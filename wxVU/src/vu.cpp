@@ -44,11 +44,14 @@ void Vu::Reset() {
 
 void Vu::ResetMemory() {
     uint32 i;
-    for(i = 0; i < m_maxRows; i++) {
-        m_pVuMem->WriteVector(i, 0, 0, 0, 0);
+    for(i = 0; i < MAX_VUCODE_SIZE; i++)  {
         program[i].SymbolIndex = -1;
         program[i].Reset();
     }
+
+    for(i = 0; i < MAX_VUDATA_SIZE; i++)  {
+      m_pVuMem->WriteVector(i, 0, 0, 0, 0);
+		}
     m_pMemoryPanel->Clear();
 }
 
