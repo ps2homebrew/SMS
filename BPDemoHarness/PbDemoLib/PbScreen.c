@@ -218,7 +218,7 @@ void PbScreenClear( int Color )
 
 void PbScreenDisplayAt( u32 Pos, int Width )
 {
-  GS_SET_DISPFB2( Pos / 2048*(256/64), Width / 64, 0, 0, 0 );
+  GS_SET_DISPFB2( Pos / 8192, Width / 64, 0, 0, 0 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
