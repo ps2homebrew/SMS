@@ -8,8 +8,8 @@ typedef struct{
 	int lastRecv;
 }tenFtpInfo;
 
-tenFtpState	lFtpState[8];
-tenFtpInfo	lFtpConns[8];
+tenFtpState	lFtpState[TEN_MAX_CONNS];
+tenFtpInfo	lFtpConns[TEN_MAX_CONNS];
 int			nFtpConns=0;
 
 
@@ -120,7 +120,7 @@ int GetFtpConn( char *p1, char *p2, char *p3 )
 #if DEBUG_LEVEL>=1
 	printf( "no cache nFtpConns %d\n",nFtpConns );
 #endif
-	if( nFtpConns>7 )
+	if( nFtpConns>=TEN_MAX_CONNS )
 		return -4;
 
 	lFtpConns[nFtpConns].FtpIp[0]=FtpIp[0];
@@ -130,6 +130,7 @@ int GetFtpConn( char *p1, char *p2, char *p3 )
 	lFtpConns[nFtpConns].FtpIp[4]=FtpIp[4];
 	lFtpConns[nFtpConns].CommandConnection=-1;
 	lFtpConns[nFtpConns].DataConnection=-1;
+	lFtpState[nFtpConns].DirReadCacheData=0;
 
 	strcpy( lFtpState[nFtpConns].FtpUser, FtpUser );
 	strcpy( lFtpState[nFtpConns].FtpPass, FtpPass );
@@ -183,6 +184,11 @@ int FtpClose( int i )
 	lFtpState[i].bAuthed=0;
 	lFtpState[i].bData=0;
 	lFtpState[i].bBusy=0;
+
+	if( lFtpState[i].DirReadCacheData )
+		free( lFtpState[i].DirReadCacheData );
+	lFtpState[i].DirReadCacheData=0;
+
 	return 1;
 }
 
@@ -482,6 +488,11 @@ int FtpDataClose( int serverId )
 		lFtpState[serverId].bData=0;
 	}
 
+	if( lFtpState[serverId].DirReadCacheData )
+		free( lFtpState[serverId].DirReadCacheData );
+	lFtpState[serverId].DirReadCacheData=0;
+
+
 	return 1;
 }
 
@@ -571,7 +582,38 @@ int IsDataFromFtpDataConnAvail( int serverId )
 	}
 }
 
+int IsDataSendToFtpDataConnAvail( int serverId )
+{
+	int s;
+	fd_set r;
+	struct timeval tv;
 
+	if( serverId<0 || serverId>nFtpConns )
+		return -1;
+
+	s = lFtpConns[serverId].DataConnection;
+
+	FD_ZERO(&r);
+	FD_SET(s,&r);
+	tv.tv_sec=0;
+	tv.tv_usec=0;
+	if( select( s+1, 0, &r, 0, &tv ) < 0 )
+	{
+		printf("IsDataSendToFtpDataConnAvail select err\n" );
+		return 0;
+	}
+	if( FD_ISSET(s,&r) )
+	{
+		return 1;
+	}
+	else
+	{
+#if DEBUG_LEVEL>=1
+		printf("IsDataSendToFtpDataConnAvail not set\n" );
+#endif
+		return 0;
+	}
+}
 
 
 

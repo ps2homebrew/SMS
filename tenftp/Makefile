@@ -8,15 +8,13 @@
 #
 # $Id$
 
-PS2SDKSRC=/cygdrive/c/ps2dev/ps2sdk
-
 IOP_OBJS_DIR = obj/
 IOP_BIN_DIR = bin/
 IOP_SRC_DIR = src/
 IOP_INC_DIR = include/
 
-IOP_BIN  = bin/tenfs.irx
-IOP_OBJS = obj/tenfs.o obj/ftp_cache.o obj/ftp_proto.o obj/imports.o
+IOP_BIN  = bin/tenftp.irx
+IOP_OBJS = obj/tenfs.o obj/ftp_cache.o obj/ftp_proto.o obj/file_layer.o obj/imports.o
 
 IOP_CFLAGS  += -Wall -fno-builtin
 IOP_LDFLAGS += -s
