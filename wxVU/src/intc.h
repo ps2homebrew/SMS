@@ -17,9 +17,9 @@ public:
     INTC();
     ~INTC();
     static const int    nREGISTERS;
-    vector<string>      getRegisterText(const int reg);
+    const vector<string>    GetRegisterText(const int reg);
 private:
-    vector<string>      unpack_I_STAT(const int reg);
-    vector<string>      unpack_I_MASK(const int reg);
+    vector<string>      UnpackIStat(const int reg);
+    vector<string>      UnpackIMask(const int reg);
 };
 #endif

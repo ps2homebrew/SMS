@@ -7,73 +7,38 @@
 #include <sys/stat.h>
 
 #include "main.h"
-#include "parser.h"
 #include "util.h"
 #include "prefdef.h"
-#include "dump.h"
-#include "errors.h"
+#include "Remote.h"
 #include "linkproto_stub.h"
 
+#include "vif.h"
+#include "vif0.h"
+#include "vif1.h"
 #include "vu.h"
 #include "sif.h"
 #include "timer.h"
-#include "dma.h"
 #include "gif.h"
 #include "intc.h"
 #include "ipu.h"
 #include "fifo.h"
-#include "vif0.h"
-#include "vif1.h"
 #include "gs.h"
-#include "gif.h"
 #include "vuBreakDialog.h"
 #include "breakpoint.h"
+
+#include "MiscRegisterPanel.h"
 
 using namespace std;
 
 //---------------------------------------------------------------------------
 extern MicroCode Instr;
-extern VU VUchip;
 
 uint32 getFLGField(uint64 data);
 uint32 getNregs(uint64);
 uint32 validateRegsField(uint64);
 
-static const wxString regSelectChoices[] =
-{
-    "P", "Q", "R", "I", "ACC", 
-    "VF0", "VF1", "VF2", "VF3", "VF4", "VF5", "VF6", "VF7", 
-    "VF8", "VF9", "VF10", "VF11", "VF12", "VF13", "VF14", "VF15", 
-    "VF16", "VF17", "VF18", "VF19", "VF20", "VF21", "VF22", "VF23", 
-    "VF24", "VF25", "VF26", "VF27", "VF28", "VF29", "VF30", "VF31",
-    "VI00", "VI01", "VI02", "VI03", "VI04", "VI05", "VI06", "VI07",
-    "VI08", "VI09", "VI10", "VI11", "VI12","VI13","VI14","VI15",
-    "VI16", "VI17", "VI18", "VI19", "VI20","VI21","VI22","VI23",
-    "VI24", "VI25", "VI26", "VI27", "VI28","VI29","VI30","VI31"
-};
-
 static int running = 0;
 static int accumulatedTicks = 0;
-
-static uint32 tagInitGs[24] = {
-    0x00008005, 0x10000000, 0xe, 0x0,
-    10<<16, 0x0, 0x4c, 0x0,                     // frame_1
-    (10<<24)+(640*512*4/8192), 0x0, 0x4E, 0x0,  // zbuf_1
-    32000, 32000, 0x18, 0x0,                    // xyoffset_1
-    (639<<16), (511<<16), 0x40, 0x0,            // scissor_1
-    0x0, 0x0, 0x42, 0x0                         // alpha_1
-};
-
-static uint32 tagClearGs[24] = {
-    0x00008005, 0x10000000, 0xe, 0x0,
-    0x6, 0x0, 0x0, 0x0,                         // prim
-    0x00030000, 0x0, 0x47, 0x0,                 // test_1
-    0x00000000, 0x3F800000, 0x1, 0x0,           // rgbaq
-    (32000<<16) + 32000, 0x0, 0x5, 0x0,         // xyz2
-    ((32000+(512<<4))<<16) + 32000+(640<<4), 0x0, 0x5, 0x0 // xyz2
-};
-
-
 
 BEGIN_EVENT_TABLE(VUFrame, wxFrame)
 	EVT_MENU(ID_FILE_LOADCODE, VUFrame::OnLoadCode)
@@ -94,21 +59,16 @@ BEGIN_EVENT_TABLE(VUFrame, wxFrame)
 	EVT_MENU(ID_REMOTE_VU1, VUFrame::OnVu1)
 	EVT_MENU(ID_REMOTE_VU0ALL, VUFrame::OnVu0All)
 	EVT_MENU(ID_REMOTE_VU1ALL, VUFrame::OnVu1All)
-	EVT_MENU(ID_REMOTE_REGS, VUFrame::OnRegs)
+	EVT_MENU(ID_REMOTE_REGS, VUFrame::OnGetMiscRegs)
 	EVT_MENU(ID_REMOTE_REGSVU0, VUFrame::OnRegsVu0)
 	EVT_MENU(ID_REMOTE_REGSVU1, VUFrame::OnRegsVu1)
-	EVT_MENU(ID_REMOTE_GSINIT, VUFrame::OnGSInit)
-	EVT_MENU(ID_REMOTE_CLR, VUFrame::OnCLR)
+	EVT_MENU(ID_REMOTE_GSINIT, VUFrame::OnGsInit)
+	EVT_MENU(ID_REMOTE_CLR, VUFrame::OnGsClear)
+    EVT_MENU(ID_OPTION_TRACE_DMA, VUFrame::OnOptionTraceDma)
+    EVT_MENU(ID_OPTION_TRACE_VIF, VUFrame::OnOptionTraceVif)
+    EVT_MENU(ID_OPTION_TRACE_GIF, VUFrame::OnOptionTraceGif)
+    EVT_MENU(ID_OPTION_TRACE_VU, VUFrame::OnOptionTraceVu)
     EVT_GRID_CELL_LEFT_DCLICK(VUFrame::OnBreakpoint)
-    EVT_GRID_CELL_CHANGE(VUFrame::OnCellChange)
-    EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK1, VUFrame::OnNotebookOne)
-    EVT_RADIOBOX(ID_MEMORYRADIO, VUFrame::OnMemoryRadio)
-    EVT_RADIOBOX(ID_INTREGRADIO, VUFrame::OnIntRegRadio)
-    EVT_RADIOBOX(ID_FLOATREGRADIO, VUFrame::OnFloatRegRadio)
-    EVT_RADIOBOX(ID_SPECREGRADIO, VUFrame::OnSpecRegRadio)
-    EVT_GRID_LABEL_LEFT_CLICK(VUFrame::OnGridLabel)
-    EVT_TREE_ITEM_ACTIVATED(ID_REGTREE, VUFrame::OnMiscRegSelect)
-    // EVT_SIZE(VUFrame::OnSize)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(VUemu)
@@ -118,267 +78,40 @@ VUFrame* VUemu::ms_pFrame = NULL;
 //---------------------------------------------------------------------------
 // GUI builder functions
 //---------------------------------------------------------------------------
-void
-VUFrame::buildRegisterGrid(wxNotebook *book) {
-	int i;
-    intRegPanel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
-        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
-    floatRegPanel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
-        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
-    specRegPanel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
-        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
-
-    // Build the Integer register tab
-	
-    wxString choices[6] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15",
-		"Float", "Hex" };
-    intRegRadio = new wxRadioBox(intRegPanel, ID_INTREGRADIO,
-        "Number representation", wxDefaultPosition,
-        wxDefaultSize, 6, choices, 6);
-    intRegRadio->SetSelection(0);
-    gridIntRegisters = new wxGrid(intRegPanel, ID_GRIDREGINT, wxDefaultPosition);
-    gridIntRegisters->CreateGrid(1, 16);
-    gridIntRegisters->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
-    gridIntRegisters->EnableEditing(FALSE);
-    gridIntRegisters->SetRowLabelValue(0, "X");
-    gridIntRegisters->SetColLabelSize(int(wxWindow::GetCharHeight()*1.5));
-    gridIntRegisters->SetRowLabelSize(charWidth*2);
-    gridIntRegisters->SetRowSize(0, int(GetCharHeight()*1.5));
-    gridIntRegisters->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
-    for (i = 0; i < 16; i++) {
-        gridIntRegisters->SetColLabelValue(i, wxString::Format("vi%02d", i));
-    }
-
-    // Build the Float register tab
-    floatRegRadio = new wxRadioBox(floatRegPanel, ID_FLOATREGRADIO,
-        "Number representation", wxDefaultPosition,
-        wxDefaultSize, 6, choices, 6);
-    floatRegRadio->SetSelection(4);
-    gridFloatRegisters = new wxGrid(floatRegPanel, ID_GRIDREGFLOAT, wxDefaultPosition);
-    gridFloatRegisters->CreateGrid(4, 32);
-    gridFloatRegisters->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
-    gridFloatRegisters->EnableEditing(FALSE);
-    gridFloatRegisters->SetRowLabelValue(0, "X");
-    gridFloatRegisters->SetRowLabelValue(1, "Y");
-    gridFloatRegisters->SetRowLabelValue(2, "Z");
-    gridFloatRegisters->SetRowLabelValue(3, "W");
-    gridFloatRegisters->SetColLabelSize(int(GetCharHeight()*1.5));
-    gridFloatRegisters->SetRowLabelSize(charWidth*3);
-    gridFloatRegisters->SetRowSize(0, int(GetCharHeight()*1.5));
-    gridFloatRegisters->SetRowSize(1, int(GetCharHeight()*1.5));
-    gridFloatRegisters->SetRowSize(2, int(GetCharHeight()*1.5));
-    gridFloatRegisters->SetRowSize(3, int(GetCharHeight()*1.5));
-    gridFloatRegisters->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
-    for (i = 0; i < 32; i++) {
-        gridFloatRegisters->SetColLabelValue(i, wxString::Format("vf%02d", i));
-    }
-
-    // Build the Special register tab
-    specRegRadio = new wxRadioBox(specRegPanel, ID_SPECREGRADIO,
-        "Number representation", wxDefaultPosition,
-        wxDefaultSize, 6, choices, 6);
-    specRegRadio->SetSelection(4);
-    gridSpecialRegisters = new wxGrid(specRegPanel, ID_GRIDREGSPECIAL, wxDefaultPosition);
-    gridSpecialRegisters->CreateGrid(4, 5);
-    gridSpecialRegisters->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
-    gridSpecialRegisters->EnableEditing(FALSE);
-    gridSpecialRegisters->SetRowLabelValue(0, "X");
-    gridSpecialRegisters->SetRowLabelValue(1, "Y");
-    gridSpecialRegisters->SetRowLabelValue(2, "Z");
-    gridSpecialRegisters->SetRowLabelValue(3, "W");
-    gridSpecialRegisters->SetColLabelSize(int(GetCharHeight()*1.5));
-    gridSpecialRegisters->SetRowLabelSize(charWidth*3);
-    gridSpecialRegisters->SetRowSize(0, int(GetCharHeight()*1.5));
-    gridSpecialRegisters->SetRowSize(1, int(GetCharHeight()*1.5));
-    gridSpecialRegisters->SetRowSize(2, int(GetCharHeight()*1.5));
-    gridSpecialRegisters->SetRowSize(3, int(GetCharHeight()*1.5));
-    gridSpecialRegisters->SetColLabelValue(0, wxString("ACC"));
-    gridSpecialRegisters->SetColLabelValue(1, wxString("Q"));
-    gridSpecialRegisters->SetColLabelValue(2, wxString("P"));
-    gridSpecialRegisters->SetColLabelValue(3, wxString("R"));
-    gridSpecialRegisters->SetColLabelValue(4, wxString("I"));
-    gridSpecialRegisters->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
-
-    wxBoxSizer *intRegSizer = new wxBoxSizer(wxVERTICAL);
-    wxBoxSizer *floatRegSizer = new wxBoxSizer(wxVERTICAL);
-    wxBoxSizer *specRegSizer = new wxBoxSizer(wxVERTICAL);
-
-	intRegSizer->Add(intRegRadio);
-	intRegSizer->Add(gridIntRegisters, 1, wxEXPAND);
-	intRegPanel->SetSizer(intRegSizer);
-
-	floatRegSizer->Add(floatRegRadio);
-	floatRegSizer->Add(gridFloatRegisters, 1, wxEXPAND);
-	floatRegPanel->SetSizer(floatRegSizer);
-
-	specRegSizer->Add(specRegRadio);
-	specRegSizer->Add(gridSpecialRegisters, 1, wxEXPAND);
-	specRegPanel->SetSizer(specRegSizer);
-}
-
-wxPanel *
-VUFrame::buildMemoryTable(wxNotebook *book) {
-    uint32 i;
-    wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
-    wxPanel *panel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
-        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
-
-    wxString choices[6] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15",
-		"Float", "Hex" };
-    regRadioBox = new wxRadioBox(panel, ID_MEMORYRADIO,
-        "Number representation", wxDefaultPosition,
-        wxDefaultSize, 6, choices, 6);
-    regRadioBox->SetSelection(4);
-    gridMemory = new wxGrid(panel, ID_GRIDMEMORY, wxDefaultPosition,
-        wxDefaultSize);
-    gridMemory->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
-    gridMemory->CreateGrid(MAX_VUDATA_SIZE, 4);
-    gridMemory->EnableEditing(TRUE);
-    gridMemory->SetColLabelValue(0, "X");
-    gridMemory->SetColLabelValue(1, "Y");
-    gridMemory->SetColLabelValue(2, "Z");
-    gridMemory->SetColLabelValue(3, "W");
-    gridMemory->SetColLabelSize(int(GetCharHeight()*1.5));
-    gridMemory->SetRowLabelSize(charWidth*5);
-    gridMemory->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
-    for (i = 0; i < MAX_VUDATA_SIZE; i++) {
-        gridMemory->SetRowLabelValue(i, wxString::Format("%04d", i));
-        gridMemory->SetRowSize(i, int(GetCharHeight()*1.5));
-    }
-    gridMemory->DisableDragGridSize();
-    gridMemory->SetGridLineColour(*wxBLACK);
-    sizer->Add(regRadioBox);
-    sizer->Add(gridMemory, 1, wxEXPAND);
-    panel->SetSizer(sizer);
-    return panel;
-}
-
-void VUFrame::buildGIFTable(wxNotebook *nbook) {
-    uint32 i;
-    gridGIF = new wxGrid(nbook, ID_GRIDGIF, wxDefaultPosition);
-    gridGIF->CreateGrid(MAX_VUDATA_SIZE+16, 2);
-    gridGIF->SetColMinimalWidth(0, charWidth*8);
-    gridGIF->SetColMinimalWidth(1, charWidth*40);
-    gridGIF->SetColSize(0, charWidth*8);
-    gridGIF->SetColSize(1, charWidth*40);
-    gridGIF->EnableEditing(FALSE);
-    gridGIF->SetColLabelValue(0, "");
-    gridGIF->SetColLabelValue(1, "");
-    gridGIF->SetColLabelSize(int(GetCharHeight()*1.5));
-    gridGIF->SetRowLabelSize(charWidth*5);
-    gridGIF->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
-    for (i = 0; i < MAX_VUDATA_SIZE; i++) {
-        gridGIF->SetRowLabelValue(i, wxString::Format("%04d", i));
-        gridGIF->SetRowSize(i, int(GetCharHeight()*1.5));
-        gridGIF->SetCellAlignment(i, 0, wxALIGN_LEFT, wxALIGN_CENTRE);
-        gridGIF->SetCellAlignment(i, 1, wxALIGN_LEFT, wxALIGN_CENTRE);
-    }
-    gridGIF->DisableDragGridSize();
-    gridGIF->SetGridLineColour(*wxBLACK);
-}
-
-void
-VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
-    int i;
-    boxMiscRegs = new wxBoxSizer(wxHORIZONTAL);
-    panelMiscRegisters = new wxPanel(nbook, -1, wxDefaultPosition, wxDefaultSize,
-        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
-    regInfoBox = new wxGrid(panelMiscRegisters, ID_REGINFOBOX, wxDefaultPosition,
-        wxDefaultSize);
-    regInfoBox->CreateGrid(25, 1);
-    regInfoBox->SetRowLabelValue(0, "");
-    for (i = 0; i < 25; i++) {
-        regInfoBox->SetRowLabelValue(i, "");
-        regInfoBox->SetCellValue(i, 0, "");
-    }
-
-    miscRegTree = new wxTreeCtrl(panelMiscRegisters, ID_REGTREE, wxDefaultPosition,
-        wxDefaultSize,
-        wxSP_3D|wxTR_NO_LINES|wxTR_FULL_ROW_HIGHLIGHT|wxTR_ROW_LINES);
-    wxTreeItemId root;
-    wxTreeItemId id;
-
-    root = miscRegTree->AddRoot("Registers");
-    id = miscRegTree->AppendItem(root, "DMA");
-    for( i = 0; i < DMAnREGISTERS; i++ ) {
-        dmaItemIds[i] = miscRegTree->AppendItem(id, tDMA_REGISTERS[i]);
-    }
-    id = miscRegTree->AppendItem(root, "Intc");
-	// for( i = 0; i < INTC::nREGISTERS; i++ ) {
-	//     intcItemIds[i] = miscRegTree->AppendItem(id, tINTC_REGISTERS[i]);
-	// }
-    id = miscRegTree->AppendItem(root, "Timer");
-    for( i = 0; i < TIMERnREGISTERS; i++ ) {
-        timerItemIds[i] = miscRegTree->AppendItem(id, tTIMER_REGISTERS[i]);
-    }
-    id = miscRegTree->AppendItem(root, "GS");
-	// for( i = 0; i < GS::nREGISTERS; i++ ) {
-	//     gsItemIds[i] = miscRegTree->AppendItem(id, tGS_REGISTERS[i]);
-	// }
-    id = miscRegTree->AppendItem(root, "SIF");
-    for( i = 0; i < SIFnREGISTERS; i++ ) {
-        dmaItemIds[i] = miscRegTree->AppendItem(id, tSIF_REGISTERS[i]);
-    }
-    id = miscRegTree->AppendItem(root, "FIFO");
-	// for( i = 0; i < FIFO::nREGISTERS; i++ ) {
-	//     fifoItemIds[i] = miscRegTree->AppendItem(id, tFIFO_REGISTERS[i]);
-	// }
-    id = miscRegTree->AppendItem(root, "GIF");
-    for( i = 0; i < GIFnREGISTERS; i++ ) {
-        gifItemIds[i] = miscRegTree->AppendItem(id, tGIF_REGISTERS[i]);
-    }
-    id = miscRegTree->AppendItem(root, "VIF0");
-	// for( i = 0; i < VIF0::nREGISTERS; i++ ) {
-	//     vif0ItemIds[i] = miscRegTree->AppendItem(id, tVIF0_REGISTERS[i]);
-	// }
-    id = miscRegTree->AppendItem(root, "VIF1");
-	// for( i = 0; i < VIF1::nREGISTERS; i++ ) {
-	//     vif1ItemIds[i] = miscRegTree->AppendItem(id, tVIF1_REGISTERS[i]);
-	// }
-
-    boxMiscRegs->Add(miscRegTree, 1, wxALIGN_LEFT|wxEXPAND, 10);
-    boxMiscRegs->Add(regInfoBox, 1, wxALIGN_LEFT|wxEXPAND, 10);
-    panelMiscRegisters->SetSizer(boxMiscRegs);
-}
-
-void
-VUFrame::OnMiscRegSelect(wxTreeEvent &event) {
-    miscRegTree->Toggle(event.GetItem());
-}
 
 void
 VUFrame::buildCodeTable(wxNotebook *nbook) {
     uint32 i;
-    gridCode = new wxGrid(nbook, ID_GRIDCODE, wxDefaultPosition);
+    m_pGridCode = new wxGrid(nbook, ID_GRIDCODE, wxDefaultPosition);
     // take num opcodes * 2 to allow space for labels.
-    gridCode->CreateGrid(MAX_VUCODE_SIZE*2, 5);
-    gridCode->EnableEditing(FALSE);
-    gridCode->SetColLabelValue(0, "P");
-    gridCode->SetColLabelValue(1, "B");
-    gridCode->SetColLabelValue(2, "T");
-    gridCode->SetColLabelValue(3, "Upper");
-    gridCode->SetColLabelValue(4, "Lower");
-    gridCode->SetColLabelSize(int(GetCharHeight()*1.5));
-    gridCode->SetRowLabelSize(charWidth*5);
-    gridCode->SetColSize(0, charWidth*2);
-    gridCode->SetColSize(1, charWidth*2);
-    gridCode->SetColSize(2, charWidth*2);
-    gridCode->SetColSize(2, charWidth*2);
-    gridCode->SetColSize(3, charWidth*20);
-    gridCode->SetColSize(4, charWidth*20);
-    gridCode->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
+    m_pGridCode->CreateGrid(MAX_VUCODE_SIZE*2, 5);
+    m_pGridCode->EnableEditing(FALSE);
+    m_pGridCode->SetColLabelValue(0, "P");
+    m_pGridCode->SetColLabelValue(1, "B");
+    m_pGridCode->SetColLabelValue(2, "T");
+    m_pGridCode->SetColLabelValue(3, "Upper");
+    m_pGridCode->SetColLabelValue(4, "Lower");
+    m_pGridCode->SetColLabelSize(int(GetCharHeight()*1.5));
+    m_pGridCode->SetRowLabelSize(m_charWidth*5);
+    m_pGridCode->SetColSize(0, m_charWidth*2);
+    m_pGridCode->SetColSize(1, m_charWidth*2);
+    m_pGridCode->SetColSize(2, m_charWidth*2);
+    m_pGridCode->SetColSize(2, m_charWidth*2);
+    m_pGridCode->SetColSize(3, m_charWidth*20);
+    m_pGridCode->SetColSize(4, m_charWidth*20);
+    m_pGridCode->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
     for (i = 0; i < MAX_VUCODE_SIZE; i++) {
-        gridCode->SetRowLabelValue(i, wxString::Format("%04d", i));
-        gridCode->SetCellValue(i, 1, wxString("."));
-        gridCode->SetRowSize(i, int(GetCharHeight()*1.5));
+        m_pGridCode->SetRowLabelValue(i, wxString::Format("%04d", i));
+        m_pGridCode->SetCellValue(i, 1, wxString("."));
+        m_pGridCode->SetRowSize(i, int(GetCharHeight()*1.5));
     }
-    gridCode->DisableDragGridSize();
-    gridCode->SetGridLineColour(*wxBLACK);
+    m_pGridCode->DisableDragGridSize();
+    m_pGridCode->SetGridLineColour(*wxBLACK);
 }
 
 void
 VUFrame::buildFlagsPanel(wxNotebook *book) {
-    flagsDetail = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
+    m_pFlagsDetail = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
         wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
 
     wxBoxSizer  *topSizer = new wxBoxSizer(wxVERTICAL);
@@ -388,20 +121,20 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
     wxSize size;
 
     // clip flags
-    size = wxSize(7*charWidth, (int)(1.5*GetCharHeight()));
-    clipflags->Add(new wxStaticText(flagsDetail, -1, "3rd prv", wxDefaultPosition,
+    size = wxSize(7*m_charWidth, (int)(1.5*GetCharHeight()));
+    clipflags->Add(new wxStaticText(m_pFlagsDetail, -1, "3rd prv", wxDefaultPosition,
             size), 0, wxADJUST_MINSIZE, 1);
-    clipflags->Add(new wxStaticText(flagsDetail, -1, "2nd prv", wxDefaultPosition,
+    clipflags->Add(new wxStaticText(m_pFlagsDetail, -1, "2nd prv", wxDefaultPosition,
             size), 0, wxADJUST_MINSIZE, 1);
-    clipflags->Add(new wxStaticText(flagsDetail, -1, "previous", wxDefaultPosition,
+    clipflags->Add(new wxStaticText(m_pFlagsDetail, -1, "previous", wxDefaultPosition,
             size), 0, wxADJUST_MINSIZE, 1);
-    clipflags->Add(new wxStaticText(flagsDetail, -1, "current", wxDefaultPosition,
+    clipflags->Add(new wxStaticText(m_pFlagsDetail, -1, "current", wxDefaultPosition,
             size), 0, wxADJUST_MINSIZE, 1);
 
-    clip3 = new wxTextCtrl(flagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
-    clip2 = new wxTextCtrl(flagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
-    clip1 = new wxTextCtrl(flagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
-    clip0 = new wxTextCtrl(flagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
+    clip3 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
+    clip2 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
+    clip1 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
+    clip0 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
 
     clipflags->Add(clip3, 0, wxLEFT, 1);
     clipflags->Add(clip2, 0, wxLEFT, 1);
@@ -409,32 +142,32 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
     clipflags->Add(clip0, 0, wxLEFT, 1);
     
     // statusflags
-    size = wxSize(3*charWidth, (int)(1.5*GetCharHeight()));
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "DS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "IS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "OS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "US", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "SS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "ZS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "D", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "I", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "O", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "U", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "S", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
-    statusflags->Add(new wxStaticText(flagsDetail, -1, "Z", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    size = wxSize(3*m_charWidth, (int)(1.5*GetCharHeight()));
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "DS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "IS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "OS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "US", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "SS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "ZS", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "D", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "I", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "O", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "U", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "S", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
+    statusflags->Add(new wxStaticText(m_pFlagsDetail, -1, "Z", wxDefaultPosition, size), 0, wxADJUST_MINSIZE, 1);
 
-    fds = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fis = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fos = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fzs = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fss = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fus = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fi = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fo = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fs = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fz = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fu = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
-    fd = new wxTextCtrl(flagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fds = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fis = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fos = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fzs = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fss = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fus = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fi = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fo = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fs = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fz = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fu = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
+    fd = new wxTextCtrl(m_pFlagsDetail, -1, "0", wxDefaultPosition, size, wxTE_READONLY);
 
     statusflags->Add(fds, 0, wxLEFT, 1);
     statusflags->Add(fis, 0, wxLEFT, 1);
@@ -450,23 +183,23 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
     statusflags->Add(fz, 0, wxLEFT, 1);
 
     // mac flags
-    size = wxSize(5*charWidth, (int)(1.5*GetCharHeight()));
-    macflags->Add(new wxStaticText(flagsDetail, -1, "O xyzw"), 0,
+    size = wxSize(5*m_charWidth, (int)(1.5*GetCharHeight()));
+    macflags->Add(new wxStaticText(m_pFlagsDetail, -1, "O xyzw"), 0,
         wxADJUST_MINSIZE, 1);
-    macflags->Add(new wxStaticText(flagsDetail, -1, "U xyzw"), 0,
+    macflags->Add(new wxStaticText(m_pFlagsDetail, -1, "U xyzw"), 0,
         wxADJUST_MINSIZE, 1);
-    macflags->Add(new wxStaticText(flagsDetail, -1, "S xyzw"), 0,
+    macflags->Add(new wxStaticText(m_pFlagsDetail, -1, "S xyzw"), 0,
         wxADJUST_MINSIZE, 1);
-    macflags->Add(new wxStaticText(flagsDetail, -1, "Z xyzw"), 0,
+    macflags->Add(new wxStaticText(m_pFlagsDetail, -1, "Z xyzw"), 0,
         wxADJUST_MINSIZE, 1);
 
-    MOf = new wxTextCtrl(flagsDetail, -1, "0000", wxDefaultPosition, size,
+    MOf = new wxTextCtrl(m_pFlagsDetail, -1, "0000", wxDefaultPosition, size,
         wxTE_READONLY);
-    MUf = new wxTextCtrl(flagsDetail, -1, "0000", wxDefaultPosition, size,
+    MUf = new wxTextCtrl(m_pFlagsDetail, -1, "0000", wxDefaultPosition, size,
         wxTE_READONLY);
-    MSf = new wxTextCtrl(flagsDetail, -1, "0000", wxDefaultPosition, size,
+    MSf = new wxTextCtrl(m_pFlagsDetail, -1, "0000", wxDefaultPosition, size,
         wxTE_READONLY);
-    MZf = new wxTextCtrl(flagsDetail, -1, "0000", wxDefaultPosition, size,
+    MZf = new wxTextCtrl(m_pFlagsDetail, -1, "0000", wxDefaultPosition, size,
         wxTE_READONLY);
 
     macflags->Add(MOf, 0, wxLEFT, 1);
@@ -475,18 +208,18 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
     macflags->Add(MZf, 0, wxLEFT, 1);
 
     // show
-    topSizer->Add(new wxStaticText(flagsDetail, -1, "CLIP -z+z-y+y-x+x ( 4 times )"),
+    topSizer->Add(new wxStaticText(m_pFlagsDetail, -1, "CLIP -z+z-y+y-x+x ( 4 times )"),
             0, wxADJUST_MINSIZE, 1);
     topSizer->Add(clipflags);
-    topSizer->Add(new wxStaticText(flagsDetail, -1, "Status Flags"),
+    topSizer->Add(new wxStaticText(m_pFlagsDetail, -1, "Status Flags"),
             0, wxADJUST_MINSIZE, 1);
     topSizer->Add(statusflags);
-    topSizer->Add(new wxStaticText(flagsDetail, -1, "Mac Flags"),
+    topSizer->Add(new wxStaticText(m_pFlagsDetail, -1, "Mac Flags"),
             0, wxADJUST_MINSIZE, 1);
     topSizer->Add(macflags);
-	flagsDetail->SetSizerAndFit(topSizer);
-	flagsDetail->SetAutoLayout(TRUE);
-	flagsDetail->Layout();
+	m_pFlagsDetail->SetSizerAndFit(topSizer);
+	m_pFlagsDetail->SetAutoLayout(TRUE);
+	m_pFlagsDetail->Layout();
 }
 
 //---------------------------------------------------------------------------
@@ -502,13 +235,13 @@ VUFrame::OnRestart(wxCommandEvent &WXUNUSED(event)) {
     if(Status != READY) {
         return;
     }
-    gridCode->SetCellBackgroundColour(Previous, 3, *wxWHITE);
-    gridCode->SetCellBackgroundColour(Previous, 4, *wxWHITE);
+    m_pGridCode->SetCellBackgroundColour(m_previous, 3, *wxWHITE);
+    m_pGridCode->SetCellBackgroundColour(m_previous, 4, *wxWHITE);
 
-    VUchip.Reset();
-    DrawMemory();
+    m_pVu1->Reset();
+    m_pParser->InitCodeMem();
     DrawProgram();
-    if(LoadCode((char *)codeFile.GetFullPath().c_str())) {
+    if(m_pParser->LoadCode((char *)m_codeFile.GetFullPath().c_str())) {
         for(i=0; i< Instr.nInstructionDef; i++) {
             for(j=0; j<15; j++) {
                 Instr.Instr[i].lastthr[j]=0;
@@ -516,64 +249,61 @@ VUFrame::OnRestart(wxCommandEvent &WXUNUSED(event)) {
         }
         Status=READY;
         DrawProgram();
-        txtDebug->AppendText("VU Code reloaded from file: " +
-            codeFile.GetFullPath() + "\n");
-        txtDebug->AppendText("Status=READY\n");
+        m_pTextDebug->AppendText("VU Code reloaded from file: " +
+            m_codeFile.GetFullPath() + "\n");
+        m_pTextDebug->AppendText("Status=READY\n");
         InstuctionStatus();
     } else{
         wxMessageBox(wxString::Format("Syntax Error in line: %d",
-                VUchip.NInstructions+1), "", wxOK|wxICON_INFORMATION, this);
-        txtDebugFailed("Failed to load VU Code from file: " + 
-            codeFile.GetFullPath() + "\n");
-        txtDebug->AppendText("Status=EMPTY\n");
-        VUchip.Reset();
+                m_pVu1->NInstructions+1), "", wxOK|wxICON_INFORMATION, this);
+        TextDebugFailed("Failed to load VU Code from file: " + 
+            m_codeFile.GetFullPath() + "\n");
+        m_pTextDebug->AppendText("Status=EMPTY\n");
+        m_pVu1->Reset();
         Status = wxRESET;
     }
 
-    if(dataFile.GetFullPath() != "") {
-        LoadMemory(dataFile);
+    if(m_dataFile.GetFullPath() != "") {
+        LoadMemory(m_dataFile);
     } else {
-        txtDebugFailed(wxString("Failed to load VU Data from file: " + 
-            dataFile.GetFullPath() + "\n"));
+        TextDebugFailed(wxString("Failed to load VU Data from file: " + 
+            m_dataFile.GetFullPath() + "\n"));
     }
-    gridCode->SetGridCursor(0, 3);
+    m_pGridCode->SetGridCursor(0, 3);
 }
 
 //---------------------------------------------------------------------------
 void
 VUFrame::OnStep(wxCommandEvent &WXUNUSED(event)) {
-    int cur = VUchip.PC;
-    VUchip.SetCallback(this, VUFrame::wrapper_DebugTic);
-    VUchip.SetXGKICKCallback(this, VUFrame::wrapper_XGKICK);
-    VUchip.Tic();
-    gridCode->SetCellValue(Previous, 0, wxString(""));
-    gridCode->SetCellValue(LineInstruction(cur), 2, wxString::Format("%d",
-            VUchip.program[cur].tics));
+    int cur = m_pVu1->PC;
+    m_pVu1->SetCallback(this, VUFrame::wrapper_DebugTic);
+    m_pVu1->SetXGKICKCallback(this, VUFrame::wrapper_XGKICK);
+    m_pVu1->Tic();
+    m_pGridCode->SetCellValue(m_previous, 0, wxString(""));
+    m_pGridCode->SetCellValue(LineInstruction(cur), 2, wxString::Format("%d",
+            m_pVu1->program[cur].tics));
 
-	// sort of a kludge
+	// KLUDGE
 	if ( running == 0 ) {
-		gridCode->SetCellBackgroundColour(Previous, 3, *wxWHITE);
-		gridCode->SetCellBackgroundColour(Previous, 4, *wxWHITE);
-		gridCode->SetCellValue(LineInstruction(cur), 0, wxString(">"));
-		gridCode->SetCellBackgroundColour(LineInstruction(cur), 3, cCurCode);
-		gridCode->SetCellBackgroundColour(LineInstruction(cur), 4, cCurCode);
-		gridCode->SetGridCursor(LineInstruction(cur), 4);
+		m_pGridCode->SetCellBackgroundColour(m_previous, 3, *wxWHITE);
+		m_pGridCode->SetCellBackgroundColour(m_previous, 4, *wxWHITE);
+		m_pGridCode->SetCellValue(LineInstruction(cur), 0, wxString(">"));
+		m_pGridCode->SetCellBackgroundColour(LineInstruction(cur), 3, cCurCode);
+		m_pGridCode->SetCellBackgroundColour(LineInstruction(cur), 4, cCurCode);
+		m_pGridCode->SetGridCursor(LineInstruction(cur), 4);
 
-		Previous = LineInstruction(cur);
-		if ( Previous < cur ) {
-			gridCode->MoveCursorDown(FALSE);
-		} else if ( cur < Previous ) {
-			gridCode->MoveCursorUp(FALSE);
+		m_previous = LineInstruction(cur);
+		if ( m_previous < cur ) {
+			m_pGridCode->MoveCursorDown(FALSE);
+		} else if ( cur < m_previous ) {
+			m_pGridCode->MoveCursorUp(FALSE);
 		}
 	}
 
-	accumulatedTicks += VUchip.program[cur].tics;
+	accumulatedTicks += m_pVu1->program[cur].tics;
 
 	if ( running == 0 ) {
-		if ( VUchip.memoryUpdate ) {
-			DrawMemory();
-		}
-		registerUpdate();
+		RegisterUpdate();
 		FlagsUpdate(); 
 	}
     InstuctionStatus();
@@ -584,27 +314,26 @@ VUFrame::OnRun(wxCommandEvent &event) {
     uint32 i = 0;
 	running = 1;
     Breakpoint *bp = Breakpoint::Instance(); 
-    while( (VUchip.program[VUchip.PC].flg!='E') &&
+    while( (m_pVu1->program[m_pVu1->PC].flg!='E') &&
             (i < MAX_VUCODE_SIZE) &&
             !bp->check()
             ) {
         OnStep(event);
         i++;
     }
-	gridCode->SetGridCursor(LineInstruction(VUchip.PC), 4);
-	gridCode->MoveCursorDown(FALSE);
-	DrawMemory();
-	registerUpdate();
+	m_pGridCode->SetGridCursor(LineInstruction(m_pVu1->PC), 4);
+	m_pGridCode->MoveCursorDown(FALSE);
+	RegisterUpdate();
 	FlagsUpdate(); 
-	// kludge
+	// KLUDGE 
 	running = 0;
 }
 
 //---------------------------------------------------------------------------
 void
 VUFrame::OnSettings(wxCommandEvent &WXUNUSED(event)) {
-    m_prefs = new Prefs();
-    PreferenceDlg (this, m_prefs);
+    m_pPrefs = new Prefs();
+    PreferenceDlg (this, m_pPrefs);
     // Save away current settings
     VUFrame::SetSettings();
 }
@@ -614,29 +343,34 @@ VUFrame::SetSettings() {
     wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
     wxString key = PAGE_LOAD;
     autoLoadLast = conf->Read(key + _T("/") + AUTOLOADLAST, 0L);
-    dataFile.Assign(conf->Read(key + _T("/") + LASTFILEMEM)); 
-    codeFile.Assign(conf->Read(key + _T("/") + LASTFILECODE)); 
-	memStateFile.Assign(conf->Read(key + _T("/") + MEMSTATEFILE));
-	regStateFile.Assign(conf->Read(key + _T("/") + REGSTATEFILE));
-	mnemonicFile.Assign(conf->Read(key + _T("/") + MNEMONICFILE));
+    m_dataFile.Assign(conf->Read(key + _T("/") + LASTFILEMEM)); 
+    m_codeFile.Assign(conf->Read(key + _T("/") + LASTFILECODE)); 
+	m_memStateFile.Assign(conf->Read(key + _T("/") + MEMSTATEFILE));
+	m_regStateFile.Assign(conf->Read(key + _T("/") + REGSTATEFILE));
+	m_mnemonicFile.Assign(conf->Read(key + _T("/") + MNEMONICFILE));
     codeAdressStyle = 0;
 
     key = PAGE_REMOTE;
     autoGSExec = conf->Read(key + _T("/") + AUTOGSEXEC, 0L);
-    binTmpFile = conf->Read(key + _T("/") + BINTMPFILE);
-    datTmpFile = conf->Read(key + _T("/") + DATTMPFILE);
-    regTmpFile = conf->Read(key + _T("/") + REGTMPFILE);
-    gsTmpFile = conf->Read(key + _T("/") + GSTMPFILE);
-    dumpMemCmd = conf->Read(key + _T("/") + DUMPMEMCMD);
-    dumpRegCmd = conf->Read(key + _T("/") + DUMPREGCMD);
-    gsExecCmd = conf->Read(key + _T("/") + GSEXECCMD);
+    m_binTmpFile = conf->Read(key + _T("/") + BINTMPFILE);
+    m_datTmpFile = conf->Read(key + _T("/") + DATTMPFILE);
+    m_regTmpFile = conf->Read(key + _T("/") + REGTMPFILE);
+    m_gsTmpFile = conf->Read(key + _T("/") + GSTMPFILE);
+    m_dumpMemCmd = conf->Read(key + _T("/") + DUMPMEMCMD);
+    m_dumpRegCmd = conf->Read(key + _T("/") + DUMPREGCMD);
+    m_gsExecCmd = conf->Read(key + _T("/") + GSEXECCMD);
+
+    Remote::SetTmpFiles(
+        m_datTmpFile, m_binTmpFile, m_regTmpFile,
+        m_regTmpFile, m_gsExecCmd
+        );
 
     key = PAGE_STYLE;
     wxString fontname = conf->Read(key + _T("/") + FONTNAME);
     fontname = conf->Read(key + _T("/") + FONTNAME);
-    if ( gridCode != NULL ) {
+    if ( m_pGridCode != NULL ) {
         wxFont font (10, wxMODERN, wxNORMAL, wxNORMAL, false, fontname);
-        gridCode->SetDefaultCellFont(font);
+        m_pGridCode->SetDefaultCellFont(font);
     }
     // set font here.
     // set color for text here
@@ -651,6 +385,8 @@ VUFrame::SetSettings() {
     scissorX = conf->Read(key + _T("/") + SCISSOR_X, 0L);
     scissorY = conf->Read(key + _T("/") + SCISSOR_Y, 0L);
     prim = conf->Read(key + _T("/") + PRIM, 0L);
+
+    Remote::SetGsInit(xoffset, yoffset, scissorX, scissorY, ClrColor);
 }
 
 //---------------------------------------------------------------------------
@@ -658,56 +394,52 @@ void VUFrame::OnQuit(wxCommandEvent &WXUNUSED(event)) {
     wxMessageDialog *ask = new wxMessageDialog(this, "Are you sure?", "Exit",
         wxOK | wxCANCEL);
     if (ask->ShowModal() == wxID_OK) {
-        if ( dataFile.GetFullPath()  != "" ) {
+        if ( m_dataFile.GetFullPath()  != "" ) {
             wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
             wxString key = PAGE_LOAD;
-            conf->Write(key + _T("/") + LASTFILEMEM, dataFile.GetFullPath());
+            conf->Write(key + _T("/") + LASTFILEMEM, m_dataFile.GetFullPath());
             delete conf;
         }
-        if (codeFile.GetFullPath() != "") {
+        if (m_codeFile.GetFullPath() != "") {
             wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
             wxString key = PAGE_LOAD;
-            conf->Write(key + _T("/") + LASTFILECODE, codeFile.GetFullPath());
+            conf->Write(key + _T("/") + LASTFILECODE, m_codeFile.GetFullPath());
             delete conf;
         }
-        if (mnemonicFile.GetFullPath() != "") {
+        if (m_mnemonicFile.GetFullPath() != "") {
             wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
             wxString key = PAGE_LOAD;
-            conf->Write(key + _T("/") + MNEMONICFILE, mnemonicFile.GetFullPath());
+            conf->Write(key + _T("/") + MNEMONICFILE, m_mnemonicFile.GetFullPath());
             delete conf;
-        }
-        if ( dumpIsOpen() >= 0 ) {
-            dumpClose();
         }
         Close(TRUE);
     }
 }
 
 // All the Remote gui functions here.
-
 //---------------------------------------------------------------------------
 void
 VUFrame::OnVu0All(wxCommandEvent &WXUNUSED(event)) {
-    if ( binTmpFile == "" ) {
+    if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( datTmpFile == "" ) {
+    if ( m_datTmpFile == "" ) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 0) == 0) {
-        LoadCode((char *)binTmpFile.c_str());
+    if ( Remote::GetVu(0) == 0) {
+        m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
-        LoadMemory(datTmpFile);
+        LoadMemory(m_datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu0 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
     }
 
-    if ( dumpVURegisters((char *)regTmpFile.c_str(), 0) == 0) {
-        VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        registerUpdate();
+    if ( Remote::GetVuRegisters(0) == 0) {
+        m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
+        RegisterUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu0 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -717,26 +449,26 @@ VUFrame::OnVu0All(wxCommandEvent &WXUNUSED(event)) {
 //---------------------------------------------------------------------------
 void
 VUFrame::OnVu1All(wxCommandEvent &WXUNUSED(event)) {
-    if ( binTmpFile == "" ) {
+    if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( datTmpFile == "" ) {
+    if ( m_datTmpFile == "" ) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 1) == 0) {
-        LoadCode((char *)binTmpFile.c_str());
+    if ( Remote::GetVu(1) == 0) {
+        m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
-        LoadMemory(datTmpFile);
+        LoadMemory(m_datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu1 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
     }
 
-    if ( dumpVURegisters((char *)regTmpFile.c_str(), 1) == 0) {
-        VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        registerUpdate();
+    if ( Remote::GetVuRegisters(1) == 0) {
+        m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
+        RegisterUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu1 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -745,18 +477,18 @@ VUFrame::OnVu1All(wxCommandEvent &WXUNUSED(event)) {
 
 //---------------------------------------------------------------------------
 void VUFrame::OnVu0(wxCommandEvent &WXUNUSED(event)) {
-    if ( binTmpFile == "" ) {
+    if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( datTmpFile == "" ) {
+    if ( m_datTmpFile == "" ) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 0) == 0) {
-        LoadCode((char *)binTmpFile.c_str());
+    if ( Remote::GetVu(0) == 0) {
+        m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
-        LoadMemory(datTmpFile);
+        LoadMemory(m_datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu0 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -765,18 +497,18 @@ void VUFrame::OnVu0(wxCommandEvent &WXUNUSED(event)) {
 
 //---------------------------------------------------------------------------
 void VUFrame::OnVu1(wxCommandEvent &WXUNUSED(event)) {
-    if ( binTmpFile == "" ) {
+    if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( datTmpFile == "" ) {
+    if ( m_datTmpFile == "" ) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 1) == 0) {
-        LoadCode((char *)binTmpFile.c_str());
+    if ( Remote::GetVu(1) == 0) {
+        m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
-        LoadMemory(datTmpFile);
+        LoadMemory(m_datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu1 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -784,13 +516,13 @@ void VUFrame::OnVu1(wxCommandEvent &WXUNUSED(event)) {
 }
 
 //---------------------------------------------------------------------------
-void VUFrame::OnRegs(wxCommandEvent &WXUNUSED(event)) {
-    if ( regTmpFile == "" ) {
+void VUFrame::OnGetMiscRegs(wxCommandEvent &WXUNUSED(event)) {
+    if ( m_regTmpFile == "" ) {
         wxMessageBox("No register temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpRegisters((char *)regTmpFile.c_str()) == 0) {
-        printf("parse dma, intc, gif, vif register dump\n");
+    if ( Remote::GetMiscRegisters() == 0) {
+        // MiscRegisterPanel::UpdateMiscRegs((char *)m_regTmpFile.c_str());
     } else {
         wxMessageBox("Unable to fetch registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -798,13 +530,13 @@ void VUFrame::OnRegs(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void VUFrame::OnRegsVu0(wxCommandEvent &WXUNUSED(event)) {
-    if ( regTmpFile == "" ) {
+    if ( m_regTmpFile == "" ) {
         wxMessageBox("No register temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpVURegisters((char *)regTmpFile.c_str(), 0) == 0) {
-        VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        registerUpdate();
+    if ( Remote::GetVuRegisters(0) == 0) {
+        m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
+        RegisterUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu0 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -812,13 +544,13 @@ void VUFrame::OnRegsVu0(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void VUFrame::OnRegsVu1(wxCommandEvent &WXUNUSED(event)) {
-    if ( regTmpFile == "" ) {
+    if ( m_regTmpFile == "" ) {
         wxMessageBox("No register temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( dumpVURegisters((char *)regTmpFile.c_str(), 1) == 0) {
-        VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        registerUpdate();
+    if ( Remote::GetVuRegisters(1) == 0) {
+        m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
+        RegisterUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu1 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -826,35 +558,25 @@ void VUFrame::OnRegsVu1(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void
-VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
-    if ( gsTmpFile == "" ) {
+VUFrame::OnGsInit(wxCommandEvent &WXUNUSED(event)) {
+    if ( m_gsTmpFile == "" ) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-
-    tagInitGs[12] = yoffset<<4;
-    tagInitGs[13] = xoffset<<4;
-    tagInitGs[16] = scissorX<<16;
-    tagInitGs[17] = scissorY<<16;
-    
-    if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagInitGs, 96) != 0) {
+    if ( Remote::GsInit() != 0 ) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
     }
 }
 
 void
-VUFrame::OnCLR(wxCommandEvent &WXUNUSED(event)) {
-    if ( gsTmpFile == "" ) {
+VUFrame::OnGsClear(wxCommandEvent &WXUNUSED(event)) {
+    if ( m_gsTmpFile == "" ) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
 
-    tagClearGs[12] = ClrColor;
-    tagClearGs[20] = (((scissorY<<4)+(yoffset<<4))<<16) +
-        ((scissorX<<4)+(xoffset<<4));
-
-    if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagClearGs, 96) != 0) {
+    if ( Remote::GsSetColor() != 0 ) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
     }
@@ -867,12 +589,13 @@ void VUFrame::OnHelp(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnLoadMem(wxCommandEvent &WXUNUSED(event)) {
-    dlgOpenFile = new wxFileDialog(this, "Choose a data file");
-    if (dlgOpenFile->ShowModal() == wxID_OK &&
-        dlgOpenFile->GetFilename() != "") {
-        dataFile.Assign(dlgOpenFile->GetPath());
-        LoadMemory(dataFile);
+    wxFileDialog* dlg = new wxFileDialog(this, "Choose a data file");
+    if (dlg->ShowModal() == wxID_OK &&
+        dlg->GetFilename() != "") {
+        m_dataFile.Assign(dlg->GetPath());
+        LoadMemory(m_dataFile);
     }
+    delete dlg;
 }
 
 int
@@ -884,6 +607,8 @@ VUFrame::LoadMemory(wxFileName file) {
     if ((stat(file.GetFullPath().c_str(), &sb)) != 0 ) {
         return E_FILE_OPEN;
     }
+    // KLUDGE
+    // replace with a Vu::MemReadFromFile()
     if ((fd = fopen(file.GetFullPath().c_str(), "rb")) != NULL) {
         for(i = 0; i < MAX_VUDATA_SIZE && i < sb.st_size/16; i++) {
             uint32 x, y, z, w;
@@ -891,46 +616,46 @@ VUFrame::LoadMemory(wxFileName file) {
             fread(&y, sizeof(int32), 1, fd);
             fread(&z, sizeof(int32), 1, fd);
             fread(&w, sizeof(int32), 1, fd);
-            VUchip.dataMem[i].x = x;
-            VUchip.dataMem[i].y = y;
-            VUchip.dataMem[i].z = z;
-            VUchip.dataMem[i].w = w;
+            m_pVu1->WriteMemX(i, x);
+            m_pVu1->WriteMemY(i, y);
+            m_pVu1->WriteMemZ(i, z);
+            m_pVu1->WriteMemW(i, w);
             if ( tagShow == 0 ) {
                 if (
                     (validateRegsField(((uint64)z<<32)+w) == getNregs(((uint64)x<<32)+y))
                     && ((getFLGField(((uint64)x<<32)+y) == 0))
                    ) {
-                    VUchip.dataMem[i].gif = true;
+                    // m_pVu1->dataMem[i].gif = true;
                 } else {
-                    VUchip.dataMem[i].gif = false;
+                    // m_pVu1->dataMem[i].gif = false;
                 }
             } else {
-                VUchip.dataMem[i].gif = false;
+                // m_pVu1->dataMem[i].gif = false;
             }
         }
         fclose(fd);
-        DrawMemory();
-        txtDebug->AppendText("VU Data loaded from file: " +
+        m_pTextDebug->AppendText("VU Data loaded from file: " +
             file.GetFullPath() + "\n");
     } else {
-        txtDebugFailed(wxString("Failed to load VU Data from file: " +
-                dataFile.GetFullPath() + "\n"));
+        TextDebugFailed(wxString("Failed to load VU Data from file: " +
+                m_dataFile.GetFullPath() + "\n"));
         return E_FILE_OPEN;
     }
     return 0;
 }
 
-void VUFrame::txtDebugFailed(wxString message) {
-        txtDebug->SetDefaultStyle(wxTextAttr(wxNullColour, cWarning));
-        txtDebug->AppendText(message);
-        txtDebug->SetDefaultStyle(wxTextAttr(wxNullColour, *wxWHITE));
+void VUFrame::TextDebugFailed(wxString message) {
+        m_pTextDebug->SetDefaultStyle(wxTextAttr(wxNullColour, cWarning));
+        m_pTextDebug->AppendText(message);
+        m_pTextDebug->SetDefaultStyle(wxTextAttr(wxNullColour, *wxWHITE));
 }
 
 //---------------------------------------------------------------------------
 void VUFrame::OnSaveCode(wxCommandEvent &WXUNUSED(event)) {
-    dlgSaveFile = new wxFileDialog(this, "Choose a file");
-    if ( dlgSaveFile->ShowModal() ) {
+    wxFileDialog* m_pDlgSaveFile = new wxFileDialog(this, "Choose a file");
+    if ( m_pDlgSaveFile->ShowModal() ) {
     }
+    delete m_pDlgSaveFile;
 }
 
 void VUFrame::OnSaveState(wxCommandEvent &WXUNUSED(event)) {
@@ -939,138 +664,60 @@ void VUFrame::OnSaveState(wxCommandEvent &WXUNUSED(event)) {
 	int r;
     uint32 i;
 	// Save memory
-	if ( (fd = fopen(memStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
+	if ( (fd = fopen(m_memStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
 		for(i = 0; i < MAX_VUDATA_SIZE; i++ ) {
-			x = VUchip.dataMem[i].x;
-			y = VUchip.dataMem[i].y;
-			z = VUchip.dataMem[i].z;
-			w = VUchip.dataMem[i].w;
+            x = m_pVu1->ReadMemX(i);
+            y = m_pVu1->ReadMemY(i);
+            z = m_pVu1->ReadMemZ(i);
+            w = m_pVu1->ReadMemW(i);
 			fwrite(&x, sizeof(float), 1, fd);
 			fwrite(&y, sizeof(float), 1, fd);
 			fwrite(&z, sizeof(float), 1, fd);
 			fwrite(&w, sizeof(float), 1, fd);
 		}	
 	} else {
-		txtDebugFailed(wxString("Save vu data to file: %s failed.: " +
-			memStateFile.GetFullPath() + "\n"));
+		TextDebugFailed(wxString("Save vu data to file: %s failed.: " +
+			m_memStateFile.GetFullPath() + "\n"));
 	}
 	// Save regs
-	if ( (fd = fopen(regStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
+	if ( (fd = fopen(m_regStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
 		for(i = 0; i < 32; i++) {
-			x = VUchip.RegFloat[i].x();
-			y = VUchip.RegFloat[i].y();
-			z = VUchip.RegFloat[i].z();
-			w = VUchip.RegFloat[i].w();
+			x = m_pVu1->RegFloat[i].x();
+			y = m_pVu1->RegFloat[i].y();
+			z = m_pVu1->RegFloat[i].z();
+			w = m_pVu1->RegFloat[i].w();
 			fwrite(&x, sizeof(float), 1, fd);
 			fwrite(&y, sizeof(float), 1, fd);
 			fwrite(&z, sizeof(float), 1, fd);
 			fwrite(&w, sizeof(float), 1, fd);
 		}
 		for(i = 0; i < 16; i++) {
-			r = VUchip.RegInt[i].value();
+			r = m_pVu1->RegInt[i].value();
 			fwrite(&r, sizeof(int), 1, fd);
 		}
 	} else {
-		txtDebugFailed(wxString("Save vu registers to file: %s failed.: " +
-			regStateFile.GetFullPath() + "\n"));
+		TextDebugFailed(wxString("Save vu registers to file: %s failed.: " +
+			m_regStateFile.GetFullPath() + "\n"));
 	}
 }
 
 void
 VUFrame::OnReset(wxCommandEvent &WXUNUSED(event)) {
 	accumulatedTicks = 0;
-    VUchip.Reset();
-    InstFill();
-    DrawMemory();
+    m_pVu1->Reset();
+    m_pParser->InitCodeMem();
+    m_pTextDebug->Clear();
+    m_pTextStatus->Clear();
     DrawProgram();
-    registerUpdate();
+    RegisterUpdate();
     Status = RESET;
-    txtDebug->AppendText("Status=EMPTY\n");
-}
-
-void
-VUFrame::InstFill() {
-    unsigned int i;
-    for(i = 0; i < MAX_VUCODE_SIZE; i++) {
-        insert(strdup("nop"), strdup("loi"), strdup(""), strdup("0x0"), i);
-    }
 }
 
 
 void
 VUFrame::OnSelectCodeCell(wxCommandEvent &WXUNUSED(event)) {
-    gridCode->SetCellValue(gridCode->GetCursorRow(), 0, wxString(""));
-    gridCode->SetCellValue(gridCode->GetCursorRow(), 0, wxString(">"));
-}
-
-void
-VUFrame::OnCellChange(wxGridEvent &event) {
-    char *end_ptr;
-    int num;
-    float fnum;
-    char cNum[50];
-    wxString cell = gridMemory->GetCellValue(event.GetRow(),
-        event.GetCol());
-    num = (int)strtol(cell.c_str(), &end_ptr, 0);
-    if ( !((cell.c_str() != '\0') && (*end_ptr == '\0'))) {
-        fnum = (float)strtod(cell.c_str(), &end_ptr);
-        num = *((int *)&fnum);
-    }
-    
-    if ( (*end_ptr == '\0') ) {
-        switch (event.GetCol()) {
-            case 0:
-                VUchip.dataMem[event.GetRow()].x = num;
-                break;
-            case 1:
-                VUchip.dataMem[event.GetRow()].y = num;
-                break;
-            case 2:
-                VUchip.dataMem[event.GetRow()].z = num;
-                break;
-            case 3:
-                VUchip.dataMem[event.GetRow()].w = num;
-                break;
-        }
-    } else {
-        switch (event.GetCol()) {
-            case 0:
-                num = VUchip.dataMem[event.GetRow()].x;
-                break;
-            case 1:
-                num = VUchip.dataMem[event.GetRow()].y;
-                break;
-            case 2:
-                num = VUchip.dataMem[event.GetRow()].z;
-                break;
-            case 3:
-                num = VUchip.dataMem[event.GetRow()].w;
-                break;
-            default:
-                break;
-        }
-        // Redraw
-    }
-
-    switch(regRadioBox->GetSelection()) {
-        case 0:
-            sprintf(cNum,"%ld", (long)num);
-            break;
-        case 1:
-            sprintf(cNum,"%.4f", num/16.0f);
-            break;
-        case 2:
-            sprintf(cNum,"%.12f", num/4096.0f);
-            break;
-        case 3:
-            sprintf(cNum,"%.15f", num/32768.0f);
-            break;
-        case 4:
-            sprintf(cNum,"%f", num);
-        default:
-            break;
-    }
-    gridMemory->SetCellValue(event.GetRow(), event.GetCol(), cNum);
+    m_pGridCode->SetCellValue(m_pGridCode->GetCursorRow(), 0, wxString(""));
+    m_pGridCode->SetCellValue(m_pGridCode->GetCursorRow(), 0, wxString(">"));
 }
 
 //---------------------------------------------------------------------------
@@ -1084,165 +731,99 @@ void
 VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
     char line[255];
     char *ptr;
-	wxFileDialog *dlgOpenFile = new wxFileDialog(this, "Choose a project file");
-	if(dlgOpenFile->ShowModal() == wxID_OK) {
-        ifstream fin(dlgOpenFile->GetPath());
+	wxFileDialog *dlg= new wxFileDialog(this, "Choose a project file");
+	if(dlg->ShowModal() == wxID_OK) {
+        ifstream fin(dlg->GetPath());
         fin.getline(line, 256);
         if(strstr(line, "codefile") != 0) {
             ptr = strchr(line, '=');
-            codeFile.Assign(ptr+1);
+            m_codeFile.Assign(ptr+1);
         } else if ( strstr(line, "datafile")  != 0) {
             ptr = strchr(line, '=');
-            dataFile.Assign(ptr+1);
+            m_dataFile.Assign(ptr+1);
         }
         fin.getline(line, 256);
         if(strstr(line, "codefile") != 0) {
             ptr = strchr(line, '=');
-            codeFile.Assign(ptr+1);
+            m_codeFile.Assign(ptr+1);
         } else if ( strstr(line, "datafile")  != 0) {
             ptr = strchr(line, '=');
-            dataFile.Assign(ptr+1);
+            m_dataFile.Assign(ptr+1);
         }
         fin.close();
-        codeFile.PrependDir(dlgOpenFile->GetDirectory());
-        dataFile.PrependDir(dlgOpenFile->GetDirectory());
-        if ( LoadCode((char *)codeFile.GetFullPath().c_str()) ) {
+        m_codeFile.PrependDir(dlg->GetDirectory());
+        m_dataFile.PrependDir(dlg->GetDirectory());
+        if ( m_pParser->LoadCode((char *)m_codeFile.GetFullPath().c_str()) ) {
             Status = READY;
             DrawProgram();
-            txtDebug->AppendText(wxString("VU Code loaded from file: " +
-                    codeFile.GetFullPath() + "\n"));
+            m_pTextDebug->AppendText(wxString("VU Code loaded from file: " +
+                    m_codeFile.GetFullPath() + "\n"));
             InstuctionStatus();
         } else {
-            txtDebugFailed(wxString("Failed to load VU Code from file: " +
-                    codeFile.GetFullPath() + "\n"));
+            TextDebugFailed(wxString("Failed to load VU Code from file: " +
+                    m_codeFile.GetFullPath() + "\n"));
         }
-        LoadMemory(dataFile);
+        LoadMemory(m_dataFile);
 	}
+    delete dlg;
 }
 
 //---------------------------------------------------------------------------
 void
 VUFrame::OnLoadVIF(wxCommandEvent &WXUNUSED(event)) {
-    dlgOpenFile = new wxFileDialog(this, "Choose a VIF file");
-    dlgOpenFile->SetWildcard("*.bin");
-    if (dlgOpenFile->ShowModal() == wxID_OK) {
-        vifFile.Assign(dlgOpenFile->GetPath());
-        VIF *vif = new VIF(vifFile.GetFullPath().c_str());
-        while(!vif->eof()) {
-            vif->read();
-        }
-        DrawMemory();
+    wxFileDialog* dlg = new wxFileDialog(this, "Choose a VIF file");
+    dlg->SetWildcard("*.bin");
+    if (dlg->ShowModal() == wxID_OK) {
+        m_vifFile.Assign(dlg->GetPath());
+        m_pVif1->Open(m_vifFile.GetFullPath().c_str());
+        m_pVif1->Read();
+        m_pVif1->Close();
         DrawProgram();
     }
+    delete dlg;
+    return;
 }
 
 //---------------------------------------------------------------------------
 void
 VUFrame::OnLoadDMA(wxCommandEvent &WXUNUSED(event)) {
-    dlgOpenFile = new wxFileDialog(this, "Choose a DMA file");
-    if (dlgOpenFile->ShowModal() == wxID_OK) {
-        vifFile.Assign(dlgOpenFile->GetPath());
-        DMA *dma = new DMA(vifFile.GetFullPath().c_str());
-        while(!dma->eof()) {
-            dma->read();
-        }
+    wxFileDialog* dlg = new wxFileDialog(this, "Choose a DMA file");
+    if (dlg->ShowModal() == wxID_OK) {
+        m_vifFile.Assign(dlg->GetPath());
+        m_pDma->Open(m_vifFile.GetFullPath().c_str());
+        m_pDma->Read();
+        m_pDma->Close();
+        DrawProgram();
     }
+    delete dlg;
+    return;
 }
 
 //---------------------------------------------------------------------------
 void
 VUFrame::OnLoadCode(wxCommandEvent &WXUNUSED(event)) {
-    dlgOpenFile = new wxFileDialog(this, "Choose a code file");
-    if (dlgOpenFile->ShowModal() == wxID_OK) {
-        codeFile.Assign(dlgOpenFile->GetPath());
-        if(LoadCode((char *)dlgOpenFile->GetPath().c_str())) {
+    wxFileDialog* dlg = new wxFileDialog(this, "Choose a code file");
+    if (dlg->ShowModal() == wxID_OK) {
+        m_codeFile.Assign(dlg->GetPath());
+        if(m_pParser->LoadCode((char *)dlg->GetPath().c_str())) {
             Status = READY;
             DrawProgram();
-            txtDebug->AppendText(wxString("VU Code loaded from file: " +
-                    codeFile.GetFullPath() + "\n"));
+            m_pTextDebug->AppendText(wxString("VU Code loaded from file: " +
+                    m_codeFile.GetFullPath() + "\n"));
             InstuctionStatus();
         } else {
-            txtDebugFailed(wxString("Failed to load VU Code from file: " +
-                    codeFile.GetFullPath() + "\n"));
+            TextDebugFailed(wxString("Failed to load VU Code from file: " +
+                    m_codeFile.GetFullPath() + "\n"));
         }
     }
-}
-
-void
-VUFrame::OnNotebookOne(wxNotebookEvent &WXUNUSED(event)) {
-    // if ( event.GetOldSelection() != -1 ) {
-    //     DrawMemory();
-    // }
-}
-
-void
-VUFrame::OnMemoryRadio(wxCommandEvent &WXUNUSED(event)) {
-    DrawMemory();
-    gridMemory->ForceRefresh();
-}
-
-void
-VUFrame::OnIntRegRadio(wxCommandEvent &WXUNUSED(event)) {
-	registerUpdate();
-}
-void
-VUFrame::OnFloatRegRadio(wxCommandEvent &WXUNUSED(event)) {
-	registerUpdate();
-}
-void
-VUFrame::OnSpecRegRadio(wxCommandEvent &WXUNUSED(event)) {
-	registerUpdate();
-}
-
-void
-VUFrame::updateStatusBar(void) {
-    uint32 col = statusBarReg[1];
-    switch(statusBarReg[0]) {
-        case ID_GRIDREGINT:
-            statusBar->PushStatusText(
-                wxString::Format("Reg: VI%02d", col), 0);
-            statusBar->PushStatusText(
-                wxString::Format("Stall: %d", VUchip.RegInt[col].stall()), 1);
-            statusBar->PushStatusText(
-                wxString::Format("Last Read: %d", VUchip.RegInt[col].stall()), 2);
-            statusBar->PushStatusText(
-                wxString::Format("Last Write: %d", VUchip.RegInt[col].stall()), 3);
-            break;
-        case ID_GRIDREGFLOAT:
-            statusBar->PushStatusText(
-                wxString::Format("Reg: VF%02d", col), 0);
-            statusBar->PushStatusText(
-                wxString::Format("Stall: %d", VUchip.RegFloat[col].stall()), 1);
-            statusBar->PushStatusText(
-                wxString::Format("Last Read: %d", VUchip.RegFloat[col].stall()), 2);
-            statusBar->PushStatusText(
-                wxString::Format("Last Write: %d", VUchip.RegFloat[col].stall()), 3);
-            break;
-        case ID_GRIDREGSPECIAL:
-            statusBar->PushStatusText(
-                wxString::Format("Reg: VI%02d", col), 0);
-            statusBar->PushStatusText(
-                wxString::Format("Stall: %d", VUchip.RegInt[col].stall()), 1);
-            statusBar->PushStatusText(
-                wxString::Format("Last Read: %d", VUchip.RegInt[col].stall()), 2);
-            statusBar->PushStatusText(
-                wxString::Format("Last Write: %d", VUchip.RegInt[col].stall()), 3);
-            break;
-    }
-}
-
-void
-VUFrame::OnGridLabel(wxGridEvent &event) {
-    statusBarReg[0] = event.GetId();
-    statusBarReg[1] = event.GetCol();
-    updateStatusBar();
+    delete dlg;
 }
 
 //---------------------------------------------------------------------------
 // Various helper functions.
 //---------------------------------------------------------------------------
 void
-VUFrame::DrawParam(VUParam &p, char *a, uint32 hex) {
+VUFrame::DrawParam(VuParam &p, char *a) {
     switch (p.type) {
         case 1: //VInn
             sprintf(a,"VI%02d", p.index);
@@ -1284,22 +865,14 @@ VUFrame::DrawParam(VUParam &p, char *a, uint32 hex) {
             if(p.label[0]) {
                 sprintf(a, "%s(VI%02d)", p.label, p.index);
             } else {
-                if ( hex == 0 ) {
-                    sprintf(a, "0x%4X(VI%02d)", (uint32)p.data, p.index);
-                } else {
-                    sprintf(a, "%4d(VI%02d)", (uint32)p.data, p.index);
-                }
+                sprintf(a, "%d(VI%02d)", (uint32)p.data, p.index);
             }
             break;
         case 13: //Imm11(VI)dest
             if(p.label[0]) {
                 sprintf(a,"%s(VI%02d)%s", p.label, p.index, strlwr(p.sufix));
             } else {
-                if ( hex == 0 ) {
-                    sprintf(a,"0x%4X(VI%02d)%s", (uint32)p.data, p.index, strlwr(p.sufix));
-                } else {
-                    sprintf(a,"%4d(VI%02d)%s", (uint32)p.data, p.index, strlwr(p.sufix));
-                }
+                sprintf(a,"%d(VI%02d)%s", (uint32)p.data, p.index, strlwr(p.sufix));
             }
             break;
         case 14: //(VI)dest
@@ -1335,28 +908,28 @@ void VUFrame::DrawProgram() {
     char scode[100],param[50], auxi[50], aux2[10];
     char *flavors[]={"","i","x","y","z","w","q","A","Ai","Aq","Ax","Ay","Az","Aw"};
 
-    Previous = 0;
-    gridCode->SetCellBackgroundColour(0, 3, cCurCode);
-    gridCode->SetCellBackgroundColour(0, 4, cCurCode);
+    m_previous = 0;
+    m_pGridCode->SetCellBackgroundColour(0, 3, cCurCode);
+    m_pGridCode->SetCellBackgroundColour(0, 4, cCurCode);
     for(i = 0; i < MAX_VUCODE_SIZE; i++) {
-        gridCode->SetCellValue(i, 1, wxString("."));
-        gridCode->SetCellValue(i, 2, wxString(""));
-        gridCode->SetCellValue(i, 3, wxString(""));
-        gridCode->SetCellValue(i, 4, wxString(""));
+        m_pGridCode->SetCellValue(i, 1, wxString("."));
+        m_pGridCode->SetCellValue(i, 2, wxString(""));
+        m_pGridCode->SetCellValue(i, 3, wxString(""));
+        m_pGridCode->SetCellValue(i, 4, wxString(""));
     }
     for (i = 0; i < MAX_VUCODE_SIZE; i++,l++){
-        if(VUchip.program[i].SymbolIndex != -1) {
-            strcpy(scode,VUchip.Labels[VUchip.program[i].SymbolIndex].symb);
+        if(m_pVu1->program[i].SymbolIndex != -1) {
+            strcpy(scode,m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb);
             strcat(scode,":");
-            gridCode->SetCellValue(l++, 1, scode);
+            m_pGridCode->SetCellValue(l++, 1, scode);
         }
-        VUchip.program[i].addr = i;
-        gridCode->SetCellValue(l, 2, wxString::Format("%d",
-                VUchip.program[i].tics));
+        m_pVu1->program[i].addr = i;
+        m_pGridCode->SetCellValue(l, 2, wxString::Format("%d",
+                m_pVu1->program[i].tics));
         for(m=UPPER; m<=LOWER; m++) {
-            strcpy(auxi,Instr.Instr[VUchip.program[i].InstIndex[m]].nemot);
-            if(VUchip.program[i].flg && !m) {
-                sprintf(aux2,"[%c]",VUchip.program[i].flg);
+            strcpy(auxi,Instr.Instr[m_pVu1->program[i].InstIndex[m]].nemot);
+            if(m_pVu1->program[i].flg && !m) {
+                sprintf(aux2,"[%c]",m_pVu1->program[i].flg);
                 strcat(auxi, aux2);
             }
             k = 0;
@@ -1368,208 +941,88 @@ void VUFrame::DrawProgram() {
             if (!strcmp(auxi, "CLIPW")) {
                 strcpy(auxi,"CLIP");
             }
-            strcpy(scode,auxi);
-            if(VUchip.program[i].flavor[m])
-                strcat(scode,flavors[VUchip.program [i].flavor[m]]);
-            if(VUchip.program[i].dest[m][0]) {
+            strcpy(scode, auxi);
+            if(m_pVu1->program[i].flavor[m])
+                strcat(scode,flavors[m_pVu1->program[i].flavor[m]]);
+            if(m_pVu1->program[i].dest[m][0]) {
                 strcat(scode, ".");
-                strcpy(auxi, VUchip.program [i].dest[m]);
+                strcpy(auxi, m_pVu1->program[i].dest[m]);
                 strcat(scode, strlwr(auxi));
             }
-            for (j=0; j<Instr.Instr[VUchip.program [i].InstIndex[m]].operands; j++) {
-                DrawParam(VUchip.program [i].Params[m][j],param, codeAdressStyle);
-                strcat(scode," ");
-                strcat(scode,param);
-                if(j<Instr.Instr[VUchip.program [i].InstIndex[m]].operands-1)
+            for (j=0; j<Instr.Instr[m_pVu1->program[i].InstIndex[m]].operands; j++) {
+                DrawParam(m_pVu1->program[i].Params[m][j], param);
+                strcat(scode, " ");
+                strcat(scode, param);
+                if(j<Instr.Instr[m_pVu1->program[i].InstIndex[m]].operands-1) {
                     strcat(scode,",");
+                }
             }
-            gridCode->SetCellValue(l, 3+m, scode);
+            m_pGridCode->SetCellValue(l, 3+m, scode);
         }
     }
 }
 
 int VUFrame::LineInstruction(int a) {
-    int i,l=0;
+    int i, l = 0;
     for(i=0; i<=a; i++, l++) {
-        if(VUchip.program[i].SymbolIndex!=-1) {
+        if(m_pVu1->program[i].SymbolIndex!=-1) {
             l++;
         }
     }
     return (l);
 }
 
-void
-VUFrame::DrawMemory() {
+// TODO
+// remove in favor of vu core updating registers
+void VUFrame::RegisterUpdate() {
+    VuFloatReg* Reg;
     uint32 i;
-    char val[4][50];
-    float stuff;
-    cout << "DrawMemory" << endl;
-    for (i = 0; i < MAX_VUDATA_SIZE; i++) {
-        switch(regRadioBox->GetSelection()) {
-            case 0:
-                sprintf(val[0],"%ld", VUchip.dataMem[i].w);
-                sprintf(val[1],"%ld", VUchip.dataMem[i].z);
-                sprintf(val[2],"%ld", VUchip.dataMem[i].y);
-                sprintf(val[3],"%ld", VUchip.dataMem[i].x);
-                break;
-            case 1:
-                sprintf(val[0],"%.4f", VUchip.dataMem[i].w/16.0f);
-                sprintf(val[1],"%.4f", VUchip.dataMem[i].z/16.0f);
-                sprintf(val[2],"%.4f", VUchip.dataMem[i].y/16.0f);
-                sprintf(val[3],"%.4f", VUchip.dataMem[i].x/16.0f);
-                break;
-            case 2:
-                sprintf(val[0],"%.12f",VUchip.dataMem[i].w/4096.0f);
-                sprintf(val[1],"%.12f",VUchip.dataMem[i].z/4096.0f);
-                sprintf(val[2],"%.12f",VUchip.dataMem[i].y/4096.0f);
-                sprintf(val[3],"%.12f",VUchip.dataMem[i].x/4096.0f);
-				break;
-            case 3:
-                sprintf(val[0],"%.15f",VUchip.dataMem[i].w/32768.0f);
-                sprintf(val[1],"%.15f",VUchip.dataMem[i].z/32768.0f);
-                sprintf(val[2],"%.15f",VUchip.dataMem[i].y/32768.0f);
-                sprintf(val[3],"%.15f",VUchip.dataMem[i].x/32768.0f);
-				break;
-            case 4:
-                memcpy(&stuff,&(VUchip.dataMem[i].w),4);
-                sprintf(val[0],"%f",stuff);
-                memcpy(&stuff,&(VUchip.dataMem[i].z),4);
-                sprintf(val[1],"%f",stuff);
-                memcpy(&stuff,&(VUchip.dataMem[i].y),4);
-                sprintf(val[2],"%f",stuff);
-                memcpy(&stuff,&(VUchip.dataMem[i].x),4);
-                sprintf(val[3],"%f",stuff);
-				break;
-			case 5:
-                sprintf(val[0],"0x%08x",VUchip.dataMem[i].w);
-                sprintf(val[1],"0x%08x",VUchip.dataMem[i].z);
-                sprintf(val[2],"0x%08x",VUchip.dataMem[i].y);
-                sprintf(val[3],"0x%08x",VUchip.dataMem[i].x);
-                break;
-			default:
-				break;
-        }
-
-        gridMemory->SetCellValue(i, 3, val[0]);
-        gridMemory->SetCellValue(i, 2, val[1]);
-        gridMemory->SetCellValue(i, 1, val[2]);
-        gridMemory->SetCellValue(i, 0, val[3]);
-
-        if ( tagShow == 0 ) {
-            if ( VUchip.dataMem[i].gif ) {
-                gridMemory->SetCellBackgroundColour(i, 0, cGIFtag);
-                gridMemory->SetCellBackgroundColour(i, 1, cGIFtag);
-                gridMemory->SetCellBackgroundColour(i, 2, cGIFtag);
-                gridMemory->SetCellBackgroundColour(i, 3, cGIFtag);
-            } else {
-                gridMemory->SetCellBackgroundColour(i, 0, *wxWHITE);
-                gridMemory->SetCellBackgroundColour(i, 1, *wxWHITE);
-                gridMemory->SetCellBackgroundColour(i, 2, *wxWHITE);
-                gridMemory->SetCellBackgroundColour(i, 3, *wxWHITE);
-            }
-        }
-    }
-	VUchip.memoryUpdate = false;
-}
-void VUFrame::registerUpdate() {
-    int i, selection;
-    VFReg *Reg;
 
     for(i = 0; i < 16; i++) {
-		int intRegValue = VUchip.RegInt[i].value();
-		switch(intRegRadio->GetSelection()) {
-			case 0:
-				gridIntRegisters->SetCellValue(0, i, wxString::Format("%d",
-						VUchip.RegInt[i].value()));
-				break;
-			case 1:
-				gridIntRegisters->SetCellValue(0, i, wxString::Format("%.4f",
-						(float)VUchip.RegInt[i].value()/16));
-				break;
-			case 2:
-				gridIntRegisters->SetCellValue(0, i, wxString::Format("%.12f",
-						(float)VUchip.RegInt[i].value()/4096));
-				break;
-			case 3:
-				gridIntRegisters->SetCellValue(0, i, wxString::Format("%.12f",
-						(float)VUchip.RegInt[i].value()/32768));
-				break;
-			case 4:
-				gridIntRegisters->SetCellValue(0, i, wxString::Format("%f",
-						*((float *)&intRegValue) ));
-				break;
-			case 5:
-				gridIntRegisters->SetCellValue(0, i, wxString::Format("0x%x",
-						VUchip.RegInt[i].value()));
-				break;
-		}
-	}
-
-	selection = floatRegRadio->GetSelection();
-    for(i = 0; i < 32; i++) {
-        Reg = &VUchip.RegFloat[i];
-		gridFloatRegisters->SetCellValue(0, i,
-			floatToString(Reg->x(), selection)
-			);
-		gridFloatRegisters->SetCellValue(1, i,
-			floatToString(Reg->y(), selection)
-			);
-		gridFloatRegisters->SetCellValue(2, i,
-			floatToString(Reg->z(), selection)
-			);
-		gridFloatRegisters->SetCellValue(3, i,
-			floatToString(Reg->w(), selection)
-			);
+        m_pRegisterView->WriteInt(i, m_pVu1->RegInt[i].value());
     }
-    
-	selection = specRegRadio->GetSelection();
-    gridSpecialRegisters->SetCellValue(0, 0,
-		floatToString(VUchip.ACC.x(), selection));
-    gridSpecialRegisters->SetCellValue(1, 0,
-		floatToString(VUchip.ACC.y(), selection));
-    gridSpecialRegisters->SetCellValue(2, 0,
-		floatToString(VUchip.ACC.z(), selection));
-    gridSpecialRegisters->SetCellValue(3, 0,
-		floatToString(VUchip.ACC.w(), selection));
 
-    gridSpecialRegisters->SetCellValue(0, 1,
-		floatToString(VUchip.Q.x(), selection));
-    gridSpecialRegisters->SetCellValue(1, 1,
-		floatToString(VUchip.Q.y(), selection));
-    gridSpecialRegisters->SetCellValue(2, 1,
-		floatToString(VUchip.Q.z(), selection));
-    gridSpecialRegisters->SetCellValue(3, 1,
-		floatToString(VUchip.Q.w(), selection));
+    for(i = 0; i < 32; i++) {
+        Reg = &m_pVu1->RegFloat[i];
+        m_pRegisterView->WriteFloat(
+            i,
+            Reg->x(),
+            Reg->y(),
+            Reg->z(),
+            Reg->w()
+            );
+    }
 
-    gridSpecialRegisters->SetCellValue(0, 2,
-		floatToString(VUchip.P.x(), selection));
-    gridSpecialRegisters->SetCellValue(1, 2,
-		floatToString(VUchip.P.y(), selection));
-    gridSpecialRegisters->SetCellValue(2, 2,
-		floatToString(VUchip.P.z(), selection));
-    gridSpecialRegisters->SetCellValue(3, 2,
-		floatToString(VUchip.P.w(), selection));
-
-    gridSpecialRegisters->SetCellValue(0, 3,
-		floatToString(VUchip.R.x(), selection));
-    gridSpecialRegisters->SetCellValue(1, 3,
-		floatToString(VUchip.R.y(), selection));
-    gridSpecialRegisters->SetCellValue(2, 3,
-		floatToString(VUchip.R.z(), selection));
-    gridSpecialRegisters->SetCellValue(3, 3,
-		floatToString(VUchip.R.w(), selection));
-
-    gridSpecialRegisters->SetCellValue(0, 4,
-		floatToString(VUchip.I.x(), selection));
-    gridSpecialRegisters->SetCellValue(1, 4,
-		floatToString(VUchip.I.y(), selection));
-    gridSpecialRegisters->SetCellValue(2, 4,
-		floatToString(VUchip.I.z(), selection));
-    gridSpecialRegisters->SetCellValue(3, 4,
-		floatToString(VUchip.I.w(), selection));
-
-    // Latest register in statusbar
-    updateStatusBar();
+    m_pRegisterView->WriteAcc(
+        m_pVu1->ACC.x(),
+        m_pVu1->ACC.y(),
+        m_pVu1->ACC.z(),
+        m_pVu1->ACC.w()
+        );
+    m_pRegisterView->WriteQ(
+        m_pVu1->Q.x(),
+        m_pVu1->Q.y(),
+        m_pVu1->Q.z(),
+        m_pVu1->Q.w()
+        );
+    m_pRegisterView->WriteP(
+        m_pVu1->P.x(),
+        m_pVu1->P.y(),
+        m_pVu1->P.z(),
+        m_pVu1->P.w()
+        );
+    m_pRegisterView->WriteR(
+        m_pVu1->R.x(),
+        m_pVu1->R.y(),
+        m_pVu1->R.z(),
+        m_pVu1->R.w()
+        );
+    m_pRegisterView->WriteI(
+        m_pVu1->I.x(),
+        m_pVu1->I.y(),
+        m_pVu1->I.z(),
+        m_pVu1->I.w()
+        );
 }
 
 //---------------------------------------------------------------------------
@@ -1589,7 +1042,7 @@ VUFrame::wrapper_XGKICK(void *objPtr, int offset) {
 void
 VUFrame::wrapper_DebugWarning(void *objPtr, wxString message) {
     VUFrame *self = (VUFrame*)objPtr;
-    self->txtDebugFailed(message);
+    self->TextDebugFailed(message);
 }
 
 void
@@ -1599,55 +1052,47 @@ VUFrame::drawGIF(uint32 offset) {
     uint32 i, j;
 
     j = 0;
-    for(i = offset; i < MAX_VUDATA_SIZE; i++) {
-        memcpy(&data[j*4+0], &VUchip.dataMem[i].x, 4);
-        memcpy(&data[j*4+1], &VUchip.dataMem[i].y, 4);
-        memcpy(&data[j*4+2], &VUchip.dataMem[i].z, 4);
-        memcpy(&data[j*4+3], &VUchip.dataMem[i].w, 4);
-        j++;
-    }
+    // m_pVu1->ReadMem(&data, offset, size);
 
     if (autoGSExec == 0) {
         if (sendPrim == 0) {
-            // gsExec(gsTmpFile.c_str(), prim, size);
+            Remote::GsExec((unsigned char *)data, size);
         }
-        dumpDisplayList((char *)gsTmpFile.c_str(), data, size);
     }
 
-    GIF *gif = new GIF(data, size);
-    gif->xoffset = xoffset;
-    gif->yoffset = yoffset;
-    if ( gif->unpack() ) {
-        vector<string> v = gif->TagAsString();
+    Gif* localGif = new Gif(data, size);
+    localGif->xoffset = xoffset;
+    localGif->yoffset = yoffset;
+    if ( localGif->Unpack() ) {
+        vector<string> v = localGif->TagAsString();
         vector<string>::const_iterator it = v.begin();
         i = 0;
         while(it != v.end()) {
-            gridGIF->SetCellValue(i, 0, wxString(((string)*it).c_str()));
-            gridGIF->SetCellValue(i, 1, wxString(((string)*(it+1)).c_str()));
-            gridGIF->SetCellBackgroundColour(i, 0, cGIFtag);
-            gridGIF->SetCellBackgroundColour(i, 1, cGIFtag);
+            m_pGifPanel->SetBackgroundColour(cGIFtag);
+            m_pGifPanel->Write(
+                wxString( ((string)*it).c_str()),
+                wxString( ((string)*(it+1)).c_str() )
+                );
             it = it + 2;
             i++;
         }
         i++;
-        gridGIF->SetCellBackgroundColour(i, 0, cNloop1);
-        gridGIF->SetCellBackgroundColour(i, 1, cNloop1);
-        for(j = 0;j < gif->getNloop(); j++ ) {
-            v = gif->NloopData();
+        for(j = 0;j < localGif->GetNloop(); j++ ) {
+            v = localGif->NloopData();
             it = v.begin();
             while(it != v.end()) {
                 if (i > MAX_VUDATA_SIZE ) {
                     break;
                 }
-                gridGIF->SetCellValue(i, 0, wxString(((string)*it).c_str()));
-                gridGIF->SetCellValue(i, 1, wxString(((string)*(it+1)).c_str()));
                 if(j&0x1) {
-                    gridGIF->SetCellBackgroundColour(i, 0, cNloop1);
-                    gridGIF->SetCellBackgroundColour(i, 1, cNloop1);
+                    m_pGifPanel->SetBackgroundColour(cNloop1);
                 } else {
-                    gridGIF->SetCellBackgroundColour(i, 0, cNloop2);
-                    gridGIF->SetCellBackgroundColour(i, 1, cNloop2);
+                    m_pGifPanel->SetBackgroundColour(cNloop2);
                 }
+                m_pGifPanel->Write(
+                    wxString(((string)*it).c_str()),
+                    wxString( ((string)*(it+1)).c_str() )
+                );
                 it = it + 2;
                 i++;
             }
@@ -1656,13 +1101,16 @@ VUFrame::drawGIF(uint32 offset) {
             }
         }
     } else {
-        wxMessageBox(
-            wxString::Format("Invalid GIF Tag at offset: %d", offset),
-            "", wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(
+            wxString::Format("Invalid Gif tag at offset: %d", offset)
+            );
+        // wxMessageBox(
+        //     wxString::Format("Invalid GIF Tag at offset: %d", offset),
+        //     "", wxOK|wxICON_INFORMATION, this);
     }
 
     free(data);
-    delete gif;
+    delete localGif;
 }
 
 void
@@ -1679,22 +1127,23 @@ VUFrame::DebugTic(int mode, int error) {
         "EXIT delay slot. Instruction Finished!!"};
 
     if(error==999) {
-        wxMessageBox("End of Program", "", wxOK|wxICON_INFORMATION, this);
+        m_pLog->Trace("End of program reached\n");
+        // wxMessageBox("End of Program", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
     if(mode==2) {
-        i = LineInstruction(VUchip.PC-1);
-        sprintf(buffer, "Instruction line %d [%s][%s] completed\n",VUchip.PC,
-            gridCode->GetCellValue(i, 3).c_str(),
-            gridCode->GetCellValue(i, 4).c_str());
-        txtDebug->AppendText(buffer);
+        i = LineInstruction(m_pVu1->PC-1);
+        sprintf(buffer, "Instruction line %d [%s][%s] completed\n",m_pVu1->PC,
+            m_pGridCode->GetCellValue(i, 3).c_str(),
+            m_pGridCode->GetCellValue(i, 4).c_str());
+        m_pTextDebug->AppendText(buffer);
     } else {
-        i = LineInstruction(VUchip.PC);
-        sprintf(buffer, "Executing instruction line %d %s [%s]\n", VUchip.PC,
-            modedef[mode], gridCode->GetCellValue(i, 3+mode).c_str());
-        txtDebug->AppendText(buffer);
+        i = LineInstruction(m_pVu1->PC);
+        sprintf(buffer, "Executing instruction line %d %s [%s]\n", m_pVu1->PC,
+            modedef[mode], m_pGridCode->GetCellValue(i, 3+mode).c_str());
+        m_pTextDebug->AppendText(buffer);
         sprintf(buffer,"Result: %s\n",succes[error]);
-        txtDebug->AppendText(buffer);
+        m_pTextDebug->AppendText(buffer);
     }
 }
 
@@ -1703,36 +1152,36 @@ VUFrame::DebugTic(int mode, int error) {
 void
 VUFrame::FlagsUpdate() {
     char data[100];
-    sprintf (data,"%06ld",iToBin(VUchip.ClipFlag[3]));
+    sprintf (data,"%06ld",iToBin(m_pVu1->ClipFlag[3]));
     clip3->SetValue(data);
-    sprintf (data,"%06ld",iToBin(VUchip.ClipFlag[2]));
+    sprintf (data,"%06ld",iToBin(m_pVu1->ClipFlag[2]));
     clip2->SetValue(data);
-    sprintf (data,"%06ld",iToBin(VUchip.ClipFlag[1]));
+    sprintf (data,"%06ld",iToBin(m_pVu1->ClipFlag[1]));
     clip1->SetValue(data);
-    sprintf (data,"%06ld",iToBin(VUchip.ClipFlag[0]));
+    sprintf (data,"%06ld",iToBin(m_pVu1->ClipFlag[0]));
     clip0->SetValue(data);
 
-    sprintf (data,"%04ld",iToBin(VUchip.MacZ));
+    sprintf (data,"%04ld",iToBin(m_pVu1->MacZ));
     MZf->SetValue(data);
-    sprintf (data,"%04ld",iToBin(VUchip.MacS));
+    sprintf (data,"%04ld",iToBin(m_pVu1->MacS));
     MSf->SetValue(data);
-    sprintf (data,"%04ld",iToBin(VUchip.MacU));
+    sprintf (data,"%04ld",iToBin(m_pVu1->MacU));
     MUf->SetValue(data);
-    sprintf (data,"%04ld",iToBin(VUchip.MacO));
+    sprintf (data,"%04ld",iToBin(m_pVu1->MacO));
     MOf->SetValue(data);
 
-    fz->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 1)));
-    fs->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 2)/2));
-    fu->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 4)/4));
-    fo->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 8)/8));
-    fi->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 16)/16));
-    fd->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 32)/32));
-    fzs->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 64)/64));
-    fss->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 128)/128));
-    fus->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 256)/256));
-    fos->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 512)/512));
-    fis->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 1024)/1024));
-    fds->SetValue(wxString::Format("%d\n", (VUchip.StatusFlag & 2048)/2048));
+    fz->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 1)));
+    fs->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 2)/2));
+    fu->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 4)/4));
+    fo->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 8)/8));
+    fi->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 16)/16));
+    fd->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 32)/32));
+    fzs->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 64)/64));
+    fss->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 128)/128));
+    fus->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 256)/256));
+    fos->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 512)/512));
+    fis->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 1024)/1024));
+    fds->SetValue(wxString::Format("%d\n", (m_pVu1->StatusFlag & 2048)/2048));
 }
 
 //---------------------------------------------------------------------------
@@ -1745,86 +1194,94 @@ void VUFrame::InstuctionStatus() {
         return;
     }
 
-    i = LineInstruction(VUchip.PC);
-    txtStatus->Clear();
-    txtStatus->AppendText("------------------------\n");
-    txtStatus->AppendText("    Instrucion UPPER    \n");
-    txtStatus->AppendText("------------------------\n");
-    sprintf(data," [%s] ", gridCode->GetCellValue(i, 3).c_str());
-    txtStatus->AppendText(data);
-    txtStatus->AppendText("Can be executed...\n");
-    j=Instr.Instr[VUchip.program[VUchip.PC].InstIndex[0]].lastthr[VUchip.program[VUchip.PC].flavor[0]];
+    i = LineInstruction(m_pVu1->PC);
+    m_pTextStatus->Clear();
+    m_pTextStatus->AppendText("------------------------\n");
+    m_pTextStatus->AppendText("    Instrucion UPPER    \n");
+    m_pTextStatus->AppendText("------------------------\n");
+    sprintf(data," [%s] ", m_pGridCode->GetCellValue(i, 3).c_str());
+    m_pTextStatus->AppendText(data);
+    m_pTextStatus->AppendText("Can be executed...\n");
+    j=Instr.Instr[m_pVu1->program[m_pVu1->PC].InstIndex[0]].lastthr[m_pVu1->program[m_pVu1->PC].flavor[0]];
     if(j>1) {
         sprintf(data,"After %d cycles",j-1);
     } else {
         sprintf(data,"Inmediatly");
     }
-    txtStatus->AppendText(data);
-    txtStatus->AppendText("\n");
-    txtStatus->AppendText("------------------------\n");
-    txtStatus->AppendText("    Instrucion LOWER    \n");
-    txtStatus->AppendText("------------------------\n");
-    sprintf(data," [%s] ", gridCode->GetCellValue(i, 4).c_str());
-    txtStatus->AppendText(data);
-    txtStatus->AppendText("Can be executed...");
-    j=Instr.Instr[VUchip.program[VUchip.PC].InstIndex[1]].lastthr[VUchip.program[VUchip.PC].flavor[1]];
+    m_pTextStatus->AppendText(data);
+    m_pTextStatus->AppendText("\n");
+    m_pTextStatus->AppendText("------------------------\n");
+    m_pTextStatus->AppendText("    Instrucion LOWER    \n");
+    m_pTextStatus->AppendText("------------------------\n");
+    sprintf(data," [%s] ", m_pGridCode->GetCellValue(i, 4).c_str());
+    m_pTextStatus->AppendText(data);
+    m_pTextStatus->AppendText("Can be executed...");
+    j=Instr.Instr[m_pVu1->program[m_pVu1->PC].InstIndex[1]].lastthr[m_pVu1->program[m_pVu1->PC].flavor[1]];
     if(j>1) {
         sprintf(data,"After %d cycles\n",j-1);
     } else {
         sprintf(data,"Inmediately\n");
     }
-    txtStatus->AppendText(data);
-    txtStatus->AppendText("\n");
-    txtStatus->AppendText("NOTE: Information is regarding instruction throughput.\n");
-    txtStatus->AppendText("Other issues such Register STALL may occur.\n");
+    m_pTextStatus->AppendText(data);
+    m_pTextStatus->AppendText("\n");
+    m_pTextStatus->AppendText("NOTE: Information is regarding instruction throughput.\n");
+    m_pTextStatus->AppendText("Other issues such Register STALL may occur.\n");
 }
 
 void
-VUFrame::buildToolbar(void) {
-    // toolbar = CreateToolBar(wxTB_TEXT|wxTB_FLAT);
-    menuBar = new wxMenuBar;
-    menuFile = new wxMenu;
-    menuTools = new wxMenu;
-    menuOptions = new wxMenu;
-    menuHelp = new wxMenu;
-    menuRemote = new wxMenu;
+VUFrame::BuildToolbar(void) {
+    m_pMenuBar = new wxMenuBar;
+    m_pMenuFile = new wxMenu;
+    m_pMenuTools = new wxMenu;
+    m_pMenuOptions = new wxMenu;
+    m_pMenuHelp = new wxMenu;
+    m_pMenuRemote = new wxMenu;
 
-    menuFile->Append(ID_FILE_LOADCODE,  "&Load code\tCtrl-l");
-    menuFile->Append(ID_FILE_LOADMEM,   "&Load mem\tCtrl-m");
-    menuFile->Append(ID_FILE_LOADPROJECT,   "&Load project\tCtrl-p");
-    menuFile->Append(ID_FILE_LOADVIF,   "&Load VIF data");
-    menuFile->Append(ID_FILE_LOADDMA,   "&Load DMA data");
-    menuFile->Append(ID_FILE_SAVESTATE,  "&Save state");
-    menuFile->Append(ID_FILE_QUIT,      "&Exit\tCtrl-q");
+    m_pMenuFile->Append(ID_FILE_LOADCODE,   "&Load code\tCtrl-l");
+    m_pMenuFile->Append(ID_FILE_LOADMEM,    "&Load mem\tCtrl-m");
+    m_pMenuFile->Append(ID_FILE_LOADPROJECT,"&Load project\tCtrl-p");
+    m_pMenuFile->AppendSeparator();
+    m_pMenuFile->Append(ID_FILE_LOADVIF,    "&Load VIF data");
+    m_pMenuFile->Append(ID_FILE_LOADDMA,    "&Load DMA data");
+    m_pMenuFile->AppendSeparator();
+    m_pMenuFile->Append(ID_FILE_SAVESTATE,  "&Save state");
+    m_pMenuFile->Append(ID_FILE_QUIT,       "&Exit\tCtrl-q");
 
-    menuTools->Append(ID_TOOL_RESET,    "Reset\tF1");
-    menuTools->Append(ID_TOOL_RESTART,  "Restart\tF2");
-    menuTools->Append(ID_TOOL_STEP,     "Step\tF3");
-    menuTools->Append(ID_TOOL_RUN,      "Run\tF4");
-    // menuTools->Append(ID_TOOL_CLEARMEM,      "Clear Memory");
-    // menuTools->Append(ID_TOOL_CLEARCODE,     "Clear Code");
+    m_pMenuTools->Append(ID_TOOL_RESET,    "Reset\tF1");
+    m_pMenuTools->Append(ID_TOOL_RESTART,  "Restart\tF2");
+    m_pMenuTools->Append(ID_TOOL_STEP,     "Step\tF3");
+    m_pMenuTools->Append(ID_TOOL_RUN,      "Run\tF4");
+    // m_pMenuTools->Append(ID_TOOL_CLEARMEM,      "Clear Memory");
+    // m_pMenuTools->Append(ID_TOOL_CLEARCODE,     "Clear Code");
 
-    menuOptions->Append(ID_OPTION_SETTINGS, "Preferences\tCtrl-p");
-    // menuOptions->Append(ID_OPTION_CLEARMEM,      "Always clear memory on reset");
-    // menuOptions->Append(ID_OPTION_CLEARCODE,     "Always clear registers on reset");
-    // menuOptions->Append(ID_OPTION_HIDE_PANEL3, "Hide right panel");
-    // menuOptions->Append(ID_OPTION_HIDE_PANEL2, "Hide bottom panel");
+    m_pMenuOptions->Append(ID_OPTION_SETTINGS,  "Preferences\tCtrl-p");
+    m_pMenuOptions->AppendSeparator();
+    m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_DMA, "Trace DMA", "DMA");
+    m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_GIF, "Trace GIF", "GIF");
+    m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_VIF, "Trace VIF", "VIF");
+    m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_VU,  "Trace VU", "VU");
+    // m_pMenuOptions->Append(ID_OPTION_CLEARMEM,   "Always clear memory on reset");
+    // m_pMenuOptions->Append(ID_OPTION_CLEARCODE,  "Always clear registers on reset");
+    // m_pMenuOptions->Append(ID_OPTION_HIDE_PANEL3, "Hide right panel");
+    // m_pMenuOptions->Append(ID_OPTION_HIDE_PANEL2, "Hide bottom panel");
     
-    menuRemote->Append(ID_REMOTE_VU0,       "Get VPU0 content\tF7");
-    menuRemote->Append(ID_REMOTE_VU1,       "Get VPU1 content\tF8");
-    menuRemote->Append(ID_REMOTE_REGSVU0,   "Get VPU0 Registers\tF9");
-    menuRemote->Append(ID_REMOTE_REGSVU1,   "Get VPU1 Registers\tF10");
-    menuRemote->Append(ID_REMOTE_REGS,      "Get misc registers\tF11");
-    menuRemote->Append(ID_REMOTE_GSINIT,    "Init GS on PS2\tF12");
-    menuRemote->Append(ID_REMOTE_VU0ALL,    "Get VPU0 Code, Memory and Registers\tCtrl-0");
-    menuRemote->Append(ID_REMOTE_VU1ALL,    "Get VPU1 Code, Memory and Registers\tCtrl-1");
-    menuRemote->Append(ID_REMOTE_CLR,       "Clear screen");
+    m_pMenuRemote->Append(ID_REMOTE_VU0,    "Get VPU0 content\tF7");
+    m_pMenuRemote->Append(ID_REMOTE_VU1,    "Get VPU1 content\tF8");
+    m_pMenuRemote->Append(ID_REMOTE_REGSVU0,"Get VPU0 Registers\tF9");
+    m_pMenuRemote->Append(ID_REMOTE_REGSVU1,"Get VPU1 Registers\tF10");
+    m_pMenuRemote->Append(ID_REMOTE_VU0ALL, "Get VPU0 content and registers\tF11");
+    m_pMenuRemote->Append(ID_REMOTE_VU1ALL, "Get VPU1 content and registers\tF12");
+    m_pMenuRemote->AppendSeparator();
+    m_pMenuRemote->Append(ID_REMOTE_REGS,   "Get misc registers\tCtrl-0");
+    m_pMenuRemote->AppendSeparator();
+    m_pMenuRemote->Append(ID_REMOTE_GSINIT, "Init GS on PS2");
+    m_pMenuRemote->Append(ID_REMOTE_CLR,    "Clear screen");
 
-    menuBar->Append(menuFile,   "&File");
-    menuBar->Append(menuTools,  "&Tools");
-    menuBar->Append(menuRemote, "&Remote");
-    menuBar->Append(menuOptions,"&Options");
-    SetMenuBar(menuBar);
+    m_pMenuBar->Append(m_pMenuFile,     "&File");
+    m_pMenuBar->Append(m_pMenuTools,    "&Tools");
+    m_pMenuBar->Append(m_pMenuRemote,   "&Remote");
+    m_pMenuBar->Append(m_pMenuOptions,  "&Options");
+    SetMenuBar(m_pMenuBar);
 }
 
 VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
@@ -1833,108 +1290,152 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 #ifdef WIN32
 #undef GetCharWidth
 #endif
-    charWidth = wxWindow::GetCharWidth();
+    m_charWidth = wxWindow::GetCharWidth();
+    m_pGridCode = NULL;
 
-    gridCode = NULL;
+    // setup all state machines
 
     SetSettings();
     // Toolbar
-    buildToolbar();
+    BuildToolbar();
 
     // Splitters
-	wxSplitterWindow    *hzsplit = new wxSplitterWindow(this, -1, wxPoint(0, 0),
+	wxSplitterWindow    *m_hzSplit = new wxSplitterWindow(this, -1, wxPoint(0, 0),
         wxDefaultSize, wxSP_3D);;
-    wxSplitterWindow    *vertsplit = new wxSplitterWindow(hzsplit, -1,
+    wxSplitterWindow    *vertsplit = new wxSplitterWindow(m_hzSplit, -1,
         wxPoint(0, 0), wxDefaultSize, wxSP_3D);
 
     // Left notebook
-    left_book = new wxNotebook(vertsplit, ID_NOTEBOOK1, wxDefaultPosition,
+    m_pLeftBook = new wxNotebook(vertsplit, ID_NOTEBOOK1, wxDefaultPosition,
         wxDefaultSize); 
-    buildCodeTable(left_book);
-    buildGIFTable(left_book);
-    buildMiscRegistersTable(left_book);
-    left_book->AddPage(gridCode, "Code", TRUE, -1);
-    left_book->AddPage(buildMemoryTable(left_book), "Memory", FALSE, -1);
-    left_book->AddPage(gridGIF, "GIF output", FALSE, -1);
-    left_book->AddPage(panelMiscRegisters, "Misc. Registers", FALSE, -1);
-    left_book->Show(TRUE);
+    buildCodeTable(m_pLeftBook);
+    m_pLeftBook->AddPage(m_pGridCode, "Code", TRUE, -1);
+    m_pMemoryPanel = new MemoryPanel(
+        m_pLeftBook, -1, wxDefaultPosition, wxDefaultSize,
+        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER,
+        MAX_VUDATA_SIZE
+        );
+    m_pLeftBook->AddPage(m_pMemoryPanel, "Memory", FALSE, -1);
+    m_pGifPanel = new GifOutputPanel(
+        m_pLeftBook, -1, wxDefaultPosition, wxDefaultSize,
+        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER
+        );
+    m_pLeftBook->AddPage(m_pGifPanel, "GIF output", FALSE, -1);
+
+    m_pLeftBook->AddPage(new MiscRegisterPanel(
+            m_pLeftBook, -1, wxDefaultPosition, wxDefaultSize,
+            wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER), 
+        "Misc. Registers", FALSE, -1);
+    m_pLeftBook->Show(TRUE);
 
     // Right notebook
-    right_book = new wxNotebook(vertsplit, -1, wxDefaultPosition,
+    m_pRightBook = new wxNotebook(vertsplit, -1, wxDefaultPosition,
         wxDefaultSize);
 
-    txtDebug = new wxTextCtrl(right_book, ID_TEXT_DEBUG, wxString(""),
+    m_pTextDebug = new wxTextCtrl(m_pRightBook, ID_TEXT_DEBUG, wxString(""),
         wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
-    right_book->AddPage(txtDebug, "Debug", FALSE, -1);
+    m_pRightBook->AddPage(m_pTextDebug, "Debug", FALSE, -1);
  
-    txtStatus = new wxTextCtrl(right_book, ID_TEXT_STATUS, wxString(""),
+    m_pTextStatus = new wxTextCtrl(m_pRightBook, ID_TEXT_STATUS, wxString(""),
         wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
-    right_book->AddPage(txtStatus, "Instruction Status", FALSE, -1);
-    buildFlagsPanel(right_book);
-    right_book->AddPage(flagsDetail, "Flags", FALSE, -1);
+    m_pRightBook->AddPage(m_pTextStatus, "Instruction Status", FALSE, -1);
+    buildFlagsPanel(m_pRightBook);
+    m_pRightBook->AddPage(m_pFlagsDetail, "Flags", FALSE, -1);
 
     vertsplit->SetMinimumPaneSize(100);
-    vertsplit->SplitVertically(left_book, right_book, 550);
+    vertsplit->SplitVertically(m_pLeftBook, m_pRightBook, 550);
 
     // bottom tabs
-    down_book = new wxNotebook(
-        hzsplit, -1, wxDefaultPosition, wxDefaultSize);
-    buildRegisterGrid(down_book);
-    down_book->AddPage(intRegPanel, "Integer registers", TRUE, -1);
-    down_book->AddPage(floatRegPanel, "Float registers", FALSE, -1);
-    down_book->AddPage(specRegPanel, "Special registers", FALSE, -1);
-    hzsplit->SetMinimumPaneSize(100);
-    hzsplit->SplitHorizontally(vertsplit, down_book, 380);
+    m_pRegisterView = new VuRegisterPanel(
+        m_hzSplit, -1, wxDefaultPosition, wxDefaultSize,
+        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER
+        );
+    m_hzSplit->SetMinimumPaneSize(100);
+    m_hzSplit->SplitHorizontally(vertsplit, m_pRegisterView, 380);
 
-	static const int widths[] = {-1, 6*charWidth, 6*charWidth, 6*charWidth,
-        6*charWidth };
+	static const int widths[] = {-1, 6*m_charWidth, 6*m_charWidth, 6*m_charWidth,
+        6*m_charWidth };
 	CreateStatusBar(WXSIZEOF(widths), wxST_SIZEGRIP, ID_STATUSBAR);
-    statusBar = GetStatusBar();
+    m_pStatusBar = GetStatusBar();
 
+    // Init vu core
+    m_pVu1      = new Vu(VPU_1, m_pMemoryPanel);
+    m_pParser   = new Parser(m_pVu1);
+    m_pVu1->m_pVuRegisterPanel = m_pRegisterView;
+
+    m_pGif      = new Gif();
+    m_pVif1     = new Vif1(m_pParser, m_pVu1);
+    m_pDma      = new Dma();
+    remoteDma   = new Dma();
+    // m_pVif1     = new Vif1();
+    // m_pVif0     = new Vif0();
+    m_pDma->SetVif1(m_pVif1);
+    m_pLog      = Log::Instance();
+    m_pLog->SetTextCtrl(m_pTextDebug);
 
     // ok gui is up, lets load the mnemonics
-	if (mnemonicFile.GetFullPath() == "") {	
-		mnemonicFile.Assign("instructions.txt");
+	if (m_mnemonicFile.GetFullPath() == "") {	
+		m_mnemonicFile.Assign("instructions.txt");
 	}
-	if (!LoadInstructions((char *)mnemonicFile.GetFullPath().c_str())) {
-		wxMessageBox("Failed to load instructions", "",
-			wxOK|wxICON_INFORMATION, this);
-		dlgOpenFile = new wxFileDialog(this, "Open instructions.txt file");
-		if (dlgOpenFile->ShowModal() == wxID_OK &&
-			dlgOpenFile->GetFilename() != "") {
-			mnemonicFile.Assign(dlgOpenFile->GetPath());
-			if(!LoadInstructions((char *)mnemonicFile.GetFullPath().c_str())) {
-				wxMessageBox("Failed to load instructions, Exiting", "",
-					wxOK|wxICON_INFORMATION, this);
+	if (!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
+        m_pLog->Error("Failed to load instructions");
+        // wxMessageBox("Failed to load instructions", "",
+        //     wxOK|wxICON_INFORMATION, this);
+		wxFileDialog* dlg = new wxFileDialog(this, "Open instructions.txt file");
+		if (dlg->ShowModal() == wxID_OK &&
+			dlg->GetFilename() != "") {
+			m_mnemonicFile.Assign(dlg->GetPath());
+			if(!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
+                m_pLog->Error("Failed to load instructions, Exiting");
+                // wxMessageBox("Failed to load instructions, Exiting", "",
+                //     wxOK|wxICON_INFORMATION, this);
 				Close(TRUE);
 			}
 		}
 	}
 
-    VUchip.Reset();
-    InstFill();
-	registerUpdate();
+    m_pVu1->Reset();
+    m_pParser->InitCodeMem();
+	RegisterUpdate();
     if ( autoLoadLast == 0 ) {
-        if ( dataFile.GetFullPath() != "" ) {
+        if ( m_dataFile.GetFullPath() != "" ) {
             Status = READY;
-            LoadMemory(dataFile);
+            LoadMemory(m_dataFile);
         }
-        if ( codeFile.GetFullPath() != "" ) {
+        if ( m_codeFile.GetFullPath() != "" ) {
             Status = READY;
-            LoadCode((char *)codeFile.GetFullPath().c_str());
-            DrawProgram();
+            m_pParser->LoadCode((char *)m_codeFile.GetFullPath().c_str());
         }
     } else {
-        codeFile.Assign("");
-        dataFile.Assign("");
+        m_codeFile.Assign("");
+        m_dataFile.Assign("");
     }
+    DrawProgram();
 }
 
 bool VUemu::OnInit() {
-    ms_pFrame = new VUFrame("VU Emu", wxPoint(50, 50), wxSize(800, 600));
+    ms_pFrame = new VUFrame("VU Emu", wxPoint(10, 10), wxSize(800, 600));
     ms_pFrame->Show(TRUE);
     SetTopWindow(ms_pFrame);
     return TRUE;
+}
+
+void
+VUFrame::OnOptionTraceDma(wxCommandEvent &event) {
+    m_pDma->Trace(event.IsChecked());
+}
+void
+VUFrame::OnOptionTraceGif(wxCommandEvent &event) {
+    m_pGif->Trace(event.IsChecked());
+}
+void
+VUFrame::OnOptionTraceVif(wxCommandEvent &event) {
+    // m_pVif0->Trace(event.IsChecked());
+    m_pVif1->Trace(event.IsChecked());
+}
+void
+VUFrame::OnOptionTraceVu(wxCommandEvent &event) {
+    m_pVu1->Trace(event.IsChecked());
 }
 
 uint32

@@ -4,7 +4,9 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
+
 #include "vu.h"
+#include "MicroCode.h"
 
 extern MicroCode Instr;
 
@@ -13,7 +15,7 @@ extern MicroCode Instr;
 //1 - 3 stall on param #
 //4 warning P used before fixed (use waitp)
 //5 warning q used before fixed (use waitq)
-int VU::VU_ABS(VUInstruction &A)
+int Vu::VU_ABS(VuInstruction &A)
 {
     int st1;
     char dst[50];
@@ -48,10 +50,10 @@ int VU::VU_ABS(VUInstruction &A)
 }
 
 int
-VU::VU_ADD(VUInstruction &A) {
+Vu::VU_ADD(VuInstruction &A) {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1 = Stalling(A.Params[0][1]);
@@ -103,9 +105,9 @@ VU::VU_ADD(VUInstruction &A) {
             p3 = &I;
             break;
         case 9:
-            p1=&ACC;
-            p2=&(RegFloat[A.Params[0][1].index]);
-            p3=&Q;
+            p1 = &ACC;
+            p2 = &(RegFloat[A.Params[0][1].index]);
+            p3 = &Q;
             break;
     }
 
@@ -181,7 +183,7 @@ VU::VU_ADD(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_CLIPW(VUInstruction &A)
+int Vu::VU_CLIPW(VuInstruction &A)
 {
     int st0, st1;
     char dst[50];
@@ -221,7 +223,7 @@ int VU::VU_CLIPW(VUInstruction &A)
 }
 
 int
-VU::VU_FTOI(VUInstruction &A, int point) {
+Vu::VU_FTOI(VuInstruction &A, int point) {
     int st1;
     char dst[50];
 
@@ -254,7 +256,7 @@ VU::VU_FTOI(VUInstruction &A, int point) {
     return 0;
 }
 
-int VU::VU_ITOF(VUInstruction &A, int point)
+int Vu::VU_ITOF(VuInstruction &A, int point)
 {
     int st1, dx, dy, dz, dw;
     char dst[50];
@@ -290,11 +292,11 @@ int VU::VU_ITOF(VUInstruction &A, int point)
     return 0;
 }
 
-int VU::VU_MADD(VUInstruction &A)
+int Vu::VU_MADD(VuInstruction &A)
 {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1=Stalling(A.Params[0][1]);
@@ -420,11 +422,11 @@ int VU::VU_MADD(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MAX(VUInstruction &A)
+int Vu::VU_MAX(VuInstruction &A)
 {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1=Stalling(A.Params[0][1]);
@@ -545,11 +547,11 @@ int VU::VU_MAX(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MIN(VUInstruction &A)
+int Vu::VU_MIN(VuInstruction &A)
 {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1 = Stalling(A.Params[0][1]);
@@ -672,11 +674,11 @@ int VU::VU_MIN(VUInstruction &A)
 }
 
 
-int VU::VU_MSUB(VUInstruction &A)
+int Vu::VU_MSUB(VuInstruction &A)
 {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1=Stalling(A.Params[0][1]);
@@ -807,11 +809,11 @@ int VU::VU_MSUB(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MUL(VUInstruction &A)
+int Vu::VU_MUL(VuInstruction &A)
 {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1 = Stalling(A.Params[0][1]);
@@ -951,12 +953,12 @@ int VU::VU_MUL(VUInstruction &A)
 }
 
 int
-VU::VU_NOP(void) {
+Vu::VU_NOP(void) {
     return 0;
 }
 
 int
-VU::VU_OPMULA(VUInstruction &A) {
+Vu::VU_OPMULA(VuInstruction &A) {
     int st1, st2;
     char dst[50];
 
@@ -995,7 +997,7 @@ VU::VU_OPMULA(VUInstruction &A) {
 }
 
 int
-VU::VU_OPMSUB(VUInstruction &A) {
+Vu::VU_OPMSUB(VuInstruction &A) {
     int st1, st2, st3;
     char dst[50];
 
@@ -1031,11 +1033,11 @@ VU::VU_OPMSUB(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_SUB(VUInstruction &A)
+int Vu::VU_SUB(VuInstruction &A)
 {
     int st1,st2;
     char dst[50];
-    VFReg *p1, *p2, *p3;
+    VuFloatReg *p1, *p2, *p3;
     float x,y,z,w;
 
     st1 = Stalling(A.Params[0][1]);

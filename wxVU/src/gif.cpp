@@ -118,10 +118,12 @@ static const string tDIR[2] = {
     "GS to EE"
 };
 
-GIF::GIF() : SubSystem(GIFnREGISTERS) {
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+
+Gif::Gif() : SubSystem(GIFnREGISTERS) {
 }
 
-GIF::GIF(uint32 *data, uint32 size) : SubSystem(GIFnREGISTERS) {
+Gif::Gif(uint32 *data, uint32 size) : SubSystem(GIFnREGISTERS) {
     uint32 i;
     for(i = 0; i < size/16; i++) {
         gifData[i].x = data[i*4+0];
@@ -138,20 +140,28 @@ GIF::GIF(uint32 *data, uint32 size) : SubSystem(GIFnREGISTERS) {
     REGISTERS = new uint32[GIFnREGISTERS];
 }
 
+void
+Gif::SetRegisters(uint32 *data, uint32 size) {
+    uint32 i;
+    for(i = 0; i < size/8; i++) {
+        REGISTERS[i] = *(data++);
+    }
+}
+
 bool
-GIF::unpack() {
-    unpackNloop();
-    unpackNreg();
-    unpackFlag();
-    unpackPre();
-    unpackPrim();
-    unpackRegisters();
+Gif::Unpack() {
+    UnpackNloop();
+    UnpackNreg();
+    UnpackFlag();
+    UnpackPre();
+    UnpackPrim();
+    UnpackRegisters();
     counter = counter + 1;
-    return validate();
+    return Validate();
 }
 
 void
-GIF::unpackRegisters(void) {
+Gif::UnpackRegisters(void) {
 	uint32 i;
     uint64 regs = ((uint64)gifData[counter].w<<32)+(uint64)gifData[counter].z;
     for(i = 0; i < 16; i++) {
@@ -164,7 +174,7 @@ GIF::unpackRegisters(void) {
 }
 
 bool
-GIF::validate(void) {
+Gif::Validate(void) {
     uint32 i;
     if (nloop > 1024) {
         return false;
@@ -182,7 +192,7 @@ GIF::validate(void) {
 }
 
 vector<string>
-GIF::NloopData() {
+Gif::NloopData() {
     string tag;
     vector<string> v;
     uint32 i;
@@ -290,7 +300,7 @@ GIF::NloopData() {
 }
 
 string
-GIF::getReadableTag() {
+Gif::GetReadableTag() {
     string tag;
     uint32 i;
     char x[32], y[32], z[32], w[32];
@@ -312,7 +322,7 @@ GIF::getReadableTag() {
 }
 
 string
-GIF::RegsAsString(void) {
+Gif::RegsAsString(void) {
     string regs;
     uint32 i;
     for(i = 0; i < nreg; i++) {
@@ -322,54 +332,59 @@ GIF::RegsAsString(void) {
 }
 
 uint32
-GIF::getNreg(void) {
+Gif::GetNreg(void) {
     return nreg;
 }
 
 uint32
-GIF::getNloop(void) {
+Gif::GetNloop(void) {
     return nloop;
 }
 
+/////////////////////////////// PRIVATE    ///////////////////////////////////
+// void
+// Gif::Init(void) {
+// }
+
 void
-GIF::unpackFlag(void) {
+Gif::UnpackFlag(void) {
     flag = ((gifData[counter].y>>26)&0x3);
     cout << "flag: " << flag << endl;
 }
 
 void
-GIF::unpackPrim(void) {
+Gif::UnpackPrim(void) {
     prim = ((gifData[counter].y>>15)&0x3ff);
     cout << "prim: " << prim << endl;
 }
 
 void
-GIF::unpackPre(void) {
+Gif::UnpackPre(void) {
     pre = ((gifData[counter].y>>14)&0x1);
     cout << "pre: " << pre << endl;
 }
 
 void
-GIF::unpackEop(void) {
+Gif::UnpackEop(void) {
     eop = ((gifData[counter].x>>15)&0x1);
 }
 
 void
-GIF::unpackNloop(void) {
+Gif::UnpackNloop(void) {
    nloop = (gifData[counter].x&0x7FFF);
    curNloop = nloop;
    cout << "curNloop: " << curNloop << endl;
 }
 
 void
-GIF::unpackNreg(void) {
+Gif::UnpackNreg(void) {
     nreg = ((gifData[counter].y>>28));
     curNreg = nreg;
     cout << "curNreg: " << curNreg << endl;
 }
 
 vector<string>
-GIF::TagAsString(void) {
+Gif::TagAsString(void) {
     string reg;
     vector<string> v;
     char val[100];
@@ -401,7 +416,7 @@ GIF::TagAsString(void) {
     // prim
     v.push_back((string)tGIFTag[3]);
     // v.push_back("");
-    parsePRIM(v);
+    ParsePrim(v);
 
     v.push_back((string)tGIFTag[4]);
     sprintf(val, "%d", pre);
@@ -418,7 +433,7 @@ GIF::TagAsString(void) {
 }
 
 void
-GIF::parsePRIM(vector<string> &v) {
+Gif::ParsePrim(vector<string> &v) {
     v.push_back((string)tPRIM[prim&0x7]);
     v.push_back("");
     v.push_back(tIIP[(prim&0x8)>>3]);
@@ -438,32 +453,32 @@ GIF::parsePRIM(vector<string> &v) {
     v.push_back((string)tFIX[(prim&0x400)>>10]);
 }
 
-vector<string>
-GIF::getRegisterText(const int reg) {
+const vector<string>
+Gif::GetRegisterText(const int reg) {
     switch(reg) {
         case GIF_STAT:
-            return unpack_stat(reg);
+            return UnpackStat(reg);
             break;
         case GIF_TAG0:
-            return unpack_tag0(reg);
+            return UnpackTag0(reg);
             break;
         case GIF_TAG1:
-            return unpack_tag1(reg);
+            return UnpackTag1(reg);
             break;
         case GIF_TAG2:
-            return unpack_tag2(reg);
+            return UnpackTag2(reg);
             break;
         case GIF_TAG3:
-            return unpack_tag3(reg);
+            return UnpackTag3(reg);
             break;
         case GIF_CNT:
-            return unpack_cnt(reg);
+            return UnpackCnt(reg);
             break;
         case GIF_P3CNT:
-            return unpack_p3cnt(reg);
+            return UnpackP3cnt(reg);
             break;
         case GIF_P3TAG:
-            return unpack_p3tag(reg);
+            return UnpackP3tag(reg);
             break;
         default:
             vector<string> v;
@@ -473,7 +488,7 @@ GIF::getRegisterText(const int reg) {
 }
 
 vector<string>
-GIF::unpack_stat(const int reg) {
+Gif::UnpackStat(const int reg) {
     vector<string> v;
     v.push_back("M3R");
     v.push_back(tM3R[(REGISTERS[reg]&0x1)]);
@@ -504,7 +519,7 @@ GIF::unpack_stat(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_tag0(const int reg) {
+Gif::UnpackTag0(const int reg) {
     vector<string> v;
     char val[100];
     sprintf(val, "%d", REGISTERS[reg]&0x00007FFF);
@@ -519,7 +534,7 @@ GIF::unpack_tag0(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_tag1(const int reg) {
+Gif::UnpackTag1(const int reg) {
     vector<string> v;
     char val[100];
 
@@ -541,7 +556,7 @@ GIF::unpack_tag1(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_tag2(const int reg) {
+Gif::UnpackTag2(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("REGS");
@@ -550,7 +565,7 @@ GIF::unpack_tag2(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_tag3(const int reg) {
+Gif::UnpackTag3(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("REGS");
@@ -559,7 +574,7 @@ GIF::unpack_tag3(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_cnt(const int reg) {
+Gif::UnpackCnt(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("LOOPCNT");
@@ -574,7 +589,7 @@ GIF::unpack_cnt(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_p3cnt(const int reg) {
+Gif::UnpackP3cnt(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("P3CNT");
@@ -583,7 +598,7 @@ GIF::unpack_p3cnt(const int reg) {
     return v;
 }
 vector<string>
-GIF::unpack_p3tag(const int reg) {
+Gif::UnpackP3tag(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("LOOPCNT");

@@ -1,8 +1,10 @@
-#ifndef _VIF1
-#define _VIF1
+#ifndef __VIF1__
+#define __VIF1__
+
 #include <vector>
 #include "datatypes.h"
-#include "vif.h"
+
+class Vif;
 
 using namespace std;
 enum VIF1_REGISTERS {
@@ -22,17 +24,30 @@ static const char *tVIF1_REGISTERS[] = {
     "VIF1_C0", "VIF1_C1", "VIF1_C2", "VIF1_C3"
 };
 
-class VIF1 : public VIF {
+class Vif1 : public Vif {
 public:
-    VIF1();
-    ~VIF1();
+    Vif1();
+    Vif1(Parser* parser, Vu* vu);
+    ~Vif1();
+    const int32         Read();
+    const int32         Read(ifstream* fin, const uint16 numQuad);
     static const int    nREGISTERS;
-    vector<string>      getRegisterText(const int reg);
+    const vector<string>    GetRegisterText(const int reg);
 private:
-    vector<string>      unpack_VIF1_STAT(const int reg);
-    vector<string>      unpack_VIF1_TOPS(const int reg);
-    vector<string>      unpack_VIF1_TOP(const int reg);
-    vector<string>      unpack_VIF1_BASE(const int reg);
-    vector<string>      unpack_VIF1_OFST(const int reg);
+    const int32         DecodeCmd(void);
+    const int32         CmdOffset(const int32& data);
+    const int32         CmdBase(const int32& data);
+    const int32         CmdMaskpath3(const int32& data);
+    const int32         CmdFlush(void);
+    const int32         CmdFlushA(void);
+    const int32         CmdDirect(const int32& data);
+    const int32         CmdDirectHl(const int32& data);
+    vector<string>      UnpackStat(const int reg);
+    vector<string>      UnpackTops(const int reg);
+    vector<string>      UnpackTop(const int reg);
+    vector<string>      UnpackBase(const int reg);
+    vector<string>      UnpackOfst(const int reg);
+
+    bool                m_maskPath3;
 };
 #endif

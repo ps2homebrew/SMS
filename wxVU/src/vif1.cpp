@@ -1,11 +1,18 @@
 // -*- C++ -*-
 // (C) 2004 by Khaled Daham, <khaled@w-arts.com>
 
+#include <vector>
 #include <string>
-#include <stdio.h>
-#include "vif1.h"
+#include <fstream>
 
-const int VIF1::nREGISTERS = 22;
+#include "wx/string.h"
+
+#include "vif.h"
+#include "vif1.h"
+#include "Log.h"
+#include "Remote.h"
+
+const int Vif1::nREGISTERS = 22;
 
 static const string tVPS[4] = {
     "Idle",
@@ -58,78 +65,358 @@ static const string tFDR[2] = {
     "VIF1 -> Main memory/SPRAM"
 };
 
-VIF1::VIF1() : VIF(VIF1::nREGISTERS) {
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+
+Vif1::Vif1() : Vif(Vif1::nREGISTERS) {
 }
 
-VIF1::~VIF1() {
+Vif1::Vif1(Parser* parser, Vu* vu) : Vif(Vif1::nREGISTERS) {
+    m_pParser = parser;
+    m_pVu = vu;
 }
 
-// public classes
-vector<string>
-VIF1::getRegisterText(const int reg) {
+Vif1::~Vif1() {
+}
+
+const vector<string>
+Vif1::GetRegisterText(const int reg) {
     switch(reg) {
         case VIF1_STAT:
-            return unpack_VIF1_STAT(reg);
+            return UnpackStat(reg);
             break;
         // case VIF1_FBRST:
-            // return unpack_VIF1_FBRST(reg);
+            // return Unpack_VIF1_FBRST(reg);
             // break;
         case VIF1_ERR:
-            return unpack_VIF_ERR(reg);
+            return UnpackErr(reg);
             break;
         case VIF1_MARK:
-            return unpack_VIF_MARK(reg);
+            return UnpackMark(reg);
             break;
         case VIF1_CYCLE:
-            return unpack_VIF_CYCLE(reg);
+            return UnpackCycle(reg);
             break;
         case VIF1_MODE:
-            return unpack_VIF_MODE(reg);
+            return UnpackMode(reg);
             break;
         case VIF1_NUM:
-            return unpack_VIF_NUM(reg);
+            return UnpackNum(reg);
             break;
         case VIF1_MASK:
-            return unpack_VIF_MASK(reg);
+            return UnpackMask(reg);
             break;
         case VIF1_CODE:
-            return unpack_VIF_CODE(reg);
+            return UnpackCode(reg);
             break;
         case VIF1_ITOPS:
-            return unpack_VIF_ITOPS(reg);
+            return UnpackItops(reg);
             break;
         case VIF1_ITOP:
-            return unpack_VIF_ITOP(reg);
+            return UnpackItop(reg);
             break;
         case VIF1_BASE:
-            return unpack_VIF1_BASE(reg);
+            return UnpackBase(reg);
             break;
         case VIF1_OFST:
-            return unpack_VIF1_OFST(reg);
+            return UnpackOfst(reg);
             break;
         case VIF1_TOP:
-            return unpack_VIF1_TOP(reg);
+            return UnpackTop(reg);
             break;
         case VIF1_TOPS:
-            return unpack_VIF1_TOPS(reg);
+            return UnpackTops(reg);
             break;
         case VIF1_R0:
         case VIF1_R1:
         case VIF1_R2:
         case VIF1_R3:
-            return unpack_VIF_R(reg);
+            return UnpackR(reg);
             break;
         case VIF1_C0:
         case VIF1_C1:
         case VIF1_C2:
         case VIF1_C3:
-            return unpack_VIF_C(reg);
+            return UnpackC(reg);
             break;
     }
+    vector<string> v;
+    return v;
 }
 
+const int32 
+Vif1::Read() {
+    int32 ret;
+    Init();
+    if ( m_trace ) {
+        m_pLog->Trace(0, "VIF\n");
+    }
+    while(m_fin->peek() != EOF) {
+        ret = DecodeCmd();
+        if ( ret != E_OK ) {
+            m_pLog->Warning("VIF Decoder failed\n");
+            return ret;
+        }
+    }
+    return E_OK;
+}
+
+const int32 
+Vif1::Read(ifstream* fin, const uint16 numQuad) {
+    int32 ret;
+    Init();
+    uint32 m_start;
+    uint16 m_delta = 0;
+    m_fin = fin;
+    m_start = m_fin->tellg();
+    if ( m_trace ) {
+        m_pLog->Trace(0, "VIF\n");
+    }
+    while(m_delta < (numQuad*16)) {
+        ret = DecodeCmd();
+        if ( ret != E_OK ) {
+            m_pLog->Warning("VIF Decoder failed\n");
+            return ret;
+        }
+        m_delta = m_fin->tellg()-m_start;
+    }
+    return 0;
+}
+
+/////////////////////////////// PRIVATE ///////////////////////////////////////
+const int32
+Vif1::DecodeCmd(void) {
+    uint32 data;
+    char raw[4];
+    uint32 cmd;
+    m_fin->read(raw, 4);
+    data = ((unsigned char)raw[3]<<24) +
+        ((unsigned char)raw[2]<<16) +
+        ((unsigned char)raw[1]<<8) +
+        (unsigned char)raw[0];
+    if (m_fin->peek() == EOF) {
+        return E_FILE_EOF;
+    }
+    cmd = data>>24;
+    uint32 vl, vn;
+    switch(cmd) {
+        case VIF_NOP:
+            CmdNop();
+            break;
+        case VIF_STCYCL:
+            CmdStcycl(data);
+            break;
+        case VIF_OFFSET:
+            CmdOffset(data);
+            break;
+        case VIF_BASE:
+            CmdBase(data);
+            break;
+        case VIF_ITOP:
+            CmdItop(data);
+            break;
+        case VIF_STMOD:
+            CmdStmod(data);
+            break;
+        case VIF_MSKPATH3:
+            CmdMaskpath3(data);
+            break;
+        case VIF_MARK:
+            CmdMark(data);
+            break;
+        case VIF_FLUSHE:
+            CmdFlushE();
+            break;
+        case VIF_FLUSH:
+            CmdFlush();
+            break;
+        case VIF_FLUSHA:
+            CmdFlushA();
+            break;
+        case VIF_MSCAL:
+            CmdMscal(data);
+            break;
+        case VIF_MSCNT:
+            CmdMscnt();
+            break;
+        case VIF_MSCALF:
+            CmdMscalf(data);
+            break;
+        case VIF_STMASK:
+            CmdStmask();
+            break;
+        case VIF_STROW:
+            CmdStrow();
+            break;
+        case VIF_STCOL:
+            CmdStcol();
+            break;
+        case VIF_MPG:
+            CmdMpg(data);
+            break;
+        case VIF_DIRECT:
+            CmdDirect(data);
+            break;
+        case VIF_DIRECTHL:
+            CmdDirectHl(data);
+            break;
+        default:
+            if ( (cmd&VIF_UNPACK) == VIF_UNPACK) {
+                if ( m_trace ) {
+                    m_pLog->Trace(1, "UNPACK\n");
+
+                }
+                m_memIndex = 0;
+                m_vifCmd = VIF_UNPACK;
+                m_vifCmdNum = (data>>16)&0xFF;
+                if ( m_vifCmdNum == 0 ) {
+                    m_vifCmdNum = 256;
+                }
+                m_unpack = (data>>24)&0xF;
+                _addr = (data)&0x3FF;
+                _usn = (data>>14)&0x1;
+                _flg = (data>>15)&0x1;
+                _mask = (bool)((data>>27)&0x1);
+                vl = (data>>24)&3;
+                vn = (data>>26)&3;
+
+                if ( _WL <= _CL ) {
+                    m_length = 1+(((32>>vl)*(vn+1))*m_vifCmdNum/32);
+                } else {
+                    uint32 n = _CL*(m_vifCmdNum/_WL)+limit(m_vifCmdNum%_WL,_CL);
+                    m_length = 1+(((32>>vl)*(vn+1))*n/32);
+                }
+
+                m_unpack = (vn<<2)+vl;
+                // cout << "length: " << m_length << ", ";
+                // cout << "usn: " << _usn << ", ";
+                // cout << "flg: " << _flg << ", ";
+                // cout << "mode: " << m_unpack << ", ";
+                // cout << "num: " << m_vifCmdNum << ", ";
+                // cout << "m_memIndex: " << m_memIndex << endl;
+                if ( _flg == 1 ) {
+                    m_memIndex = rVIF1_TOPS; 
+                }
+                m_memIndex += _addr;
+                return CmdUnpack();
+            } else {
+                m_pLog->Warning("Illegal VIF code\n");
+                return E_VIF_DECODE;
+            }
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdOffset(const int32& data) {
+    rVIF1_OFST = data&0x3FF;
+    // rVIF_STAT::DBF = 0
+    rVIF1_STAT = (rVIF1_STAT&0x1f803f4f);
+    rVIF1_TOPS = rVIF1_BASE;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("OFFSET = %d\n", rVIF1_OFST));
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdBase(const int32& data) {
+    rVIF1_BASE = data&0x3FF;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("BASE = %d\n", rVIF1_BASE));
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdMaskpath3(const int32& data) {
+    // TODO
+    // enables/disables transfer via PATH3
+    m_vifCmd = VIF_MSKPATH3;
+    m_maskPath3 = (data&0x8000)>>15;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("MSKPATH3 = %d\n", m_maskPath3));
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdFlush(void) {
+    // TODO
+    // waits for the state in wich transfers to the GIF from PATH1 and PATH2
+    // have been ended after end of mpg. ( any xgkick or directh/directhl ).
+    if ( m_trace ) {
+        m_pLog->Trace(1, "FLUSH\n");
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdFlushA(void) {
+    // TODO
+    // waits for end of mpg and the state where there is no xfer request from
+    // PATH3, and end of transfer from PATH1 and PATH2
+    if ( m_trace ) {
+        m_pLog->Trace(1, "FLUSHA\n");
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdDirect(const int32& data) {
+    // TODO
+    uint32 size = data&0xffff;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("DIRECT, size(QWC) = %d\n", size));
+    }
+    // read 16KB at a time, dump and gsExec
+    uint32 total = 0;
+    uint32 len = 16*1024;
+    static unsigned char buffer[16*1024];
+    while(total < size) {
+        if ( size < len ) {
+            len = size;
+        } else if ((size - total) < len) {
+            len = size - total;
+        }
+
+        m_fin->read(buffer, len);
+        Remote::GsExec(buffer, len);
+        total += len;
+    }
+    return E_OK;
+}
+
+const int32
+Vif1::CmdDirectHl(const int32& data) {
+    // TODO
+    // DIRECTHL does not interrupt PATH3 IMAGE mode
+    uint32 size = data&0xffff;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("DIRECTHL, size(QWC) = %d\n", size));
+    }
+
+    // read 16KB at a time, dump and gsExec
+    uint32 total = 0;
+    uint32 len = 16*1024;
+    static unsigned char buffer[16*1024];
+    while(total < size) {
+        if ( size < len ) {
+            len = size;
+        } else if ((size - total) < len) {
+            len = size - total;
+        }
+
+        m_fin->read(buffer, len);
+        Remote::GsExec(buffer, len);
+        total += len;
+    }
+    return E_OK;
+}
+
+// --------------------------------------------------------------------------
+// register to text functions
 vector<string>
-VIF1::unpack_VIF1_STAT(const int reg) {
+Vif1::UnpackStat(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("VPS");
@@ -162,7 +449,7 @@ VIF1::unpack_VIF1_STAT(const int reg) {
     return v;
 }
 vector<string>
-VIF1::unpack_VIF1_TOPS(const int reg) {
+Vif1::UnpackTops(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("TOPS");
@@ -171,7 +458,7 @@ VIF1::unpack_VIF1_TOPS(const int reg) {
     return v;
 }
 vector<string>
-VIF1::unpack_VIF1_TOP(const int reg) {
+Vif1::UnpackTop(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("TOP");
@@ -180,7 +467,7 @@ VIF1::unpack_VIF1_TOP(const int reg) {
     return v;
 }
 vector<string>
-VIF1::unpack_VIF1_BASE(const int reg) {
+Vif1::UnpackBase(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("BASE");
@@ -189,7 +476,7 @@ VIF1::unpack_VIF1_BASE(const int reg) {
     return v;
 }
 vector<string>
-VIF1::unpack_VIF1_OFST(const int reg) {
+Vif1::UnpackOfst(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("OFFSET");

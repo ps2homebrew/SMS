@@ -8,16 +8,19 @@ CFLAGS += -Wmissing-noreturn
 CFLAGS += -Wchar-subscripts -Wformat-security
 
 LIBS = `wx-config --libs` -lc_r
-CPP = g++
+CPP = c++
 RM = rm -f
 DVP = dvp-elf-as
 OBJCOPY = ee-objcopy
 OBJECTS = main.o lower.o parser.o upper.o util.o vu.o \
-		gif.o prefdlg.o prefs.o dump.o linkproto_stub.o \
-		vif.o timer.o sif.o dma.o vuBreakDialog.o breakpoint.o debug.o
+		gif.o prefdlg.o prefs.o Remote.o linkproto_stub.o \
+		vif.o vif1.o timer.o sif.o dma.o vuBreakDialog.o breakpoint.o debug.o \
+		MiscRegisterPanel.o GifOutputPanel.o MemoryPanel.o VuRegisterPanel.o \
+		VuParam.o VuInstruction.o VuMem.o VuReg.o VuFloatReg.o \
+		VuIntReg.o MicroCode.o VuSymbol.o Log.o NumberFormat.o
 
 FILES = Makefile Makefile.WIN32 TODO src/datatypes.h src/defsext.h src/dma.cpp src/dma.h \
-	src/dump.cpp src/dump.h src/errors.h src/gif.cpp src/gif.h src/instructions.txt src/linkproto_stub.cpp \
+	src/Remote.cpp src/Remote.h src/gif.cpp src/gif.h src/instructions.txt src/linkproto_stub.cpp \
 	src/linkproto_stub.h src/lower.cpp src/main.cpp src/main.h src/opcodes.h src/parser.cpp src/parser.h \
 	src/prefdef.h src/prefdlg.cpp src/prefdlg.h src/prefs.cpp src/prefs.h src/sif.cpp src/sif.h src/timer.cpp \
 	src/timer.h src/upper.cpp src/util.cpp src/util.h src/vif.cpp src/vif.h \

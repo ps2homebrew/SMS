@@ -2,8 +2,12 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <stdio.h>
-#include <sys/stat.h>
+
+#include "wx/string.h"
+
+#include "gif.h"
+#include "vif0.h"
+#include "vif1.h"
 #include "dma.h"
 
 const string tDMA_CTRL[6] = {
@@ -239,21 +243,225 @@ static const string tCHCR_SPR[2] = {
 // static const string *Dn_QWC = "QWC";
 // static const string *SADR_ADDR = "Transfer data size (in qwords) = ";
 
-DMA::DMA() {
-    REGISTERS = new uint32[DMAnREGISTERS];
+
+static const int numRegisters = 9;
+// static const int numRegisters = 52;
+
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+Dma::Dma() : SubSystem(0) {
+    Init();
 }
 
-DMA::DMA(const char *filename) : _fin(filename, ios::binary) {
-    _id = -1;
-    _qwc = 0;
-    _channel = VIF1;
+Dma::Dma(const char *filename) : SubSystem(0) {
+    m_pFileIn->open(filename, ios::binary);
+    Init();
 }
 
-DMA::~DMA() {
+Dma::~Dma() {
+    Init();
 }
 
+void
+Dma::Init(void) {
+    m_id = -1;
+    m_qwc = 0;
+    m_channel = VIF1;
+    m_pLog = Log::Instance();
+    m_trace = false;
+    REGISTERS = new uint32[numRegisters];
+}
+
+uint32
+Dma::NumRegisters() {
+    return numRegisters;
+}
+
+void
+Dma::SetRegisters(uint32 *data, uint32 size) {
+    uint32 i;
+    for(i = 0; i < size/4; i++) {
+        REGISTERS[i] = *(data++);
+    }
+    return;
+}
+
+bool
+Dma::Eof(void) {
+    return m_pFileIn->eof();
+}
+
+const vector<string>
+Dma::GetRegisterText(const int reg) {
+    switch(reg) {
+        case DMA_CTRL:
+            return UnpackCtrl(reg);
+            break;
+        case DMA_STAT:
+            return UnpackStat(reg);
+            break;
+        case DMA_PCR:
+            return UnpackPcr(reg);
+            break;
+        case DMA_SQWC:
+            return UnpackSqwc(reg);
+            break;
+        case DMA_RBOR:
+            return UnpackRbor(reg);
+            break;
+        case DMA_RBSR:
+            return UnpackRbsr(reg);
+            break;
+        case DMA_STADR:
+            return UnpackStadr(reg);
+            break;
+        case DMA_EnableR:
+            return UnpackEnabler(reg);
+            break;
+        case D0_CHCR:
+        case D1_CHCR:
+        case D2_CHCR:
+        case D3_CHCR:
+        case D4_CHCR:
+        case D5_CHCR:
+        case D6_CHCR:
+        case D7_CHCR:
+        case D8_CHCR:
+        case D9_CHCR:
+            return UnpackDnCHCR(reg);
+            break;
+        case D0_MADR:
+        case D1_MADR:
+        case D2_MADR:
+        case D3_MADR:
+        case D4_MADR:
+        case D5_MADR:
+        case D6_MADR:
+        case D7_MADR:
+        case D8_MADR:
+        case D9_MADR:
+            return UnpackDnMADR(reg);
+            break;
+        case D0_QWC:
+        case D1_QWC:
+        case D2_QWC:
+        case D3_QWC:
+        case D4_QWC:
+        case D5_QWC:
+        case D6_QWC:
+        case D7_QWC:
+        case D8_QWC:
+        case D9_QWC:
+            return UnpackDnQWC(reg);
+            break;
+        case D0_TADR:
+        case D1_TADR:
+        case D2_TADR:
+        case D4_TADR:
+        case D6_TADR:
+        case D9_TADR:
+            return UnpackDnTADR(reg);
+            break;
+        case D0_ASR0:
+        case D1_ASR0:
+        case D2_ASR0:
+            return UnpackDnASR0(reg);
+            break;
+        case D0_ASR1:
+        case D1_ASR1:
+        case D2_ASR1:
+            return UnpackDnASR1(reg);
+            break;
+        case D8_SADR:
+        case D9_SADR:
+            return UnpackDnSADR(reg);
+            break;
+        default:
+            vector<string> v;
+            return v; 
+            break;
+    }    
+}
+
+void
+Dma::DecodeTag(void) {
+    uint64 data;
+    char   raw[8];
+    m_pFileIn->read(raw, 8);
+    if ( m_pFileIn->peek() == EOF ) {
+        cout << "peek sees EOF" << endl;
+    }
+    if(m_pFileIn->eof()) {
+        return;
+    }
+    data = (
+        ((uint64)raw[7]<<56) +
+        ((uint64)raw[6]<<48) +
+        ((uint64)raw[5]<<40) +
+        ((uint64)raw[4]<<32) +
+        ((uint64)raw[3]<<24) +
+        ((uint64)raw[2]<<16) +
+        ((uint64)raw[1]<<8)  +
+        raw[0]);
+    m_qwc = data&0xffff;
+    m_pce = (data>>26)&0x3;
+    m_id = (data>>28)&0x7;
+    m_irq = (data>>31)&0x1;
+    m_num = m_qwc*4;
+    m_addr = (data>>32)&0xffffffff;
+    if ( m_channel == VIF1 || m_channel == VIF0 ) {
+        m_num += 2;
+    }
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("QWC: %d, PCE: %d, ID: %d\n", m_qwc,
+                m_pce, m_id));
+    }
+    // TODO
+    // all dma now goes automatically to vif1
+    m_pVif1->Read(m_pFileIn, m_qwc);
+    return;
+}
+
+const int32
+Dma::Read() {
+    if ( m_trace ) {
+        m_pLog->Trace(0, wxString("DMA\n"));
+    }
+    while(!m_pFileIn->eof()) {
+        DecodeTag();
+    }
+    return E_OK;
+}
+
+const int32
+Dma::Open(const char *filename) {
+    m_pFileIn = new ifstream(filename, ios::binary);
+    return E_OK;
+}
+
+const int32
+Dma::Close(void) {
+    m_pFileIn->close();
+    return E_OK;
+}
+
+void
+Dma::SetGif(Gif* gif) {
+    m_pGif = gif;
+}
+
+void
+Dma::SetVif0(Vif0* vif) {
+    m_pVif0 = vif;
+}
+
+void
+Dma::SetVif1(Vif1* vif) {
+    m_pVif1 = vif;
+}
+
+/////////////////////////////// PRIVATE    ///////////////////////////////////
 vector<string>
-DMA::unpack_ctrl(const int reg) {
+Dma::UnpackCtrl(const int reg) {
     vector<string> v;
     v.push_back("DMAE");
     v.push_back(tDMAE[(REGISTERS[reg]&0x1)]);
@@ -271,7 +479,7 @@ DMA::unpack_ctrl(const int reg) {
 }
 
 vector<string>
-DMA::unpack_stat(const int reg) {
+Dma::UnpackStat(const int reg) {
     vector<string> v;
     v.push_back("CIS0");
     v.push_back(tCIS[(REGISTERS[reg]&0x1)]);
@@ -324,7 +532,7 @@ DMA::unpack_stat(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_pcr(const int reg) {
+Dma::UnpackPcr(const int reg) {
     vector<string> v;
     v.push_back("CPC0");
     v.push_back(tCPC[(REGISTERS[reg]&0x1)]);
@@ -373,7 +581,7 @@ DMA::unpack_pcr(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_sqwc(const int reg) {
+Dma::UnpackSqwc(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("SQWC");
@@ -385,7 +593,7 @@ DMA::unpack_sqwc(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_rbor(const int reg) {
+Dma::UnpackRbor(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -394,7 +602,7 @@ DMA::unpack_rbor(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_rbsr(const int reg) {
+Dma::UnpackRbsr(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("RMSK");
@@ -403,7 +611,7 @@ DMA::unpack_rbsr(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_stadr(const int reg) {
+Dma::UnpackStadr(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -413,7 +621,7 @@ DMA::unpack_stadr(const int reg) {
 }
 
 vector<string>
-DMA::unpack_enabler(const int reg) {
+Dma::UnpackEnabler(const int reg) {
     vector<string> v;
     v.push_back("CPND");
     v.push_back(tENABLER_CPND[(REGISTERS[reg]&0x10000)>>16]);
@@ -422,7 +630,7 @@ DMA::unpack_enabler(const int reg) {
 
 // Dma channels
 vector<string>
-DMA::unpack_Dn_CHCR(const int reg) {
+Dma::UnpackDnCHCR(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("DIR");
@@ -443,7 +651,7 @@ DMA::unpack_Dn_CHCR(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_Dn_MADR(const int reg) {
+Dma::UnpackDnMADR(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -454,7 +662,7 @@ DMA::unpack_Dn_MADR(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_Dn_TADR(const int reg) {
+Dma::UnpackDnTADR(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -465,7 +673,7 @@ DMA::unpack_Dn_TADR(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_Dn_ASR0(const int reg) {
+Dma::UnpackDnASR0(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -476,7 +684,7 @@ DMA::unpack_Dn_ASR0(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_Dn_ASR1(const int reg) {
+Dma::UnpackDnASR1(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -487,7 +695,7 @@ DMA::unpack_Dn_ASR1(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_Dn_SADR(const int reg) {
+Dma::UnpackDnSADR(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ADDR");
@@ -498,139 +706,11 @@ DMA::unpack_Dn_SADR(const int reg) {
     return v;
 }
 vector<string>
-DMA::unpack_Dn_QWC(const int reg) {
+Dma::UnpackDnQWC(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("QWC");
     sprintf(val, "%d", (REGISTERS[reg]&0xFFFF));
     v.push_back(val);
     return v;
-}
-
-vector<string>
-DMA::getRegisterText(const int reg) {
-    switch(reg) {
-        case DMA_CTRL:
-            return unpack_ctrl(reg);
-            break;
-        case DMA_STAT:
-            return unpack_stat(reg);
-            break;
-        case DMA_PCR:
-            return unpack_pcr(reg);
-            break;
-        case DMA_SQWC:
-            return unpack_sqwc(reg);
-            break;
-        case DMA_RBOR:
-            return unpack_rbor(reg);
-            break;
-        case DMA_RBSR:
-            return unpack_rbsr(reg);
-            break;
-        case DMA_STADR:
-            return unpack_stadr(reg);
-            break;
-        case DMA_EnableR:
-            return unpack_enabler(reg);
-            break;
-        case D0_CHCR:
-        case D1_CHCR:
-        case D2_CHCR:
-        case D3_CHCR:
-        case D4_CHCR:
-        case D5_CHCR:
-        case D6_CHCR:
-        case D7_CHCR:
-        case D8_CHCR:
-        case D9_CHCR:
-            return unpack_Dn_CHCR(reg);
-            break;
-        case D0_MADR:
-        case D1_MADR:
-        case D2_MADR:
-        case D3_MADR:
-        case D4_MADR:
-        case D5_MADR:
-        case D6_MADR:
-        case D7_MADR:
-        case D8_MADR:
-        case D9_MADR:
-            return unpack_Dn_MADR(reg);
-            break;
-        case D0_QWC:
-        case D1_QWC:
-        case D2_QWC:
-        case D3_QWC:
-        case D4_QWC:
-        case D5_QWC:
-        case D6_QWC:
-        case D7_QWC:
-        case D8_QWC:
-        case D9_QWC:
-            return unpack_Dn_QWC(reg);
-            break;
-        case D0_TADR:
-        case D1_TADR:
-        case D2_TADR:
-        case D4_TADR:
-        case D6_TADR:
-        case D9_TADR:
-            return unpack_Dn_TADR(reg);
-            break;
-        case D0_ASR0:
-        case D1_ASR0:
-        case D2_ASR0:
-            return unpack_Dn_ASR0(reg);
-            break;
-        case D0_ASR1:
-        case D1_ASR1:
-        case D2_ASR1:
-            return unpack_Dn_ASR1(reg);
-            break;
-        case D8_SADR:
-        case D9_SADR:
-            return unpack_Dn_SADR(reg);
-            break;
-        default:
-            vector<string> v;
-            return v; 
-            break;
-    }    
-}
-
-bool
-DMA::eof(void) {
-    return _fin.eof();
-}
-
-void
-DMA::decode_tag(void) {
-    uint64 *data;
-    char   raw[8];
-    _fin.read(raw, 8);
-    _qwc = (*data&0xffff);
-    _pce = (*data>>26)&0x3;
-    _id = (*data>>28)&0x7;
-    _irq = (*data>>31)&0x1;
-    _num = _qwc*4;
-    if ( _channel == VIF1 || _channel == VIF0 ) {
-        _num += 2;
-    }
-    // Signal back
-    cout << "QWC: " << _qwc << ", PCE: " << _pce << ", ID:" << _id << endl;
-    return;
-}
-
-uint32
-DMA::read() {
-    uint32  data;
-    char    raw[4];
-    if (_num == 0) {
-        decode_tag();
-    } else {
-        _fin.read(raw, 4);
-        _num--;
-    }
-    return data;
 }

@@ -1,5 +1,8 @@
-#ifndef _SubSystem
-#define _SubSystem
+#ifndef __SubSystem__
+#define __SubSystem__
+
+#include "Log.h"
+
 using namespace std;
 class SubSystem {
 public:
@@ -10,13 +13,15 @@ public:
         for(i = 0; i < nREGISTERS; i++) {
             REGISTERS[i] = 0;
         }
+        m_pLog = Log::Instance();
+        m_trace = false;
     }
-    virtual ~SubSystem() {};
-    virtual vector<string>  getRegisterText(const int reg) = 0;
-    virtual uint32          readRegister(const int reg) {
+    virtual ~SubSystem(){};
+    virtual const vector<string>  GetRegisterText(const int reg) = 0;
+    virtual uint32          GetRegister(const int reg) {
         return REGISTERS[reg];
     };
-    virtual uint32          writeRegister(const int reg, uint32 value) {
+    virtual uint32          WriteRegister(const int reg, uint32 value) {
         REGISTERS[reg] = value;
         return 0;
     };
@@ -27,8 +32,14 @@ public:
         }
         return 0;
     };
-    uint32  *REGISTERS;
+    void    Trace(bool mode) {
+        m_trace = mode;
+    };
+    uint32*     REGISTERS;
+protected:
+    bool        m_trace;
+    Log*        m_pLog;
 private:
-    uint32  nREGISTERS;
+    uint32      nREGISTERS;
 };
 #endif

@@ -5,109 +5,112 @@
 #include "breakpoint.h"
 #include "vu.h"
 
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+
 // this is ugly, but it will suffice until vu.cpp gets replaced
-extern VU VUchip;
+extern Vu VUchip;
 
-Breakpoint *Breakpoint::_instance = 0;
+Breakpoint* Breakpoint::_instance = 0;
 
-Breakpoint *Breakpoint::Instance() {
+Breakpoint* Breakpoint::Instance() {
     if(_instance == 0) {
         _instance = new Breakpoint;
     }
     return _instance;
 }
 
-Breakpoint::Breakpoint() {
-    cur = NULL;
-    head = NULL;
-}
-
-Breakpoint::~Breakpoint() {
-}
-
 bool
 Breakpoint::check() {
-    VFReg *vf;
-    cur = head;
-    while(cur) {
-        if (cur->row == VUchip.PC) {
-            switch(cur->type) {
-                case BRK_INTREG:
-                    if (VUchip.RegInt[cur->index].value() == cur->value_x) {
-                        return true;
-                    }
-                    return false;
-                case BRK_FLOATREG:
-                    vf = &VUchip.RegFloat[cur->index];
-                    if (vf->x() == cur->value_x &&
-                        vf->y() == cur->value_y &&
-                        vf->z() == cur->value_z &&
-                        vf->w() == cur->value_w) {
-                        return true;
-                    }
-                    return false;
-                case BRK_MEMORY:
-                    if (VUchip.dataMem[cur->index].x == cur->value_x &&
-                        VUchip.dataMem[cur->index].y == cur->value_y &&
-                        VUchip.dataMem[cur->index].z == cur->value_z &&
-                        VUchip.dataMem[cur->index].w == cur->value_w) {
-                        return true;
-                    }
-                    return false;
-                default:
-                    return true;
-            }
-        }
-        cur = (bplist *)cur->next;
-    }
+    VuFloatReg *vf;
+    m_cur = m_head;
+    // while(m_cur) {
+    //     if (m_cur->row == VUchip.PC) {
+    //         switch(m_cur->type) {
+    //             case BRK_INTREG:
+    //                 if (VUchip.RegInt[m_cur->index].value() == m_cur->value_x) {
+    //                     return true;
+    //                 }
+    //                 return false;
+    //             case BRK_FLOATREG:
+    //                 vf = &VUchip.RegFloat[m_cur->index];
+    //                 if (vf->x() == m_cur->value_x &&
+    //                     vf->y() == m_cur->value_y &&
+    //                     vf->z() == m_cur->value_z &&
+    //                     vf->w() == m_cur->value_w) {
+    //                     return true;
+    //                 }
+    //                 return false;
+    //             case BRK_MEMORY:
+    //                 // if (VUchip.dataMem[m_cur->index].x == m_cur->value_x &&
+    //                 //     VUchip.dataMem[m_cur->index].y == m_cur->value_y &&
+    //                 //     VUchip.dataMem[m_cur->index].z == m_cur->value_z &&
+    //                 //     VUchip.dataMem[m_cur->index].w == m_cur->value_w) {
+    //                 //     return true;
+    //                 // }
+    //                 return false;
+    //             default:
+    //                 return true;
+    //         }
+    //     }
+    //     m_cur = (bplist *)m_cur->next;
+    // }
     return false;
 }
 
 void
 Breakpoint::add(uint32 row, uint32 type, uint32 index, int32 value_x, int32
     value_y, int32 value_z, int32 value_w) {
-    cur = new bplist;
-    cur->row = row;
+    m_cur = new bplist;
+    m_cur->row = row;
     switch(type) {
         case BRK_NONE:
-            cur->type = type;
-            cur->index = index;
+            m_cur->type = type;
+            m_cur->index = index;
             break;
         case BRK_INTREG:
-            cur->type = type;
-            cur->index = index;
-            cur->value_x = value_x;
+            m_cur->type = type;
+            m_cur->index = index;
+            m_cur->value_x = value_x;
             break;
         case BRK_FLOATREG:
         case BRK_MEMORY:
-            cur->type = type;
-            cur->index = index;
-            cur->type = type;
-            cur->index = index;
-            cur->value_x = value_x;
-            cur->value_y = value_y;
-            cur->value_z = value_z;
-            cur->value_w = value_w;
+            m_cur->type = type;
+            m_cur->index = index;
+            m_cur->type = type;
+            m_cur->index = index;
+            m_cur->value_x = value_x;
+            m_cur->value_y = value_y;
+            m_cur->value_z = value_z;
+            m_cur->value_w = value_w;
             break;
         default:
-            cur->type = BRK_NONE;
-            cur->index = 0;
+            m_cur->type = BRK_NONE;
+            m_cur->index = 0;
             break;
     }
-    cur->next = head;
-    head = cur;
+    m_cur->next = m_head;
+    m_head = m_cur;
 }
 
 void
 Breakpoint::list(void) {
-    cur = head;
-    while(cur) {
-        printf("row: %d, type: %d, index: %d, x: %d\n", cur->row, cur->type,
-            cur->index, cur->value_x);
-        cur = (bplist *)cur->next;
+    m_cur = m_head;
+    while(m_cur) {
+        printf("row: %d, type: %d, index: %d, x: %d\n", m_cur->row, m_cur->type,
+            m_cur->index, m_cur->value_x);
+        m_cur = (bplist *)m_cur->next;
     }
 }
 
 void
 Breakpoint::remove() {
+}
+
+/////////////////////////////// PRIVATE ///////////////////////////////////////
+Breakpoint::Breakpoint() {
+    m_cur = NULL;
+    m_head = NULL;
+}
+
+Breakpoint::~Breakpoint() {
 }

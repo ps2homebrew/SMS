@@ -16,46 +16,48 @@ enum GIF_REGISTERS {
     GIF_CNT, GIF_P3CNT, GIF_P3TAG
 };
 
-class GIF : public SubSystem {
+class Gif : public SubSystem {
 public:
-    GIF();
-    GIF(uint32 *, uint32);
-    static int const nREGISTERS;
-    string          getReadableTag();
-    uint32          getNloop();
-    uint32          getNreg();
-    uint32          getRegs();
+    Gif();
+    Gif(uint32 *, uint32);
+    void            Init(void);
+    string          GetReadableTag();
+    uint32          GetNloop();
+    uint32          GetNreg();
+    uint32          GetRegs();
     string          RegsAsString();
     vector<string>  TagAsString();
     vector<string>  NloopData();
 
-    vector<string>  getRegisterText(const int reg);
+    const vector<string>    GetRegisterText(const int reg);
+    void            SetRegisters(uint32 *data, uint32 size);
 
-    bool            unpack();
+    bool            Unpack();
     // variables
     long            xoffset;
     long            yoffset;
+    static int const nREGISTERS;
 private:
     // functions
-    void            unpackNloop(void);
-    void            unpackNreg(void);
-    void            unpackFlag(void);
-    void            unpackPrim(void);
-    void            unpackPre(void);
-    void            unpackEop(void);
-    void            unpackRegisters(void);
-    void            parsePRIM(vector<string> &);
-    bool            validate(void);
+    void            UnpackNloop(void);
+    void            UnpackNreg(void);
+    void            UnpackFlag(void);
+    void            UnpackPrim(void);
+    void            UnpackPre(void);
+    void            UnpackEop(void);
+    void            UnpackRegisters(void);
+    void            ParsePrim(vector<string> &);
+    bool            Validate(void);
 
     // EE mapped register functions
-    vector<string>  unpack_stat(const int reg); 
-    vector<string>  unpack_tag0(const int reg); 
-    vector<string>  unpack_tag1(const int reg); 
-    vector<string>  unpack_tag2(const int reg); 
-    vector<string>  unpack_tag3(const int reg); 
-    vector<string>  unpack_cnt(const int reg); 
-    vector<string>  unpack_p3cnt(const int reg); 
-    vector<string>  unpack_p3tag(const int reg); 
+    vector<string>  UnpackStat(const int reg); 
+    vector<string>  UnpackTag0(const int reg); 
+    vector<string>  UnpackTag1(const int reg); 
+    vector<string>  UnpackTag2(const int reg); 
+    vector<string>  UnpackTag3(const int reg); 
+    vector<string>  UnpackCnt(const int reg); 
+    vector<string>  UnpackP3cnt(const int reg); 
+    vector<string>  UnpackP3tag(const int reg); 
 
     // variables
     unsigned char   registers[16];

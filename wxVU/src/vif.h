@@ -1,14 +1,22 @@
-#ifndef _VIF
-#define _VIF
+#ifndef __VIF__
+#define __VIF__
+
+#include <vector>
+#include <string>
 #include "datatypes.h"
 #include "sub.h"
-#include <fstream>
+
+class ifstream;
+class Parser;
+class Vu;
 
 typedef struct vifCode {
     uint32  CMD;
     uint32  NUM;
     uint32  IMMEDIATE;
 };
+
+int limit(int, int);
 
 // VU CMD
 const uint32 VIF_NOP       = 0x0;
@@ -53,62 +61,68 @@ const uint32 MODE_DIRECT   = 0x0;
 const uint32 MODE_ADD      = 0x1;
 const uint32 MODE_ADDROW   = 0x2;
 
-class VIF : public SubSystem {
+class Vif : public SubSystem {
 public:
-    VIF(int);
-    VIF(const char *filename);
-    VIF(const char *filename, int numregs);
-    ~VIF();
-    bool            eof(void);
-    bool            valid(void);
-    uint32          read(void);
-    uint32          cmd(void);
-    void            decode_cmd(void);
-    void            getVifcode(void);
-    void            getFloatVec(void);
-    vector<string>  getRegisterText(const int reg) {
-        vector<string> v;
-        return v;
-    };
+    Vif();
+    Vif(int);
+    Vif(const char *filename, Parser* pParser, Vu* pVu);
+    Vif(const char *filename, int numregs);
+    ~Vif();
+    
+    const int32             Open(const char* filename);
+    const int32             Close(void);
 
-    vector<string>      unpack_VIF_ITOPS(const int reg);
-    vector<string>      unpack_VIF_ITOP(const int reg);
-    vector<string>      unpack_VIF_R(const int reg);
-    vector<string>      unpack_VIF_C(const int reg);
-    vector<string>      unpack_VIF_CYCLE(const int reg);
-    vector<string>      unpack_VIF_MODE(const int reg);
-    vector<string>      unpack_VIF_MASK(const int reg);
-    vector<string>      unpack_VIF_ERR(const int reg);
-    vector<string>      unpack_VIF_MARK(const int reg);
-    vector<string>      unpack_VIF_NUM(const int reg);
-    vector<string>      unpack_VIF_CODE(const int reg);
-private:
+    virtual const int32     Read(void) = 0;
+    virtual const int32     Read(ifstream* fin, const uint16 numQuad) = 0;
+    virtual const vector<string>    GetRegisterText(const int reg) = 0;
+
+protected:
+    vector<string>      UnpackItops(const int reg);
+    vector<string>      UnpackItop(const int reg);
+    vector<string>      UnpackR(const int reg);
+    vector<string>      UnpackC(const int reg);
+    vector<string>      UnpackCycle(const int reg);
+    vector<string>      UnpackMode(const int reg);
+    vector<string>      UnpackMask(const int reg);
+    vector<string>      UnpackErr(const int reg);
+    vector<string>      UnpackMark(const int reg);
+    vector<string>      UnpackNum(const int reg);
+    vector<string>      UnpackCode(const int reg);
+    uint32          m_vifCmdNum;
+    uint32          m_vifCmd;
+    uint32          m_memIndex;
+    ifstream*       m_fin;
+    uint32          m_unpack;
+    uint32          _WL;
+    uint32          _CL;
+    uint32          m_length;
+    uint32          m_fileLength;
+    uint32          m_codeIndex;
+    uint32          _flg;
+    uint32          _addr;
+    uint32          _usn;
+    uint32          vpu;
+    bool            m_interrupt;
+    bool            _mask;
+// private:
     // vif command functions
-    void            cmd_nop(void);
-    void            cmd_offset(void);
-    void            cmd_base(void);
-    void            cmd_itop(void);
-    void            cmd_stmod(void);
-    void            cmd_mskpath3(void);
-    void            cmd_mark(void);
-    void            cmd_flushe(void);
-    void            cmd_flush(void);
-    void            cmd_flusha(void);
-    void            cmd_mscal(void);
-    void            cmd_mscnt(void);
-    void            cmd_mscalf(void);
-    void            cmd_stmask(void);
-    void            cmd_strow(void);
-    void            cmd_stcol(void);
-    void            cmd_mpg(void);
-    void            cmd_direct(void);
-    void            cmd_directhl(void);
-    uint32          cmd_unpack(void);
-    void            writeCode(void);
+    virtual const int32 DecodeCmd(void) = 0;
+    const int32     CmdNop(void);
+    const int32     CmdStcycl(const int32& data);
+    const int32     CmdItop(const int32& data);
+    const int32     CmdStmod(const int32& data);
+    const int32     CmdMark(const int32& data);
+    const int32     CmdFlushE(void);
+    const int32     CmdMscal(const int32& data);
+    const int32     CmdMscnt(void);
+    const int32     CmdMscalf(const int32& data);
+    const int32     CmdStmask(void);
+    const int32     CmdStrow(void);
+    const int32     CmdStcol(void);
+    const int32     CmdMpg(const int32& data);
+    const int32     CmdUnpack(void);
     void            writeRegister(void);
-    void            writeData(void);
-    void            clearRegisters(void);
-
+    void            Init(void);
 
     // VIF Registers
     uint32   rVIF1_R0;
@@ -153,25 +167,8 @@ private:
     uint32   rVIF0_CODE;
 
     // helper vars
-    uint32          vifcode;
-    uint32          *data;
-    bool            interrupt;
-    bool            _maskpath3;
-    bool            _mask;
-    uint32          _flg;
-    uint32          _addr;
-    uint32          _usn;
-    uint32          vpu;
     uint32          nREGISTERS;
-    ifstream        _fin;
-    uint32          _cmd;
-    uint32          _num;
-    uint32          _imm;
-    uint32          _unpack;
-    uint32          _WL;
-    uint32          _CL;
-    uint32          _length;
-    uint32          _memIndex;
-    uint32          _codeIndex;
+    Parser*         m_pParser;
+    Vu*             m_pVu;
 };
 #endif

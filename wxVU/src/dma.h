@@ -1,6 +1,15 @@
 #ifndef _DMA
 #define _DMA
+
+#include <vector>
+#include <string>
 #include "datatypes.h"
+#include "sub.h"
+
+class Gif;
+class Vif0;
+class Vif1;
+class ifstream;
 
 using namespace std;
 
@@ -39,51 +48,61 @@ static const char *tDMA_REGISTERS[] = {
     // SPR 2
 };
 
-class DMA {
+class Dma : public SubSystem {
 public:
-    DMA();
-    DMA(const char *filename);
-    DMA(const char *filename, int numregs);
-    ~DMA();
-    vector<string>  getRegisterText(const int reg);
-    uint64          readRegister(const int reg);
-    uint32          writeRegister(const int reg, uint32 value);
-    uint32          initRegisters(uint32 *data);
+    Dma();
+    Dma(const char *filename);
+    Dma(const char *filename, int numregs);
+    ~Dma();
+    void            Init(void);
+    const vector<string>    GetRegisterText(const int reg);
+    uint64          ReadRegister(const int reg);
+    void            SetRegisters(uint32 *data, uint32 size);
+    uint32          NumRegisters(void);
 
-    bool            eof(void);
-    bool            valid(void);
-    uint32          read(void);
-    void            write(uint32);
-    void            decode_tag(void);
-    // void            getDmaTag(void);
+    bool            Eof(void);
+    bool            Valid(void);
+    const int32     Read(void);
+    const int32     Open(const char *filename);
+    const int32     Close(void);
+    void            Write(uint32);
+    void            DecodeTag(void);
+    void            SetGif(Gif *gif);
+    void            SetVif0(Vif0 *vif0);
+    void            SetVif1(Vif1 *vif1);
 private:
-    vector<string>  unpack_ctrl(const int reg);
-    vector<string>  unpack_stat(const int reg);
-    vector<string>  unpack_pcr(const int reg);
-    vector<string>  unpack_sqwc(const int reg);
-    vector<string>  unpack_rbor(const int reg);
-    vector<string>  unpack_rbsr(const int reg);
-    vector<string>  unpack_stadr(const int reg);
-    vector<string>  unpack_enablew(const int reg);
-    vector<string>  unpack_enabler(const int reg);
-    vector<string>  unpack_Dn_CHCR(const int reg);
-    vector<string>  unpack_Dn_MADR(const int reg);
-    vector<string>  unpack_Dn_TADR(const int reg);
-    vector<string>  unpack_Dn_ASR0(const int reg);
-    vector<string>  unpack_Dn_ASR1(const int reg);
-    vector<string>  unpack_Dn_SADR(const int reg);
-    vector<string>  unpack_Dn_QWC(const int reg);
+    vector<string>  UnpackCtrl(const int reg);
+    vector<string>  UnpackStat(const int reg);
+    vector<string>  UnpackPcr(const int reg);
+    vector<string>  UnpackSqwc(const int reg);
+    vector<string>  UnpackRbor(const int reg);
+    vector<string>  UnpackRbsr(const int reg);
+    vector<string>  UnpackStadr(const int reg);
+    vector<string>  UnpackEnablew(const int reg);
+    vector<string>  UnpackEnabler(const int reg);
+    vector<string>  UnpackDnCHCR(const int reg);
+    vector<string>  UnpackDnMADR(const int reg);
+    vector<string>  UnpackDnTADR(const int reg);
+    vector<string>  UnpackDnASR0(const int reg);
+    vector<string>  UnpackDnASR1(const int reg);
+    vector<string>  UnpackDnSADR(const int reg);
+    vector<string>  UnpackDnQWC(const int reg);
 
     uint32          *REGISTERS;
-    std::ifstream        _fin;
-    int16           _id;
-    uint16          _qwc;
-    uint16          _pce;
-    uint16          _irq;
-    uint16          _addr;
-    uint16          _spr;
-    uint32          _num;
-    uint32          _channel;
+    ifstream*       m_pFileIn;
+    int16           m_id;
+    uint16          m_qwc;
+    uint16          m_pce;
+    uint16          m_irq;
+    uint16          m_addr;
+    uint16          m_spr;
+    uint32          m_num;
+    uint32          m_channel;
+
+    // subsystems
+    Gif*            m_pGif;
+    Vif0*           m_pVif0;
+    Vif1*           m_pVif1;
+    Log*            m_pLog;
 };
-const int DMAnREGISTERS = 52;
 #endif

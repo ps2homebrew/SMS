@@ -1,5 +1,5 @@
-#ifndef _VIF0
-#define _VIF0
+#ifndef __VIF0__
+#define __VIF0__
 #include <vector>
 #include "datatypes.h"
 #include "vif.h"
@@ -23,14 +23,14 @@ static const char *tVIF0_REGISTERS[] = {
     "VIF0_C0", "VIF0_C1", "VIF0_C2", "VIF0_C3"
 };
 
-class VIF0 : public VIF {
+class Vif0 : public Vif {
 public:
-    VIF0();
-    ~VIF0();
+    Vif0();
+    ~Vif0();
     static const int    nREGISTERS;
-    vector<string>      getRegisterText(const int reg);
+    const vector<string>    GetRegisterText(const int reg);
 private:
-    vector<string>      unpack_VIF0_STAT(const int reg);
-    vector<string>      unpack_VIF0_FBRST(const int reg);
+    vector<string>      unpackStat(const int reg);
+    vector<string>      unpackFbrst(const int reg);
 };
 #endif

@@ -1,7 +1,23 @@
 #ifndef _VU_H
 #define _VU_H
 
+#include <vector>
+#include <string>
+
 #include "datatypes.h"
+#include "sub.h"
+// #include "parser.h"
+#include "VuInstruction.h"
+#include "VuFloatReg.h"
+#include "VuIntReg.h"
+#include "VuReg.h"
+#include "VuSymbol.h"
+#include "MicroCode.h"
+
+class MemoryPanel;
+class VuMem;
+class VuRegisterPanel;
+class VuParam;
 
 #define UPPER 0
 #define LOWER 1
@@ -21,249 +37,180 @@ static const char *tVU_REGISTERS[] = {
 	"cmsar", "fbrst"
 };
 
-class VUReg {
-private:
-	int vstall;
-	int lRead;
-	int lWrite;
-protected:
-	vec data;
+class Vu : public SubSystem {
 public:
-	int stall(); //stall states before can accessed
-	int lastRead(); //last instruction in read value
-	int lastWrite(); //last instruction in write value
-	void stall(int v); //set previously defined values
-	void decstall();
-	void lastRead(int v);
-	void lastWrite(int v);
-};
-
-class VFReg:public VUReg {
-public:
-	float x();
-	float y();
-	float z();
-	float w();
-	void set(float v);
-	void x(float v);
-	void y(float v);
-	void z(float v);
-	void w(float v);
-	void xtoi(float v, int a);
-	void ytoi(float v, int a);
-	void ztoi(float v, int a);
-	void wtoi(float v, int a);
-	void xtof(int v, int a);
-	void ytof(int v, int a);
-	void ztof(int v, int a);
-	void wtof(int v, int a);
-	void mcopy(int *dest, int reg);
-	void mwrite(int *org, int reg);   
-};
-
-class VIReg:public VUReg {
-public:
-	int16 value();              //read values from register
-	void value(int16 v);        //sets values on register
-};
-
-class VUInstructionDef {
-public:
-	int     mode;               //uppder-lower-macromode
-	int     sufix;              //diferent flavors
-	char    nemot[15];          //instruction
-	int     operands;           //number of operands
-	char    types[4][50];       //type of operands (by order)
-	int     throughput;         //see VU manual
-	int     latency;            //
-	int     lastthr[15];        //one for each flavor
-	friend class VUInstruction;
-};
-
-class MicroCode
-{
-public:
-	VUInstructionDef Instr[200];
-	int nInstructionDef;
-	void DecThroughput();  
-};
-
-class VUParam {
-public:
-	void    Reset();
-	int     type;           //kind of parameter vf, vi, value, other
-	int     index;          //if vf-vi-other index
-	char    sufix[5];       //x-y-z-w-combination
-	unsigned long udata;    //data value
-	long    data;           //data value
-	float   fdata;
-	char    label[50];
-	int     stalling;
-	int     memdir;
-};
-
-class VUInstruction {
-public:
-	void    Reset();
-	char    flg;
-	int     addr;				//memory address
-	int     tics;
-    int     invalid;
-	int     breakpoint;			//do the user toogle to breackpoint?
-	int     SymbolIndex;		//Symbol index, only for easy drawing
-	int     InstIndex[2];		//pointer to instruction class
-	int     flavor[2];
-	char    dest[2][50];
-	VUParam Params[2][4];		//parameters
-};
-
-class Symbol {
-public:
-	char symb[50];
-	int Line;
-};
-
-class VU {
-public:
-    static const int nREGISTERS;
-	VFReg           RegFloat[32];       //32 float registers
-	VIReg           RegInt[16];         //16 integer registers
-	VFReg           ACC, I, Q, P, R;    //special registers
+    Vu(uint32 vpuType, MemoryPanel* memPanel);
+	VuFloatReg      RegFloat[32];       //32 float registers
+	VuIntReg        RegInt[16];         //16 integer registers
+	VuFloatReg      ACC, I, Q, P, R;    //special registers
 	uint16          PC;                 //program counter
-	int64           clock;              //clock ticks
-	dataquad        dataMem[MAX_VUDATA_SIZE];   //data memory 16 Kb
-	VUInstruction   program[MAX_VUCODE_SIZE];   //programm to be executed
+	int64           m_clock;            //clock ticks
+	VuInstruction   program[MAX_VUCODE_SIZE];   //programm to be executed
 	uint32          NInstructions;
-	Symbol          Labels[MAX_VUCODE_SIZE];
+	VuSymbol        Labels[MAX_VUCODE_SIZE];
 	int             NSymbols;
-	Symbol          MemDir[MAX_VUCODE_SIZE];
+	VuSymbol        MemDir[MAX_VUCODE_SIZE];
 	int             NMemDir;
 	uint16          ClipFlag[4];
 	int             StatusFlag;
 	char            MacZ,MacS,MacU,MacO;
+    int32           ReadMemX(uint32 row);
+    int32           ReadMemY(uint32 row);
+    int32           ReadMemZ(uint32 row);
+    int32           ReadMemW(uint32 row);
+    void            WriteMemX(uint32 row, uint32 x);
+    void            WriteMemY(uint32 row, uint32 y);
+    void            WriteMemZ(uint32 row, uint32 z);
+    void            WriteMemW(uint32 row, uint32 w);
+	const int32     LoadRegisters(const char *file);
+    // const int32     LoadMemory(const char *filename);
+    // const int32     LoadCode(const char *filename);
+    const int32     Run(const int32 _addr);
+    const int32     Run(void);
 
-	VU();
 	void            Tic(void);
-	int             DoUpper();
-	int             DoLower();
-    void            updateRegisters();
 	void            Reset();
 	void            DecStall();
-	int             Stalling(VUParam &a);
+    // KLUDGE
 	void            *CallBackObj;
 	void            (*CallBackFn)(void *, int, int);
 	void            *XGKICKCallBackObj;
 	void            (*XGKICKCallBackFn)(void *, int);
-	uint32          LoadRegisters(char *file);
-    bool            memoryUpdate;
+	void            SetCallback(void *, void (*)(void *, int, int));
+	void            SetXGKICKCallback(void *, void (*)(void *, int));
+    // TODO
+    const vector<string>    GetRegisterText(const int reg) {
+        vector<string> v;
+        return v;
+    }
 
-	void MemVal2(uint16 v2,int16 *v3);
-	void MemVal16(uint16 v2,char pos, int16 *v3);
-	void MemSetVal16(uint16 v2,char pos, int16 v3);
+    // KLUDGE
+    VuRegisterPanel*    m_pVuRegisterPanel;
+    // Parser*             m_pParser;
+
+private:
+	void            MemVal2(uint16 v2,int16 *v3);
+	void            MemVal16(uint16 v2,char pos, int16 *v3);
+	void            MemSetVal16(uint16 v2,char pos, int16 v3);
+	int             Stalling(VuParam &a);
+    void            WriteFloatRegister(const int index, const char *dst,
+                        int32 &x, int32 &y, int32 &z, int32 &w);
+    void            InitCodeMem();
 
 	//UPPER instructions
-	int VU_ABS(VUInstruction &a);
-	int VU_ADD(VUInstruction &a);
-	int VU_CLIPW(VUInstruction &a);
-	int VU_FTOI(VUInstruction &a, int mode);
-	int VU_ITOF(VUInstruction &a, int mode);
-	int VU_MADD(VUInstruction &a);
-	int VU_MAX(VUInstruction &a);
-	int VU_MIN(VUInstruction &a);
-	int VU_MSUB(VUInstruction &a);
-	int VU_MUL(VUInstruction &a);
-	int VU_NOP(void);
-	int VU_OPMULA(VUInstruction &a);
-	int VU_OPMSUB(VUInstruction &a);
-	int VU_SUB(VUInstruction &a);
+	int     VU_ABS(VuInstruction &a);
+	int     VU_ADD(VuInstruction &a);
+	int     VU_CLIPW(VuInstruction &a);
+	int     VU_FTOI(VuInstruction &a, int mode);
+	int     VU_ITOF(VuInstruction &a, int mode);
+	int     VU_MADD(VuInstruction &a);
+	int     VU_MAX(VuInstruction &a);
+	int     VU_MIN(VuInstruction &a);
+	int     VU_MSUB(VuInstruction &a);
+	int     VU_MUL(VuInstruction &a);
+	int     VU_NOP(void);
+	int     VU_OPMULA(VuInstruction &a);
+	int     VU_OPMSUB(VuInstruction &a);
+	int     VU_SUB(VuInstruction &a);
 
 	//LOWER instructions
-	int VU_B(VUInstruction &a);
-	int VU_BAL(VUInstruction &a);
-	int VU_DIV(VUInstruction &a);
-	int VU_EATAN(VUInstruction &A);
-	int VU_EATANXY(VUInstruction &A);
-	int VU_EATANXZ(VUInstruction &A);
-	int VU_EEXP(VUInstruction &A);
-	int VU_ELENG(VUInstruction &A);
-	int VU_ERCPR(VUInstruction &A);
-	int VU_ERLENG(VUInstruction &A);
-	int VU_ERSADD(VUInstruction &A);
-	int VU_ERSQRT(VUInstruction &A);
-	int VU_ESADD(VUInstruction &A);
-	int VU_ESIN(VUInstruction &A);
-	int VU_ESQRT(VUInstruction &A);
-	int VU_ESUM(VUInstruction &A);
-	int VU_FCAND(VUInstruction &A);    
-	int VU_FCEQ(VUInstruction &A);
-	int VU_FCGET(VUInstruction &A);
-	int VU_FCOR(VUInstruction &A);
-	int VU_FCSET(VUInstruction &A);
-	int VU_FMAND(VUInstruction &A);
-	int VU_FMEQ(VUInstruction &A);
-	int VU_FMOR(VUInstruction &A);
-	int VU_FSAND(VUInstruction &A);
-	int VU_FSEQ(VUInstruction &A);
-	int VU_FSOR(VUInstruction &A);
-	int VU_FSSET(VUInstruction &A);
-	int VU_IADD(VUInstruction &A);
-	int VU_IADDI(VUInstruction &A);
-	int VU_IADDIU(VUInstruction &A);
-	int VU_IAND(VUInstruction &A);
-	int VU_IBEQ(VUInstruction &A);
-	int VU_IBGEZ(VUInstruction &A);
-	int VU_IBGTZ(VUInstruction &A);
-	int VU_IBLEZ(VUInstruction &A);
-	int VU_IBLTZ(VUInstruction &A);
-	int VU_IBNE(VUInstruction &A);
-	int VU_ILW(VUInstruction &A);
-	int VU_ILWR(VUInstruction &A);
-	int VU_IOR(VUInstruction &A);
-	int VU_ISUB(VUInstruction &A);
-	int VU_ISUBIU(VUInstruction &A);
-	int VU_ISW(VUInstruction &A);
-	int VU_ISWR(VUInstruction &A);
-	int VU_JARL(VUInstruction &A);
-	int VU_JR(VUInstruction &A);
-	int VU_LQ(VUInstruction &A);
-	int VU_LQD(VUInstruction &A);
-	int VU_LQI(VUInstruction &A);
-	int VU_MFIR(VUInstruction &A);
-	int VU_MFP(VUInstruction &A);
-	int VU_MOVE(VUInstruction &A);
-	int VU_MR32(VUInstruction &A);
-	int VU_MTIR(VUInstruction &A);
-	int VU_RGET(VUInstruction &A);
-	int VU_RINIT(VUInstruction &A);
-	int VU_RNEXT(VUInstruction &A);
-	int VU_RSQRT(VUInstruction &A);
-	int VU_RXOR(VUInstruction &A);
-	int VU_SQ(VUInstruction &A);
-	int VU_SQD(VUInstruction &A);
-	int VU_SQI(VUInstruction &A);
-	int VU_SQRT(VUInstruction &A);
-	int VU_WAITP(void);
-	int VU_WAITQ(void);
-	int VU_XGKICK(VUInstruction &A);
-	int VU_XITOP(VUInstruction &A);
-	int VU_XTOP(VUInstruction &A);
-	int VU_LOI_UPPER(VUInstruction &A);
-	int VU_LOI_LOWER(VUInstruction &A);
-	void SetCallback(void *, void (*)(void *, int, int));
-	void SetXGKICKCallback(void *, void (*)(void *, int));
-private:
-    bool    lowerRegisterWrite;
-    bool    upperRegisterWrite;
-    bool    specialRegisterWrite;
-    int     lowerIntIndex;
-    int     lowerFloatIndex;
-    int     upperIntIndex;
-    int     upperFloatIndex;
-    int     specialFloatIndex;
-    VIReg   lowerIntTemp;
-    VFReg   lowerFloatTemp;
-    VIReg   upperIntTemp;
-    VFReg   upperFloatTemp;
-    
+	int     VU_B(VuInstruction &a);
+	int     VU_BAL(VuInstruction &a);
+	int     VU_DIV(VuInstruction &a);
+	int     VU_EATAN(VuInstruction &A);
+	int     VU_EATANXY(VuInstruction &A);
+	int     VU_EATANXZ(VuInstruction &A);
+	int     VU_EEXP(VuInstruction &A);
+	int     VU_ELENG(VuInstruction &A);
+	int     VU_ERCPR(VuInstruction &A);
+	int     VU_ERLENG(VuInstruction &A);
+	int     VU_ERSADD(VuInstruction &A);
+	int     VU_ERSQRT(VuInstruction &A);
+	int     VU_ESADD(VuInstruction &A);
+	int     VU_ESIN(VuInstruction &A);
+	int     VU_ESQRT(VuInstruction &A);
+	int     VU_ESUM(VuInstruction &A);
+	int     VU_FCAND(VuInstruction &A);    
+	int     VU_FCEQ(VuInstruction &A);
+	int     VU_FCGET(VuInstruction &A);
+	int     VU_FCOR(VuInstruction &A);
+	int     VU_FCSET(VuInstruction &A);
+	int     VU_FMAND(VuInstruction &A);
+	int     VU_FMEQ(VuInstruction &A);
+	int     VU_FMOR(VuInstruction &A);
+	int     VU_FSAND(VuInstruction &A);
+	int     VU_FSEQ(VuInstruction &A);
+	int     VU_FSOR(VuInstruction &A);
+	int     VU_FSSET(VuInstruction &A);
+	int     VU_IADD(VuInstruction &A);
+	int     VU_IADDI(VuInstruction &A);
+	int     VU_IADDIU(VuInstruction &A);
+	int     VU_IAND(VuInstruction &A);
+	int     VU_IBEQ(VuInstruction &A);
+	int     VU_IBGEZ(VuInstruction &A);
+	int     VU_IBGTZ(VuInstruction &A);
+	int     VU_IBLEZ(VuInstruction &A);
+	int     VU_IBLTZ(VuInstruction &A);
+	int     VU_IBNE(VuInstruction &A);
+	int     VU_ILW(VuInstruction &A);
+	int     VU_ILWR(VuInstruction &A);
+	int     VU_IOR(VuInstruction &A);
+	int     VU_ISUB(VuInstruction &A);
+	int     VU_ISUBIU(VuInstruction &A);
+	int     VU_ISW(VuInstruction &A);
+	int     VU_ISWR(VuInstruction &A);
+	int     VU_JARL(VuInstruction &A);
+	int     VU_JR(VuInstruction &A);
+	int     VU_LQ(VuInstruction &A);
+	int     VU_LQD(VuInstruction &A);
+	int     VU_LQI(VuInstruction &A);
+	int     VU_MFIR(VuInstruction &A);
+	int     VU_MFP(VuInstruction &A);
+	int     VU_MOVE(VuInstruction &A);
+	int     VU_MR32(VuInstruction &A);
+	int     VU_MTIR(VuInstruction &A);
+	int     VU_RGET(VuInstruction &A);
+	int     VU_RINIT(VuInstruction &A);
+	int     VU_RNEXT(VuInstruction &A);
+	int     VU_RSQRT(VuInstruction &A);
+	int     VU_RXOR(VuInstruction &A);
+	int     VU_SQ(VuInstruction &A);
+	int     VU_SQD(VuInstruction &A);
+	int     VU_SQI(VuInstruction &A);
+	int     VU_SQRT(VuInstruction &A);
+	int     VU_WAITP(void);
+	int     VU_WAITQ(void);
+	int     VU_XGKICK(VuInstruction &A);
+	int     VU_XITOP(VuInstruction &A);
+	int     VU_XTOP(VuInstruction &A);
+	int     VU_LOI_UPPER(VuInstruction &A);
+	int     VU_LOI_LOWER(VuInstruction &A);
+	int     DoUpper();
+	int     DoLower();
+    void    UpdateRegisters();
+
+    // Used for dual pipeline sync
+    bool            m_lowerRegisterWrite;
+    bool            m_upperRegisterWrite;
+    bool            m_specialRegisterWrite;
+    int             m_lowerIntIndex;
+    int             m_lowerFloatIndex;
+    int             m_upperIntIndex;
+    int             m_upperFloatIndex;
+    int             m_specialFloatIndex;
+    VuIntReg        m_lowerIntTemp;
+    VuFloatReg      m_lowerFloatTemp;
+    VuIntReg        m_upperIntTemp;
+    VuFloatReg      m_upperFloatTemp;
+
+    uint32          m_vpuType;
+    uint32          m_maxRows;
+    VuMem*          m_pVuMem;
+    MemoryPanel*    m_pMemoryPanel;
+};
+
+enum VpuType {
+    VPU_0,
+    VPU_1
 };
 #endif

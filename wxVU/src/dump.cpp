@@ -5,7 +5,7 @@
 #endif
 #include "linkproto_stub.h"
 #include "vu.h"
-#include "errors.h"
+#include "Log.h"
 
 #ifndef __WIN32__
 static int32 sock = -1;

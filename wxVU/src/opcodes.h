@@ -133,7 +133,7 @@ typedef struct
 	uint32  opcode;
 } OPCODE;
 
-OPCODE uopcodes[NUM_UPPER] = {
+static OPCODE uopcodes[NUM_UPPER] = {
     {"abs", 2, PARAM_VFT_VFS, TARGET_VU1_U, /*TYPESET_VTYPE,*/ 0x01E001FD},
 	{"abs.w", 2, PARAM_VFT_VFS, TARGET_VU1_U, /*TYPESET_VTYPE,*/ 0x002001FD},
 	{"abs.z", 2, PARAM_VFT_VFS, TARGET_VU1_U, /*TYPESET_VTYPE,*/ 0x004001FD},
@@ -1689,7 +1689,7 @@ OPCODE uopcodes[NUM_UPPER] = {
 };
 
 // Lower Instructions
-OPCODE lopcodes[NUM_LOWER] = {
+static OPCODE lopcodes[NUM_LOWER] = {
 	{"b", 1, PARAM_IMM11, TARGET_VU1_L, /*TYPESET_VTYPE,*/ 0x40000000},
 	{"bal", 2, PARAM_VIT_IMM11, TARGET_VU1_L, /*TYPESET_VTYPE,*/ 0x42000000},
 	{"div", 2, PARAM_FSFVFS_FTFVFT, TARGET_VU1_L, /*TYPESET_VTYPE,*/ 0x800003BC},

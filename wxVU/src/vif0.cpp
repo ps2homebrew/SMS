@@ -5,12 +5,12 @@
 #include <stdio.h>
 #include "vif0.h"
 
-const int VIF0::nREGISTERS = 18;
+const int Vif0::nREGISTERS = 18;
 
-VIF0::VIF0() : VIF(VIF0::nREGISTERS) {
+Vif0::Vif0() : Vif(Vif0::nREGISTERS) {
 }
 
-VIF0::~VIF0() {
+Vif0::~Vif0() {
 }
 static const string tVPS[4] = {
     "Idle",
@@ -52,7 +52,7 @@ static const string tER1[2] = {
 };
 
 vector<string>
-VIF0::unpack_VIF0_STAT(const int reg) {
+Vif0::unpackStat(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("VPS");
@@ -80,11 +80,11 @@ VIF0::unpack_VIF0_STAT(const int reg) {
 }
 
 // public classes
-vector<string>
-VIF0::getRegisterText(const int reg) {
+const vector<string>
+Vif0::GetRegisterText(const int reg) {
     switch(reg) {
         case VIF0_STAT:
-            return unpack_VIF0_STAT(reg);
+            return unpackStat(reg);
             break;
         // case VIF0_FBRST:
             // return unpack_VIF0_FBRST(reg);

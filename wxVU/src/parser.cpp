@@ -7,29 +7,15 @@
 #include <fstream>
 #include <string>
 #include <sys/stat.h>
+
+#include "parser.h"
 #include "util.h"
 #include "vu.h"
+#include "MicroCode.h"
+#include "VuInstruction.h"
 #include "opcodes.h"
-#include "parser.h"
 
 using namespace std;
-
-static int get_lower(uint32);
-static int get_upper(uint32);
-static int get_int_reg(uint32, uint32);
-static int get_float_reg(uint32, uint32);
-static int get_imm5(uint32);
-static int get_imm11(uint32);
-static int get_imm12(uint32);
-static int get_imm15(uint32);
-static int get_imm24(uint32);
-static int get_imm32(uint32);
-static char *get_fsf(uint32);
-static char *get_ftf(uint32);
-static void get_params(int, uint32, char *, OPCODE *);
-static bool LoadBinaryCode(ifstream *, char*);
-static bool LoadAsciiCode(ifstream *, char*, int);
-static char *getLine(char *, char *);
 
 static const int vid = 6;
 static const int vis = 11;
@@ -46,12 +32,17 @@ static uint32 dbit = 0;
 static uint32 tbit = 0;
 
 extern MicroCode Instr;
-extern VU VUchip;
 
 int counter = 0;
 
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+
+Parser::Parser(Vu* vu) {
+    m_pVuCore = vu;
+} 
+
 int
-LoadInstructions (char *file) {
+Parser::LoadInstructions (char *file) {
     /*in a future version this should use
       XML to load data, but by the moment...
       File format is very simple, each instructions has:
@@ -135,7 +126,7 @@ LoadInstructions (char *file) {
 }
 
 
-int IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char *dest, char *flg)
+int Parser::IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char *dest, char *flg)
 {
     //Mode 0-upper 1-lower
     //flavors
@@ -284,13 +275,13 @@ int IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char 
                 }
         }
     }
-    *InstIndex=0;
-    *flavor=0;
+    *InstIndex = 0;
+    *flavor = 0;
     return 0;
 }
 
 int
-IndexMode(char *a) {
+Parser::IndexMode(char *a) {
     int i;
     char *Type[]={"VI", "VF", "VIDEST", "VFDEST", "ACC",
         "IMM24", "IMM15", "IMM12", "IMM11", "IMM5", "I",
@@ -305,7 +296,7 @@ IndexMode(char *a) {
 }
 
 int
-VIindex(char *a, char *dest) {
+Parser::VIindex(char *a, char *dest) {
     int i=2,j;
     if(a[0]!='V' || a[1]!='I') return -1;
     while (a[i]=='0' && a[i]) i++;
@@ -321,7 +312,7 @@ VIindex(char *a, char *dest) {
 }
 
 int
-VFindex(char *a, char *dest) {
+Parser::VFindex(char *a, char *dest) {
     int i=2,j;
     if(a[0]!='V' || a[1]!='F') return -1;
     while (a[i]=='0' && a[i]) i++;
@@ -337,7 +328,7 @@ VFindex(char *a, char *dest) {
 }
 
 int
-SameDest(char *a, char *b) {
+Parser::SameDest(char *a, char *b) {
     //check a nd b are the same destinations
     int i,j;
     if (!a[0]) return 1; //if no dest specified takes default
@@ -365,7 +356,7 @@ SameDest(char *a, char *b) {
 }
 
 int
-GetVal(char *a, long *b) {
+Parser::GetVal(char *a, long *b) {
     int i=0;
     long offset;
     char auxi[100], auxi2[100];
@@ -379,17 +370,17 @@ GetVal(char *a, long *b) {
     if(auxi[i]==0)
         offset=0;
     auxi[i]=0;
-    for(i=0; i<VUchip.NSymbols; i++) {
-        strcpy(auxi2,VUchip.Labels[i].symb);
+    for(i=0; i < m_pVuCore->NSymbols; i++) {
+        strcpy(auxi2,m_pVuCore->Labels[i].symb);
         if(!strcmp(auxi,strupr(auxi2))) {
-            *b=offset+(long)VUchip.Labels[i].Line;
+            *b=offset+(long)m_pVuCore->Labels[i].Line;
             return 2;
         }
     }
-    for(i=0; i<VUchip.NMemDir; i++) {
-        strcpy(auxi2,VUchip.MemDir[i].symb);
+    for(i=0; i<m_pVuCore->NMemDir; i++) {
+        strcpy(auxi2,m_pVuCore->MemDir[i].symb);
         if(!strcmp(auxi,strupr(auxi2))) {
-            *b=offset+(long)VUchip.MemDir[i].Line;
+            *b=offset+(long)m_pVuCore->MemDir[i].Line;
             return 2;
         }
     }
@@ -404,7 +395,7 @@ GetVal(char *a, long *b) {
 }
 
 int
-UGetVal(char *a, unsigned long *b, int *md) {
+Parser::UGetVal(char *a, unsigned long *b, int *md) {
     int i;
     i=strlen(a);
     *md=0;
@@ -414,14 +405,14 @@ UGetVal(char *a, unsigned long *b, int *md) {
         strcpy(a,a+1);
     }
 
-    for(i=0; i<VUchip.NSymbols; i++)
-        if(!strcmp(a,VUchip.Labels[i].symb)) {
-            *b=(unsigned long)VUchip.Labels[i].Line;
+    for(i=0; i<m_pVuCore->NSymbols; i++)
+        if(!strcmp(a,m_pVuCore->Labels[i].symb)) {
+            *b=(unsigned long)m_pVuCore->Labels[i].Line;
             return 2;
         }
-    for(i=0; i<VUchip.NMemDir; i++)
-        if(!strcmp(a,VUchip.MemDir[i].symb)) {
-            *b=(unsigned long)VUchip.MemDir[i].Line;
+    for(i=0; i<m_pVuCore->NMemDir; i++)
+        if(!strcmp(a,m_pVuCore->MemDir[i].symb)) {
+            *b=(unsigned long)m_pVuCore->MemDir[i].Line;
             return 2;
         }
     i=0;
@@ -434,7 +425,7 @@ UGetVal(char *a, unsigned long *b, int *md) {
     return 1;
 }
 
-int FGetVal(char *a, float *b)
+int Parser::FGetVal(char *a, float *b)
 {
     char auxi[100];
 
@@ -453,7 +444,7 @@ int FGetVal(char *a, float *b)
 }
 
 int
-SetParam(VUInstruction &inst, int j, int mode, char * token) {
+Parser::SetParam(VuInstruction &inst, int j, int mode, char * token) {
     //check if param is correct and store it in instruction class
     //TYPE OF PARAM VI VF VIdest VFdest ACCdest Imm24 Imm15 Imm12 Imm11 Imm5 I
     //TYPE OF PARAM Imm11(VI) Imm11(VI)dest (VI)dest (--VI) (VI++) P Q R VI01 Fmm32
@@ -694,7 +685,7 @@ SetParam(VUInstruction &inst, int j, int mode, char * token) {
 }
 
 int
-ProcessInstruction(char * Line) {
+Parser::ProcessInstruction(char* Line) {
     //this functions should process upper and lower instruction line
     //first we spect to find the upper instruction
     int i=0,j,k,InstIndex, flavor=0;
@@ -709,17 +700,17 @@ ProcessInstruction(char * Line) {
     strncpy(token,Line,i);
     token[i]=0;
     strupr(token);
-    VUchip.program[VUchip.NInstructions].invalid = 0;
+    m_pVuCore->program[m_pVuCore->NInstructions].invalid = 0;
     if(!IsValidInstruction(token, UPPER, &InstIndex, &flavor, dest, &flg)) {
-        VUchip.program[VUchip.NInstructions].invalid = 1;
+        m_pVuCore->program[m_pVuCore->NInstructions].invalid = 1;
         return 0;
     }
-    VUchip.program [VUchip.NInstructions].InstIndex[UPPER]=InstIndex;
-    strcpy(VUchip.program [VUchip.NInstructions].dest[UPPER],dest);
-    VUchip.program[VUchip.NInstructions].flavor[UPPER] = flavor;
-    VUchip.program[VUchip.NInstructions].breakpoint = 0;
-    VUchip.program[VUchip.NInstructions].flg = flg;
-    VUchip.program[VUchip.NInstructions].SymbolIndex = -1;
+    m_pVuCore->program [m_pVuCore->NInstructions].InstIndex[UPPER]=InstIndex;
+    strcpy(m_pVuCore->program [m_pVuCore->NInstructions].dest[UPPER],dest);
+    m_pVuCore->program[m_pVuCore->NInstructions].flavor[UPPER] = flavor;
+    m_pVuCore->program[m_pVuCore->NInstructions].breakpoint = 0;
+    m_pVuCore->program[m_pVuCore->NInstructions].flg = flg;
+    m_pVuCore->program[m_pVuCore->NInstructions].SymbolIndex = -1;
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         if(j==Instr.Instr[InstIndex].operands-1) { //last operand
             //first eliminate heading blanks
@@ -728,7 +719,7 @@ ProcessInstruction(char * Line) {
             while (Line[i]!=' ' && Line[i]!='\t' && Line[i]!=0) i++;
             strncpy(token,Line+k,i-k);
             token[i-k]=0;  //parameter grabbed in token
-            SetParam(VUchip.program[VUchip.NInstructions],j,UPPER,token);
+            SetParam(m_pVuCore->program[m_pVuCore->NInstructions],j,UPPER,token);
         }
         else { //intermediate operand, search for a ','
             while ((Line[i]==' ' || Line[i]=='\t') && Line[i]!=0) i++;
@@ -736,7 +727,7 @@ ProcessInstruction(char * Line) {
             while(Line[i]!=',' && Line[i]) i++;
             strncpy(token,Line+k,i-k);
             token[i-k]=0; //parameter grabbed in token
-            SetParam(VUchip.program [VUchip.NInstructions],j,UPPER,token);
+            SetParam(m_pVuCore->program [m_pVuCore->NInstructions],j,UPPER,token);
             if(Line[i]==',') i++;
         }
     }
@@ -755,12 +746,12 @@ ProcessInstruction(char * Line) {
     strupr(token);
 
     if(!IsValidInstruction(token, LOWER, &InstIndex, &flavor,dest, &flg)) {
-        VUchip.program[VUchip.NInstructions].invalid = 1;
+        m_pVuCore->program[m_pVuCore->NInstructions].invalid = 1;
         return 0;
     }
-    VUchip.program[VUchip.NInstructions].InstIndex[LOWER] = InstIndex;
-    strcpy(VUchip.program[VUchip.NInstructions].dest[LOWER],dest);
-    VUchip.program[VUchip.NInstructions].flavor[LOWER] = flavor;
+    m_pVuCore->program[m_pVuCore->NInstructions].InstIndex[LOWER] = InstIndex;
+    strcpy(m_pVuCore->program[m_pVuCore->NInstructions].dest[LOWER],dest);
+    m_pVuCore->program[m_pVuCore->NInstructions].flavor[LOWER] = flavor;
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         if(j==Instr.Instr[InstIndex].operands-1) { //last operand
             //first eliminate heading blanks
@@ -769,7 +760,7 @@ ProcessInstruction(char * Line) {
             while (Line[i]!=' ' && Line[i]!='\t' && Line[i]!=0) i++;
             strncpy(token,Line+k,i-k);
             token[i-k]=0;
-            SetParam(VUchip.program [VUchip.NInstructions],j,LOWER,token);
+            SetParam(m_pVuCore->program [m_pVuCore->NInstructions],j,LOWER,token);
         }
         else { //intermediate operand, search for a ','
             while ((Line[i]==' ' || Line[i]=='\t') && Line[i]!=0) {
@@ -781,34 +772,34 @@ ProcessInstruction(char * Line) {
             }
             strncpy(token,Line+k,i-k);
             token[i-k] = 0;
-            SetParam(VUchip.program [VUchip.NInstructions],j,LOWER,token);
+            SetParam(m_pVuCore->program [m_pVuCore->NInstructions],j,LOWER,token);
             if(Line[i]==',') {
                 i++;
             }
         }
     }
-    VUchip.NInstructions++;
+    m_pVuCore->NInstructions++;
     return 1;
 }
 
 
 int
-MatchSymbol(char *Line) {
+Parser::MatchSymbol(char *Line) {
     int i;
     i=strlen(Line);
     if(Line[i-1]!=':')
         return 0;
     Line[i-1]=0;
-    for(i=0; i<VUchip.NSymbols; i++)
-        if(!strcmp(Line,VUchip.Labels[i].symb)) {
-            VUchip.program [VUchip.NInstructions].SymbolIndex=i;
+    for(i=0; i<m_pVuCore->NSymbols; i++)
+        if(!strcmp(Line,m_pVuCore->Labels[i].symb)) {
+            m_pVuCore->program [m_pVuCore->NInstructions].SymbolIndex=i;
             return 1;
         }
     return 0;
 }
 
 int
-ProcessLine(char *Line) {
+Parser::ProcessLine(char *Line) {
     int i;
     i = strlen(Line);
     if(Line[i-1]==':') { 
@@ -819,7 +810,7 @@ ProcessLine(char *Line) {
 }
 
 int
-ProcessSymbol(char *Line) {
+Parser::ProcessSymbol(char *Line) {
     //we spect to find here a label
     //or a upper - lower pair
     int i;
@@ -830,15 +821,15 @@ ProcessSymbol(char *Line) {
         return 1;
     }
     Line[i-1]=0;
-    strcpy(VUchip.Labels[VUchip.NSymbols].symb, Line);
-    VUchip.Labels[VUchip.NSymbols].Line=VUchip.NInstructions;
-    VUchip.Labels[VUchip.NSymbols].Line=counter;
-    VUchip.NSymbols++;
+    strcpy(m_pVuCore->Labels[m_pVuCore->NSymbols].symb, Line);
+    m_pVuCore->Labels[m_pVuCore->NSymbols].Line=m_pVuCore->NInstructions;
+    m_pVuCore->Labels[m_pVuCore->NSymbols].Line=counter;
+    m_pVuCore->NSymbols++;
     return 1;
 }
 
 int
-LoadSymbol(char *file) {
+Parser::LoadSymbol(char *file) {
     FILE *In;
     char Line[250];
     int j=0;
@@ -858,7 +849,7 @@ LoadSymbol(char *file) {
         if(Line[0]==';' || Line[0]==0) //comment or empty line
             continue;
         if(!ProcessSymbol(Line)) {
-            VUchip.Reset();
+            m_pVuCore->Reset();
             return 0;
         }
     }
@@ -866,12 +857,12 @@ LoadSymbol(char *file) {
 }
 
 int
-LoadCode(char *file) {
+Parser::LoadCode(char *file) {
     char Line[250];
     string line;
     int j = 0;
     int i;
-    VUchip.Reset();
+    m_pVuCore->Reset();
     ifstream fin(file, ios::binary);
     struct stat st;
     char *data;
@@ -930,7 +921,7 @@ LoadCode(char *file) {
 }
 
 char *
-getLine(char *line, char *data){
+Parser::getLine(char *line, char *data){
     int i;
     if ( *data == NULL ) {
         return NULL;
@@ -944,14 +935,14 @@ getLine(char *line, char *data){
 }
 
 bool
-LoadAsciiCode(ifstream *fin, char *code, int size) {
+Parser::LoadAsciiCode(ifstream *fin, char *code, int size) {
     cout << "LoadAsciCode" << endl;
     fin->read(code, size);
     return true;
 }
 
 bool
-LoadBinaryCode(ifstream *fin, char *data) {
+Parser::LoadBinaryCode(ifstream *fin, char *data) {
     uint32 ucode, lcode;
     int uidx, lidx;
     char lparam[50];
@@ -999,7 +990,7 @@ LoadBinaryCode(ifstream *fin, char *data) {
 }
 
 void
-get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
+Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
     switch(opcodes[idx].param) {
         case PARAM_FSFVFS:
             sprintf(param, "P,VF%02d%s", get_float_reg(code, vfs),
@@ -1155,11 +1146,11 @@ get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
             printf("we need to insert a label\n");
             sprintf(param, "L%d:", get_imm11(code));
             printf("label = %s\n", param);
-            strcpy(VUchip.Labels[VUchip.NSymbols].symb, param);
-            VUchip.Labels[VUchip.NSymbols].Line=1;
-            VUchip.Labels[VUchip.NSymbols].Line=1;
-            VUchip.program[1].SymbolIndex = 1;
-            VUchip.NSymbols++;
+            strcpy(m_pVuCore->Labels[m_pVuCore->NSymbols].symb, param);
+            m_pVuCore->Labels[m_pVuCore->NSymbols].Line=1;
+            m_pVuCore->Labels[m_pVuCore->NSymbols].Line=1;
+            m_pVuCore->program[1].SymbolIndex = 1;
+            m_pVuCore->NSymbols++;
 
             sprintf(param, "VI%02d,VI%02d,L%d", get_int_reg(code, vit),
                     get_int_reg(code, vis), get_imm11(code));
@@ -1181,29 +1172,29 @@ get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
 }
 
 int
-get_int_reg(uint32 code, uint32 reg) {
+Parser::get_int_reg(uint32 code, uint32 reg) {
     return (code>>reg)&0x1f;
 }
 
 int
-get_float_reg(uint32 code, uint32 reg) {
+Parser::get_float_reg(uint32 code, uint32 reg) {
     return (code>>reg)&0x1f;
 }
 
 char *
-get_ftf(uint32 code) {
+Parser::get_ftf(uint32 code) {
     char *ftf[4] = {"x", "y", "z", "w"};
     return ftf[(code>>23)&0x3];
 }
 
 char *
-get_fsf(uint32 code) {
+Parser::get_fsf(uint32 code) {
     char *fsf[4] = {"x", "y", "z", "w"};
     return fsf[(code>>21)&0x3];
 }
 
 int
-get_imm5(uint32 code) {
+Parser::get_imm5(uint32 code) {
     if ( ((code>>6)&0x10) == 0x10) {
         return (int)(code>>6)|0xfffffff0;
     }
@@ -1211,7 +1202,7 @@ get_imm5(uint32 code) {
 }
 
 int
-get_imm11(uint32 code) {
+Parser::get_imm11(uint32 code) {
     if ( (code & 0x400) == 1024 ) {
         return (int)code|0xfffff800;
     }
@@ -1219,27 +1210,27 @@ get_imm11(uint32 code) {
 }
 
 int
-get_imm12(uint32 code) {
+Parser::get_imm12(uint32 code) {
     return ((code>>10)&0x0400)+((code)&0x7FF);
 }
 
 int
-get_imm15(uint32 code) {
+Parser::get_imm15(uint32 code) {
     return ((code>>10)&0x7800)+((code)&0x7FF);
 }
 
 int
-get_imm24(uint32 code) {
+Parser::get_imm24(uint32 code) {
     return (code&0xffffff);
 }
 
 int
-get_imm32(uint32 code) {
+Parser::get_imm32(uint32 code) {
     return code;
 }
 
 int
-get_lower(uint32 code) {
+Parser::get_lower(uint32 code) {
     int i;
     uint32 hold = code&0xFFE007FF;
     uint32 hold2 = code&0xFFe00000;
@@ -1281,7 +1272,7 @@ get_lower(uint32 code) {
 }
 
 int
-get_upper(uint32 code) {
+Parser::get_upper(uint32 code) {
 	int i;
     uint32 hold  = code&0x01E003FF;          // 11 bit opcodes
     uint32 hold2 = code&0x01E003FC;          // 9 bit bc opcodes
@@ -1328,23 +1319,23 @@ get_upper(uint32 code) {
 
 // insert the upper and lower instruction at a given index
 int
-insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
+Parser::insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
     int i = 0, j = 0, k, InstIndex, flavor = 0;
     char dest[50], token[50], flg;
 
     strupr(upper);
     strupr(lower);
-    VUchip.program[index].invalid = 0;
+    m_pVuCore->program[index].invalid = 0;
     if(!IsValidInstruction(upper, UPPER, &InstIndex, &flavor, dest, &flg)) {
-        VUchip.program[index].invalid = 1;
+        m_pVuCore->program[index].invalid = 1;
         return 0;
     }
-    VUchip.program[index].InstIndex[UPPER] = InstIndex;
-    strcpy(VUchip.program[index].dest[UPPER],dest);
-    VUchip.program[index].flavor[UPPER] = flavor;
-    VUchip.program[index].breakpoint = 0;
-    VUchip.program[index].flg = flg;
-    VUchip.program[index].SymbolIndex = -1;
+    m_pVuCore->program[index].InstIndex[UPPER] = InstIndex;
+    strcpy(m_pVuCore->program[index].dest[UPPER],dest);
+    m_pVuCore->program[index].flavor[UPPER] = flavor;
+    m_pVuCore->program[index].breakpoint = 0;
+    m_pVuCore->program[index].flg = flg;
+    m_pVuCore->program[index].SymbolIndex = -1;
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         memset(token, 0, 50);
         if(j==Instr.Instr[InstIndex].operands-1) { //last operand
@@ -1354,7 +1345,7 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
             while (uparam[i]!=' ' && uparam[i]!='\t' && uparam[i]!=0) i++;
             strncpy(token,uparam+k,i-k);
             token[i-k]=0;  //parameter grabbed in token
-            SetParam(VUchip.program[index],j,UPPER,token);
+            SetParam(m_pVuCore->program[index],j,UPPER,token);
         }
         else { //intermediate operand, search for a ','
             while ((uparam[i]==' ' || uparam[i]=='\t') && uparam[i]!=0) i++;
@@ -1362,18 +1353,18 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
             while(uparam[i]!=',' && uparam[i]) i++;
             strncpy(token,uparam+k,i-k);
             token[i-k]=0; //parameter grabbed in token
-            SetParam(VUchip.program[index],j,UPPER,token);
+            SetParam(m_pVuCore->program[index],j,UPPER,token);
             if(uparam[i]==',') i++;
         }
     }
 
     if(!IsValidInstruction(lower, LOWER, &InstIndex, &flavor,dest, &flg)) {
-        VUchip.program[index].invalid = 1;
+        m_pVuCore->program[index].invalid = 1;
         return 0;
     }
-    VUchip.program[index].InstIndex[LOWER] = InstIndex;
-    strcpy(VUchip.program[index].dest[LOWER], dest);
-    VUchip.program[index].flavor[LOWER] = flavor;
+    m_pVuCore->program[index].InstIndex[LOWER] = InstIndex;
+    strcpy(m_pVuCore->program[index].dest[LOWER], dest);
+    m_pVuCore->program[index].flavor[LOWER] = flavor;
     i = 0;
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         memset(token, 0, 50);
@@ -1384,7 +1375,7 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
             while (lparam[i]!=' ' && lparam[i]!='\t' && lparam[i]!=0) i++;
             strncpy(token,lparam+k,i-k);
             token[i-k]=0;  //parameter grabbed in token
-            SetParam(VUchip.program[index],j,LOWER,token);
+            SetParam(m_pVuCore->program[index],j,LOWER,token);
         }
         else { //intermediate operand, search for a ','
             while ((lparam[i]==' ' || lparam[i]=='\t') && lparam[i]!=0) i++;
@@ -1392,7 +1383,7 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
             while(lparam[i]!=',' && lparam[i]) i++;
             strncpy(token,lparam+k,i-k);
             token[i-k]=0; //parameter grabbed in token
-            SetParam(VUchip.program[index],j,LOWER,token);
+            SetParam(m_pVuCore->program[index],j,LOWER,token);
             if(lparam[i]==',') i++;
         }
     }
@@ -1401,7 +1392,7 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
 
 // disasm class
 void
-dlower(uint32 *lower, char *low, char *lparam ) {
+Parser::dlower(uint32 *lower, char *low, char *lparam ) {
     uint32 lidx;
     memset(lparam, 0, 50);
     lidx = get_lower(*lower);
@@ -1410,7 +1401,7 @@ dlower(uint32 *lower, char *low, char *lparam ) {
 }
 
 void
-dupper(uint32 *upper, char *upp, char *uparam ) {
+Parser::dupper(uint32 *upper, char *upp, char *uparam ) {
     uint32 uidx;
     memset(uparam, 0, 50);
     uidx = get_upper(*upper);
@@ -1421,4 +1412,14 @@ dupper(uint32 *upper, char *upp, char *uparam ) {
     } else if ( dbit == 1 ) {
         strcat(upp, "[d]");
     }
+}
+
+// KLUDGE
+void
+Parser::InitCodeMem(void) {
+    unsigned int i;
+    for(i = 0; i < 1024; i++) {
+        insert(strdup("nop"), strdup("loi"), strdup(""), strdup("0x0"), i);
+    }
+    return;
 }

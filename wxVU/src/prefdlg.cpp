@@ -429,30 +429,6 @@ wxPanel *PreferenceDlg::CreatePageStyles () {
     const int ch = GetCharWidth();
     const int sz1 = 20*ch; // width of a text lable
 
-    // foreground prefs
-    m_foreground = new wxTextCtrl (panel, -1, wxEmptyString,
-                                   wxDefaultPosition, wxSize(sz1,-1));
-    wxBoxSizer *foreground = new wxBoxSizer (wxHORIZONTAL);
-    foreground->Add (4, 0);
-    foreground->Add (new wxStaticText (panel, -1, _("Foreground"),
-                                       wxDefaultPosition, wxSize(sz1, -1)),
-                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    foreground->Add (6, 0);
-    foreground->Add (m_foreground, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    foreground->Add (4, 0);
-
-    // background prefs
-    // m_background = new wxTextCtrl (panel, -1, wxEmptyString,
-    //                                wxDefaultPosition, wxSize(sz1,-1));
-    // wxBoxSizer *background = new wxBoxSizer (wxHORIZONTAL);
-    // background->Add(4, 0);
-    // background->Add(new wxStaticText (panel, -1, _("Background"),
-    //                                    wxDefaultPosition, wxSize(sz1, -1)),
-    //                  0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    // background->Add(6, 0);
-    // background->Add(m_background, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    // background->Add(4, 0);
-
     // font name prefs
     wxFontEnumerator fontEnum;
     fontEnum.EnumerateFacenames(wxFONTENCODING_SYSTEM, true);
@@ -486,83 +462,30 @@ wxPanel *PreferenceDlg::CreatePageStyles () {
     fontsize->Add(m_fontsize, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
     fontsize->Add(4, 0);
 
-    // font style prefs
-    m_stylebold = new wxCheckBox(panel, -1, _("Bold"),
-                                  wxDefaultPosition, wxSize(12*ch, -1));
-    m_styleitalic = new wxCheckBox(panel, -1, _("Italic"),
-                                    wxDefaultPosition, wxSize(12*ch, -1));
-    m_styleunderl = new wxCheckBox(panel, -1, _("Underline"),
-                                       wxDefaultPosition, wxSize(12*ch, -1));
-    m_stylehidden = new wxCheckBox(panel, -1, _("Hidden"),
-                                    wxDefaultPosition, wxSize(12*ch, -1));
-    wxBoxSizer *fontstyle = new wxBoxSizer (wxHORIZONTAL);
-    fontstyle->Add(4, 0);
-    fontstyle->Add(new wxStaticText (panel, -1, _("Font style"),
-                                      wxDefaultPosition, wxSize(sz1, -1)),
-                    0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    fontstyle->Add(6, 0);
-    fontstyle->Add(m_stylebold, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    fontstyle->Add(m_styleitalic, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    fontstyle->Add(m_styleunderl, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    fontstyle->Add(m_stylehidden, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    fontstyle->Add(4, 0);
-
-    // font case prefs
-    m_unchanged = new wxRadioButton (panel, -1, _T("Normal"),
-                                     wxDefaultPosition, wxSize(12*ch, -1), wxRB_GROUP);
-    m_uppercase = new wxRadioButton (panel, -1, _T("Uppercase"),
-                                     wxDefaultPosition, wxSize(12*ch, -1));
-    m_lowercase = new wxRadioButton (panel, -1, _T("Lowercase"),
-                                     wxDefaultPosition, wxSize(12*ch, -1));
-    wxBoxSizer *lettercase = new wxBoxSizer (wxHORIZONTAL);
-    lettercase->Add (4, 0);
-    lettercase->Add (new wxStaticText (panel, -1, _("Letter case"),
-                                       wxDefaultPosition, wxSize(sz1, -1)),
-                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    lettercase->Add (6, 0);
-    lettercase->Add (m_unchanged, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    lettercase->Add (m_uppercase, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    lettercase->Add (m_lowercase, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    lettercase->Add (4, 0);
-
     // layout the style types prefs
     wxStaticBoxSizer *prefspane = new wxStaticBoxSizer (
                      new wxStaticBox (panel, -1, _("Style types settings")),
                      wxVERTICAL);
-    // prefspane->Add (foreground, 0, wxEXPAND);
-    // prefspane->Add (0, 6);
-    // prefspane->Add (background, 0, wxEXPAND);
-    // prefspane->Add (0, 6);
-    prefspane->Add (fontname, 0, wxEXPAND);
-    prefspane->Add (0, 6);
-    prefspane->Add (fontsize, 0, wxEXPAND);
-    prefspane->Add (0, 6);
-    prefspane->Add (fontstyle, 0, wxEXPAND);
-    prefspane->Add (0, 6);
-    prefspane->Add (lettercase, 0, wxEXPAND);
-    prefspane->Add (0, 4);
+    prefspane->Add(fontname, 0, wxEXPAND);
+    prefspane->Add(0, 6);
+    prefspane->Add(fontsize, 0, wxEXPAND);
+    prefspane->Add(0, 6);
 
     // layout panel
     wxBoxSizer *panelpane = new wxBoxSizer (wxVERTICAL);
-    panelpane->Add (prefspane, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 10);
+    panelpane->Add(prefspane, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 10);
 
     // set and return panel
-    panel->SetSizer (panelpane);
+    panel->SetSizer(panelpane);
     return panel;
 }
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::GetValuesPageStyles () {
     long fontsize = 0;
-    int fontstyle = 0;
-    int lettercase = 0;
-    // g_StylePrefs.foreground = strdup (m_foreground->GetValue());
-    // g_StylePrefs.background = strdup (m_background->GetValue());
     g_StylePrefs.fontname = strdup (m_fontname->GetValue());
     m_fontsize->GetValue().ToLong (&fontsize);
     g_StylePrefs.fontsize = fontsize;
-    g_StylePrefs.fontstyle = fontstyle;
-    g_StylePrefs.lettercase = lettercase;
 }
 
 //----------------------------------------------------------------------------
@@ -572,8 +495,6 @@ void PreferenceDlg::SetValuesPageStyles () {
     } else {
         m_fontname->SetValue(m_default_fontname);
     }
-    // m_foreground->SetValue(g_StylePrefs.foreground);
-    // m_background->SetValue(g_StylePrefs.background);
     m_fontsize->SetValue(wxString::Format (_T("%d"), g_StylePrefs.fontsize));
 }
 
@@ -654,7 +575,6 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
                      wxVERTICAL);
     alphabox->Add (alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
     alphabox->Add (0, 4);
-
 
     // wxString cSendPrim[2] = {"Yes", "No"};
     // m_sendPrim = new wxRadioBox(panel, -1, "Always send PRIM before xgkick",

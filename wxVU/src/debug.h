@@ -56,11 +56,11 @@ DebugStream& DebugStream::operator<<( short p ) { char a[256]; a[0] = 0; sprintf
 DebugStream& DebugStream::operator<<( unsigned short p ) { char a[256]; a[0] = 0; sprintf( a,"%d", p ); strcat( m_aBuffer, a );   return (*this); }
 DebugStream& DebugStream::operator<<( int p ) { char a[256]; a[0] = 0; sprintf( a,"%d", p ); strcat( m_aBuffer, a );   return (*this); }
 DebugStream& DebugStream::operator<<( unsigned int p ) { char a[256]; a[0] = 0; sprintf( a,"%d", p ); strcat( m_aBuffer, a );   return (*this); }
-DebugStream& DebugStream::operator<<( long p ) { char a[256]; a[0] = 0; sprintf( a,"%d", p ); strcat( m_aBuffer, a );   return (*this); }
-DebugStream& DebugStream::operator<<( unsigned long p ) { char a[256]; a[0] = 0; sprintf( a,"%s", p ); strcat( m_aBuffer, a );  return (*this); }
+DebugStream& DebugStream::operator<<( long p ) { char a[256]; a[0] = 0; sprintf( a,"%ld", p ); strcat( m_aBuffer, a );   return (*this); }
+DebugStream& DebugStream::operator<<( unsigned long p ) { char a[256]; a[0] = 0; sprintf( a,"%lu", p ); strcat( m_aBuffer, a );  return (*this); }
 DebugStream& DebugStream::operator<<( float p ) { char a[256]; a[0] = 0; sprintf( a,"%f", p ); strcat( m_aBuffer, a );   return (*this); }
 DebugStream& DebugStream::operator<<( double p ) { char a[256]; a[0] = 0; sprintf( a,"%f", p ); strcat( m_aBuffer, a );   return (*this); }
-DebugStream& DebugStream::operator<<( long double p ) { char a[256]; a[0] = 0; sprintf( a,"%f", p ); strcat( m_aBuffer, a );   return (*this); }
+DebugStream& DebugStream::operator<<( long double p ) { char a[256]; a[0] = 0; sprintf( a,"%Lf", p ); strcat( m_aBuffer, a );   return (*this); }
 
 inline DebugStream& DebugStream::operator<<( DebugStream& (* _f)(DebugStream&)) { (*_f)(*this); return *this; }
 

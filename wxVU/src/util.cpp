@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include <wx/wx.h>
+#include "datatypes.h"
 
 #ifndef WIN32
 char * strupr(char *);
@@ -91,58 +92,6 @@ long htol(char *a)
 		desp*=16;
 	}
 	return val;
-}
-
-wxString
-floatToString(float a, int format) {
-	switch(format) {
-		case 0:
-			return wxString::Format("%d", a); 
-			break;
-		case 1:
-			return wxString::Format("%.4f", a/16.0f);
-			break;
-		case 2:
-			return wxString::Format("%.12f", a/4096.0f);
-			break;
-		case 3:
-			return wxString::Format("%.15f", a/32768.0f);
-			break;
-		case 4:
-			return wxString::Format("%f", a);
-			break;
-		case 5:
-			return wxString::Format("0x%x", a);
-			break;
-
-	}
-	return wxString("");
-}
-
-wxString
-intToString(int a, int format) {
-	switch(format) {
-		case 0:
-			return wxString::Format("%d", a);
-			break;
-		case 1:
-			return wxString::Format("%.4f", (float)a);
-			break;
-		case 2:
-			return wxString::Format("%.12f", (float)a/4096);
-			break;
-		case 3:
-			return wxString::Format("%.15f", (float)a/32768);
-			break;
-		case 4:
-			return wxString::Format("%f", *((float *)&a));
-			break;
-		case 5:
-			return wxString::Format("0x%x", a); 
-			break;
-
-	}
-	return wxString("");
 }
 
 #ifndef WIN32

@@ -20,16 +20,17 @@ typedef struct node {
 
 class Breakpoint {
 public:
-    static Breakpoint *Instance();
-    bool Breakpoint::check();
-    void Breakpoint::add(uint32 row, uint32 type, uint32 index, int32
-        value_x, int32 value_y, int32 value_z, int32 value_w);
-    void Breakpoint::remove();
-    void Breakpoint::list();
+    static Breakpoint*	Instance();
+    bool				Breakpoint::check();
+    void				Breakpoint::add(uint32 row, uint32 type, uint32 index,
+							int32 value_x, int32 value_y, int32 value_z, int32
+							value_w);
+    void				Breakpoint::remove();
+    void				Breakpoint::list();
 protected:
     Breakpoint();
     ~Breakpoint();
 private:
-    static Breakpoint *_instance;
-    bplist  *cur, *head;
+    static Breakpoint*	_instance;
+    bplist				*m_cur, *m_head;
 };

@@ -17,7 +17,8 @@ BEGIN_EVENT_TABLE(vuBreakDialog, wxDialog)
     EVT_TEXT_ENTER(brkID_INDEX, vuBreakDialog::OnIndexEnter)
 END_EVENT_TABLE()
 
-vuBreakDialog::vuBreakDialog(wxWindow *parent, uint32 row)
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+vuBreakDialog::vuBreakDialog(wxWindow* parent, uint32 row)
     : wxDialog(parent, -1, _("Breakpoint settings"),
         wxDefaultPosition, wxDefaultSize) {
 
@@ -96,6 +97,7 @@ vuBreakDialog::~vuBreakDialog() {
     delete m_type;
 }
 
+/////////////////////////////// PRIVATE ///////////////////////////////////
 void
 vuBreakDialog::OnTypeSelect(wxCommandEvent &WXUNUSED(event)) {
     type = m_type->GetSelection();

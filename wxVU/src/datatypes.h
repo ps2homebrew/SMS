@@ -39,8 +39,8 @@ typedef union vec {
 	int16 vi;
 }vec;
 
-typedef struct dataquad {
+typedef struct quadvector {
 	int32 x, y, z, w;
 	bool gif;
-}dataquad;
+} quadvector;
 #endif

@@ -4,15 +4,16 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
+
 #include "vu.h"
+#include "MicroCode.h"
+#include "VuMem.h"
 
 extern MicroCode Instr;
 
 int
-VU::VU_B(VUInstruction &A) {
+Vu::VU_B(VuInstruction &A) {
     int a;
-    //all this instructions are due to delay slot
-
     a=PC;
     CallBackFn(CallBackObj, LOWER, 6);
     PC++;
@@ -29,7 +30,7 @@ VU::VU_B(VUInstruction &A) {
 }
 
 int
-VU::VU_BAL(VUInstruction &A) {
+Vu::VU_BAL(VuInstruction &A) {
     int a;
 
     RegInt[A.Params[1][0].index].lastWrite(PC);
@@ -54,7 +55,7 @@ VU::VU_BAL(VUInstruction &A) {
 }
 
 int
-VU::VU_DIV(VUInstruction &A) {
+Vu::VU_DIV(VuInstruction &A) {
     int st1, st2;
     float d1,d2;
 
@@ -105,7 +106,7 @@ VU::VU_DIV(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_EATAN(VUInstruction &A)
+int Vu::VU_EATAN(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -135,7 +136,7 @@ int VU::VU_EATAN(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_EATANXY(VUInstruction &A)
+int Vu::VU_EATANXY(VuInstruction &A)
 {
     int st1;
 
@@ -156,7 +157,7 @@ int VU::VU_EATANXY(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_EATANXZ(VUInstruction &A)
+int Vu::VU_EATANXZ(VuInstruction &A)
 {
     int st1;
 
@@ -177,7 +178,7 @@ int VU::VU_EATANXZ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_EEXP(VUInstruction &A)
+int Vu::VU_EEXP(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -207,7 +208,7 @@ int VU::VU_EEXP(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ELENG(VUInstruction &A)
+int Vu::VU_ELENG(VuInstruction &A)
 {
     int st1;
     float d1,d2,d3;
@@ -231,7 +232,7 @@ int VU::VU_ELENG(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ERCPR(VUInstruction &A)
+int Vu::VU_ERCPR(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -261,7 +262,7 @@ int VU::VU_ERCPR(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ERLENG(VUInstruction &A)
+int Vu::VU_ERLENG(VuInstruction &A)
 {
     int st1;
     float d1,d2,d3;
@@ -285,7 +286,7 @@ int VU::VU_ERLENG(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ERSADD(VUInstruction &A)
+int Vu::VU_ERSADD(VuInstruction &A)
 {
     int st1;
     float d1,d2,d3;
@@ -309,7 +310,7 @@ int VU::VU_ERSADD(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ERSQRT(VUInstruction &A)
+int Vu::VU_ERSQRT(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -339,7 +340,7 @@ int VU::VU_ERSQRT(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ESADD(VUInstruction &A)
+int Vu::VU_ESADD(VuInstruction &A)
 {
     int st1;
     float d1,d2,d3;
@@ -364,7 +365,7 @@ int VU::VU_ESADD(VUInstruction &A)
 }
 
 
-int VU::VU_ESIN(VUInstruction &A)
+int Vu::VU_ESIN(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -393,7 +394,7 @@ int VU::VU_ESIN(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ESQRT(VUInstruction &A)
+int Vu::VU_ESQRT(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -423,7 +424,7 @@ int VU::VU_ESQRT(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ESUM(VUInstruction &A)
+int Vu::VU_ESUM(VuInstruction &A)
 {
     int st1;
     float d1,d2,d3;
@@ -448,7 +449,7 @@ int VU::VU_ESUM(VUInstruction &A)
 }
 
 int
-VU::VU_FCAND(VUInstruction &A) {
+Vu::VU_FCAND(VuInstruction &A) {
     unsigned int test;
     int ct1, ct2, ct3, ct4;
 
@@ -480,7 +481,7 @@ VU::VU_FCAND(VUInstruction &A) {
 
 
 int
-VU::VU_FCEQ(VUInstruction &A) {
+Vu::VU_FCEQ(VuInstruction &A) {
     unsigned int test;
     int ct1, ct2, ct3, ct4;
 
@@ -509,7 +510,7 @@ VU::VU_FCEQ(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_FCGET(VUInstruction &A)
+int Vu::VU_FCGET(VuInstruction &A)
 {
     uint16 test;
 
@@ -522,7 +523,7 @@ int VU::VU_FCGET(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_FCOR(VUInstruction &A)
+int Vu::VU_FCOR(VuInstruction &A)
 {
     unsigned int test;
     int ct1, ct2, ct3, ct4;
@@ -554,7 +555,7 @@ int VU::VU_FCOR(VUInstruction &A)
 }
 
 int
-VU::VU_FCSET(VUInstruction &A) {
+Vu::VU_FCSET(VuInstruction &A) {
     unsigned int test;
     uint16 ct1, ct2, ct3, ct4;
 
@@ -577,7 +578,7 @@ VU::VU_FCSET(VUInstruction &A) {
 }
 
 int
-VU::VU_FMAND(VUInstruction &A) {
+Vu::VU_FMAND(VuInstruction &A) {
     uint16 test1, test2;
     int16 aux;
     int st1;
@@ -602,7 +603,7 @@ VU::VU_FMAND(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_FMEQ(VUInstruction &A)
+int Vu::VU_FMEQ(VuInstruction &A)
 {
     uint16 test1, test2;
     int16 aux;
@@ -630,7 +631,7 @@ int VU::VU_FMEQ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_FMOR(VUInstruction &A)
+int Vu::VU_FMOR(VuInstruction &A)
 {
     uint16 test1, test2;
     int16 aux;
@@ -657,7 +658,7 @@ int VU::VU_FMOR(VUInstruction &A)
 
 
 
-int VU::VU_FSAND(VUInstruction &A)
+int Vu::VU_FSAND(VuInstruction &A)
 {
     uint16 test1,test2;
     int16 aux;
@@ -676,7 +677,7 @@ int VU::VU_FSAND(VUInstruction &A)
 }
 
 
-int VU::VU_FSEQ(VUInstruction &A)
+int Vu::VU_FSEQ(VuInstruction &A)
 {
     uint16 test1,test2;
 
@@ -695,7 +696,7 @@ int VU::VU_FSEQ(VUInstruction &A)
 }
 
 
-int VU::VU_FSOR(VUInstruction &A)
+int Vu::VU_FSOR(VuInstruction &A)
 {
     uint16 test1,test2;
     int16 aux;
@@ -713,7 +714,7 @@ int VU::VU_FSOR(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_FSSET(VUInstruction &A)
+int Vu::VU_FSSET(VuInstruction &A)
 {
     uint16 test1;
 
@@ -726,7 +727,7 @@ int VU::VU_FSSET(VUInstruction &A)
 }
 
 int
-VU::VU_IADD(VUInstruction &A) {
+Vu::VU_IADD(VuInstruction &A) {
     int st1, st2;
     int32 v1,v2;
 
@@ -754,7 +755,7 @@ VU::VU_IADD(VUInstruction &A) {
 }
 
 int
-VU::VU_IADDI(VUInstruction &A) {
+Vu::VU_IADDI(VuInstruction &A) {
     int st1;
     int32 v1,v2;
 
@@ -779,7 +780,7 @@ VU::VU_IADDI(VUInstruction &A) {
 }
 
 int
-VU::VU_IADDIU(VUInstruction &A) {
+Vu::VU_IADDIU(VuInstruction &A) {
     int st1;
     int16 v1,v3;
     st1 = Stalling(A.Params[1][1]);
@@ -803,7 +804,7 @@ VU::VU_IADDIU(VUInstruction &A) {
 }
 
 int
-VU::VU_IAND(VUInstruction &A) {
+Vu::VU_IAND(VuInstruction &A) {
     int st1, st2;
     int32 v1,v2;
 
@@ -829,7 +830,7 @@ VU::VU_IAND(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_IBEQ(VUInstruction &A)
+int Vu::VU_IBEQ(VuInstruction &A)
 {
     int st1, st2,a;
 
@@ -861,7 +862,7 @@ int VU::VU_IBEQ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_IBGEZ(VUInstruction &A)
+int Vu::VU_IBGEZ(VuInstruction &A)
 {
     int st1, a;
 
@@ -889,7 +890,7 @@ int VU::VU_IBGEZ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_IBGTZ(VUInstruction &A)
+int Vu::VU_IBGTZ(VuInstruction &A)
 {
     int st1, a;
 
@@ -917,7 +918,7 @@ int VU::VU_IBGTZ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_IBLEZ(VUInstruction &A)
+int Vu::VU_IBLEZ(VuInstruction &A)
 {
     int st1, a;
 
@@ -945,7 +946,7 @@ int VU::VU_IBLEZ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_IBLTZ(VUInstruction &A)
+int Vu::VU_IBLTZ(VuInstruction &A)
 {
     int st1, a;
     st1=Stalling(A.Params[1][0]);
@@ -970,7 +971,7 @@ int VU::VU_IBLTZ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_IBNE(VUInstruction &A)
+int Vu::VU_IBNE(VuInstruction &A)
 {
     int st1, st2,a;
 
@@ -1003,7 +1004,7 @@ int VU::VU_IBNE(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ILW(VUInstruction &A)
+int Vu::VU_ILW(VuInstruction &A)
 {
     int st1;
     char dst[50];
@@ -1041,7 +1042,7 @@ int VU::VU_ILW(VUInstruction &A)
 }
 
 int
-VU::VU_ILWR(VUInstruction &A) {
+Vu::VU_ILWR(VuInstruction &A) {
     int st1;
     char dst[50];
     int16 v1, v2;
@@ -1077,7 +1078,7 @@ VU::VU_ILWR(VUInstruction &A) {
 }
 
 int
-VU::VU_IOR(VUInstruction &A) {
+Vu::VU_IOR(VuInstruction &A) {
     int st1, st2;
     int32 v1,v2;
 
@@ -1104,7 +1105,7 @@ VU::VU_IOR(VUInstruction &A) {
     return 0;
 }
 
-int VU::VU_ISUB(VUInstruction &A)
+int Vu::VU_ISUB(VuInstruction &A)
 {
     int st1, st2;
     int32 v1,v2;
@@ -1133,7 +1134,7 @@ int VU::VU_ISUB(VUInstruction &A)
 
 
 int
-VU::VU_ISUBIU(VUInstruction &A) {
+Vu::VU_ISUBIU(VuInstruction &A) {
     int st1;
     int16 v2;
     int16 v1;
@@ -1155,7 +1156,7 @@ VU::VU_ISUBIU(VUInstruction &A) {
 }
 
 int
-VU::VU_ISW(VUInstruction &A) {
+Vu::VU_ISW(VuInstruction &A) {
     int st1;
     char dst[50];
     uint16 v1, v2;
@@ -1190,13 +1191,12 @@ VU::VU_ISW(VUInstruction &A) {
     if(strstr(dst,"W")) {
         MemSetVal16((uint16)(v2+v1),'W', v3);
     }
-    memoryUpdate = true;
     return 0;
 }
 
 
 int
-VU::VU_ISWR(VUInstruction &A) {
+Vu::VU_ISWR(VuInstruction &A) {
     int st1;
     char dst[50];
     int16 v1, v2;
@@ -1222,12 +1222,10 @@ VU::VU_ISWR(VUInstruction &A) {
         MemSetVal16(v1,'Z', v2);
     if(strstr(dst,"w"))
         MemSetVal16(v1,'W', v2);
-
-    memoryUpdate = true;
     return 0;
 }
 
-int VU::VU_JARL(VUInstruction &A)
+int Vu::VU_JARL(VuInstruction &A)
 {
     int a;
 
@@ -1250,7 +1248,7 @@ int VU::VU_JARL(VUInstruction &A)
 }
 
 int
-VU::VU_JR(VUInstruction &A) {
+Vu::VU_JR(VuInstruction &A) {
     int a;
     //all this instructions are due to delay slot
 
@@ -1265,7 +1263,7 @@ VU::VU_JR(VUInstruction &A) {
     return -1;
 }
 
-int VU::VU_LQ(VUInstruction &A)
+int Vu::VU_LQ(VuInstruction &A)
 {
     char dst[50];
     int st1;
@@ -1282,10 +1280,14 @@ int VU::VU_LQ(VUInstruction &A)
     RegInt[A.Params[1][1].index].lastRead(PC);
     v1=RegInt[A.Params[1][1].index].value();
     v2=(uint16)A.Params[1][1].data;
-    memcpy(&vx, &(dataMem[v1+v2].x),4);
-    memcpy(&vy, &(dataMem[v1+v2].y),4);
-    memcpy(&vz, &(dataMem[v1+v2].z),4);
-    memcpy(&vw, &(dataMem[v1+v2].w),4);
+    // memcpy(&vx, &(dataMem[v1+v2].x),4);
+    // memcpy(&vy, &(dataMem[v1+v2].y),4);
+    // memcpy(&vz, &(dataMem[v1+v2].z),4);
+    // memcpy(&vw, &(dataMem[v1+v2].w),4);
+    vx = m_pVuMem->ReadX(v1+v2);
+    vy = m_pVuMem->ReadY(v1+v2);
+    vz = m_pVuMem->ReadZ(v1+v2);
+    vw = m_pVuMem->ReadW(v1+v2);
     RegFloat[A.Params[1][0].index].stall(4);
     RegFloat[A.Params[1][0].index].lastWrite(PC);
 
@@ -1309,7 +1311,7 @@ int VU::VU_LQ(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_LQD(VUInstruction &A)
+int Vu::VU_LQD(VuInstruction &A)
 {
     char dst[50];
     int st1;
@@ -1329,10 +1331,14 @@ int VU::VU_LQD(VUInstruction &A)
     v1--;
     RegInt[A.Params[1][1].index].value(v1);
 
-    vx=dataMem[v1].x;
-    vy=dataMem[v1].y;
-    vz=dataMem[v1].z;
-    vw=dataMem[v1].w;
+    vx = m_pVuMem->ReadX(v1);
+    vy = m_pVuMem->ReadY(v1);
+    vz = m_pVuMem->ReadZ(v1);
+    vw = m_pVuMem->ReadW(v1);
+    // vx=dataMem[v1].x;
+    // vy=dataMem[v1].y;
+    // vz=dataMem[v1].z;
+    // vw=dataMem[v1].w;
 
     RegFloat[A.Params[1][0].index].stall(4);
     RegInt[A.Params[1][1].index].stall(4);
@@ -1357,7 +1363,7 @@ int VU::VU_LQD(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_LQI(VUInstruction &A)
+int Vu::VU_LQI(VuInstruction &A)
 {
     char dst[50];
     int st1;
@@ -1375,10 +1381,14 @@ int VU::VU_LQI(VUInstruction &A)
     RegInt[A.Params[1][1].index].lastWrite(PC);
     v1=RegInt[A.Params[1][1].index].value();
 
-    vx=dataMem[v1].x;
-    vy=dataMem[v1].y;
-    vz=dataMem[v1].z;
-    vw=dataMem[v1].w;
+    vx = m_pVuMem->ReadX(v1);
+    vy = m_pVuMem->ReadY(v1);
+    vz = m_pVuMem->ReadZ(v1);
+    vw = m_pVuMem->ReadW(v1);
+    // vx=dataMem[v1].x;
+    // vy=dataMem[v1].y;
+    // vz=dataMem[v1].z;
+    // vw=dataMem[v1].w;
     v1++;
     RegFloat[A.Params[1][0].index].stall(4);
     RegInt[A.Params[1][1].index].stall(4);
@@ -1404,7 +1414,7 @@ int VU::VU_LQI(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MFIR(VUInstruction &A)
+int Vu::VU_MFIR(VuInstruction &A)
 {
     char dst[50];
     int st1;
@@ -1425,21 +1435,28 @@ int VU::VU_MFIR(VUInstruction &A)
         strcpy(dst,A.dest[1]);
     else
         strcpy(dst,"XYZW");
-    if(strstr(dst,"X"))
-        RegFloat[A.Params[1][0].index].mwrite(&v2,0);
-    if(strstr(dst,"Y"))
-        RegFloat[A.Params[1][0].index].mwrite(&v2,1);
-    if(strstr(dst,"Z"))
-        RegFloat[A.Params[1][0].index].mwrite(&v2,2);
-    if(strstr(dst,"W"))
-        RegFloat[A.Params[1][0].index].mwrite(&v2,3);
+
+    WriteFloatRegister(
+        A.Params[1][0].index,
+        dst,
+        v2, v2, v2, v2
+        );
+
+    // if(strstr(dst,"X"))
+    //     RegFloat[A.Params[1][0].index].mwrite(&v2,0);
+    // if(strstr(dst,"Y"))
+    //     RegFloat[A.Params[1][0].index].mwrite(&v2,1);
+    // if(strstr(dst,"Z"))
+    //     RegFloat[A.Params[1][0].index].mwrite(&v2,2);
+    // if(strstr(dst,"W"))
+    //     RegFloat[A.Params[1][0].index].mwrite(&v2,3);
 
     RegFloat[A.Params[1][0].index].stall(4);
     return 0;
 }
 
 
-int VU::VU_MFP(VUInstruction &A)
+int Vu::VU_MFP(VuInstruction &A)
 {
     char dst[50];
     float d1;
@@ -1474,7 +1491,7 @@ int VU::VU_MFP(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MOVE(VUInstruction &A)
+int Vu::VU_MOVE(VuInstruction &A)
 {
     char dst[50];
     int st1;
@@ -1508,7 +1525,7 @@ int VU::VU_MOVE(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MR32(VUInstruction &A)
+int Vu::VU_MR32(VuInstruction &A)
 {
     char dst[50];
     int st1;
@@ -1543,7 +1560,7 @@ int VU::VU_MR32(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_MTIR(VUInstruction &A)
+int Vu::VU_MTIR(VuInstruction &A)
 {
     int st1;
     float d1;
@@ -1574,7 +1591,7 @@ int VU::VU_MTIR(VUInstruction &A)
 }
 
 
-int VU::VU_RGET(VUInstruction &A)
+int Vu::VU_RGET(VuInstruction &A)
 {
     int st1;
     st1 = Stalling(A.Params[1][1]);
@@ -1600,7 +1617,7 @@ int VU::VU_RGET(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_RINIT(VUInstruction &A)
+int Vu::VU_RINIT(VuInstruction &A)
 {
     int st1;
     st1 = Stalling(A.Params[1][1]);
@@ -1620,7 +1637,7 @@ int VU::VU_RINIT(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_RNEXT(VUInstruction &A)
+int Vu::VU_RNEXT(VuInstruction &A)
 {
     int st1;
     float v1;
@@ -1649,7 +1666,7 @@ int VU::VU_RNEXT(VUInstruction &A)
 }
 
 
-int VU::VU_RSQRT(VUInstruction &A)
+int Vu::VU_RSQRT(VuInstruction &A)
 {
     int st1, st2;
     float d1,d2;
@@ -1699,7 +1716,7 @@ int VU::VU_RSQRT(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_RXOR(VUInstruction &A)
+int Vu::VU_RXOR(VuInstruction &A)
 {
     int st1;
     int32 v1,v2;
@@ -1730,7 +1747,7 @@ int VU::VU_RXOR(VUInstruction &A)
 }
 
 int
-VU::VU_SQ(VUInstruction &A) {
+Vu::VU_SQ(VuInstruction &A) {
     char dst[50];
     int st1, st2;
     int16 v1, v2;
@@ -1763,23 +1780,26 @@ VU::VU_SQ(VUInstruction &A) {
         strcpy(dst,"XYZW");
     }
     if(strstr(dst,"X")) {
-        memcpy(&(dataMem[v1+v2].x),&vx,4);
+        m_pVuMem->WriteX(v1+v2, vx);
+        // memcpy(&(dataMem[v1+v2].x),&vx,4);
     }
     if(strstr(dst,"Y")) {
-        memcpy(&(dataMem[v1+v2].y),&vy,4);
+        m_pVuMem->WriteY(v1+v2, vy);
+        // memcpy(&(dataMem[v1+v2].y),&vy,4);
     }
     if(strstr(dst,"Z")) {
-        memcpy(&(dataMem[v1+v2].z),&vz,4);
+        m_pVuMem->WriteZ(v1+v2, vz);
+        // memcpy(&(dataMem[v1+v2].z),&vz,4);
     }
     if(strstr(dst,"W")) {
-        memcpy(&(dataMem[v1+v2].w),&vw,4);
+        m_pVuMem->WriteW(v1+v2, vw);
+        // memcpy(&(dataMem[v1+v2].w),&vw,4);
     }
-    memoryUpdate = true;
     return 0;
 }
 
 int
-VU::VU_SQD(VUInstruction &A) {
+Vu::VU_SQD(VuInstruction &A) {
     char dst[50];
     int st1,st2;
     int16 v1;
@@ -1808,31 +1828,38 @@ VU::VU_SQD(VUInstruction &A) {
     RegFloat[A.Params[1][0].index].mcopy(&vz,2);
     RegFloat[A.Params[1][0].index].mcopy(&vw,3);
 
-    if (A.dest[1][0])
+    if (A.dest[1][0]) {
         strcpy(dst,A.dest[1]);
-    else
+    } else {
         strcpy(dst,"XYZW");
-    if(strstr(dst,"X"))
-        memcpy(&(dataMem[v1].x),&vx,4);
-    if(strstr(dst,"Y"))
-        memcpy(&(dataMem[v1].y),&vy,4);
-    if(strstr(dst,"Z"))
-        memcpy(&(dataMem[v1].z),&vz,4);
-    if(strstr(dst,"W"))
-        memcpy(&(dataMem[v1].w),&vw,4);
+    }
+    if(strstr(dst,"X")) {
+        // memcpy(&(dataMem[v1].x),&vx,4);
+        m_pVuMem->WriteW(v1, vx);
+    }
+    if(strstr(dst,"Y")) {
+        // memcpy(&(dataMem[v1].y),&vy,4);
+        m_pVuMem->WriteW(v1, vy);
+    }
+    if(strstr(dst,"Z")) {
+        // memcpy(&(dataMem[v1].z),&vz,4);
+        m_pVuMem->WriteW(v1, vz);
+    }
+    if(strstr(dst,"W")) {
+        // memcpy(&(dataMem[v1].w),&vw,4);
+        m_pVuMem->WriteW(v1, vw);
+    }
 
     RegInt[A.Params[1][1].index].stall(4);
-    memoryUpdate = true;
     return 0;
 }
 
-int VU::VU_SQI(VUInstruction &A)
+int Vu::VU_SQI(VuInstruction &A)
 {
     char dst[50];
     int st1, st2;
     int16 v1;
     int32 vx,vy,vz,vw;
-
 
     st1=Stalling(A.Params[1][0]);
     st2=Stalling(A.Params[1][1]);
@@ -1856,14 +1883,22 @@ int VU::VU_SQI(VUInstruction &A)
         strcpy(dst,A.dest[1]);
     else
         strcpy(dst,"XYZW");
-    if(strstr(dst,"X"))
-        memcpy(&(dataMem[v1].x),&vx,4);
-    if(strstr(dst,"Y"))
-        memcpy(&(dataMem[v1].y),&vy,4);
-    if(strstr(dst,"Z"))
-        memcpy(&(dataMem[v1].z),&vz,4);
-    if(strstr(dst,"W"))
-        memcpy(&(dataMem[v1].w),&vw,4);
+    if(strstr(dst,"X")) {
+        // memcpy(&(dataMem[v1].x),&vx,4);
+        m_pVuMem->WriteW(v1, vx);
+    }
+    if(strstr(dst,"Y")) {
+        // memcpy(&(dataMem[v1].y),&vy,4);
+        m_pVuMem->WriteW(v1, vy);
+    }
+    if(strstr(dst,"Z")) {
+        // memcpy(&(dataMem[v1].z),&vz,4);
+        m_pVuMem->WriteW(v1, vz);
+    }
+    if(strstr(dst,"W")) {
+        // memcpy(&(dataMem[v1].w),&vw,4);
+        m_pVuMem->WriteW(v1, vw);
+    }
 
     v1++;
     if ( A.Params[1][1].index != 0 ) {
@@ -1871,14 +1906,11 @@ int VU::VU_SQI(VUInstruction &A)
     }
     RegInt[A.Params[1][1].index].stall(4);
     RegInt[A.Params[1][1].index].lastWrite(PC);
-
-    memoryUpdate = true;
     return 0;
 }
 
-
 int
-VU::VU_SQRT(VUInstruction &A) {
+Vu::VU_SQRT(VuInstruction &A) {
     int st1;
     float d1;
 
@@ -1911,10 +1943,10 @@ VU::VU_SQRT(VUInstruction &A) {
 }
 
 int
-VU::VU_WAITP(void) {
+Vu::VU_WAITP(void) {
     while(P.stall()) {
         program[PC].tics++;
-        clock++;
+        m_clock++;
         DecStall(); //dec stall registers
         Instr.DecThroughput(); //dec throughput counter
     }
@@ -1922,10 +1954,10 @@ VU::VU_WAITP(void) {
 }
 
 int
-VU::VU_WAITQ(void) {
+Vu::VU_WAITQ(void) {
     while(Q.stall()) {
         program[PC].tics++;
-        clock++;
+        m_clock++;
         DecStall(); //dec stall registers
         Instr.DecThroughput(); //dec throughput counter
     }
@@ -1933,7 +1965,7 @@ VU::VU_WAITQ(void) {
 }
 
 int
-VU::VU_XGKICK(VUInstruction &A) {
+Vu::VU_XGKICK(VuInstruction &A) {
     uint32 start = RegInt[A.Params[1][0].index].value();
     if ( start > 1023 ) {
         return -1;
@@ -1942,26 +1974,26 @@ VU::VU_XGKICK(VUInstruction &A) {
 }
 
 int
-VU::VU_XITOP(VUInstruction &A) {
+Vu::VU_XITOP(VuInstruction &A) {
     RegInt[A.Params[1][0].index].value(0);
     return 0;
 }
 
 int
-VU::VU_XTOP(VUInstruction &A) {
+Vu::VU_XTOP(VuInstruction &A) {
     RegInt[A.Params[1][0].index].value(0);
     return 0;
 }
 
 int
-VU::VU_LOI_LOWER(VUInstruction &A) {
-    lowerFloatTemp.x(A.Params[1][0].fdata);
-    lowerFloatTemp.y(A.Params[1][0].fdata);
-    lowerFloatTemp.z(A.Params[1][0].fdata);
-    lowerFloatTemp.w(A.Params[1][0].fdata);
+Vu::VU_LOI_LOWER(VuInstruction &A) {
+    m_lowerFloatTemp.x(A.Params[1][0].fdata);
+    m_lowerFloatTemp.y(A.Params[1][0].fdata);
+    m_lowerFloatTemp.z(A.Params[1][0].fdata);
+    m_lowerFloatTemp.w(A.Params[1][0].fdata);
     I.lastWrite(PC);
     I.stall(1);
-    specialRegisterWrite = true;
-    specialFloatIndex = 1;
+    m_specialRegisterWrite = true;
+    m_specialFloatIndex = 1;
     return 0;
 }

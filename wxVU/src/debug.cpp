@@ -35,9 +35,9 @@ DebugStream& DebugStream::flush()
 
   if( p_frame != NULL )
   {
-    if( p_frame->txtDebug != NULL )
+    if( p_frame->m_pTextDebug != NULL )
     {
-      p_frame->txtDebug->AppendText( m_aBuffer );
+      p_frame->m_pTextDebug->AppendText( m_aBuffer );
     }
     else
     {

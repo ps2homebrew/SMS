@@ -2,19 +2,14 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+
 #include "vif.h"
-#include "vu.h"
 #include "parser.h"
+#include "vu.h"
 #include "debug.h"
 
 using namespace std;
 
-extern VU VUchip;
-
-int limit(int , int );
 
 static const string tMOD[4] = {
     "No addition processing",
@@ -35,9 +30,74 @@ static const string tME1[2] = {
     "Mask (considered as VIFcode NOP.)"
 };
 
+static const wxString tUNPACK_MODES[16] = {
+    "S32\n",
+    "S16\n",
+    "S8\n",
+    "",
+    "V2_32\n",
+    "V2_16\n",
+    "V2_8\n",
+    "",
+    "V3_32\n",
+    "V3_16\n",
+    "V3_8\n",
+    "",
+    "V4_32\n",
+    "V4_16\n",
+    "V4_8\n",
+    "V4_5\n"
+};
+
+/////////////////////////////// PUBLIC ///////////////////////////////////////
+int limit(int a, int max) { return(a > max ? max: a);}
+
+Vif::Vif() : SubSystem(0) {
+    Init();
+}
+
+Vif::Vif(int num) : SubSystem(num) {
+    nREGISTERS = num;
+    Init();
+}
+
+Vif::Vif(const char *filename, Parser* pParser, Vu* pVu) : SubSystem(0) {
+    m_fin->open(filename);
+    m_fin->seekg(0, ios::end);
+    m_fileLength = m_fin->tellg();
+    m_fin->seekg(0, ios::beg);
+
+    m_pParser = pParser;
+    m_pVu = pVu;
+    Init();
+}
+
+Vif::Vif(const char *filename, int num) : SubSystem(num) {
+    m_fin->open(filename);
+    nREGISTERS = num;
+    Init();
+}
+
+// de struct or
+Vif::~Vif() {
+}
+
+const int32
+Vif::Open(const char* filename) {
+    m_fin = new ifstream(filename, ios::binary);
+    return E_OK;
+}
+
+const int32
+Vif::Close() {
+    delete m_fin;
+    return E_OK;
+}
+
+/////////////////////////////// PRIVATE    ///////////////////////////////////
 void
-VIF::clearRegisters(void) {
-	interrupt = false;
+Vif::Init(void) {
+	m_interrupt = false;
 	vpu = 0;
 	rVIF1_R0 = 0;
 	rVIF1_R1 = 0;
@@ -79,126 +139,83 @@ VIF::clearRegisters(void) {
 	rVIF0_MARK = 0;
 	rVIF0_NUM = 0;
 	rVIF0_CODE = 0;
-    _num = 0;
-    _cmd = NULL;
+    m_vifCmdNum = 0;
+    m_vifCmd = NULL;
     _WL = 0;
     _CL = 0;
-    _memIndex = 0;
-    _codeIndex = 0;
-
+    m_memIndex = 0;
+    m_codeIndex = 0;
 }
-
-// boa constrictor
-VIF::VIF(int num) : SubSystem(num) {
-    nREGISTERS = num;
-    clearRegisters();
-}
-
-VIF::VIF(const char *filename) : SubSystem(0), _fin(filename) {
-    clearRegisters();
-}
-
-VIF::VIF(const char *filename, int num)
-    : SubSystem(num), _fin(filename) {
-    nREGISTERS = num;
-    clearRegisters();
-}
-
-// de struct or
-VIF::~VIF() {
-}
-
-//
-// VIF Register functions
-//
 
 // ------------------------------------------------------------------
 // VIF commands
-void
-VIF::cmd_nop(void) {
+const int32
+Vif::CmdNop(void) {
+    m_vifCmd = VIF_NOP;
+    if ( m_trace ) {
+        m_pLog->Trace(1, "NOP\n");
+    }
+    return E_OK;
 }
 
-void
-VIF::cmd_base(void) {
-    // uint32 base = data[pos]&0x1ff;
-    // VIF1_BASE = base;
+const int32
+Vif::CmdStcycl(const int32& data) {
+    m_vifCmd = VIF_STCYCL;
+    _WL = (data>>8)&0xff;
+    _CL = data&0xff;
+    if ( m_trace ) {
+        m_pLog->Trace(1, "STCYCL\n");
+        m_pLog->Trace(2, wxString::Format("WL: %d, CL: %d\n", _WL, _CL));
+    }
+    return E_OK;
 }
 
-void
-VIF::cmd_itop(void) {
-
+const int32
+Vif::CmdItop(const int32& data) {
+    if ( m_trace ) {
+        m_pLog->Trace(1, "ITOP\n");
+    }
+    m_vifCmd = VIF_ITOP;
+    m_vifCmdNum = 0;
+    rVIF0_ITOPS = data&0x3ff;
+    rVIF1_ITOPS = data&0x3ff;
+    return E_OK;
 }
 
-void
-VIF::cmd_stcol(void) {
-    char raw[4];
-    int32 data;
-    _fin.read(raw, 4);
-    data = (raw[3]<<24)+
-        (raw[2]<<16)+
-        (raw[1]<<8)+
-        raw[0];
-    rVIF0_C0 = data;
-    rVIF1_C0 = data;
-    _fin.read(raw, 4);
-    data = (raw[3]<<24)+
-        (raw[2]<<16)+
-        (raw[1]<<8)+
-        raw[0];
-    rVIF0_C1 = data;
-    rVIF1_C1 = data;
-    _fin.read(raw, 4);
-    data = (raw[3]<<24)+
-        (raw[2]<<16)+
-        (raw[1]<<8)+
-        raw[0];
-    rVIF0_C2 = data;
-    rVIF1_C2 = data;
-    _fin.read(raw, 4);
-    data = (raw[3]<<24)+
-        (raw[2]<<16)+
-        (raw[1]<<8)+
-        raw[0];
-    rVIF0_C3 = data;
-    rVIF1_C3 = data;
+const int32
+Vif::CmdStmod(const int32& data) {
+    if ( m_trace ) {
+        m_pLog->Trace(1, "STMOD\n");
+    }
+    m_vifCmd = VIF_STMOD;
+    rVIF0_MODE = data&0x3;
+    rVIF1_MODE = data&0x3;
+    return E_OK;
 }
 
-void
-VIF::cmd_strow(void) {
-    char raw[4];
-    uint32 data;
-    _fin.read(raw, 4);
-    data =  ((unsigned char)raw[3]<<24) +
-            ((unsigned char)raw[2]<<16) +
-            ((unsigned char)raw[1]<<8)  +
-            (unsigned char)raw[0];
-    rVIF0_R0 = data;
-    rVIF1_R0 = data;
-    _fin.read(raw, 4);
-    data =  ((unsigned char)raw[3]<<24) +
-            ((unsigned char)raw[2]<<16) +
-            ((unsigned char)raw[1]<<8)  +
-            (unsigned char)raw[0];
-    rVIF0_R1 = data;
-    rVIF1_R1 = data;
-    _fin.read(raw, 4);
-    data = ((unsigned char)raw[3]<<24)+
-        ((unsigned char)raw[2]<<16)+
-        ((unsigned char)raw[1]<<8)+
-        (unsigned char)raw[0];
-    rVIF0_R2 = data;
-    rVIF1_R2 = data;
-    _fin.read(raw, 4);
-    data = ((unsigned char)raw[3]<<24)+
-        ((unsigned char)raw[2]<<16)+
-        ((unsigned char)raw[1]<<8)+
-        (unsigned char)raw[0];
-    rVIF0_R3 = data;
-    rVIF1_R3 = data;
+const int32
+Vif::CmdMark(const int32& data) {
+    if ( m_trace ) {
+        m_pLog->Trace(1, "MARK\n");
+    }
+    m_vifCmd = VIF_MARK;
+    rVIF0_MARK = data&0xFFFF;
+    rVIF1_MARK = data&0xFFFF;
+    return E_OK;
 }
 
-void
-VIF::cmd_mpg(void) {
+const int32
+Vif::CmdFlushE(void) {
+    // TODO
+    m_vifCmd = VIF_FLUSHE;
+    if ( m_trace ) {
+        m_pLog->Trace(1, "FLUSHE\n");
+    }
+    return E_OK;
+}
+
+const int32
+Vif::CmdMpg(const int32& data) {
     char    raw[4];
     uint32  lower;
     uint32  upper;
@@ -207,278 +224,81 @@ VIF::cmd_mpg(void) {
     char    lowline[64];
     char    uparam[64];
     char    lparam[64];
+
+    m_vifCmd = VIF_MPG;
+    m_vifCmdNum = (data>>16)&0xFF;
+    _addr = data&0xffff;
     index = _addr;
-    while ( _num > 0 ) {
-        _fin.read(raw, 4);
+    if ( m_vifCmdNum == 0 ) {
+        m_vifCmdNum = 256;
+    }
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("MPG, Num = %d, Load addr = %d\n",
+                m_vifCmdNum, _addr));
+    }
+
+    while ( m_vifCmdNum > 0 ) {
+        m_fin->read(raw, 4);
         lower = ((unsigned char)raw[3]<<24)+
             ((unsigned char)raw[2]<<16)+
             ((unsigned char)raw[1]<<8)+
             (unsigned char)raw[0];
-        _fin.read(raw, 4);
+        m_fin->read(raw, 4);
         upper = ((unsigned char)raw[3]<<24)+
             ((unsigned char)raw[2]<<16)+
             (((unsigned char)raw[1])<<8)+
             ((unsigned char)raw[0]);
-        dlower(&lower, lowline, lparam );
-        dupper(&upper, uppline, uparam );
-        insert(uppline, lowline, uparam, lparam, index);
+        m_pParser->dlower(&lower, lowline, lparam );
+        m_pParser->dupper(&upper, uppline, uparam );
+        m_pParser->insert(uppline, lowline, uparam, lparam, index);
         index++;
-        _num--;
+        m_vifCmdNum--;
     }
 
-    if ( _num == 0 ) {
-        _cmd = NULL;
+    if ( m_vifCmdNum == 0 ) {
+        m_vifCmd = NULL;
     }
+    return E_OK;
 }
 
-// ------------------------------------------------------------------
-bool
-VIF::eof() {
-    return _fin.eof();
-}
-
-bool
-VIF::valid() {
-    return true;
-}
-
-uint32
-VIF::read() {
-    char    raw[4];
-    uint32  data = 0;
-    if (_num == 0) {
-        decode_cmd();
-    }
-    return data;
-}
-
-uint32
-VIF::cmd() {
-    return _cmd;
-}
-
-void
-VIF::decode_cmd(void) {
-    uint32 data;
-    char raw[4];
-    uint32 cmd;
-    _fin.read(raw, 4);
-    data = ((unsigned char)raw[3]<<24) +
-        ((unsigned char)raw[2]<<16) +
-        ((unsigned char)raw[1]<<8) +
-        (unsigned char)raw[0];
-    if (_fin.eof()) {
-        return;
-    }
-    cmd = data>>24;
-    uint32 vl, vn;
-    switch(cmd) {
-        case VIF_NOP:
-            _cmd = VIF_NOP;
-            _num = 0;
-            cdbg << "VIF_NOP" << endl;
-            break;
-        case VIF_STCYCL:
-            _cmd = VIF_STCYCL;
-            _num = 0;
-            _WL = (data>>8)&0xff;
-            _CL = data&0xff;
-            cdbg << "VIF_STCYCL: ";
-            cdbg << "WL: " << _WL << ", CL: " << _CL << endl;
-            break;
-        case VIF_OFFSET:
-            _cmd = VIF_OFFSET;
-            _num = 0;
-            rVIF1_OFST = data&0x3ff;
-            // clear DBF flag
-            rVIF1_STAT = (rVIF1_STAT&0x1f803f4f);
-            rVIF1_TOPS = rVIF1_BASE;
-            break;
-        case VIF_BASE:
-            _cmd = VIF_BASE;
-            _num = 0;
-            rVIF1_BASE = data&0x3ff;
-            cdbg << "VIF_BASE: " << rVIF1_BASE << endl;
-            break;
-        case VIF_ITOP:
-            _cmd = VIF_ITOP;
-            _num = 0;
-            rVIF0_ITOPS = data&0x3ff;
-            rVIF1_ITOPS = data&0x3ff;
-            break;
-        case VIF_STMOD:
-            cout << "VIF_STMOD" << endl;
-            _cmd = VIF_STMOD;
-            _num = 0;
-            rVIF0_MODE = data&0x3;
-            rVIF1_MODE = data&0x3;
-            break;
-        case VIF_MSKPATH3:
-            _cmd = VIF_MSKPATH3;
-            _num = 0;
-            if ( (data&0x8000) == 0x8000 ) {
-                _maskpath3 = true;
-            } else {
-                _maskpath3 = false;
-            }
-            break;
-        case VIF_MARK:
-            _cmd = VIF_MARK;
-            _num = 0;
-            rVIF0_MARK = data&0xFFFF;
-            rVIF1_MARK = data&0xFFFF;
-            break;
-        case VIF_FLUSHE:
-            _cmd = VIF_FLUSHE;
-            _num = 0;
-            cdbg << "VIF_FLUSHE" << endl;
-			// end of micro program
-            break;
-        case VIF_FLUSH:
-            _cmd = VIF_FLUSH;
-            _num = 0;
-            cdbg << "VIF_FLUSH" << endl;
-			// end of micro program
-			// end of transfer to GIF from PATH1 and PATH2
-            break;
-        case VIF_FLUSHA:
-            _cmd = VIF_FLUSHA;
-            cdbg << "VIF_FLUSHA" << endl;
-			// waits no request state from path3
-			// end of micro program
-			// end of transfer to GIF from PATH1 and PATH2
-            break;
-        case VIF_MSCAL:
-            _cmd = VIF_MSCAL;
-            cdbg << "VIF_MSCAL" << endl;
-            _addr = data&0xFFFF;
-            break;
-		case VIF_MSCNT:
-            _cmd = VIF_MSCNT;
-            cdbg << "VIF_MSCNT" << endl;
-			break;
-        case VIF_MSCALF:
-            _cmd = VIF_MSCALF;
-            cdbg << "VIF_MSCALF" << endl;
-            _addr = data&0xFFFF;
-            break;
-		case VIF_STMASK:
-			cdbg << "VIF_STMASK" << endl;
-            _cmd = VIF_STMASK;
-            rVIF0_MASK = data;
-            rVIF1_MASK = data;
-			break;
-        case VIF_STROW:
-            cdbg << "VIF_STROW" << endl;
-            cmd_strow();
-            break;
-        case VIF_STCOL:
-            cmd_stcol();
-            break;
-        case VIF_MPG:
-            cdbg << "VIF_MPG" << endl;
-            _cmd = VIF_MPG;
-            _num = (data>>16)&0xFF;
-            _addr = data&0xffff;
-            if ( _num == 0 ) {
-                _num = 256;
-            }
-            cmd_mpg();
-            break;
-		case VIF_DIRECT:
-            // should be redirected to gsexec directly
-			cdbg << "VIF_DIRECT" << endl;
-            // num = code&0xFFFF;
-            // if (num == 0) {
-            //     num = 65536;
-            // }
-			break;
-		case VIF_DIRECTHL:
-            // should be redirected to gsexec directly
-			cdbg << "VIF_DIRECTHL" << endl;
-            // num = code&0xFFFF;
-            // if (num == 0) {
-            //     num = 65536;
-            // }
-			break;
-    }
-
-    if ( (cmd&VIF_UNPACK) == VIF_UNPACK) {
-        _memIndex = 0;
-        _cmd = VIF_UNPACK;
-        _num = (data>>16)&0xFF;
-        cout << (void *)data << endl;
-        if ( _num == 0 ) {
-            _num = 256;
-        }
-        _unpack = (data>>24)&0xF;
-        _addr = (data)&0x3FF;
-        _usn = (data>>14)&0x1;
-        _flg = (data>>15)&0x1;
-        _mask = (bool)((data>>27)&0x1);
-        vl = (data>>24)&3;
-        vn = (data>>26)&3;
-
-        if ( _WL <= _CL ) {
-            _length = 1+(((32>>vl)*(vn+1))*_num/32);
-        } else {
-            uint32 n = _CL*(_num/_WL)+limit(_num%_WL,_CL);
-            _length = 1+(((32>>vl)*(vn+1))*n/32);
-        }
-
-        _unpack = (vn<<2)+vl;
-        cdbg << "length: " << _length << ", ";
-        cdbg << "usn: " << _usn << ", ";
-        cdbg << "flg: " << _flg << ", ";
-        cdbg << "mode: " << _unpack << ", ";
-        cdbg << "num: " << _num << endl;
-        if ( _flg == 1 ) {
-            _memIndex = rVIF1_TOPS; 
-        }
-        _memIndex += _addr;
-        cmd_unpack();
-    }
-}
-
-uint32
-VIF::cmd_unpack(void) {
+// --------------------------------------------------------------------------
+// function to extract VIF UNPACK data
+const int32
+Vif::CmdUnpack(void) {
     char    rword[4], rhword[2], rbyte[1];
     uint32  word_x, word_y, word_z, word_w;
-    uint16  hword_x, hword_y, hword_z, hword_w;
-    uint8   byte_x, byte_y, byte_z, byte_w;
-    uint32  _cycle = 0;
-    uint32  _write = 0;
-    uint32  _cnt = _num;
-    for (;_num > 0; _num--) {
-        if (_fin.eof()) {
-            // should probably warn about premature ending, ie something is
-            // wrong with the vifcode
-            cdbg << "premature eof" << endl;
-            break;
+    for (;m_vifCmdNum > 0; m_vifCmdNum--) {
+        if (m_fin->peek() == EOF) {
+            m_pLog->Warning("Premature EOF\n");
+            return E_FILE_EOF;
         }
+        uint32 cycle;
+        uint32 write = 0;
         if( _CL > _WL ) {
-            if ( _write >= _WL ) {
-                _memIndex += _CL-_WL;
-                _cycle = 0;
-                _write = 0;
+            if ( write >= _WL ) {
+                m_memIndex += _CL-_WL;
+                cycle = 0;
+                write = 0;
             }
         } else if ( _CL > _WL ) {
-            if ( _write >= _CL ) {
-                for(_cnt = 0; _cnt < (_CL-_WL); _cnt++) {
-                    VUchip.dataMem[_memIndex].x = rVIF1_C0; 
-                    VUchip.dataMem[_memIndex].y = rVIF1_C1; 
-                    VUchip.dataMem[_memIndex].z = rVIF1_C2; 
-                    VUchip.dataMem[_memIndex].w = rVIF1_C3; 
-                    _memIndex++;
+            if ( write >= _CL ) {
+                for(uint32 cnt = 0; cnt < (_CL-_WL); cnt++) {
+                    m_pVu->WriteMemX(m_memIndex, rVIF1_C0);
+                    m_pVu->WriteMemY(m_memIndex, rVIF1_C1);
+                    m_pVu->WriteMemZ(m_memIndex, rVIF1_C2);
+                    m_pVu->WriteMemW(m_memIndex, rVIF1_C3);
+                    m_memIndex++;
                 }
-                _cycle = 0;
-                _write = 0;
+                cycle = 0;
+                write = 0;
             }
         }
-        switch(_unpack) {
+        if ( m_trace ) {
+            m_pLog->Trace(2, tUNPACK_MODES[m_unpack]);
+        }
+        switch(m_unpack) {
             case UNPACK_S32:
-                cdbg << "unpacking S32" << endl;
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
@@ -488,8 +308,7 @@ VIF::cmd_unpack(void) {
                 word_w = word_x;
                 break;
             case UNPACK_S16:
-                cdbg << "unpacking S16" << endl;
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
                 word_y = word_x;
@@ -497,137 +316,127 @@ VIF::cmd_unpack(void) {
                 word_w = word_x;
                 break;
             case UNPACK_S8:
-                cdbg << "unpacking S8" << endl;
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_x = (unsigned int)rbyte[0];
                 word_y = word_x;
                 word_z = word_x;
                 word_w = word_x;
                 break;
             case UNPACK_V232:
-                cdbg << "unpacking V2_32" << endl;
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_y = (rword[3]<<24) +
                     (rword[2]<<16) +
                     (rword[1]<<8) +
                     rword[0];
-                word_z = VUchip.dataMem[_memIndex].z;
-                word_w = VUchip.dataMem[_memIndex].w;
+                // word_z = m_pVu->ReadMemZ(m_memIndex);
+                // word_w = m_pVu->ReadMemW(m_memIndex);
                 break;
             case UNPACK_V216:
-                cdbg << "unpacking V2_16" << endl;
-                _fin.read(rword, 2);
+                m_fin->read(rword, 2);
                 word_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                _fin.read(rword, 2);
+                m_fin->read(rword, 2);
                 word_y = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                word_z = VUchip.dataMem[_memIndex].z;
-                word_w = VUchip.dataMem[_memIndex].w;
+                // word_z = m_pVu->ReadMemZ(m_memIndex);
+                // word_w = m_pVu->ReadMemW(m_memIndex);
                 break;
             case UNPACK_V28:
-                cdbg << "unpacking V2_8" << endl;
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_x = (unsigned int)rbyte[0];
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_y = (unsigned int)rbyte[0];
-                word_z = VUchip.dataMem[_memIndex].z;
-                word_w = VUchip.dataMem[_memIndex].w;
+                // word_z = m_pVu->ReadMemZ(m_memIndex);
+                // word_w = m_pVu->ReadMemW(m_memIndex);
                 break;
             case UNPACK_V332:
-                cdbg << "unpacking V3_32" << endl;
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_y = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_z = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                word_w = VUchip.dataMem[_memIndex].w;
+                // word_w = m_pVu->ReadMemW(m_memIndex);
                 break;
             case UNPACK_V316:
-                cdbg << "unpacking V3_16" << endl;
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_y = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_z = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                word_w = VUchip.dataMem[_memIndex].w;
+                // word_w = m_pVu->ReadMemW(m_memIndex);
                 break;
             case UNPACK_V38:
-                cdbg << "unpacking V3_8" << endl;
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_x = (unsigned char)rbyte[0];
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_y = (unsigned char)rbyte[0];
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_z = (unsigned char)rbyte[0];
-                word_w = VUchip.dataMem[_memIndex].w;
+                // word_w = m_pVu->ReadMemW(m_memIndex);
                 break;
             case UNPACK_V432:
-                cdbg << "unpacking V4_32" << endl;
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_y = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_z = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
-                _fin.read(rword, 4);
+                m_fin->read(rword, 4);
                 word_w = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
                     ((unsigned char)rword[1]<<8) +
                     (unsigned char)rword[0];
                 break;
             case UNPACK_V416:
-                cout << "unpacking V4_16" << endl;
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_y = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_z = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
-                _fin.read(rhword, 2);
+                m_fin->read(rhword, 2);
                 word_w = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
                 break;
             case UNPACK_V48:
-                cout << "unpacking V4_8" << endl;
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_x = (unsigned int)rbyte[0];
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_y = (unsigned int)rbyte[0];
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_z = (unsigned int)rbyte[0];
-                _fin.read(rbyte, 1);
+                m_fin->read(rbyte, 1);
                 word_w = (unsigned int)rbyte[0];
                 break;
             case UNPACK_V45:
@@ -659,30 +468,157 @@ VIF::cmd_unpack(void) {
                 word_y = word_y+rVIF1_R1;
                 word_z = word_z+rVIF1_R2;
                 word_w = word_w+rVIF1_R3;
-                rVIF1_R0 = word_x;
-                rVIF1_R1 = word_y;
-                rVIF1_R2 = word_z;
-                rVIF1_R3 = word_w;
             }
+            rVIF1_R0 = word_x;
+            rVIF1_R1 = word_y;
+            rVIF1_R2 = word_z;
+            rVIF1_R3 = word_w;
         }
-        VUchip.dataMem[_memIndex].x = word_x;
-        VUchip.dataMem[_memIndex].y = word_y;
-        VUchip.dataMem[_memIndex].z = word_z;
-        VUchip.dataMem[_memIndex].w = word_w;
-
-        _memIndex++;
-        _cycle++;
-        _write++;
+        cout << "Writing: "
+            << (void *)word_x << ", "
+            << (void *)word_y << ", "
+            << (void *)word_z << ", "
+            << (void *)word_w << endl;
+        m_pVu->WriteMemX(m_memIndex, word_x);
+        m_pVu->WriteMemY(m_memIndex, word_y);
+        m_pVu->WriteMemZ(m_memIndex, word_z);
+        m_pVu->WriteMemW(m_memIndex, word_w);
+        m_memIndex++;
+        cycle++;
+        write++;
     }
-    return 0;
+    return E_OK;
 }
 
-int
-limit(int a, int max) { return(a > max ? max: a);}
+const int32
+Vif::CmdMscal(const int32& data) {
+    m_vifCmd = VIF_MSCAL;
+    _addr = data&0xffff;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("MSCAL at %d\n", _addr));
+    }
+    m_pVu->Run(_addr);
+    return E_OK;
+}
 
-// vif0/vif1 common register unpack functions
+const int32
+Vif::CmdMscalf(const int32& data) {
+    // TODO simulate the wait for GIF PATH1/PATH2 and
+    // end of microprogram ( ie mpg is running while a new batch is waiting to
+    // be transfered from VIF to VU
+    m_vifCmd = VIF_MSCALF;
+    _addr = data&0xffff;
+    if ( m_trace ) {
+        m_pLog->Trace(1, wxString::Format("MSCALF at %d\n", _addr));
+    }
+    m_pVu->Run(_addr);
+    return E_OK;
+}
+
+const int32
+Vif::CmdMscnt(void) {
+    if ( m_trace ) {
+        m_pLog->Trace(1, "MSCNT\n");
+    }
+    m_pVu->Run();
+    return E_OK;
+}
+
+const int32
+Vif::CmdStmask(void) {
+    char raw[4];
+    uint32 data;
+    m_fin->read(raw, 4);
+    data = ((unsigned char)raw[3]<<24) +
+        ((unsigned char)raw[2]<<16) +
+        ((unsigned char)raw[1]<<8) +
+        (unsigned char)raw[0];
+    m_vifCmd = VIF_STMASK;
+    rVIF0_MASK = data;
+    rVIF1_MASK = data;
+    if ( m_trace ) {
+        m_pLog->Trace(1, "STMASK\n");
+    }
+    return E_OK;
+}
+
+const int32
+Vif::CmdStrow(void) {
+    char raw[4];
+    uint32 data;
+    if ( m_trace ) {
+        m_pLog->Trace(1, "STROW\n");
+    }
+    m_fin->read(raw, 4);
+    data =  ((unsigned char)raw[3]<<24) +
+            ((unsigned char)raw[2]<<16) +
+            ((unsigned char)raw[1]<<8)  +
+            (unsigned char)raw[0];
+    rVIF0_R0 = data;
+    rVIF1_R0 = data;
+    m_fin->read(raw, 4);
+    data =  ((unsigned char)raw[3]<<24) +
+            ((unsigned char)raw[2]<<16) +
+            ((unsigned char)raw[1]<<8)  +
+            (unsigned char)raw[0];
+    rVIF0_R1 = data;
+    rVIF1_R1 = data;
+    m_fin->read(raw, 4);
+    data =  ((unsigned char)raw[3]<<24)+
+            ((unsigned char)raw[2]<<16)+
+            ((unsigned char)raw[1]<<8)+
+            (unsigned char)raw[0];
+    rVIF0_R2 = data;
+    rVIF1_R2 = data;
+    m_fin->read(raw, 4);
+    data =  ((unsigned char)raw[3]<<24)+
+            ((unsigned char)raw[2]<<16)+
+            ((unsigned char)raw[1]<<8)+
+            (unsigned char)raw[0];
+    rVIF0_R3 = data;
+    rVIF1_R3 = data;
+    return E_OK;
+}
+
+const int32
+Vif::CmdStcol(void) {
+    char raw[4];
+    int32 data;
+    m_fin->read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
+    rVIF0_C0 = data;
+    rVIF1_C0 = data;
+    m_fin->read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
+    rVIF0_C1 = data;
+    rVIF1_C1 = data;
+    m_fin->read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
+    rVIF0_C2 = data;
+    rVIF1_C2 = data;
+    m_fin->read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
+    rVIF0_C3 = data;
+    rVIF1_C3 = data;
+    return E_OK;
+}
+
+// --------------------------------------------------------------------------
+// vif0/vif1 common register to text functions
 vector<string>
-VIF::unpack_VIF_R(const int reg) {
+Vif::UnpackR(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("R");
@@ -691,7 +627,7 @@ VIF::unpack_VIF_R(const int reg) {
     return v;
 }
 vector<string>
-VIF::unpack_VIF_C(const int reg) {
+Vif::UnpackC(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("C");
@@ -701,7 +637,7 @@ VIF::unpack_VIF_C(const int reg) {
 }
 
 vector<string>
-VIF::unpack_VIF_ITOPS(const int reg) {
+Vif::UnpackItops(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ITOPS");
@@ -710,7 +646,7 @@ VIF::unpack_VIF_ITOPS(const int reg) {
     return v;
 }
 vector<string>
-VIF::unpack_VIF_ITOP(const int reg) {
+Vif::UnpackItop(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("ITOP");
@@ -720,7 +656,7 @@ VIF::unpack_VIF_ITOP(const int reg) {
 }
 
 vector<string>
-VIF::unpack_VIF_CYCLE(const int reg) {
+Vif::UnpackCycle(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("CL");
@@ -732,14 +668,14 @@ VIF::unpack_VIF_CYCLE(const int reg) {
     return v;
 }
 vector<string>
-VIF::unpack_VIF_MODE(const int reg) {
+Vif::UnpackMode(const int reg) {
     vector<string> v;
     v.push_back("MODE");
     v.push_back(tMOD[REGISTERS[reg]&0x3]);
     return v;
 }
 vector<string>
-VIF::unpack_VIF_ERR(const int reg) {
+Vif::UnpackErr(const int reg) {
     vector<string> v;
     v.push_back("MII");
     v.push_back(tMII[REGISTERS[reg]&0x1]);
@@ -750,17 +686,7 @@ VIF::unpack_VIF_ERR(const int reg) {
     return v;
 }
 vector<string>
-VIF::unpack_VIF_MARK(const int reg) {
-    vector<string> v;
-    char val[100];
-    v.push_back("NUM");
-    sprintf(val, "0x%x", REGISTERS[reg]&0x000000ff);
-    v.push_back(val);
-    return v;
-    return v;
-}
-vector<string>
-VIF::unpack_VIF_NUM(const int reg) {
+Vif::UnpackMark(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("NUM");
@@ -769,7 +695,7 @@ VIF::unpack_VIF_NUM(const int reg) {
     return v;
 }
 vector<string>
-VIF::unpack_VIF_MASK(const int reg) {
+Vif::UnpackNum(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("NUM");
@@ -778,7 +704,16 @@ VIF::unpack_VIF_MASK(const int reg) {
     return v;
 }
 vector<string>
-VIF::unpack_VIF_CODE(const int reg) {
+Vif::UnpackMask(const int reg) {
+    vector<string> v;
+    char val[100];
+    v.push_back("NUM");
+    sprintf(val, "0x%x", REGISTERS[reg]&0x000000ff);
+    v.push_back(val);
+    return v;
+}
+vector<string>
+Vif::UnpackCode(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("IMMEDIATE");
@@ -793,15 +728,6 @@ VIF::unpack_VIF_CODE(const int reg) {
     return v;
 }
 
-// write functions
 void
-VIF::writeCode(void) {
-}
-
-void
-VIF::writeData(void) {
-}
-
-void
-VIF::writeRegister(void) {
+Vif::writeRegister(void) {
 }
