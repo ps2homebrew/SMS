@@ -7,8 +7,8 @@
 # Review ps2sdk README & LICENSE files for further details.
 
 all : mc68000.a
-EE_LFLAGS = -DLSB_FIRST
-EE_CFLAGS = -DLSB_FIRST
+EE_LFLAGS = -DLSB_FIRST  -finline-functions
+EE_CFLAGS = -DLSB_FIRST  -finline-functions
 EE_GSRC   = neocd68k.c m68kcpu.c m68kops.c m68kopac.c m68kopdm.c m68kopnz.c
 EE_OBJS   = m68kcpu.o m68kops.o m68kopac.o m68kopdm.o m68kopnz.o
 
