@@ -466,7 +466,7 @@ Imm24
 FSSET
 0
 1
-VI
+Imm12
 1
 4
 # IADD VI[id], VI[is], VI[it]
