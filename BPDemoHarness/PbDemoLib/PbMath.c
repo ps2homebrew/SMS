@@ -19,11 +19,11 @@ float PbCos( float v )
 	float res,w;
 	int t;
 	float fac;
-	int i=(v)/(2*M_PI);
-	v-=i*2*M_PI;
+	int i=(v)/(2.0f*M_PI);
+	v-=i*2.0f*M_PI;
 
-	fac=1;
-	res=0;
+	fac=1.0f;
+	res=0.0f;
 	w=1;
 	for(t=0;t<SIN_ITERATOR;)
 	{
@@ -54,11 +54,11 @@ float PbSin( float v )
 	float res,w;
 	int t;
 	float fac;
-	int i=(v)/(2*M_PI);
-	v-=i*2*M_PI;
+	int i=(v)/(2.0f*M_PI);
+	v-=i*2.0f*M_PI;
 
-	fac=1;
-	res=0;
+	fac=0.0f;
+	res=0.0f;
 	w=v;
 	for(t=1;t<SIN_ITERATOR;)
 	{
