@@ -1,4 +1,4 @@
-#include "PBGfx.h"
+#include "PbGfx.h"
 #include <tamtypes.h>
 #include <stdio.h>
 #include "gs.h"
