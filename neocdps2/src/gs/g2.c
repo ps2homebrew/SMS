@@ -88,6 +88,8 @@ static uint32	gs_mem_current;	// points to current GS memory allocation point
 static uint16	gs_origin_x;	// used for mapping Primitive to Window coordinate systems
 static uint16	gs_origin_y;
 
+uint32 imageBuff[16384] __attribute__ ((section (".sdata"))) __attribute__((aligned(64))); //MAX_TRANSFER*4     // temporary image buffer - 32it pixels are assembled here from 16bit pixels 
+
 //---------------------------------------------------------------------------
 DECLARE_GS_PACKET(gs_dma_buf,50);
 
@@ -421,23 +423,25 @@ void g2_put_image(int16 x, int16 y, int16 w, int16 h, int16 dw, int16 dh, const 
 //---------------------------------------------------------------------------
 void g2_put_image16(uint16 x, uint16 y, uint16 w, uint16 h, uint16* data)
 {
-uint32 i;		// DMA buffer loop counter
-uint32 frac;		// flag for whether to run a fractional buffer or not
-uint32 current;		// number of pixels to transfer in current DMA
-uint32 qtotal;		// total number of qwords of data to transfer
-
-
-uint32 imageBuff[MAX_TRANSFER*4];     // temporary image buffer - 32it pixels are assembled here from 16bit pixels 
-uint32    imageOffs = 0;
-uint32    buffOffs;
-uint32    imageMax = w * h;
+	uint32 i;		// DMA buffer loop counter
+	uint32 frac;		// flag for whether to run a fractional buffer or not
+	uint32 current;		// number of pixels to transfer in current DMA
+	uint32 qtotal;		// total number of qwords of data to transfer
+	
+	//x += gs_origin_x;
+	//y += gs_origin_y;
+	
+	//uint32 imageBuff[16384]; //MAX_TRANSFER*4     // temporary image buffer - 32it pixels are assembled here from 16bit pixels 
+	uint32    imageOffs = 0;
+	uint32    buffOffs;
+	uint32    imageMax = w * h;
 
 	BEGIN_GS_PACKET(gs_dma_buf);
 	GIF_TAG_AD(gs_dma_buf, 4, 1, 0, 0, 0);
 	GIF_DATA_AD(gs_dma_buf, bitbltbuf,
  		GS_BITBLTBUF(0, 0, 0,
 			0,				// frame buffer address
-			(g2_max_x+1)/64,		// frame buffer width
+			(g2_max_x+1)>>6, // -> /64		// frame buffer width
 			0));
 	GIF_DATA_AD(gs_dma_buf, trxpos,
 		GS_TRXPOS(
@@ -448,9 +452,11 @@ uint32    imageMax = w * h;
 			0));	// left to right/top to bottom
 	GIF_DATA_AD(gs_dma_buf, trxreg, GS_TRXREG(w, h));
 	GIF_DATA_AD(gs_dma_buf, trxdir, GS_TRXDIR(XDIR_EE_GS));
+	
+	
 	SEND_GS_PACKET(gs_dma_buf);
 
-	qtotal = w*h/4;				// total number of quadwords to transfer.
+	qtotal = w*h>>2;	//w*h/4;	// total number of quadwords to transfer.
 	current = qtotal % MAX_TRANSFER;	// work out if a partial buffer transfer is needed.
 	frac=1;					// assume yes.
 	if(!current)				// if there is no need for partial buffer
@@ -461,16 +467,10 @@ uint32    imageMax = w * h;
 	for(i=0; i<(qtotal/MAX_TRANSFER)+frac; i++)
 	{
 		//fill temporary buffer data
-                for (buffOffs = 0; buffOffs < current*4 &&  imageOffs < imageMax; buffOffs++, imageOffs++)
+                for (buffOffs = 0; buffOffs < (current<<2) &&  imageOffs < imageMax; buffOffs++, imageOffs++) // *4
                 {
 			// global CLUT
 			imageBuff[buffOffs] = CLUT[(data[imageOffs])];
-/*
-			// SEPARATE COMPONENT CLUT
-			imageBuff[buffOffs] = (uint32)CLUT_RGB565_RB[(uint8)((data[imageOffs] >> 11) & 0x001F)] | 
-					      (uint32)CLUT_RGB565_G[(uint8)((data[imageOffs] >> 5) & 0x003F)] <<8 | 
-					      (uint32)CLUT_RGB565_RB[(uint8)(data[imageOffs]& 0x1f)] <<16;
-*/
          	}
 
 		BEGIN_GS_PACKET(gs_dma_buf);

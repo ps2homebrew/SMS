@@ -12,7 +12,7 @@
 #include "../misc/misc.h"
 
 
-extern unsigned short  *video_paletteram_ng;
+extern unsigned short  *video_paletteram_ng __attribute__((aligned(64)));
 
 #if 0
     #define logaccess(...) printf(__VA_ARGS__)
@@ -58,7 +58,8 @@ void initialize_memmap(void) {
 
 
 /***************************************************************************************************/
-unsigned int  m68k_read_memory_8(unsigned int offset) {
+unsigned int m68k_read_memory_8(unsigned int offset)
+{
     offset&=0xffffff;
     if(offset<0x200000)
         return neogeo_prg_memory[offset^1];
@@ -135,7 +136,7 @@ unsigned int  m68k_read_memory_16(unsigned int offset) {
 /***************************************************************************************************/
 unsigned int  m68k_read_memory_32(unsigned int offset) {
     unsigned int data;
-    offset&=0xfffffe;
+    offset&=0xffffff;
     data=m68k_read_memory_16(offset)<<16;
     data|=m68k_read_memory_16(offset+2);
     return data;
@@ -246,7 +247,7 @@ void m68k_write_memory_32(unsigned int offset, unsigned int data) {
 #else
 void m68k_write_memory_32(unsigned int offset, unsigned int data) {
     int temp=((data&0xffff)<<16)|((data>>16)&0xffff);
-    offset&=0xfffffe;
+    offset&=0xffffff;
 
 
     if(offset<0x200000) {
@@ -333,29 +334,30 @@ static void    cpu_writevidreg(int offset, int data)
 
 /***************************************************************************************************/
 
-static void     neogeo_setpalbank0 (void) {
+static void neogeo_setpalbank0 (void) {
     video_paletteram_ng=video_palette_bank0_ng;
     video_paletteram_pc=video_palette_bank0_pc;
 }
 
 
-static void     neogeo_setpalbank1 (void) {
+static void neogeo_setpalbank1 (void) {
     video_paletteram_ng=video_palette_bank1_ng;
     video_paletteram_pc=video_palette_bank1_pc;
 }
 
 
-static void    neogeo_select_bios_vectors (void) {
+static void neogeo_select_bios_vectors (void) 
+{
     memcpy(neogeo_prg_memory, neogeo_rom_memory, 0x80);
 }
 
 
-static void    neogeo_select_game_vectors (void) {
+static void neogeo_select_game_vectors (void) {
     //logaccess("write game vectors stub\n");
 }
 
 
-static void    cpu_writeswitch(int offset, int data)
+static void cpu_writeswitch(int offset, int data)
 {
     switch(offset)
     {
@@ -428,7 +430,8 @@ static void watchdog_reset_w (void)
 }
 
 
-static int read_upload(int offset) {
+static int read_upload(int offset) 
+{
     int zone = m68k_read_memory_8(0x10FEDA);
     /* int bank = m68k_read_memory_8(0x10FEDB); */
 
@@ -448,7 +451,8 @@ static int read_upload(int offset) {
 }
 
 
-static void write_upload(int offset, int data) {
+static void write_upload(int offset, int data) 
+{
     int zone = m68k_read_memory_8(0x10FEDA);
     /* int bank = m68k_read_memory_8(0x10FEDB); */
 
@@ -469,7 +473,8 @@ static void write_upload(int offset, int data) {
 }
 
 
-static void write_upload_word(int offset, int data) {
+static void write_upload_word(int offset, int data) 
+{
     int zone = m68k_read_memory_8(0x10FEDA);
     int bank = m68k_read_memory_8(0x10FEDB);
     int offset2;
@@ -492,15 +497,18 @@ static void write_upload_word(int offset, int data) {
 
             dest=&neogeo_spr_memory[offset2];
 
-            if (offset & 0x02) {
-               /* second word */
-			   *(uint16*)(&dest[2])=(uint16)data;
-			   /* reformat sprite data */
-               swab(dest, sprbuffer, sizeof(sprbuffer));
-               extract8(sprbuffer, dest);
-			} else {
-			   /* first word */
-			   *(uint16*)(&dest[0])=(uint16)data;
+            if (offset & 0x02) 
+            {
+                /* second word */
+		*(uint16*)(&dest[2])=(uint16)data;
+		/* reformat sprite data */
+               	swab(dest, sprbuffer, sizeof(sprbuffer));
+               	extract8(sprbuffer, dest);
+	    } 
+	    else 
+	    {
+		/* first word */
+		*(uint16*)(&dest[0])=(uint16)data;
             }
             break;
 
@@ -517,7 +525,8 @@ static void write_upload_word(int offset, int data) {
 }
 
 
-static void write_upload_dword(int offset, int data) {
+static void write_upload_dword(int offset, int data) 
+{
     int zone = m68k_read_memory_8(0x10FEDA);
     int bank = m68k_read_memory_8(0x10FEDB);
     char *dest;
@@ -544,10 +553,11 @@ static void write_upload_dword(int offset, int data) {
 }
 
 
-static void write_memcard(int offset, int data) {
+static void write_memcard(int offset, int data) 
+{
     data&=0xff;
+    //printf("write memory card\n");
     neogeo_memorycard[(offset&0x3fff)>>1]=(char)data; 
-
     /* signal that memory card has been written */
     memcard_write=3; 
 }
