@@ -8,6 +8,8 @@
 #include <string>
 #include <sys/stat.h>
 
+#include <wx/string.h>
+
 #include "parser.h"
 #include "util.h"
 #include "vu.h"
@@ -861,7 +863,6 @@ Parser::LoadCode(char *file) {
     char Line[250];
     string line;
     int j = 0;
-    int i;
     m_pVuCore->Reset();
     ifstream fin(file, ios::binary);
     struct stat st;
@@ -889,7 +890,6 @@ Parser::LoadCode(char *file) {
     }
 
     while((data = getLine(Line, data))) {
-        i++;
         j = 0;
         while(Line[j]) {
             if(Line[j]==';') {

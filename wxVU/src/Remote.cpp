@@ -5,7 +5,6 @@
 #endif
 #include "linkproto_stub.h"
 #include "Remote.h"
-#include "Log.h"
 #include "vu.h"
 
 #ifndef __WIN32__

@@ -3,14 +3,11 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <stdio.h>
 #include <sys/stat.h>
 
 #include "main.h"
-#include "util.h"
 #include "prefdef.h"
 #include "Remote.h"
-#include "linkproto_stub.h"
 
 #include "vif.h"
 #include "vif0.h"
@@ -127,10 +124,14 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
     clipflags->Add(new wxStaticText(m_pFlagsDetail, -1, "current", wxDefaultPosition,
             size), 0, wxADJUST_MINSIZE, 1);
 
-    clip3 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
-    clip2 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
-    clip1 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
-    clip0 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition, size, wxTE_READONLY);
+    clip3 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition,
+        size, wxTE_READONLY|wxTE_RICH);
+    clip2 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition,
+        size, wxTE_READONLY|wxTE_RICH);
+    clip1 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition,
+        size, wxTE_READONLY|wxTE_RICH);
+    clip0 = new wxTextCtrl(m_pFlagsDetail, -1, "000000", wxDefaultPosition,
+        size, wxTE_READONLY|wxTE_RICH);
 
     clipflags->Add(clip3, 0, wxLEFT, 1);
     clipflags->Add(clip2, 0, wxLEFT, 1);
@@ -1319,11 +1320,13 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
         wxDefaultSize);
 
     m_pTextDebug = new wxTextCtrl(m_pRightBook, ID_TEXT_DEBUG, wxString(""),
-        wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
+        wxDefaultPosition, wxSize(400, 400),
+        wxTE_MULTILINE|wxTE_READONLY|wxTE_RICH);
     m_pRightBook->AddPage(m_pTextDebug, "Debug", FALSE, -1);
  
     m_pTextStatus = new wxTextCtrl(m_pRightBook, ID_TEXT_STATUS, wxString(""),
-        wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
+        wxDefaultPosition, wxSize(400, 400),
+        wxTE_MULTILINE|wxTE_READONLY|wxTE_RICH);
     m_pRightBook->AddPage(m_pTextStatus, "Instruction Status", FALSE, -1);
     buildFlagsPanel(m_pRightBook);
     m_pRightBook->AddPage(m_pFlagsDetail, "Flags", FALSE, -1);

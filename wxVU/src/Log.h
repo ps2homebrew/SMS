@@ -6,6 +6,7 @@
 #define __LOG__
 
 #include <map>
+#include <wx/string.h>
 #include "datatypes.h"
 
 class wxFrame;
@@ -31,7 +32,7 @@ const int32     E_FILE_EOF      =   -33;
 //
 const int32     E_SYSTEM_CMD    =   -40;
 
-// VIF Errors
+// VIF Errorsx
 const int32     E_VIF_DECODE    =   -50;
 
 class Log {

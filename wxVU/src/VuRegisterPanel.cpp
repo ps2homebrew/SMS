@@ -244,6 +244,7 @@ VuRegisterPanel::BuildVuRegisterPanel() {
     wxBoxSizer *m_pFloatRegSizer = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer *m_pSpecRegSizer = new wxBoxSizer(wxVERTICAL);
 
+	m_pIntRegSizer->Add(m_pIntRegRadio);
 	m_pIntRegSizer->Add(m_pIntRegGrid, 1, wxEXPAND);
 	m_pIntRegPanel->SetSizer(m_pIntRegSizer);
 

@@ -10,12 +10,6 @@
 class Parser;
 class Vu;
 
-typedef struct vifCode {
-    uint32  CMD;
-    uint32  NUM;
-    uint32  IMMEDIATE;
-};
-
 int limit(int, int);
 
 // VU CMD

@@ -183,6 +183,7 @@ VuMem::ReadMem(uint32* data, uint32 offset, uint32 size) {
         data[i*4+2] = m_pVuMemArray[i].z;
         data[i*4+3] = m_pVuMemArray[i].w;
     }
+    return E_OK;
 }
 
 int32
