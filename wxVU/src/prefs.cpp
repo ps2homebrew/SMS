@@ -57,7 +57,7 @@ Prefs::Prefs () {
     LoadValuesPageLoad();
     LoadValuesPageRemote();
     LoadValuesPageStyles();
-    LoadValuesPageGIF();
+    LoadValuesPageGif();
 }
 
 Prefs::~Prefs () {
@@ -65,7 +65,7 @@ Prefs::~Prefs () {
     DeleteValuesPageLoad();
     DeleteValuesPageRemote();
     DeleteValuesPageStyles();
-    DeleteValuesPageGIF();
+    DeleteValuesPageGif();
 }
 
 //----------------------------------------------------------------------------
@@ -110,6 +110,13 @@ void Prefs::SaveValuesPageLoad() {
 
 void Prefs::DeleteValuesPageLoad() {
     // nothing to delete
+}
+
+void Prefs::SetDefaultValuesLoad() {
+    g_CommonPrefs.autoLoadLast = 1;
+    g_CommonPrefs.regOrder = 0;
+    g_CommonPrefs.regStateFile = "regstate.dat";
+    g_CommonPrefs.memStateFile = "memstate.dat";
 }
 
 //----------------------------------------------------------------------------
@@ -163,6 +170,14 @@ void Prefs::SaveValuesPageRemote() {
 void Prefs::DeleteValuesPageRemote() {
 }
 
+void Prefs::SetDefaultValuesRemote() {
+    g_RemotePrefs.autoGSExec = 0;
+    g_RemotePrefs.binTmpFile = "bin.dat";
+    g_RemotePrefs.datTmpFile = "data.dat";
+    g_RemotePrefs.regTmpFile = "reg.dat";
+    g_RemotePrefs.gsTmpFile = "gs.dat";
+}
+
 //----------------------------------------------------------------------------
 void Prefs::LoadValuesPageStyles(bool dflt) {
     g_StylePrefs = g_StyleTable;
@@ -196,7 +211,7 @@ void Prefs::SaveValuesPageStyles () {
 }
 
 //----------------------------------------------------------------------------
-void Prefs::DeleteValuesPageStyles () {
+void Prefs::DeleteValuesPageStyles() {
     // StyleInfo *g_StylePrefs;
     // g_StylePrefs = &g_StylePrefs [typeNr];
     // if (g_StyleTable [typeNr].foreground != g_StylePrefs->foreground) {
@@ -210,9 +225,14 @@ void Prefs::DeleteValuesPageStyles () {
     // }
 }
 
+void Prefs::SetDefaultValuesStyles() {
+    // g_StylePrefs.fontname = ;
+    g_StylePrefs.fontsize = 10;
+}
+
 //----------------------------------------------------------------------------
 // GIF
-void Prefs::LoadValuesPageGIF(bool dflt) {
+void Prefs::LoadValuesPageGif(bool dflt) {
     g_GIFPrefs = g_GIFTable;
     if (dflt) {
         return;
@@ -245,7 +265,7 @@ void Prefs::LoadValuesPageGIF(bool dflt) {
     }
 }
 
-void Prefs::SaveValuesPageGIF() {
+void Prefs::SaveValuesPageGif() {
     wxString key = PAGE_GIF;
     key.Append (_T("/"));
     // Auto
@@ -260,5 +280,16 @@ void Prefs::SaveValuesPageGIF() {
     m_config->Flush();
 }
 
-void Prefs::DeleteValuesPageGIF() {
+void Prefs::DeleteValuesPageGif() {
+}
+
+void Prefs::SetDefaultValuesGif() {
+    g_GIFPrefs.xOffset = 2048;
+    g_GIFPrefs.xOffset = 2048;
+    g_GIFPrefs.prim = 0;
+    g_GIFPrefs.sendPrim = 0;
+    g_GIFPrefs.tagShow = 1;
+    g_GIFPrefs.clrcol = 0;
+    g_GIFPrefs.scissorX = 640;
+    g_GIFPrefs.scissorY = 512;
 }

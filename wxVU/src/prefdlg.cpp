@@ -68,8 +68,8 @@ PreferenceDlg::PreferenceDlg (wxWindow *parent,
     SetValuesPageRemote();
     m_pPrefsBook->AddPage(CreatePageStyles(), PAGE_STYLE, true);
     SetValuesPageStyles();
-    m_pPrefsBook->AddPage(CreatePageGIF(), PAGE_GIF, true);
-    SetValuesPageGIF();
+    m_pPrefsBook->AddPage(CreatePageGif(), PAGE_GIF, true);
+    SetValuesPageGif();
     m_pPrefsBook->SetSelection (0);
 
     // lauout the buttons
@@ -114,8 +114,8 @@ void PreferenceDlg::OnApply (wxCommandEvent &WXUNUSED(event)) {
     m_pPrefs->SaveValuesPageRemote();
     GetValuesPageStyles();
     m_pPrefs->SaveValuesPageStyles();
-    GetValuesPageGIF();
-    m_pPrefs->SaveValuesPageGIF();
+    GetValuesPageGif();
+    m_pPrefs->SaveValuesPageGif();
 }
 
 void PreferenceDlg::OnCancel (wxCommandEvent &WXUNUSED(event)) {
@@ -133,22 +133,25 @@ void PreferenceDlg::OnOkay (wxCommandEvent &WXUNUSED(event)) {
     m_pPrefs->SaveValuesPageRemote();
     GetValuesPageStyles();
     m_pPrefs->SaveValuesPageStyles();
-    GetValuesPageGIF();
-    m_pPrefs->SaveValuesPageGIF();
+    GetValuesPageGif();
+    m_pPrefs->SaveValuesPageGif();
     EndModal(ID_PREF_OK);
 }
 
 void PreferenceDlg::OnReset (wxCommandEvent &WXUNUSED(event)) {
     int pageNr = m_pPrefsBook->GetSelection ();
     if (pageNr == 0) {
-        m_pPrefs->LoadValuesPageLoad(true);
+        m_pPrefs->SetDefaultValuesLoad();
         SetValuesPageLoad();
     }else if (pageNr == 1) {
-        // m_pPrefs->LoadValuesPageLanguages (true);
-        // SetValuesPageLanguages ();
+        m_pPrefs->SetDefaultValuesRemote();
+        SetValuesPageRemote();
     }else if (pageNr == 2) {
-        m_pPrefs->LoadValuesPageStyles (true);
+        m_pPrefs->SetDefaultValuesStyles();
         SetValuesPageStyles();
+    }else if (pageNr == 3) {
+        m_pPrefs->SetDefaultValuesGif();
+        SetValuesPageGif();
     }
 }
 
@@ -292,7 +295,7 @@ void PreferenceDlg::SetValuesPageLoad() {
 wxPanel *PreferenceDlg::CreatePageRemote() {
     wxPanel *panel = new wxPanel (m_pPrefsBook);
     const int ch = GetCharWidth();
-    const int sz1 = 20*ch; // width of a text lable
+    const int sz1 = 20*ch;                          // width of a text lable
     
     // toggle for Automatic gsexec on xgkick
     wxString cAutoGSexec[2] = {"Yes", "No"};
@@ -498,7 +501,7 @@ void PreferenceDlg::SetValuesPageStyles () {
 
 //----------------------------------------------------------------------------
 // GIF panel functions
-wxPanel *PreferenceDlg::CreatePageGIF() {
+wxPanel *PreferenceDlg::CreatePageGif() {
     wxPanel *panel = new wxPanel (m_pPrefsBook);
     const int ch = GetCharWidth();
     // width of a text lable
@@ -661,7 +664,7 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
 }
 
 //----------------------------------------------------------------------------
-void PreferenceDlg::GetValuesPageGIF() {
+void PreferenceDlg::GetValuesPageGif() {
     g_GIFPrefs.xOffset = atoi(m_xOffset->GetValue().c_str());
     g_GIFPrefs.yOffset = atoi(m_yOffset->GetValue().c_str());
     // g_GIFPrefs.prim = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
@@ -673,7 +676,7 @@ void PreferenceDlg::GetValuesPageGIF() {
 }
 
 //----------------------------------------------------------------------------
-void PreferenceDlg::SetValuesPageGIF() {
+void PreferenceDlg::SetValuesPageGif() {
     m_xOffset->SetValue(wxString::Format("%d", g_GIFPrefs.xOffset));
     m_yOffset->SetValue(wxString::Format("%d", g_GIFPrefs.yOffset));
     // m_primText->SetValue(wxString::Format("0x%x", g_GIFPrefs.prim));

@@ -60,12 +60,12 @@ private:
     void            SetValuesPageRemote();
     void            GetValuesPageStyles();
     void            SetValuesPageStyles();
-    void            GetValuesPageGIF();
-    void            SetValuesPageGIF();
+    void            GetValuesPageGif();
+    void            SetValuesPageGif();
     wxPanel*        CreatePageLoad();
     wxPanel*        CreatePageStyles();
     wxPanel*        CreatePageRemote();
-    wxPanel*        CreatePageGIF();
+    wxPanel*        CreatePageGif();
 
     Prefs*          m_pPrefs;
 

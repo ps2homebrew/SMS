@@ -5,6 +5,7 @@
 #ifndef __LOG__
 #define __LOG__
 
+#include <map>
 #include "datatypes.h"
 
 class wxFrame;
@@ -54,6 +55,7 @@ private:
     wxTextCtrl*     m_pOut;
     wxFrame*        m_pFrame;
     uint32          m_numLastMessage;
+    map<int32, wxString> object;
 };
 
 #endif

@@ -3,12 +3,8 @@
 // Singleton
 //
 
-#include <iostream>
-#include <map>
 #include <iterator>
-
 #include <wx/wx.h>
-#include <wx/string.h>
 #include "Log.h"
 
 using namespace std;
@@ -19,27 +15,6 @@ static const wxColour cTRACE	= wxColour(255, 128, 128);
 static const wxColour cNORMAL	= wxColour(0, 0, 0);
 
 typedef map<int32, wxString>::iterator m_mapIterator;
-pair<int32, wxString>
-m_map[] = {
-    pair<int32, wxString>(0, ""),
-    pair<int32, wxString>(E_TIMEOUT,        "Operation timed out"),
-    pair<int32, wxString>(E_NO_LINK,        "No connection to ps2link server"),
-    pair<int32, wxString>(E_SOCK_CLOSE,     "Connection reset by peer"),
-
-    pair<int32, wxString>(E_FILE_OPEN,      "Unable to open file"),
-    pair<int32, wxString>(E_FILE_READ,      "Unable to read from file"),
-    pair<int32, wxString>(E_FILE_WRITE,     "Unable to write to file"),
-    pair<int32, wxString>(E_FILE_EOF,       "EOF reached"),
-
-    pair<int32, wxString>(E_VIF_DECODE,     "Bad VIF code"),
-
-    // pair<int32, wxString>( ),
-    // pair<int32, wxString>( ),
-    // pair<int32, wxString>( ),
-};
-
-map<int32, wxString>
-    object(&m_map[0], &m_map[9]);
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 Log*    Log::_instance = 0;
@@ -174,6 +149,24 @@ Log::Log() {
     m_pOut = NULL;
     m_numLastMessage = 0;
     m_pLastMessage = new wxString();
+
+    object.insert(pair<int32, wxString>(0, ""));
+    object.insert(pair<int32, wxString>(E_TIMEOUT,
+            "Operation timed out"));
+    object.insert(pair<int32, wxString>(E_NO_LINK,
+            "No connection to ps2link server"));
+    object.insert(pair<int32, wxString>(E_SOCK_CLOSE,
+            "Connection reset by peer"));
+
+    object.insert(pair<int32, wxString>(E_FILE_OPEN,
+            "Unable to open file"));
+    object.insert(pair<int32, wxString>(E_FILE_READ,
+            "Unable to read from file"));
+    object.insert(pair<int32, wxString>(E_FILE_WRITE,
+            "Unable to write to file"));
+    object.insert(pair<int32, wxString>(E_FILE_EOF,       "EOF reached"));
+
+    object.insert(pair<int32, wxString>(E_VIF_DECODE,     "Bad VIF code"));
 }
 
 Log::~Log() {

@@ -104,6 +104,7 @@ protected:
     uint32          vpu;
     bool            m_interrupt;
     bool            _mask;
+    bool            m_stopped;
 // private:
     // vif command functions
     virtual const int32 DecodeCmd(void) = 0;

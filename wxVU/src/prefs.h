@@ -72,18 +72,22 @@ public:
     void LoadValuesPageLoad(bool dflt = false);
     void SaveValuesPageLoad();
     void DeleteValuesPageLoad();
+    void SetDefaultValuesLoad();
 
     void LoadValuesPageRemote(bool dflt = false);
     void SaveValuesPageRemote();
     void DeleteValuesPageRemote();
+    void SetDefaultValuesRemote();
 
     void LoadValuesPageStyles(bool dflt = false);
     void SaveValuesPageStyles();
-    void DeleteValuesPageStyles ();
+    void DeleteValuesPageStyles();
+    void SetDefaultValuesStyles();
 
-    void LoadValuesPageGIF(bool dflt = false);
-    void SaveValuesPageGIF();
-    void DeleteValuesPageGIF();
+    void LoadValuesPageGif(bool dflt = false);
+    void SaveValuesPageGif();
+    void DeleteValuesPageGif();
+    void SetDefaultValuesGif();
 
 private:
     wxConfig *m_config;

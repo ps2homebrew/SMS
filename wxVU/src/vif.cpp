@@ -506,12 +506,16 @@ Vif::CmdMscalf(const int32& data) {
     // TODO simulate the wait for GIF PATH1/PATH2 and
     // end of microprogram ( ie mpg is running while a new batch is waiting to
     // be transfered from VIF to VU
+
     m_vifCmd = VIF_MSCALF;
     _addr = data&0xffff;
     if ( m_trace ) {
         m_pLog->Trace(1, wxString::Format("MSCALF at %d\n", _addr));
     }
     m_pVu->Run(_addr);
+
+    m_stopped = true;
+
     return E_OK;
 }
 
