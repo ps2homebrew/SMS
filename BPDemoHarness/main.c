@@ -2,16 +2,26 @@
 #include <kernel.h>
 #include <fileio.h>
 #include <string.h>
+#include <libpad.h>
+#include <loadfile.h>
+#include <sifrpc.h>
 #include "harness.h"
 
 #include "stream_ee/streamload.h"
 int sound_enabled = 0;
+
+#define DEF_PART "hdd:+PS2MENU"
 
 #define BIN_LOADADDR 0x1000000
 u8 *loadptr = (u8 *) BIN_LOADADDR;
 typedef u32 (*main_func)(demo_init_t *p);
 main_func call_main = (main_func) BIN_LOADADDR;
 #define MAX_DEMOS 16
+
+char hdd_part[64] = DEF_PART;
+static u8 padBuf[256] __attribute__((aligned(64)));
+
+void check_pad();
 
 typedef struct _demo_entry
 
@@ -27,6 +37,7 @@ int th_id;
 int th_sema = -1;
 int demo_count = 0;
 int demo_starttime = 0;
+int pad_enabled = 0;
 demo_entry_t demos[MAX_DEMOS];
 u32 curr_demotime = 10;
 u32 set_noprintf = 0;
@@ -71,6 +82,10 @@ int update_thread_pal(void *arg)
       init.time_count_i -= (65536 / 50);
       init.curr_time += (1.0f / 50.0f);
       init.curr_time_i += (65536 / 50);
+      if(pad_enabled)
+      { 
+         check_pad();
+      }
    }
 }
 
@@ -86,6 +101,10 @@ int update_thread_ntsc(void *arg)
       init.time_count_i -= (65536 / 60);
       init.curr_time += (1.0f / 60.0f);
       init.curr_time_i += (65536 / 60);
+      if(pad_enabled)
+      { 
+         check_pad();
+      }
    }
 }
 
@@ -163,10 +182,12 @@ void print_usage()
    printf("Options:\n");
    printf("-pal      : Set pal mode\n");
    printf("-ntsc     : Set NTSC mode\n");
-   printf("-sound : Enable Sound\n");
+   printf("-sound    : Enable Sound\n");
    printf("-tX       : Time in seconds to run each demo\n");
    printf("-sX       : Time in seconds to start tune at\n");
    printf("-noprintf : Disables the printf function\n");
+   printf("-mPART    : Specifies the partition to mount for sound files\n");
+   printf("-p        : Enables pad support\n");
    printf("Demos:\n");
    printf("List of host files to run.\n");
 }
@@ -205,6 +226,24 @@ int process_args(int argc, char **argv)
          {
 		sound_enabled = 1;
             printf("Enable Sound\n");
+         }
+	 else if(argv[arg_loop][1] == 'm')
+         {
+            if(strlen(argv[arg_loop]) > 2)
+            {
+               strcpy(hdd_part, &argv[arg_loop][2]);
+               printf("Set HDD Partition %s\n", hdd_part);
+            }
+            else
+            {
+              printf("Invalid argument %s\n", argv[arg_loop]);
+              return -1;
+            }
+         }
+         else if(argv[arg_loop][1] == 'p')
+         {
+            pad_enabled = 1;
+            printf("Enable pad\n");
          }
          else if(argv[arg_loop][1] == 's')
          {  
@@ -264,11 +303,60 @@ int process_args(int argc, char **argv)
    return 0;
 }
 
+void check_pad()
+
+{
+   int ret;
+   u32 paddata;
+   static u32 oldpad = 0;
+   u32 newpad;
+   struct padButtonStatus buttons;
+
+   ret = padGetState(0, 0);
+   if(ret == PAD_STATE_STABLE)
+   {
+      ret = padRead(0, 0, &buttons);
+      if(ret != 0)
+      {
+         paddata = 0xFFFF ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+         newpad = paddata & ~oldpad;
+         oldpad = paddata;
+
+         if(newpad & PAD_CROSS)
+         {
+            printf("Stream Position = %d\n", StreamLoad_Position());
+         }
+      }
+   }
+}
+
+void setup_pad()
+
+{
+   int ret;
+
+   SifLoadModule("rom0:SIO2MAN", 0, NULL);
+   SifLoadModule("rom0:PADMAN", 0, NULL);
+   padInit(0);
+   if((ret = padPortOpen(0, 0, padBuf)) == 0)
+   {
+      printf("Pad open failed. Disabling pad support ret=%d\n", ret);
+      pad_enabled = 0;
+      return;
+   }
+
+   while((ret = padGetState(0, 0)) != PAD_STATE_STABLE)
+   {
+   }
+}
+
 int main(int argc, char **argv)
 
 {
    int fd;
    int demo_loop;
+
+   SifInitRpc(0);
 
    if(is_pal())
    {
@@ -290,9 +378,14 @@ int main(int argc, char **argv)
    reset_init();
    create_updateth(init.screen_mode);
   
+   if(pad_enabled)
+   {
+     setup_pad();
+   }
+
    if(sound_enabled)
    {
-     StreamLoad_Init(0,"hdd:+PS2MENU");
+     StreamLoad_Init(0,hdd_part);
 //     StreamLoad_SetupTune("HALFDEAPH");// hdd:+PS2MENU/HALFDEAPHL.RAW AND HALFDEAPHR.RAW
      StreamLoad_SetupTune("UNSEEN"); // hdd:+PS2MENU/UNSEENL.RAW AND UNSEENR.RAW
      StreamLoad_SetPosition(demo_starttime*48000);
