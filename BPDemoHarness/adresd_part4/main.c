@@ -212,16 +212,16 @@ void DrawDevLogo()
     int toff=0;
 
     PbPrimSpriteTexture( p_texture_ps2dev, 
-                        100<<4, -30<<4,  
+                        50<<4, -60<<4,  
 						0<<4, 0<<4, 
-                        500<<4, 120<<4,
+                        562<<4, 196<<4,
 						512<<4, 256<<4,
 						100, MakeCol(0x80,0x80,0x80,logoAlpha) ); 
 
     PbPrimSpriteTexture( p_texture_presents, 
-                        170<<4, 80<<4,  
+                        180<<4, 120<<4,  
 						0<<4, 0<<4, 
-                        426<<4, 144<<4,
+                        436<<4, 184<<4,
 						256<<4, 64<<4,
 						100, MakeCol(0x80,0x80,0x80,preAlpha) ); 
 
@@ -230,7 +230,7 @@ void DrawDevLogo()
     {
         if (logoAlpha>0)
         {
-            logoAlpha--;
+            logoAlpha-=2;
         }
     }else{
         if (logoAlpha<0x80)
@@ -265,7 +265,7 @@ void DrawDevLogo()
         {
             for (i=0; i<27; i++)
             {
-                zs_ZoomText(*(strapline+i),90+toff,215,100,strapZoom[i]);
+                zs_ZoomText(*(strapline+i),90+toff,225,100,strapZoom[i]);
                 toff += GetCharWidth(*(strapline+i))+1;
                 if (strapZoom[i]>0.0f)strapZoom[i]-=0.1f;
                 //printf("%c ",*(strapline+i));
@@ -276,7 +276,7 @@ void DrawDevLogo()
         {
             for (i=0; i<27; i++)
             {
-                zs_ZoomText(*(strapline+i),90+toff,215,100,strapZoom[i]);
+                zs_ZoomText(*(strapline+i),90+toff,225,100,strapZoom[i]);
                 toff += GetCharWidth(*(strapline+i))+1;
                 if (strapZoom[i]>1.0f)strapZoom[i]-=0.3f;
                 //printf("%c ",*(strapline+i));
@@ -321,7 +321,7 @@ u32 start_demo( const demo_init_t* pInfo )
   /////////////////////////////////////////////////////////////////////////////
   // Create our view to screen matrix
   PbMatrixViewScreen( &viewscreen_matrix, 512.0f,1.0f,1.0f, // 0.5,0.8// 1.3f for last
-                      offset_x+512/2,offset_y+200/2,
+                      offset_x+512/2,offset_y+125/2,
                       1.0f, 6777215.0f,64.0f, 5536.0f );
   PbDistortSetup();
 
