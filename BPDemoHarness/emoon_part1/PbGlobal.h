@@ -22,6 +22,7 @@ extern const demo_init_t* gp_Info; // nice
 /////////////////////////////////////////////////////////////////////
 
 void out( const char* pString, ... );
+int  PbGlobal_Log( int Value );
 const char* PbGlobal_GetAsBits32( unsigned int value );
 
 #define line out( "LINE: %d\n", __LINE__ );

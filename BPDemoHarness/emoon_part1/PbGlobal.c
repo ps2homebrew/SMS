@@ -54,4 +54,22 @@ const char* PbGlobal_GetAsBits32( unsigned int value )
   return (const char*)&name;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// const char* PbGlobal_GetAsBits32
+///////////////////////////////////////////////////////////////////////////////
+
+int PbGlobal_Log( int Value )
+{
+  int r = 0;
+  
+  Value--;
+
+  while( Value > 0 )
+  {
+    Value = Value >> 1;
+    r++;
+  }
+  
+  return r;
+}
 
