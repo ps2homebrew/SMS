@@ -11,11 +11,12 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi3
 
 OBJECTS=obj/main.obj obj/lower.obj obj/parser.obj obj/upper.obj obj/util.obj obj/vu.obj \
 		obj/gif.obj obj/prefdlg.obj obj/prefs.obj obj/dump.obj obj/linkproto_stub.obj \
-		obj/vif.obj obj/timer.obj obj/sif.obj obj/dma.obj obj/vuBreakDialog.obj obj/breakpoint.obj
+		obj/vif.obj obj/timer.obj obj/sif.obj obj/dma.obj obj/vuBreakDialog.obj \
+		obj/breakpoint.obj
 SOURCES=dummy2.cpp main.cpp lower.cpp parser.cpp upper.cpp util.cpp vu.cpp \
 		gif.cpp prefdlg.cpp prefs.cpp dump.cpp linkproto_stub.cpp \
-		vif.cpp timer.cpp sif.cpp dma.cpp vuBreakDialog.cpp breakpoint.cpp \
-        dummy.cpp 
+		vif.cpp timer.cpp sif.cpp dma.cpp vuBreakDialog.cpp breakpoint.cpp debug.cpp \
+		dummy.cpp 
 HEADERS=main.h lower.h parser.h upper.h util.h vu.h \
 		gif.h prefdlg.h prefs.h dump.h linkproto_stub.h \
 		vif.h timer.h sif.h dma.h vuBreakDialog.h breakpoint.h
