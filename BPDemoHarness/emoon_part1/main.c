@@ -33,14 +33,15 @@ void set_zbufcmp(int cmpmode);
 u32 start_demo( const demo_init_t* pInfo )
 {
   gp_Info = pInfo;
-  
-	PbMatrix ViewScreenMatrix;
+ 	PbMatrix ViewScreenMatrix;
 	PbMatrix CameraMatrix;
 	PbMatrix CombindedMatrix;
 	PbMatrix FinalMatrix;
 	PbMatrix RotateMatrix;
 	PbMatrix RotateMatrix2;
   float    angles[4] __attribute__((aligned(16)));
+  float    angle = 0.0f;
+  int      down = 1;
 
   PbGfx_Setup();
   
@@ -94,9 +95,6 @@ u32 start_demo( const demo_init_t* pInfo )
 
   angles[3] = 0.101; // this is the lagrate
 
-  float angle = 0.0f;
-  int down = 1;
-
   while( pInfo->time_count > 0 )
   {
   	angles[2] = pInfo->curr_time;
@@ -144,62 +142,3 @@ u32 start_demo( const demo_init_t* pInfo )
   return pInfo->screen_mode;
 }
 
-/*
-		dma_buf[dma_buf_cur++] = PS2_GS_PRIM;
-		dma_buf[dma_buf_cur++] = PS2_GS_SETREG_PRIM( PS2_GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0);
-
-		dma_buf[dma_buf_cur++] = PS2_GS_RGBAQ;
-		dma_buf[dma_buf_cur++] = color;
-
-		dma_buf[dma_buf_cur++] = PS2_GS_XYZ2;
-		dma_buf[dma_buf_cur++] = PS2_GS_SETREG_XYZ2( (0+offs_x)<<4, (0+offs_y)<<4, 0 );
-
-		dma_buf[dma_buf_cur++] = PS2_GS_XYZ2;
-		dma_buf[dma_buf_cur++] = PS2_GS_SETREG_XYZ2( (200+offs_x)<<4, (200+offs_y)<<4, 0 );
-*/
-
-/*
-		dma_buf[dma_buf_cur++] = ((u64)(4)<< 0) | ((u64)(1)	<< 15) | ((u64)(0)	<< 46) | ((u64)(0)	<< 47) | ((u64)(0)	<< 58) | ((u64)(1)	<< 60);
-		dma_buf[dma_buf_cur++] = GIF_AD;
-
-		dma_buf[dma_buf_cur++] = PS2_GS_SETREG_PRIM( PS2_GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0);
-		dma_buf[dma_buf_cur++] = PS2_GS_PRIM;
-  
-		dma_buf[dma_buf_cur++] = color;
-		dma_buf[dma_buf_cur++] = PS2_GS_RGBAQ;
-  
-		dma_buf[dma_buf_cur++] = PS2_GS_SETREG_XYZ2( (0+offs_x)<<4, (0+offs_y)<<4, 0 );
-		dma_buf[dma_buf_cur++] = PS2_GS_XYZ2;
-  
-		dma_buf[dma_buf_cur++] = PS2_GS_SETREG_XYZ2( (200+offs_x)<<4, (200+offs_y)<<4, 0 );
-		dma_buf[dma_buf_cur++] = PS2_GS_XYZ2;
-*/
-
-/*
-		BEGIN_GS_PACKET(dma_buf);
-
-		dma_buf_dma_size = 5;
-
-		dma_buf[dma_buf_cur++] = ((u64)4<< 60) | ((u64)0 << 58) | ((u64)3 << 47) | ((u64)1 << 46) | ((u64)1 << 15) | 1;
-		dma_buf[dma_buf_cur++] = 0x5551;
-
-		dma_buf[dma_buf_cur++] = 127;
-		dma_buf[dma_buf_cur++] = 0;
-    
-		dma_buf[dma_buf_cur++] = ((1024L + 100) << 4 ) | ( ((1024L + 20) << 4) << 32 );  // X,Y;
-		dma_buf[dma_buf_cur++] = 0;
-  
-		dma_buf[dma_buf_cur++] = ((1024L + 100) << 4 ) | ( ((1024L + 84) << 4) << 32 );
-		dma_buf[dma_buf_cur++] = 0;
-
-		dma_buf[dma_buf_cur++] = ((1024L + 160) << 4 ) | ( ((1024L + 84) << 4) << 32 );
-		dma_buf[dma_buf_cur++] = 0;
-
-	  SEND_GS_PACKET(dma_buf);
-
-
-	
-
-
-		while(*D2_CHCR&0x100);
-*/
