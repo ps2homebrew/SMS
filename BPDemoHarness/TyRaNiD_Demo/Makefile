@@ -2,7 +2,7 @@ EE_BIN = tyra_demo.elf
 BIN_IMAGE = tyra_demo.bin
 EE_OBJS = crt0.o main.o ee_malloc.o \
 vif.o utils.o vu_program.o box0.o matrix.o sine_tabs.o \
-random.o 
+random.o gfx/oddments_tyr.o
 EE_INCS = -I../PbDemoLib
 EE_LDFLAGS = -L../PbDemoLib
 EE_LIBS = -lpbdemo

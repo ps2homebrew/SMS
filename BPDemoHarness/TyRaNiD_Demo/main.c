@@ -1,9 +1,12 @@
 #include <tamtypes.h>
+#include <kernel.h>
 #include <stdio.h>
 #include <string.h>
 #include <PbScreen.h>
 #include <PbGs.h>
 #include <PbMatrix.h>
+#include <PbTexture.h>
+#include <PbPrim.h>
 #include "shapes.h"
 #include "vu1.h"
 #include "../harness.h"
@@ -23,25 +26,6 @@
 const demo_init_t *init;
 
 u32 vucode_size;
-
-void apply_matrix_vu(const vertex *m, vertex *v, s32 num) 
-
-     /* Apply a matrix to a list of points */
-
-{
-  float t[4];
-  int loop;
-
-  for(loop = 0; loop < 4; loop++)
-    {
-      t[loop] = m[loop].x * v->x + m[loop].y * v->y + m[loop].z * v->z + m[loop].w * v->w;
-    }
-
-  memcpy(v, t, sizeof(vertex));
-}
-
-vertex m[4] __attribute__((aligned(128)));
-vertex p __attribute__((aligned(128))) = {10, 10, -10, 1};
 
 vu_gp_t vu_gp __attribute__((aligned(128)));
 
@@ -147,14 +131,31 @@ void render_obj(scrobj_t *obj)
 
 extern vertex box0_data[];
 extern obj_vustrips_t box0_strips;
+extern u32 logo[];
 
 #define BOX_X 16
 #define BOX_Y 16
 #define BOX_SIZE 50.0f
 #define BOX_Z 100.0f
 
+void invert_alpha(void *data)
+
+{
+   int loop;
+   u8 *buf = (u8 *) data;
+   u8 val;
+
+   for(loop = 0; loop < (512 * 256); loop++)
+   {
+     val = buf[loop * 4 + 3];
+     val = 0xFF - val;
+     buf[loop * 4 + 3] = val;
+   }
+}
+
 scrobj_t g_boxes[BOX_X * BOX_Y] __attribute__((aligned(128)));
 camera_t g_camera __attribute__((aligned(128)));
+PbTexture *p_logo = NULL;
 
 void init_objs()
 
@@ -195,6 +196,11 @@ void init_objs()
       update_obj(&g_boxes[(loopy * BOX_X) + loopx]);
     }
   }
+
+  invert_alpha(logo);
+  FlushCache(0);
+  p_logo = PbTextureCreate32(logo, 512, 256);
+  PbTextureUpload(p_logo); 
 }
 
 void init_demo()
@@ -211,6 +217,8 @@ void init_demo()
   vu1_send_chain();
   vu1_wait_dma();
   init_objs();
+  PbPrimSetState( PB_ALPHA_BLENDING, PB_ENABLE);
+  PbPrimSetAlpha(0, 1, 2, 2, 0x80);
 }
 
 void do_demo()
@@ -230,12 +238,14 @@ void do_demo()
    while(init->frame_count > 0)
      {
        *((u32 *) 0x120000e0) = 0xFF00;
+       PbPrimSetState( PB_ALPHA_BLENDING, PB_DISABLE);
        PbScreenClear(0);
        
        angle = (angle + 4) & 1023;
-       g_camera.roty = angle;
-       g_camera.rotx = angle;
-       g_camera.rotz = angle;
+       c_angle = (c_angle + 1) & 1023;
+       g_camera.roty = c_angle;
+       g_camera.rotx = c_angle;
+       g_camera.rotz = c_angle;
        update_camera(&g_camera);
        vu1_upload_data_copy((vertex *) &vu_gp, 0, sizeof(vu_gp_t) / 16, DB_OFF);
 
@@ -244,15 +254,15 @@ void do_demo()
           g_boxes[loop].rotx = angle;
           g_boxes[loop].roty = angle;
           g_boxes[loop].rotz = angle;
-          //g_boxes[loop].tz -= 100;
           update_obj(&g_boxes[loop]);
           render_obj(&g_boxes[loop]);
        }
        vu1_add_flush();
        vu1_send_chain();
        vu1_wait_dma();
-/*        vu1_dumpregs(); */
-/*        printf("\n"); */
+       PbPrimSetState( PB_ALPHA_BLENDING, PB_ENABLE);
+       PbPrimSpriteTexture(p_logo, 50 << 4, 60 << 4, 0 << 4, 0 << 4,
+			562 << 4, 176 << 4, 512 << 4, 116 << 4, 0xFFFFFFFF, 0x80808080);
        
        *((u32 *) 0x120000e0) = 0xFF;
        fcount++;
