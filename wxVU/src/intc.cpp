@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "intc.h"
 
+const int INTC::nREGISTERS = 2;
+
 const string tINTC_STAT[2] = {
     "No interrupt request exists",
     "An interrupt request exists"

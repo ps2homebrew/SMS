@@ -24,5 +24,4 @@ private:
     vector<string>      unpack_IPU_CTRL(const int reg);
     vector<string>      unpack_IPU_BP(const int reg);
 };
-const int IPU::nREGISTERS = 4;
 #endif

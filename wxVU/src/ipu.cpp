@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "ipu.h"
 
+const int IPU::nREGISTERS = 4;
+
 static const string tIPU_CMD[2] = {
     "DATA field enable",
     "DATA field disable"

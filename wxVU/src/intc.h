@@ -22,5 +22,4 @@ private:
     vector<string>      unpack_I_STAT(const int reg);
     vector<string>      unpack_I_MASK(const int reg);
 };
-const int INTC::nREGISTERS = 2;
 #endif

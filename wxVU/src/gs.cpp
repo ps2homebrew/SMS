@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "gs.h"
 
+const int GS::nREGISTERS = 2;
+
 static const string tSIGNAL[2] = {
     "SIGNAL event has not been generated",
     "SIGNAL event has been generated"

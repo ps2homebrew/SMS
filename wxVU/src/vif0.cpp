@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "vif0.h"
 
+const int VIF0::nREGISTERS = 18;
+
 VIF0::VIF0() : VIF(VIF0::nREGISTERS) {
 }
 

@@ -35,5 +35,4 @@ private:
     vector<string>      unpack_VIF1_BASE(const int reg);
     vector<string>      unpack_VIF1_OFST(const int reg);
 };
-const int VIF1::nREGISTERS = 22;
 #endif

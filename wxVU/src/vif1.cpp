@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "vif1.h"
 
+const int VIF1::nREGISTERS = 22;
+
 static const string tVPS[4] = {
     "Idle",
     "Waits for the data following VIFcode.",

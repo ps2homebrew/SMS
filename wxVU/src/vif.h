@@ -2,6 +2,7 @@
 #define _VIF
 #include "datatypes.h"
 #include "sub.h"
+#include <fstream>
 
 typedef struct vifCode {
     uint32  CMD;

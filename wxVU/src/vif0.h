@@ -33,5 +33,4 @@ private:
     vector<string>      unpack_VIF0_STAT(const int reg);
     vector<string>      unpack_VIF0_FBRST(const int reg);
 };
-const int VIF0::nREGISTERS = 18;
 #endif

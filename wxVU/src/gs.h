@@ -23,5 +23,4 @@ private:
     vector<string>      unpack_CSR(const int reg);
 
 };
-const int GS::nREGISTERS = 2;
 #endif
