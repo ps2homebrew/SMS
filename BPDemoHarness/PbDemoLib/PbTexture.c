@@ -276,8 +276,8 @@ u64 PbTextureGetTex0( PbTexture* pTexture )
   if( pTexture->format == 32 )
   {
     return ((u64)1<<34) + 
-           ((u64)lx<<30) + 
-           ((u64)ly<<26) + 
+           ((u64)ly<<30) + 
+           ((u64)lx<<26) + 
            (0<<20) + 
            (((pTexture->x/64)&63)<<14) + 
            (pTexture->Vram/256);
@@ -286,8 +286,8 @@ u64 PbTextureGetTex0( PbTexture* pTexture )
   return ((u64)1<<61)+
          (((u64)pTexture->VramClut/256)<<37) + 
          (((u64)0)<<34) + 
-         (((u64)lx)<<30) +
-         (((u64)ly)<<26) +
+         (((u64)ly)<<30) +
+         (((u64)lx)<<26) +
          (((u64)GS_PSMT8)<<20) + 
          (((pTexture->x/64)&63)<<14) + 
          (pTexture->Vram/256);
