@@ -18,9 +18,9 @@ public:
 	char currentDir[1024];
 	
 	FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false);
-	
-private:
 	t_aioDent rootDir[4];
+private:
+	
 
 };
 

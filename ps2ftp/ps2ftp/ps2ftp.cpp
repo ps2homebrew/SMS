@@ -9,37 +9,31 @@
 
 #include "ps2ftp.h"
 
+/* function prototypes */
 void serverThread ();
 void HandleClient (int, struct sockaddr_in *);
-
 enum command_types get_command (int com_sock, char *buf, int bufsize);
-void retrieve (char *filename, struct sockaddr_in *data_address,
-			   int data_length, int com_sock, char *buf);
+void retrieve (char *filename, struct sockaddr_in *data_address, int data_length, int com_sock, char *buf);
+void processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum command_modes *command_mode);
 
+/* Variables */
 u8 buffer[BUFFER_SIZE] __attribute__ ((aligned (64))); //for sending files
 FSMan *vfs;
-char currentDir[1024];
+char currentDir[128];
 char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-extern u8 *ps2ip_irx;
-extern int size_ps2ip_irx;
-extern u8 *ps2smap_irx;
-extern int size_ps2smap_irx;
-
-#define IPCONF_MAX_LEN  (3*16)
-
-char if_conf[IPCONF_MAX_LEN];
-int if_conf_len;
-
-char ip[16] __attribute__((aligned(16))) = "192.168.0.10";
-char netmask[16] __attribute__((aligned(16))) = "255.255.255.0";
-char gw[16] __attribute__((aligned(16))) = "192.168.0.1";
-
+/*
+ *	Send a FTP reply to the client
+ *  If code is negative it means that the message is coninued
+ *  and the client will simple print it out and wait for the 
+ *  next, allows multiline status msgs to be returned to client
+ */
 int
 reply (int sock, int code, char *msg)
 {
 	static char replybuf[256] __attribute__ ((aligned (64)));
 	int ret;
+
 	//let - #'s for code indicate that there is another line to send
 	if (code < 0)
 		snprintf (replybuf, 256, "%d- %s\r\n", (code * -1), msg);
@@ -58,23 +52,29 @@ reply (int sock, int code, char *msg)
 	Initiate a connection to a tcp/ip port in the given address 
 	Return a socket to the connected port.
 	Return -1 if an error occurs
+	NOTE: had to make it static inline or the sock would seem
+	      to open and send data but it would not happen *shrug*
+		  possibly same problem as sjeep has in pgen in loading
+		  hdd modules
 */
-int
-connect_tcpip (struct sockaddr_in *data_address, int data_length, char *buf,
-			   int com_sock)
+static inline int 
+connect_tcpip (struct sockaddr_in *data_address, int data_length, int com_sock)
 {
 	int sock;
+perror("pre sock\n");
 	sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock < 0) {
-		reply (com_sock, -550, "connect_tcpip:sock() failed");
-		perror ("connect_tcpip:sock() failed %d", sock);
+		reply (com_sock, 550, "connect_tcpip:sock() failed");
+		printf ("connect_tcpip:sock() failed %d", sock);
 		return -1;
 	}
-	if (connect (sock, (struct sockaddr *) data_address, data_length) < 0) {
-		reply (com_sock, -550, "connect_tcpip:connect() failed");
+perror("post sock\n");
+	if (connect(sock, (struct sockaddr *) data_address, data_length) < 0) {
+		reply (com_sock, 550, "connect_tcpip:connect() failed");
 		printf ("FATAL: connect_tcpip:connect() failed\n");
 		return -1;
 	}
+	printf("sock is: %d\n", sock);
 	return sock;
 }
 
@@ -96,7 +96,7 @@ get_command (int com_sock, char *buf, unsigned int bufsize)
 
 	//advance i to the start of the command argument
 	i = strlen (cmd);
-	while (!isPrintable (buf[i]))
+	while (!isPrintable (buf[i]) || buf[i] == 0x20)
 		i++;
 
 	//copy the command argument into buf stopping at
@@ -125,7 +125,7 @@ get_command (int com_sock, char *buf, unsigned int bufsize)
 }
 void setupIP() {
 	int i;
-	memset(if_conf, 0x00, IPCONF_MAX_LEN);
+	memset(if_conf, 0x00, sizeof(if_conf));
 	i = 0;
 	strncpy(&if_conf[i], ip, 15);
 	i += strlen(ip) + 1;
@@ -141,26 +141,41 @@ void setupIP() {
 int
 main (int argc, char **argv)
 {
+	int ret;
+	bool underPS2Link = false;
+	
+	//causes an exception *shrug*
+	//printf("argv0: %s\n", argv[0]);
+	//Test to see if we're running under PS2Link
+	//f (strncmp(argv[0], "host", 4) == 0)
+	//	underPS2Link = true;
+
 	init_scr();
 	printf("PS2FTP v%d.%d starting...\n", verMajor, verMinor);
-	SifExitRpc();
-	SifIopReset("rom0:UDNL rom0:EELOADCNF", 0);
-	while(!SifIopSync());
+	
+	if (!underPS2Link) {
+		SifExitRpc();
+		SifIopReset("rom0:UDNL rom0:EELOADCNF", 0);
+		while(!SifIopSync());
+	}
 	SifInitRpc(0);
 
 	//load dev9 and smap here
 	printf("Loading Network Adapter drivers...\n");
+	if (!underPS2Link) {
+		setupIP();
+		SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
+		printf("\tLoaded PS2IP: %d\n", ret);
+		SifExecModuleBuffer(&ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], &ret);
+		printf("\tLoaded PS2SMAP: %d\n", ret);
+	}
 	
-	setupIP();
-	printf("loading ps2ip: %d\n", size_ps2ip_irx);
-	SifExecModuleBuffer(ps2ip_irx, size_ps2ip_irx, 0, NULL, NULL);
-	//loadMemModule(ps2ip, size_ps2ip, 0, NULL);
-	printf("loading ps2smap: %d\n", size_ps2smap_irx);
-	SifExecModuleBuffer(ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], NULL);
-	//loadMemModule(ps2smap, size_ps2smap, if_conf_len, &if_conf[0]);
+	SifExecModuleBuffer(&ps2ips_irx, size_ps2ips_irx, 0, NULL, &ret);
+	printf("\tLoaded PS2IPS: %d\n", ret);
 
 	printf("Initialising IP stack...\n");
-	ps2ip_init ();
+	ps2ip_init();
+
 
 	printf("Initialising filesystems:\n");
 	vfs = new FSMan(true /*mc*/, false /*cdvd*/, false /*hdd*/);
@@ -181,9 +196,8 @@ serverThread ()
 
 	printf("Server started.\n");
 
-	sh = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sh < 0) {
-		printf("FATAL: Failed to create socket!\n");
+	if ((sh = socket(AF_INET, SOCK_STREAM, 0/*IPPROTO_TCP*/)) < 0) {
+		printf("FATAL: Failed to create socket: %d\n", sh);
 		SleepThread ();
 	}
 	//perror ("PS2FTP: Got socket.. %i\n", sh);
@@ -221,22 +235,12 @@ serverThread ()
 	}
 }
 
-
 void
 HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 {
 	/* Create buffered file descriptors for reading and writing */
 	/* Data buffer for reading FTP command codes */
-	char filename[256];
-	char buf[512];
-	char buf2[512];
-	char *tok; //for strtok in PORT
-	t_aioDent fileEntry; //for SIZE command
-
-	int ret=0, i, ls_sock, fd, sock, bytes;
-	/* Address of the data port used to transfer files */
-	struct sockaddr_in data_address;
-	int data_length = sizeof (data_address);
+	char buf[256];
 
 	/* The initial command mode */
 	enum command_modes command_mode = LOGIN;
@@ -251,9 +255,6 @@ HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 		/* Get FTP command from input stream */
 		enum command_types ftpcommand = get_command(com_sock, buf, sizeof(buf));
 
-		/* Temporary Storage for tcp/ip address */
-		int a1, a2, a3, a4, p1, p2;
-
 		switch (command_mode) {
 			case LOGIN:  /* In login mode, only the USER command accepted */
 				if (ftpcommand == USER) {
@@ -262,7 +263,7 @@ HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 						reply (com_sock, 331,
 							"anonymous login accepted, enter email as password");
 					} else {
-						perror ("user: >%s<\n", buf);
+						printf("user: >%s<\n", buf);
 						reply (com_sock, 504, buf);
 					}
 				} else
@@ -278,282 +279,7 @@ HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 				}
 				break;
 			case COMMANDS:  /* In the command mode, accept all other commands */
-				switch (ftpcommand) { /* Check commands */
-			case EOFC:  /* End Of File detected on command stream */
-			case QUIT:
-				command_mode = EXIT;
-				break;
-			case SYST:  /* System command, return something but not much */
-				reply (com_sock, 215, "UNIX Type: L8");
-				break;
-			case PWD:  /* Print working directory */
-				sprintf (buf2, "\"%s\" is the current directory.", vfs->currentDir);
-				reply (com_sock, 257, buf2);
-				break;
-			case CWD:  /* Change working directory */
-				/*
-				if (isDir (buf)) { // If we have an absolute path
-					if (buf[0] == '/') { //keep /dirname pattern
-						strcpy (currentDir, buf);
-						perror ("last char is: %c\n", buf[strlen (buf) - 1]);
-						if (buf[strlen (buf) - 1] != '/')
-							strcat (currentDir, "/");
-						perror ("currentdir now: %s\n", currentDir);
-					} else {
-						//sprintf (currentDir, "/%s", buf);
-						strcpy (currentDir, "/");
-						strcat (currentDir, buf);
-						perror ("last char 2 is: %c\n", buf[strlen (buf) - 1]);
-						if (buf[strlen (buf) - 1] != '/')
-							strcat (currentDir, "/");
-						perror ("currentdir 2 now: %s\n", currentDir);
-					}
-					reply (com_sock, 250, "CWD command successful.");
-				} else {  //else assume that its a relative path
-					sprintf (buf2, "%s%s", currentDir, buf);
-					if (isDir (buf2)) {
-						sprintf (currentDir, "%s%s", currentDir, buf);
-						reply (com_sock, 250, "CWD command successful 2.");
-					} else
-						reply (com_sock, 550, "No such directory");
-				}*/
-				break;
-			case CDUP:
-				/*i = strlen (currentDir);
-				if (i < 5) {
-					currentDir[0] = '/';
-					currentDir[1] = '\0';
-					reply (com_sock, 250, "CDUP command successful. 1");
-				} else {
-					i--;
-					if (currentDir[i] == '/')
-						currentDir[i] = '\0';
-					i--;
-					while (i >= 0 && currentDir[i] != '/')
-						i--;
-					if (i == 0) {
-						currentDir[0] = '/';
-						currentDir[1] = '\0';
-					} else {
-						currentDir[i] = '\0';
-					}
-					reply (com_sock, 250, "CDUP command successful.");
-				}*/
-
-				break;
-			case TYPE:  /* Accept file TYPE commands, but always translate to BIN */
-				reply (com_sock, 200, "Type set to I.");
-				break;
-			case LIST:
-				//open socket to client
-				ls_sock = connect_tcpip (&data_address, data_length, buf, com_sock);
-				if (ls_sock < 0) {
-					reply (com_sock, 500, "data connection failed");
-				} else {
-					//get dir listing
-					reply (com_sock, 150, "Opening BINARY mode data connection for /bin/ls.");
-					i = 0;
-					while (vfs->dirlisting[i].name[0] != '\0') {
-						if (vfs->dirlisting[i].attrib && AIO_ATTRIB_DIR)
-							sprintf(buf, "drw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %d %02d:%02d %s\r\n",
-							vfs->dirlisting[i].size,
-							months[0], //month
-							1, //day
-							0, //hour
-							1, //min
-							vfs->dirlisting[i].name);
-						else
-							sprintf(buf, "-rw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %2d %02d:%02d %s\r\n",
-							vfs->dirlisting[i].size,
-							months[0], //month
-							1, //day
-							0, //hour
-							1, //min
-							vfs->dirlisting[i].name);
-
-						ret = send (ls_sock, buf, strlen (buf), 0);
-						if (ret < 0) {
-							perror ("Error sending dir listing: %d\n", ret);
-							reply (com_sock, 500, "Error Sending directory listing");
-							break;
-						}
-						i++;
-					}
-					if (ret >= 0)
-						reply (com_sock, 226, "Transfer complete.");
-				}
-				//close socket
-				disconnect (ls_sock);
-				break;
-			case NOOP:  /* Acknowledge NOOP command */
-				reply (com_sock, 200, "OK");
-				break;
-			case PORT:  /* Set the tcp/ip address based on the given argument */
-				/* Grab data port address from command argument */
-				tok = strtok (buf, ",");
-				a1 = atoi (tok);
-				tok = strtok (NULL, ",");
-				a2 = atoi (tok);
-				tok = strtok (NULL, ",");
-				a3 = atoi (tok);
-				tok = strtok (NULL, ",");
-				a4 = atoi (tok);
-				perror ("addr: %d.%d.%d.%d\n", a1, a2, a3, a4);
-				IP4_ADDR (&(data_address.sin_addr), a1, a2, a3, a4);
-				tok = strtok (NULL, ",");
-				p1 = atoi (tok);
-				tok = strtok (NULL, ",");
-				p2 = atoi (tok);
-
-				perror ("port: %d\n", p1 * 256 + p2);
-				data_address.sin_port = htons ((p1 * 256) + p2);
-
-				reply (com_sock, 200, "PORT command successful"); //
-				break;
-			case RETR:  /* Retrieve File and transfer it to data address */
-				//TODO: STRIP OFF VFS DEVICE DIRECTORY
-				sprintf (filename, "%s%s", currentDir, buf);
-
-				if ((fd = vfs->currentDevice->open(filename, O_RDONLY)) < 0) {
-					sprintf (buf2, "File Does Not Exist: '%s'", filename);
-					reply (com_sock, 550, buf2);
-					break;
-				} else
-					perror ("Opened %s", filename);
-
-				/* Everything OK, so make data connection */
-				sprintf (buf2, "Opening data connection for '%s'", filename);
-				reply (com_sock, 150, buf2);
-
-				/* Create tcp/ip connection for data link */
-				sock = connect_tcpip (&data_address, data_length, buf2, com_sock);
-				if (sock < 0) {
-					reply (com_sock, 550, "data connection failed");
-					return;
-				} else {
-					/* Transfer file using BINARY mode translation */
-					memset (buffer, '\0', BUFFER_SIZE);
-					while ((bytes = vfs->currentDevice->read(fd, buffer, BUFFER_SIZE)) != 0) {
-						if (send (sock, buffer, bytes, 0) < 0)
-							break;
-					}
-					if (bytes != 0)
-						reply (com_sock, 550, "error transfering file");
-					else
-						reply (com_sock, 226, "Transfer Complete");
-
-					/* Clean up */
-					disconnect (sock);
-					vfs->currentDevice->close(fd);
-				}
-				break;
-			case STOR:
-				//TODO: STRIP OFF VFS DEVICE DIRECTORY
-				if (currentDir[strlen (currentDir) - 1] == '/')
-					currentDir[strlen (currentDir) - 1] = '\0';
-				if (currentDir[0] == '/')
-					strcpy (buf2, &currentDir[1]);
-				else
-					strcpy (buf2, currentDir);
-				sprintf (filename, "mc0:%s/%s", buf2, buf);
-				perror ("filename: %s\n", filename);
-				perror ("Before open\n");
-				
-				if ((fd = vfs->currentDevice->open(filename, O_WRONLY | O_CREAT)) < 0) {
-					perror ("permission denied\n");
-					sprintf (buf2, "Permission denied. Could not create file: '%s'",
-						filename);
-					reply (com_sock, 553, buf2);
-					break;
-				} else {
-					perror ("opened\n");
-				}
-				/* Everything OK, so make data connection */
-				sprintf (buf2, "Opening BINARY mode data connection for '%s'", filename);
-				reply (com_sock, 150, buf2);
-
-				/* Create tcp/ip connection for data link */
-				sock = connect_tcpip (&data_address, data_length, buf2, com_sock);
-				if (sock < 0) {
-					reply (com_sock, 550, "data connection failed");
-					return;
-				} else {
-
-					/* Transfer file using BINARY mode translation */
-					memset (buffer, '\0', BUFFER_SIZE);
-					while ((bytes = recv (sock, buffer, BUFFER_SIZE, 0)) > 0) {
-						perror ("read: %d bytes\n");
-						if (vfs->currentDevice->write(fd, buffer, bytes) < 1)
-							break;
-					}
-
-					if (bytes != 0)
-						reply (com_sock, 550, "error transfering file");
-					else
-						reply (com_sock, 226, "Transfer Complete");
-
-					/* Clean up */
-					disconnect (sock);
-					vfs->currentDevice->close(fd);
-				}
-				break;
-			case DELE:
-				//TODO: STRIP OFF VFS DEVICE DIRECTORY
-				perror ("deleting: %s\n", buf);
-				ret = vfs->currentDevice->remove(buf);
-				if (ret == 0)
-					reply (com_sock, 250, "DELE command successful.");
-				else {
-					sprintf (buf2, "Error %d returned from remove(%s).", ret, buf);
-					reply (com_sock, 550, buf2);
-				}
-				break;
-			case RMD:
-				//TODO: STRIP OFF VFS DEVICE DIRECTORY
-				ret = vfs->currentDevice->rmdir(buf);
-				if (ret == 0)
-					reply (com_sock, 250, "RMD command successful.");
-				else {
-					sprintf (buf2, "Error %d returned from rmdir(%s).", ret, buf);
-					reply (com_sock, 550, buf2);
-				}
-				break;
-			case MKD:
-				//TODO: STRIP OFF VFS DEVICE DIRECTORY
-				if (buf[0] == '/')
-					sprintf (buf2, "%s", buf);
-				else
-					sprintf (buf2, "%s%s", currentDir, buf);
-
-				perror ("MKD: %s\n", buf2);
-				ret = vfs->currentDevice->mkdir(buf2);
-				if (ret < 0) {
-					sprintf (buf, "Could not create directory \"%s\" (%d)\n", buf2, ret);
-					reply (com_sock, 550, buf);
-				} else {
-					sprintf (buf, "\"%s\" created.\n", buf2);
-					reply (com_sock, 257, buf);
-				}
-				break;
-			case SIZE:
-				//TODO: STRIP OFF VFS DEVICE DIRECTORY
-				//sprintf (buf2, "%s%s", currentDir, buf);
-				vfs->currentDevice->getstat(buf2, &fileEntry);
-				bytes = fileEntry.size;
-				if (bytes < 0) {
-					perror ("SIZE: %s: No such file or directory\n", buf2);
-					sprintf (buf2, "%s: No such file or is a directory", buf2);
-					reply (com_sock, 550, buf2);
-				} else {
-					perror ("SIZE: %s is %d\n", buf2, bytes);
-					sprintf (buf2, "%d", bytes);
-					reply (com_sock, 250, buf2);
-				}
-				break;
-			default: /* Any command not implemented, return not recognized response. */
-				reply(com_sock, 500, "command not recognized");
-				break;
-				}
+				processCommand(com_sock, ftpcommand, buf, &command_mode);
 				break;
 			case EXIT:
 				break;
@@ -561,4 +287,330 @@ HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 	};
 	//Disconnect
 	disconnect (com_sock);
+}
+
+void 
+processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum command_modes *command_mode) {
+	char filename[256];
+	char buf[128];
+	char buf2[128];
+	char *tok; //for strtok in PORT
+	t_aioDent fileEntry; //for SIZE command
+
+	int ret=0, i, ls_sock, fd, sock, bytes;
+
+	/* Address of the data port used to transfer files */
+	struct sockaddr_in data_address;
+	int data_length = sizeof (data_address);
+
+	/* Temporary Storage for tcp/ip address (PORT command)*/
+	int a1, a2, a3, a4, p1, p2;
+
+	switch (ftpcommand) { /* Check commands */
+		case EOFC:  /* End Of File detected on command stream */
+
+		case QUIT:
+			*command_mode = EXIT;
+			break;
+		case SYST:  /* System command, return something but not much */
+			reply (com_sock, 215, "UNIX Type: L8");
+			break;
+		case PWD:  /* Print working directory */
+			sprintf (buf, "\"%s\" is the current directory.", vfs->currentDir);
+			reply (com_sock, 257, buf);
+			break;
+		case CWD:  /* Change working directory */
+			/*
+			if (isDir (buf)) { // If we have an absolute path
+			if (buf[0] == '/') { //keep /dirname pattern
+			strcpy (currentDir, buf);
+			perror ("last char is: %c\n", buf[strlen (buf) - 1]);
+			if (buf[strlen (buf) - 1] != '/')
+			strcat (currentDir, "/");
+			perror ("currentdir now: %s\n", currentDir);
+			} else {
+			//sprintf (currentDir, "/%s", buf);
+			strcpy (currentDir, "/");
+			strcat (currentDir, buf);
+			perror ("last char 2 is: %c\n", buf[strlen (buf) - 1]);
+			if (buf[strlen (buf) - 1] != '/')
+			strcat (currentDir, "/");
+			perror ("currentdir 2 now: %s\n", currentDir);
+			}
+			reply (com_sock, 250, "CWD command successful.");
+			} else {  //else assume that its a relative path
+			sprintf (buf2, "%s%s", currentDir, buf);
+			if (isDir (buf2)) {
+			sprintf (currentDir, "%s%s", currentDir, buf);
+			reply (com_sock, 250, "CWD command successful 2.");
+			} else
+			reply (com_sock, 550, "No such directory");
+			}*/
+			break;
+		case CDUP:
+			/*i = strlen (currentDir);
+			if (i < 5) {
+			currentDir[0] = '/';
+			currentDir[1] = '\0';
+			reply (com_sock, 250, "CDUP command successful. 1");
+			} else {
+			i--;
+			if (currentDir[i] == '/')
+			currentDir[i] = '\0';
+			i--;
+			while (i >= 0 && currentDir[i] != '/')
+			i--;
+			if (i == 0) {
+			currentDir[0] = '/';
+			currentDir[1] = '\0';
+			} else {
+			currentDir[i] = '\0';
+			}
+			reply (com_sock, 250, "CDUP command successful.");
+			}*/
+			break;
+		case TYPE:  /* Accept file TYPE commands, but always translate to BIN */
+			reply (com_sock, 200, "Type set to I.");
+			break;
+		case LIST:
+			perror("In List\n");
+			//open socket to client
+			//NOTICE: THIS AREA IS SCREWING UP, there is some kind of stack
+			//        weirdness or something going on, any help is appreciated
+			//        please only compile with -O0 right now, it seems to give
+			//        the best results. Basically, the socket is being created
+			//        and its reported that its connected to the client but it
+			//        never actually does, check it with a packet sniffer. If
+			//        you want to help with code please concentrate _only_ on
+			//        helping figure out what's going on and getting dir listing
+			//        to work. CWD and other commands depend on FSMan which I
+			//        have not finished writing (I wanted to haev this working
+			//        to test it with.
+			//ls_sock = connect_tcpip (&data_address, data_length, com_sock);
+			ls_sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+			if (sock < 0) {
+				reply (com_sock, 550, "connect_tcpip:sock() failed");
+				printf ("connect_tcpip:sock() failed %d", sock);
+
+			}
+			perror("post sock\n");
+			if (connect(ls_sock, (struct sockaddr *) &data_address, data_length) < 0) {
+				reply (com_sock, 550, "connect_tcpip:connect() failed");
+				printf ("FATAL: connect_tcpip:connect() failed\n");
+
+			}
+			perror("connection opened\n");
+			if (ls_sock < 0) {
+				reply (com_sock, 500, "data connection failed");
+			} else {
+				//get dir listing
+				reply (com_sock, 150, "Opening BINARY mode data connection for /bin/ls.");
+				i = 0;
+				while (vfs->dirlisting[i].name[0] != '\0') {
+
+					if (vfs->dirlisting[i].attrib && AIO_ATTRIB_DIR)
+						sprintf(buf, "drw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %d %02d:%02d %s\r\n",
+						vfs->dirlisting[i].size,
+						months[0], //month
+						1, //day
+						0, //hour
+						1, //min
+						vfs->dirlisting[i].name);	
+					else
+						sprintf(buf, "-rw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %2d %02d:%02d %s\r\n",
+						vfs->dirlisting[i].size,
+						months[0], //month
+						1, //day
+						0, //hour
+						1, //min
+						vfs->dirlisting[i].name);
+
+					perror("%s", buf);
+					ret = send (ls_sock, buf, strlen (buf), 0);
+					printf("sent %d bytes\n", ret);
+					if (ret < 0) {
+						perror ("Error sending dir listing: %d\n", ret);
+						reply (com_sock, 500, "Error Sending directory listing");
+						break;
+					}
+					i++;
+				}
+				disconnect (ls_sock);
+				if (ret >= 0)
+					reply (com_sock, 226, "Transfer complete.");
+			}
+			break;
+		case NOOP:  /* Acknowledge NOOP command */
+			reply (com_sock, 200, "OK");
+			break;
+		case PORT:  /* Set the tcp/ip address based on the given argument */
+			/* Grab data port address from command argument */
+			tok = strtok (cmd_buf, ",");
+			a1 = atoi (tok);
+			tok = strtok (NULL, ",");
+			a2 = atoi (tok);
+			tok = strtok (NULL, ",");
+			a3 = atoi (tok);
+			tok = strtok (NULL, ",");
+			a4 = atoi (tok);
+			perror ("addr: %d.%d.%d.%d\n", a1, a2, a3, a4);
+			IP4_ADDR(&(data_address.sin_addr), a1, a2, a3, a4);
+			tok = strtok (NULL, ",");
+			p1 = atoi (tok);
+			tok = strtok (NULL, ",");
+			p2 = atoi (tok);
+
+			perror ("port: %d\n", p1 * 256 + p2);
+			data_address.sin_port = htons ((p1 * 256) + p2);
+
+			reply (com_sock, 200, "PORT command successful"); //
+			break;
+		case RETR:  /* Retrieve File and transfer it to data address */
+			//TODO: STRIP OFF VFS DEVICE DIRECTORY
+			/*sprintf (filename, "%s%s", currentDir, cmd_buf);
+
+			if ((fd = vfs->currentDevice->open(filename, O_RDONLY)) < 0) {
+				sprintf (buf, "File Does Not Exist: '%s'", filename);
+				reply (com_sock, 550, buf);
+				break;
+			} else
+				perror ("Opened %s", filename);
+
+			// Everything OK, so make data connection 
+			sprintf (buf, "Opening data connection for '%s'", filename);
+			reply (com_sock, 150, buf);
+
+			// Create tcp/ip connection for data link 
+			sock = connect_tcpip (&data_address, data_length, com_sock);
+			if (sock < 0) {
+				reply (com_sock, 550, "data connection failed");
+				return;
+			} else {
+				// Transfer file using BINARY mode translation
+				memset (buffer, '\0', BUFFER_SIZE);
+				while ((bytes = vfs->currentDevice->read(fd, buffer, BUFFER_SIZE)) != 0) {
+					if (send (sock, buffer, bytes, 0) < 0)
+						break;
+				}
+				if (bytes != 0)
+					reply (com_sock, 550, "error transfering file");
+				else
+					reply (com_sock, 226, "Transfer Complete");
+
+				// Clean up 
+				disconnect (sock);
+				vfs->currentDevice->close(fd);
+			}*/
+			break;
+		case STOR:
+			//TODO: STRIP OFF VFS DEVICE DIRECTORY
+			/*if (currentDir[strlen (currentDir) - 1] == '/')
+				currentDir[strlen (currentDir) - 1] = '\0';
+			if (currentDir[0] == '/')
+				strcpy (buf2, &currentDir[1]);
+			else
+				strcpy (buf2, currentDir);
+			sprintf (filename, "mc0:%s/%s", buf2, cmd_buf);
+			perror ("filename: %s\n", filename);
+			perror ("Before open\n");
+
+			if ((fd = vfs->currentDevice->open(filename, O_WRONLY | O_CREAT)) < 0) {
+				perror ("permission denied\n");
+				sprintf (buf2, "Permission denied. Could not create file: '%s'",
+					filename);
+				reply (com_sock, 553, buf2);
+				break;
+			} else {
+				perror ("opened\n");
+			}
+			// Everything OK, so make data connection 
+			sprintf (buf2, "Opening BINARY mode data connection for '%s'", filename);
+			reply (com_sock, 150, buf2);
+
+			// Create tcp/ip connection for data link
+			sock = connect_tcpip (&data_address, data_length, com_sock);
+			if (sock < 0) {
+				reply (com_sock, 550, "data connection failed");
+				return;
+			} else {
+
+				// Transfer file using BINARY mode translation
+				memset (buffer, '\0', BUFFER_SIZE);
+				while ((bytes = recv (sock, buffer, BUFFER_SIZE, 0)) > 0) {
+					perror ("read: %d bytes\n");
+					if (vfs->currentDevice->write(fd, buffer, bytes) < 1)
+						break;
+				}
+
+				if (bytes != 0)
+					reply (com_sock, 550, "error transfering file");
+				else
+					reply (com_sock, 226, "Transfer Complete");
+
+				// Clean up
+				disconnect (sock);
+				vfs->currentDevice->close(fd);
+			}*/
+			break;
+		case DELE:
+			//TODO: STRIP OFF VFS DEVICE DIRECTORY
+			/*perror ("deleting: %s\n", buf);
+			ret = vfs->currentDevice->remove(buf);
+			if (ret == 0)
+				reply (com_sock, 250, "DELE command successful.");
+			else {
+				sprintf (buf2, "Error %d returned from remove(%s).", ret, buf);
+				reply (com_sock, 550, buf2);
+			}*/
+			break;
+		case RMD:
+			//TODO: STRIP OFF VFS DEVICE DIRECTORY
+			/*ret = vfs->currentDevice->rmdir(buf);
+			if (ret == 0)
+				reply (com_sock, 250, "RMD command successful.");
+			else {
+				sprintf (buf2, "Error %d returned from rmdir(%s).", ret, buf);
+				reply (com_sock, 550, buf2);
+			}*/
+			break;
+		case MKD:
+			//TODO: STRIP OFF VFS DEVICE DIRECTORY
+			/*if (buf[0] == '/')
+				sprintf (buf2, "%s", buf);
+			else
+				sprintf (buf2, "%s%s", currentDir, buf);
+
+			perror ("MKD: %s\n", buf2);
+			ret = vfs->currentDevice->mkdir(buf2);
+			if (ret < 0) {
+				sprintf (buf, "Could not create directory \"%s\" (%d)\n", buf2, ret);
+				reply (com_sock, 550, buf);
+			} else {
+				sprintf (buf, "\"%s\" created.\n", buf2);
+				reply (com_sock, 257, buf);
+			}*/
+			break;
+		case SIZE:
+			//TODO: STRIP OFF VFS DEVICE DIRECTORY
+			//sprintf (buf2, "%s%s", currentDir, buf);
+			/*vfs->currentDevice->getstat(buf2, &fileEntry);
+			bytes = fileEntry.size;
+			if (bytes < 0) {
+				perror ("SIZE: %s: No such file or directory\n", buf2);
+				sprintf (buf2, "%s: No such file or is a directory", buf2);
+				reply (com_sock, 550, buf2);
+			} else {
+				perror ("SIZE: %s is %d\n", buf2, bytes);
+				sprintf (buf2, "%d", bytes);
+				reply (com_sock, 250, buf2);
+			}*/
+			break;
+		case PLNK: /*command to (re)load ps2link*/
+			disconnect (com_sock);
+			LoadExecPS2(PS2LINK_PATH, 0, NULL);
+			break;
+		default: /* Any command not implemented, return not recognized response. */
+			reply(com_sock, 500, "command not recognized");
+			break;
+	}
 }

@@ -22,7 +22,6 @@ mcIO::mcIO(int port, int maxEntries)
 
 	if((rv < -1)) //|| !format //Since we're not using XMC format is always 0
 	{
-		printf("mcgetinfo failed\n");
 		status = AIO_STATE_ERROR;
 		return;
 	}

@@ -1,4 +1,6 @@
 #include "FSMan.h"
+#include <kernel.h>
+#define printf scr_printf
 
 FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 	int dirPos = 0;
@@ -25,9 +27,11 @@ FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 			if (!(mc0->getstatus() && AIO_STATE_ERROR)) {
 				printf("PRESENT\n");
 				mc0On = true;
-				strcpy(dirlisting[dirPos].name, "mc0");
+				strcpy(rootDir[dirPos].name, "mc0");
 				rootDir[dirPos].size = 2048;
 				rootDir[dirPos].attrib = AIO_ATTRIB_DIR;
+				printf("rootdir[%d] = >%s<\n", dirPos, rootDir[dirPos].name);
+				dirPos++;
 			} else 
 				printf("NOT PRESENT\n");
 			
@@ -39,6 +43,7 @@ FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 				strcpy(rootDir[dirPos].name, "mc1");
 				rootDir[dirPos].size = 2048;
 				rootDir[dirPos].attrib = AIO_ATTRIB_DIR;
+				dirPos++;
 			} else
 				printf("NOT PRESENT\n");
 		} else
@@ -59,4 +64,5 @@ FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 		//unload modules if hdd not present
 	}
 	memcpy(dirlisting, rootDir, sizeof(t_aioDent)*4);
+	printf("dir #1: %s\n", dirlisting[0].name);
 }
