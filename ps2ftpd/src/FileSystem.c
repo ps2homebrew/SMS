@@ -191,6 +191,7 @@ int FileSystem_ReadFile( FSContext* pContext, char* pBuffer, int iSize )
 		break;
 
 		default:
+		break;
 	}
 
 	return -1;
@@ -220,6 +221,7 @@ int FileSystem_WriteFile( FSContext* pContext, const char* pBuffer, int iSize )
 		break;
 
 		default:
+		break;
 	}
 
 	return -1;

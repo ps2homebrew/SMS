@@ -24,7 +24,54 @@ int server(void* argv);
 // placed out here to end up on the heap, not the stack
 FtpServer srv;
 
-s32 _start(char **argv, int argc)
+int process_args( FtpServer* pServer, int argc, char* argv[] )
+{
+	argc--; argv++;
+
+	while( argc > 0 )
+	{
+		if(!strcmp("-port",argv[0]))
+		{
+			if( argc <= 0 )
+				return -1;
+
+			argc--; argv++;
+			FtpServer_SetPort( pServer, strtol(argv[0],NULL,10) );
+		}
+		else if(!strcmp("-anonymous",argv[0]))
+		{
+			// enable anonymous logins
+			FtpServer_SetAnonymous( pServer, 1 );
+		}
+		else if(!strcmp("-user",argv[0]))
+		{
+			// set new username
+
+			if( argc <= 0 )
+				return -1;
+
+			argc--; argv++;
+			FtpServer_SetUsername( pServer, argv[0] );
+		}
+		else if(!strcmp("-pass",argv[0]))
+		{
+			// set new password
+
+			if( argc <= 0 )
+				return -1;
+
+			argc--; argv++;
+			FtpServer_SetPassword( pServer, argv[0] );
+		}
+
+		argc--;
+		argv++;
+	}
+
+	return 0;
+}
+
+s32 _start(int argc, char* argv[])
 {
   iop_thread_t mythread;
   int pid;
@@ -39,12 +86,23 @@ s32 _start(char **argv, int argc)
 
 	FtpServer_Create(&srv);
 
+	// process arguments
+
+	if( process_args( &srv, argc, argv ) < 0 )
+	{
+		printf("ps2ftpd: could not parse arguments\n" );
+		return MODULE_NO_RESIDENT_END;
+	}
+
 	// setup server
 
 	FtpServer_SetPort(&srv,21);
+
+
 	if( -1 == FtpServer_Start(&srv) )
 	{
 		FtpServer_Destroy(&srv);
+		printf("ps2ftpd: could not create server\n" );
 		return MODULE_NO_RESIDENT_END;
 	}
 
@@ -62,12 +120,14 @@ s32 _start(char **argv, int argc)
   {
     if ((i=StartThread(pid, NULL)) < 0) 
     {
+			FtpServer_Destroy(&srv);
       printf("ps2ftpd: StartThread failed (%d)\n", i);
       return MODULE_NO_RESIDENT_END;
     }
   } 
   else 
   {
+		FtpServer_Destroy(&srv);
     printf("ps2ftpd: CreateThread failed (%d)\n", pid);
     return MODULE_NO_RESIDENT_END;
   }

@@ -62,37 +62,6 @@ char* itoa(char* in, int val)
 static char buffer[8192];
 #define BUFFER_OFFSET 4096	// use this if you need to use buffer & push it to FtpClient_Send()
 
-// list of commands
-FtpCommand commands[] = 
-{
-	{ FTPCMD_USER, "user" },
-	{ FTPCMD_PASS, "pass" },
-	{ FTPCMD_PASV, "pasv" },
-	{ FTPCMD_PORT, "port" },
-	{ FTPCMD_QUIT, "quit" },
-	{ FTPCMD_SYST, "syst" },
-	{ FTPCMD_LIST, "list" },
-	{ FTPCMD_NLST, "nlst" },
-	{ FTPCMD_RETR, "retr" },
-	{ FTPCMD_TYPE, "type" },
-	{ FTPCMD_STOR, "stor" },
-	{ FTPCMD_PWD, "pwd" },
-	{ FTPCMD_PWD, "xpwd" },
-	{ FTPCMD_CWD, "cwd" },
-	{ FTPCMD_CDUP, "cdup" },
-	{ FTPCMD_DELE, "dele" },
-	{ FTPCMD_MKD, "mkd" },
-	{ FTPCMD_MKD, "xmkd" },
-	{ FTPCMD_RMD, "rmd" },
-	{ FTPCMD_RMD, "xrmd" },
-	{ FTPCMD_SITE, "site" }, 
-	{ -1, NULL }
-
-	// commands to implement
-	
-	// SIZE
-};
-
 void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocket )
 {
 	assert( pClient && pServer );
@@ -101,6 +70,8 @@ void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocke
 
 	pClient->m_pServer = pServer;
 	pClient->m_iControlSocket = iControlSocket;
+	pClient->m_eAuthState = AUTHSTATE_INVALID;
+	pClient->m_iAuthAttempt = 0;
 
 	pClient->m_iDataSocket = -1;
 	pClient->m_uiDataBufferSize = 0;
@@ -162,58 +133,69 @@ void FtpClient_OnConnect( FtpClient* pClient )
 
 void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 {
-	char* cmd;
 	char* c;
 
 	assert( pClient );
 
 	strcpy(buffer,pString);
 
-	cmd = c = strtok(buffer," ");
+	c = strtok(buffer," ");
 
-	while(*c)
+	if(c)
 	{
-		*c = tolower(*c);
-		c++;
-	}
+		int i;
+		unsigned int result = 0;
 
-	if(cmd)
-	{
-		int i = 0;
-		int cmdresult = -1;
+		for( i = 0; *c && i < 4; i++ )
+			result = (result<<8)|tolower(*(c++));
 
-		for( i = 0; commands[i].m_iCommand != -1; i++ )
+		if( pClient->m_eAuthState != AUTHSTATE_VALID )
 		{
-			if(!strcmp(cmd,commands[i].m_pName))
+			switch( result )
 			{
-				cmdresult = commands[i].m_iCommand;
+				// USER <name>
+				case FTPCMD_USER:
+				{
+					char* user = strtok(NULL,"");
+
+					if(user)
+						FtpClient_OnCmdUser(pClient,user);
+					else
+						FtpClient_Send( pClient, 500, "USER: Requires a parameter." );
+				}
 				break;
+
+				// PASS <password>
+				case FTPCMD_PASS:
+				{
+					char* pass = strtok(NULL,"");
+
+					if(pass)
+						FtpClient_OnCmdPass(pClient,pass);
+					else
+						FtpClient_Send( pClient, 530, "Login incorrect." );
+				}
+				break;
+
+				// QUIT
+				case FTPCMD_QUIT:
+				{
+					FtpClient_OnCmdQuit(pClient);
+				}
+				break;
+
+				case FTPCMD_NOOP: FtpClient_Send( pClient, 200, "NOOP command successful." ); break;
 			}
+
+			return;
 		}
-	
-		switch( cmdresult )
+
+		switch( result )
 		{
-			// USER <name>
 			case FTPCMD_USER:
-			{
-				char* user = strtok(NULL,"");
-
-				if(user)
-					FtpClient_OnCmdUser(pClient,user);
-				else
-					FtpClient_Send( pClient, 500, "USER: Requires a parameter." );
-			}
-			break;
-
-			// PASS <password>
 			case FTPCMD_PASS:
 			{
-				char* pass = strtok(NULL,"");
-
-				if(pass)
-					FtpClient_OnCmdPass(pClient,pass);
-				else
-					FtpClient_Send( pClient, 530, "Login incorrect." );
+				FtpClient_Send( pClient, 503, "Already authenticated." );
 			}
 			break;
 
@@ -334,12 +316,14 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			break;
 
 			case FTPCMD_PWD:
+			case FTPCMD_XPWD:
 			{
 				FtpClient_OnCmdPwd(pClient);
 			}
 			break;
 
 			case FTPCMD_CWD:
+			case FTPCMD_XCWD:
 			{
 				char* path = strtok(NULL,"");
 
@@ -368,6 +352,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			break;
 
 			case FTPCMD_MKD:
+			case FTPCMD_XMKD:
 			{
 				char* dir = strtok(NULL,"");
 
@@ -379,6 +364,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			break;
 
 			case FTPCMD_RMD:
+			case FTPCMD_XRMD:
 			{
 				char* dir = strtok(NULL,"");
 
@@ -399,6 +385,8 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 					FtpClient_Send( pClient, 500, "SITE requires parameters." );
 			}
 			break;
+
+			case FTPCMD_NOOP: FtpClient_Send( pClient, 200, "NOOP command successful." ); break;
 
 			default:
 				FtpClient_Send( pClient, 500, "Not understood." );
@@ -434,8 +422,12 @@ void FtpClient_OnDataConnect( FtpClient* pClient,  int* ip, int port )
 	}
 
 	pClient->m_iDataSocket = s;
+
+	// attempt to enter non-blocking mode
 /*
-	FIXME
+	FIXME: non-blocking mode - if this is not enabled, the entire server will
+	stall when the connect is made. the ps2 does not seem to have capability
+	in the lwip-stack to support non-blocking sockets yet though...
 
 	if( fcntl( s, F_SETFL, O_NONBLOCK ) < 0 )
 	{
@@ -527,19 +519,29 @@ void FtpClient_OnDataRead( FtpClient* pClient )
 	{
 		case DATAACTION_STOR:
 		{
+			// read data from socket
+
 			int rv = recv(pClient->m_iDataSocket,buffer,pClient->m_uiDataBufferSize,0);
 
 			if( rv > 0 )
 			{
+				// write data to file
+
 				int sv = FileSystem_WriteFile( &pClient->m_kContext, buffer, rv );
+
+				// write failed? then abort transfer
 
 				if( sv <= 0 )
 					FtpClient_OnDataFailed(pClient,"Local write failed");
-
-				pClient->m_uiDataOffset += sv;
+				else
+					pClient->m_uiDataOffset += sv;
 			}
 			else
+			{
+				// connection has been lost, shut down transfer (this will happen when transfer completes)
+
 				FtpClient_OnDataComplete(pClient,0,NULL);
+			}
 		}
 		break;
 
@@ -557,25 +559,36 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 	{
 		case DATAACTION_RETR:
 		{
+			// read data from file
+
 			int rv = FileSystem_ReadFile(&pClient->m_kContext,buffer,pClient->m_uiDataBufferSize);
 
 			if( -1 == rv )
 			{
+				// if read failed, abort transfer
+
 				FtpClient_OnDataFailed(pClient,"Failed reading data");
 				return;
 			}
 
 			if( rv > 0 )
 			{
+				// send data to socket
+
 				int sv = send( pClient->m_iDataSocket, buffer, rv, 0 );
+
+				// if client closed the connection, shut down transfer
 
 				if( sv <= 0 )
 					FtpClient_OnDataFailed(pClient,"Premature client disconnect");
-
-				pClient->m_uiDataOffset += sv;
+				else
+					pClient->m_uiDataOffset += sv;
 			}
 			else
+			{
+				// transfer complete, shut down transfer
 				FtpClient_OnDataComplete(pClient,0,NULL);
+			}
 		}
 		break;
 
@@ -700,4 +713,26 @@ void FtpClient_OnDataCleanup( FtpClient* pClient )
 
 	pClient->m_eConnState = CONNSTATE_IDLE;
 	pClient->m_eDataMode = DATAMODE_IDLE;
+}
+
+void FtpClient_HandleDataConnect( FtpClient* pClient )
+{
+	if( CONNSTATE_RUNNING == pClient->m_eConnState )
+	{
+		// we already have an active connection, use it
+		FtpClient_OnDataConnected( pClient );
+	}
+	else
+	{
+		if( -1 != pClient->m_iRemotePort )
+		{
+			// connect to remote host
+			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
+		}
+		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
+		{
+			// no connection mode has yet been chosen
+			FtpClient_OnDataFailed( pClient, "Unable to build data connection." );
+		}
+	}
 }

@@ -53,21 +53,49 @@ void FtpClient_OnCmdUser( FtpClient* pClient, const char* pUser )
 {
 	assert( pClient );
 
-	if(!strcmp(pUser,"anonymous"))
-		FtpClient_Send(pClient,331,"Anonymous login ok.");
+	if(!strcmp(pUser,"anonymous") && pClient->m_pServer->m_iAnonymous )
+	{
+		// anonymous login, user authenticated
+		pClient->m_eAuthState = AUTHSTATE_VALID;
+
+		FtpClient_Send(pClient,230,"Anonymous login ok.");
+	}
 	else
-		FtpClient_Send(pClient,331,"Password required for user.");
+	{
+		// allow password check
+		pClient->m_eAuthState = !strcmp(pUser,pClient->m_pServer->m_Username) ? AUTHSTATE_PASSWORD : AUTHSTATE_FAKEPASS;
+
+		FtpClient_Send(pClient,331,"Password required for user."); // after this line, username is destroyed
+	}
 }
 
 void FtpClient_OnCmdPass( FtpClient* pClient, const char* pPass )
 {
-	assert( pClient );
+	if( (AUTHSTATE_PASSWORD == pClient->m_eAuthState) && !strcmp(pPass,pClient->m_pServer->m_Password) )
+	{
+		// password matches, allow login
+		FtpClient_Send(pClient,230,"User logged in.");
+		pClient->m_eAuthState = AUTHSTATE_VALID;
+	}
+	else
+	{
+		// password didn't match, or we had no valid login
 
-	// TODO: authentication
+		if( AUTHSTATE_INVALID != pClient->m_eAuthState )
+		{
+			FtpClient_Send(pClient,530,"Login incorrect.");
 
-	FtpClient_Send(pClient,230,"User logged in.");
+			// disconnect client if more than 3 attempts to login has been made
 
-	// 530 Login incorrect.
+			pClient->m_iAuthAttempt++;
+			if( pClient->m_iAuthAttempt > 3 )
+				FtpServer_OnClientDisconnect( pClient->m_pServer, pClient );
+
+			pClient->m_eAuthState = AUTHSTATE_INVALID;
+		}
+		else
+			FtpClient_Send(pClient,503,"Login with USER first.");
+	}
 }
 
 void FtpClient_OnCmdPasv( FtpClient* pClient )
@@ -100,14 +128,6 @@ void FtpClient_OnCmdPasv( FtpClient* pClient )
 		return;
 	}
 
-// FIXME
-/*  if( fcntl( s, F_SETFL, O_NONBLOCK ) < 0 )
-  {
-  	disconnect(s);
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-*/
 	if( bind( s, (struct sockaddr*)&sa, sl ) < 0 )
 	{
   	disconnect(s);
@@ -131,8 +151,12 @@ void FtpClient_OnCmdPasv( FtpClient* pClient )
 		return;
 	}
 
+	// store socket and flag us as listening
+
 	pClient->m_iDataSocket = s;
 	pClient->m_eConnState = CONNSTATE_LISTEN;
+
+	// generate reply
 
 	addr = htonl(sa.sin_addr.s_addr);
 	port = htons(sa.sin_port);
@@ -185,6 +209,8 @@ void FtpClient_OnCmdSyst( FtpClient* pClient )
 {
 	assert( pClient );
 
+	// TODO: is this proper?
+
 	FtpClient_Send( pClient, 215, "UNIX Type: L8" );
 }
 
@@ -197,32 +223,22 @@ void FtpClient_OnCmdList( struct FtpClient* pClient, const char* pPath, int iNam
 	else
 		pClient->m_eDataAction = DATAACTION_LIST;
 
+	// attempt to open directory
+
 	if( FileSystem_OpenDir(&pClient->m_kContext,pPath) < 0 )
 	{
 		FtpClient_Send( pClient, 500, "Unable to open directory." );
 		return;
 	}
 
-	if( CONNSTATE_RUNNING == pClient->m_eConnState )
-	{
-		FtpClient_OnDataConnected( pClient );
-	}
-	else
-	{
-		if( -1 != pClient->m_iRemotePort )
-		{
-			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
-		}
-		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
-			FtpClient_Send( pClient, 500, "Unable to build data connection." );
-	}
+	FtpClient_HandleDataConnect( pClient );
 }
 
 void FtpClient_OnCmdType( FtpClient* pClient, const char* pType )
 {
 	assert( pClient );
 
-	// only binary for now, but we accept them anyway....
+	// TODO: write proper handling of this command
 
 	if(!strcmp(pType,"I") || !strcmp(pType,"i"))
 		FtpClient_Send( pClient, 200, "Type set to I." );
@@ -244,17 +260,7 @@ void FtpClient_OnCmdRetr( FtpClient* pClient, const char* pFile )
 
 	pClient->m_eDataAction = DATAACTION_RETR;
 
-	if( CONNSTATE_RUNNING == pClient->m_eConnState )
-	{
-		FtpClient_OnDataConnected( pClient );
-	}
-	else
-	{
-		if( -1 != pClient->m_iRemotePort )
-			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
-		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
-			FtpClient_Send( pClient, 500, "Unable to build data connection." );
-	}
+	FtpClient_HandleDataConnect( pClient );
 }
 
 void FtpClient_OnCmdStor( FtpClient* pClient, const char* pFile )
@@ -269,17 +275,7 @@ void FtpClient_OnCmdStor( FtpClient* pClient, const char* pFile )
 
 	pClient->m_eDataAction = DATAACTION_STOR;
 
-	if( CONNSTATE_RUNNING == pClient->m_eConnState )
-	{
-		FtpClient_OnDataConnected( pClient );
-	}
-	else
-	{
-		if( -1 != pClient->m_iRemotePort )
-			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
-		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
-			FtpClient_Send( pClient, 500, "Unable to build data connection." );
-	}
+	FtpClient_HandleDataConnect( pClient );
 }
 
 void FtpClient_OnCmdPwd( FtpClient* pClient )
@@ -323,7 +319,6 @@ void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val )
 	pClient->m_eCOnnState |= _T(val);
 }
 
-
 void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 {
 	if( FileSystem_DeleteDir(&pClient->m_kContext,pDir) < 0 )
@@ -332,50 +327,28 @@ void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 		FtpClient_Send( pClient, 250, "RMD command successful." );
 }
 
-FtpCommand sitecmds[] =
-{
-	{ SITECMD_MOUNT, "mount" },
-	{ SITECMD_UMOUNT, "umount" },
-	{ SITECMD_SYNC, "sync" },
-	{ -1, NULL }
-};
-        
-
 void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 {
-	char* cmd;
 	char* c;
 
 	// copy command to clean buffer
 	strcpy(buffer,pCmd);
 
-	cmd = c = strtok(buffer," ");
+	c = strtok(buffer," ");
 
-	if(cmd)
+	if(c)
 	{
 		int i = 0;
-		int cmdresult = -1;
+		unsigned int result = 0;
 
-		while(*c)
-		{
-			*c = tolower(*c);
-			c++;
-		}
-
-		for( i = 0; sitecmds[i].m_iCommand != -1; i++ )
-		{
-			if(!strcmp(cmd,sitecmds[i].m_pName))
-			{
-				cmdresult = sitecmds[i].m_iCommand;
-				break;
-			}
-		}
+		for( i = 0; *c && i < 4; i++ )
+			result = (result << 8)|tolower(*(c++));
 	
-		switch( cmdresult )
+		switch( result )
 		{
 #ifndef LINUX
-			// SITE MOUNT <mountpoint> <file>
-			case SITECMD_MOUNT:
+			// SITE MNT <device> <file>
+			case SITECMD_MNT:
 			{
 				char* mount_point;
 				char* mount_file;
@@ -384,7 +357,7 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 				mount_point = strtok(NULL," ");
 				if(!mount_point||!strlen(mount_point))
 				{
-					FtpClient_Send( pClient, 500, "SITE MOUNT: missing mount-point." );
+					FtpClient_Send( pClient, 500, "SITE MNT: missing mount-point." );
 					break;
 				}
 
@@ -392,7 +365,7 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 				mount_file = strtok(NULL,"");
 				if(!mount_file||!strlen(mount_file))
 				{
-					FtpClient_Send( pClient, 500, "SITE MOUNT: missing mount-file." );
+					FtpClient_Send( pClient, 500, "SITE MNT: missing mount-file." );
 					break;
 				}
 
@@ -400,17 +373,19 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 			}
 			break;
 
-			case SITECMD_UMOUNT:
+			// SITE UMNT <device>
+			case SITECMD_UMNT:
 			{
 				char* mount_point = strtok(NULL,"");
 
 				if(mount_point)
 					FtpClient_OnSiteUmount(pClient,mount_point);
 				else
-					FtpClient_Send( pClient, 500, "SITE UMOUNT: missing mount-point" );
+					FtpClient_Send( pClient, 500, "SITE UMNT: missing mount-point" );
 			}
 			break;
 
+			// SITE SYNC <device>
 			case SITECMD_SYNC:
 			{
 				char* devname = strtok(NULL,"");
@@ -425,29 +400,33 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 
 			default:
 			{
-				FtpClient_Send( pClient, 500, "SITE subcommand not supported" );
+				FtpClient_Send( pClient, 500, "SITE command not supported" );
 			}
 			break;
 		}
 	}
 	else
-		FtpClient_Send( pClient, 500, "SITE subcommand not understood" );
+		FtpClient_Send( pClient, 500, "SITE command not understood" );
 
 }
 
 #ifndef LINUX
 void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile )
 {
+	// mount filesystem
+
 	if( FileSystem_MountDevice( &(pClient->m_kContext), pMountPoint, pMountFile ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE MOUNT failed." );
+		FtpClient_Send( pClient, 550, "SITE MNT failed." );
 	else
-		FtpClient_Send( pClient, 214, "SITE MOUNT succeeded." );
+		FtpClient_Send( pClient, 214, "SITE MNT succeeded." );
 }
 
 void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint )
 {
+	// unmount filesystem
+
 	if( FileSystem_UnmountDevice( &(pClient->m_kContext), pMountPoint ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE UMOUNT failed." );
+		FtpClient_Send( pClient, 550, "SITE UMNT failed." );
 	else
 		FtpClient_Send( pClient, 214, "SITE UMOUNT succeeded." );
 
@@ -455,6 +434,8 @@ void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint 
 
 void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName )
 {
+	// sync data with filesystem
+
 	if( FileSystem_SyncDevice( &(pClient->m_kContext), pDeviceName ) < 0 )
 		FtpClient_Send( pClient, 550, "SITE SYNC failed." );
 	else

@@ -34,7 +34,7 @@
 
 #include <errno.h>
 
-void FtpServer_Create( struct FtpServer* pServer )
+void FtpServer_Create( FtpServer* pServer )
 {
 	int i;
 
@@ -47,32 +47,23 @@ void FtpServer_Create( struct FtpServer* pServer )
 	pServer->m_kClients.m_pPrev = &(pServer->m_kClients);
 	pServer->m_kClients.m_pNext = &(pServer->m_kClients);
 
+	pServer->m_iAnonymous = 0;
+	strcpy( pServer->m_Username, "ps2dev" );
+	strcpy( pServer->m_Password, "ps2dev" );
+
 	for( i = 0; i < MAX_CLIENTS; i++ )
 		pServer->m_kClientArray[i].m_pServer = NULL;
 }
 
-void FtpServer_Destroy( struct FtpServer* pServer )
+void FtpServer_Destroy( FtpServer* pServer )
 {
 	assert( pServer );
 
 	FtpServer_Stop(pServer);
 }
 
-void FtpServer_SetPort( struct FtpServer* pServer, int iPort )
-{
-	assert( pServer );
 
-	pServer->m_iPort = iPort;
-}
-
-int FtpServer_GetPort( struct FtpServer* pServer )
-{
-	assert( pServer );
-
-	return pServer->m_iPort;
-}
-
-int FtpServer_Start( struct FtpServer* pServer )
+int FtpServer_Start( FtpServer* pServer )
 {
 	int opt;
 	int s;
@@ -121,36 +112,62 @@ int FtpServer_Start( struct FtpServer* pServer )
 		return -1;
 	}
 
-	printf("ps2ftpd: listening to port %d\n",pServer->m_iPort);
+	printf("ps2ftpd: listening to port %d\n",pServer->m_iPort&0xffff);
 
 	pServer->m_iSocket = s;
 
 	return s;
 }
 
-void FtpServer_Stop( struct FtpServer* pServer )
+void FtpServer_Stop( FtpServer* pServer )
 {
-	assert( pServer );
+	// disconnect all clients
 
-	// TODO: implement
+	while( pServer->m_kClients.m_pNext != &(pServer->m_kClients) )
+		FtpServer_OnClientDisconnect( pServer, pServer->m_kClients.m_pNext->m_pClient );
+
+	// close server socket
+
+	if( -1 != pServer->m_iSocket )
+	{
+		disconnect( pServer->m_iSocket );
+		pServer->m_iSocket = -1;
+	}
 }
 
-int FtpServer_IsRunning( struct FtpServer* pServer )
+void FtpServer_SetPort( FtpServer* pServer, int iPort )
 {
-	assert( pServer );
+	pServer->m_iPort = iPort;
+}
 
+void FtpServer_SetAnonymous( FtpServer* pServer, int iAnonymous )
+{
+	pServer->m_iAnonymous = iAnonymous;
+}
+
+void FtpServer_SetUsername( FtpServer* pServer, char* pUsername )
+{
+	strncpy( pServer->m_Username, pUsername, sizeof(pServer->m_Username) );
+	pServer->m_Username[sizeof(pServer->m_Username)-1] = '\0';
+}
+
+void FtpServer_SetPassword( FtpServer* pServer, char* pPassword )
+{
+	strncpy( pServer->m_Password, pPassword, sizeof(pServer->m_Password) );
+	pServer->m_Password[sizeof(pServer->m_Password)-1] = '\0';
+}
+
+int FtpServer_IsRunning( FtpServer* pServer )
+{
 	return ( -1 != pServer->m_iSocket );
 }
 
-int FtpServer_HandleEvents( struct FtpServer* pServer )
+int FtpServer_HandleEvents( FtpServer* pServer )
 {
 	int res;
 	fd_set r;
 	fd_set w;
-//	fd_set e;
 	int hs = pServer->m_iSocket;
-
-	assert( pServer );
 
 	FD_ZERO( &r );
 	FD_ZERO( &w );
@@ -230,11 +247,12 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 				char *rofs; 
 				char *nofs;
 
-				pClient->m_iCommandOffset += rv;
-				pClient->m_CommandBuffer[pClient->m_iCommandOffset] = '\0';
+				pClient->m_CommandBuffer[pClient->m_iCommandOffset+rv] = '\0';
 
-				rofs = strchr(pClient->m_CommandBuffer,'\r');
-				nofs = strchr(pClient->m_CommandBuffer,'\n');
+				rofs = strchr(pClient->m_CommandBuffer+pClient->m_iCommandOffset,'\r');
+				nofs = strchr(pClient->m_CommandBuffer+pClient->m_iCommandOffset,'\n');
+
+				pClient->m_iCommandOffset += rv;
 
 				if( nofs )
 				{
@@ -258,7 +276,7 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 				}
 			}
 			else
-				FtpServer_OnClientDisconnect(pServer,pClient);
+				FtpServer_OnClientDisconnect(pServer,pClient); // :FIXME: use a preallocated ringbuffer in the server shared between clients?
 		}
 
 		// handle client data transfers
@@ -320,7 +338,7 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 }
 
 const char s[] = { 0x68,0x64,0x64,0x3a,0x2f, 0x00 };
-FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket )
+FtpClient* FtpServer_OnClientConnect( FtpServer* pServer, int iSocket )
 {
 	FtpClient* pClient;
 	int i;
@@ -383,7 +401,7 @@ FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket )
 	return pClient;
 }
 
-void FtpServer_OnClientDisconnect( struct FtpServer* pServer, FtpClient* pClient )
+void FtpServer_OnClientDisconnect( FtpServer* pServer, FtpClient* pClient )
 {
 	assert( pServer && pClient );
 

@@ -34,6 +34,14 @@ When starting the module, it will start listening for incoming connections
 on port 21. The server currently allows for up to 4 concurrent clients. This
 is configurable at compile-time if you need more.
 
+The module accepts to following commandline-arguments:
+
+  -port <num>    Set which port-number that the server should listen to.
+                 (default: 21)
+  -anonymous     Allow anonymous logins. (default: disabled)
+  -user <user>   Set username to accept. (default: ps2dev)
+  -pass <pass>   Set password to accept. (default: ps2dev)
+
 If you're having trouble with "Unable to build data connection", it might be
 that your version of ps2ip.irx is too old (the older versions did only allow
 for 5 sockets at one time), please upgrade to a newer version in that case.
@@ -66,13 +74,14 @@ MKD <dir>
 XRMD <dir>
 RMD <dir>
 SITE <action>
+NOOP
 
 The supported site-commands are:
 
-SITE MOUNT <device> <file>
-	Mount <file> at <device>. Example: SITE MOUNT /pfs/0 hdd:+PS2MENU
-SITE UMOUNT <device>
-	Unmount mounted device. Example: SITE UMOUNT /pfs/0
+SITE MNT <device> <file>
+	Mount <file> at <device>. Example: SITE MNT /pfs/0 hdd:+PS2MENU
+SITE UMNT <device>
+	Unmount mounted device. Example: SITE UMNT /pfs/0
 SITE SYNC <device>
 	Synchronize device. Example: SITE SYNC /pfs/0
 

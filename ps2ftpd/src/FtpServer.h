@@ -20,6 +20,10 @@ typedef struct FtpServer
 	int m_iSocket;
 	int m_iPort;
 
+	int m_iAnonymous; // != 0 if anonymous logins are allowed
+	char m_Username[32];
+	char m_Password[32];
+
 	// double-linked list of connected clients
 	FtpClientContainer m_kClients;
 
@@ -45,12 +49,16 @@ typedef struct FtpServer
 		} \
 	}
 
-void FtpServer_Create( struct FtpServer* pServer );
-void FtpServer_Destroy( struct FtpServer* pServer );
-void FtpServer_SetPort( struct FtpServer* pServer, int iPort );
-int FtpServer_GetPort( struct FtpServer* pServer );
+void FtpServer_Create( FtpServer* pServer );
+void FtpServer_Destroy( FtpServer* pServer );
 int FtpServer_Start( struct FtpServer* pServer );
 void FtpServer_Stop( struct FtpServer* pServer );
+
+void FtpServer_SetPort( FtpServer* pServer, int iPort );
+void FtpServer_SetAnonymous( FtpServer* pServer, int iAnonymous );
+void FtpServer_SetUsername( FtpServer* pServer, char* pUsername );
+void FtpServer_SetPassword( FtpServer* pServer, char* pPassword );
+
 int FtpServer_IsRunning( struct FtpServer* pServer );
 int FtpServer_HandleEvents( struct FtpServer* pServer );
 FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket );

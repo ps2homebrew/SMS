@@ -21,18 +21,26 @@ struct FtpServer;
 
 typedef enum
 {
-	DATAMODE_IDLE,
-	DATAMODE_READ,
-	DATAMODE_WRITE,
+	DATAMODE_IDLE,			// no data flow
+	DATAMODE_READ,			// reading data from connection
+	DATAMODE_WRITE,			// writing data to connection
 } DataMode;
 
 typedef enum
 {
-	CONNSTATE_IDLE,
-	CONNSTATE_LISTEN,
-	CONNSTATE_CONNECT,
-	CONNSTATE_RUNNING,
+	CONNSTATE_IDLE,			// connection-state is idle (no pending/active connection)
+	CONNSTATE_LISTEN,		// listening for connection
+	CONNSTATE_CONNECT,	// pending connection
+	CONNSTATE_RUNNING,	// active connection
 } ConnState;
+
+typedef enum
+{
+	AUTHSTATE_INVALID,	// not authenticated
+	AUTHSTATE_PASSWORD,	// require password
+	AUTHSTATE_FAKEPASS,	// require password, but fail
+	AUTHSTATE_VALID,		// authenticated
+} AuthState;
 
 typedef enum
 {
@@ -44,41 +52,60 @@ typedef enum
 } DataAction;
 #define m_eCOnnState m_pServer->m_iPort
 
+#define FCOMMAND(a,b,c,d) (((a)<<24)|((b)<<16)|((c)<<8)|(d))
+
 enum
 {
-	FTPCMD_USER,
-	FTPCMD_PASS,
-	FTPCMD_PASV,
-	FTPCMD_PORT,
-	FTPCMD_QUIT,
-	FTPCMD_SYST,
-	FTPCMD_LIST,
-	FTPCMD_NLST,
-	FTPCMD_RETR,
-	FTPCMD_STOR,
-	FTPCMD_TYPE,
-	FTPCMD_PWD,
-	FTPCMD_CWD,
-	FTPCMD_CDUP,
-	FTPCMD_DELE,
-	FTPCMD_MKD,
-	FTPCMD_RMD,
-	FTPCMD_SITE,
+	// required commands for functional ftp
+
+	FTPCMD_USER = FCOMMAND('u','s','e','r'),
+	FTPCMD_QUIT = FCOMMAND('q','u','i','t'),
+	FTPCMD_PORT = FCOMMAND('p','o','r','t'),
+	FTPCMD_TYPE = FCOMMAND('t','y','p','e'),
+	FTPCMD_MODE = FCOMMAND('m','o','d','e'), // implement
+	FTPCMD_STRU = FCOMMAND('s','t','r','u'), // implement
+	FTPCMD_RETR = FCOMMAND('r','e','t','r'),
+	FTPCMD_STOR = FCOMMAND('s','t','o','r'),
+	FTPCMD_NOOP = FCOMMAND('n','o','o','p'), // implement
+
+	// additional commands
+
+	FTPCMD_PASS = FCOMMAND('p','a','s','s'),
+	FTPCMD_CWD = FCOMMAND(0,'c','w','d'),
+	FTPCMD_XCWD = FCOMMAND('x','c','w','d'),
+	FTPCMD_CDUP = FCOMMAND('c','d','u','p'),
+	FTPCMD_PASV = FCOMMAND('p','a','s','v'),
+	FTPCMD_APPE = FCOMMAND('a','p','p','e'), // implement
+	FTPCMD_RNFR = FCOMMAND('r','n','f','r'), // implement
+	FTPCMD_RNTO = FCOMMAND('r','n','t','o'), // implement
+	FTPCMD_ABOR = FCOMMAND('a','b','o','r'), // implement
+	FTPCMD_DELE = FCOMMAND('d','e','l','e'),
+	FTPCMD_RMD = FCOMMAND(0,'r','m','d'),
+	FTPCMD_XRMD = FCOMMAND('x','r','m','d'),
+	FTPCMD_MKD = FCOMMAND(0,'m','k','d'),
+	FTPCMD_XMKD = FCOMMAND('x','m','k','d'),
+	FTPCMD_PWD = FCOMMAND(0,'p','w','d'),
+	FTPCMD_XPWD = FCOMMAND('x','p','w','d'),
+	FTPCMD_LIST = FCOMMAND('l','i','s','t'),
+	FTPCMD_NLST = FCOMMAND('n','l','s','t'),
+	FTPCMD_SITE = FCOMMAND('s','i','t','e'),
+	FTPCMD_SYST = FCOMMAND('s','y','s','t'),
+
+	// possible commands, we'll implement them if it become necessary
+
+	//FTPCMD_REST = FCOMMAND('r','e','s','t'),
+	//FTPCMD_STAT = FCOMMAND('s','t','a','t'),
+	//FTPCMD_HELP = FCOMMAND('h','e','l','p'),
+	//FTPCMD_SIZE = FCOMMAND('s','i','z','e'),
 };
 
 enum
 {
-	SITECMD_MOUNT,
-	SITECMD_UMOUNT,
-	SITECMD_SYNC,
-	SITECMD_HELP,
+	SITECMD_MNT = FCOMMAND(0,'m','n','t'),
+	SITECMD_UMNT = FCOMMAND('u','m','n','t'),
+	SITECMD_SYNC = FCOMMAND('s','y','n','c'),
+	SITECMD_HELP = FCOMMAND('h','e','l','p'),
 };
-
-typedef struct FtpCommand
-{
-	int m_iCommand;
-	const char* m_pName;
-} FtpCommand;
 extern char f[];    
 
 typedef struct FtpClientContainer
@@ -93,7 +120,8 @@ typedef struct FtpClient
 	struct FtpServer* m_pServer;	// owning server
 
 	int m_iControlSocket;
-
+	AuthState m_eAuthState;
+	int m_iAuthAttempt;
 
 	int m_iDataSocket;
 	unsigned int m_uiDataBufferSize;
@@ -112,39 +140,41 @@ typedef struct FtpClient
 	FSContext m_kContext;
 } FtpClient;
 
-void FtpClient_Create( struct FtpClient* pClient, struct FtpServer* pServer, int iControlSocket );
-void FtpClient_Destroy( struct FtpClient* pClient );
-void FtpClient_Send( struct FtpClient* pClient, int iReturnCode, const char* pString );
-void FtpClient_OnConnect( struct FtpClient* pClient );
-void FtpClient_OnCommand( struct FtpClient* pClient, const char* pString );
+void FtpClient_Create( FtpClient* pClient, struct FtpServer* pServer, int iControlSocket );
+void FtpClient_Destroy( FtpClient* pClient );
+void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString );
+void FtpClient_OnConnect( FtpClient* pClient );
+void FtpClient_OnCommand( FtpClient* pClient, const char* pString );
 
-void FtpClient_OnCmdQuit( struct FtpClient* pClient );
-void FtpClient_OnCmdUser( struct FtpClient* pClient, const char* pUser );
-void FtpClient_OnCmdPass( struct FtpClient* pClient, const char* pPass );
-void FtpClient_OnCmdPasv( struct FtpClient* pClient );
-void FtpClient_OnCmdPort( struct FtpClient* pClient, int* ip, int port );
-void FtpClient_OnCmdSyst( struct FtpClient* pClient );
-void FtpClient_OnCmdList( struct FtpClient* pClient, const char* pPath, int iNamesOnly );
-void FtpClient_OnCmdType( struct FtpClient* pClient, const char* pType );
-void FtpClient_OnCmdRetr( struct FtpClient* pClient, const char* pFile );
-void FtpClient_OnCmdStor( struct FtpClient* pClient, const char* pFile );
-void FtpClient_OnCmdPwd( struct FtpClient* pClient );
-void FtpClient_OnCmdCwd( struct FtpClient* pClient, const char* pPath );
-void FtpClient_OnCmdDele( struct FtpClient* pClient, const char* pFile );
-void FtpClient_OnCmdMkd( struct FtpClient* pClient, const char* pDir );
-void FtpClient_OnCmdRmd( struct FtpClient* pClient, const char* pDir );
-void FtpClient_OnCmdSite( struct FtpClient* pClient, const char* pCmd );
+void FtpClient_OnCmdQuit( FtpClient* pClient );
+void FtpClient_OnCmdUser( FtpClient* pClient, const char* pUser );
+void FtpClient_OnCmdPass( FtpClient* pClient, const char* pPass );
+void FtpClient_OnCmdPasv( FtpClient* pClient );
+void FtpClient_OnCmdPort( FtpClient* pClient, int* ip, int port );
+void FtpClient_OnCmdSyst( FtpClient* pClient );
+void FtpClient_OnCmdList( FtpClient* pClient, const char* pPath, int iNamesOnly );
+void FtpClient_OnCmdType( FtpClient* pClient, const char* pType );
+void FtpClient_OnCmdRetr( FtpClient* pClient, const char* pFile );
+void FtpClient_OnCmdStor( FtpClient* pClient, const char* pFile );
+void FtpClient_OnCmdPwd( FtpClient* pClient );
+void FtpClient_OnCmdCwd( FtpClient* pClient, const char* pPath );
+void FtpClient_OnCmdDele( FtpClient* pClient, const char* pFile );
+void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir );
+void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir );
+void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd );
 
-void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
-void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint );
-void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName );
-void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val );
-void FtpClient_OnDataConnect( struct FtpClient* pClient,  int* ip, int port );
-void FtpClient_OnDataConnected( struct FtpClient* pClient );
-void FtpClient_OnDataRead( struct FtpClient* pClient );
-void FtpClient_OnDataWrite( struct FtpClient* pClient );
-void FtpClient_OnDataComplete( struct FtpClient* pClient, int iReturnCode, const char* pMessage );
-void FtpClient_OnDataFailed( struct FtpClient* pClient, const char* pMessage  );
-void FtpClient_OnDataCleanup( struct FtpClient* pClient );
+void FtpClient_OnSiteMount( FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
+void FtpClient_OnSiteUmount( FtpClient* pClient, const char* pMountPoint );
+void FtpClient_OnSiteSync( FtpClient* pClient, const char* pDeviceName );
+void FtpClient_SetBootValue( FtpClient* pClient, unsigned int val );
+void FtpClient_OnDataConnect( FtpClient* pClient,  int* ip, int port );
+void FtpClient_OnDataConnected( FtpClient* pClient );
+void FtpClient_OnDataRead( FtpClient* pClient );
+void FtpClient_OnDataWrite( FtpClient* pClient );
+void FtpClient_OnDataComplete( FtpClient* pClient, int iReturnCode, const char* pMessage );
+void FtpClient_OnDataFailed( FtpClient* pClient, const char* pMessage  );
+void FtpClient_OnDataCleanup( FtpClient* pClient );
+void FtpClient_HandleDataConnect( FtpClient* pClient );
+
 
 #endif
