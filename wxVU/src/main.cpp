@@ -275,19 +275,19 @@ VUFrame::OnStep(wxCommandEvent &WXUNUSED(event)) {
     m_pVu1->SetXGKICKCallback(this, VUFrame::wrapper_XGKICK);
     m_pVu1->Tic();
     m_pGridCode->SetCellValue(m_previous, 0, wxString(""));
-    m_pGridCode->SetCellValue(LineInstruction(cur), 2, wxString::Format("%d",
+    m_pGridCode->SetCellValue(m_pVu1->PC, 2, wxString::Format("%d",
             m_pVu1->program[cur].tics));
 
 	// KLUDGE
 	if ( running == 0 ) {
 		m_pGridCode->SetCellBackgroundColour(m_previous, 3, *wxWHITE);
 		m_pGridCode->SetCellBackgroundColour(m_previous, 4, *wxWHITE);
-		m_pGridCode->SetCellValue(LineInstruction(cur), 0, wxString(">"));
-		m_pGridCode->SetCellBackgroundColour(LineInstruction(cur), 3, cCurCode);
-		m_pGridCode->SetCellBackgroundColour(LineInstruction(cur), 4, cCurCode);
-		m_pGridCode->SetGridCursor(LineInstruction(cur), 4);
+		m_pGridCode->SetCellValue(m_pVu1->PC, 0, wxString(">"));
+		m_pGridCode->SetCellBackgroundColour(m_pVu1->PC, 3, cCurCode);
+		m_pGridCode->SetCellBackgroundColour(m_pVu1->PC, 4, cCurCode);
+        m_pGridCode->SetGridCursor(m_pVu1->PC, 4);
 
-		m_previous = LineInstruction(cur);
+		m_previous = m_pVu1->PC;
 		if ( m_previous < cur ) {
 			m_pGridCode->MoveCursorDown(FALSE);
 		} else if ( cur < m_previous ) {

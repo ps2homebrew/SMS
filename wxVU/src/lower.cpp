@@ -17,14 +17,10 @@ int
 Vu::VU_B(VuInstruction &A) {
     int a;
     a = PC;
-    CallBackFn(CallBackObj, LOWER, 6);
     PC++;
     Tic(); //delay slot itself
     PC = (uint16)a;
-    CallBackFn(CallBackObj, LOWER, 7);
     PC += (uint16)(A.Params[1][0].data);
-    // cout << "PC: " << PC << endl;
-    // cout << "branch: " << A.Params[1][0].data;
     return -1;
 }
 
@@ -36,14 +32,11 @@ Vu::VU_BAL(VuInstruction &A) {
     RegInt[A.Params[1][0].index].stall(2);
     RegInt[A.Params[1][0].index].value((int16)(PC+2));
 
-    //this instructions are due to delay slot
     a = PC;
-    CallBackFn(CallBackObj, LOWER, 6);
     PC++;
     Tic(); //delay slot itself
-    PC=(uint16)a;
-    CallBackFn(CallBackObj, LOWER, 7);
-    PC+=(uint16)(A.Params[1][1].data-1);
+    PC = (uint16)a;
+    PC += (uint16)(A.Params[1][1].data);
     return -1;
 }
 

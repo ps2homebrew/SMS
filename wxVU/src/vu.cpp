@@ -123,7 +123,6 @@ Vu::Tic() {
     }
     UpdateRegisters();                  // We update registers as the last
                                         // stage to keep the dual pipeline in
-                                        // sync
     PC++;
     if(j >= 0) {
         CallBackFn(CallBackObj, 2, i);
