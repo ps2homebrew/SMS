@@ -8,6 +8,8 @@
 #define FFT_BLOCK_SIZE 1024
 #define MAX_SIZE 255.0
 
+static double max = 0.0;
+
 void fft_block(double *data)
 
 {
@@ -31,7 +33,7 @@ void fft_block(double *data)
 
   for(loop = 0; loop < FFT_BLOCK_SIZE; loop++)
     {
-      data[loop] = out[loop][0];
+      data[loop] = sqrt(out[loop][0] * out[loop][0] + out[loop][1] * out[loop][1]);
     }
   
   fftw_free(in); fftw_free(out);
@@ -86,7 +88,10 @@ void normalise_block(unsigned short *out, double *fft)
   for(loop = 1; loop < FFT_BLOCK_SIZE; loop++)
   {
      double temp;
-     temp = fft[loop] / ((double) FFT_BLOCK_SIZE);
+     temp = fft[loop] / ((double) FFT_BLOCK_SIZE * 2.0);
+     if(temp > max)
+       max = temp;
+     if(temp < 0) printf("Negative valuei\n");
      out[loop] = temp < 0 ? 0 : temp;
   }
 }
@@ -182,6 +187,7 @@ int convert(const char *left, const char *right, const char *outfile, int block_
   fclose(fpl);
   fclose(fpr);
   fclose(fpout);
+  printf("Maximum value = %f\n", max);
 
   return 0;
 }
