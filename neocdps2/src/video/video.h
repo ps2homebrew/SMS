@@ -1,8 +1,23 @@
-/*******************************************
-**** VIDEO.H - Video Hardware Emulation ****
-****            Header File             ****
-*******************************************/
-
+/*
+ *  video.h - Video Hardware Emulation
+ *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+ 
 #ifndef	VIDEO_H
 #define VIDEO_H
 
@@ -83,6 +98,7 @@ void video_setup(void);
 void incframeskip(void);
 void clean_buffers(void);
 void blitter(void);
+void system_graphics_blit(void);
 
 /*-- draw_fix.c functions -------------------------------------------------*/
 void video_draw_fix(void);
@@ -90,6 +106,7 @@ void video_draw_fix(void);
 /*-- UI functions -------------------------------------------------*/
 void display_insertscreen(void);
 void display_loadingscreen(void);
+void display_errorMessage(char *msg);
 
 void inline displayGPFrameBuffer(uint32 *buffer);
 void inline displayGPImageBuffer(uint32 *buffer);

@@ -1,6 +1,22 @@
-/*******************************************
-**** VIDEO.C - Video Hardware Emulation ****
-*******************************************/
+/*
+ *  video.c - Video Hardware Emulation
+ *  Copyright (C) 2003 Foster (Original Code)
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 //-- Include Files -----------------------------------------------------------
 
@@ -11,14 +27,10 @@
 #include <libpad.h>
 
 #include "video.h"
-#include "../neocd.h"
+#include "neocd.h"
 #include "../input/input.h"
-#ifdef USE_MAMEZ80
-#include "../mz80/mz80interf.h"
-#else
-#include "../z80/z80intrf.h"
-#endif
 #include "../misc/misc.h"
+#include "../misc/timer.h"
 
 #include "../gs/clut.h"
 #include "../gs/gfxpipe.h"
@@ -29,9 +41,6 @@
 // resources
 #include "resources/splash.h"
 #include "resources/loading.h"
-//#include "resources/fontmsx.h"
-#include "resources/font5200.h"
-//#include "resources/m0508fnt.h"
 #include "resources/credit.h"
 
 //-- Defines -----------------------------------------------------------------
@@ -51,7 +60,7 @@
 
 
 //-- Global Variables --------------------------------------------------------
-char *          video_vidram;
+char *video_vidram;
 //unsigned short *video_vidram;
 unsigned short	*video_paletteram_ng __attribute__((aligned(64)));
 unsigned short	video_palette_bank0_ng[4096] __attribute__((aligned(64)));
@@ -75,14 +84,30 @@ unsigned char   rom_spr_usage[32768] __attribute__((aligned(64)));
 
 unsigned int dpw = 320;
 unsigned int dph = 224;
-
-int whichdrawbuf = 0;
+// swap buffer in vram
+int whichdrawbuf = 0; 
 
 #define BUF_WIDTH	336 // size should be 320, but it causes gfx glitches .. !
 #define BUF_HEIDTH	224
 
 static uint16 	video_buffer[ BUF_WIDTH * BUF_HEIDTH ] __attribute__((aligned(64))) __attribute__ ((section (".bss"))); // 320*224, rest is padding
-static uint32 	video_frame_buffer[ BUF_WIDTH * BUF_HEIDTH ] __attribute__((aligned(64))) __attribute__ ((section (".bss"))); // 320*224, rest is padding
+
+static uint32 	*video_frame_buffer;
+//static uint32 	video_frame_buffer[ BUF_WIDTH * BUF_HEIDTH ] __attribute__((aligned(64))) __attribute__ ((section (".bss"))); // 320*224, rest is padding;
+
+static uint32 	video_back_buffer[2][ BUF_WIDTH * BUF_HEIDTH ] __attribute__((aligned(64)))  __attribute__ ((section (".bss"))); // 320*224, rest is padding
+
+
+char 		display_fps[12]  __attribute__((aligned(64))); 
+extern int 	fps; 
+extern int 	frame_counter;
+
+extern unsigned vsync_freq; 
+
+int videoBufferAvailable = 0; 
+// swap soft backbuffer
+int whichbackbuf = 0; 
+ 
 
 //static uint16	*src_blit;  // blitter pointer
 //static uint32	*dest_blit; // blitter pointer
@@ -137,10 +162,14 @@ int	video_init(void)
 	
 	// zero-fill both buffers
 	memset((void*)video_buffer, 0, sizeof(video_buffer)); 
-	memset((void*)video_frame_buffer, 0, sizeof(video_frame_buffer)); 
+	//memset((void*)video_frame_buffer, 0, sizeof(video_frame_buffer)); 
+	//memset((void*)video_back_buffer[0], 0, sizeof(video_back_buffer[0])); 
+	//memset((void*)video_back_buffer[1], 0, sizeof(video_back_buffer[1])); 
 
 	// put in scratchpad
 	dda_y_skip  =  (unsigned char *)(0x70000000);
+	
+	video_frame_buffer = video_back_buffer[whichbackbuf];
 	
 	return video_set_mode();
 }
@@ -159,10 +188,11 @@ int video_set_mode()
 		machine_def.vidsys = PAL_MODE;
 		neocdSettings.region = REGION_EUROPE;
 		machine_def.fps_rate = FPS_PAL; //50;
-		machine_def.snd_sample = 960; //48000khz /50
+		machine_def.snd_sample = (960 >> 2); //12000khz /50
 		machine_def.m68k_cycles = 12000000 / 50; // 240.000
 		machine_def.z80_cycles = 4000000 / 50;
 		machine_def.z80_cycles_slice = machine_def.z80_cycles / 256;
+		vsync_freq = GETTIME_FREQ_PAL; 
 		
 	} 
 	else // NTSC
@@ -174,10 +204,11 @@ int video_set_mode()
 		machine_def.vidsys = NTSC_MODE;
         	neocdSettings.region = REGION_USA;
         	machine_def.fps_rate = FPS_NTSC; // 60;
-        	machine_def.snd_sample = 800; //48000khz /60
+        	machine_def.snd_sample = (800 >> 2); //12000khz /60
         	machine_def.m68k_cycles = 12000000 / 60; // 200.000
         	machine_def.z80_cycles = 4000000 / 60;
 		machine_def.z80_cycles_slice = machine_def.z80_cycles / 256;
+		vsync_freq = GETTIME_FREQ_NTSC; 
 		
 
 	}
@@ -192,13 +223,16 @@ int video_set_mode()
 	
 	// init pipe
 	GS_SetEnv(dpw, machine_def.vdph, 0, 0x080000, GS_PSMCT32, 0x100000, GS_PSMZ32);
-	//GS_SetEnv(dpw, machine_def.vdph, 0, 0x50000, GS_PSMCT32, 0xA0000, GS_PSMZ32);
 	install_VRstart_handler();
 	createGfxPipe(&thegp /*, (void *)0xF00000*/ , 0x080000);
-	//createGfxPipe(&thegp /*, (void *)0xF00000*/ , 0x50000);
 
+	// vsync callback
+    	addVSyncCallback(&system_graphics_blit); 
+
+	// display loading screen...
 	display_loadingscreen();
 	
+   	
    	return machine_def.vidsys;
 }
 
@@ -334,6 +368,7 @@ void video_draw_screen1()
             tileno = (tileno&~7)|(neogeo_frame_counter&7); 
          else if (tileatr&0x4) 
             tileno = (tileno&~3)|(neogeo_frame_counter&3); 
+            
 
          //  tileno &= 0x7FFF; 
          if (tileno>0x7FFF) 
@@ -380,9 +415,10 @@ void video_draw_screen1()
       }  // for y 
    }  // for count 
 
-   if (fc >= neogeo_frame_counter_speed) { 
-      neogeo_frame_counter++; 
+   if (fc++ > neogeo_frame_counter_speed) 
+   { 
       fc=0; // 3
+      neogeo_frame_counter++;
    } 
    fc++; 
     
@@ -1269,6 +1305,20 @@ inline void video_draw_spr(unsigned int code, unsigned int color, int flipx,
 
 }
 
+void inline ps2_vsync()
+{
+	WaitForNextVRstart(1);
+}
+
+void inline ps2_switch_buffers()
+{
+	// Update drawing and display enviroments.
+    	GS_SetCrtFB(whichdrawbuf);
+    	whichdrawbuf ^= 1;
+    	GS_SetDrawFB(whichdrawbuf); 
+}
+ 
+
 /*------------------------------------------------------------*/
 /* blit image to screen */
 void blitter(void)
@@ -1281,15 +1331,43 @@ void blitter(void)
 	uint16 *src_blit  = (uint16 *)&video_buffer[0];
 	uint32 *dest_blit = (uint32 *)&video_frame_buffer[0];
 	
+	
 	for( offs= ( BUF_WIDTH * BUF_HEIDTH ); offs--; )
 	{	
 	   *dest_blit++=CLUT[(uint16)*src_blit++];
-	   //video_frame_buffer[offs]=CLUT[(uint16)video_buffer[offs]];
 	}
+
 	displayGPFrameBuffer(video_frame_buffer);
+	//displayGPFrameBuffer(video_back_buffer[whichbackbuf]);
 	
 
+    	 // switch back buffers
+    	
+    	whichbackbuf  ^= 1;
+    	video_frame_buffer = video_back_buffer[whichbackbuf]; 
+    	
+	
+	// make video buffer available
+	videoBufferAvailable=1;	
+	
+	//ps2_vsync();
+	
+	//ps2_switch_buffers();
+	
 }
+
+// called by the vsync interrupt
+void system_graphics_blit(void)
+{
+    if (videoBufferAvailable==1)
+    {
+	   ps2_switch_buffers();
+	   videoBufferAvailable=0;	
+	   frame_counter++;
+    } 
+    asm __volatile__ ("ei");
+}
+ 
 
 /*-- UI functions -------------------------------------------------*/
 // display a 512x256x32 image buffer using GfxPipe
@@ -1312,15 +1390,15 @@ void inline displayGPFrameBuffer(uint32 *buffer)
 		   10, 				// z
 		   GS_SET_RGBA(255, 255, 255, 200) // color
 		  );
+	
+	if (neocdSettings.showFPS)
+	{
+		sprintf(display_fps,"FPS %d/%d",fps,machine_def.fps_rate);
+		textpixel(10,5,GS_SET_RGBA(255, 255, 255, 255)   ,0,0,12,display_fps);
+	}		 
 		
 	gp_hardflush(&thegp);
 
-	WaitForNextVRstart(1);
-
-	// Update drawing and display enviroments.
-    	GS_SetCrtFB(whichdrawbuf);
-    	whichdrawbuf ^= 1;
-    	GS_SetDrawFB(whichdrawbuf);
 }
 //------------------------------------------------------------------
 // display the splash/credit screen
@@ -1355,9 +1433,8 @@ void display_insertscreen(void)
 	//gp_linerect(&thegp, (8+32+56)<<4, 92<<4, (320-56-32-8)<<4, 172<<4, 2, GS_SET_RGBA(255, 255, 255, 128));
 
 	//146
-	// Neocd/PS2 0.4 (c)Evilo '04 	
-	
-	sprintf(text,"%s %d.%d %s", neocd_ps2, VERSION2_MAJOR, VERSION2_MINOR, copyright);
+	// Neocd/PS2 x.x (c)Evilo '04 	
+	sprintf(text,"%s %c.%c %s", neocd_ps2, (char)(VERSION2_MAJOR+0x30), (char)(VERSION2_MINOR+0x30), copyright);
 	textCpixel(0,320,146, GS_SET_RGBA(255, 255, 255, 255)   ,0,0,12,text);
 	
 	//164
@@ -1387,11 +1464,10 @@ void display_insertscreen(void)
 	if (isButtonPressed (PAD_CROSS)) break;
 		
 	gp_hardflush(&thegp);
-	WaitForNextVRstart(1);
-	// Update drawing and display enviroments.
-    	GS_SetCrtFB(whichdrawbuf);
-    	whichdrawbuf ^= 1;
-    	GS_SetDrawFB(whichdrawbuf);
+	
+	ps2_vsync();
+	
+	ps2_switch_buffers();
     	
     	
    } // end while  	
@@ -1401,11 +1477,49 @@ void display_insertscreen(void)
 // display the loading screen
 void display_loadingscreen(void)
 {
+	// deactivate bi-linear filtering
+	gp_setFilterMethod(0);
 	// Clear the screen (with ZBuffer Disabled)
 	gp_disablezbuf(&thegp);
 	gp_frect(&thegp,0,0,320<<4,machine_def.vdph<<4,0,GS_SET_RGBA(0,0,0,0x80));
 	gp_enablezbuf(&thegp);
 	displayGPImageBuffer(loading);
+	// reset current filter
+	gp_setFilterMethod(neocdSettings.renderFilter);
+}
+
+// display an error msg screen
+void display_errorMessage(char *msg)
+{
+	// deactivate bi-linear filtering
+	gp_setFilterMethod(0);
+
+	gp_uploadTexture(&thegp, NGCD_TEX, 256, 0, 0, GS_PSMCT32, loading, 256, 256);
+	
+	gp_setTex(&thegp, NGCD_TEX, 256, GS_TEX_SIZE_256, GS_TEX_SIZE_256, GS_PSMCT32, 0, 0, 0);
+
+	gp_texrect(&thegp, 			// gfxpipe	
+		   32<<4, 0, 			// x1,y1
+		   0, 0, 			// u1,v1
+		   (256+32)<<4, 256<<4,		// x2,y2
+		   256<<4, 256<<4, 		// u2,v2
+		   10, 				// z
+		   GS_SET_RGBA(255, 255, 255, 200) // color
+		  );	
+		  
+	
+	
+	gp_gouradrect(&thegp,(56)<<4, 102<<4,GS_SET_RGBA(204,0x00, 51, 100), (264)<<4, 122<<4, GS_SET_RGBA(204,0x00, 51, 100), 11);
+	gp_linerect(&thegp,  (56)<<4, 102<<4, 			             (264)<<4, 122<<4, 12, GS_SET_RGBA(255, 255, 255, 128));
+	
+	textCpixel(0,320,108, GS_SET_RGBA(255, 255, 255, 255)   ,0,0,13,msg);
+	
+	gp_hardflush(&thegp);
+	
+	ps2_vsync();
+	
+	ps2_switch_buffers();
+
 }
 
 //------------------------------------------------------------------
@@ -1428,91 +1542,7 @@ void inline displayGPImageBuffer(uint32 *buffer)
 		
 	gp_hardflush(&thegp);
 
-	WaitForNextVRstart(1);
-
-	// Update drawing and display enviroments.
-    	GS_SetCrtFB(whichdrawbuf);
-    	whichdrawbuf ^= 1;
-    	GS_SetDrawFB(whichdrawbuf);
-}
-
-
-
-/* Text printing function
-   kindly copied from PSMS !!!
-*/
-void printch(int x, int y, unsigned couleur,unsigned char ch,int taille,int pl,int zde)
-{
-        
-	int i,j;
-	unsigned char *font;
-   	int rectx,recty;
-    
-  	//font=&msx[(int)ch * 8];
-  	font=&font5200[(int)(ch-32)*8];
-  	//font=&m0508fnt[(int)ch * 8];
-  	 	
-	for(i=0;i<8;i++,font++)
-	{
-	     for(j=0;j<8;j++)
-	     {
-         	if ((*font &(128>>j)))
-         	{
-		  rectx = x+(j<<0);
-                  if(taille==1)recty = y+(i<<1);
-                  else recty = y+(i<<0);
-                 
-                  gp_point( &thegp, rectx<<4, (recty)<<4,zde,couleur);     
-	          if(pl==1)gp_point( &thegp, rectx<<4,(recty+1)<<4,zde,couleur); 
-	           //gp_frect(&thegp, (rectx)<<4, (recty+2)<<4,(rectx+1) <<4, (recty+4)<<4, 4,couleur);
-  	             
-            	}
-	     }
-         }
-}
-
-void textpixel(int x,int y,unsigned color,int tail,int plein,int zdep, char *string,...)
-{
-   int boucle=0;  
-   char	text[256];	   	
-   va_list	ap;			
-   
-   if (string == NULL)return;		
-		
-   va_start(ap, string);		
-      vsprintf(text, string, ap);	
-   va_end(ap);	
-   
-   while(text[boucle]!=0){
-     printch(x,y,color,text[boucle],tail,plein,zdep);
-     boucle++;x+=6;
-   }
+	ps2_vsync();
 	
+	ps2_switch_buffers();
 }
-
-
-void textCpixel(int x,int x2,int y,unsigned color,int tail,int plein,int zdep,char *string,...)
-{
-   int boucle=0;  
-   char	text[256];	   	
-   va_list	ap;			
-   
-   if (string == NULL)return;		
-		
-   va_start(ap, string);		
-      vsprintf(text, string, ap);	
-   va_end(ap);
-   	
-   while(text[boucle]!=0)boucle++;   
-   boucle=(x2-x)/2 -(boucle*3);
-   x=boucle;
-   
-   boucle=0;
-   while(text[boucle]!=0){
-     printch(x,y,color,text[boucle],tail,plein,zdep);
-     boucle++;x+=6;
-   }
-	
-}
-
-
