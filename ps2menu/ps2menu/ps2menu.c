@@ -1,5 +1,5 @@
 /*
-	PS2Menu v2.6b
+	PS2Menu v2.6
 	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
@@ -228,7 +228,7 @@ int dowereformat();
 void ReadHDDFiles();
 void LoadModules();
 void RunLoaderElf(char *filename);
-void MenuKeyboard(char *s);
+void MenuKeyboard(char *s, u32 old_pad);
 void jprintf(char *s);
 char *strrchr(const char *sp, int i);
 
@@ -1646,10 +1646,10 @@ int selectfunc(u32 old_pad)
 		else printXY("Rename",380,52,mypalette[1]);
 		if(function==2) printXY("Adv. Copy",380,60,mypalette[2]);
 		else printXY("Adv. Copy",380,60,mypalette[1]);
-		if(function==3) printXY("function3",380,68,mypalette[2]);
+/*		if(function==3) printXY("function3",380,68,mypalette[2]);
 		else printXY("function3",380,68,mypalette[1]);
 		if(function==4) printXY("function4",380,76,mypalette[2]);
-		else printXY("function4",380,76,mypalette[1]);
+		else printXY("function4",380,76,mypalette[1]);*/
 		PutImage();
 		ret = padRead(0, 0, &buttons); // port, slot, buttons
             
@@ -1663,12 +1663,12 @@ int selectfunc(u32 old_pad)
 			if(new_pad & PAD_UP)
 			{
 				function--;
-				if (function<1) function=4;
+				if (function<1) function=2;
 				}
 			if(new_pad & PAD_DOWN)
 			{
 				function++;
-				if (function>4) function=1;
+				if (function>2) function=1;
 				}
 			if(new_pad & PAD_CROSS)
 			{
@@ -1935,21 +1935,21 @@ void showhelp(u32 old_pad)
 	drawVertical(58,40,168,mypalette[2]);
 	drawVertical(466,40,168,mypalette[2]);
 	printXY("Functions of the Joypad in PS2MENU", 66, 48, mypalette[1]);
-	printXY("D-PAD:", 66, 64, mypalette[1]);
-	printXY("UP:       move highlight one step up in list.", 66, 72, mypalette[1]);
-	printXY("DOWN:     move highlight one step down in list.", 66, 80, mypalette[1]);
-	printXY("LEFT:     move highlight ten steps up in list.", 66, 88, mypalette[1]);
-	printXY("RIGHT:    move highlight ten steps down in list.", 66, 96, mypalette[1]);
-	printXY("BUTTONS:", 66, 112, mypalette[1]);
-	printXY("SQUARE:   Create folder in current path.", 66, 120, mypalette[1]);
-	printXY("CIRCLE:   Delete file or remove an empty folder.", 66, 128, mypalette[1]);
-	printXY("TRIANGLE: Set copy to folder / copy a file.", 66, 136, mypalette[1]);
-	printXY("CROSS:    Execute highlighted file or change to", 66, 144, mypalette[1]);
-	printXY("          highlighted folder.", 66, 152, mypalette[1]);
-	printXY("L1:       Toggle active partition on the PS2 HDD.", 66, 160, mypalette[1]);
-	printXY("R1:       Select from active device list.", 66, 168, mypalette[1]);
-	printXY("L2:       PS2MENU configuration screen.", 66, 176, mypalette[1]);
-	printXY("R2:       Test validity of highlighted file.", 66, 184, mypalette[1]);
+//	printXY("D-PAD:", 66, 64, mypalette[1]);
+	printXY("UP:       move highlight one step up in list.", 66, 64, mypalette[1]);
+	printXY("DOWN:     move highlight one step down in list.", 66, 72, mypalette[1]);
+	printXY("LEFT:     move highlight ten steps up in list.", 66, 80, mypalette[1]);
+	printXY("RIGHT:    move highlight ten steps down in list.", 66, 88, mypalette[1]);
+	printXY("START:    Rename or recursive copy of selection.", 66, 104, mypalette[1]);
+	printXY("SQUARE:   Create folder in current path.", 66, 112, mypalette[1]);
+	printXY("CIRCLE:   Delete file or folder and its contents.", 66, 120, mypalette[1]);
+	printXY("TRIANGLE: Set copy to folder / copy a file.", 66, 128, mypalette[1]);
+	printXY("CROSS:    Execute highlighted file or change to", 66, 136, mypalette[1]);
+	printXY("          highlighted folder.", 66, 144, mypalette[1]);
+	printXY("L1:       Toggle active partition on the PS2 HDD.", 66, 152, mypalette[1]);
+	printXY("R1:       Select from active device list.", 66, 160, mypalette[1]);
+	printXY("L2:       PS2MENU configuration screen.", 66, 168, mypalette[1]);
+	printXY("R2:       Test validity of highlighted file.", 66, 176, mypalette[1]);
 	printXY("Press SELECT to return to PS2MENU main screen.", 66, 192, mypalette[1]);
 	PutImage();
 	while(!triangle)
@@ -2035,14 +2035,14 @@ int ConfirmYN(char *s, u32 old_pad)
 // Simple on screen keyboard for user input, only used for creating a
 // folder thus far. Text is written to global string foldername, and
 // limited to 24 characters at the moment
-void MenuKeyboard(char *s)
+void MenuKeyboard(char *s, u32 old_pad)
 {
 	int i,ret,keyrow=0,keycol=0,nameptr=0;
 	int enterkey = 0;
 	int held;
 	struct padButtonStatus buttons;
 	u32 paddata;
-	u32 old_pad = 0;
+//	u32 old_pad = 0;
 	u32 new_pad = 0;
 	char keysrow1[130]="0 1 2 3 4 5 6 7 8 9 ( ) .\0A B C D E F G H I J K L M\0N O P Q R S T U V W X Y Z\0a b c d e f g h i j k l m\0n o p q r s t u v w x y z\0";
 	char funcrow[19]="SPACE   DEL   ENTER";
@@ -2196,7 +2196,7 @@ char *SelectELF(void)
 	int changed=1,minpath;
 	char botcap,botcap2;
 	char *ptr;
-	char tmppath[MAX_PATH], newpath[MAX_PATH] __attribute__((aligned(64)));
+	char tmppath[MAX_PATH]; //, newpath[MAX_PATH] __attribute__((aligned(64)));
 
 	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
 		maxrows=24;
@@ -2418,7 +2418,7 @@ char *SelectELF(void)
 				}
 			else if((new_pad & PAD_SQUARE) && (elfhost==1 || elfhost==3))
 			{
-				MenuKeyboard("Create folder, enter name");
+				MenuKeyboard("Create folder, enter name",new_pad);
 				if(strlen(foldername)>0)
 				{
 					if(elfhost==1)
@@ -2468,7 +2468,7 @@ char *SelectELF(void)
 				ret=selectfunc(new_pad);
 				if(ret==1)
 				{
-					MenuKeyboard("Enter new name");
+					MenuKeyboard("Enter new name",new_pad);
 					if(strlen(foldername)>0)
 					{
 						if(elfhost==1)
@@ -2481,7 +2481,7 @@ char *SelectELF(void)
 							}
 						if(elfhost==3)
 						{
-							for(i=0;i<MAX_PATH;i++)
+/*							for(i=0;i<MAX_PATH;i++)
 							{
 								tmppath[i]='\0';
 								newpath[i]='\0';
@@ -2491,12 +2491,13 @@ char *SelectELF(void)
 							tmppath[i-1]='\0';
 							strcpy(newpath,tmppath);
 							strcat(tmppath,HDDfiles[highlighted]);
-							strcat(newpath,foldername);
+							strcpy(newpath,foldername);
 							printf("%s -> %s\n",tmppath,newpath);
 							mcRename(mcport, 0, tmppath,newpath);
-							mcSync(0, NULL, &ret);
+							mcSync(0, NULL, &ret);*/
 							}
 						sprintf(sStatus,"Renamed %s to %s %i",fullpath,foldername,ret);
+						if(elfhost==3) sprintf(sStatus,"Rename not implemented on mc");
 						}
 					}
 				else if(ret==2)
@@ -2784,7 +2785,7 @@ int main(int argc, char *argv[])
 		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.6b\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.6\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
