@@ -1,0 +1,21 @@
+On going coding for my (adresd) part1 for the BP demo.
+
+Any of this code here is free for usage, but a thanks
+greeting/beer/whatever is always nice :)
+
+This is a spherical harmonics dot drawer, running entirely
+on vu1.
+Parameters sent via vif to it, and then object is generated
+and kicked to gs from there.
+
+========================================================
+This makes use of 'PbDemoLib' and is also designed as an
+example for the lib.
+
+Thanks to emoon for his work on the library :)
+And to tyranid for the demo harness
+========================================================
+
+enjoy.
+
+adresd

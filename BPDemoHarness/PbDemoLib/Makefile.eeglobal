@@ -31,6 +31,9 @@ EE_CXX_COMPILE = $(EE_CC) $(EE_CXXFLAGS) $(EE_INCS)
 %.o : %.cpp
 	$(EE_CXX) $(EE_CXXFLAGS) $(EE_INCS) -c $< -o $@
 
+%.o : %.vsm
+	dvp-elf-as $< -o $@
+
 %.o : %.S
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 

@@ -1,0 +1,280 @@
+;////////////////////////////////////////////////////////////////////////////////////////
+;// Spherical Harmonic Dots 
+;// Copyright (c) 2004   adresd <adresd_ps2dev@yahoo.com>
+;// 
+;// Licensed under the AFL v2.0. See the file LICENSE included with this
+;// distribution for licensing terms.
+;//
+;// This is my attempt at a procedural object generator
+;// it generates a dot pattern of a spherical harmonic object
+;//
+;// first builds a list of dots for one segment, then transforms that list
+;// then kicks that while building another list.
+;//
+;// Note that this code is highly unoptimized, but might be useful to learn from or so.
+;//
+
+iScreenMatrix   = 0	;object->screen transformation matrix
+
+iDU             = 12	;du in each member (TWOPI / (float)resolutioni)
+iDV             = 13	;dv in each member (PI / (float)resolutionj)
+iSCALE          = 14	;scale in all members
+iMFX            = 15	;(mf_X) should have x=mf[1],y=mf[3],z=mf[5],w=mf[7]
+iMF02           = 16	;(mf_02) x=mf[0],z=mf[2]
+iMF46           = 17	;(mf_46) x=mf[4],z=mf[6]
+iRESOLI         = 18	;resolution-i (int)
+iRESOLJ         = 19    ;resolution-j (int)
+iGIFTAGJ        = 20	;gif tag (for j verts)
+
+vfData          = 30	;storage for verts
+vfKick          = 500	;storage for gifpkt
+
+.global         g_Vu1_SparmGenDots
+.global         g_Vu1_SparmGenDots_End
+                
+                .p2align 4  ; This aligns the following data to quadword alignment
+                .vu
+
+; vas-asm adaptation of vcl powf function by
+; (c) Ian Stephenson
+;
+; ian@dctsystems.freeserve.co.uk
+; adapted from vcl to vas-macro by adresd
+.macro MYFAST_POW result,a,b,tmp
+	ITOF0	\a,\a					nop
+	NOP						loi	0.00000011920928955078125
+	MULI	\a,\a,I				nop
+	NOP						loi	-127
+	ADDi	\tmp,\a,I				nop
+	mul	\tmp,\tmp,\b			nop
+	NOP						loi	127
+	ADDi	\tmp,\tmp,I				nop
+	NOP						loi	8388608
+	MULi	\tmp,\tmp,I				nop
+	FTOI0	\result,\tmp			nop
+.endm
+
+g_Vu1_SparmGenDots:
+		nop                             lq          vf28, iScreenMatrix+0(vi00)
+		nop                             lq          vf29, iScreenMatrix+1(vi00)
+		nop                             lq          vf30, iScreenMatrix+2(vi00)
+		nop                             lq          vf31, iScreenMatrix+3(vi00)
+                                              
+		nop                             iaddiu      vi02, vi00, vfKick      ; 
+		nop                             iadd        vi03, vi00, vi02      ; xgkick address
+		nop                             iaddiu      vi01, vi00, vfData      ; coord adress
+                
+		nop                             lq.xyzw     vf06, iGIFTAGJ(vi00)     ; giftag
+		nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
+		nop                             iaddiu      vi13, vi00, iRESOLI
+		nop                             ilwr.w      vi08, (vi13)w	; this is u int limit
+		nop                             iaddiu      vi13, vi00, iRESOLJ
+		nop                             ilwr.w      vi09, (vi13)w	; this is v int limit
+sparmgen:
+		; vf02 is the u
+		; vf22 is the v
+		nop					lq.xyzw vf23, iDU(vi00)		; vf23 is du
+		nop					lq.xyzw vf24, iDV(vi00)		; vf24 is dv
+		nop					lq.xyzw vf25, iSCALE(vi00)	; vf25 is scale
+		sub vf02,vf00,vf00		iadd vi10,vi00,vi08		; set u to limit
+I_LOOP:
+		sub vf22,vf00,vf00		iadd vi11,vi00,vi09		; set v to limit
+		; vf26 is x=costheta,z=sintheta
+;   sintheta = PbSin(u);
+;   costheta = PbCos(u);
+		nop					move vf19,vf02	; vf02 is u
+		nop					bal vi13,doSinCos	; vf19 is dest, sin,cos,sin,cos
+		nop					nop
+		addy.x vf26x,vf00,vf19y		nop
+		addx.z vf26z,vf00,vf19x		nop
+; vf26 now contains x=costheta, z=sintheta
+
+; powf(PbSin(mf[4]*u),mf[5]) 
+; powf(PbCos(mf[6]*u),mf[7])
+; PbSin(mf[4]*u)  PbCos(mf[6]*u)
+		nop					lq.xyzw vf18, iMF46(vi00)	; vf18 is MF46
+		nop					move vf19,vf02	; vf02 is u
+		mul.xz vf19,vf19,vf18		nop ; vf18 x=mf[4],z=mf[6]
+		nop					bal vi13,doSinCos	; vf19 is dest, sin,cos,sin,cos
+		subw.w vf27w,vf27w,vf27w	nop
+		addx.z vf27z,vf00,vf19x		nop
+		addw.w vf27w,vf00,vf19w		nop
+; vf27 now contains z=PbSin(mf[4]*u),w=PbCos(mf[6]*u)
+
+; now setup the giftag and stuff, for output buffer
+		nop                           iaddiu      vi01, vi00, vfData      ; coord adress
+		
+J_LOOP:
+;      r = powf(PbSin(mf[0]*v),mf[1]);
+;      r += powf(PbCos(mf[2]*v),mf[3]);
+; PbSin(mf[0]*v)  PbCos(mf[2]*v)
+		nop					lq.xyzw vf18, iMF02(vi00)	; vf18 is MF02
+		nop					move vf19,vf22	; vf22 is v
+		mul.xz vf19,vf19,vf18		nop ; vf18 x=mf[0],z=mf[2]
+		nop					bal vi13,doSinCos	; vf19 is dest, sin,cos,sin,cos
+		nop					nop
+		addx.x vf27x,vf00,vf19x		nop
+		addw.y vf27y,vf00,vf19w		nop
+; vf27 now contains x=PbSin(mf[0]*v),y=PbCos(mf[2]*v)
+		nop					lq.xyzw vf18, iMFX(vi00)	; vf19 is MFX
+
+; vf27 (in) should have x=PbSin(mf[0]*v),y=PbCos(mf[2]*v),z=PbSin(mf[4]*u),w=PbCos(mf[6]*u)
+; vf19 (mf_X) should have x=mf[1],y=mf[3],z=mf[5],w=mf[7]
+; seeing as we can do four 'pow's at same time, we will
+		nop					move vf12,vf27
+		MYFAST_POW vf11,vf12,vf18,vf19		
+;MYFAST_POW vf11,vf27,vf18,vf19
+; now add them all together
+		
+; add to all fields, with w as 1.0f
+		nop					esum P,vf11
+		; result later in P reg
+;      sinphi = PbSin(v);
+;      cosphi = PbCos(v);
+		nop					move vf19,vf22	; vf22 is v
+		nop					bal vi13,doSinCos	; vf19 is dest, sin,cos,sin,cos
+		nop					nop
+; returns,vf19 x=sinphi,y=cosphi,z=sinphi,w=cosphi
+
+; pickup result from P reg
+		nop					waitp
+		nop					mfp.xyzw vf11xyzw,P ; put P into vf11
+; vf11 all fields now contain 'r'
+
+;      p_outv->x = r * sinphi * costheta * scale;
+;      p_outv->y = r * cosphi *            scale;
+;      p_outv->z = r * sinphi * sintheta * scale;
+;      p_outv->w = 1.0f;
+; now multiply xyz by sincos vals	-	r * sinphi,cosphi,sinphi
+		mul.xyz vf12,vf11,vf19		nop
+; now multiply x,z by costheta,sintheta  - vf26 should have x=costheta,z=sintheta
+		mul.xz  vf12,vf12,vf26		nop
+; now multiply xyz by scale		-	r * scale
+		mul.xyz vf12,vf12,vf25		nop	
+; fixup in case	
+		nop					loi 1.0
+		addi.w vf12w,vf00w,I		nop
+; vf12 contains the vertex point at this point - lol
+		nop					sqi vf12,(vi01++)
+
+J_ENDL:	; increment v
+		add vf22,vf22,vf24		nop
+		nop					iaddi vi11,vi11,-1
+		; check limit, if under, continue
+		nop					ibne vi11,vi00,J_LOOP
+		nop					nop
+	
+		; render this strip of points
+		nop					iadd vi05,vi00,vi09	; set num of points to do
+		nop					iaddi vi05,vi05,-1
+		nop					bal vi13,rendercall
+		nop					nop
+
+I_ENDL:	; increment u
+		add vf02,vf02,vf23		nop
+		nop					iaddi vi10,vi10,-1
+		; check limit, if under, continue
+		nop					ibne vi10,vi00,I_LOOP
+		nop					nop
+
+
+            nop                             nop
+            nop[e]                          nop
+            nop                             nop
+; go back to start, just in case we are triggered again
+		nop					b g_Vu1_SparmGenDots
+		nop					nop
+
+
+rendercall:                
+; this must be called with the num of verts in vi05
+;//////////////////////////////////////////////////////////////////////////////////              
+		nop                           iaddiu      vi01, vi00, vfData      ; coord adress
+		nop                             iaddiu      vi02, vi00, vfKick         ; 
+		nop                             iadd        vi03, vi00, vi02    
+		nop                             lq.xyzw     vf06, iGIFTAGJ(vi00)     ; giftag
+		nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
+             ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Temporary for colors right now.
+                mul  vf06,vf00,vf00			loi 250.0                
+                addi.z      vf06,vf00,I         loi 1.0
+                addi        vf07,vf00,I         nop
+poly_loop:      
+
+;//////////////////////////////////////////////////////////////////////////////////
+                nop                             lqi         vf05, (vi01++)          ; XYZ                                                      
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Project vertex to screen space.
+                                
+                mulax     acc,  vf28, vf05x     nop                                 
+                madday    acc,  vf29, vf05y     nop                                 
+                maddaz    acc,  vf30, vf05z     nop                                 
+                maddw     vf05, vf31, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+
+                ;// Temporary color stuff              
+                add.xy      vf06, vf06, vf07    nop
+                ftoi0       vf08, vf06          loi         0.65
+                nop                             sqi         vf08, (vi02++)          ; store colors
+
+                nop                             waitq                               
+                mulq        vf05, vf05, q       nop                                 
+                ftoi4       vf05, vf05          nop                                 ; fixedpoint for gif
+                nop                             sqi         vf05, (vi02++)          ; store xyz
+                nop                             iaddi       vi05, vi05, -1          ; 
+                nop                             nop                                 ;
+                nop                             ibne        vi05, vi00, poly_loop   ; loop check
+                nop                             nop
+                nop                             xgkick      vi03
+                nop                             nop
+	NOP						jr vi13
+	NOP						nop
+
+;//////////////////////////////////////////////////////////////////////////////////
+; input vf19 , x , z
+; output vf19 x=sinx,y=cosx z=sinz,w=cosz
+;
+; touches
+; ACC,I
+; vf14, vf15, vf16, vf17, vf18, vf19, vf20, vf21 
+;--------------------------------------------------------------------
+; doSinCos - Returns the sin and cos of up to 2 angles, which must
+; be contained in the X and Z elements of "angle".  The sin/cos pair
+; will be contained in the X/Y elements of "sincos" for the first
+; angle, and Z/W for the second one.
+; Thanks to Colin Hughes (SCEE) for that one.
+; Thanks to the playstation2 linux forums and site for it.
+doSinCos:               
+                mulz.w      vf19, vf00, vf19z   nop                     ; copy angle from z to w
+                addx.y      vf19, vf00, vf19x   loi 1.570796            ; copy angle from x to y                                     
+                subi.xz     vf19, vf19, i       nop                     ; phase difference for sin as cos ( pi/2 )
+                abs         vf19, vf19          nop                     ; mirror cos around zero
+                maxw        vf20, vf00, vf00w   loi -0.159155           ; initialise all 1s                                                                             
+                mulai       acc,  vf19, i       loi 12582912.0          ; scale so single cycle is range 0 to -1 ( *-1/2pi )                                   
+                msubai      acc,  vf20, i       nop                     ; apply bias to remove fractional part
+                maddai      acc,  vf20, i       loi -0.159155           ; remove bias to leave original int part                                    
+                msubai      acc,  vf19, i       loi 0.5                 ; apply original number to leave fraction range only                                             
+                msubi       vf19, vf20, i       nop                     ; ajust range: -0.5 to +0.5
+                abs         vf19, vf19          loi 0.25                ; clamp: 0 to +0.5                                         
+                subi        vf19, vf19, i       nop                     ; ajust range: -0.25 to +0.25
+                mul         vf21, vf19, vf19    loi -76.574959          ; a^2
+                muli        vf14, vf19, i       loi -41.341675          ; k4 a   
+                muli        vf16, vf19, i       loi 81.602226           ; k2 a
+                muli        vf15, vf19, i       nop                     ; k3 a
+                mul         vf18, vf21, vf21    nop                     ; a^4
+                mul         vf14, vf14, vf21    nop                     ; k4 a^3
+                mula        acc,  vf16, vf21    loi 39.710659           ; + k2 a^3                                    
+                muli        vf16, vf19, i       nop                     ; k5 a
+                mul         vf17, vf18, vf18    nop                     ; a^8
+                madda       acc,  vf14, vf18    nop                     ; + k4 a^7
+                madda       acc,  vf15, vf18    loi 6.283185            ; + k3 a^5
+                maddai      acc,  vf19, i       nop                     ; + k1 a
+                madd        vf19, vf16, vf17    nop                     ; + k5 a^9
+	NOP						jr vi13
+	NOP						nop
+                
+;//
+
+                                
+g_Vu1_SparmGenDots_End:
+
