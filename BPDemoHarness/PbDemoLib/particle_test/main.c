@@ -1,10 +1,13 @@
 /*
- * main.c - Sample of a simple vu1 drawing program.
+ * main.c - Test of PbParticle*
  *
- * Copyright (c) 2004   emoon <daniel@collin.com>
+ * Copyright (c) 2004   jar <dsl123588@vip.cybercity.dk>
  *
  * Licensed under the AFL v2.0. See the file LICENSE included with this
  * distribution for licensing terms.
+ *
+ * Makes use of PbDemoLib by emoon
+ * Copyright (c) 2004   emoon <daniel@collin.com> 
  */
 
 #include <tamtypes.h>
@@ -32,7 +35,7 @@
 /*  DEFINES AND ENUMERATIONS
  */
  
-#define NUM_POINTS 12500
+#define NUM_POINTS 16000
 
 /*  DATA
  */
@@ -65,8 +68,8 @@ void generate_points()
 	
 	for(i=0; i<NUM_POINTS; ++i)
 	{
-		points[i].x = frandom()*400-200;
-		points[i].y = frandom()*400-200;
+		points[i].x = frandom()*500-250;
+		points[i].y = frandom()*500-250;
 		points[i].z = frandom()*400-200;
 		points[i].w = 1.0f;
 		
@@ -77,9 +80,9 @@ void generate_points()
 void move_points(float dt)
 {
 	int i;
-    const float a = 10.0f;
-    const float b = 28.0f;
-    const float c = 8.0f / 3.0f;
+    const float a = 100.0f;
+    const float b = 220.0f;
+    const float c = 120.0f / 3.0f;
     PbFvec temp = { dt * 0.028f, 0, 0, 0 };
     
     for(i=0; i<NUM_POINTS; ++i)
@@ -178,24 +181,18 @@ u32 start_demo(const demo_init_t *pInfo)
 		{
 			PbMatrix rotate_matrix, temprot_matrix, final_matrix;
 
-			//GS_SET_BGCOLOR(0xFF, 0x00, 0x00);
-			
 			move_points(dt);
 			
 		    PbMatrixRotateY( &rotate_matrix, t*1.5f );
 		    PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &camera_matrix );
 		    PbMatrixMultiply( &final_matrix, &temprot_matrix, &view_screen_matrix );
 		    
-		    PbParticleSetup(&final_matrix, texture, 28.0f *16.0f, 3.0f, 0x40404040);		    
+		    PbParticleSetup(&final_matrix, texture, 12.0f *16.0f, 1.0f, 0x40404040);
 			PbParticleDraw(points, NUM_POINTS);
-			
-			//GS_SET_BGCOLOR(0x00, 0x00, 0x00);
 		}
 		
 		PbScreenSyncFlip();
 	}
 
-	//LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
-	
 	return pInfo->screen_mode;
 }
