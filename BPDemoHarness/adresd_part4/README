@@ -1,0 +1,22 @@
+On going coding for the intro section of the BP demo.
+
+Any of this code here is free for usage, but a thanks
+greeting/beer/whatever is always nice :)
+
+This is a triangle strip twister, with envmap.
+Parameters sent via vif to it, and then object is sent via
+vif, processed on vu1 and kicked to gs from there.
+
+Base routine and inspiration came from emoon.
+
+========================================================
+This makes use of 'PbDemoLib' and is also designed as an
+example for the lib.
+
+Thanks to emoon for his work on the library :)
+And to tyranid for the demo harness
+========================================================
+
+enjoy.
+
+adresd
