@@ -1,15 +1,16 @@
-IOP_BIN = ps2ftp.irx
-IOP_OBJS = ps2ftp.o snprintf.o mcman.o
-IOP_INCS += -I$(PS2DEV)/ps2ip/include
-IOP_LDFLAGS += -L$(PS2DEV)/ps2ip/iop/lib
-IOP_LIBS += -liop_ps2ip
+EE_BIN = ps2ftp.elf
+EE_OBJS = ps2ftp.o FSMan.o aio/aioMc.o aio/aioCdvd.o aio/aioHdd.o aio/cdvd_rpc.o
+EE_INCS += -I$(PS2DEV)/ps2ip/include -I$(PS2DRV)/common/include -I$(PS2DRV)/ee/libfileXio
+EE_LDFLAGS += -L$(PS2DEV)/ps2ip/ee/lib -Lz:/projects/libhdd/ee/lib -L$(PS2DRV)/ee/libfileXio 
+EE_LIBS += -lgcc -lkernel -lmc -lhdd -lps2ip -lfileXio
 
-all:	$(IOP_BIN)
+all:	$(EE_BIN)
 
 clean:
-	rm -f *.elf *.o *.a *.irx
+	rm -f *.elf *.o *.a
 
+rebuild: clean	all
+	
 include $(PS2LIB)/Makefile.pref
-include $(PS2LIB)/Makefile.iopglobal
-
+include $(PS2LIB)/Makefile.eeglobal
 

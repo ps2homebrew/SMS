@@ -316,11 +316,11 @@
 #define LINUX_COMPATIBLE
 #endif
 
-//#include <types.h>
+#include <tamtypes.h>
 //#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 //#include <assert.h>
 //#include <errno.h>
 #include <kernel.h>
