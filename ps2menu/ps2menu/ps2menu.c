@@ -916,7 +916,6 @@ char *strrchr(const char *sp, int i)
 void PrintHDDFiles(int highlighted)
 {
 	int i,j,texcol,maxrows,maxchars;
-//	char s[MAX_PATH];
 	char textfit[80];
 	char *ptr;
 
@@ -946,7 +945,6 @@ void PrintHDDFiles(int highlighted)
 
 		if(ptr == NULL) ptr = (char *)&HDDfiles[i+topfil];
 		else ptr++;
-//			for (j=0;j<80;j++) textfit[j]='\0';
 		j=strlen(ptr);
 		if (j>maxchars) j=maxchars;
 		textfit[j]='\0';
@@ -1080,42 +1078,38 @@ int copytodest(char *sourcefile)
 		boot_buffer = malloc(boot_size);
 		if ((boot_buffer)==NULL)
 		{
-			if(elfhost!=2)
+			dbgprintf("Malloc failed. Attempting chunkcopy\n");
+			boot_buffer = malloc(32768);
+			if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+			else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
+			if(boot_fd2 < 0)
 			{
-				dbgprintf("Malloc failed. Attempting chunkcopy\n");
-				boot_buffer = malloc(1048576);
-				if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
-				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
-				if(boot_fd2 < 0)
-				{
-					sprintf(sStatus,"Open %s Failed",destination);
-					}
-				else
-				{
-					while(boot_size>=1048576)
-					{
-						boot_size=boot_size-1048576;
-						if (xiosource) fileXioRead(boot_fd, boot_buffer, 1048576);
-						else fioRead(boot_fd, boot_buffer, 1048576);
-						sprintf(iuntar,"Bytes remaining %i", boot_size);
-						jprintf(iuntar);
-						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,1048576);
-						else fioWrite(boot_fd2,boot_buffer,1048576);
-						}
-					if(boot_size>0)
-					{
-						if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
-						else fioRead(boot_fd, boot_buffer, boot_size);
-						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,boot_size);
-						else fioWrite(boot_fd2,boot_buffer,boot_size);
-						}
-					if(xiodest)	fileXioClose(boot_fd2);
-					else fioClose(boot_fd2);
-					sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
-					}
-				free(boot_buffer);
+				sprintf(sStatus,"Open %s Failed",destination);
 				}
-			else sprintf(sStatus,"File too big to be copied from host, try it as .tgz");
+			else
+			{
+				while(boot_size>=32768)
+				{
+					boot_size=boot_size-32768;
+					if (xiosource) fileXioRead(boot_fd, boot_buffer, 32768);
+					else fioRead(boot_fd, boot_buffer, 32768);
+					sprintf(iuntar,"Bytes remaining %i", boot_size);
+					jprintf(iuntar);
+					if (xiodest) fileXioWrite(boot_fd2,boot_buffer,32768);
+					else fioWrite(boot_fd2,boot_buffer,32768);
+					}
+				if(boot_size>0)
+				{
+					if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
+					else fioRead(boot_fd, boot_buffer, boot_size);
+					if (xiodest) fileXioWrite(boot_fd2,boot_buffer,boot_size);
+					else fioWrite(boot_fd2,boot_buffer,boot_size);
+					}
+				if(xiodest)	fileXioClose(boot_fd2);
+				else fioClose(boot_fd2);
+				sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
+				}
+			free(boot_buffer);
 			if(xiosource) fileXioClose(boot_fd);
 			else fioClose(boot_fd);
 			strcpy(destination,savedestination);
@@ -1230,42 +1224,38 @@ int tomcopy(char *sourcefile)
 		boot_buffer = malloc(boot_size);
 		if ((boot_buffer)==NULL)
 		{
-			if(elfhost!=2)
+			dbgprintf("Malloc failed. Attempting chunkcopy\n");
+			boot_buffer = malloc(32768);
+			if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+			else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
+			if(boot_fd2 < 0)
 			{
-				dbgprintf("Malloc failed. Attempting chunkcopy\n");
-				boot_buffer = malloc(1048576);
-				if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
-				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
-				if(boot_fd2 < 0)
-				{
-					sprintf(sStatus,"Open %s Failed",destination);
-					}
-				else
-				{
-					while(boot_size>=1048576)
-					{
-						boot_size=boot_size-1048576;
-						if (xiosource) fileXioRead(boot_fd, boot_buffer, 1048576);
-						else fioRead(boot_fd, boot_buffer, 1048576);
-						sprintf(iuntar,"Bytes remaining %i", boot_size);
-						jprintf(iuntar);
-						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,1048576);
-						else fioWrite(boot_fd2,boot_buffer,1048576);
-						}
-					if(boot_size>0)
-					{
-						if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
-						else fioRead(boot_fd, boot_buffer, boot_size);
-						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,boot_size);
-						else fioWrite(boot_fd2,boot_buffer,boot_size);
-						}
-					if(xiodest)	fileXioClose(boot_fd2);
-					else fioClose(boot_fd2);
-					sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
-					}
-				free(boot_buffer);
+				sprintf(sStatus,"Open %s Failed",destination);
 				}
-			else sprintf(sStatus,"File too big to be copied from host, try it as .tgz");
+			else
+			{
+				while(boot_size>=32768)
+				{
+					boot_size=boot_size-32768;
+					if (xiosource) fileXioRead(boot_fd, boot_buffer, 32768);
+					else fioRead(boot_fd, boot_buffer, 32768);
+					sprintf(iuntar,"Bytes remaining %i", boot_size);
+					jprintf(iuntar);
+					if (xiodest) fileXioWrite(boot_fd2,boot_buffer,32768);
+					else fioWrite(boot_fd2,boot_buffer,32768);
+					}
+				if(boot_size>0)
+				{
+					if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
+					else fioRead(boot_fd, boot_buffer, boot_size);
+					if (xiodest) fileXioWrite(boot_fd2,boot_buffer,boot_size);
+					else fioWrite(boot_fd2,boot_buffer,boot_size);
+					}
+				if(xiodest)	fileXioClose(boot_fd2);
+				else fioClose(boot_fd2);
+				sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
+				}
+			free(boot_buffer);
 			if(xiosource) fileXioClose(boot_fd);
 			else fioClose(boot_fd);
 			if(xiosource || xiodest) fileXioUmount("pfs0:"); 
@@ -2037,7 +2027,7 @@ int ConfirmYN(char *s, u32 old_pad)
 // limited to 24 characters at the moment
 void MenuKeyboard(char *s, u32 old_pad)
 {
-	int i,ret,keyrow=0,keycol=0,nameptr=0;
+	int i,ret,keyrow=5,keycol=1,nameptr=0;
 	int enterkey = 0;
 	int held;
 	struct padButtonStatus buttons;
@@ -2871,21 +2861,21 @@ checkmc:
 		activeMC=TRUE;
 		strcpy(MCPath, "/*\0");
 		}
-	if((dret = fioDopen("host:") < 0))
+	if ((ret = fioOpen("host:elflist.txt", O_RDONLY))>=0)
 	{
-		activeHOST=FALSE;
-		}
-	else
-	{
-		fioDclose(dret);
-		activeHOST=2;
+		activeHOST=1;
+		fioClose(ret);
 		}
 	if (activeHOST==FALSE)
 	{
-		if ((ret = fioOpen("host:elflist.txt", O_RDONLY))>=0)
+		if((dret = fioDopen("host:") < 0))
 		{
-			activeHOST=1;
-			fioClose(ret);
+			activeHOST=FALSE;
+			}
+		else
+		{
+			fioDclose(dret);
+			activeHOST=2;
 			}
 		}
 	if (activeHDD==TRUE) { strcpy(destination, "pfs0:\0"); elfhost=1; }
@@ -3012,6 +3002,7 @@ checkmc:
 	padPortClose(0,0);
 	free(settings);
 
+	strcpy(s,"\0");
 	if(elfhost==4)
 	{
 		strcpy(s, "cdfs:");
@@ -3024,7 +3015,7 @@ checkmc:
 		i=strlen(s);
 		s[i-1]='\0';
 		}
-	if(elfhost==2) strcpy(s, HOSTpath);
+	if(elfhost==2 && activeHOST == 2) strcpy(s, HOSTpath);
 	if(elfhost==1) strcpy(s, HDDpath);
 	strcat(s, pc);
 	dbgprintf("Executing %s ...", s);
