@@ -20,6 +20,7 @@
 
 #define FS_IOMAN_DEVICES 16
 #define FS_IOMANX_DEVICES 32
+#define FS_IOMAN2_BOOTVAL 0x59969e7e
 
 typedef enum
 {
@@ -36,6 +37,8 @@ typedef enum
 	FM_CREATE,
 	FM_APPEND,
 } FileMode;
+
+#define CRC32_Key (pClient->m_uiDataOffset)
 
 typedef struct FSContext
 {
@@ -54,17 +57,29 @@ typedef struct FSContext
 typedef enum
 {
 	FT_FILE,
-	FT_DIRECTORY
+	FT_DIRECTORY,
+	FT_LINK,
 } FileType;
 
 #define bb_status() (srv_flags() & 0x80000000)
 
-typedef struct FSDirectory
+typedef struct FSFileInfo
 {
+	struct
+	{
+		int			m_iYear;
+		int			m_iMonth;
+		int			m_iDay;
+		int			m_iHour;
+		int			m_iMinute;
+	} m_TS; // timestamp
+
 	FileType	m_eType;	
+	int				m_iProtection; // 3 bits protection per section: UrwxGrwxOrwx
+
 	int				m_iSize;
 	char			m_Name[256];
-} FSDirectory;
+} FSFileInfo;
 
 //! Initialize context for use
 void FileSystem_Create( FSContext* pContext );
@@ -85,10 +100,7 @@ int FileSystem_ReadFile( FSContext* pContext, char* pBuffer, int iSize );
 int FileSystem_WriteFile( FSContext* pContext, const char* pBuffer, int iSize );
 
 //! Read directory
-int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory );
-
-//! Get file information
-int FileSystem_GetFileInfo( FSDirectory* pDirectory, const char* pPath );
+int FileSystem_ReadDir( FSContext* pContext, FSFileInfo* pInfo );
 
 //! Close file or directory
 void FileSystem_Close( FSContext* pContext );
@@ -114,6 +126,7 @@ const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath );
 
 //! Get a pointer to device handler
 smod_mod_info_t* FileSystem_GetModule( const char* pDevice );
+#define _T(v) (v?(FS_IOMAN2_BOOTVAL==v)?1:0:0)
 
 //! Scan devices & return ops structure if found
 iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath );
@@ -122,6 +135,7 @@ iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const
 int FileSystem_MountDevice( FSContext* pContext, const char* mount_point, const char* mount_file );
 
 //! Unmount device
+#define bb_Status() pClient->m_eCOnnState
 int FileSystem_UnmountDevice( FSContext* pContext, const char* mount_point );
 
 //! Sync device

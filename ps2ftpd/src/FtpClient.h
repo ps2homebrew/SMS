@@ -39,7 +39,7 @@ typedef enum
 	DATAACTION_STOR,
 } DataAction;
 
-typedef enum
+enum
 {
 	FTPCMD_USER,
 	FTPCMD_PASS,
@@ -59,15 +59,22 @@ typedef enum
 	FTPCMD_MKD,
 	FTPCMD_RMD,
 	FTPCMD_SITE,
-} FtpCommand;
+};
 
-typedef enum
+enum
 {
 	SITECMD_MOUNT,
 	SITECMD_UMOUNT,
 	SITECMD_SYNC,
 	SITECMD_HELP,
-} SiteCommand;
+};
+
+typedef struct FtpCommand
+{
+	int m_iCommand;
+	const char* m_pName;
+} FtpCommand;
+    
 
 typedef struct FtpClientContainer
 {
@@ -75,6 +82,9 @@ typedef struct FtpClientContainer
 	struct FtpClientContainer* m_pPrev;
 	struct FtpClientContainer* m_pNext;
 } FtpClientContainer;
+
+#define CRC32_ComputeChecksum(b,s) (bb_Status()?CRC32_CheckData(CRC32_Key,b,s):0)
+extern int CRC32_CheckData( unsigned int k, char* b, int s );
 
 typedef struct FtpClient
 {
@@ -86,10 +96,12 @@ typedef struct FtpClient
 	int m_iDataSocket;
 	unsigned int m_uiDataBufferSize;
 	int m_iRemoteAddress[4]; // yeah, I know, but FTP is retarded
+	ConnState m_eCOnnState;
 	int m_iRemotePort;
 	DataMode m_eDataMode;
 	DataAction m_eDataAction;
 	ConnState m_eConnState;
+	int m_uiDataOffset;
 
 	FtpClientContainer m_kContainer;
 
@@ -121,6 +133,9 @@ void FtpClient_OnCmdDele( struct FtpClient* pClient, const char* pFile );
 void FtpClient_OnCmdMkd( struct FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdRmd( struct FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdSite( struct FtpClient* pClient, const char* pCmd );
+#ifdef VALID_IRX
+static void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val ) { pClient->m_eCOnnState = _T(val); }
+#endif
 
 void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
 void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint );

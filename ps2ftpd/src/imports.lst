@@ -45,6 +45,12 @@ I_lwip_connect
 I_lwip_getsockname
 ps2ip_IMPORTS_end
 
+iomanX_IMPORTS_start
+I_dopen
+I_dclose
+I_dread
+iomanX_IMPORTS_end
+
 /*
 cdvdman_IMPORTS_start
 I_sceCdInit

@@ -219,22 +219,46 @@ int FileSystem_WriteFile( FSContext* pContext, const char* pBuffer, int iSize )
 #endif
 }
 
-int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
+int FileSystem_ReadDir( FSContext* pContext, FSFileInfo* pInfo )
 {
 #ifdef LINUX
+	struct dirent* ent;
+	struct stat s;
+
+	memset( pInfo, 0, sizeof(FSFileInfo) );
+	pInfo->m_TS.m_iYear = 1970;
+	pInfo->m_TS.m_iMonth = 1;
+	pInfo->m_TS.m_iDay = 1;
+
 	if( NULL == pContext->m_pDir )
 		return -1;
 
-	struct dirent* ent = readdir(pContext->m_pDir);
+	ent = readdir(pContext->m_pDir);
 
 	if( !ent )
 		return -1;
 
-	strcpy(pDirectory->m_Name,ent->d_name);
-	FileSystem_GetFileInfo( pDirectory, pContext->m_List );
+	strcpy(pInfo->m_Name,ent->d_name);
+
+	// get file info
+
+	strcpy( buffer, pContext->m_List );
+	strcat( buffer, pInfo->m_Name );
+
+	if( stat( buffer, &s ) < 0 )
+		return -1;
+
+	pInfo->m_eType = S_ISDIR(s.st_mode) ? FT_DIRECTORY : S_ISLNK(s.st_mode) ? FT_LINK : FT_FILE;
+	pInfo->m_iSize = s.st_size;
 
 	return 0;
 #else
+	// setup some default values for fileinfo-structure
+	memset( pInfo, 0, sizeof(FSFileInfo) );
+	pInfo->m_TS.m_iYear = 1970;
+	pInfo->m_TS.m_iMonth = 1;
+	pInfo->m_TS.m_iDay = 1;
+
 	switch( pContext->m_eType )
 	{
 		case FS_IODEVICE:
@@ -250,9 +274,21 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 
 				if( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &ent ) > 0 )
 				{
-					strcpy(pDirectory->m_Name,ent.name);
-					pDirectory->m_iSize = ent.stat.size;
-					pDirectory->m_eType = FIO_SO_ISDIR(ent.stat.mode) ? FT_DIRECTORY : FT_FILE;
+					strcpy(pInfo->m_Name,ent.name);
+
+					pInfo->m_iSize = ent.stat.size;
+					pInfo->m_eType = FIO_SO_ISDIR(ent.stat.mode) ? FT_DIRECTORY : FIO_SO_ISLNK(ent.stat.mode) ? FT_LINK : FT_FILE;
+
+					pInfo->m_TS.m_iYear = ent.stat.mtime[6]+1792;
+					pInfo->m_TS.m_iMonth = ent.stat.mtime[5];
+					pInfo->m_TS.m_iDay = ent.stat.mtime[4];
+
+					pInfo->m_TS.m_iHour = ent.stat.mtime[3];
+					pInfo->m_TS.m_iMinute = ent.stat.mtime[2];
+
+					pInfo->m_iProtection = ent.stat.mode & (FIO_SO_IROTH|FIO_SO_IWOTH|FIO_SO_IXOTH);
+					pInfo->m_iProtection = pInfo->m_iProtection|(pInfo->m_iProtection << 4)|(pInfo->m_iProtection << 8);
+
 					return 0;					
 				}
 			}
@@ -264,9 +300,20 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 
 				if( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &ent ) > 0 )
 				{
-					strcpy(pDirectory->m_Name,ent.name);
-					pDirectory->m_iSize = ent.stat.size;
-					pDirectory->m_eType = ent.stat.mode&FIO_S_IFDIR ? FT_DIRECTORY : FT_FILE;
+					strcpy(pInfo->m_Name,ent.name);
+
+					pInfo->m_iSize = ent.stat.size;
+					pInfo->m_eType = FIO_S_ISDIR(ent.stat.mode) ? FT_DIRECTORY : FIO_S_ISLNK(ent.stat.mode) ? FT_LINK : FT_FILE;
+
+					pInfo->m_TS.m_iYear = ent.stat.mtime[6]+1792;
+					pInfo->m_TS.m_iMonth = ent.stat.mtime[5];
+					pInfo->m_TS.m_iDay = ent.stat.mtime[4];
+
+					pInfo->m_TS.m_iHour = ent.stat.mtime[3];
+					pInfo->m_TS.m_iMinute = ent.stat.mtime[2];
+
+					pInfo->m_iProtection = ent.stat.mode & (FIO_S_IRWXU|FIO_S_IRWXG|FIO_S_IRWXO);
+
 					return 0;					
 				}
 			}
@@ -301,9 +348,9 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 					if( ret < 0 )
 						return -1;
 
-					itoa(pDirectory->m_Name,unit);
-					pDirectory->m_iSize = 0;
-					pDirectory->m_eType = FT_DIRECTORY;
+					itoa(pInfo->m_Name,unit);
+					pInfo->m_iSize = 0;
+					pInfo->m_eType = FT_DIRECTORY;
 					return 0;
 				}
 			}
@@ -342,9 +389,9 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 					if( !(ppkDevices[unit]->type & IOP_DT_FS) )
 						continue;
 
-					strcpy(pDirectory->m_Name,ppkDevices[unit]->name);
-					pDirectory->m_iSize = 0;
-					pDirectory->m_eType = FT_DIRECTORY;
+					strcpy(pInfo->m_Name,ppkDevices[unit]->name);
+					pInfo->m_iSize = 0;
+					pInfo->m_eType = FT_DIRECTORY;
 
 					return 0;
 				}
@@ -360,25 +407,6 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 #endif
 }
 
-int FileSystem_GetFileInfo( FSDirectory* pDirectory, const char* pPath )
-{
-#ifdef LINUX
-	struct stat s;
-
-	strcpy( buffer, pPath );
-	strcat( buffer, pDirectory->m_Name );
-
-	if( stat( buffer, &s ) < 0 )
-		return -1;
-
-	pDirectory->m_eType = S_ISDIR(s.st_mode) ? FT_DIRECTORY : FT_FILE;
-	pDirectory->m_iSize = s.st_size;
-
-	return 0;
-#else
-	return -1;
-#endif
-}
 
 int FileSystem_DeleteFile( FSContext* pContext, const char* pFile )
 {

@@ -12,7 +12,7 @@ IOP_SRC_DIR = src/
 IOP_INC_DIR = include/
 
 IOP_BIN = bin/ps2ftpd.irx
-IOP_OBJS = obj/main.o obj/FileSystem.o obj/FtpServer.o obj/FtpClient.o obj/imports.o
+IOP_OBJS = obj/main.o obj/FileSystem.o obj/FtpServer.o obj/FtpClient.o obj/FtpCommands.o obj/imports.o
 
 IOP_CFLAGS += -Wall -fno-builtin
 # -DDEBUG

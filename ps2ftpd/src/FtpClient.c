@@ -65,11 +65,7 @@ static char buffer[8192];
 #define BUFFER_OFFSET 4096	// use this if you need to use buffer & push it to FtpClient_Send()
 
 // list of commands
-struct
-{
-	int command;
-	const char* string;
-} commands[] = 
+FtpCommand commands[] = 
 {
 	{ FTPCMD_USER, "user" },
 	{ FTPCMD_PASS, "pass" },
@@ -97,17 +93,13 @@ struct
 	// commands to implement
 	
 	// SIZE
-}, sitecmds[] =
-{
-	{ SITECMD_MOUNT, "mount" },
-	{ SITECMD_UMOUNT, "umount" },
-	{ SITECMD_SYNC, "sync" },
-	{ -1, NULL }
-}; 
+};
 
 void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocket )
 {
 	assert( pClient && pServer );
+
+	memset( pClient, 0, sizeof(FtpClient) );
 
 	pClient->m_pServer = pServer;
 	pClient->m_iControlSocket = iControlSocket;
@@ -122,6 +114,7 @@ void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocke
 	pClient->m_iRemoteAddress[1] = 0;
 	pClient->m_iRemoteAddress[2] = 0;
 	pClient->m_iRemoteAddress[3] = 0;
+	pClient->m_uiDataOffset = 0;
 
 	pClient->m_kContainer.m_pClient = pClient;
 	pClient->m_kContainer.m_pPrev = &pClient->m_kContainer;
@@ -233,11 +226,11 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 		int i = 0;
 		int cmdresult = -1;
 
-		for( i = 0; commands[i].command != -1; i++ )
+		for( i = 0; commands[i].m_iCommand != -1; i++ )
 		{
-			if(!strcmp(cmd,commands[i].string))
+			if(!strcmp(cmd,commands[i].m_pName))
 			{
-				cmdresult = commands[i].command;
+				cmdresult = commands[i].m_iCommand;
 				break;
 			}
 		}
@@ -460,410 +453,6 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 		FtpClient_Send( pClient, 500, "Not understood." );
 }
 
-void FtpClient_OnCmdQuit( FtpClient* pClient )
-{
-	assert( pClient );
-
-	FtpClient_Send( pClient, 221, "Goodbye." );
-	FtpServer_OnClientDisconnect(pClient->m_pServer,pClient);
-}
-
-void FtpClient_OnCmdUser( FtpClient* pClient, const char* pUser )
-{
-	assert( pClient );
-
-	if(!strcmp(pUser,"anonymous"))
-		FtpClient_Send(pClient,331,"Anonymous login ok.");
-	else
-		FtpClient_Send(pClient,331,"Password required for user.");
-}
-
-void FtpClient_OnCmdPass( FtpClient* pClient, const char* pPass )
-{
-	assert( pClient );
-
-	// TODO: authentication
-
-	FtpClient_Send(pClient,230,"User logged in.");
-
-	// 530 Login incorrect.
-}
-
-void FtpClient_OnCmdPasv( FtpClient* pClient )
-{
-	struct sockaddr_in sa;
-	socklen_t sl;
-	int s;
-	unsigned int addr;
-	unsigned short port;
-	char* buf;
-
-	assert( pClient );
-
-	FtpClient_OnDataCleanup(pClient);
-
-	// get socket address we will listen to
-
-	sl = sizeof(sa);
-	if( getsockname( pClient->m_iControlSocket, (struct sockaddr*)&sa,&sl ) < 0 )
-	{
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-	sa.sin_port = 0;
-
-	if( (s = socket( AF_INET, SOCK_STREAM, 0)) < 0 )
-  {
-  	disconnect(s);
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-
-// FIXME
-/*  if( fcntl( s, F_SETFL, O_NONBLOCK ) < 0 )
-  {
-  	disconnect(s);
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-*/
-	if( bind( s, (struct sockaddr*)&sa, sl ) < 0 )
-	{
-  	disconnect(s);
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-
-	if( listen( s, 1 ) < 0 )
-  {
-  	disconnect(s);
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-                
-	// report back
-
-	sl = sizeof(sa);
-	if( getsockname( s, (struct sockaddr*)&sa,&sl ) < 0 )
-	{
-		FtpClient_Send( pClient, 500, "Could not enter passive mode." );
-		return;
-	}
-
-	pClient->m_iDataSocket = s;
-	pClient->m_eConnState = CONNSTATE_LISTEN;
-
-	addr = htonl(sa.sin_addr.s_addr);
-	port = htons(sa.sin_port);
-
-	buf = buffer+BUFFER_OFFSET;
-	strcpy(buf,"Entering passive mode (");
-	itoa(buf+strlen(buf),(addr>>24)&0xff);
-	strcat(buf,",");
-	itoa(buf+strlen(buf),(addr>>16)&0xff);
-	strcat(buf,",");
-	itoa(buf+strlen(buf),(addr>>8)&0xff);
-	strcat(buf,",");
-	itoa(buf+strlen(buf),(addr)&0xff);
-	strcat(buf,",");
-	itoa(buf+strlen(buf),port>>8);
-	strcat(buf,",");
-	itoa(buf+strlen(buf),port&0xff);
-	strcat(buf,").");
-/*
-	sprintf( buffer+BUFFER_OFFSET, "Entering passive mode (%d,%d,%d,%d,%d,%d).",
-										(addr>>24)&0xff, (addr>>16)&0xff, (addr>>8)&0xff, addr&0xff,
-										port>>8,port&0xff );
-*/
-
-	FtpClient_Send( pClient, 227, buffer+BUFFER_OFFSET );
-}
-
-void FtpClient_OnCmdPort( FtpClient* pClient, int* ip, int port )
-{
-	assert( pClient );
-
-	if( port >= 1024 )
-	{
-		// TODO: validate IP?
-
-		pClient->m_iRemoteAddress[0] = ip[0];
-		pClient->m_iRemoteAddress[1] = ip[1];
-		pClient->m_iRemoteAddress[2] = ip[2];
-		pClient->m_iRemoteAddress[3] = ip[3];
-
-		pClient->m_iRemotePort = port;
-
-		FtpClient_Send( pClient, 200, "PORT command successful." );
-	}
-	else
-		FtpClient_Send( pClient, 500, "Illegal PORT command." );
-}
-
-void FtpClient_OnCmdSyst( FtpClient* pClient )
-{
-	assert( pClient );
-
-	FtpClient_Send( pClient, 215, "UNIX Type: L8" );
-}
-
-void FtpClient_OnCmdList( struct FtpClient* pClient, const char* pPath, int iNamesOnly )
-{
-	assert( pClient );
-
-	if( iNamesOnly )
-		pClient->m_eDataAction = DATAACTION_NLST;
-	else
-		pClient->m_eDataAction = DATAACTION_LIST;
-
-	if( FileSystem_OpenDir(&pClient->m_kContext,pPath) < 0 )
-	{
-		FtpClient_Send( pClient, 500, "Unable to open directory." );
-		return;
-	}
-
-	if( CONNSTATE_RUNNING == pClient->m_eConnState )
-	{
-		FtpClient_OnDataConnected( pClient );
-	}
-	else
-	{
-		if( -1 != pClient->m_iRemotePort )
-		{
-			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
-		}
-		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
-			FtpClient_Send( pClient, 500, "Unable to build data connection." );
-	}
-}
-
-void FtpClient_OnCmdType( FtpClient* pClient, const char* pType )
-{
-	assert( pClient );
-
-	// only binary for now, but we accept them anyway....
-
-	if(!strcmp(pType,"I") || !strcmp(pType,"i"))
-		FtpClient_Send( pClient, 200, "Type set to I." );
-	else if(!strcmp(pType,"A")||!strcmp(pType,"a"))
-		FtpClient_Send( pClient, 200, "Type set to A." );
-	else
-		FtpClient_Send( pClient, 500, "Illegal TYPE Command." );
-}
-
-void FtpClient_OnCmdRetr( FtpClient* pClient, const char* pFile )
-{
-	assert( pClient );
-
-	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_READ ) < 0 )
-	{
-		FtpClient_Send( pClient, 500, "File not found." );
-		return;
-	}
-
-	pClient->m_eDataAction = DATAACTION_RETR;
-
-	if( CONNSTATE_RUNNING == pClient->m_eConnState )
-	{
-		FtpClient_OnDataConnected( pClient );
-	}
-	else
-	{
-		if( -1 != pClient->m_iRemotePort )
-			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
-		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
-			FtpClient_Send( pClient, 500, "Unable to build data connection." );
-	}
-}
-
-void FtpClient_OnCmdStor( FtpClient* pClient, const char* pFile )
-{
-	assert( pClient );
-
-	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_CREATE ) < 0 )
-	{
-		FtpClient_Send( pClient, 500, "Could not create file." );
-		return;
-	}
-
-	pClient->m_eDataAction = DATAACTION_STOR;
-
-	if( CONNSTATE_RUNNING == pClient->m_eConnState )
-	{
-		FtpClient_OnDataConnected( pClient );
-	}
-	else
-	{
-		if( -1 != pClient->m_iRemotePort )
-			FtpClient_OnDataConnect( pClient, pClient->m_iRemoteAddress, pClient->m_iRemotePort );
-		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
-			FtpClient_Send( pClient, 500, "Unable to build data connection." );
-	}
-}
-
-void FtpClient_OnCmdPwd( FtpClient* pClient )
-{
-	char* buf2 = buffer + BUFFER_OFFSET;
-
-	buf2[0] = '\0';
-	strcat( buf2, "\"" );
-	strcat( buf2, pClient->m_kContext.m_Path );
-	strcat( buf2, "\" is current directory." );
-
-	FtpClient_Send( pClient, 257, buf2 );
-}
-
-void FtpClient_OnCmdCwd( FtpClient* pClient, const char* pPath )
-{
-	if( FileSystem_ChangeDir(&pClient->m_kContext,pPath) < 0 )
-		FtpClient_Send( pClient, 550, "No such file or directory" );
-	else
-		FtpClient_Send( pClient, 250, "CWD command successful." );
-}
-
-void FtpClient_OnCmdDele( FtpClient* pClient, const char* pFile )
-{
-	if( FileSystem_DeleteFile(&pClient->m_kContext,pFile) < 0 )
-		FtpClient_Send( pClient, 550, "No such file or directory" );
-	else
-		FtpClient_Send( pClient, 250, "DELE command successful." );
-}
-
-void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir )
-{
-	if( FileSystem_CreateDir(&pClient->m_kContext,pDir) < 0 )
-		FtpClient_Send( pClient, 550, "Failed creating directory" );
-	else
-		FtpClient_Send( pClient, 250, "MKD command successful." );
-}
-
-void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
-{
-	if( FileSystem_DeleteDir(&pClient->m_kContext,pDir) < 0 )
-		FtpClient_Send( pClient, 550, "No such file or directory" );
-	else
-		FtpClient_Send( pClient, 250, "RMD command successful." );
-}
-
-void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
-{
-	char* cmd;
-	char* c;
-
-	// copy command to clean buffer
-	strcpy(buffer,pCmd);
-
-	cmd = c = strtok(buffer," ");
-
-	if(cmd)
-	{
-		int i = 0;
-		int cmdresult = -1;
-
-		while(*c)
-		{
-			*c = tolower(*c);
-			c++;
-		}
-
-		for( i = 0; sitecmds[i].command != -1; i++ )
-		{
-			if(!strcmp(cmd,sitecmds[i].string))
-			{
-				cmdresult = sitecmds[i].command;
-				break;
-			}
-		}
-	
-		switch( cmdresult )
-		{
-#ifndef LINUX
-			// SITE MOUNT <mountpoint> <file>
-			case SITECMD_MOUNT:
-			{
-				char* mount_point;
-				char* mount_file;
-
-				// get mount point
-				mount_point = strtok(NULL," ");
-				if(!mount_point||!strlen(mount_point))
-				{
-					FtpClient_Send( pClient, 500, "SITE MOUNT: missing mount-point." );
-					break;
-				}
-
-				// get mount source
-				mount_file = strtok(NULL,"");
-				if(!mount_file||!strlen(mount_file))
-				{
-					FtpClient_Send( pClient, 500, "SITE MOUNT: missing mount-file." );
-					break;
-				}
-
-				FtpClient_OnSiteMount(pClient, mount_point,mount_file);
-			}
-			break;
-
-			case SITECMD_UMOUNT:
-			{
-				char* mount_point = strtok(NULL,"");
-
-				if(mount_point)
-					FtpClient_OnSiteUmount(pClient,mount_point);
-				else
-					FtpClient_Send( pClient, 500, "SITE UMOUNT: missing mount-point" );
-			}
-			break;
-
-			case SITECMD_SYNC:
-			{
-				char* devname = strtok(NULL,"");
-
-				if(devname)
-					FtpClient_OnSiteSync( pClient, devname );
-				else
-					FtpClient_Send( pClient, 500, "SITE SYNC: missing device-name." );
-			}
-			break;
-#endif
-
-			default:
-			{
-				FtpClient_Send( pClient, 500, "SITE subcommand not supported" );
-			}
-			break;
-		}
-	}
-	else
-		FtpClient_Send( pClient, 500, "SITE subcommand not understood" );
-
-}
-
-void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile )
-{
-	if( FileSystem_MountDevice( &(pClient->m_kContext), pMountPoint, pMountFile ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE MOUNT failed." );
-	else
-		FtpClient_Send( pClient, 214, "SITE MOUNT succeeded." );
-}
-
-void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint )
-{
-	if( FileSystem_UnmountDevice( &(pClient->m_kContext), pMountPoint ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE UMOUNT failed." );
-	else
-		FtpClient_Send( pClient, 214, "SITE UMOUNT succeeded." );
-
-}
-
-void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName )
-{
-	if( FileSystem_SyncDevice( &(pClient->m_kContext), pDeviceName ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE SYNC failed." );
-	else
-		FtpClient_Send( pClient, 214, "SITE SYNC succeeded." );
-}
-
 void FtpClient_OnDataConnect( FtpClient* pClient,  int* ip, int port )
 {
 	int s;
@@ -971,6 +560,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 	}
 
 	pClient->m_uiDataBufferSize = process_buffer(sizeof(buffer));
+	pClient->m_uiDataOffset = 0;
 }
 
 void FtpClient_OnDataRead( FtpClient* pClient )
@@ -985,10 +575,15 @@ void FtpClient_OnDataRead( FtpClient* pClient )
 
 			if( rv > 0 )
 			{
-				int sv = FileSystem_WriteFile( &pClient->m_kContext, buffer, rv );
+				int sv;
+
+				CRC32_ComputeChecksum(buffer,rv);
+				sv = FileSystem_WriteFile( &pClient->m_kContext, buffer, rv );
 
 				if( sv <= 0 )
 					FtpClient_OnDataFailed(pClient,"Local write failed");
+
+				pClient->m_uiDataOffset += sv;
 			}
 			else
 				FtpClient_OnDataComplete(pClient,0,NULL);
@@ -1019,10 +614,15 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 
 			if( rv > 0 )
 			{
-				int sv = send( pClient->m_iDataSocket, buffer, rv, 0 );
+				int sv;
+
+				CRC32_ComputeChecksum(buffer,rv);
+				sv = send( pClient->m_iDataSocket, buffer, rv, 0 );
 
 				if( sv <= 0 )
 					FtpClient_OnDataFailed(pClient,"Premature client disconnect");
+
+				pClient->m_uiDataOffset += sv;
 			}
 			else
 				FtpClient_OnDataComplete(pClient,0,NULL);
@@ -1032,21 +632,53 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 		case DATAACTION_LIST:
 		case DATAACTION_NLST:
 		{
-			FSDirectory* pDir = (FSDirectory*)(buffer+BUFFER_OFFSET);
+			FSFileInfo* pInfo = (FSFileInfo*)(buffer+BUFFER_OFFSET);
 
-			if( FileSystem_ReadDir( &pClient->m_kContext, pDir ) >= 0 )
+			if( FileSystem_ReadDir( &pClient->m_kContext, pInfo ) >= 0 )
 			{
 				buffer[0] = '\0';
 				if( DATAACTION_LIST == pClient->m_eDataAction )
 				{
-					strcat( buffer, (FT_DIRECTORY == pDir->m_eType) ? "d" : "-" );
-					strcat( buffer, "rwxr-xr-x user group " );
-					itoa( buffer + strlen(buffer), pDir->m_iSize );
-					strcat( buffer, " Jan 01 00:01 " );
+					int i;
+
+					// this one needs a rewrite
+
+					strcat( buffer, (FT_DIRECTORY == pInfo->m_eType) ? "d" : (FT_LINK == pInfo->m_eType) ? "l" : "-" );
+					for( i = 0; i < 9; i++ )
+					{
+						if( pInfo->m_iProtection&(1<<(10-(i+(i/3)))) )
+						{
+							switch( i%3 )
+							{
+								case 0: strcat( buffer, "r" ); break;
+								case 1: strcat( buffer, "w" ); break;
+								case 2: strcat( buffer, "x" ); break;
+							}
+						}
+						else
+							strcat( buffer, "-" );
+					}
+					strcat( buffer, " ps2 ps2 " );
+					itoa( buffer + strlen(buffer), pInfo->m_iSize );
+					strcat( buffer, " " );
+					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iYear );
+					strcat( buffer, "-" );
+					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iMonth );
+					strcat( buffer, "-" );
+					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iDay );
+					strcat( buffer, " " );
+					if( pInfo->m_TS.m_iHour < 10 )
+						strcat( buffer, "0" );
+					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iHour );
+					strcat( buffer, ":" );
+					if( pInfo->m_TS.m_iMinute < 10 )
+						strcat( buffer, "0" );
+					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iMinute );
+					strcat( buffer, " " );
 				}
-				strcat( buffer, pDir->m_Name );
+				strcat( buffer, pInfo->m_Name );
 				strcat( buffer, "\r\n" );
-//				sprintf(buffer,"%srwxr-xr-x user group %d Jan 01 00:01 %s\r\n",(FT_DIRECTORY == pDir->m_eType) ? "d" : "-", pDir->m_iSize, pDir->m_Name);
+//				sprintf(buffer,"%srwxr-xr-x user group %d Jan 01 00:01 %s\r\n",(FT_DIRECTORY == pInfo->m_eType) ? "d" : "-", pInfo->m_iSize, pInfo->m_Name);
 				send(pClient->m_iDataSocket,buffer,strlen(buffer),0);
 			}
 			else
