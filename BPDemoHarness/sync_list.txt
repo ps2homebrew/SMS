@@ -13,7 +13,7 @@ No | Start | Sample Pos | Time | Description
 3  | 1:36  | 4608000    | 26   | emoon part1
 4  | 2:02  | 5856000    | 26   | adresd part2
 5  | 2:28  | 7104000    | 14   | short break (jar part2)
-6  | 2:42  | 7776000    | 33   | part
+6  | 2:42  | 7776000    | 32   | part
 7  | 3:14  | 9312000    | 27   | adresd part3
 8  | 3:41  | 10608000   | 26   | emoon part2
 9  | 4:07  | 11856000   | 26   | part
