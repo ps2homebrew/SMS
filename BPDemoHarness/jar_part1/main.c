@@ -19,6 +19,7 @@
 extern u8 binary_texture_start[];
 static u32 texture_test_32[256*256] __attribute__((aligned(16)));
 PbTexture* texture = NULL;
+float max_time;
 
 #define NUM_X (SCR_W / 8)
 #define NUM_Y (SCR_H / 8)
@@ -81,6 +82,7 @@ static void fd_tunnel(vertex Origin, vertex Direction, float* u, float* v, float
 	*v = (fabs(vinkel/M_PI));
 	t = 20000.0/t;
 	*z = log((0.8+0.25*(PbCos(8*vinkel+*u*2)))*2.718282*((t > 63 ? 63 : t)/63.0));	
+	if(*z < 0.0f) *z = 0.0f;
 }
 
 #define PLANE_OFFSET 650
@@ -120,16 +122,17 @@ void Rotate(vertex* v, float ang)
 	v->y = -x*s + y*c;
 }
 
-void lerp3(float u0, float v0, float z0, float u1, float v1, float z1, float* u, float* v, float* z
+#define lerp(a,b,t) ((a) + ((b)-(a))*(t))
 
-void calc_coords(float t)
+
+void calc_coords(float t, float progress)
 {
 	int x,y;
 	gridcoord* g;
 	
 	float a_u, a_v, a_z;
 	float b_u, b_v, b_z;
-	float blend = 0.0f;
+	float blend = progress;//0.5f + 0.5f * PbCos(1.0f + t*0.56f);
 	
 	vertex Origin = { 0,0,-1+t*100 };
 	vertex Direction;
@@ -147,14 +150,13 @@ void calc_coords(float t)
 			Direction.z = 1.0f;
 			
 			Rotate(&Direction, t*1.2f);
-						
 		
 			fd_tunnel(Origin,Direction,&a_u,&a_v,&a_z);
 			fd_planes(Origin,Direction,&b_u,&b_v,&b_z);
 			
-			lerp(a_u, b_u, &g->u, blend);
-			lerp(a_v, b_v, &g->v, blend);
-			lerp(a_z, b_z, &g->z, blend);
+			g->u = lerp(a_u, b_u, blend);
+			g->v = lerp(a_v, b_v, blend);
+			g->z = lerp(a_z, b_z, blend);
 		}
 	}	
 }
@@ -244,14 +246,14 @@ void draw_quad(u64* p_data,gridcoord*a, gridcoord*b, gridcoord*c, gridcoord*d)
 	c2 =127 * c->z;
 	c3 =127 * d->z;
 	
-	if(c0<0) c0=0;
+/*	if(c0<0) c0=0;
 	if(c0>127) c0=127;
 	if(c1<0) c1=0;
 	if(c1>127) c1=127;
 	if(c2<0) c2=0;
 	if(c2>127) c2=127;	
 	if(c3<0) c3=0;
-	if(c3>127) c3=127;	
+	if(c3>127) c3=127;	*/
 	
 	c0 = c0<<16|c0<<8|c0;
 	c1 = c1<<16|c1<<8|c1;
@@ -323,19 +325,21 @@ void demo_init()
 u32 start_demo( const demo_init_t* pInfo )
 {
 	demo_init();
+	
+	max_time = pInfo->time_count;
 
 	while( pInfo->time_count > 0 )
 	{
 	    PbScreenClear( 0x000000);
 	        
-	    calc_coords(pInfo->curr_time);
+	    calc_coords(pInfo->curr_time, pInfo->curr_time / max_time);
 	    
 	    draw_grid();
 
 		PbScreenSyncFlip();
 	}
 	
-	LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
+	//LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
   
   	return pInfo->screen_mode;
 }

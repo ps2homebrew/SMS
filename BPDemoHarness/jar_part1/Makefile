@@ -8,15 +8,15 @@ EE_INCS = -I../PbDemoLib
 EE_LDFLAGS = -L../PbDemoLib
 EE_LIBS = -lpbdemo -lgcc
 
-.SUFFIXES: .s .o .raw
+.SUFFIXES: .s .o .bin
 
-.raw.s:
-	./rawtoasm $< $@ $@	
+.bin.s:
+	rawtoasm $< $@ $@	
 
 all: $(EE_BIN) $(BIN_IMAGE)
 
 clean:
-	rm -f *.elf *.o *.a *.bin
+	rm -f *.elf *.o *.a $(BIN_IMAGE) $(EE_BIN)
 
 run: all
 	ps2client -h 10.0.0.10 execee host:..\harness.elf host:jar_part1.bin
