@@ -195,19 +195,14 @@ void Prefs::LoadValuesPageStyles(bool dflt) {
     if (m_config->Exists (key + FONTSTYLE)) {
         m_config->Read (key + FONTSTYLE, &g_StylePrefs.fontstyle);
     }
-    if (m_config->Exists (key + LETTERCASE)) {
-        m_config->Read (key + LETTERCASE, &g_StylePrefs.lettercase);
-    }
 }
 
 //----------------------------------------------------------------------------
 void Prefs::SaveValuesPageStyles () {
     wxString key = PAGE_STYLE;
     key.Append (_T("/"));
-    m_config->Write (key + FONTNAME, g_StylePrefs.fontname);
-    m_config->Write (key + FONTSIZE, g_StylePrefs.fontsize);
-    m_config->Write (key + FONTSTYLE, g_StylePrefs.fontstyle);
-    m_config->Write (key + LETTERCASE, g_StylePrefs.lettercase);
+    m_config->Write(key + FONTNAME, g_StylePrefs.fontname);
+    m_config->Write(key + FONTSIZE, g_StylePrefs.fontsize);
 }
 
 //----------------------------------------------------------------------------

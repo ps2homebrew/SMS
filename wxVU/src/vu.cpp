@@ -37,10 +37,25 @@ Vu::Vu(uint32 vpuType, MemoryPanel* memPanel) : SubSystem(0) {
 
 // initialize VU
 void Vu::Reset() {
+    ResetCode();
+    ResetMemory();
+
+}
+
+void Vu::ResetMemory() {
     uint32 i;
-    NInstructions=0;
-    NSymbols = 0;
+    for(i = 0; i < m_maxRows; i++) {
+        m_pVuMem->WriteVector(i, 0, 0, 0, 0);
+        program[i].SymbolIndex = -1;
+        program[i].Reset();
+    }
+    m_pMemoryPanel->Clear();
+}
+
+void Vu::ResetCode() {
+    uint32 i;
     NMemDir = 0;
+
     ClipFlag[0]=ClipFlag[1]=ClipFlag[2]=ClipFlag[3]=0;
     MacZ=0;
     MacS=0;
@@ -53,25 +68,21 @@ void Vu::Reset() {
     for(i=0; i<16; i++) {
         RegInt[i].value(0);
     }
+
+    InitCodeMem();
+    m_upperRegisterWrite = false;
+    m_lowerRegisterWrite = false;
+    m_specialRegisterWrite = false;
+    NSymbols = 0;
+    NInstructions = 0;
+    m_clock = 0;
     ACC.set(0.0);
     I.set(0.0);
     Q.set(0.0);
     P.set(0.0);
     PC = 0;
-    m_clock = 0;
-    for(i = 0; i < m_maxRows; i++) {
-        m_pVuMem->WriteVector(i, 0, 0, 0, 0);
-        program[i].SymbolIndex = -1;
-        program[i].Reset();
-    }
-    InitCodeMem();
-    NInstructions = 0;
-    NSymbols = 0;
-    m_upperRegisterWrite = false;
-    m_lowerRegisterWrite = false;
-    m_specialRegisterWrite = false;
-    m_pMemoryPanel->Clear();
 }
+
 void Vu::DecStall()
 {
     int i;

@@ -1220,14 +1220,10 @@ int Vu::VU_JARL(VuInstruction &A)
     RegInt[A.Params[1][0].index].stall(2);
     RegInt[A.Params[1][0].index].value((uint16)(PC+2));
 
-
-    //all this instructions are due to delay slot
     a=PC;
-    CallBackFn(CallBackObj, LOWER, 6);
     PC++;
     Tic(); //delay slot itself
     PC=(uint16)a;
-    CallBackFn(CallBackObj, LOWER, 7);
 
     PC= (uint16)(RegInt[A.Params[1][1].index].value()-1);
     return -1;
@@ -1236,15 +1232,12 @@ int Vu::VU_JARL(VuInstruction &A)
 int
 Vu::VU_JR(VuInstruction &A) {
     int a;
-    //all this instructions are due to delay slot
 
     RegInt[A.Params[1][0].index].lastRead(PC);
     a=PC;
-    CallBackFn(CallBackObj, LOWER, 6);
     PC++;
     Tic(); //delay slot itself
     PC=(uint16)a;
-    CallBackFn(CallBackObj, LOWER, 7);
     PC=(uint16)(RegInt[A.Params[1][0].index].value()-1);
     return -1;
 }

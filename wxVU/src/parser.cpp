@@ -713,7 +713,7 @@ Parser::ProcessInstruction(char* Line) {
     m_pVuCore->program[m_pVuCore->NInstructions].flavor[UPPER] = flavor;
     m_pVuCore->program[m_pVuCore->NInstructions].breakpoint = 0;
     m_pVuCore->program[m_pVuCore->NInstructions].flg = flg;
-    m_pVuCore->program[m_pVuCore->NInstructions].SymbolIndex = -1;
+    // m_pVuCore->program[m_pVuCore->NInstructions].SymbolIndex = -1;
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         if(j==Instr.Instr[InstIndex].operands-1) { //last operand
             //first eliminate heading blanks
@@ -1127,6 +1127,7 @@ Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes, uint32 in
         case PARAM_VIS_IMM11:
             sprintf(param, "VI%02d,0x%08x", get_int_reg(code, vis),
                     get_imm11(code));
+            InsertLabel(index, get_imm11(code));
             break;
         case PARAM_VIT:
             sprintf(param, "VI%02d", get_int_reg(code, vit));
@@ -1154,6 +1155,7 @@ Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes, uint32 in
         case PARAM_VIT_VIS_IMM11:
             sprintf(param, "VI%02d,VI%02d,%d", get_int_reg(code, vit),
                     get_int_reg(code, vis), get_imm11(code));
+            InsertLabel(index, get_imm11(code));
             break;
         case PARAM_VIT_VIS_IMM15:
             sprintf(param, "VI%02d,VI%02d,0x%08x", get_int_reg(code, vit),
