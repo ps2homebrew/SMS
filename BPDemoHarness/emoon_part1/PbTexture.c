@@ -133,9 +133,6 @@ void PbTexture_SimpleBlur( PbTexture* pDest, PbTexture* pSource,
 {
   u64* p_data = NULL;
   u64* p_store = NULL;
-
-  // a1 and as2 between 0 - 255
-  // dest= (source *a1 + dest*a2)>>7
   
   u1 += 0.5f;
   v1 += 0.5f;
@@ -215,9 +212,7 @@ void PbTexture_RadialBlur( PbTexture* pSource,PbTexture* pDest, float cx, float 
   float scale=v;
   int t;
 
-  // source og dest skal have ens image data
-  // passende værdi for v er 0.5
-  // mix1=mix2=64 giver blur uden forøgelse af styrke
+  // Based on aura for laura code.
   
   for( t = 0; t < n; t++ )
   {
