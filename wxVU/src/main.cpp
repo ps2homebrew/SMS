@@ -1679,6 +1679,8 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 #endif
     charWidth = wxWindow::GetCharWidth();
 
+    gridCode = NULL;
+
     SetSettings();
     // Toolbar
     buildToolbar();
