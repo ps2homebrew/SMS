@@ -5,6 +5,7 @@
 #include <libpad.h>
 #include <loadfile.h>
 #include <sifrpc.h>
+#include "demo_parts.h"
 #include "dernc.h"
 #include "harness.h"
 
@@ -203,6 +204,7 @@ void print_usage()
    printf("-sound    : Enable Sound\n");
    printf("-tX       : Time in seconds to run each demo\n");
    printf("-sX       : Time in seconds to start tune at\n");
+   printf("-dX       : Starts the demo at a number from sync_list.txt\n");
    printf("-noprintf : Disables the printf function\n");
    printf("-mPART    : Specifies the partition to mount for sound files\n");
    printf("-p        : Enables pad support\n");
@@ -271,6 +273,7 @@ int process_args(int argc, char **argv)
             {
               char *endp;
               demo_starttime = strtol(&argv[arg_loop][2], &endp, 10);
+              demo_starttime *= 48000;
               printf("Set start time %d\n", demo_starttime);
             } 
             else
@@ -286,6 +289,31 @@ int process_args(int argc, char **argv)
               char *endp;
               curr_demotime = strtol(&argv[arg_loop][2], &endp, 10);
               printf("Set time %d\n", curr_demotime);
+            } 
+            else
+            {
+              printf("Invalid argument %s\n", argv[arg_loop]);
+              return -1;
+            }
+         }
+         else if(argv[arg_loop][1] == 'd')
+         {  
+            if((argv[arg_loop][2] >= '0') && (argv[arg_loop][2] <= '9'))
+            {
+              char *endp;
+              int part;
+              part = strtol(&argv[arg_loop][2], &endp, 10);
+              if(part < MAX_PARTS)
+              {
+                 demo_starttime = demo_parts[part].start; 
+                 curr_demotime = demo_parts[part].time;
+                 printf("Set Demo Part %d start=%d time=%d\n", part, demo_starttime, curr_demotime);
+              }
+              else
+              {
+                 printf("Invalid part number %d\n", part);
+                 return -1;
+              }
             } 
             else
             {
@@ -451,7 +479,7 @@ int main(int argc, char **argv)
      StreamLoad_Init(0,hdd_part,palmode);
 //     StreamLoad_SetupTune("HALFDEAPH");// hdd:+PS2MENU/HALFDEAPHL.RAW AND HALFDEAPHR.RAW
      StreamLoad_SetupTune("UNSEEN"); // hdd:+PS2MENU/UNSEENL.RAW AND UNSEENR.RAW
-     StreamLoad_SetPosition(demo_starttime*48000);
+     StreamLoad_SetPosition(demo_starttime);
      StreamLoad_Play(0x3fff);
    }
 
