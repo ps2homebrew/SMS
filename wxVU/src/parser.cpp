@@ -286,22 +286,23 @@ int IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char 
     return 0;
 }
 
-int IndexMode(char *a) {
+int
+IndexMode(char *a) {
     int i;
     char *Type[]={"VI", "VF", "VIDEST", "VFDEST", "ACC",
         "IMM24", "IMM15", "IMM12", "IMM11", "IMM5", "I",
         "IMM11(VI)", "IMM11(VI)DEST", "(VI)DEST", "(--VI)",
         "(VI++)", "P", "Q", "R", "VI01", "FMM32"};
-        for (i=0; i<21; i++) {
-            if(!strcmp(strupr(a),Type[i])) {
-                return i+1;
-            }
+    for (i=0; i<21; i++) {
+        if(!strcmp(strupr(a),Type[i])) {
+            return i+1;
         }
-        return 0;
+    }
+    return 0;
 }
 
-int VIindex(char *a, char *dest)
-{
+int
+VIindex(char *a, char *dest) {
     int i=2,j;
     if(a[0]!='V' || a[1]!='I') return -1;
     while (a[i]=='0' && a[i]) i++;
@@ -448,8 +449,8 @@ int FGetVal(char *a, float *b)
     return 1;
 }
 
-int SetParam(VUInstruction &inst, int j, int mode, char * token)
-{
+int
+SetParam(VUInstruction &inst, int j, int mode, char * token) {
     //check if param is correct and store it in instruction class
     //TYPE OF PARAM VI VF VIdest VFdest ACCdest Imm24 Imm15 Imm12 Imm11 Imm5 I
     //TYPE OF PARAM Imm11(VI) Imm11(VI)dest (VI)dest (--VI) (VI++) P Q R VI01 Fmm32
@@ -637,11 +638,13 @@ int SetParam(VUInstruction &inst, int j, int mode, char * token)
             if (!root[v]) return 0;
             root[v]=0;
             strcat(root,root+v+1); //cat dest
-            k=VIindex(root, dest);
-            if(NemoMode)
-                if(!SameDest(dest,inst.dest[mode]))
-                    return 0;
-            inst.Params[mode][j].index=k;
+            k = VIindex(root, dest);
+            // if(NemoMode) {
+            //     if(!SameDest(dest,inst.dest[mode])) {
+            //         cout << "not same dest" << endl;
+            //     }
+            // }
+            inst.Params[mode][j].index = k;
             strcpy(inst.Params[mode][j].sufix,dest);
             break;
         case 15: //(--VI)
@@ -749,9 +752,9 @@ ProcessInstruction(char * Line) {
         VUchip.program[VUchip.NInstructions].invalid = 1;
         return 0;
     }
-    VUchip.program [VUchip.NInstructions].InstIndex[LOWER]=InstIndex;
-    strcpy(VUchip.program [VUchip.NInstructions].dest[LOWER],dest);
-    VUchip.program [VUchip.NInstructions].flavor[LOWER]=flavor;
+    VUchip.program[VUchip.NInstructions].InstIndex[LOWER] = InstIndex;
+    strcpy(VUchip.program[VUchip.NInstructions].dest[LOWER],dest);
+    VUchip.program[VUchip.NInstructions].flavor[LOWER] = flavor;
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         if(j==Instr.Instr[InstIndex].operands-1) { //last operand
             //first eliminate heading blanks

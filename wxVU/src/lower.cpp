@@ -1048,8 +1048,8 @@ int VU::VU_ILW(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_ILWR(VUInstruction &A)
-{
+int
+VU::VU_ILWR(VUInstruction &A) {
     int st1;
     char dst[50];
     int16 v1, v2;
@@ -1084,8 +1084,8 @@ int VU::VU_ILWR(VUInstruction &A)
     return 0;
 }
 
-int VU::VU_IOR(VUInstruction &A)
-{
+int
+VU::VU_IOR(VUInstruction &A) {
     int st1, st2;
     int32 v1,v2;
 
@@ -1198,41 +1198,36 @@ VU::VU_ISW(VUInstruction &A) {
     if(strstr(dst,"W")) {
         MemSetVal16((uint16)(v2+v1),'W', v3);
     }
-
     return 0;
 }
 
 
-int VU::VU_ISWR(VUInstruction &A)
-{
+int
+VU::VU_ISWR(VUInstruction &A) {
     int st1;
     char dst[50];
     int16 v1, v2;
 
-
-    st1=Stalling(A.Params[1][1]);
-
-    //ths instruction can not return a warning
-    if(st1>0)
+    st1 = Stalling(A.Params[1][1]);
+    if(st1>0) {
         return 2;
-
-
+    }
     RegInt[A.Params[1][0].index].lastRead(PC);
     RegInt[A.Params[1][1].index].lastRead(PC);
-    v1=RegInt[A.Params[1][1].index].value();
-    v2=RegInt[A.Params[1][0].index].value();
+    v1 = RegInt[A.Params[1][1].index].value();
+    v2 = RegInt[A.Params[1][0].index].value();
 
-    if (A.dest[1][0])
-        strcpy(dst,A.dest[1]);
+    if (strcmp(A.Params[1][1].sufix, ""))
+        strcpy(dst, A.Params[1][1].sufix);
     else
-        strcpy(dst,"X");
-    if(strstr(dst,"X"))
+        strcpy(dst,"x");
+    if(strstr(dst,"x"))
         MemSetVal16(v1,'X', v2);
-    if(strstr(dst,"Y"))
+    if(strstr(dst,"y"))
         MemSetVal16(v1,'Y', v2);
-    if(strstr(dst,"Z"))
+    if(strstr(dst,"z"))
         MemSetVal16(v1,'Z', v2);
-    if(strstr(dst,"W"))
+    if(strstr(dst,"w"))
         MemSetVal16(v1,'W', v2);
 
     return 0;

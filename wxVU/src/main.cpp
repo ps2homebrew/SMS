@@ -455,13 +455,7 @@ VUFrame::OnRestart(wxCommandEvent &WXUNUSED(event)) {
     }
 
     if(dataFile.GetFullPath() != "") {
-        if ( LoadMemory(dataFile) == 0) {
-            DrawMemory();
-        } else {
-            // ERROR
-        }
-        txtDebug->AppendText("VU Data reloaded from file: " +
-            dataFile.GetFullPath() + "\n");
+        LoadMemory(dataFile);
     } else {
         txtDebugFailed(wxString("Failed to load VU Data from file: " + 
             dataFile.GetFullPath() + "\n"));
@@ -618,11 +612,7 @@ VUFrame::OnVu0All(wxCommandEvent &WXUNUSED(event)) {
     if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 0) == 0) {
         LoadCode((char *)binTmpFile.c_str());
         DrawProgram();
-        if ( LoadMemory(datTmpFile) == 0) {
-            DrawMemory();
-        } else {
-            // ERROR
-        }
+        LoadMemory(datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu0 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -651,11 +641,7 @@ VUFrame::OnVu1All(wxCommandEvent &WXUNUSED(event)) {
     if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 1) == 0) {
         LoadCode((char *)binTmpFile.c_str());
         DrawProgram();
-        if ( LoadMemory(datTmpFile) == 0) {
-            DrawMemory();
-        } else {
-            // ERROR
-        }
+        LoadMemory(datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu1 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -683,11 +669,7 @@ void VUFrame::OnVu0(wxCommandEvent &WXUNUSED(event)) {
     if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 0) == 0) {
         LoadCode((char *)binTmpFile.c_str());
         DrawProgram();
-        if ( LoadMemory(datTmpFile) == 0) {
-            DrawMemory();
-        } else {
-            // ERROR
-        }
+        LoadMemory(datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu0 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -707,11 +689,7 @@ void VUFrame::OnVu1(wxCommandEvent &WXUNUSED(event)) {
     if ( dumpVU((char *)binTmpFile.c_str(), (char *)datTmpFile.c_str(), 1) == 0) {
         LoadCode((char *)binTmpFile.c_str());
         DrawProgram();
-        if ( LoadMemory(datTmpFile) == 0) {
-            DrawMemory();
-        } else {
-            // ERROR
-        }
+        LoadMemory(datTmpFile);
     } else {
         wxMessageBox("Unable to fetch vpu1 content\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -797,11 +775,7 @@ VUFrame::OnLoadMem(wxCommandEvent &WXUNUSED(event)) {
     if (dlgOpenFile->ShowModal() == wxID_OK &&
         dlgOpenFile->GetFilename() != "") {
         dataFile.Assign(dlgOpenFile->GetPath());
-        if ( LoadMemory(dataFile) == 0 ) {
-            DrawMemory();
-        } else {
-            // ERROR
-        }
+        LoadMemory(dataFile);
     }
 }
 
@@ -811,7 +785,7 @@ VUFrame::LoadMemory(wxFileName file) {
     struct stat sb;
     uint32 i;
 
-    if ((stat(file.GetFullPath().c_str(), &sb)) != NULL ) {
+    if ((stat(file.GetFullPath().c_str(), &sb)) != 0 ) {
         return E_FILE_OPEN;
     }
     if ((fd = fopen(file.GetFullPath().c_str(), "rb")) != NULL) {
@@ -839,7 +813,12 @@ VUFrame::LoadMemory(wxFileName file) {
             }
         }
         fclose(fd);
+        DrawMemory();
+        txtDebug->AppendText("VU Data loaded from file: " +
+            file.GetFullPath() + "\n");
     } else {
+        txtDebugFailed(wxString("Failed to load VU Data from file: " +
+                dataFile.GetFullPath() + "\n"));
         return E_FILE_OPEN;
     }
     return 0;
@@ -1005,7 +984,6 @@ void
 VUFrame::codeMouseDown(wxCommandEvent &WXUNUSED(event), wxMouseEvent
     &Button)
 {
-    cout << "codeMouseDown()" << endl;
     char buffer[100];
     if( Button.Button(1) == 1 &&
         gridCode->GetCellValue(gridCode->GetCursorRow(), 4) != "") {
@@ -1048,20 +1026,19 @@ VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
             dataFile.Assign(ptr+1);
         }
         fin.close();
-        if ( LoadCode((char *)codeFile.GetFullPath().c_str()) == 0 ) {
+        codeFile.PrependDir(dlgOpenFile->GetDirectory());
+        dataFile.PrependDir(dlgOpenFile->GetDirectory());
+        if ( LoadCode((char *)codeFile.GetFullPath().c_str()) ) {
+            Status = READY;
             DrawProgram();
+            txtDebug->AppendText(wxString("VU Code loaded from file: " +
+                    codeFile.GetFullPath() + "\n"));
+            InstuctionStatus();
         } else {
             txtDebugFailed(wxString("Failed to load VU Code from file: " +
                     codeFile.GetFullPath() + "\n"));
         }
-
-        if ( LoadMemory(dataFile) == 0) {
-            DrawMemory();
-        } else {
-            // ERROR
-            txtDebugFailed(wxString("Failed to load VU Data from file: " +
-                    dataFile.GetFullPath() + "\n"));
-        }
+        LoadMemory(dataFile);
 	}
 }
 
@@ -1799,11 +1776,7 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     if ( autoLoadLast == 0 ) {
         if ( dataFile.GetFullPath() != "" ) {
             Status = READY;
-            if ( LoadMemory(dataFile) == 0) {
-                DrawMemory();
-            } else {
-                // ERROR
-            }
+            LoadMemory(dataFile);
         }
         if ( codeFile.GetFullPath() != "" ) {
             Status = READY;
