@@ -9,7 +9,7 @@ EE_CFLAGS  :=	-mips3 -mcpu=r5900 -ffreestanding -fno-builtin -G0 \
 		-fshort-double -mlong64 -mhard-float -mno-abicalls -O2 -EL -Wall \
 		-c $(EE_INCS) $(EE_CFLAGS)
 EE_ASFLAGS := -EL -G0 $(EE_ASFLAGS)
-LOADADDR  = 0xa0000
+LOADADDR  = 0x90000
 STACKADDR = 0xb0000
 ifeq ($(DEBUG),1)
 LOADADDR  = 0x1700000
@@ -20,12 +20,15 @@ EE_LDFLAGS += -Wl,-Ttext -Wl,$(LOADADDR) $(LDPARAMS)
 
 EE_LDFLAGS := $(EE_LDFLAGS) -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
 		-L$(PS2LIB)/ee/lib -T$(PS2LIB)/ee/startup/linkfile -nostartfiles
-EE_BIN = ../../bin/PS2MENU.ELF
-EE_OBJS = loader.o
+EE_BIN = ../../bin/LOADER.ELF
+EE_OBJS = loader.o fakehost.o
 
 EE_LIBS = -lmc -lhdd -lfileXio
 
 all: $(EE_BIN)
+
+fakehost.s:
+	bin2s $(PS2DRV)/iop/fakehost/fakehost.irx fakehost.s fakehost_irx
 
 clean:
 	rm -f *.elf *.o *.a

@@ -9,21 +9,49 @@ EE_CFLAGS  :=	-mips3 -mcpu=r5900 -ffreestanding -fno-builtin -G0 \
 		-fshort-double -mlong64 -mhard-float -mno-abicalls -O2 -EL -Wall \
 		-c $(EE_INCS) $(EE_CFLAGS)
 EE_ASFLAGS := -EL -G0 $(EE_ASFLAGS)
-ifeq ($(DEBUG),1)
-LOADADDR  = 0xd00000
-STACKADDR = 0xde0000
-LDPARAMS := -Wl,--defsym -Wl,_stack_size=0x8000 -Wl,--defsym -Wl,_stack=$(STACKADDR)
-EE_LDFLAGS += -Wl,-Ttext -Wl,$(LOADADDR) $(LDPARAMS)
-endif
 
 EE_LDFLAGS := $(EE_LDFLAGS) -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
 		-L$(PS2LIB)/ee/lib -T$(PS2LIB)/ee/startup/linkfile -nostartfiles
-EE_BIN = ../bin/HDDMENU.ELF
-EE_OBJS = hddmenu.o hw.o hardware.o
+EE_BIN = ../bin/PS2MENU.ELF
+EE_OBJS = ps2menu.o hw.o hardware.o iomanx.o filexio.o ps2atad.o ps2dev9.o \
+		ps2hdd.o ps2fs.o loader.o poweroff.o iuntar.o ps2menupcx.o
 
 EE_LIBS = -lmc -lpad -lhdd -lfileXio
 
 all: $(EE_BIN)
+
+iomanx.s:
+	bin2s $(PS2DRV)/iop/iomanX/iomanx.irx iomanx.s iomanx_irx
+
+filexio.s:
+	bin2s $(PS2DRV)/iop/fileXio/filexio.irx filexio.s filexio_irx
+
+ps2atad.s:
+	bin2s $(PS2DRV)/iop/ps2atad/ps2atad.irx ps2atad.s ps2atad_irx
+
+ps2dev9.s:
+	bin2s $(PS2DRV)/iop/ps2dev9/ps2dev9.irx ps2dev9.s ps2dev9_irx
+
+ps2fs.s:
+	bin2s $(LIBHDD)/iop/modules/ps2fs.irx ps2fs.s ps2fs_irx
+
+ps2hdd.s:
+	bin2s $(LIBHDD)/iop/modules/ps2hdd.irx ps2hdd.s ps2hdd_irx
+
+poweroff.s:
+	bin2s $(LIBHDD)/iop/poweroff/poweroff.irx poweroff.s poweroff_irx
+
+iuntar.s:
+	bin2s $(PS2DRV)/iop/iuntar/iuntar.irx iuntar.s iuntar_irx
+
+loader.s:
+	bin2s ../bin/loader.elf loader.s loader_elf
+
+ps2menupcx.s:
+	bin2s images/ps2menu.pcx ps2menupcx.s ps2menu_pcx
+
+#mainlogo.s:
+#	bin2s images/mainlogo.pcx mainlogo.s mainlogo_pcx
 
 clean:
 	rm -f *.elf *.o *.a

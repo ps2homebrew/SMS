@@ -26,12 +26,19 @@ extern int show_logo;
 	//
 	// Emulated screen size
 	//
-	int		g_nScreen_X	= 366;					// These can go UP TO 512x512
-	int		g_nScreen_Y	= 256;
+//	int		g_nScreen_X	= 366;					// These can go UP TO 512x512
+//	int		g_nScreen_Y	= 256;
+	int		g_nScreen_X	= 512;					// These can go UP TO 512x512
+	int		g_nScreen_Y	= 512;
+
 	int		g_nFiltered = 0;					// set to 1 to bi-linear filter the screen
 
-	int		g_nDisplayWidth = 366;
-	int		g_nDisplayHeight= 256;
+//	int		g_nDisplayWidth = 366;
+//	int		g_nDisplayHeight= 256;
+	int		g_nDisplayWidth = 512;
+	int		g_nDisplayHeight= 512;
+//	int		g_nXoffset = (4096-366)/2;
+//	int		g_nYoffset = (4096-256)/2;
 
 	int		g_nClearScreen = 0;					// set to 1 to clear screen after FLIP
 	U32		g_nClearColour = 0x00000000;		// clear screen colour
@@ -420,7 +427,7 @@ void	SetupScreen( int nDisplayBuffer )
 // Notes:	   Test GS functions.
 //
 //********************************************************
-void	RenderQuad2( void )
+/*void	RenderQuad2( void )
 {
 
 	U128			*pBuff = (U128*) &DMABuffer[0];
@@ -476,7 +483,7 @@ void	RenderQuad2( void )
 	dma02_send((void *)&pBuff[0], 9, 0x101); 			// send Quad to GIF
 	Dma02Wait(); 										// wait for DMA transfer to finish
 
-}
+}*/
 
 
 
@@ -494,7 +501,7 @@ void	RenderQuad2( void )
 // Notes:	   Test GS functions.
 //
 //********************************************************
-void	RenderQuad( int xx )
+/*void	RenderQuad( int xx )
 {
 
 	U128			*pBuff = (U128*) &DMABuffer[0];
@@ -550,7 +557,7 @@ void	RenderQuad( int xx )
     dma02_send((void *)&pBuff[0], 9, 0x101); 			// send Quad to GIF
 	Dma02Wait(); 										// wait for DMA transfer to finish
 
-}
+}*/
 
 
 
@@ -775,7 +782,7 @@ void	UploadScreen( U32 Xsize, U32 Ysize, U32 VAdd )
 // Out:			None
 //
 //********************************************************
-void	UploadImage24( U32 *src, U32 Xsize, U32 Ysize, U32 VAdd )
+/*void	UploadImage24( U32 *src, U32 Xsize, U32 Ysize, U32 VAdd )
 {
 	U128			pBuff[32 + 320 * 256] __attribute__((aligned(16)));
 	U32 			dTextureQuadWordCount;
@@ -835,7 +842,7 @@ void	UploadImage24( U32 *src, U32 Xsize, U32 Ysize, U32 VAdd )
 	dma02_send((void *)&pBuff[0], 6+dTextureQuadWordCount ,0x101); 			//
 	Dma02Wait(); 															// wait for DMA transfer to finish
 
-}
+}*/
 
 
 
@@ -874,101 +881,5 @@ void	UpdateScreen( void )
 //********************************************************
 void	SetPaletteEntry( U32 ARGB, U32 index )
 {
-	//int	i;
-	//i = index & 0xe7;
-	//i |= (index&8)<<1;
-	//i |= (index&16)>>1;
-    // JH
-/*
-    int lobits = index & 0x1f;
-    int hiofs = index & 0xe0;
-    int loofs;
-
-    if(lobits >= 8 && lobits < 16) loofs = lobits + 8;
-    else if(lobits >= 16 && lobits < 24) loofs = lobits - 8;
-    else loofs = lobits;
-	pPalette32[hiofs + loofs] = ARGB;
-*/
     pPalette32[palmap[index]] = ARGB;
 }
-
-/*
-// ********************************************************
-//
-// Name:		Load
-// Function:    Load a file into RAM
-//
-// Author:		Bigboy
-//
-// In:			pszName = filename to load
-//				pBuffer = Destination buffer to load INTO
-// Out:			size of loaded data, or -1 for error
-//
-// Examples:-	"host:\\homer_simpson.pcm"
-//				"cdrom:\\homer_simpson.pcm;1"
-//
-// ********************************************************
-int	Load( char* pszName, PU8 pBuffer )
-{
-	int	handle;
-	char	c[512];
-
-	//sprintf(&c[0],FILESYS"\\%s"FILESYS_E,pszName);
-#ifndef	MASTER
-	//printf("PATH=%s\n", &c[0]);
-#endif
-
-	//handle = fio_open( &c[0], 0 );
-	handle = fio_open( pszName, 0 );
-	if( handle>=0)
-	{
-		int size;
-		size = fio_lseek( handle, 0, 2 );
-		fio_lseek( handle, 0, 0 );
-		fio_read( handle, pBuffer, size );
-		fio_close( handle );
-		return size;
-	}
-
-#ifdef	DEBUG
-	printf("Can't open file!!!\n" );
-#endif
-	return -1;
-}
-*/
-
-/*
-
-// ********************************************************
-//
-// Name:		LoadSoundModules
-// Function:   	Load and init the sound module
-// Author:		Sjeep
-//
-// In:			none
-// Out:			none
-//
-// notes:		Seems to disable NAPLINK reset.
-//
-// ********************************************************
-void LoadSoundModules( void )
-{
-    int ret;
-
-	jprintf("Loading module: LIBSD");
-	ret = sif_load_module("rom0:LIBSD", 0, NULL);
-	if (ret < 0) {		  
-			jprintf("Failed to load module: LIBSD");
-			k_SleepThread();
-    }						  
-
-	jprintf("Loading module: SJPCM.IRX");
-	ret = sif_load_module(FILESYS"SJPCM.IRX", 0, NULL);
-	if (ret < 0) {
-			jprintf("Failed to load module: SJPCM.IRX");
-			k_SleepThread();
-    }
-
-}
-
-*/

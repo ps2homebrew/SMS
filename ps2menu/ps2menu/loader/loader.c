@@ -16,6 +16,13 @@
 #include "errno.h"
 #include "libhdd.h"
 
+#define DEBUG
+#ifdef DEBUG
+#define dbgprintf(args...) scr_printf(args)
+#else
+#define dbgprintf(args...) do { } while(0)
+#endif
+
 // ELF-loading stuff
 #define ELF_MAGIC	0x464c457f
 #define ELF_PT_LOAD	1
@@ -50,45 +57,162 @@ typedef struct
 	u32	align;
 	} elf_pheader_t;
 
-/* extern u8 *iomanX_irx;
-extern u8 *iomanX_irx_end;
-extern u8 *fileXio_irx;
-extern u8 *fileXio_irx_end;
-extern u8 *ps2dev9_irx;
-extern u8 *ps2dev9_irx_end;
-extern u8 *ps2atad_irx;
-extern u8 *ps2atad_irx_end;
-extern u8 *ps2hdd_irx;
-extern u8 *ps2hdd_irx_end;
-extern u8 *ps2fs_irx;
-extern u8 *ps2fs_irx_end; */
-extern u32 *_end;
+t_ExecData elfdata;
 
+extern u8 *fakehost_irx;
+extern int size_fakehost_irx;
 
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char elfName[256];
 char elfPath[256];
 char HDDpath[256]="host:hddmenu.elf";
 char partition[40];
-char iomanX_path[256];
-char fileXio_path[256];
-char ps2dev9_path[256];
-char ps2atad_path[256];
-char ps2hdd_path[256];
-char ps2fs_path[256];
 
 const char *eeloadimg = "rom0:UDNL rom0:EELOADCNF";
 char *imgcmd;
 int elfhost=2,elfload=0;
 
-void LoadModules();
-void LoadAndRunMCElf(char *filename);
+static int pkoLoadElf(char *path);
+
+int userThreadID = 0;
+static char userThreadStack[16*1024] __attribute__((aligned(16)));
+
+#define MAX_ARGS 16
+#define MAX_ARGLEN 256
+
+struct argData
+{
+    int flag;                     // Contains thread id atm
+    int argc;
+    char *argv[MAX_ARGS];
+} __attribute__((packed)) userArgs;
+
+static int tLoadElf(char *filename)
+{
+	u8 *boot_elf = (u8 *)0x1800000;
+	elf_header_t *eh = (elf_header_t *)boot_elf;
+	elf_pheader_t *eph;
+
+	int fd, size, i, ret;
+
+	ret = fileXioMount("pfs0:", partition, FIO_MT_RDONLY);
+	if ((fd = fileXioOpen(filename, O_RDONLY, fileMode)) < 0)
+	{
+		dbgprintf("Failed in fileXioOpen %s\n",filename);
+		goto error;
+		}
+	dbgprintf("Opened file %s\n",filename);
+	size = fileXioLseek(fd, 0, SEEK_END);
+	dbgprintf("File size = %i\n",size);
+	if (!size)
+	{
+		dbgprintf("Failed in fileXioLseek\n");
+		fileXioClose(fd);
+		goto error;
+		}
+	fileXioLseek(fd, 0, SEEK_SET);
+	fileXioRead(fd, boot_elf, 52);
+	dbgprintf("Read elf header from file\n");
+	fileXioLseek(fd, (void *)eh->phoff, SEEK_SET);
+	eph = (elf_pheader_t *)(boot_elf + eh->phoff);
+	size=eh->phnum*eh->phentsize;
+	size=fileXioRead(fd, (void *)eph, size);
+	dbgprintf("Read %i bytes of program header(s) from file\n",size);
+	for (i = 0; i < eh->phnum; i++)
+	{
+		if (eph[i].type != ELF_PT_LOAD)
+		continue;
+
+		fileXioLseek(fd, eph[i].offset, SEEK_SET);
+		size=eph[i].filesz;
+		size=fileXioRead(fd, eph[i].vaddr, size);
+		dbgprintf("Read %i bytes to %x\n", size, eph[i].vaddr);
+		if (eph[i].memsz > eph[i].filesz)
+			memset(eph[i].vaddr + eph[i].filesz, 0,
+					eph[i].memsz - eph[i].filesz);
+		}		
+
+	fileXioClose(fd);
+//	fileXioUmount("pfs0:");
+/* Load the ELF into RAM.  */
+
+	if (_lw((u32)&eh->ident) != ELF_MAGIC)
+	{
+		dbgprintf("Not a recognised ELF.\n");
+		goto error;
+		}
+	
+//	eph = (elf_pheader_t *)(boot_elf + eh->phoff);
+
+/* Scan through the ELF's program headers and copy them into RAM, then
+									zero out any non-loaded regions.  */
+/*	for (i = 0; i < eh->phnum; i++)
+	{
+		if (eph[i].type != ELF_PT_LOAD)
+		continue;
+
+		pdata = (void *)(boot_elf + eph[i].offset);
+		dbgprintf("vaddr=%x pdata=%x filesz=%x",eph[i].vaddr, pdata, eph[i].filesz);
+		memcpy(eph[i].vaddr, pdata, eph[i].filesz);
+
+		if (eph[i].memsz > eph[i].filesz)
+			memset(eph[i].vaddr + eph[i].filesz, 0,
+					eph[i].memsz - eph[i].filesz);
+		}*/
+	dbgprintf("entry=%x\n",eh->entry);
+	elfdata.epc=(int *)eh->entry;
+error:
+//	while (1) ;
+
+	}
+
+////////////////////////////////////////////////////////////////////////
+// Load the actual elf, and create a thread for it
+// Return the thread id
+static int
+pkoLoadElf(char *path)
+{
+    ee_thread_t th_attr;
+    int ret=0;
+    int pid;
+
+    if(!strncmp(path, "host", 4)) ret = SifLoadElf(path, &elfdata);
+    else if(!strncmp(path, "mc0", 3)) ret = SifLoadElf(path, &elfdata);
+    else if(!strncmp(path, "pfs0", 4)) ret = tLoadElf(path);
+
+    FlushCache(0);
+    FlushCache(2);
+
+    dbgprintf("EE: LoadElf returned %d\n", ret);
+
+    dbgprintf("EE: Creating user thread (ent: %x, gp: %x, st: %x)\n", 
+              elfdata.epc, elfdata.gp, elfdata.sp);
+
+    if (elfdata.epc == 0) {
+        dbgprintf("EE: Could not load file\n");
+        return -1;
+    }
+
+    th_attr.func = (void *)elfdata.epc;
+    th_attr.stack = userThreadStack;
+    th_attr.stack_size = sizeof(userThreadStack);
+    th_attr.gp_reg = (void *)elfdata.gp;
+    th_attr.initial_priority = 64;
+
+    pid = CreateThread(&th_attr);
+    if (pid < 0) {
+        dbgprintf("EE: Create user thread failed %d\n", pid);
+        return -1;
+    }
+    dbgprintf("EE: Created user thread: %d\n", pid);
+
+    return pid;
+}
 
 void
 wipeUserMem(void)
 {
     int i;
-    // Whipe user mem
     for (i = 0x100000; i < 0x2000000 ; i += 64) {
         asm (
             "\tsq $0, 0(%0) \n"
@@ -98,6 +222,14 @@ wipeUserMem(void)
             :: "r" (i) );
     }
 }
+
+void poweroffHandler(int i)
+{
+	dbgprintf("Trying to delete thread %i\n",i);
+	TerminateThread(i);
+	DeleteThread(i);
+	hddPowerOff();
+	}
 
 char *strrchr(const char *sp, int i)
 {
@@ -121,59 +253,28 @@ char *strrchr(const char *sp, int i)
 	return (char *) last;
 }
 
-static void
-setPathInfo(char *path)
-{
-    char *ptr;
-
-    strncpy(elfName, path, 255);
-    strncpy(elfPath, path, 255);
-    elfName[255] = '\0'; 
-    elfPath[255] = '\0';
-
-
-    ptr = strrchr(elfPath, '/');
-    if (ptr == NULL) {
-        ptr = strrchr(elfPath, '\\');
-        if (ptr == NULL) {
-            ptr = strrchr(elfPath, ':');
-            if (ptr == NULL) {
-                scr_printf("Did not find path (%s)!\n", path);
-                SleepThread();
-            }
-        }
-    }
-    
-    ptr++;
-    *ptr = '\0';
-
-    /* Paths to modules.  */
-    sprintf(iomanX_path, "%s%s", elfPath, "IOMANX.IRX");
-    sprintf(ps2dev9_path, "%s%s", elfPath, "PS2DEV9.IRX");
-    sprintf(fileXio_path, "%s%s", elfPath, "FILEXIO.IRX");
-    sprintf(ps2atad_path, "%s%s", elfPath, "PS2ATAD.IRX");
-    sprintf(ps2hdd_path, "%s%s", elfPath, "PS2HDD.IRX");
-    sprintf(ps2fs_path, "%s%s", elfPath, "PS2FS.IRX");
-    sprintf(HDDpath, "%s%s", elfPath, "HDDMENU.ELF");
-    }
-
 // *************************************************************************
 // *** MAIN
 // *************************************************************************
 int main(int argc, char *argv[])
 {
-	char s[256];
+	char s[256],fakepart[128], *ptr;
+	int pid,ret;
 
 // Initialise
 	SifInitRpc(0);
+	hddPreparePoweroff();
+	hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)userThreadID);
 	init_scr();
-	scr_printf("Welcome to PS2Menu v1.0\nPlease wait...loading.\n");
+	wipeUserMem();
+	scr_printf("Welcome to PS2Menu Loader v2.0\nPlease wait...loading.\n");
 
 	strcpy(s,argv[0]);
+	dbgprintf("argv[0] = %s\n",s);
 	if (argc==1)
 	{									// hopefully this is the first
-										// time loader has run
-		setPathInfo(s);
+		while(1);
+/*		setPathInfo(s);
 		if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
 		else if(!strncmp(s, "mc0:", 4)) 			// loading from memory card
 		{
@@ -193,13 +294,14 @@ int main(int argc, char *argv[])
 		strcpy(elfName,s);
 
 		LoadModules();
+		LoadAndRunMCElf(HDDpath);*/
 		}
 	if (argc==2)				// if call came from hddmenu.elf
 	{
 		strcpy(partition,argv[1]);
-		printf("argv[1] = %s\n", partition);
+		dbgprintf("argv[1] = %s\n", partition);
 
-		if(hddCheckPresent() < 0)
+/*		if(hddCheckPresent() < 0)
 		{
 			scr_printf("Error: supported HDD not connected!\n");
 			while(1);
@@ -209,23 +311,53 @@ int main(int argc, char *argv[])
 			scr_printf("Error: HDD is not properly formatted!\n");
 			while(1);
 			}
-		scr_printf("HDD is connected and formatted.\n");
+		scr_printf("HDD is connected and formatted.\n");*/
 		strcpy(HDDpath,s);
 		elfhost=1;
 		}
 
-	scr_printf("HDDmenu module\n");
-	LoadAndRunMCElf(HDDpath);
-	return 0;
-	SleepThread();
-error:
-	return -1;
+	dbgprintf("Loading %s\n",HDDpath);
+	pid = pkoLoadElf(HDDpath);
+	dbgprintf("pkoLoadElf returned %i\n",pid);
+	if (pid < 0) {
+        scr_printf("Could not execute file %s\n", HDDpath);
+        return -1;
+    }
+	strcpy(fakepart,HDDpath);
+	ptr=strrchr(fakepart,'/');
+	if(ptr==NULL) strcpy(fakepart,"pfs0:");
+	else
+	{
+		ptr++;
+		*ptr='\0';
+		}
+	scr_printf("Loading fakehost.irx %i bytes\n", size_fakehost_irx);
+	scr_printf("%s\n", fakepart);
+	SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
+
+    FlushCache(0);
+    FlushCache(2);
+
+    userThreadID = pid;
+
+    userArgs.argc=2;
+    userArgs.argv[0]=HDDpath;
+    userArgs.argv[1]=elfName;
+    userArgs.flag = (int)&userThreadID;
+
+    ret = StartThread(userThreadID, &userArgs);
+    if (ret < 0) {
+        scr_printf("EE: Start user thread failed %d\n", ret);
+        DeleteThread(userThreadID);
+        return -1;
+    }
+    SleepThread();
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // Wrapper to load module from disc/rom/mc
 // Max irx size hardcoded to 300kb atm..
-static void
+/*static void
 pkoLoadMcModule(char *path, int argc, char *argv)
 {
     void *iop_mem;
@@ -234,18 +366,18 @@ pkoLoadMcModule(char *path, int argc, char *argv)
     scr_printf("LoadMcModule %s\n", path);
     iop_mem = SifAllocIopHeap(1024*300);
     if (iop_mem == NULL) {
-        scr_printf("allocIopHeap failed\n");
+        scr_printf("SifallocIopHeap failed\n");
         SleepThread();
     }
     ret = SifLoadIopHeap(path, iop_mem);
     if (ret < 0) {
-        scr_printf("loadIopHeap %s ret %d\n", path, ret);
+        scr_printf("SifloadIopHeap %s ret %d\n", path, ret);
         SleepThread();
     }
     else {
         ret = SifLoadModuleBuffer(iop_mem, argc, argv);
         if (ret < 0) {
-            scr_printf("loadModuleBuffer %s ret %d\n", path, ret);
+            scr_printf("SifloadModuleBuffer %s ret %d\n", path, ret);
             SleepThread();
         }
     }
@@ -268,44 +400,14 @@ pkoSifLoadModule(char *path, int argc, char *argv)
 	
 void LoadModules()
 {
-/*	int ret,fd,size;
-	int size_iomanX_irx;
-	int size_fileXio_irx;
-	int size_ps2dev9_irx;
-	int size_ps2atad_irx;
-	int size_ps2hdd_irx;
-	int size_ps2fs_irx; */
-
 	static char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
-	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40" /*"\0" "-debug"*/;
-
-/*	size_iomanX_irx=&iomanX_irx_end-&iomanX_irx;
-	size_fileXio_irx=&fileXio_irx_end-&fileXio_irx;
-	size_ps2dev9_irx=&ps2dev9_irx_end-&ps2dev9_irx;
-	size_ps2atad_irx=&ps2atad_irx_end-&ps2atad_irx;
-	size_ps2hdd_irx=&ps2hdd_irx_end-&ps2hdd_irx;
-	size_ps2fs_irx=&ps2fs_irx_end-&ps2fs_irx; */
+	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40";
 
 	if(elfload==2)
 	{
-/* 		scr_printf("Loading iomanX.irx %i bytes\n", size_iomanX_irx);
-		SifExecModuleBuffer(&iomanX_irx, size_iomanX_irx, 0, NULL, &ret);
-		scr_printf("Loading fileXio.irx %i bytes\n", size_fileXio_irx);
-		SifExecModuleBuffer(&fileXio_irx, size_fileXio_irx, 0, NULL, &ret);
-		scr_printf("Loading ps2dev9.irx %i bytes\n", size_ps2dev9_irx);
-		SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &ret);
-		scr_printf("Loading ps2atad.irx %i bytes\n", size_ps2atad_irx);
-		SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
-		scr_printf("Loading ps2hdd.irx %i bytes\n", size_ps2hdd_irx);
-		SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &ret);
-		scr_printf("Loading ps2fs.irx %i bytes\n", size_ps2fs_irx);
-		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret); */
-
 		SifLoadModule("rom0:SIO2MAN", 0, NULL);
 		SifLoadModule("rom0:MCMAN", 0, NULL);
 		pkoLoadMcModule(iomanX_path, 0, NULL);
-//		SifLoadModule(iomanX_path, 0, NULL);
-//		pkoLoadMcModule("mc0:/BWLINUX/POWEROFF.IRX", 0, NULL);
 		pkoLoadMcModule(fileXio_path, 0, NULL);
 		pkoLoadMcModule(ps2dev9_path, 0, NULL);
 		pkoLoadMcModule(ps2atad_path, 0, NULL);
@@ -318,15 +420,6 @@ void LoadModules()
 		pkoSifLoadModule(ps2atad_path, 0, NULL);
 		pkoSifLoadModule(ps2hdd_path, sizeof(hddarg), hddarg);
 		pkoSifLoadModule(ps2fs_path, sizeof(pfsarg), pfsarg);
-
-/* 		scr_printf("Loading fileXio.irx %i bytes\n", size_fileXio_irx);
-		SifExecModuleBuffer(&fileXio_irx, size_fileXio_irx, 0, NULL, &ret);
-		scr_printf("Loading ps2atad.irx %i bytes\n", size_ps2atad_irx);
-		SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
-		scr_printf("Loading ps2hdd.irx %i bytes\n", size_ps2hdd_irx);
-		SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &ret);
-		scr_printf("Loading ps2fs.irx %i bytes\n", size_ps2fs_irx);
-		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret); */
 		}
 	}
 
@@ -340,7 +433,7 @@ void LoadAndRunMCElf(char *filename)
 	int fd, size, i, ret;
 	char *argv[1];
 
-	scr_printf("Start of LoadAndRunElf\nelfhost=%i\nfilename=%s\n",elfhost,filename);
+	dbgprintf("Start of LoadAndRunElf\nelfhost=%i\nfilename=%s\n",elfhost,filename);
 
 	if(elfhost==1)
 	{
@@ -385,7 +478,6 @@ void LoadAndRunMCElf(char *filename)
 		if(fioRead(fd, boot_elf, size)<0) scr_printf("Error in Read.\n");
 		if(fioClose(fd)<0) scr_printf("Error in Close.\n");
 		}
-/* Load the ELF into RAM.  */
 	if (_lw((u32)&eh->ident) != ELF_MAGIC)
 	{
 		goto error;
@@ -393,15 +485,12 @@ void LoadAndRunMCElf(char *filename)
 
 	eph = (elf_pheader_t *)(boot_elf + eh->phoff);
 
-/* Scan through the ELF's program headers and copy them into RAM, then
-									zero out any non-loaded regions.  */
 	for (i = 0; i < eh->phnum; i++)
 	{
 		if (eph[i].type != ELF_PT_LOAD)
 		continue;
 
 		pdata = (void *)(boot_elf + eph[i].offset);
-		scr_printf("%x %x %x\n",eph[i].vaddr,pdata,eph[i].filesz);
 		memcpy(eph[i].vaddr, pdata, eph[i].filesz);
 
 		if (eph[i].memsz > eph[i].filesz)
@@ -409,14 +498,9 @@ void LoadAndRunMCElf(char *filename)
 					eph[i].memsz - eph[i].filesz);
 		}
 
-/* Let's go.  */
 
 	scr_printf("Starting %s\n",elfName);
-//	fioExit(); //*
-	SifExitRpc(); //*
-//	while(!SifIopSync());
-//	SifResetIop(); //*
-//	while(!SifIopSync());
+	SifExitRpc();
 	SifInitRpc(0);
 	SifExitRpc();
 	FlushCache(0);
@@ -428,4 +512,4 @@ void LoadAndRunMCElf(char *filename)
 error:
 	while (1) ;
 
-	}
+	}*/
