@@ -40,8 +40,20 @@ typedef struct st_PbTexture
 // Functions
 ///////////////////////////////////////////////////////////////////////////////
 
+
 void        PbTextureUpload( PbTexture* pTexture );
+PbTexture*  PbTextureCreate32( u32* pData, int Width, int Height );
 PbTexture*  PbTextureAlloc( int Widht, int Height, int Psm );
+
+u64         PbTextureGetTex0( PbTexture* pTexture );
+
+///////////////////////////////////////////////////////////////////////////////
+// Internal functions
+///////////////////////////////////////////////////////////////////////////////
+
+void PbTextureUpload32( PbTexture* pTexture );
+void PbTextureUpload8( PbTexture* pTexture );
+void PbTextureUpload4( PbTexture* pTexture );
 
 #endif // _PBTEXTURE_H_
 

@@ -25,7 +25,7 @@ static PbTexture ga_Textures[PB_MAX_TEXTURES];
 // void PbTextureUpload
 ///////////////////////////////////////////////////////////////////////////////
 
-PbTexture*  PbTextureAlloc( int Width, int Height, int Psm )
+PbTexture* PbTextureAlloc( int Width, int Height, int Psm )
 {
   PbTexture* pTexture;
 
@@ -38,9 +38,9 @@ PbTexture*  PbTextureAlloc( int Width, int Height, int Psm )
 
   switch( Psm )
   {
-    case GS_PSMCT32 : pTexture->Vram = PbVramAlloc( Width*Height ); break;
-    case GS_PSMT8   : pTexture->Vram = PbVramAlloc( (Width*Height)/4 ); break;
-    case GS_PSMT4   : pTexture->Vram = PbVramAlloc( (Width*Height)/8 ); break;
+    case GS_PSMCT32 : pTexture->Vram = PbVramAlloc( Width*Height*4 ); break;
+    case GS_PSMT8   : pTexture->Vram = PbVramAlloc( Width*Height   ); break;
+    case GS_PSMT4   : pTexture->Vram = PbVramAlloc( Width*Height/4 ); break;
   }
 
   pTexture->pMem  = NULL;
@@ -61,19 +61,33 @@ PbTexture*  PbTextureAlloc( int Width, int Height, int Psm )
 // void PbTextureUpload
 ///////////////////////////////////////////////////////////////////////////////
 
+PbTexture* PbTextureCreate32( u32* pData, int Width, int Height )
+{
+  PbTexture* p_texture = PbTextureAlloc( Width, Height, GS_PSMCT32 );
+
+  p_texture->format  = 32;
+  p_texture->x      = (u16)Width;
+  p_texture->y      = (u16)Height;
+  p_texture->pMem   = pData;
+
+  return p_texture;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbTextureUpload
+///////////////////////////////////////////////////////////////////////////////
+
 void PbTextureUpload( PbTexture* pTexture )
 {
   u64* p_data       = NULL;
   u64* p_store      = NULL;
-  char* p_tmap_data = NULL;       
-  int n_quads       = 0; 
-  int curr_quads    = 0;
 
   /////////////////////////////////////////////////////////////////////////////
   // Setup registers
 
   p_data = p_store = PbSprAlloc( 6*16 );
 
+  p_data = p_store = PbSprAlloc( 6*16 );
   *p_data++ = DMA_CNT_TAG( 5 );
   *p_data++ = 0;
 
@@ -81,10 +95,10 @@ void PbTextureUpload( PbTexture* pTexture )
   *p_data++ = GIF_AD;
 
   /////////////////////////////////////////////////////////////////////////////
-  // Setup the blitting
+  // Setup the blitting & blit it
 
   *p_data++ = (u64)( ((pTexture->psm & 0x3f) << 24) | (((pTexture->x>>6) & 0x3f)<<16) | 
-                      ((pTexture->Vram/64) & 0x3fff) ) << 32;
+                      ((pTexture->Vram/256) & 0x3fff) ) << 32;
   *p_data++ = GS_BITBLTBUF;
 
   *p_data++ = (unsigned long)( ((0)<<16) | (0) ) << 32;  // x,y offsets 0 for now
@@ -96,14 +110,106 @@ void PbTextureUpload( PbTexture* pTexture )
   *p_data++ = 0;
   *p_data++ = GS_TRXDIR;
 
+  PbDmaSend02ChainSpr( p_store );
+  
   /////////////////////////////////////////////////////////////////////////////
-  // 
+  // select correct method of upload depending on format
+
+  switch( pTexture->psm )
+  {
+    case GS_PSMCT32 : PbTextureUpload32( pTexture ); break;
+//    case GS_PSMCT8  : PbTextureUpload8( pTexture ); break;
+//    case GS_PSMCT4  : PbTextureUpload4( pTexture ); break;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbTextureUpload32
+///////////////////////////////////////////////////////////////////////////////
+
+void PbTextureUpload32( PbTexture* pTexture )
+{
+  char* p_tmap_data = NULL;       
+  u64* p_data       = NULL;
+  u64* p_store      = NULL;
+  int n_quads       = 0; 
+  int curr_quads    = 0;
+
+  n_quads = pTexture->x * pTexture->y;  
+  n_quads = (n_quads >> 2) + ((n_quads & 0x03 ) != 0 ? 1 : 0);
+
+  p_tmap_data = pTexture->pMem;
+
+  p_data = p_store = PbSprAlloc( 32*16 );
+
+  /////////////////////////////////////////////////////////////////////////////
+  // send the data
+
+  while( n_quads )
+  {
+    if( n_quads > PB_IMAGE_MAX_COUNT ) 
+       curr_quads = PB_IMAGE_MAX_COUNT;
+    else 
+      curr_quads = n_quads;
+
+    *p_data++ = DMA_CNT_TAG( 1 );
+    *p_data++ = 0; // pad
+
+    *p_data++ = 0x0800000000000000 | curr_quads; // TODO: use proper macro
+    *p_data++ = 0; // pad
+
+    *p_data++ = DMA_REF_TAG( (u32)p_tmap_data, curr_quads );
+    *p_data++ = 0; // pad
+
+    n_quads     -= curr_quads;
+    p_tmap_data += (curr_quads << 4);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // end the list
+
+  *p_data++ = DMA_END_TAG( 0 );
+  *p_data++ = 0;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // And send it
 
   PbDmaSend02ChainSpr( p_store );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbTextureUpload8
+///////////////////////////////////////////////////////////////////////////////
+
+void PbTextureUpload8( PbTexture* pTexture )
+{
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbTextureUpload4
+///////////////////////////////////////////////////////////////////////////////
+
+void PbTextureUpload4( PbTexture* pTexture )
+{
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// u64 PbTextureGetTex0
+///////////////////////////////////////////////////////////////////////////////
+
+u64 PbTextureGetTex0( PbTexture* pTexture )
+{
+  return ((u64)1<<34) + 
+         ((u64)8<<30) + 
+         ((u64)8<<26) + 
+         (0<<20) + 
+         (((pTexture->x/64)&63)<<14) + 
+         (pTexture->Vram/256);
+}
 
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Calculate number of quads
+
+/*
 
   n_quads = pTexture->x * pTexture->y;  
   n_quads = (n_quads >> 2) + ((n_quads & 0x03 ) != 0 ? 1 : 0);
@@ -143,5 +249,4 @@ void PbTextureUpload( PbTexture* pTexture )
   // And send it
 
   PbDmaSend02ChainSpr( p_store );
-}
-
+*/
