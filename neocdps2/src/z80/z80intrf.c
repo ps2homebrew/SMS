@@ -5,7 +5,7 @@
 //-- Include Files ----------------------------------------------------------
 #include	"../neocd.h"
 #include 	<stdio.h>
-#include 	<stdlib.h>
+//#include 	<stdlib.h>
 #include	"mz80.h"
 
 
@@ -26,6 +26,20 @@ struct	z80PortWrite WritePorts[] =
 	{(UINT16)-1,	(UINT16)-1,	NULL,		NULL}
 };
 
+/*
+struct MemoryReadByte	MemRead[] =
+{
+	{(UINT16)-1,	(UINT16)-1,	NULL,		NULL},
+	{(UINT32)-1,	(UINT32)-1,	NULL,		NULL} // fix hang up @startup.. 
+};
+
+struct MemoryWriteByte	MemWrite[] =
+{
+	{(UINT16)-1,	(UINT16)-1,	NULL,		NULL},
+	{(UINT32)-1,	(UINT32)-1,	NULL,		NULL}// fix hang up @startup.. 
+};
+*/ 
+
 struct MemoryReadByte	MemRead[] =
 {
 	{0xFFFF0000,	0xffffffff,	NULL,		NULL},
@@ -40,7 +54,7 @@ struct MemoryWriteByte	MemWrite[] =
 
 //-- Variables --------------------------------------------------------------
 CONTEXTMZ80	subcpu_context;
-UINT8		subcpu_memspace[65536] __attribute__((aligned(64)));
+UINT8		subcpu_memspace[Z80_MEMSIZE] __attribute__((aligned(16)));
 int		sound_code = 0;
 int		pending_command = 0;
 int		result_code = 0;
@@ -63,42 +77,41 @@ void z80_init(void)
 	mz80reset();
 
 	// Let Z80 do its initialization
-	mz80exec(100000);
+	mz80exec(z80_cycles); // 1 vblank
 }
 
 //---------------------------------------------------------------------------
 void PortWrite(UINT16 PortNo, UINT8 data, struct z80PortWrite *ptr)
 {
-	// sound routines broken... so returns directly...
 	switch( PortNo & 0xff)
 	{
 	case	0x4:
-		//YM2610_control_port_0_A_w(0,data);
+		YM2610_control_port_0_A_w(0,data);
 		break;
 
 	case	0x5:
-		//YM2610_data_port_0_A_w(0,data);
+		YM2610_data_port_0_A_w(0,data);
 		break;
 
 	case	0x6:
-		//YM2610_control_port_0_B_w(0,data);
+		YM2610_control_port_0_B_w(0,data);
 		break;
 
 	case	0x7:
-		//YM2610_data_port_0_B_w(0,data);
+		YM2610_data_port_0_B_w(0,data);
 		break;
 
-	case	0x8:
+	//case	0x8:
 		/* NMI enable / acknowledge? (the data written doesn't matter) */
-		break;
+	//	break;
 	
 	case	0xc:
 		result_code = data;
 		break;
 	
-	case	0x18:
+	//case	0x18:
 		/* NMI disable? (the data written doesn't matter) */
-		break;
+	//	break;
 
 	default:
 		//printf("Unimplemented Z80 Write Port: %x data: %x\n",PortNo&0xff,data);
@@ -108,55 +121,55 @@ void PortWrite(UINT16 PortNo, UINT8 data, struct z80PortWrite *ptr)
 
 //---------------------------------------------------------------------------
 UINT16 PortRead(UINT16 PortNo, struct z80PortRead *ptr)
-{
-	static int bank[4];
-	// sound routines broken... so returns directly...
-	switch( PortNo & 0xff)
-	{
+{	
+	//static int bank[4];
+	
+    switch( PortNo & 0xff)
+    {
 	case	0x0:
 		pending_command = 0;
 		return sound_code;
 		break;
 	
 	case	0x4:
-		//return YM2610_status_port_0_A_r(0);
+		return YM2610_status_port_0_A_r(0);
 		break;
 	
 	case	0x5:
-		//return YM2610_read_port_0_r(0);
+		return YM2610_read_port_0_r(0);
 		break;
 	
 	case	0x6:
-		//return YM2610_status_port_0_B_r(0);
+		return YM2610_status_port_0_B_r(0);
 		break;
 
+/*
 	case 0x08:
 		{
-		    	bank[3] = 0x0800 * ((PortNo >> 8) & 0x7f);
+		    	bank[3] = 0x0800 * ((PortNo >> 8) & 0x7f); //NG AES/MVS?
 			return 0;
 			break;
 		}
 	case 0x09:
 		{
-			bank[2] = 0x1000 * ((PortNo >> 8) & 0x3f);
+			bank[2] = 0x1000 * ((PortNo >> 8) & 0x3f);//NG AES/MVS?
 			return 0;
 			break;
 		}	
 	case 0x0a:
 		{
-			bank[1] = 0x2000 * ((PortNo >> 8) & 0x1f);
+			bank[1] = 0x2000 * ((PortNo >> 8) & 0x1f);//NG AES/MVS?
 			return 0;
 			break;
 		}
 	case 0x0b:
 		{
-			bank[0] = 0x4000 * ((PortNo >> 8) & 0x0f);
+			bank[0] = 0x4000 * ((PortNo >> 8) & 0x0f);//NG AES/MVS?
 			return 0;
 			break;
 		}
-	default:
-		//printf("Unimplemented Z80 Read Port: %d\n",PortNo&0xff);
-		break;
-	};	
-	return 0;
+*/
+	default: break;
+     };	
+     return 0;
 }

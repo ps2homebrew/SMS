@@ -31,15 +31,15 @@
  */
 
 #include <time.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <malloc.h>
 #include <libcdvd.h>
 #include "pd4990a.h"
 
 
 /* Set the data in the chip to Monday 09/09/73 00:00:00 	*/
 /* If you ever read this Leejanne, you know what I mean :-) */
-struct pd4990a_s pd4990a =
+static struct pd4990a_s pd4990a =
 {
 	0x00,	/* seconds BCD */
 	0x00,	/* minutes BCD */
@@ -52,8 +52,8 @@ struct pd4990a_s pd4990a =
 
 static unsigned int shiftlo,shifthi;
 
-static int retraces = 0; /* Assumes 60 retraces a second */
-static int testwaits= 0;
+static int retraces = 0; /* Assumes 50/60 retraces a second */
+//static int testwaits= 0;
 static int maxwaits=  1; /*switch test every frame*/
 static int testbit = 0;	/* Pulses a bit in order to simulate */
 			/* test output */
@@ -62,18 +62,21 @@ static int bitno=0;
 static char reading=0;
 static char writting=0;
 
+static int _fps_rate;
+
 #define DATA_BIT	0x1
 #define CLOCK_BIT	0x2
 #define END_BIT		0x4
 
-void pd4990a_init(void)
+void pd4990a_init(int fps_rate)
 {
 
     CdvdClock_t *cdclock = malloc (sizeof(CdvdClock_t));
     
+    _fps_rate = fps_rate;
+    
     printf("Init PD4990A chip\n");
     // At this point CD device is already initialized
-
     if ((cdReadClock(cdclock)==1) & (cdclock->status==0))
     {
     	pd4990a.seconds = cdclock->second;
@@ -94,41 +97,36 @@ void pd4990a_init(void)
 
 void pd4990a_addretrace()
 {
-	++testwaits;
-	if(testwaits>=maxwaits)
-	{
-		testbit ^= 1;
-		testwaits=0;
-	}
-	retraces++;
-	if (retraces < 60)
-		return;
+    testbit ^= 1;
+    retraces++;
+    if (retraces == _fps_rate) {
 	retraces = 0;
 	pd4990a.seconds++;
-	if ( (pd4990a.seconds & 0x0f) < 10 )
-		return;
-	pd4990a.seconds &= 0xf0;
-	pd4990a.seconds += 0x10;
-	if (pd4990a.seconds < 0x60)
-		return;
-	pd4990a.seconds = 0;
-	pd4990a.minutes++;
-	if ( (pd4990a.minutes & 0x0f) < 10 )
-		return;
-	pd4990a.minutes &= 0xf0;
-	pd4990a.minutes += 0x10;
-	if (pd4990a.minutes < 0x60)
-		return;
-	pd4990a.minutes = 0;
-	pd4990a.hours++;
-	if ( (pd4990a.hours & 0x0f) < 10 )
-		return;
-	pd4990a.hours &= 0xf0;
-	pd4990a.hours += 0x10;
-	if (pd4990a.hours < 0x24)
-		return;
-	pd4990a.hours = 0;
-	pd4990a_increment_day();
+	if ((pd4990a.seconds & 0x0f) == 10) {
+	    pd4990a.seconds &= 0xf0;
+	    pd4990a.seconds += 0x10;
+	    if (pd4990a.seconds == 0x60) {
+		pd4990a.seconds = 0;
+		pd4990a.minutes++;
+		if ((pd4990a.minutes & 0x0f) == 10) {
+		    pd4990a.minutes &= 0xf0;
+		    pd4990a.minutes += 0x10;
+		    if (pd4990a.minutes == 0x60) {
+			pd4990a.minutes = 0;
+			pd4990a.hours++;
+			if ((pd4990a.hours & 0x0f) == 10) {
+			    pd4990a.hours &= 0xf0;
+			    pd4990a.hours += 0x10;
+			}
+			if (pd4990a.hours == 0x24) {
+			    pd4990a.hours = 0;
+			    pd4990a_increment_day();
+			}
+		    }
+		}
+	    }
+	}
+    }
 }
 
 void pd4990a_increment_day(void)
@@ -201,17 +199,17 @@ void pd4990a_increment_month(void)
 	}
 }
 
-int pd4990a_testbit_r (void)
+int inline pd4990a_testbit_r (void)
 {
 	return (testbit);
 }
 
-int pd4990a_databit_r (void)
+int inline pd4990a_databit_r (void)
 {
 	return (outputbit);
 }
 
-static void pd4990a_readbit(void)
+static inline void pd4990a_readbit(void)
 {
 	switch(bitno)
 	{
@@ -250,14 +248,14 @@ static void pd4990a_readbit(void)
 
 
 
-static void pd4990a_resetbitstream(void)
+static inline void pd4990a_resetbitstream(void)
 {
 	shiftlo=0;
 	shifthi=0;
 	bitno=0;
 }
 
-static void pd4990a_writebit(unsigned char bit)
+static inline void pd4990a_writebit(unsigned char bit)
 {
 	if(bitno<=31)	/*low part */
 		shiftlo|=bit<<bitno;
@@ -265,7 +263,7 @@ static void pd4990a_writebit(unsigned char bit)
 		shifthi|=bit<<(bitno-32);
 }
 
-static void pd4990a_nextbit(void)
+static inline void pd4990a_nextbit(void)
 {
 	++bitno;
 	if(reading)

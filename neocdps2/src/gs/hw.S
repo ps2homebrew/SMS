@@ -1,6 +1,6 @@
-# This file's from vzzrzzn's textfont
-        
-    .file   1 "hw.s"
+# By Vzzrzzn, modifications by Sjeep
+
+.file   1 "hw.s"
 
 .set nomips16
 .set noat
@@ -17,59 +17,9 @@ VRcount:    .word 0
 VRstartid:  .word 0
 
 
-
-
-# DMA lists ensue
-
-.p2align 4
-set_fb1:
-    .dword 0x0000000070000010, 0x0000000000000000   # DMA tag
-    .dword 0x100000000000800f, 0xfffffffffffffffe   # GIF tag
-    .dword 0x00080000, 0x4c             # framebuf: ptr = 0, width 8*64 = 512
-    .dword 0x00000000, 0x18             # offset
-    .dword 0x0a0000c0, 0x4e             # zbuffer @ 0x180000, 16-bit
-    .dword 0x00000001, 0x1a             # use the prim register
-    .dword 0x00000000, 0x45             # dither off
-    .dword 0x00000001, 0x46
-    .dword 0x00030000, 0x47
-    .dword 0x17f000001ff00000, 0x40     # clipping window
-    .dword 0x00000004, 0x00
-    .dword 0x3f80000000000000, 0x01
-    .dword 0x0000000000000000, 0x0d
-    .dword 0x0000000000002000, 0x0d
-    .dword 0x0000000018000000, 0x05
-    .dword 0x0000000018002000, 0x05
-    .dword 0x0007000d, 0x47
-
-.p2align 4
-set_fb2:
-    .dword 0x0000000070000010, 0x0000000000000000   # DMA tag
-    .dword 0x100000000000800f, 0xfffffffffffffffe   # GIF tag
-    .dword 0x00080060, 0x4c             # framebuf: ptr = 0xc0000, width 8*64 = 512
-    .dword 0x00000000, 0x18             # offset
-    .dword 0x0a0000c0, 0x4e             # zbuffer @ 0x180000, 16-bit
-    .dword 0x00000001, 0x1a             # use the prim register
-    .dword 0x00000000, 0x45             # dither off
-    .dword 0x00000001, 0x46
-    .dword 0x00030000, 0x47
-    .dword 0x17f000001ff00000, 0x40     # clipping window
-    .dword 0x00000004, 0x00
-    .dword 0x3f80000000000000, 0x01
-    .dword 0x00000000, 0x0d
-    .dword 0x00002000, 0x0d
-    .dword 0x18000000, 0x05
-    .dword 0x18002000, 0x05
-    .dword 0x0007000d, 0x47
-
-
-
-
 # ----------------------------
 # ----------------------------
 # ----------------------------
-
-
-
 
 
 .text
@@ -203,151 +153,12 @@ ClearVRcount:
 # ----------------------------
 # ----------------------------
 
-
-# void initGraph(int mode);
-# mode = 3 for PAL, 2 for NTSC
-    .globl initGraph
-    .ent initGraph
-initGraph:
-    addiu $29, -8
-    sd $4, 0($29)           # push 'mode'
-
-    lui $3, 0x1200
-    daddiu $2, $0, 0x0200
-    sd $2, 0x1000($3)       # reset GS
-    sync.p                  # definitely a fun instruction!
-    sd $0, 0x1000($3)
-
-    # putIMR thru bios
-    ori $4, $0, 0xff00
-    addiu $3, $0, 0x0071
-    syscall
-    nop
-
-    # sceSetGSCrt
-    ori $4, $0, 1           # interlace mode (for high vertical resolution)
-    ld $5, 0($29)           # NTSC/PAL mode
-    ori $6, $0, 0           # field mode
-    addiu $3, $0, 2
-    syscall
-    nop
-
-    addiu $29, 8            # clean up stack
-
-    jr $31
-    nop
-
-    .end initGraph
-
-
-// sets interlaced field-mode 512x384 ... you get 60 vr int's per second
-//   which means you must wait for 2 vr's before swapping buffers
-// void SetVideoMode();
-    .globl SetVideoMode
-    .ent SetVideoMode
-SetVideoMode:
-    di
-
-    lui $2, 0x1200
-
-    daddu $3, $0, $0
-    ori $3, 0xff61
-    sd $3, 0($2)
-
-    addiu $3, $0, 1
-    sd $3, 0x0020($2)
-
-    addiu $3, $0, 0x1000
-    sd $3, 0x0070($2)
-
-    li $3, 0x0017F9FF0205c272  # the magic number
-    sd $3, 0x0080($2)
-
-    # set the background color !
-    sd $0, 0x00e0($2)
-
-    ei
-
-    jr $31
-    nop
-
-    .end SetVideoMode
-
-
-// use this function to swap framebuffers
-// void SetDrawFrameBuffer(int which);
-// which = 0 : framebuffer 1
-//         1 : framebuffer 2
-    .globl SetDrawFrameBuffer
-    .ent SetDrawFrameBuffer
-SetDrawFrameBuffer:
-    addiu $29, -4
-    sw $31, 0($29)
-
-    jal Dma02Wait
-    nop
-
-    andi $2, $4, 1
-    la $4, set_fb1
-
-    beq $2, $0, SetDrawFrameBuffer.sendDma
-    nop
-
-    la $4, set_fb2
-
-SetDrawFrameBuffer.sendDma:
-
-    jal SendDma02
-    nop
-
-    lw $31, 0($29)
-    addiu $29, 4
-
-    jr $31
-    nop
-
-    .end SetDrawFrameBuffer
-
-
-// use this function to set which buffer is output to the screen
-// void SetCrtFrameBuffer(int which);
-// which = 0: framebuffer 1
-//         1: framebuffer 2
-    .globl SetCrtFrameBuffer
-    .ent SetCrtFrameBuffer
-SetCrtFrameBuffer:
-
-    sll $4, 31
-    sra $4, 31      # we have 0->0 or 1->0xffffffff
-    andi $4, 0x0060 # addr of framebuffer 2
-    ori $4, 0x1000  # width
-
-    lui $2, 0x1200
-    sw $4, 0x0070($2)
-
-    jr $31
-    nop
-
-    .end SetCrtFrameBuffer
-
-
-
-
-
-
-
-
-# ----------------------------
-# ----------------------------
-
-
-
 # DMA stuff
 
 
     .set at
-// Duke's DmaReset !
-// void DmaReset();
+# Duke's DmaReset !
+# void DmaReset();
     .globl DmaReset
     .ent DmaReset
 DmaReset:
@@ -376,8 +187,8 @@ DmaReset:
     .set noat
 
 
-// the same as Duke's "SendPrim"
-// void SendDma02(void *DmaTag);
+# the same as Duke's "SendPrim"
+# void SendDma02(void *DmaTag);
     .globl SendDma02
     .ent SendDma02
 SendDma02:
@@ -394,8 +205,8 @@ SendDma02:
     .end SendDma02
 
 
-// Duke's Dma02Wait !
-// void Dma02Wait();
+# Duke's Dma02Wait !
+# void Dma02Wait();
     .globl Dma02Wait
     .ent Dma02Wait
 Dma02Wait:
@@ -417,8 +228,7 @@ Dma02Wait.poll:
 
     .end Dma02Wait
 
-
-// void DCacheFlush();
+# void DCacheFlush();
     .globl DCacheFlush
     .ent DCacheFlush
 DCacheFlush:
@@ -438,22 +248,6 @@ DCacheFlush:
 # ----------------------------
 
 
-    .globl resetVU0
-    .ent resetVU0
-resetVU0:
-    cfc2.ni $3, $28
-    li $2, 0xffffff00
-    and $2, $3
-    ori $2, 2
-    ctc2.ni $3, $28
-    sync.p
-
-    jr $31
-    nop
-    .end resetVU0
-
-
-
 # ----------------------------
 # ----------------------------
 
@@ -466,7 +260,6 @@ qmemcpy:
     addiu $6, -1
     sq $2, 0($4)
     addiu $4, 0x0010
-    nop
     bnez $6, qmemcpy
     addiu $5, 0x0010
 
@@ -482,10 +275,9 @@ dmemcpy:
     ld $2, 0($5)
     addiu $6, -1
     sd $2, 0($4)
-    addiu $4, 0x0008
-    nop
+    addiu $4, 0x0010
     bnez $6, dmemcpy
-    addiu $5, 0x0008
+    addiu $5, 0x0010
 
     jr $31
     nop
@@ -499,24 +291,26 @@ wmemcpy:
     lw $2, 0($5)
     addiu $6, -1
     sw $2, 0($4)
-    addiu $4, 0x0004
-    nop
+    addiu $4, 0x0010
     bnez $6, wmemcpy
-    addiu $5, 0x0004
+    addiu $5, 0x0010
 
     jr $31
     nop
     .end wmemcpy
 
+# Dukes pal/ntsc auto-detection. Returns 3 for PAL, 2 for NTSC.
+.globl	pal_ntsc
+.ent	pal_ntsc
+pal_ntsc:
+	lui     $8,0x1fc8
+	lb      $8,-0xae($8)
+	li      $9,'E'
+	beql    $8,$9,pal_mode
+	li      $2,3                  # 2=NTSC, 3=PAL
 
-
-
-
-
-
-
-
-
-
-
-
+	li		$2,2
+pal_mode:
+	jr		$31
+	nop
+.end	pal_ntsc

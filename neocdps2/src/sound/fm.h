@@ -22,9 +22,9 @@
 
 /* --- speedup optimize --- */
 /* support LFO unit */
-#define FM_LFO_SUPPORT 1
+#define FM_LFO_SUPPORT 0
 /* support OPN SSG type envelope mode */
-#define FM_SEG_SUPPORT 1
+#define FM_SEG_SUPPORT 0
 
 /* --- external SSG(YM2149/AY-3-8910)emulator interface port */
 /* used by YM2203,YM2608,and YM2610 */
@@ -78,7 +78,7 @@ typedef unsigned char FMSAMPLE;
 typedef unsigned short FMSAMPLE_MIX;
 #endif
 
-typedef void (*FM_TIMERHANDLER) (int c, int cnt, double stepTime);
+typedef void (*FM_TIMERHANDLER) (int c, int cnt, float stepTime);
 typedef void (*FM_IRQHANDLER) (int n, int irq);
 /* FM_TIMERHANDLER : Stop or Start timer         */
 /* int n          = chip number                  */
@@ -243,7 +243,8 @@ int YM2610Init(int baseclock, int rate,
 	       FM_TIMERHANDLER TimerHandler, FM_IRQHANDLER IRQHandler);
 void YM2610Shutdown(void);
 void YM2610ResetChip(void);
-void YM2610UpdateOne(int num, int16 **buffer, int length);
+void YM2610UpdateOne(int16 **buffer, int length);
+//void YM2610UpdateOne(int num, FMSAMPLE * bufL, FMSAMPLE * bufR, int length);
 
 int YM2610Write(int a, unsigned char v);
 unsigned char YM2610Read(int a);

@@ -1,409 +1,225 @@
-//---------------------------------------------------------------------------
-// File:	gs.h
-// Author:	Tony Saveski, t_saveski@yahoo.com
-// Notes:	Playstation2 GS Convenience Routines
-//---------------------------------------------------------------------------
-#ifndef GS_H
-#define GS_H
+/*
+  _____     ___ ____
+   ____|   |    ____|      PS2 OpenSource Project
+  |     ___|   |____       (C) 2001 Nick Van Veen (nickvv@xtra.co.nz)
+  ------------------------------------------------------------------------
+  gs.h
+  		Macro's and structures related to the Graphics Synthesiser.
 
-#include "../defines.h"
-#include "regs.h"
+*/
+#ifndef _HW1_H_
+#define _HW1_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern void gs_set_imr(void);
-extern void gs_set_crtc(uint8 int_mode, uint8 ntsc_pal, uint8 field_mode);
-extern void gs_load_texture(uint16 x, uint16 y, uint16 w, uint16 h, uint32 data_adr, uint32 dest_adr, uint16 dest_w);
-extern uint16 gs_texture_wh(uint16 n);
-extern uint8 gs_is_ntsc(void);
-extern uint8 gs_is_pal(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-//===========================================================================
-// Privileged Register Macros
-//===========================================================================
-
-//---------------------------------------------------------------------------
-// CSR Register
-//---------------------------------------------------------------------------
-#define CSR			((volatile uint64 *)(csr))
-#define GS_SET_CSR(SIGNAL,FINISH,HSINT,VSINT,EDWINT,FLUSH,RESET,NFIELD,FIELD,FIFO,REV,ID) \
-	*CSR = \
-	((uint64)(SIGNAL)	<< 0)		| \
-	((uint64)(FINISH)	<< 1)		| \
-	((uint64)(HSINT)	<< 2)		| \
-	((uint64)(VSINT)	<< 3)		| \
-	((uint64)(EDWINT)	<< 4)		| \
-	((uint64)(FLUSH)	<< 8)		| \
-	((uint64)(RESET)	<< 9)		| \
-	((uint64)(NFIELD)	<< 12)		| \
-	((uint64)(FIELD)	<< 13)		| \
-	((uint64)(FIFO)		<< 14)		| \
-	((uint64)(REV)		<< 16)		| \
-	((uint64)(ID)		<< 24)
-
-#define GS_RESET() \
-	*CSR = ((uint64)(1)	<< 9)
-
-//---------------------------------------------------------------------------
-// PMODE Register
-//---------------------------------------------------------------------------
-#define PMODE		((volatile uint64 *)(pmode))
-#define GS_SET_PMODE(EN1,EN2,MMOD,AMOD,SLBG,ALP) \
-	*PMODE = \
-	((uint64)(EN1) 	<< 0) 	| \
-	((uint64)(EN2) 	<< 1) 	| \
-	((uint64)(001)	<< 2) 	| \
-	((uint64)(MMOD)	<< 5) 	| \
-	((uint64)(AMOD) << 6) 	| \
-	((uint64)(SLBG) << 7) 	| \
-	((uint64)(ALP) 	<< 8)
-
-//---------------------------------------------------------------------------
-// SMODE2 Register
-//---------------------------------------------------------------------------
-#define SMODE2		((volatile uint64 *)(smode2))
-#define GS_SET_SMODE2(INT,FFMD,DPMS) \
-	*SMODE2 = \
-	((uint64)(INT)	<< 0)	| \
-	((uint64)(FFMD)	<< 1)	| \
-	((uint64)(DPMS)	<< 2)
-
-//---------------------------------------------------------------------------
-// DISPFP1 Register
-//---------------------------------------------------------------------------
-#define DISPFB1		((volatile uint64 *)(dspfb1))
-#define GS_SET_DISPFB1(FBP,FBW,PSM,DBX,DBY) \
-	*DISPFB1 = \
-	((uint64)(FBP)	<< 0)	| \
-	((uint64)(FBW)	<< 9)	| \
-	((uint64)(PSM)	<< 15)	| \
-	((uint64)(DBX)	<< 32)	| \
-	((uint64)(DBY)	<< 43)
-
-//---------------------------------------------------------------------------
-// DISPLAY1 Register
-//---------------------------------------------------------------------------
-#define DISPLAY1	((volatile uint64 *)(display1))
-#define GS_SET_DISPLAY1(DX,DY,MAGH,MAGV,DW,DH) \
-	*DISPLAY1 = \
-	((uint64)(DX)	<< 0)	| \
-	((uint64)(DY)	<< 12)	| \
-	((uint64)(MAGH)	<< 23)	| \
-	((uint64)(MAGV)	<< 27)	| \
-	((uint64)(DW)	<< 32)	| \
-	((uint64)(DH)	<< 44)
-
-//---------------------------------------------------------------------------
-// DISPFP2 Register
-//---------------------------------------------------------------------------
-#define DISPFB2		((volatile uint64 *)(dispfb2))
-#define GS_SET_DISPFB2(FBP,FBW,PSM,DBX,DBY) \
-	*DISPFB2 = \
-	((uint64)(FBP)	<< 0)	| \
-	((uint64)(FBW)	<< 9)	| \
-	((uint64)(PSM)	<< 15)	| \
-	((uint64)(DBX)	<< 32)	| \
-	((uint64)(DBY)	<< 43)
-
-//---------------------------------------------------------------------------
-// DISPLAY2 Register
-//---------------------------------------------------------------------------
-#define DISPLAY2	((volatile uint64 *)(display2))
-#define GS_SET_DISPLAY2(DX,DY,MAGH,MAGV,DW,DH) \
-	*DISPLAY2 = \
-	((uint64)(DX)	<< 0)	| \
-	((uint64)(DY)	<< 12)	| \
-	((uint64)(MAGH)	<< 23)	| \
-	((uint64)(MAGV)	<< 27)	| \
-	((uint64)(DW)	<< 32)	| \
-	((uint64)(DH)	<< 44)
-
-//---------------------------------------------------------------------------
-// BGCOLOR Register
-//---------------------------------------------------------------------------
-#define BGCOLOR		((volatile uint64 *)(bgcolor))
-#define GS_SET_BGCOLOR(R,G,B) \
-	*BGCOLOR = \
-	((uint64)(R)	<< 0)		| \
-	((uint64)(G)	<< 8)		| \
-	((uint64)(B)	<< 16)
-
-
-
-
-//===========================================================================
-// General Purpose Register Macros
-//===========================================================================
-
-//---------------------------------------------------------------------------
-// ALPHA_x Registers - Setup Alpha Blending Parameters
-//   Alpha Formula is: Cv = (A-B)*C>>7 + D
-//   For A,B,D - (0=texture, 1=frame buffer, 2=0)
-//   For C - (0=texture, 1=frame buffer, 2=use FIX field for Alpha)
-//---------------------------------------------------------------------------
-#define GS_ALPHA(A,B,C,D,FIX) \
-	(((uint64)(A)	<< 0)		| \
-	 ((uint64)(B)	<< 2)		| \
-	 ((uint64)(C)	<< 4)		| \
-	 ((uint64)(D)	<< 6)		| \
-	 ((uint64)(FIX)	<< 32))
-
-//---------------------------------------------------------------------------
-// BITBLTBUF Register - Setup Image Transfer Between EE and GS
-//   SBP  - Source buffer address (Address/256)
-//   SBW  - Source buffer width (Pixels/64)
-//   SPSM - Source pixel format (0 = 32bit RGBA)
-//   DBP  - Destination buffer address (Address/256)
-//   DBW  - Destination buffer width (Pixels/64)
-//   DPSM - Destination pixel format (0 = 32bit RGBA)
 //
-// - When transferring from EE to GS, only the Detination fields
-//   need to be set. (Only Source fields for GS->EE, and all for GS->GS).
-//---------------------------------------------------------------------------
-#define GS_BITBLTBUF(SBP,SBW,SPSM,DBP,DBW,DPSM) \
-	(((uint64)(SBP)		<< 0)		| \
-	 ((uint64)(SBW)		<< 16)		| \
-	 ((uint64)(SPSM)	<< 24)		| \
-	 ((uint64)(DBP)		<< 32)		| \
-	 ((uint64)(DBW)		<< 48)		| \
-	 ((uint64)(DPSM)	<< 56))
-
-//---------------------------------------------------------------------------
-// FRAME_x Register
-//---------------------------------------------------------------------------
-#define GS_FRAME(FBP,FBW,PSM,FBMSK) \
-	(((uint64)(FBP)		<< 0)		| \
-	 ((uint64)(FBW)		<< 16)		| \
-	 ((uint64)(PSM)		<< 24)		| \
-	 ((uint64)(FBMSK)	<< 32))
-
-//---------------------------------------------------------------------------
-// PRIM Register - Setup Drawing Primitive
-//   PRI  - Primitive type
-//   IIP  - Shading method (0=flat, 1=gouraud)
-//   TME  - Texture mapping (0=off, 1=on)
-//   FGE  - Fog (0=off, 1=on)
-//   ABE  - Alpha Blending (0=off, 1=on)
-//   AA1  - Antialiasing (0=off,1=on)
-//   FST  - Texture coordinate specification (0=use ST/RGBAQ register, 1=use UV register)
-//				(UV means no perspective correction, good for 2D)
-//   CTXT - Drawing context (0=1, 1=2)
-//   FIX  - ?? Fragment value control (use 0)
-//---------------------------------------------------------------------------
-#define PRIM_POINT			0
-#define PRIM_LINE			1
-#define PRIM_LINE_STRIP		2
-#define PRIM_TRI			3
-#define PRIM_TRI_STRIP		4
-#define PRIM_TRI_FAN		5
-#define PRIM_SPRITE			6
-
-#define GS_PRIM(PRI,IIP,TME,FGE,ABE,AA1,FST,CTXT,FIX) \
-	(((uint64)(PRI)		<< 0)		| \
-	 ((uint64)(IIP)		<< 3)		| \
-	 ((uint64)(TME)		<< 4)		| \
-	 ((uint64)(FGE)		<< 5)		| \
-	 ((uint64)(ABE)		<< 6)		| \
-	 ((uint64)(AA1)		<< 7)		| \
-	 ((uint64)(FST)		<< 8)		| \
-	 ((uint64)(CTXT)	<< 9)		| \
-	 ((uint64)(FIX)		<< 10))
-
-//---------------------------------------------------------------------------
-// RGBAQ Register
-//---------------------------------------------------------------------------
-#define GS_RGBAQ(R,G,B,A,Q) \
-	(((uint64)(R)		<< 0)		| \
-	 ((uint64)(G)		<< 8)		| \
-	 ((uint64)(B)		<< 16)		| \
-	 ((uint64)(A)		<< 24)		| \
-	 ((uint64)(Q)		<< 32))
-
-//---------------------------------------------------------------------------
-// SCISSOR_x Register
-//---------------------------------------------------------------------------
-#define GS_SCISSOR(X0,X1,Y0,Y1) \
-	(((uint64)(X0)		<< 0)		| \
-	 ((uint64)(X1)		<< 16)		| \
-	 ((uint64)(Y0)		<< 32)		| \
-	 ((uint64)(Y1)		<< 48))
-
-//---------------------------------------------------------------------------
-// TEST_x Register - Pixel Test Settings
-//   ATE   - Alpha Test (0=off, 1=on)
-//   ATST  - Alpha Test Method
-//             0=NEVER:  All pixels fail.
-//             1=ALWAYS: All pixels pass.
-//             2=LESS:   Pixels with A less than AREF pass.
-//             3=LEQUAL, 4=EQUAL, 5=GEQUAL, 6=GREATER, 7=NOTEQUAL
-//   AREF  - Alpha value compared to.
-//   AFAIL - What to do when a pixel fails a test.
-//             0=KEEP:    Don't update anything.
-//             1=FBONLY:  Update frame buffer only.
-//             2=ZBONLY:  Update z-buffer only.
-//             3=RGBONLY: Update only the frame buffer RGB.
-//   DATE  - Destination Alpha Test (0=off, 1=on)
-//   DATM  - DAT Mode (0=pass pixels whose destination alpha is 0)
-//   ZTE   - Depth Test (0=off, 1=on)
-//   ZTST  - Depth Test Method.
-//             0=NEVER, 1=ALWAYS, 2=GEQUAL, 3=GREATER
-//---------------------------------------------------------------------------
-#define ATST_NEVER		0
-#define ATST_ALWAYS		1
-#define ATST_LESS		2
-#define ATST_LEQUAL		3
-#define ATST_EQUAL		4
-#define ATST_GEQUAL		5
-#define ATST_GREATER	6
-#define ATST_NOTEQUAL	7
-
-#define AFAIL_KEEP		0
-#define AFAIL_FBONLY	1
-#define AFAIL_ZBONLY	2
-#define AFAIL_RGBONLY	3
-
-#define ZTST_NEVER		0
-#define ZTST_ALWAYS		1
-#define ZTST_GEQUAL		2
-#define ZTST_GREATER	3
-
-#define GS_TEST(ATE,ATST,AREF,AFAIL,DATE,DATM,ZTE,ZTST) \
-	(((uint64)(ATE)		<< 0)		| \
-	 ((uint64)(ATST)	<< 1)		| \
-	 ((uint64)(AREF)	<< 4)		| \
-	 ((uint64)(AFAIL)	<< 12)		| \
-	 ((uint64)(DATE)	<< 14)		| \
-	 ((uint64)(DATM)	<< 15)		| \
-	 ((uint64)(ZTE)		<< 16)		| \
-	 ((uint64)(ZTST)	<< 17))
-
-//---------------------------------------------------------------------------
-// TEX0_x Register - Set Texture Buffer Information
-//   TBP0 - Texture Buffer Base Pointer (Address/256)
-//   TBW  - Texture Buffer Width (Texels/64)
-//   PSM  - Pixel Storage Format (0 = 32bit RGBA)
-//   TW   - Texture Width (Width = 2^TW)
-//   TH   - Texture Height (Height = 2^TH)
-//   TCC  - Tecture Color Component
-//			  0=RGB,
-//			  1=RGBA, use Alpha from TEXA reg when not in PSM
-//   TFX  - Texture Function (0=modulate, 1=decal, 2=hilight, 3=hilight2)
-//---------------------------------------------------------------------------
-#define TEX_MODULATE	0
-#define TEX_DECAL		1
-#define TEX_HILIGHT		2
-#define TEX_HILIGHT2	3
-
-#define GS_TEX0(TBP0,TBW,PSM,TW,TH,TCC,TFX,CBP,CPSM,CSM,CSA,CLD) \
-	(((uint64)(TBP0)	<< 0)	| \
-	 ((uint64)(TBW)		<< 14)	| \
-	 ((uint64)(PSM)		<< 20)	| \
-	 ((uint64)(TW)		<< 26)	| \
-	 ((uint64)(TH)		<< 30)	| \
-	 ((uint64)(TCC)		<< 34)	| \
-	 ((uint64)(TFX)		<< 35)	| \
-	 ((uint64)(CBP)		<< 37)	| \
-	 ((uint64)(CPSM)	<< 51)	| \
-	 ((uint64)(CSM)		<< 55)	| \
-	 ((uint64)(CSA)		<< 56)	| \
-	 ((uint64)(CLD)		<< 61))
-
-//---------------------------------------------------------------------------
-// TEX1_x Register - Set Texture Information
-//   LCM   - LOD calculation method
-//   MXL   - Maximum MIP level (0-6)
-//   MMAG  - Filter when expanding (0=NEAREST, 1=LINEAR)
-//   MMIN  - Filter when reducing (0=NEAREST, 1=LINEAR)
-//   MTBA  - MIP Base specified by (0=MIPTBP1&2, 1=Automatic)
-//   L     - LOD parameter L
-//   K     - LOD parameter K
-//---------------------------------------------------------------------------
-#define FILTER_NEAREST		0
-#define FILTER_LINEAR		1
-
-#define GS_TEX1(LCM,MXL,MMAG,MMIN,MTBA,L,K) \
-	(((uint64)(LCM)		<< 0)	| \
-	 ((uint64)(MXL)		<< 2)	| \
-	 ((uint64)(MMAG)	<< 5)	| \
-	 ((uint64)(MMIN)	<< 6)	| \
-	 ((uint64)(MTBA)	<< 9)	| \
-	 ((uint64)(L)		<< 19)	| \
-	 ((uint64)(K)		<< 32))
-
-//---------------------------------------------------------------------------
-// TRXDIR Register - Set Image Transfer Directon, and Start Transfer
-//   XDIR - (0=EE->GS, 1=GS->EE, 2=GS->GS, 3=Transmission is deactivated)
-//---------------------------------------------------------------------------
-#define XDIR_EE_GS			0
-#define XDIR_GS_EE			1
-#define XDIR_GS_GS			2
-#define XDIR_DEACTIVATE		3
-
-#define GS_TRXDIR(XDIR)	\
-	((uint64)(XDIR))
-
-//---------------------------------------------------------------------------
-// TRXPOS Register - Setup Image Transfer Coordinates
-//   SSAX - Source Upper Left X
-//   SSAY - Source Upper Left Y
-//   DSAX - Destionation Upper Left X
-//   DSAY - Destionation Upper Left Y
-//   DIR  - Pixel Transmission Order (00 = top left -> bottom right)
+// GS Privileged registers.
 //
-// - When transferring from EE to GS, only the Detination fields
-//   need to be set. (Only Source fields for GS->EE, and all for GS->GS).
-//---------------------------------------------------------------------------
-#define GS_TRXPOS(SSAX,SSAY,DSAX,DSAY,DIR)	\
-	(((uint64)(SSAX)	<< 0)		| \
-	 ((uint64)(SSAY)	<< 16)		| \
-	 ((uint64)(DSAX)	<< 32)		| \
-	 ((uint64)(DSAY)	<< 48)		| \
-	 ((uint64)(DIR)		<< 59))
 
-//---------------------------------------------------------------------------
-// TRXREG Register - Setup Image Transfer Size
-//   RRW - Image Width
-//   RRH - Image Height
-//---------------------------------------------------------------------------
-#define GS_TRXREG(RRW,RRH)	\
-	(((uint64)(RRW)	<< 0)		| \
-	 ((uint64)(RRH)	<< 32))
+#define GS_PMODE	*((volatile unsigned long int*)0x12000000)
+#define GS_SMODE2	*((volatile unsigned long int*)0x12000020)
+#define GS_DISPFB1	*((volatile unsigned long int*)0x12000070)
+#define GS_DISPLAY1	*((volatile unsigned long int*)0x12000080)
+#define GS_BGCOLOUR	*((volatile unsigned long int*)0x120000E0)
 
-//---------------------------------------------------------------------------
-// UV Register - Specify Texture Coordinates
-//---------------------------------------------------------------------------
-#define GS_UV(U,V)	\
-	(((uint64)(U)	<< 0)		| \
-	 ((uint64)(V)	<< 16))
+//
+// GIF registers
+//
 
-//---------------------------------------------------------------------------
-// XYZ2 Register
-//---------------------------------------------------------------------------
-#define GS_XYZ2(X,Y,Z)	\
-	(((uint64)(X)		<< 0)		| \
-	 ((uint64)(Y)		<< 16)		| \
-	 ((uint64)(Z)		<< 32))
+#define GIF_CTRL	*((volatile unsigned long int*)0x12001000)
 
-//---------------------------------------------------------------------------
-// XYOFFSET_x Register
-//---------------------------------------------------------------------------
-#define GS_XYOFFSET(OFX,OFY)	\
-	(((uint64)(OFX)		<< 0)		| \
-	 ((uint64)(OFY)		<< 32))
+//
+// Misc macro's
+//
 
-//---------------------------------------------------------------------------
-// ZBUF_x Register
-//---------------------------------------------------------------------------
-#define GS_ZBUF(ZBP,PSM,ZMSK)	\
-	(((uint64)(ZBP)		<< 0)		| \
-	 ((uint64)(PSM)		<< 24)		| \
-	 ((uint64)(ZMSK)	<< 32))
+#define GIF_SET_TAG(nloop, eop, pre, prim, flg, nreg) \
+	( (u64)(nloop) | ((u64)(eop)<<15) | ((u64)(pre) << 46) | \
+	((u64)(prim)<<47) | ((u64)(flg)<<58) | ((u64)(nreg)<<60) )
 
-#endif // GS_H
+#define GS_INTERLACE	1
+#define GS_NONINTERLACE	0
+#define GS_PAL			3
+#define GS_NTSC			2
+#define GS_AUTO			((*((char*)0x1FC7FF52))=='E')+2
 
+
+#define GS_PSMCT32		0x00
+#define GS_PSMCT24		0x01
+#define GS_PSMCT16		0x02
+#define GS_PSMCT16S		0x0A
+#define GS_PSGPU24		0x12
+
+#define GS_PSMT8		0x13
+#define GS_PSMT4		0x14
+#define GS_PSMT8H		0x1B
+#define GS_PSMT4HL		0x24
+#define GS_PSMT4HH		0x2C
+
+#define GS_PSMZ32		0x00
+#define GS_PSMZ24		0x01
+#define GS_PSMZ16		0x02
+#define GS_PSMZ16S		0x0A
+
+// GS Regs
+#define GS_REG_PRIM			0x00
+#define GS_REG_RGBAQ		0x01
+#define GS_REG_UV			0x03
+#define GS_REG_XYZ2			0x05
+#define GS_REG_TEX0_1		0x06
+#define GS_REG_TEX0_2		0x07
+#define GS_REG_CLAMP_1		0x08
+#define GS_REG_TEX1_1		0x14
+#define GS_REG_XYOFFSET_1	0x18
+#define GS_REG_XYOFFSET_2	0x19
+#define GS_REG_PRMODECONT	0x1A
+#define GS_REG_TEXCLUT		0x1C
+#define GS_REG_TEXA			0x3B
+#define GS_REG_TEXFLUSH		0x3F
+#define GS_REG_SCISSOR_1	0x40
+#define GS_REG_SCISSOR_2	0x41
+#define GS_REG_ALPHA_1		0x42
+#define GS_REG_ALPHA_2		0x43
+#define GS_REG_DTHE			0x45
+#define GS_REG_COLCLAMP		0x46
+#define GS_REG_TEST_1		0x47
+#define GS_REG_TEST_2		0x48
+#define GS_REG_PABE			0x49	//;
+#define GS_REG_FRAME_1		0x4C
+#define GS_REG_FRAME_2		0x4D
+#define GS_REG_ZBUF_1		0x4E
+#define GS_REG_ZBUF_2		0x4F
+#define GS_REG_BITBLTBUF	0x50
+#define GS_REG_TRXPOS		0x51
+#define GS_REG_TRXREG		0x52
+#define GS_REG_TRXDIR		0x53
+
+
+//
+// Macro's used to set the contents of GS registers
+//
+
+#define GS_SET_RGBAQ(r, g, b, a, q) \
+	((u64)(r)        | ((u64)(g) << 8) | ((u64)(b) << 16) | \
+	((u64)(a) << 24) | ((u64)(q) << 32))
+
+#define GS_SET_RGBA(r, g, b, a) \
+	((u64)(r)        | ((u64)(g) << 8) | ((u64)(b) << 16) | ((u64)(a) << 24))
+
+#define GS_SET_XYZ(x, y, z) \
+	((u64)(x) | ((u64)(y) << 16) | ((u64)(z) << 32))
+
+#define GS_SET_UV(u, v) ((u64)(u) | ((u64)(v) << 16))
+
+
+#define GS_SET_FRAME(fbp, fbw, psm, fbmask) \
+	( (u64)(fbp) | (u64)((u64)(fbw) << 16) | (u64)((u64)(psm) << 24) | (u64)((u64)(fbmask) << 32) )
+
+#define GS_SET_XYOFFSET(ofx, ofy) ((u64)(ofx) | ((u64)(ofy) << 32))
+
+#define GS_SET_ZBUF(zbp, psm, zmsk) \
+	( (u64)(zbp) | ((u64)(psm) << 24) | ((u64)(zmsk) << 32) )
+
+#define GS_SET_TEST(ate, atst, aref, afail, date, datm, zte, ztst) \
+	( (u64)(ate)         | ((u64)(atst) << 1) | ((u64)(aref) << 4)  | ((u64)(afail) << 12) | \
+	((u64)(date) << 14) | ((u64)(datm) << 15) | ((u64)(zte) << 16)  | ((u64)(ztst) << 17) )
+
+#define GS_SET_SCISSOR(scax0, scax1, scay0, scay1) \
+	( (u64)(scax0) | ((u64)(scax1) << 16) | ((u64)(scay0) << 32) | ((u64)(scay1) << 48) )
+
+#define GS_SET_PRIM(prim, iip, tme, fge, abe, aa1, fst, ctxt, fix) \
+	((u64)(prim)      | ((u64)(iip) << 3)  | ((u64)(tme) << 4) | \
+	((u64)(fge) << 5) | ((u64)(abe) << 6)  | ((u64)(aa1) << 7) | \
+	((u64)(fst) << 8) | ((u64)(ctxt) << 9) | ((u64)(fix) << 10))
+
+#define GS_SET_DISPFB(fbp, fbw, psm, dbx, dby) \
+	((u64)(fbp) | ((u64)(fbw) << 9) | ((u64)(psm) << 15) | ((u64)(dbx) << 32) | ((u64)(dby) << 43))
+
+#define GS_SET_BITBLTBUF(sbp, sbw, spsm, dbp, dbw, dpsm) \
+	((u64)(sbp)         | ((u64)(sbw) << 16) | \
+	((u64)(spsm) << 24) | ((u64)(dbp) << 32) | \
+	((u64)(dbw) << 48)  | ((u64)(dpsm) << 56))
+
+#define GS_SET_TRXDIR(xdr) ((u64)(xdr))
+
+#define GS_SET_TRXPOS(ssax, ssay, dsax, dsay, dir) \
+	((u64)(ssax)        | ((u64)(ssay) << 16) | \
+	((u64)(dsax) << 32) | ((u64)(dsay) << 48) | \
+	((u64)(dir) << 59))
+
+#define GS_SET_TRXREG(rrw, rrh) \
+	((u64)(rrw) | ((u64)(rrh) << 32))
+
+#define GS_SET_TEX0(tbp, tbw, psm, tw, th, tcc, tfx, cbp, cpsm, csm, csa, cld) \
+	((u64)(tbp)         | ((u64)(tbw) << 14) | ((u64)(psm) << 20)  | ((u64)(tw) << 26) | \
+	((u64)(th) << 30)   | ((u64)(tcc) << 34) | ((u64)(tfx) << 35)  | ((u64)(cbp) << 37) | \
+	((u64)(cpsm) << 51) | ((u64)(csm) << 55) | ((u64)(csa) << 56)  | ((u64)(cld) << 61))
+	
+#define GS_SET_TEX1(lcm, mxl, mmag, mmin, mtba, l, k) ((u64)(lcm) | ((u64)(mxl) << 2)  | ((u64)(mmag) << 5) | ((u64)(mmin) << 6) |      ((u64)(mtba) << 9) | ((u64)(l) << 19) | ((u64)(k) << 32))
+
+
+#define GS_SET_CLAMP(wms, wmt, minu, maxu, minv, maxv) \
+	((u64)(wms)         | ((u64)(wmt) << 2) | ((u64)(minu) << 4)  | ((u64)(maxu) << 14) | \
+	((u64)(minv) << 24) | ((u64)(maxv) << 34))
+
+#define GS_SET_TEXA(ta0, aem, ta1) \
+	((u64)(ta0) | ((u64)(aem) << 15) | ((u64)(ta1) << 32))
+
+typedef struct {
+	unsigned long NLOOP:15;
+	unsigned long EOP:1;
+	unsigned long pad1:16;
+	unsigned long pad2:14;
+	unsigned long PRE:1;
+	unsigned long PRIM:11;
+	unsigned long FLG:2;
+	unsigned long NREG:4;
+	unsigned long REGS0:4;
+	unsigned long REGS1:4;
+	unsigned long REGS2:4;
+	unsigned long REGS3:4;
+	unsigned long REGS4:4;
+	unsigned long REGS5:4;
+	unsigned long REGS6:4;
+	unsigned long REGS7:4;
+	unsigned long REGS8:4;
+	unsigned long REGS9:4;
+	unsigned long REGS10:4;
+	unsigned long REGS11:4;
+	unsigned long REGS12:4;
+	unsigned long REGS13:4;
+	unsigned long REGS14:4;
+	unsigned long REGS15:4;
+} GifTag __attribute__((aligned(16)));
+
+void GS_InitGraph(int mode, int interlace); // Initialise the GS
+void GS_SetEnv(int width, int height, int fbp1, int fbp2, int psm, int zbp, int zbpsm); // Set up drawing enviroment
+void GS_SetDrawFB(int buffer); // Set the active drawing enviroment
+void GS_SetCrtFB(int buffer); // Set the active display enviroment
+void GS_SetDispMode(int dx, int dy, int width, int height); // Set the GS display mode
+
+//
+// DMA stuff - will be moved to dmalib src soon.
+//
+
+typedef struct {
+	u16		qwc;
+	u32		pad1:10;
+	u32		pce:2;
+	u32		id:3;
+	u32		irq:1;
+	u32		*next;
+	u64		pad2;
+} DmaTag __attribute__ ((aligned(16)));
+
+
+#define DMA_SET_TAG(qwc,pce,id,irq,next) \
+  ( (u64)(qwc) | ((u64)(pce) << 16) | ((u64)(id) << 28) | ((u64)(irq) << 31) | ((u64)(next) << 32) )
+
+#define DMA_ID_REFE		0x00
+#define DMA_ID_CNT		0x01
+#define DMA_ID_NEXT		0x02
+#define DMA_ID_REF		0x03
+#define DMA_ID_REFS		0x04
+#define DMA_ID_CALL		0x05
+#define DMA_ID_RET		0x06
+#define DMA_ID_END		0x07
+
+#endif /* _HW1_H_ */

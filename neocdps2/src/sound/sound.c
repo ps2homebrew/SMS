@@ -18,55 +18,89 @@
 
   
 #include <string.h>
-#include <time.h>
 #include <stdio.h>
+#include <malloc.h>
+
+#include "fm.h"
 #include "2610intf.h"
-#include "streams.h"
-//#include "../neocd.h"
-
-int sound=1;
-
 #include "sound.h"
+#include "sjpcm.h" 
+#include "../neocd.h"
 
-#define MIXER_MAX_CHANNELS 1
 
-//#define CPU_FPS 60
-#define BUFFER_LEN 16384
+int16 *sndbuffer[2] __attribute__((aligned(64)));
 
-extern unsigned short play_buffer[BUFFER_LEN];
-
-#define NB_SAMPLES 2048 /* better resolution */
-//#define NB_SAMPLES 1024
-
-void update_stream(void *userdata, unsigned char * stream, int len)
-{
-    //streamupdate(len);
-    memcpy(stream, (unsigned char *) play_buffer, len);
-}
+int16 ps2_soundbuf[2][960] __attribute__((aligned(64)))  __attribute__ ((section (".bss"))); 
 
 int init_audio(void)
 {
 
-    streams_sh_start();
-    YM2610_sh_start();
-    
-    return 1;
+   if(SjPCM_Init(1) < 0)
+   { 
+   	printf("SjPCM Bind failed!!");
+	return -1;
+   } 
+   
+   //streams_sh_start();
+   YM2610_sh_start();
+   
+   SjPCM_Clearbuff();
+   SjPCM_Setvol(0x3fff); // max
+   
+   if (neocdSettings.soundOn)
+   	SjPCM_Play();
+      
+   // into 16kb scratch pad @ 70001000 (why not?)
+   sndbuffer[0] = (int16 *)(0x70001000);
+   sndbuffer[1] = (int16 *)(0x70001800);
+   
+   // Sound output 
+   //sndbuffer[0] = (signed short int *)memalign(64, machine_def.snd_sample * 2);
+   //sndbuffer[1] = (signed short int *)memalign(64, machine_def.snd_sample * 2); 
+   //memset(&sndbuffer[0], 0, machine_def.snd_sample * 2); 
+   //memset(&sndbuffer[1], 0, machine_def.snd_sample * 2); 
+   
+
+   memset(&ps2_soundbuf[0][0], 0, machine_def.snd_sample * 2); 
+   memset(&ps2_soundbuf[1][0], 0, machine_def.snd_sample * 2); 
+
+   
+   printf("audio started\n");   
+   
+   return 0;
 }
 
-void sound_toggle(void) {
-
-	// pause Audio ...
-
-	sound^=1;
-}
-
-void sound_shutdown(void)
+// this is a hack to avoid 48Khz sound emulation needed by sjpcm
+// it's awfull, but still faster that emulate sound at such a high frequency !!
+static inline void up_samples(int16 *sleft, int16 *sright, int16 *dleft, int16 *dright, int dest_samples, int orig_samples) 
 {
-    
-    streams_sh_stop();
-    YM2610_sh_stop();
-    
+	register int i;
+	//int ratio = dest_samples/orig_samples; -> 4 !!
+	for(i=dest_samples;i--;)
+	{
+		*dleft++ = *sleft;
+		*dright++ = *sright;
+		if(!(i%4/*ratio*/) && i){sleft++;sright++;}
+	}
 }
+ 
+
+void play_audio(void)
+{
+     YM2610UpdateOne(sndbuffer, (machine_def.snd_sample >> 2));
+     up_samples(&sndbuffer[0][0], &sndbuffer[1][0], &ps2_soundbuf[0][0], &ps2_soundbuf[1][0], machine_def.snd_sample, (machine_def.snd_sample >> 2)); 
+     SjPCM_Enqueue(ps2_soundbuf[0],ps2_soundbuf[1], machine_def.snd_sample,0);
+}
+
+void sound_toggle(void) 
+{
+	// pause Audio ...
+	neocdSettings.soundOn ^= 1;
+	if (neocdSettings.soundOn) SjPCM_Play();
+	else SjPCM_Pause();
+}
+
+
 
 
 

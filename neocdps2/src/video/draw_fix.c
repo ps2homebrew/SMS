@@ -13,18 +13,18 @@
 inline void draw_fix(uint16 code, uint16 colour, uint16 sx, uint16 sy)
 {
 
-	uint16 y;
+	register uint16 y;
 	uint32 mydword;
-	uint32 * fix=(uint32*)&(neogeo_fix_memory[code<<5]);//fix_memory
+	uint32 * fix=(uint32*)&(neogeo_fix_memory[(code<<5)])+7;//fix_memory
 	uint16 * dest;
 	uint16 * paldata=&video_paletteram_pc[colour]; //palette
 	uint16 col;
 
-	for(y=0;y<8;y++)
+	for( y=8; y--; )
 	{
 		dest     = video_line_ptr[sy+y]+sx;
-		mydword  = *fix++;
-		
+		mydword  = *fix--;
+	
 		col = (mydword>> 0)&0x0f; if (col) dest[0] = paldata[col];
 		col = (mydword>> 4)&0x0f; if (col) dest[1] = paldata[col];
 		col = (mydword>> 8)&0x0f; if (col) dest[2] = paldata[col];
@@ -42,19 +42,19 @@ inline void draw_fix(uint16 code, uint16 colour, uint16 sx, uint16 sy)
 inline void video_draw_fix(void)
 {
 
-	uint16 x, y;
-	uint16 code, colour;
+	register uint16 x, y;
+	register uint16 code, colour;
 	uint16 * fixarea=(uint16 *)&video_vidram[0xe004];
 
 	for (y=0; y < 28; y++)
 	{
-		for (x = 0; x < 40; x++)
+		for( x=40; x--; )
 		{
 			code = fixarea[x << 5];
 			colour = (code&0xf000)>>8;
 			code  &= 0xfff;
-			if (video_fix_usage[code]==0)
-			  continue;
+			if (video_fix_usage[code])//==0)
+			  //continue;
 			draw_fix(code,colour,x<<3,y<<3);
 		}
 		fixarea++;

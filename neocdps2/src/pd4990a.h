@@ -19,7 +19,7 @@ struct pd4990a_s
 extern struct pd4990a_s pd4990a;
 
 void pd4990a_addretrace (void);
-void pd4990a_init(void);
+void pd4990a_init(int fps_rate);
 int pd4990a_testbit_r (void);
 int pd4990a_databit_r (void);
 void pd4990a_control_w(unsigned short);

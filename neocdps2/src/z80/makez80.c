@@ -1462,7 +1462,7 @@ StandardHeader()
 		fprintf(fp, " * Multi-Z80 emulator for the PC, giving maximum performance. \n");
 		fprintf(fp, " */\n\n");
 		fprintf(fp, "#include <stdio.h>\n");
-		fprintf(fp, "#include <stdlib.h>\n");
+		fprintf(fp, "#include <malloc.h>\n");
 		fprintf(fp, "#include <string.h>\n");
 		fprintf(fp, "#include \"mz80.h\"\n");
 

@@ -30,13 +30,13 @@ uint8 *ym_deltat_memory;	/* memory pointer */
 
 /* Forecast to next Forecast (rate = *8) */
 /* 1/8 , 3/8 , 5/8 , 7/8 , 9/8 , 11/8 , 13/8 , 15/8 */
-const int32 ym_deltat_decode_tableB1[16] = {
+static const int32 ym_deltat_decode_tableB1[16] = {
     1, 3, 5, 7, 9, 11, 13, 15,
     -1, -3, -5, -7, -9, -11, -13, -15,
 };
 /* delta to next delta (rate= *64) */
 /* 0.9 , 0.9 , 0.9 , 0.9 , 1.2 , 1.6 , 2.0 , 2.4 */
-const int32 ym_deltat_decode_tableB2[16] = {
+static const int32 ym_deltat_decode_tableB2[16] = {
     57, 57, 57, 57, 77, 102, 128, 153,
     57, 57, 57, 57, 77, 102, 128, 153
 };
@@ -300,9 +300,14 @@ inline void YM_DELTAT_ADPCM_CALC(YM_DELTAT * DELTAT)
 	/* output of start point */
 	DELTAT->adpcml = now_leveling * DELTAT->volume;
 	/* adjust to now */
+	/*
 	DELTAT->adpcml +=
 	    (int) ((double) DELTAT->sample_step *
 		   ((double) DELTAT->now_step / (double) DELTAT->step));
+	*/
+	DELTAT->adpcml +=
+	    (int) ((float) DELTAT->sample_step *
+		   ((float) DELTAT->now_step / (float) DELTAT->step));
     }
     DELTAT->adpcml += DELTAT->sample_step;
 #endif

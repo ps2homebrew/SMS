@@ -262,7 +262,7 @@ unsigned char AYReadReg(int r)
 }
 
 
-void AY8910Write(int a, int data)
+inline void AY8910Write(int a, int data)
 {
     struct AY8910 *PSG = &AYPSG;
 
@@ -273,7 +273,7 @@ void AY8910Write(int a, int data)
     }
 }
 
-int AY8910Read(void)
+inline int AY8910Read(void)
 {
     return AYReadReg(AYPSG.register_latch);
 }
@@ -627,7 +627,7 @@ static int AY8910_init(int clock, int sample_rate,
     PSG->PortBread = portBread;
     PSG->PortAwrite = portAwrite;
     PSG->PortBwrite = portBwrite;
-    PSG->Channel = stream_init_multi(3, 0, AY8910Update);
+    //PSG->Channel = stream_init_multi(3, 0, AY8910Update);
 
     if (PSG->Channel == -1)
 	return 1;

@@ -1,0 +1,288 @@
+        ___  ___   ___  ___     ____    ___ ___ 
+ |\  | |___ |   | |        |  /  ___|  |    ___|
+ | \_| |___ |___| |___  ___| /  |   ___|   |___   Neocd/Ps2 Project.
+---------------------------------------------------------------------
+ (c)'2004 - "evilo" <evilo13@gmail.com>
+---------------------------------------------------------------------
+
+
+History:
+---------------------------------------------------------------------
+
+0.4   - Modified CD detection/swap routines, should work better now.
+	(Press (X) a second time if cd not detected the first time)
+      - Added a workaround for the ps2ip bug (repeated small reads).
+        should fix loading with all  version.
+      - Corrected ipl.txt parsing routines.
+        fix Double Dragon hang up during loading, and probably others.
+      - Corrected a bug introduced in last version and preventing from
+        loading a game located in "cd" folder when booting from CD.
+      - Added the Samurai Spirit RPG patch.
+      - Implemented use of "GfxPipe" for gfx rendering.
+        Almost all games I've tested are fullspeed without sfx, and still 
+        with the old 68k core (who said the ps2 wasn't able to handle it?)
+      - Fixed "blinking sprite" gfx bug, no more missing vertical sprites
+        in horizontal scrolling games.
+      - Added NGCD memory card saves, Neocd will create a 45k file on 
+        your memory card if available (memory card in slot 1 only)
+      - Corrected support for PSX pads (7not6)
+      - In-Game Menu (region selector, sound activation, etc.. see below)
+      - added some gfx filter effect and a fullscreen option (to remove
+        black border in PAL video mode), see menu description.
+      - Correct cpu count cycles (68k core was running at 10Mhz in PAL)
+        will be a bit slower but timing will be more accurate
+      - Lowered Z80 frequency to 4Mhz (was "overclocked" to 6Mhz)
+      - Changed the z80 to a more portable one (fixed sfx in lots of games)
+      - Preliminary sound support (buggy and to be optimized)
+        use ingame menu to enable/disable it, and consider it just as a 
+        preview, since the code is still wip and still need to be work on.
+        (thx to lkz with help on fixing THE "freezing" bug with sound)
+      - "All-In-One" packed elf with embedded IRX and neocd files (<300kb), 
+        only bios still need to be present (for legal reason) in the root 
+        directory, see usage for new instructions.
+      - Included installation script for the Crystal Chip Boot Manager
+                  
+0.3   - Compatibily greatly increased (no more sprites/tiles missing).
+	thanks so much to Ian for the very very helpull tip !
+      - In game "freezing" fixed.
+      - Memory save "crash" fixed.
+      - Added 2nd controller support & analog controls
+      - Added possibility to disable z80 emulation.
+      - Optimized rendering code (still not fullspeed for all games).
+      - Corrected HDD/MC support ("should" work now, untested).
+      - Checks local "cd" folder before asking to swap CD.
+      - Rewrote CD reading/swapping code using Hiryu CDVD library.
+      	no more iso9660 limitations (max 31 files in root dir, ...)
+      	and cd swap issue should be fixed.
+      - Removed loading of memcard.bin (useless empty file)
+      - Removed need for timer.irx (not used anymore)
+      - Automatically set region (EUR for pal ps2, USA for ntsc ps2)
+
+            
+0.2a  - Mainly a bug fix regarding the loading/booting code :
+        Lots of people had problems while running the emulator,
+        so I made a more robust code that should allow it to run
+        even launched from your toaster now !
+        (MC and HDD not tested, but code is there)
+      - Fixed controller bug (was not responding after a while).
+
+
+0.1a  - First release !
+      	As this is an alpha release, this emulator is in 
+	the very early stages of production and a lot still 
+	need to be done. Compatiblity rate is low : 
+	some games are playable, but others have gfx glitches, 
+	no graphics at all, or just hangs up after a while.
+	(games like Bust a Move are fully playable)
+      	And there is no sound yet.
+      	
+
+Introduction:
+---------------------------------------------------------------------
+
+NeoCD/PS2 is a open source NeoGeo CD emulator running on the
+Sony Playstation 2. It is a port of NeoCD/SDL, the excellent
+NeoGeo CD emulator by Foster. Since there is actually no SDL
+library on the PS2, all SDL portions have been removed and 
+replaced by PS2 "native" libraries (using PS2SDK). 
+
+NeoCD/PS2 is not endorsed by SNK Playmore in any way and is 
+produced without the use of any copyrighted material which 
+belongs to Sony Computer Entertainment Inc, or SNK Playmore, 
+or any other party.   
+
+NeoCD/PS2 should only be used to play games that the user legally 
+owns. NeoCD/PS2 must never be distributed with any copyrighted 
+games or other material. Any breach of these terms is out of the 
+authors control and is not at the authors consent. 
+
+NeoCD/PS2 is a free sofware. You may copy and distribute it as 
+much as you like assuming that you respect the above conditions.
+
+The NeoCD/PS2 source code is distributed under the terms of the 
+GNU General Public License. 
+
+
+Current Features:
+---------------------------------------------------------------------
+- Very Good compatibilty
+- PAL/NTSC auto-detection
+- MC/HDD support
+- Loads games from the cdrom
+- 2 controllers support
+- NGCD memory card support (use 45K on a MC)
+- Preliminary sound support
+- Ingame menu
+
+Current Issues:
+---------------------------------------------------------------------
+- Sound emulation sometime slowdown emulation
+- Sound is still buggy ("echo" in MS, missing sfx in KOF '99, etc.. )
+- Timing issues
+- Graphics glitches during KOF loading
+- It's not possible to exit from the bios (ps2 reset needed!)
+- .. and probably others !
+
+To-do list:
+---------------------------------------------------------------------
+- Improve/Optimize/Finish sfx and fm sound emulation
+- Add Stef's Fast 68k Core
+- Rewrite gfx routines using gsKit
+- Add CDDA support
+- Implement Raster effect (Pleasure Goal, etc..)
+- ISO support ?
+- AES/MVS support ?
+
+If you would like a feature that is not listed above, please 
+contact me with your idea (see below).
+
+
+Usage:
+---------------------------------------------------------------------
+
+General requirements :
+
+- Before running the emulator be sure that the "host/cd" 
+  contains the following tree :
+
+  |-- neocd folder (or CD root)
+    |
+    |- neocd.bin (ngcd bios, not provided)
+    |
+    |- neocd.elf
+    |
+    |- neocdps2.txt
+    |
+    |- system.cnf (if burned on a cd)
+    |
+    |- install.pbt  \
+    |- instlst.pbt   \_ C.C. Boot Manager Install Scripts
+    |- remove.pbt    /  Needed to install neocd on the BM
+    |- run.pbt      /
+    
+  Before you ask, if ANY file is MISSING : IT WON'T WORK !
+
+- Ensure that the neocd bios file (called "neocd.bin") is 
+  present it should not be compressed (file is 512kb big).
+  a correct bios should have his CRC32 equal to 0xDF9DE490
+  -> neocd.bin is NOT provided with the emulator, so you have 
+  to search it by your own or try to dump it from your NGCD.
+  
+- Load the emulator (neocd.elf) using your favorite way. If you 
+  burn the emulator be sure to use mode1/iso9660/NO multisession.
+
+- On the splash/intro screen, when you see the "Insert a CD" text, 
+  insert a neogeo cd into your drive, wait a few seconds (the time 
+  for the drive to spin) and press (X) on the pad.
+
+- If all goes well NeoCD/PS2 should detect the game and run it.
+
+Limitation on CD swapping :
+
+1. Your ps2 will need to be modded, else cd will be only recognized 
+   as Audio CD, and it won't be recognized by the emulator.
+
+2. CD size must be at least of 30Mb. Depending of your model, your 
+   ps2 could have problem reading/booting little games (i.e. bust a move), 
+   so you will need to use a backup up copy and inject some dummy file.
+
+General remarks :
+
+1. Concerning loading from host, I use to test/debug the emulator :
+     - PSLink 1.24 / ps2exec v1.1
+   So please try using the same one if you get problem with your 
+   loader.(inlink is known to have problems loading it)
+
+2. If running the emulator from host (or any other way not using the 
+   cd swap), you can copy all files of a game under a "cd" directory
+   that will need to be in the neocd folder. The emulator will first
+   try for the folder existence and execute the game being inside.  
+   
+3. It could be possible to copy the files from your original CD and to 
+   burn them together with the emulator. It's highly recommend to put 
+   the game files directly in the cd root instead of under the "cd" 
+   folder when burning a game together with the emulator on a CD.
+
+4. HDD should be supported but under certain conditions : If used using 
+   regular way of loading (CDROM) it won't works if loaded with fakehost 
+   or similar applications (since it redirects cdrom calls). Anyway some
+   combination should be possible (see .3) ...
+
+
+In-game controls:
+---------------------------------------------------------------------
+
+PS2         -       NEOCD
+-------------------------
+Arrows      =     A/D-Pad
+Left stick  =     A/D-Pad
+Cross	    =    Button A
+Circle      =    Button B
+Square      =    Button C
+Triangle    =    Button D
+Start       =       Start
+Select      =      Select
+
+L2 + R2	    = Ingame Menu
+
+
+In-game Menu:
+---------------------------------------------------------------------
+
+- Resume     : Go back to current game
+- Filter     : Video filter (Nearest or Linear)
+	       with certain games, Linear filter is needed to correct 
+	       some effect caused by the fullscreen video option.
+- Fullscreen : Set video to fullscreen 
+	       remove black border, PAL only !
+- Sound	     : Turn sound on/off
+- CDDA	     : Turn CDDA on/off (not implemented yet)
+- Region     : Change console region 
+	       you will need to reset the emulation to apply it.
+- Enter Bios : needed if you want to format the memory card 
+	       ou will need to restard the emulator to get out (!bug!)
+- Soft Reset : Reset emulation	  
+
+
+Additionaly by holding [Select] when in the ingame menu, you can change 
+the screen position using the directional pad.
+
+
+Contact:
+---------------------------------------------------------------------
+
+Official NeoCD/PS2 Homepage
+http://neocd.ps2-scene.org
+
+Official NeoCD/PS2 Forum
+http://ps2-scene.org/forums/forumdisplay.php?f=80
+
+Feedback on the emulator and games compatibility is greatly appreciated, 
+so don't hesitate to visit the forum and to post your comments !
+
+
+Thanks go to: (in no particular order)
+---------------------------------------------------------------------
+
+Foster		    - For his NeoCD/SDL emulator, on which this one is based.
+Martinez Fabrice    - Who wrote the original NeoCD(DOS) emulator
+Karl Stenerud       - MUSASHI Motorola M680x0 processor emulation engine
+Neil Bradley        - Multi-Z80 CPU emulator
+Tony Saveski        - PS2 GS Routines 
+NeoCD/SDL(DC) team  - Ian Michael, Fosters, GPF, BlackAura, BlueCrab, for their 
+		      great work and helpull tips to fix emulator issues.
+PS2DEV		    - All people that made this possible through toolchain & PS2SDK, 
+		      that helped me (Pixel, drakonite, blackdroid,...) and for 
+		      hosting the NeoCD/PS2 source code in their CVS repository.
+PS2-Scene	    - For hosting the NeoCD/PS2 site and official forum		      
+7not6		    - tips tips tips, menu code and beta testing
+Shazz		    - Crazy Atari coder and GCC explorer ! (->Crau '04!)
+<G>		    - for support !
+Hiryu		    - for his Great PS2 CDVD library.
+Lkz		    - for help on fixing sound support
+Everyone Else       - Thanks for taking an interest....
+
+If I forgot to mention someone in the credits, please let me know.
+
+Last word, if you don't like it, don't use it, or make your own one !
+---------------------------------------------------------------------

@@ -27,8 +27,8 @@ void AY8910_set_clock( /*int chip, */ int _clock);
 void AY8910_set_volume( /*int chip, */ int channel, int volume);
 
 
-void AY8910Write( /*int chip, */ int a, int data);
-int AY8910Read( /*int chip */ void);
+inline void AY8910Write( /*int chip, */ int a, int data);
+inline int AY8910Read( /*int chip */ void);
 
 
 uint32 AY8910_read_port_0_r(uint32 offset);

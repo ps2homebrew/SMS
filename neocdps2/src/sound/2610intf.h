@@ -45,13 +45,13 @@ void YM2610_sh_reset(void);
 /************************************************/
 /* Chip 0 functions								*/
 /************************************************/
-uint32 YM2610_status_port_0_A_r(uint32 offset);
-uint32 YM2610_status_port_0_B_r(uint32 offset);
-uint32 YM2610_read_port_0_r(uint32 offset);
-void YM2610_control_port_0_A_w(uint32 offset, uint32 data);
-void YM2610_control_port_0_B_w(uint32 offset, uint32 data);
-void YM2610_data_port_0_A_w(uint32 offset, uint32 data);
-void YM2610_data_port_0_B_w(uint32 offset, uint32 data);
+inline uint32 YM2610_status_port_0_A_r(uint32 offset);
+inline uint32 YM2610_status_port_0_B_r(uint32 offset);
+inline uint32 YM2610_read_port_0_r(uint32 offset);
+inline void YM2610_control_port_0_A_w(uint32 offset, uint32 data);
+inline void YM2610_control_port_0_B_w(uint32 offset, uint32 data);
+inline void YM2610_data_port_0_A_w(uint32 offset, uint32 data);
+inline void YM2610_data_port_0_B_w(uint32 offset, uint32 data);
 
 void FMTimerInit(void);
 

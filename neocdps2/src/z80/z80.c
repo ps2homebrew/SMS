@@ -46,7 +46,7 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <malloc.h>
 #include <string.h>
 #include "mz80.h"
 UINT32 z80intAddr;

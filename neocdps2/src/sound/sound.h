@@ -37,8 +37,24 @@ LPGL */
 
 #define NB_SEGMENT 20
 
+#define SAMPLE_RATE    12000 //24000 
+
+/* Sound emulation structure */
+/*
+typedef struct
+{
+    int enabled;
+    int bufsize;
+    signed short *buffer[2];
+    signed short *fm_buffer;     
+    signed short *psg_buffer[2]; 
+    int log;
+    void (*callback)(int data);
+} t_snd; 
+*/
+
 int init_audio(void);
-void sound_shutdown(void);
+void play_audio(void);
 void sound_toggle(void);
 
 #endif

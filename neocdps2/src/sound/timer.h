@@ -33,9 +33,12 @@ LPGL */
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
+/*-- Defines ---------------------------------------------------------------*/
+#define PAL_MODE 50
+#define NTSC_MODE 60 
 
 typedef struct timer_struct {
-    double time;		// when
+    float time;		// when
     unsigned int odo_debut;
     unsigned int nb_cycle;
     int param;
@@ -44,12 +47,12 @@ typedef struct timer_struct {
     struct timer_struct *next;
 } timer_struct;
 
-extern double timer_counta;
+extern float timer_counta;
 
-timer_struct *insert_timer(double duration, int param, void (*func) (int));
+timer_struct *insert_timer(float duration, int param, void (*func) (int));
 void del_timer(timer_struct * ts);
 void my_timer(void);
-double timer_get_time(void);
+float timer_get_time(void);
 void free_all_timer(void);
 
 #endif

@@ -1,0 +1,55 @@
+
+0.4   - Modified CD detection/swap routines, should work better now.
+	(Press (X) a second time if cd not detected the first time)
+      - Added a workaround for the ps2ip bug (repeated small reads).
+        should fix loading with all  version.
+      - Corrected ipl.txt parsing routines.
+        fix Double Dragon hang up during loading, and probably others.
+      - Corrected a bug introduced in last version and preventing from
+        loading a game located in "cd" folder when booting from CD.
+      - Added the Samurai Spirit RPG patch.
+      - Implemented use of "GfxPipe" for gfx rendering.
+        Almost all games I've tested are fullspeed without sfx, and still 
+        with the old 68k core (who said the ps2 wasn't able to handle it?)
+      - Fixed "blinking sprite" gfx bug, no more missing vertical sprites
+        in horizontal scrolling games.
+      - Added NGCD memory card saves, Neocd will create a 45k file on 
+        your memory card if available (memory card in slot 1 only)
+      - Corrected support for PSX pads (7not6)
+      - In-Game Menu (region selector, sound activation, etc.. see below)
+      - added some gfx filter effect and a fullscreen option (to remove
+        black border in PAL video mode), see menu description.
+      - Correct cpu count cycles (68k core was running at 10Mhz in PAL)
+        will be a bit slower but timing will be more accurate
+      - Lowered Z80 frequency to 4Mhz (was "overclocked" to 6Mhz)
+      - Changed the z80 to a more portable one (fixed sfx in lots of games)
+      - Preliminary sound support (buggy and to be optimized)
+        use ingame menu to enable/disable it, and consider it just as a 
+        preview, since the code is still wip and still need to be work on.
+        (thx to lkz with help on fixing THE "freezing" bug with sound)
+      - "All-In-One" packed elf with embedded IRX and neocd files (<300kb), 
+        only bios still need to be present (for legal reason) in the root 
+        directory, see usage for new instructions.
+      - Included installation script for the Crystal Chip Boot Manager
+                  
+0.3   - Compatibily greatly increased (no more sprites/tiles missing).
+	thanks so much to Ian for the very very helpull tip !
+      - In game "freezing" fixed.
+      - Memory save "crash" fixed.
+      - Added 2nd controller support & analog controls
+      - Added possibility to disable z80 emulation.
+      - Optimized rendering code (still not fullspeed for all games).
+      - Corrected HDD/MC support ("should" work now, untested).
+      - Checks local "cd" folder before asking to swap CD.
+      - Rewrote CD reading/swapping code using Hiryu CDVD library.
+      	no more iso9660 limitations (max 31 files in root dir, ...)
+      	and cd swap issue should be fixed.
+      - Removed loading of memcard.bin (useless empty file)
+      - Removed need for timer.irx (not used anymore)
+      - Automatically set region (EUR for pal ps2, USA for ntsc ps2)
+
+            
+0.2a  - Bbug fix on loading/booting code :
+      - Fixed controller bug (was not responding after a while).
+
+0.1a  - First release !

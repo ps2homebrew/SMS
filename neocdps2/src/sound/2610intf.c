@@ -13,17 +13,19 @@
 
 
 #include <stdio.h>
-#include "../neocd.h"
 #include "ay8910.h"
 #include "fm.h"
 #include "2610intf.h"
 #include "timer.h"
+#include "sound.h"
+
+#include "../neocd.h"
 
 #if BUILD_YM2610
 
 /* use FM.C with stream system */
 
-static int stream;
+//static int stream;
 
 
 
@@ -40,38 +42,37 @@ static void IRQHandler(int n, int irq)
 /* Timer overflow callback from timer.c */
 void timer_callback_2610(int param)
 {
-    int c = param;
-
-    Timer[c] = 0;
-    YM2610TimerOver(c);
+    Timer[param] = 0;
+    YM2610TimerOver(param);
 }
 
 /* TimerHandler from fm.c */
-static void TimerHandler(int c, int count, double stepTime)
+static void TimerHandler(int c, int count, float stepTime)
 {
-    //printf("TimerHandler %d %d %f\n",c,count,stepTime);
-    if (count == 0) {		/* Reset FM Timer */
+
+    if (count == 0) 
+    {	/* Reset FM Timer */
 	if (Timer[c]) {
-	    del_timer(Timer[c]);
-	    Timer[c] = 0;
+	    del_timer(Timer[c]);   Timer[c] = 0;
 	}
-    } else {			/* Start FM Timer */
-	double timeSec = (double) count * stepTime;
+    } 
+    else 
+    {	/* Start FM Timer */
+	float timeSec = (float) count * stepTime;
 
 	if (Timer[c] == 0) {
-	    Timer[c] =
-		(timer_struct *) insert_timer(timeSec, c,
-					      timer_callback_2610);
+	    Timer[c] =	(timer_struct *) insert_timer(timeSec, c,   timer_callback_2610);
 	}
     }
 }
+
 void FMTimerInit(void)
 {
     Timer[0] = Timer[1] = 0;
     free_all_timer();
 }
 
-/* update request from fm.c */
+/* update request from fm.c 
 void YM2610UpdateRequest(void)
 {
     static double old_tc;
@@ -81,45 +82,39 @@ void YM2610UpdateRequest(void)
 	old_tc=timer_counta;
 	streamupdate(len);
     }
-}
+}*/
 
 
 int YM2610_sh_start(void)
 {
-    int j;
-    int rate = SAMPLE_RATE;
-    char buf[YM2610_NUMBUF][40];
+
+/*
     void *pcmbufa, *pcmbufb;
     int pcmsizea, pcmsizeb;
-
+*/
     if (AY8910_sh_start())
 	return 1;
 
     /* Timer Handler set */
     FMTimerInit();
-    for (j = 0; j < YM2610_NUMBUF; j++) {
-	buf[j][0] = 0;
-    }
-    stream = stream_init_multi(YM2610_NUMBUF, 0, YM2610UpdateOne);
+/*
     pcmbufa = (void *) neogeo_pcm_memory;
     pcmsizea = 0x100000; //1048576;
-    pcmbufb = NULL; /*(void *) memory.sound2;*/
-    pcmsizeb = 0; /*memory.sound2_size;*/
+    pcmbufb = NULL; 
+    pcmsizeb = 0; 
+*/
 
-    //}
-
-  /**** initialize YM2610 ****/
-    /*
-       if (YM2610Init(8000000,rate,
-       pcmbufa,pcmsizea,pcmbufb,pcmsizeb,
-       TimerHandler,IRQHandler) == 0)
-     */
-    if (YM2610Init(8000000, rate,
-		   pcmbufa, pcmsizea, pcmbufb, pcmsizeb,
+     
+    if (YM2610Init(8000000, 
+    		   SAMPLE_RATE,
+		   (void *) neogeo_pcm_memory, 
+		   0x100000, 
+		   NULL, 
+		   0,
 		   TimerHandler, IRQHandler) == 0)
 	return 0;
 
-    /* error */
+    printf("error\n");
     return 1;
 }
 
@@ -141,12 +136,12 @@ void YM2610_sh_reset(void)
 /************************************************/
 /* Status Read for YM2610 - Chip 0		*/
 /************************************************/
-uint32 YM2610_status_port_0_A_r(uint32 offset)
+inline uint32 YM2610_status_port_0_A_r(uint32 offset)
 {
     return YM2610Read(0);
 }
 
-uint32 YM2610_status_port_0_B_r(uint32 offset)
+inline uint32 YM2610_status_port_0_B_r(uint32 offset)
 {
     return YM2610Read(2);
 }
@@ -154,7 +149,7 @@ uint32 YM2610_status_port_0_B_r(uint32 offset)
 /************************************************/
 /* Port Read for YM2610 - Chip 0		*/
 /************************************************/
-uint32 YM2610_read_port_0_r(uint32 offset)
+inline uint32 YM2610_read_port_0_r(uint32 offset)
 {
     return YM2610Read(1);
 }
@@ -164,12 +159,12 @@ uint32 YM2610_read_port_0_r(uint32 offset)
 /* Control Write for YM2610 - Chip 0		*/
 /* Consists of 2 addresses			*/
 /************************************************/
-void YM2610_control_port_0_A_w(uint32 offset, uint32 data)
+inline void YM2610_control_port_0_A_w(uint32 offset, uint32 data)
 {
     YM2610Write(0, data);
 }
 
-void YM2610_control_port_0_B_w(uint32 offset, uint32 data)
+inline void YM2610_control_port_0_B_w(uint32 offset, uint32 data)
 {
     YM2610Write(2, data);
 }
@@ -178,12 +173,12 @@ void YM2610_control_port_0_B_w(uint32 offset, uint32 data)
 /* Data Write for YM2610 - Chip 0		*/
 /* Consists of 2 addresses			*/
 /************************************************/
-void YM2610_data_port_0_A_w(uint32 offset, uint32 data)
+inline void YM2610_data_port_0_A_w(uint32 offset, uint32 data)
 {
     YM2610Write(1, data);
 }
 
-void YM2610_data_port_0_B_w(uint32 offset, uint32 data)
+inline void YM2610_data_port_0_B_w(uint32 offset, uint32 data)
 {
     YM2610Write(3, data);
 }

@@ -5,26 +5,17 @@
 /*-- Include Files ---------------------------------------------------------*/
 #include <kernel.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <tamtypes.h>
 #include <sifrpc.h>
 #include <sifcmd.h> 
 #include <loadfile.h>
-
+#include <libpad.h>
 #include "../neocd.h"
+#include "input.h"
+#include "../menu/menu.h"
 
-#include "libpad.h"
 
 #define ROM_PADMAN
-
-#if defined(ROM_PADMAN) && defined(NEW_PADMAN)
-#error Only one of ROM_PADMAN & NEW_PADMAN should be defined!
-#endif
-
-#if !defined(ROM_PADMAN) && !defined(NEW_PADMAN)
-#error ROM_PADMAN or NEW_PADMAN must be defined!
-#endif
-
 
 /*
  * Global var's
@@ -38,37 +29,9 @@ static int actuators;
 
 static struct padButtonStatus buttons;
 static u32 paddata;
-int pad_nb;
+static int pad_nb;
 
-/*--------------------------------------------------------------------------*/
-#define P1UP    0x00000001
-#define P1DOWN  0x00000002
-#define P1LEFT  0x00000004
-#define P1RIGHT 0x00000008
-#define P1A     0x00000010
-#define P1B     0x00000020
-#define P1C     0x00000040
-#define P1D     0x00000080
-
-#define P2UP    0x00000100
-#define P2DOWN  0x00000200
-#define P2LEFT  0x00000400
-#define P2RIGHT 0x00000800
-#define P2A     0x00001000
-#define P2B     0x00002000
-#define P2C     0x00004000
-#define P2D     0x00008000
-
-#define P1START 0x00010000
-#define P1SEL   0x00020000
-#define P2START 0x00040000
-#define P2SEL   0x00080000
-
-#define SPECIAL 0x01000000
-
-#define PADDLE_1	0
-#define PADDLE_2	1
-
+static int askForBios = 0;
 
 /*--------------------------------------------------------------------------*/
 static uint32 keys  =~0;
@@ -183,10 +146,10 @@ int initializePad(int port, int slot)
         return 1;
     }
 
-    printf("Enabling dual shock functions\n");
+    //printf("Enabling dual shock functions\n");
 
     // When using MMODE_LOCK, user cant change mode with Select button
-    padSetMainMode(port, slot, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK);
+    padSetMainMode(port, slot, PAD_MMODE_DUALSHOCK, PAD_MMODE_UNLOCK);
 
     /*
     waitPadReady(port, slot);
@@ -274,146 +237,91 @@ void input_init(void)
        
 }
 
-void input_shutdown(void)
+void enterBIOS()
 {
- 	padPortClose(PADDLE_1,0);
- 	padPortClose(PADDLE_2,0);
- 	padEnd();
-}
-
-inline void joySet (int button) {
-	keys &= ~button;
+	askForBios = 1;
 }
 
 void processEvents(void)
 {
+    register int ret;
     // reset key values
     keys  =~0;
+    
      	
     // ------- controller 1 ---------------------------------------
-    while (padGetState(PADDLE_1, 0) != PAD_STATE_STABLE)
-    	; // more error check ?
+    //while (padGetState(PADDLE_1, 0) != PAD_STATE_STABLE); // more error check ?
+    while (((ret=padGetState(PADDLE_1, 0)) != PAD_STATE_STABLE)&&(ret!=PAD_STATE_FINDCTP1)&&(ret != PAD_STATE_DISCONN)); // more error check ?
+
   
     if (padRead(PADDLE_1, 0, &buttons) != 0)
     {
-    	paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+    	paddata = 0xffff ^ buttons.btns;
 
-    	if((paddata & PAD_LEFT) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_h < 64)))
-    	{
-            joySet(P1LEFT);
-        }         
-        else if((paddata & PAD_RIGHT) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_h > 192)))
-        {
-           joySet(P1RIGHT);
-        }
-        
-        if((paddata & PAD_UP) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_v < 64)))
-        {
-           joySet(P1UP);
-        }        
-        else if ((paddata & PAD_DOWN) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_v > 192)))
-        {
-            joySet(P1DOWN);
-        }
-        
-        if(paddata & PAD_SQUARE)
-        {
-            joySet(P1C);
-        }
-        
-        if(paddata & PAD_CROSS)
-        {
-            joySet(P1A);
-        }
-        
-        if(paddata & PAD_CIRCLE)
-        {
-            joySet(P1B);
-        }
-        
-        if(paddata & PAD_TRIANGLE)
-        {
-            joySet(P1D);
-        }
-        
-        if(paddata & PAD_START)
-        {
-           joySet(P1START);
-    	}
-    	
-    	if(paddata & PAD_SELECT)
-        {
-           joySet(P1SEL);
-    	}
-    	
-    	if(paddata & PAD_L1)
-        {
-           AUDIO_PLAYING=!AUDIO_PLAYING;
-	}
+    	if  ((paddata & PAD_LEFT) 
+    	 || (((buttons.mode >> 4) == 0x07)
+    	 && (buttons.ljoy_h < 64)))         	keys &= ~P1LEFT; // joySet(P1LEFT);
+        else if((paddata & PAD_RIGHT) 
+         || (((buttons.mode >> 4) == 0x07)
+         && (buttons.ljoy_h > 192)))		keys &= ~P1RIGHT; // joySet(P1RIGHT);
+        if ((paddata & PAD_UP) 
+         || (((buttons.mode >> 4) == 0x07)
+         && (buttons.ljoy_v < 64)))		keys &= ~P1UP; // joySet(P1UP);
+        else if ((paddata & PAD_DOWN) 
+         || (((buttons.mode >> 4) == 0x07)
+         && (buttons.ljoy_v > 192)))		keys &= ~P1DOWN; // joySet(P1DOWN);
+        if(paddata & PAD_SQUARE) 		keys &= ~P1C; //joySet(P1C);
+        if(paddata & PAD_CROSS) 		keys &= ~P1A; //joySet(P1A);
+        if(paddata & PAD_CIRCLE) 		keys &= ~P1B; //joySet(P1B);
+	if(paddata & PAD_TRIANGLE) 		keys &= ~P1D; //joySet(P1D);
+        if(paddata & PAD_START) 		keys &= ~P1START; //joySet(P1START);
+    	if(paddata & PAD_SELECT) 		keys &= ~P1SEL; //joySet(P1SEL);
+    	if((paddata & PAD_L2)&&
+    	   (paddata & PAD_R2)) 			IngameMenu();
     	
     } //endif
     
     // ------- controller 2 ---------------------------------------
     if (pad_nb ==2) // poll 2nd joystick if detected
     {
-	while (padGetState(PADDLE_2, 0) != PAD_STATE_STABLE)
-	    	; // more error check ?
+	//while (padGetState(PADDLE_2, 0) != PAD_STATE_STABLE); // more error check ?
+	while (((ret=padGetState(PADDLE_2, 0)) != PAD_STATE_STABLE)&&(ret!=PAD_STATE_FINDCTP1)&&(ret != PAD_STATE_DISCONN)); // more error check ?
 	  
 	if (padRead(PADDLE_2, 0, &buttons) != 0)
 	{
-		paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+		paddata = 0xffff ^ buttons.btns;
 	    
-		if((paddata & PAD_LEFT) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_h < 64)))
-    		{
-            	   joySet(P2LEFT);
-        	}         
-        	else if((paddata & PAD_RIGHT) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_h > 192)))
-        	{
-           	   joySet(P2RIGHT);
-        	}
-        
-        	if((paddata & PAD_UP) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_v < 64)))
-        	{
-           	    joySet(P2UP);
-        	}        
-        	else if ((paddata & PAD_DOWN) || (((buttons.mode >> 4) == 0x07)&&(buttons.ljoy_v > 192)))
-        	{
-            	    joySet(P2DOWN);
-        	}
-	        
-	        if(paddata & PAD_SQUARE)
-	        {
-	            joySet(P2C);
-	        }
-	        
-	        if(paddata & PAD_CROSS)
-	        {
-	            joySet(P2A);
-	        }
-	        
-	        if(paddata & PAD_CIRCLE)
-	        {
-	            joySet(P2B);
-	        }
-	        
-	        if(paddata & PAD_TRIANGLE)
-	        {
-	            joySet(P2D);
-	        }
-	        
-	        if(paddata & PAD_START)
-	        {
-	           joySet(P2START);
-	    	}
+		if ((paddata & PAD_LEFT) 
+		 || (((buttons.mode >> 4) == 0x07)
+		 &&(buttons.ljoy_h < 64)))		keys &= ~P2LEFT; // joySet(P2LEFT);
+        	else if((paddata & PAD_RIGHT) 
+        	 || (((buttons.mode >> 4) == 0x07)
+        	 &&(buttons.ljoy_h > 192)))		keys &= ~P2RIGHT; // joySet(P2RIGHT);
+        	if ((paddata & PAD_UP) 
+        	 || (((buttons.mode >> 4) == 0x07)
+        	 && (buttons.ljoy_v < 64)))		keys &= ~P2UP; // joySet(P2UP);
+        	else if ((paddata & PAD_DOWN) 
+        	 || (((buttons.mode >> 4) == 0x07)
+        	 && (buttons.ljoy_v > 192)))		keys &= ~P2DOWN; // joySet(P2DOWN);
+	        if(paddata & PAD_SQUARE) 		keys &= ~P2C; //joySet(P2C);
+	        if(paddata & PAD_CROSS) 		keys &= ~P2A; //joySet(P2A);
+		if(paddata & PAD_CIRCLE) 		keys &= ~P2B;//joySet(P2B);
+	        if(paddata & PAD_TRIANGLE) 		keys &= ~P2D;//joySet(P2D);
+	        if(paddata & PAD_START) 		keys &= ~P2START;//joySet(P2START);
+	    	if(paddata & PAD_SELECT)		keys &= ~P2SEL;//joySet(P2SEL);
+	    	if((paddata & PAD_L2)&&
+    	   	   (paddata & PAD_R2)) 			IngameMenu();
 	    	
-	    	if(paddata & PAD_SELECT)
-	        {
-	           joySet(P2SEL);
-	    	}
-	    	
-	    } //endif
-	 } //  //endif joy 2
+	 } //endif
+      } //  //endif joy 2
 	 
+      // check if enter bios from menu
+      if (askForBios==1) 
+      {
+	 	keys &= SPECIAL;
+	 	askForBios = 0;
+      }
+	
 }
         
 /*--------------------------------------------------------------------------*/
@@ -421,13 +329,11 @@ inline unsigned char read_player1(void)
 {
     return keys&0xff;
 }
-
 /*--------------------------------------------------------------------------*/
 inline unsigned char read_player2(void) 
 {
     return (keys>>8)&0xff;
 }
-
 /*--------------------------------------------------------------------------*/
 inline unsigned char read_pl12_startsel(void) 
 {
@@ -436,19 +342,32 @@ inline unsigned char read_pl12_startsel(void)
 
 void waitforX(void)
 {
-
+   int ret;
    //wait for X key press
    while(1)
    {  
-    	while (padGetState(PADDLE_1, 0) != PAD_STATE_STABLE)
-    		; // more error check ?
+    	while (((ret=padGetState(PADDLE_1, 0)) != PAD_STATE_STABLE)&&(ret!=PAD_STATE_FINDCTP1)&&(ret != PAD_STATE_DISCONN)); // more error check ?
 
     	if (padRead(PADDLE_1, 0, &buttons) != 0)
     	{
-	    	paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+	    	paddata = 0xffff ^ buttons.btns;
                 if(paddata & PAD_CROSS)
             		return;
     	}
    }
+
+}
+
+int isButtonPressed(u32 button)
+{
+   int ret;
+   while (((ret=padGetState(PADDLE_1, 0)) != PAD_STATE_STABLE)&&(ret!=PAD_STATE_FINDCTP1)&&(ret != PAD_STATE_DISCONN)); // more error check ?
+   if (padRead(PADDLE_1, 0, &buttons) != 0)
+   {
+    	paddata = 0xffff ^ buttons.btns;
+     	if(paddata & button)
+            return 1;
+   }
+   return 0;
 
 }

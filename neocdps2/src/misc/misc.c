@@ -5,7 +5,6 @@
 #include <kernel.h> 
 #include <stdio.h>
 #include <fileio.h>
-#include <stdlib.h> 
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h> 
@@ -27,6 +26,4 @@ void swab( const void* src1, const void* src2, int isize)
 		ptr2[ic1+1] = tmp;
 	}
 }
-
-
 #endif

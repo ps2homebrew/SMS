@@ -12,50 +12,32 @@
 #define PAL_MODE 50
 #define NTSC_MODE 60
 
-#define SMS_TEX		0x0B0000
+#define TextOutC2(x_start, x_end, y, string,  z) textCpixel((x_start)>>4,(x_end)>>4,((y)>>4)+4,GS_SET_RGBA(255,255,255,128),0,0,(z),(string))
 
-/*
-	X zoom table - verified on real hardware
-	        8         = 0
-	    4   8         = 1
-	    4   8  c      = 2
-	  2 4   8  c      = 3
-	  2 4   8  c e    = 4
-	  2 4 6 8  c e    = 5
-	  2 4 6 8 a c e   = 6
-	0 2 4 6 8 a c e   = 7
-	0 2 4 6 89a c e   = 8
-	0 234 6 89a c e   = 9
-	0 234 6 89a c ef  = A
-	0 234 6789a c ef  = B
-	0 234 6789a cdef  = C
-	01234 6789a cdef  = D
-	01234 6789abcdef  = E
-	0123456789abcdef  = F
+/* 
+VRAM layout
 
-static char zoomx_draw_tables[16][16] =
-{
-	{ 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0 },
-	{ 0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0 },
-	{ 0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0 },
-	{ 0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0 },
-	{ 0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,0 },
-	{ 0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0 },
-	{ 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0 },
-	{ 1,0,1,0,1,0,1,0,1,1,1,0,1,0,1,0 },
-	{ 1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,0 },
-	{ 1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1 },
-	{ 1,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1 },
-	{ 1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1 },
-	{ 1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1 },
-	{ 1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1 },
-	{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }
-};
+0x000000 - FB 1
+0x080000 - FB 2 (FB 1 + 512*256*4)
+0x100000 - ZBuf (FB 2 * 2)
+0x180000 - End of ZBuf. Star of TEX and CLUT area.
+
 */
+ 
+
+#define NGCD_TEX	0x100000 + 0x080000 //0x0A0000 + 0x0A0000 //
+//#define FONT_TEX	0x128000 + 0x0A0000
+#define NGCD_CLUT	0x138000 + 0x0A0000
+//#define LOGO_TEX	0x138000 + 0x0A0000 + 0x200
+#define VRAM_MAX	0x3E8000
+
+#define WIDTH  320
+#define HEIGHT 256
+
+
+
 /*-- Global Variables ------------------------------------------------------*/
 extern char		*video_vidram ;// __attribute__((aligned(64)));
-//extern unsigned short	*video_vidram;//  __attribute__((aligned(64)));
 extern unsigned short	*video_paletteram_ng __attribute__((aligned(64)));
 extern unsigned short	video_palette_bank0_ng[4096] __attribute__((aligned(64)));
 extern unsigned short	video_palette_bank1_ng[4096] __attribute__((aligned(64)));
@@ -70,22 +52,28 @@ extern unsigned short	video_palette_bank0[4096] __attribute__((aligned(64)));
 extern unsigned short	video_palette_bank1[4096] __attribute__((aligned(64)));
 extern unsigned short	*video_line_ptr[224] __attribute__((aligned(64)));
 extern unsigned char	video_fix_usage[4096] __attribute__((aligned(64)));
+//extern unsigned char	*video_fix_usage;
 extern unsigned char	rom_fix_usage[4096] __attribute__((aligned(64)));
 extern unsigned char	video_spr_usage[32768] __attribute__((aligned(64)));
 extern unsigned char	rom_spr_usage[32768] __attribute__((aligned(64)));
 extern unsigned int	video_hide_fps;
 extern unsigned short	video_color_lut[32768] __attribute__((aligned(64)));
 
-extern int		video_mode;
 extern double		gamma_correction;
 extern int		frameskip;
 
 extern unsigned int	neogeo_frame_counter;
 extern unsigned int	neogeo_frame_counter_speed;
 
+
+extern int 		whichdrawbuf;
+
+extern unsigned int 	dpw;
+extern unsigned int 	dph;
+
+
 /*-- video.c functions ----------------------------------------------------*/
 int  video_init(void);
-void video_shutdown(void);
 int  video_set_mode();
 void video_precalc_lut(void);
 void video_draw_screen1(void);
@@ -100,8 +88,15 @@ void blitter(void);
 void video_draw_fix(void);
 //void clean_buffers(void);
 /*-- UI functions -------------------------------------------------*/
-void display_splashscreen(void);
 void display_insertscreen(void);
 void display_loadingscreen(void);
+
+void inline displayGPFrameBuffer(uint32 *buffer);
+void inline displayGPImageBuffer(uint32 *buffer);
+
+void printch(int x, int y, unsigned couleur,unsigned char ch,int taille,int pl,int zde);
+void textpixel(int x,int y,unsigned color,int tail,int plein,int zdep, char *string,...);
+void textCpixel(int x,int x2,int y,unsigned color,int tail,int plein,int zdep,char *string,...);
+
 #endif /* VIDEO_H */
 

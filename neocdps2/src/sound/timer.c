@@ -31,24 +31,28 @@ YOU CAN REUSE SOURCE CODE AND TECHNICAL KNOWLEDGE AS LONG AS IT IS NOT FOR COMME
 LPGL */
 
 #include <stdlib.h>
-#include "timer.h"
 #include <stdio.h>
+#include "timer.h"
+#include "../neocd.h"
 
-double timer_counta;
-timer_struct *timer_list;
 #define MAX_TIMER 3
+
+float timer_counta;
+timer_struct *timer_list;
 timer_struct timers[MAX_TIMER];
-int nb_interlace=256;
+//int nb_interlace=256;
 //int nb_timer=0;
 
-double timer_get_time(void) {
+float timer_get_time(void) {
     return timer_counta;
 }
 
-timer_struct *insert_timer(double duration, int param, void (*func) (int))
+timer_struct *insert_timer(float duration, int param, void (*func) (int))
 {
     int i;
-    for (i = 0; i < MAX_TIMER; i++) {
+    //for (i = 0; i < MAX_TIMER; i++) 
+    for (i = MAX_TIMER; i--;) 
+    {
 	if (timers[i].del_it) {
 	    timers[i].time = timer_counta + duration;
 	    timers[i].param = param;
@@ -58,13 +62,15 @@ timer_struct *insert_timer(double duration, int param, void (*func) (int))
 	    return &timers[i];
 	}
     }
-    printf("YM2610: No timer free!\n");
+    //printf("YM2610: No timer free!\n");
     return NULL;		/* No timer free */
 }
 
 void free_all_timer(void) {
     int i;
-    for (i = 0; i < MAX_TIMER; i++) {
+    //for (i = 0; i < MAX_TIMER; i++) 
+    for (i = MAX_TIMER; i--;) 
+    {
 	timers[i].del_it=1;
     }
 }
@@ -74,33 +80,32 @@ void del_timer(timer_struct * ts)
     ts->del_it = 1;
 }
 
-static double inc;
+static float inc;
 
 void my_timer(void)
 {
     static int init = 1;
     int i;
 
-    if (init) {
-	//timer_init_save_state();
+    if (init) 
+    {
 	init = 0;
-	if (0) {
-	    inc = (double) (0.02) / nb_interlace;
-			  //(conf.sound ? (double) nb_interlace : 1.0);
-	} else {
-	    inc =
-		(double) (0.01666) / nb_interlace;
-	    //(conf.sound ? (double) nb_interlace : 1.0);
-	}
-	for (i = 0; i < MAX_TIMER; i++)
+	if (machine_def.vidsys == PAL_MODE)
+	    inc = (float) (0.02 / 256);
+
+	else
+	    inc = (float) (0.01666 / 256);
+
+	for (i = MAX_TIMER; i--;) 
 	    timers[i].del_it = 1;
     }
 
-    timer_counta += inc;		/* 16ms par frame */
+    timer_counta += inc;		/* 16ms/20ms par frame */
 
-    for (i = 0; i < MAX_TIMER; i++) {
-	if (timer_counta >= timers[i].time && timers[i].del_it == 0) {
-	    //printf("Timer_expire %d duration=%f param=%d\n",i,timers[i].time,timers[i].param);
+    for (i = MAX_TIMER; i--;) 
+    {
+	if (timer_counta >= timers[i].time && timers[i].del_it == 0) 
+	{
 	    if (timers[i].func) timers[i].func(timers[i].param);
 	    timers[i].del_it = 1;
 	}

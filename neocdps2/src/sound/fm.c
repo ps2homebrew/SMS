@@ -67,9 +67,10 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <malloc.h>
 #include <math.h>
 #include "../sound/sound.h"
 #include "../defines.h"
@@ -295,94 +296,6 @@ static uint32 LFOCnt, LFOIncr;	/* LFO PhaseGenerator */
 static int32 out_ch[4];		/* channel output NONE,LEFT,RIGHT or CENTER */
 static int32 pg_in1, pg_in2, pg_in3, pg_in4;	/* PG input of SLOTs */
 
-#if 0
-static void print_struct(FILE *f,YM2610 *F2610,uint8 *data) {
-    int i,j;
-    if (data==F2610) fprintf(f," - YM2610 - ");
-    if (data==&F2610->REGS) fprintf(f," - REGS - ");
-    if (data==&F2610->OPN) fprintf(f," - OPN - ");
-    for(i=0;i<6;i++) {
-	if (data==&F2610->CH[i]) fprintf(f," - CH[%d] - ",i);
-	for(j=0;j<4;j++) {
-	    if (data==&F2610->CH[i].SLOT[j]) fprintf(f," - SLOT[%d] - ",j);
-	    if (data==&F2610->CH[i].SLOT[j].DT) fprintf(f," - SL.DT - ");
-	    if (data==&F2610->CH[i].SLOT[j].DT2) fprintf(f," - SL.DT2 - ");
-	    if (data==&F2610->CH[i].SLOT[j].TL) fprintf(f," - SL.TL - ");
-	    if (data==&F2610->CH[i].SLOT[j].KSR) fprintf(f," - SL.KSR - ");
-	    if (data==&F2610->CH[i].SLOT[j].AR) fprintf(f," - SL.AR - ");
-	    if (data==&F2610->CH[i].SLOT[j].DR) fprintf(f," - SL.DR - ");
-	    if (data==&F2610->CH[i].SLOT[j].SR) fprintf(f," - SL.SR - ");
-	    if (data==&F2610->CH[i].SLOT[j].RR) fprintf(f," - SL.RR - ");
-	    if (data==&F2610->CH[i].SLOT[j].SL) fprintf(f," - SL.SL - ");
-	    if (data==&F2610->CH[i].SLOT[j].SEG) fprintf(f," - SL.SEG - ");
-	    if (data==&F2610->CH[i].SLOT[j].ksr) fprintf(f," - SL.KSR2 - ");
-	    if (data==&F2610->CH[i].SLOT[j].mul) fprintf(f," - SL.MUL - ");
-	    if (data==&F2610->CH[i].SLOT[j].Cnt) fprintf(f," - SL.CNT - ");
-	    if (data==&F2610->CH[i].SLOT[j].Incr) fprintf(f," - SL.INCR - ");
-	    if (data==&F2610->CH[i].SLOT[j].state) fprintf(f," - SL.STATE - ");
-	    if (data==&F2610->CH[i].SLOT[j].eg_next) fprintf(f," - SL.EG_NEXT - ");
-	    if (data==&F2610->CH[i].SLOT[j].evc) fprintf(f," - SL.evc - ");
-	    if (data==&F2610->CH[i].SLOT[j].eve) fprintf(f," - SL.eve - ");
-	    if (data==&F2610->CH[i].SLOT[j].evs) fprintf(f," - SL.evs - ");
-	    if (data==&F2610->CH[i].SLOT[j].evsa) fprintf(f," - SL.evsa - ");
-	    if (data==&F2610->CH[i].SLOT[j].evsd) fprintf(f," - SL.evsd - ");
-	    if (data==&F2610->CH[i].SLOT[j].evss) fprintf(f," - SL.evss - ");
-	    if (data==&F2610->CH[i].SLOT[j].evsr) fprintf(f," - SL.evsr - ");
-	    if (data==&F2610->CH[i].SLOT[j].TLL) fprintf(f," - SL.TLL - ");
-	    if (data==&F2610->CH[i].SLOT[j].amon) fprintf(f," - SL.AMON - ");
-	    if (data==&F2610->CH[i].SLOT[j].ams) fprintf(f," - SL.AMS - ");
-	    
-	    
- 
-	}
-	if (data==&F2610->CH[i].PAN) fprintf(f," - PAN - ");
-	if (data==&F2610->CH[i].ALGO) fprintf(f," - ALGO - ");
-	if (data==&F2610->CH[i].FB) fprintf(f," - FB - ");
-	if (data==&F2610->CH[i].op1_out) fprintf(f," - OP1OUT - ");
-	if (data==&F2610->CH[i].connect1) fprintf(f," - CONNECT1 - ");
-	if (data==&F2610->CH[i].connect2) fprintf(f," - CONNECT2 - ");
-	if (data==&F2610->CH[i].connect3) fprintf(f," - CONNECT3 - ");
-	if (data==&F2610->CH[i].connect4) fprintf(f," - CONNECT4 - ");
-	if (data==&F2610->CH[i].pms) fprintf(f," - PMS - ");
-	if (data==&F2610->CH[i].ams) fprintf(f," - AMS - ");
-	if (data==&F2610->CH[i].fc) fprintf(f," - FC - ");
-	if (data==&F2610->CH[i].fn_h) fprintf(f," - FN_H - ");
-	if (data==&F2610->CH[i].kcode) fprintf(f," - KCODE - ");
-    }
-    if (data==&F2610->address1) fprintf(f," - ADD1 - ");
-    if (data==&F2610->pcmbuf) fprintf(f," - PCMBUF - ");
-    if (data==&F2610->adpcmTL) fprintf(f," - ADPCMTL - ");
-    for(i=0;i<6;i++)
-	if (data==&F2610->adpcm[i]) fprintf(f," - ADPCM[%d] - ",i);
-    if (data==&F2610->adpcmreg) fprintf(f," - ADPCMREG - ");
-    if (data==&F2610->adpcm_arrivedEndAddress) fprintf(f," - ADPCM_END - ");
-    if (data==&F2610->deltaT) fprintf(f," - DELTAT - ");
-
-}
-
-static void dump_mem(FILE *f,YM2610 *F2610,uint8 *data,int size) {
-    int i;
-    fprintf(f,"%04x : ",0);
-    for(i=0;i<size;i++) {
-	print_struct(f,F2610,&data[i]);
-	fprintf(f,"%02x ",data[i]);
-	if (!((i+1)%16)) fprintf(f,"\n%04x : ",i/16);
-    }
-}
-
-void dump_struct(YM2610 *F2610,int a) {
-    FILE *f;
-    if (a) 
-	f=fopen("log_save","w");
-    else
-	f=fopen("log_load","w");
-    fprintf(f,"YM2610:\n");
-    dump_mem(f,F2610,(uint8*)F2610,sizeof(YM2610));
-    fclose(f);
-}
-
-#endif
-
 /* -------------------- log output  -------------------- */
 /* log output level */
 #define LOG_ERR  3		/* ERROR       */
@@ -424,8 +337,10 @@ void dump_struct(YM2610 *F2610,int a) {
 	out_ch[OUTD_RIGHT] += out_ch[OUTD_CENTER];		\
 	Limit( out_ch[OUTD_RIGHT], FM_MAXOUT, FM_MINOUT );	\
 	/* buffering */						\
-	bufL[i] = out_ch[OUTD_LEFT] >>FM_OUTSB;			\
-	bufR[i] = out_ch[OUTD_RIGHT]>>FM_OUTSB;			\
+	/*bufL[i] = out_ch[OUTD_LEFT] >>FM_OUTSB;	*/		\
+	/*bufR[i] = out_ch[OUTD_RIGHT]>>FM_OUTSB;	*/		\
+	*bufL++ = out_ch[OUTD_LEFT] >>FM_OUTSB;			\
+	*bufR++ = out_ch[OUTD_RIGHT]>>FM_OUTSB;			\
 }
 #endif
 
@@ -1599,7 +1514,7 @@ static uint32 pcmsizeA;
 /*    ADPCM A tables    */
 /************************/
 static int jedi_table[(48 + 1) * 16];
-static int decode_tableA1[16] = {
+static const int decode_tableA1[16] = {
     -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16,
     -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16
 };
@@ -1628,7 +1543,7 @@ static void InitOPNB_ADPCMATable(void)
     }
 }
 #else
-static int decode_tableA2[49] = {
+static const int decode_tableA2[49] = {
     0x0010, 0x0011, 0x0013, 0x0015, 0x0017, 0x0019, 0x001c, 0x001f,
     0x0022, 0x0025, 0x0029, 0x002d, 0x0032, 0x0037, 0x003c, 0x0042,
     0x0049, 0x0050, 0x0058, 0x0061, 0x006b, 0x0076, 0x0082, 0x008f,
@@ -1665,7 +1580,7 @@ static void InitOPNB_ADPCMATable(void)
 /**** ADPCM A (Non control type) ****/
 inline void OPNB_ADPCM_CALC_CHA(YM2610 * F2610, ADPCM_CH * ch)
 {
-    uint32 step;
+    uint32 step,i;
     int data;
 
     ch->now_step += ch->step;
@@ -1678,7 +1593,7 @@ inline void OPNB_ADPCM_CALC_CHA(YM2610 * F2610, ADPCM_CH * ch)
 	    F2610->adpcm_arrivedEndAddress |= ch->flagMask;
 	    return;
 	}
-	do {
+	/*do*/ for (i=step;i--;){
 #if 0
 	    if (ch->now_addr > (pcmsizeA << 1)) {
 		//LOG(LOG_WAR,("YM2610: Attempting to play past adpcm rom size!\n" ));
@@ -1699,7 +1614,7 @@ inline void OPNB_ADPCM_CALC_CHA(YM2610 * F2610, ADPCM_CH * ch)
 	    Limit(ch->adpcmd, 48 * 16, 0 * 16);
 			/**** calc pcm * volume data ****/
 	    ch->adpcml = ch->adpcmx * ch->volume;
-	} while (--step);
+	}// while (--step);
     }
     /* output for work of output channels (out_ch[OPNxxxx]) */
     *(ch->pan) += ch->adpcml;
@@ -1845,7 +1760,7 @@ static void FMsave_state_adpcma(ADPCM_CH *adpcm)
 // static int YM2610NumChips;   /* total chip */
 
 /* ---------- update one of chip (YM2610B FM6: ADPCM-A6: ADPCM-B:1) ----------- */
-void YM2610UpdateOne(int num, int16 ** buffer, int length)
+void YM2610UpdateOne(int16 ** buffer, int length)
 {
     YM2610 *F2610 = &(FM2610);
     FM_OPN *OPN = &(FM2610.OPN);
@@ -1886,7 +1801,8 @@ void YM2610UpdateOne(int num, int16 ** buffer, int length)
 
     /* update frequency counter */
     OPN_CALC_FCOUNT(cch[0]);
-    if ((State->mode & 0xc0)) {
+    if ((State->mode & 0xc0)) 
+    {
 	/* 3SLOT MODE */
 	if (cch[1]->SLOT[SLOT1].Incr == -1) {
 	    /* 3 slot mode */
@@ -1906,12 +1822,14 @@ void YM2610UpdateOne(int num, int16 ** buffer, int length)
 
 
     /* buffering */
-    for (i = 0; i < length; i++) {
+    //for (i = 0; i < length; i++) 
+    for( i=length; i--; )
+    {
 #if FM_LFO_SUPPORT
 	/* LFO */
 	if (LFOIncr) {
 	    lfo_amd = OPN_LFO_wave[(LFOCnt += LFOIncr) >> LFO_SHIFT];
-	    lfo_pmd = lfo_amd - (LFO_RATE / 2);
+	    lfo_pmd = lfo_amd - (LFO_RATE >>1); // /2
 	}
 #endif
 	/* clear output acc. */
@@ -1923,10 +1841,13 @@ void YM2610UpdateOne(int num, int16 ** buffer, int length)
 
 	/* FM */
 
-	for (ch = 0; ch < 4; ch++)
+	//for (ch = 0; ch < 4; ch++)
+	for( ch=4; ch--; )
 	    FM_CALC_CH(cch[ch]);
 
-	for (j = 0; j < 6; j++) {
+	//for (j = 0; j < 6; j++) 
+	for( j=6; j--; )
+	{
 			/**** ADPCM ****/
 
 	    if (F2610->adpcm[j].flag)
