@@ -4,7 +4,7 @@ ps2menu
 				Thomas Hawcroft 2003/04
 
 
-Version 2.6b
+Version 2.6
 
 PS2MENU is a Hard Drive project, born from mcbootloader and PS2 Independence MC loader,
 meant at start to offer hdd booting similar to that of dms3, on a no-mod or other ps2.
@@ -29,7 +29,7 @@ START			: Advanced functions, currently Rename and Advanced (recursive) copy.
 SELECT		: Display help
 
 
-To transfer files from host: you need a list similar to this in a text file 'elflist.txt'
+*To transfer files from host: you need a list similar to this in a text file 'elflist.txt'
 
 C:\ps2\random.elf
 C:\ps2\random.irx
@@ -39,6 +39,12 @@ the folder ps2menu.elf was executed from.*
 
 *Versions of PS2LINK 1.22+ support fioDopen which allows us to display directory from host:
 removing the need for elflist.txt. PS2MENU will use this extended mode if it is supported.
+This being said, there are currently issues which are to be addressed, in the clients and
+the way Dopen/Dread and mainly Stat (used to determine directory flags of a file/folder)
+are implemented and used. What this means is that, at the moment, browsing folders on host:
+or using recursive copy from host: may not work. I have managed to patch my clients, both
+pksh and ps2client, to overcome these issues - however the fixes are not ideal and only
+apply to clients compiled and run using Cygwin. 
 
 Will boot from memory card (without copy from host support) If loading as the exploit,
 PS2MENU.ELF should be renamed to BOOT.ELF. Will also boot from CDR (with mod-chip) when
@@ -89,3 +95,11 @@ Rename only working on pfs0:, until I can make mcRename work!
 Recursive copy of folder an all contents from pfs0:, host:, and mc0:
 
 2.6b Recursive copy from cdfs: implemented.
+
+2.6 This is intended binary release, to coincide with launch of umcdr, drop in replacement
+of cdfs.irx (drakonite) to support file data stored in cd-audio format; allowing users with
+an unmodified PS2 to burn their data to cdr (patched with drakonite's tools) and read them
+from cdfs: device on their console without having to resort to disc-swapping/poking knives
+into their PS2. Please note, this is not for the purpose of loading copied games on your
+console, that will not work. The authors of PS2MENU distance themselves entirely from the
+world of warez and any illegal piracy.
