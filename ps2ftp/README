@@ -16,6 +16,8 @@ gaming console.
 
 NOTES: In current state, src is very unorganised but it works. This will be 
        fixed soon.
+       PS2FTP will bind to any IPs setup on PS2 if run under PS2Link, else
+       change value in loader.c to the desired IP.
        This is runnable under ps2link by increasing the max socket values in
        ps2ip\iop\ps2ip\include\lwipopts.h and then recompiling ps2ip and 
        ps2ftp. Variables changed:
