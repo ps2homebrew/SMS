@@ -404,7 +404,7 @@ Imm24
 FCSET
 0
 1
-VI
+IMM24
 1
 4
 # FMAND VI[it], VI[is]

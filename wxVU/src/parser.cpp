@@ -435,7 +435,7 @@ int Parser::FGetVal(char *a, float *b)
 #ifndef WIN32
         int q = (int)strtoll(a, (char **)NULL, 16);
 #else
-		int q = (int)strtol(a, (char **)NULL, 16);
+        int q = (int)strtol(a, (char **)NULL, 16);
 #endif
         sprintf(auxi, "%f", *((float *)&q));
     } else  {
@@ -1055,8 +1055,12 @@ Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes, uint32 in
             sprintf(param, "VF%02d,%d(VI%02d)", get_float_reg(code, vfs),
                     get_imm11(code), get_int_reg(code, vit));
             break;
-        case PARAM_VFS_VFT:
+        case PARAM_ACC_VFS_VFT:
             sprintf(param, "ACC,VF%02d,VF%02d", get_float_reg(code, vfs),
+                    get_float_reg(code, vft));
+            break;
+        case PARAM_VFS_VFT:
+            sprintf(param, "VF%02d,VF%02d", get_float_reg(code, vfs),
                     get_float_reg(code, vft));
             break;
         case PARAM_VFS_VIT_DEC:
@@ -1123,35 +1127,35 @@ Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes, uint32 in
         case PARAM_VIT:
             sprintf(param, "VI%02d", get_int_reg(code, vit));
             break;
-		case PARAM_VIT_FSFVFS:
+        case PARAM_VIT_FSFVFS:
             sprintf(param, "VI%02d,VF%02d%s", get_int_reg(code, vit),
                     get_float_reg(code, vfs), get_fsf(code));
             break;
-		case PARAM_VIT_IMM11:
+        case PARAM_VIT_IMM11:
             sprintf(param, "VI%02d,0x%08x", get_int_reg(code, vit),
                     get_imm11(code));
             break;
-		case PARAM_VIT_IMM11_VIS:
+        case PARAM_VIT_IMM11_VIS:
             sprintf(param, "VI%02d,%d(VI%02d)", get_int_reg(code, vit),
                     get_imm11(code), get_int_reg(code, vis));
             break;
-		case PARAM_VIT_IMM12:
+        case PARAM_VIT_IMM12:
             sprintf(param, "VI%02d,0x%08x", get_int_reg(code, vit),
                     get_imm12(code));
             break;
-		case PARAM_VIT_VIS:
+        case PARAM_VIT_VIS:
             sprintf(param, "VI%02d,VI%02d", get_int_reg(code, vit),
                     get_int_reg(code, vis));
             break;
-		case PARAM_VIT_VIS_IMM11:
+        case PARAM_VIT_VIS_IMM11:
             sprintf(param, "VI%02d,VI%02d,%d", get_int_reg(code, vit),
                     get_int_reg(code, vis), get_imm11(code));
             break;
-		case PARAM_VIT_VIS_IMM15:
+        case PARAM_VIT_VIS_IMM15:
             sprintf(param, "VI%02d,VI%02d,0x%08x", get_int_reg(code, vit),
                     get_int_reg(code, vis), get_imm15(code));
             break;
-		case PARAM_VIT_VIS_IMM5:
+        case PARAM_VIT_VIS_IMM5:
             sprintf(param, "VI%02d,VI%02d,0x%08x", get_int_reg(code, vis),
                     get_int_reg(code, vit), get_imm5(code));
             break;
@@ -1265,7 +1269,7 @@ Parser::get_lower(uint32 code) {
 
 int
 Parser::get_upper(uint32 code) {
-	int i;
+    int i;
     uint32 hold  = code&0x01E003FF;          // 11 bit opcodes
     uint32 hold2 = code&0x01E003FC;          // 9 bit bc opcodes
     uint32 hold3 = code&0x01E0003F;
