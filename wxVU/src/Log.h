@@ -55,7 +55,7 @@ private:
     wxTextCtrl*     m_pOut;
     wxFrame*        m_pFrame;
     uint32          m_numLastMessage;
-    map<int32, wxString> object;
+    std::map<int32, wxString> object;
 };
 
 #endif
