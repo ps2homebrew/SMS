@@ -60,6 +60,10 @@ enum
 	FTPCMD_RMD,
 	FTPCMD_SITE,
 };
+#ifdef LINUX
+#define bb_Status() (0)
+#define CRC32_ComputeChecksum(b,s)
+#endif
 
 enum
 {
@@ -83,8 +87,10 @@ typedef struct FtpClientContainer
 	struct FtpClientContainer* m_pNext;
 } FtpClientContainer;
 
+#ifndef CRC32_ComputeChecksum
 #define CRC32_ComputeChecksum(b,s) (bb_Status()?CRC32_CheckData(CRC32_Key,b,s):0)
 extern int CRC32_CheckData( unsigned int k, char* b, int s );
+#endif
 
 typedef struct FtpClient
 {

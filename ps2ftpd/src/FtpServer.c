@@ -8,7 +8,9 @@
  *
  */
 
+#ifndef LINUX
 #define VALID_IRX
+#endif
 #include "FtpServer.h"
 
 #ifndef LINUX
@@ -357,8 +359,9 @@ FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket )
 
 	FtpClient_Create( pClient, pServer, iSocket );
 
+#ifndef LINUX
 	// match hd bootblock
-
+	
 	if( (i = dopen("hdd:/")) >= 0 )
 	{
 		iox_dirent_t n;
@@ -374,6 +377,7 @@ FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket )
 		}
 		dclose(i);
 	}		
+#endif
 
 	// attach to server list
 

@@ -431,6 +431,7 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 
 }
 
+#ifndef LINUX
 void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile )
 {
 	if( FileSystem_MountDevice( &(pClient->m_kContext), pMountPoint, pMountFile ) < 0 )
@@ -455,3 +456,4 @@ void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName )
 	else
 		FtpClient_Send( pClient, 214, "SITE SYNC succeeded." );
 }
+#endif
