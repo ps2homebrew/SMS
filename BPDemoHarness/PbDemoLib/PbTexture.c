@@ -17,6 +17,7 @@
 #include "PbGs.h"
 #include "PbVram.h"
 #include "PbMisc.h"
+#include "PbMath.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Variables, NOT to be accessed from outside this file (use access functions)
@@ -75,8 +76,6 @@ PbTexture* PbTextureCreate32( u32* pData, int Width, int Height )
   p_texture->y      = (u16)Height;
   p_texture->pMem   = pData;
 
-  out( "pTexture->format: %d\n", p_texture->format );
-
   return p_texture;
 }
 
@@ -134,9 +133,6 @@ void PbTextureUpload( PbTexture* pTexture )
 
   PbDmaSend02ChainSpr( p_store );
 
-  out( "pTexture->format: %d\n", pTexture->format );
-  PB_LINE
-
   /////////////////////////////////////////////////////////////////////////////
   // select correct method of upload depending on format
 
@@ -146,9 +142,6 @@ void PbTextureUpload( PbTexture* pTexture )
     case GS_PSMT8   : PbTextureUpload8( pTexture ); break;
 //    case GS_PSMCT4  : PbTextureUpload4( pTexture ); break;
   }
-
-  out( "pTexture->format: %d\n", pTexture->format );
-  PB_LINE
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,9 +155,6 @@ void PbTextureUpload32( PbTexture* pTexture )
   u64* p_store      = NULL;
   int n_quads       = 0; 
   int curr_quads    = 0;
-
-  out( "pTexture->format: %d\n", pTexture->format );
-  PB_LINE
 
   n_quads = pTexture->x * pTexture->y;  
   n_quads = (n_quads >> 2) + ((n_quads & 0x03 ) != 0 ? 1 : 0);
@@ -202,9 +192,6 @@ void PbTextureUpload32( PbTexture* pTexture )
   *p_data++ = DMA_END_TAG( 0 );
   *p_data++ = 0;
 
-  out( "pTexture->format: %d\n", pTexture->format );
-  PB_LINE
-
   /////////////////////////////////////////////////////////////////////////////
   // And send it
 
@@ -228,8 +215,6 @@ void PbTextureUpload8( PbTexture* pTexture )
 
   p_data = p_store = PbSprAlloc( 32*16 );
 
-  out( "n_quads %d\n", n_quads );
-
   /////////////////////////////////////////////////////////////////////////////
   // send the data
 
@@ -239,8 +224,6 @@ void PbTextureUpload8( PbTexture* pTexture )
        curr_quads = PB_IMAGE_MAX_COUNT;
     else 
       curr_quads = n_quads;
-
-    out( "curr_quads %d\n", curr_quads );
 
     *p_data++ = DMA_CNT_TAG( 1 );
     *p_data++ = 0; // pad
@@ -287,33 +270,24 @@ void PbTextureUpload4( PbTexture* pTexture )
 
 u64 PbTextureGetTex0( PbTexture* pTexture )
 {
+  int lx = PbLog( pTexture->x );
+  int ly = PbLog( pTexture->y );
+
   if( pTexture->format == 32 )
   {
     return ((u64)1<<34) + 
-           ((u64)8<<30) + 
-           ((u64)8<<26) + 
+           ((u64)lx<<30) + 
+           ((u64)ly<<26) + 
            (0<<20) + 
            (((pTexture->x/64)&63)<<14) + 
            (pTexture->Vram/256);
   }
   
-  // 8bit
-/*
-  return ((int64)1<<61)+
-         (((int64)tex->clutaddr/256)<<37)+
-         ((int64)1<<34)+
-         (tex->TH<<30)+
-         (tex->TW<<26)+
-         (0x13<<20)+
-         (((tex->width/64)&63)<<14)+
-         (tex->addr/256);
-*/
-
   return ((u64)1<<61)+
          (((u64)pTexture->VramClut/256)<<37) + 
          (((u64)0)<<34) + 
-         (((u64)8)<<30) +
-         (((u64)8)<<26) +
+         (((u64)lx)<<30) +
+         (((u64)ly)<<26) +
          (((u64)GS_PSMT8)<<20) + 
          (((pTexture->x/64)&63)<<14) + 
          (pTexture->Vram/256);
@@ -334,8 +308,6 @@ void  PbTextureSetupPal( PbTexture* pTexture )
   // Alloc vram for the clut
 
   pTexture->VramClut = PbVramAlloc( 16*16*4 );
-
-  out( "pTexture->VramClut 0x%x\n", pTexture->VramClut );
 
   /////////////////////////////////////////////////////////////////////////////
   // Setup the blitting for the clut
