@@ -35,9 +35,8 @@ static const string tME1[2] = {
     "Mask (considered as VIFcode NOP.)"
 };
 
-// boa constrictor
-VIF::VIF(int num) : SubSystem(num) {
-    nREGISTERS = num;
+void
+VIF::clearRegisters(void) {
 	interrupt = false;
 	vpu = 0;
 	rVIF1_R0 = 0;
@@ -80,25 +79,29 @@ VIF::VIF(int num) : SubSystem(num) {
 	rVIF0_MARK = 0;
 	rVIF0_NUM = 0;
 	rVIF0_CODE = 0;
+    _num = 0;
+    _cmd = NULL;
+    _WL = 0;
+    _CL = 0;
+    _memIndex = 0;
+    _codeIndex = 0;
+
+}
+
+// boa constrictor
+VIF::VIF(int num) : SubSystem(num) {
+    nREGISTERS = num;
+    clearRegisters();
 }
 
 VIF::VIF(const char *filename) : SubSystem(0), _fin(filename) {
-    _num = 0;
-    _cmd = NULL;
-    _WL = 0;
-    _CL = 0;
-    _memIndex = 0;
-    _codeIndex = 0;
+    clearRegisters();
 }
 
-VIF::VIF(const char *filename, int numreg)
-    : SubSystem(numreg), _fin(filename) {
-    _num = 0;
-    _cmd = NULL;
-    _WL = 0;
-    _CL = 0;
-    _memIndex = 0;
-    _codeIndex = 0;
+VIF::VIF(const char *filename, int num)
+    : SubSystem(num), _fin(filename) {
+    nREGISTERS = num;
+    clearRegisters();
 }
 
 // de struct or
@@ -371,6 +374,7 @@ VIF::decode_cmd(void) {
             rVIF1_MASK = data;
 			break;
         case VIF_STROW:
+            cout << "VIF_STROW" << endl;
             cmd_strow();
             break;
         case VIF_STCOL:

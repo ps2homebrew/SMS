@@ -107,6 +107,7 @@ private:
     void            writeCode(void);
     void            writeRegister(void);
     void            writeData(void);
+    void            clearRegisters(void);
 
 
     // VIF Registers
