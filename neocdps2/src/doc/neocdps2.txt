@@ -2,12 +2,24 @@
  |\  | |___ |   | |        |  /  ___|  |    ___|
  | \_| |___ |___| |___  ___| /  |   ___|   |___   Neocd/Ps2 Project.
 ---------------------------------------------------------------------
- (c)'2004 - "evilo" <evilo13@gmail.com>
+ (c)'2004/2005 - "evilo" <evilo13@gmail.com>
 ---------------------------------------------------------------------
 
 
 History:
 ---------------------------------------------------------------------
+
+0.5   - Triple Buffering using vsync callback 
+        (thanks to drakonite for the idea)
+      - CD now stop spinning once in the "insert" screen 
+        which should help people using swap method.
+      - Fixed auto-animation speed (thx mame)
+      - Bit better sound emulation, but still not perfect
+      - Settings are now saved to MC, and restored at start-up
+      - Basic frameskip routine (off by default)
+      - Added an error message if bios is not found or invalid.
+      - source clean-up
+     
 
 0.4   - Modified CD detection/swap routines, should work better now.
 	(Press (X) a second time if cd not detected the first time)
@@ -102,6 +114,8 @@ much as you like assuming that you respect the above conditions.
 The NeoCD/PS2 source code is distributed under the terms of the 
 GNU General Public License. 
 
+See COPYING for further information on the GNU licence.
+
 
 Current Features:
 ---------------------------------------------------------------------
@@ -110,14 +124,15 @@ Current Features:
 - MC/HDD support
 - Loads games from the cdrom
 - 2 controllers support
-- NGCD memory card support (use 45K on a MC)
-- Preliminary sound support
+- NGCD memory card support (use 45K on the MC)
+- Stereo sound emulation
 - Ingame menu
 
 Current Issues:
 ---------------------------------------------------------------------
 - Sound emulation sometime slowdown emulation
-- Sound is still buggy ("echo" in MS, missing sfx in KOF '99, etc.. )
+- Sound is buggy ("echo" in MS, missing sfx in KOF '99, etc.. ) when 
+  framerate is not full.
 - Timing issues
 - Graphics glitches during KOF loading
 - It's not possible to exit from the bios (ps2 reset needed!)
@@ -126,12 +141,13 @@ Current Issues:
 To-do list:
 ---------------------------------------------------------------------
 - Improve/Optimize/Finish sfx and fm sound emulation
-- Add Stef's Fast 68k Core
+- Add Stef's cz80 & 68k Core
 - Rewrite gfx routines using gsKit
 - Add CDDA support
 - Implement Raster effect (Pleasure Goal, etc..)
 - ISO support ?
 - AES/MVS support ?
+- more ?
 
 If you would like a feature that is not listed above, please 
 contact me with your idea (see below).
@@ -189,7 +205,7 @@ Limitation on CD swapping :
 General remarks :
 
 1. Concerning loading from host, I use to test/debug the emulator :
-     - PSLink 1.24 / ps2exec v1.1
+     - PS2Link 1.30 / psclient v2.00
    So please try using the same one if you get problem with your 
    loader.(inlink is known to have problems loading it)
 
@@ -235,17 +251,21 @@ In-game Menu:
 	       some effect caused by the fullscreen video option.
 - Fullscreen : Set video to fullscreen 
 	       remove black border, PAL only !
+- Frameskip  : Enable / Disable frameskip
+	       It enable a frameskip of 1, that is more than enough.
 - Sound	     : Turn sound on/off
 - CDDA	     : Turn CDDA on/off (not implemented yet)
 - Region     : Change console region 
 	       you will need to reset the emulation to apply it.
 - Enter Bios : needed if you want to format the memory card 
 	       ou will need to restard the emulator to get out (!bug!)
-- Soft Reset : Reset emulation	  
-
+- Soft Reset : Reset emulation
 
 Additionaly by holding [Select] when in the ingame menu, you can change 
 the screen position using the directional pad.
+
+If changed, settings will be automatically saved to the memory card.
+At start up, they will be automatically restored to the last saved value.
 
 
 Contact:
@@ -264,23 +284,27 @@ so don't hesitate to visit the forum and to post your comments !
 Thanks go to: (in no particular order)
 ---------------------------------------------------------------------
 
-Foster		    - For his NeoCD/SDL emulator, on which this one is based.
-Martinez Fabrice    - Who wrote the original NeoCD(DOS) emulator
-Karl Stenerud       - MUSASHI Motorola M680x0 processor emulation engine
-Neil Bradley        - Multi-Z80 CPU emulator
-Tony Saveski        - PS2 GS Routines 
-NeoCD/SDL(DC) team  - Ian Michael, Fosters, GPF, BlackAura, BlueCrab, for their 
-		      great work and helpull tips to fix emulator issues.
-PS2DEV		    - All people that made this possible through toolchain & PS2SDK, 
-		      that helped me (Pixel, drakonite, blackdroid,...) and for 
-		      hosting the NeoCD/PS2 source code in their CVS repository.
-PS2-Scene	    - For hosting the NeoCD/PS2 site and official forum		      
-7not6		    - tips tips tips, menu code and beta testing
-Shazz		    - Crazy Atari coder and GCC explorer ! (->Crau '04!)
-<G>		    - for support !
-Hiryu		    - for his Great PS2 CDVD library.
-Lkz		    - for help on fixing sound support
-Everyone Else       - Thanks for taking an interest....
+Foster		       - For his NeoCD/SDL emulator, on which this one is based.
+Martinez Fabrice       - Who wrote the original NeoCD(DOS) emulator
+Karl Stenerud          - MUSASHI Motorola M680x0 emulator
+Stéphane Dallongeville - C68K M68000 CPU emulator (C) 2004-2005
+Juergen Buchmueller    - Portable Z80 emulator (C) 1998,1999,2000
+Stéphane Dallongeville - CZ80 Z80 CPU emulator (C) 2004-2005
+Nick Van Veen	       - PS2 GS Routines (C) 2001
+Vzzrzzn	& Sjeep	       - Gfx Pipe Routines
+M.A.M.E. / GNGEO       - Sound code
+NeoCD/SDL(DC) team     - Ian Michael, Fosters, GPF, BlackAura, BlueCrab.
+PS2DEV		       - All people that made this possible through toolchain
+ 			 & PS2SDK, that helped me (Pixel, blackdroid,...) and for 
+		         hosting the NeoCD/PS2 source code in their CVS repository.
+PS2-Scene	       - For hosting the NeoCD/PS2 site and official forum		      
+Drakonite	       - triple buffering idea, and lots of talk ;)
+7not6		       - tips tips tips, menu code and beta testing
+Shazz		       - Crazy Atari coder and GCC explorer ! (->Crau '04!)
+<G>		       - for support !
+Hiryu		       - for his Great PS2 CDVD library.
+Lkz		       - for help on fixing sound support
+Everyone Else          - Thanks for taking an interest....
 
 If I forgot to mention someone in the credits, please let me know.
 
