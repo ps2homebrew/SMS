@@ -5,7 +5,7 @@
 #define __my_math_iter 20
 
 // Taylor series
-float cos(float v)
+float PbCos(float v)
 {
 	float res,w;
 	int t;
@@ -35,7 +35,7 @@ float cos(float v)
 	return res;
 }
 
-float sin(float v)
+float PbSin(float v)
 {
 	float res,w;
 	int t;
