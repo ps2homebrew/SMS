@@ -16,5 +16,5 @@ No | Start | Sample Pos | Time | Description
 6  | 2:42  | 7776000    | 32   | part
 7  | 3:14  | 9312000    | 27   | adresd part3
 8  | 3:41  | 10608000   | 26   | emoon part2
-9  | 4:07  | 11856000   | 26   | part
-10 | 4:33  | 13104000   | 32   | end part
+9  | 4:07  | 11856000   | 26   | raizor part 1
+10 | 4:33  | 13104000   | 32   | raizor end part
