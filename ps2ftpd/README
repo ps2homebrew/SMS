@@ -17,7 +17,7 @@ Building:
 Building this project requires the following:
 
 - A working IOP C compiler
-- PS2SDK installed with $PS2SDKSRC set properly.
+- PS2SDK installed with $PS2SDK set properly.
 
 Just run make and if all went OK there should be a ps2ftpd.irx in the bin/
 directory.
