@@ -146,6 +146,14 @@ void EmPart2RenderCube( PbMatrix* pCamera,PbMatrix* pScreenView,int dest,
                         float xs, float ys, float zs,float r, float g, float b );
 void EmPart2SetAlpha( u64 A, u64 B, u64 C, u64 D, u64 FIX );
 
+static inline float EmAbs( float v )
+{
+  if( v < 0.0f )
+    v = -v;
+
+  return v;
+}
+
 typedef struct st_Color
 {
   float r,g,b,a;
@@ -153,10 +161,11 @@ typedef struct st_Color
 
 static Color g_ColorTable[] = 
 {
-  { 255*0.0005f, 255*0.0005f, 255*0.0005f, 0.0 }, 
-  {  30*0.0005f, 20*0.0005f,   40*0.0005f, 0.0 },
-  {  60*0.0005f, 70*0.0005f,   40*0.0005f, 0.0 },
-  {  60*0.0005f, 20*0.0005f,   80*0.0005f, 0.0 },
+  { 125*0.0005f, 125*0.0005f, 125*0.0005f, 0.0 }, 
+  { 140*0.0005f, 120*0.0005f, 130*0.0005f, 0.0 },
+  {  60*0.0005f,  70*0.0005f,  40*0.0005f, 0.0 },
+  {  60*0.0005f,  20*0.0005f,  80*0.0005f, 0.0 },
+  {  45*0.0005f,  45*0.0005f,  45*0.0005f, 0.0 }, 
 };
 
 static int g_MaxColors = 4;
@@ -172,12 +181,14 @@ u32 start_demo(const demo_init_t *pInfo)
   float angle      = 0.0f;
   float zoom = 1400;
   float stretch = 1.0f;
-  float z_offset = 1400.0f;
+  float z_offset = 2400.0f;
   float angle_add = 0.0f;
   float angle_hold = 0.0f;
   float time_mul = 1.0f;
   int   has_dumped = FALSE;
   int   cur_color = 0;
+  int   end_render = FALSE;
+  float fade_down = 1.0f;
 
   PbMatrix rotate_matrix, rotate_matrix2, temprot_matrix, temprot_matrix2;
   PbMatrix points_rotate, points_rotate2;
@@ -185,38 +196,10 @@ u32 start_demo(const demo_init_t *pInfo)
   g_pInfo = pInfo;
 
   PbMiscSetOutput( pInfo->printf );
-
-
   setup();
   EmPart2Setup();
-
-
-  //PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &camera_matrix );
-  //EmPart2RenderCube( &temprot_matrix, &view_screen_matrix, 100, 0.5f, 0.5f, 0.5f );     
-
-  //PbVu1Dump();
   
   last_t = pInfo->curr_time;
-
-
-
-//  EmPart2SetAlpha( 0, 1, 0, 1, 0x80 );
-
-
-  PbMatrixRotateY( &points_rotate, 0.5f );
-  PbMatrixTranslate( &points_rotate, 111110, 110, 1800 );
-
-  FlushCache(0);
-
-  for( i = 0; i < NUM_POINTS; i++ )
-  {
-    float coords[4] __attribute__((aligned(16)));
-    PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i], &points_rotate );   
-    
-//    out( "%04d org: %f %f %f: rot: %f %f %f\n", i, points[i].x, points[i].y, points[i].z,
-//                                                   coords[0], coords[1], coords[2] ); 
-
-  }
 
   PbMatrixTranslate( &camera_matrix, 0, 0, 0 ); 
 
@@ -227,50 +210,50 @@ u32 start_demo(const demo_init_t *pInfo)
 
   while(pInfo->frame_count > 0)
   {
-    float t= pInfo->curr_time;
     float inv_rot = 0.0f;
-    //float dt = t-last_t;
-    int i = 0;
-    last_t= t;
-    angle = t*0.5f*time_mul;
+    angle += (3.14*3/((2400.0f-250.0f)/6.0f));
 
     PbScreenClear(00);
 
-		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
-
-
-    if( z_offset < 140 )
+    if( z_offset < 550 )
     {
+      stretch += 0.12f*time_mul;
+      fade_down -= 0.02f;
+    }
+
+    if( z_offset < 250 )
+    {
+      //end_render = TRUE;
       cur_color++;
   
       if( cur_color+1 > g_MaxColors )
         cur_color = 0;          
 
-      z_offset = 1400;
+      fade_down = 1.0f;
+      z_offset = 2400;
       stretch = 1.0f;
-      angle = 0.0f;
+      angle = 3.14f;
       angle_add = 0.0f;
     }
 
 
     angle_hold = 0.0f;
 
-    PbMatrixRotateX( &points_rotate, t*0.5f );
-//    PbMatrixIdentity( &points_rotate );   
-    PbMatrixRotateZ( &points_rotate2, t*0.5f );
+    PbMatrixRotateX( &points_rotate, angle );
+    PbMatrixRotateZ( &points_rotate2, angle );
     PbMatrixMultiply( &points_rotate, &points_rotate2, &points_rotate );
 
     
     angle_hold = angle;
 
-    if( z_offset < 1400 )
+    if( z_offset < 1200 )
     {
-      stretch += 0.02f*time_mul;
+      stretch += 0.03f*time_mul;
       angle_hold = angle*2.4;
       angle_add = 1.5f;
     }
 
-    z_offset -= 4.0f*time_mul;
+    z_offset -= 6.0f*time_mul;
 
     for( i = 0; i < NUM_POINTS; i += 2 )
     {
@@ -287,27 +270,29 @@ u32 start_demo(const demo_init_t *pInfo)
       /////////////////////////////////////////////////////////////////////////
       // Handle Center cube
 
-      if( i == 532 )
+      if( EmAbs( coords[0] ) < 10.1 && 
+          EmAbs( coords[1] ) < 10.1 &&
+          EmAbs( coords[2] ) < 10.1 )
       {
-        PbMatrixRotateX( &rotate_matrix, t*0.5f );
-        PbMatrixRotateZ( &rotate_matrix2, t*0.5f );
+//        PbMatrixIdentity( &rotate_matrix );   
+        PbMatrixRotateX( &rotate_matrix, angle );
+        PbMatrixRotateZ( &rotate_matrix2, angle );
         PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
         PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+z_offset );
         PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
         EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 50, 
-                           0.5f, 0.5f, 0.5f, g_ColorTable[cur_color+1].r,
-                                             g_ColorTable[cur_color+1].g, 
-                                             g_ColorTable[cur_color+1].b );
+                           0.5f, 0.5f, 0.5f, g_ColorTable[cur_color+1].r*fade_down,
+                                             g_ColorTable[cur_color+1].g*fade_down, 
+                                             g_ColorTable[cur_color+1].b*fade_down );
         continue;
       }
 
-      if( coords[2]+z_offset > 220 )
+      if( coords[2]+z_offset > 230 )
       {
         if( ( point_temp[0]*point_temp[0] + 
               point_temp[1]*point_temp[1] + 
-              point_temp[2]*point_temp[2] ) < 800*800 )
+              point_temp[2]*point_temp[2] ) < 750*800 )
         {
-      //    PbMatrixIdentity( &rotate_matrix );   
           PbMatrixRotateX( &rotate_matrix, angle_hold );
           PbMatrixRotateZ( &rotate_matrix2, angle_hold );
           PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
@@ -317,12 +302,6 @@ u32 start_demo(const demo_init_t *pInfo)
                              0.5f, 0.5f, 0.5f, g_ColorTable[cur_color].r,
                                                g_ColorTable[cur_color].g, 
                                                g_ColorTable[cur_color].b );
-        
-          if( has_dumped == FALSE )
-          {
-            PbVu1Dump();
-            has_dumped = TRUE;
-          }
         }
       }
 
@@ -332,12 +311,20 @@ u32 start_demo(const demo_init_t *pInfo)
       point_temp[3] = 1.0f;
       PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&point_temp, &points_rotate );   
 
-      if( coords[2]+z_offset > 220 )
+
+      if( EmAbs( coords[0] ) < 10.1 && 
+          EmAbs( coords[1] ) < 10.1 &&
+          EmAbs( coords[2] ) < 10.1 )
+      {
+        continue;
+      }
+
+      if( coords[2]+z_offset > 230 )
       {
     //    PbMatrixIdentity( &rotate_matrix );   
         if( ( point_temp[0]*point_temp[0] + 
               point_temp[1]*point_temp[1] + 
-              point_temp[2]*point_temp[2] ) < 800*800 )
+              point_temp[2]*point_temp[2] ) < 750*750 )
         {
           PbMatrixRotateX( &rotate_matrix, angle_hold );
           PbMatrixRotateZ( &rotate_matrix2, angle_hold );
@@ -348,13 +335,16 @@ u32 start_demo(const demo_init_t *pInfo)
                              0.5f, 0.5f, 0.5f, g_ColorTable[cur_color].r,
                                                g_ColorTable[cur_color].g, 
                                                g_ColorTable[cur_color].b );
+          if( has_dumped == FALSE )
+          {
+            PbVu1Dump();
+            has_dumped = TRUE;
+          }
         }
       }
 
       angle_hold += angle_add;
     }          
-
-    GS_SET_BGCOLOR(0x00, 0x00, 0xff);
         
     PbScreenSyncFlip();
   }

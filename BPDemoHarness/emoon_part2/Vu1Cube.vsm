@@ -28,7 +28,8 @@ g_Vu1CubeRender:
                 nop                             lq          vf26, CameraMatrix+2(vi00)
                 nop                             lq          vf27, CameraMatrix+3(vi00)
 
-                nop                             xitop       vi04
+                ;nop                             xitop       vi04
+                nop                             iaddiu      vi04, vi00, 50
                 nop                             iadd        vi02, vi00, vi04        ; 
                 nop                             iadd        vi03, vi00, vi04        ; xgkick adree
                 nop                             iaddiu      vi01, vi00, Data        ; coord adress
@@ -152,7 +153,7 @@ DrawKick:
                 addz.x    vf15x, vf00x,vf14z    nop
                 addz.y    vf15y, vf00y,vf14z    nop
                 addz.z    vf15z, vf00z,vf14z    nop
-                mul       vf15, vf15, vf21      loi 64
+                mul       vf15, vf15, vf21      loi 127
                 addi.w    vf15, vf20, i         nop          
                 ftoi0     vf15, vf15            nop
                 nop                             sqi         vf15, (vi02++)       ; RGA
@@ -164,7 +165,7 @@ DrawKick:
                 nop                             nop                              ;
                 nop                             ibne        vi05, vi00, p_loop   ; loop check
                 nop                             nop
-                nop                             xgkick      vi03
+                ;nop                             xgkick      vi03
                 nop                             nop
                 nop                             nop
                 nop                             nop
@@ -254,13 +255,15 @@ DrawKick_2:
                 ;// normalize vector
                 ;// 
                 
-;                mul.xyz   vf15,  vf14,  vf14    nop 
-;                addy.x    vf15x, vf15x, vf15y   nop
-;                addz.x    vf15x, vf15x, vf15z   nop
-;                nop                             rsqrt q, vf00w, vf15x
-;                nop                             waitq
-;                mulq      vf14, vf14, q         nop                             
+                ;mul.xyz   vf15,  vf14,  vf14    nop 
+                ;addy.x    vf15x, vf15x, vf15y   nop
+                ;addz.x    vf15x, vf15x, vf15z   loi 1256
+                ;nop                             rsqrt q, vf00w, vf15x
+                ;nop                             waitq
+                ;mulq      vf14, vf14, q         nop                             
+                ;muli      vf14, vf14, i         loi 64
                 abs       vf14, vf14            nop
+                ;maxw.z    vf14z, vf14z, vf00w   nop
                 addz.x    vf15x, vf00x,vf14z    nop
                 addz.y    vf15y, vf00y,vf14z    nop
                 addz.z    vf15z, vf00z,vf14z    nop
