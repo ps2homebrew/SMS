@@ -1331,7 +1331,6 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
     strupr(lower);
     VUchip.program[index].invalid = 0;
     if(!IsValidInstruction(upper, UPPER, &InstIndex, &flavor, dest, &flg)) {
-        cout << "invalid" << endl;
         VUchip.program[index].invalid = 1;
         return 0;
     }

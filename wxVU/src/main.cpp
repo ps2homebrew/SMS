@@ -757,7 +757,7 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
     tagInitGs[12] = yoffset<<4;
     tagInitGs[13] = xoffset<<4;
     tagInitGs[16] = scissorX<<16;
-    tagInitGs[17] = scissorY<<1<<16;
+    tagInitGs[17] = scissorY<<16;
     
     if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagInitGs, 96) != 0) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
@@ -805,7 +805,6 @@ VUFrame::LoadMemory(wxFileName file) {
     uint32 i;
 
     if ((stat(file.GetFullPath().c_str(), &sb)) != 0 ) {
-        cout << "E_FILE_OPEN" << endl;
         return E_FILE_OPEN;
     }
     if ((fd = fopen(file.GetFullPath().c_str(), "rb")) != NULL) {
@@ -1252,12 +1251,7 @@ void VUFrame::DrawProgram() {
         gridCode->SetCellValue(i, 4, wxString(""));
     }
     for (i = 0; i < MAX_VUCODE_SIZE; i++,l++){
-        if ( i > 2048 ) {
-            txtDebugFailed(
-                wxString("Warning. More than 2048 opcodes loaded.\n"));
-        }
         if(VUchip.program[i].SymbolIndex != -1) {
-            cout << "symbol" << endl;
             strcpy(scode,VUchip.Labels[VUchip.program[i].SymbolIndex].symb);
             strcat(scode,":");
             gridCode->SetCellValue(l++, 1, scode);
@@ -1267,7 +1261,6 @@ void VUFrame::DrawProgram() {
                 VUchip.program[i].tics));
         for(m=UPPER; m<=LOWER; m++) {
             strcpy(auxi,Instr.Instr[VUchip.program[i].InstIndex[m]].nemot);
-            cout << "auxi: " << auxi << endl;
             if(VUchip.program[i].flg && !m) {
                 sprintf(aux2,"[%c]",VUchip.program[i].flg);
                 strcat(auxi, aux2);
