@@ -1814,15 +1814,15 @@ Vu::VU_SQD(VuInstruction &A) {
     }
     if(strstr(dst,"X")) {
         // memcpy(&(dataMem[v1].x),&vx,4);
-        m_pVuMem->WriteW(v1, vx);
+        m_pVuMem->WriteX(v1, vx);
     }
     if(strstr(dst,"Y")) {
         // memcpy(&(dataMem[v1].y),&vy,4);
-        m_pVuMem->WriteW(v1, vy);
+        m_pVuMem->WriteY(v1, vy);
     }
     if(strstr(dst,"Z")) {
         // memcpy(&(dataMem[v1].z),&vz,4);
-        m_pVuMem->WriteW(v1, vz);
+        m_pVuMem->WriteZ(v1, vz);
     }
     if(strstr(dst,"W")) {
         // memcpy(&(dataMem[v1].w),&vw,4);
@@ -1864,15 +1864,15 @@ int Vu::VU_SQI(VuInstruction &A)
         strcpy(dst,"XYZW");
     if(strstr(dst,"X")) {
         // memcpy(&(dataMem[v1].x),&vx,4);
-        m_pVuMem->WriteW(v1, vx);
+        m_pVuMem->WriteX(v1, vx);
     }
     if(strstr(dst,"Y")) {
         // memcpy(&(dataMem[v1].y),&vy,4);
-        m_pVuMem->WriteW(v1, vy);
+        m_pVuMem->WriteY(v1, vy);
     }
     if(strstr(dst,"Z")) {
         // memcpy(&(dataMem[v1].z),&vz,4);
-        m_pVuMem->WriteW(v1, vz);
+        m_pVuMem->WriteZ(v1, vz);
     }
     if(strstr(dst,"W")) {
         // memcpy(&(dataMem[v1].w),&vw,4);
