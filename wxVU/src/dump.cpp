@@ -66,16 +66,17 @@ dumpVU(char *cfile, char *dfile, uint32 vpu) {
     if (dfile == "" && cfile == "") {
         return E_FILE_OPEN;
     }
-    if ( sock == -1 ) {
-       if ( dumpOpen() < 0 ) {
-           return sock;
-       }
+    if ( dumpOpen() < 0 ) {
+        dumpClose();
+        return sock;
     }
     if ((fd = fopen(cfile, "wb")) == NULL ) {
+        dumpClose();
         return E_FILE_OPEN;
     }
     fclose(fd);
     if ((fd = fopen(dfile, "wb")) == NULL ) {
+        dumpClose();
         return E_FILE_OPEN;
     }
     fclose(fd);
@@ -126,6 +127,7 @@ dumpVU(char *cfile, char *dfile, uint32 vpu) {
         }
     }
     pko_start_vu(sock, vpu);
+    dumpClose();
     return 0;
 }
 
@@ -138,10 +140,9 @@ dumpVURegisters(char *rfile, uint32 vpu) {
     if ( rfile == "" ) {
         return E_FILE_OPEN;
     }
-    if ( sock == -1 ) {
-       if ( dumpOpen() < 0 ) {
-           return sock;
-       }
+    if ( dumpOpen() < 0 ) {
+        dumpClose();
+        return sock;
     }
     if ( vpu == 0 ) {
         regs = 11;
@@ -151,6 +152,7 @@ dumpVURegisters(char *rfile, uint32 vpu) {
         file_size = 896;
     }
     if((fd = fopen(rfile, "wb")) == NULL) {
+        dumpClose();
         return E_FILE_OPEN;
     }
     fclose(fd);
@@ -172,6 +174,7 @@ dumpVURegisters(char *rfile, uint32 vpu) {
             return E_TIMEOUT;
         }
     }
+    dumpClose();
     return 0;
 }
 
@@ -185,12 +188,12 @@ dumpRegisters(char *rfile) {
     if ( rfile == "" ) {
         return E_FILE_OPEN;
     }
-    if ( sock == -1 ) {
-       if ( dumpOpen() < 0 ) {
-           return sock;
-       }
+    if ( dumpOpen() < 0 ) {
+        dumpClose();
+        return sock;
     }
     if ( (fd = fopen(rfile, "wb")) == NULL ) {
+        dumpClose();
         return E_FILE_OPEN;
     }
     fclose(fd);
@@ -212,6 +215,7 @@ dumpRegisters(char *rfile) {
             return E_TIMEOUT;
         }
     }
+    dumpClose();
     return 0;
 }
 
@@ -225,15 +229,15 @@ dumpDisplayList(char *file, uint32 *data, uint32 size) {
     printf("file = %s\n", file);
 
     if ( (fd = fopen(file, "wb")) == NULL ) {
+        dumpClose();
         return E_FILE_OPEN;
     }
     fwrite(data, size, 1, fd);
     fclose(fd);
-    if ( sock == -1 ) {
-       if ( dumpOpen() < 0 ) {
-           return sock;
-       }
+    if ( dumpOpen() < 0 ) {
+        return sock;
     }
     pko_gsexec_req(sock, file, size);
+    dumpClose();
 	return 0;
 }
