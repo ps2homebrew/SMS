@@ -81,7 +81,9 @@ void PbDmaSend01Chain( void* pList )
 void PbDmaWait01()
 {
   while( *D1_CHCR&0x100 )
-    ;
+  {
+    asm __volatile__( "nop;nop;nop;nop;nop;nop;nop;nop;" );
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -164,7 +166,9 @@ void PbDmaSend02( void* pList,int Size )
 void PbDmaWait02()
 {
   while(*D2_CHCR&0x100)
-    ;
+  {
+    asm __volatile__( "nop;nop;nop;nop;nop;nop;nop;nop;" );
+  }
 }
 
 
