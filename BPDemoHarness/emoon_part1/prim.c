@@ -232,7 +232,7 @@ void fill_rect_tex(rect r, u32 tex_p, u32 texw, u32 texh)
 		      0,0,0,0,0));
 
   GIF_DATA_AD(dma_buf, PS2_GS_TEX1_1, PS2_GS_SETREG_TEX1_1(0, 0, 1, 1, 0, 0, 0));
-  GIF_DATA_AD(dma_buf, PS2_GS_CLAMP_1, PS2_GS_SETREG_CLAMP( 0, 0, 0, 256, 0, 256) );
+  GIF_DATA_AD(dma_buf, PS2_GS_CLAMP_1, PS2_GS_SETREG_CLAMP( 1, 1, 0, texw, 0, texh) );
 
   if(alpha_en)
     {
