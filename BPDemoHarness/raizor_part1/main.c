@@ -1,20 +1,16 @@
 /*
- * main.c - quick credits part for bp demo.
- * should probably be at end of demo, just before greets bit.
+ * main.c - initial attempt at a demo part.
  *
- * Copyright (c) 2004 raizor <raizor@c0der.net> and jar <dsl123588@vip.cybercity.dk>
+ * Copyright (c) 2004   jar <dsl123588@vip.cybercity.dk>
  *
  * Licensed under the AFL v2.0. See the file LICENfSE included with this
  * distribution for licensing terms.
  *
  * Makes use of PbDemoLib by emoon
  * Copyright (c) 2004   emoon <daniel@collin.com>
- *
- * FD Tunnel code written by Jar...
- *
- * code is a bit messy, maybe clean after BP :P
  */
 
+//#define TEST
 
 #include <tamtypes.h>
 #include <kernel.h>
@@ -41,7 +37,8 @@ extern u32 c_rzr_tex[]; // raizor tex
 extern u32 c_emoon_tex[]; // emoon tex
 extern u32 c_adresd_tex[]; //  tex
 extern u32 c_tyranid_tex[]; //  tex
-extern u32 c_jar_tex[]; //  tex
+extern u32 c_jar_tex[]; //  tex*/
+extern u32 c_trinodia_tex[]; //  tex*/
 extern u32 c_gfxcoding_tex[]; //  tex
 extern u32 credits_tex[]; //  tex
 
@@ -446,18 +443,17 @@ u8 logotoggle = 0;
 u8 logocounter = 0;
 float logo_trans_pc = 0.0f;
 // ...
-#define LOGO_MAXCOUNT 4
+#define LOGO_MAXCOUNT 5
 #define LOGO_EMOON    0
 #define LOGO_ADRESD   1
 #define LOGO_JAR      2
 #define LOGO_TYRANID  3
 #define LOGO_RAIZOR   4
-#define LOGO_DUKE     5
-#define LOGO_HIRYU    6
+#define LOGO_TRINODIA 5
+#define LOGO_DUKE     6
+#define LOGO_HIRYU    7
 
 u8 fadingout = 0;
-
-// draws the stretchy name logos
 
 void DrawNameLogo()
 { 
@@ -472,23 +468,35 @@ void DrawNameLogo()
                         MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
                         MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)));
 
-    if (logocounter != LOGO_RAIZOR)
+    if (logocounter == LOGO_RAIZOR)
     {
-        PbPrimQuadTextureGouraud( tex_gfxcoding, 
-                            (300+(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4,   127<<4,   0<<4, 
-                            (453-(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4, 280<<4,   0<<4, 
-                            (300+(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4,   127<<4, 32<<4, 
-                            (453-(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4, 280<<4, 32<<4, 10,
-                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
-                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
-                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
-                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)));
-    }else{
         PbPrimQuadTextureGouraud( tex_gfxcoding, 
                             (220+(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4,   0<<4,   0<<4, 
                             (500-(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4, 280<<4,   0<<4, 
                             (220+(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4,   0<<4, 32<<4, 
                             (500-(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4, 280<<4, 32<<4, 10,
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)));
+
+    }else if (logocounter == LOGO_TRINODIA){
+        PbPrimQuadTextureGouraud( tex_gfxcoding, 
+                            (300+(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4, 325<<4,   0<<4, 
+                            (453-(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4, 465<<4,   0<<4, 
+                            (300+(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4, 325<<4, 32<<4, 
+                            (453-(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4, 465<<4, 32<<4, 10,
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
+                            MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)));
+
+    }else{
+        PbPrimQuadTextureGouraud( tex_gfxcoding, 
+                            (300+(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4,   127<<4,   0<<4, 
+                            (453-(int)((1.0f-logo_trans_pc)*400))<<4,  217<<4, 280<<4,   0<<4, 
+                            (300+(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4,   127<<4, 32<<4, 
+                            (453-(int)((1.0f-logo_trans_pc)*400))<<4,  249<<4, 280<<4, 32<<4, 10,
                             MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
                             MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
                             MakeCol(0x80,0x80,0x80,(u8)(0x80*logo_trans_pc)),
@@ -543,6 +551,14 @@ void DrawNameLogo()
                         break;
                     }
 
+                    case(LOGO_TRINODIA):
+                    {
+                        tex_emoon->pMem = c_trinodia_tex;
+                        PbTextureUpload(tex_emoon);                    
+                        break;
+                    }
+
+
                     default:
                     {
                         fadingout = 1;               
@@ -570,6 +586,8 @@ u32 start_demo( const demo_init_t* pInfo )
 
 	demo_init();
     PbPrimSetAlpha( 0, 1, 0, 1, 0x80 );
+
+    //PbSetLinearFiltering();
 	
 	max_time = pInfo->time_count;  
 	
@@ -580,6 +598,10 @@ u32 start_demo( const demo_init_t* pInfo )
 		#ifdef TEST
 		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
 		#endif
+
+        //SetVramPointer(vramTexStart);
+        //PbTextureUpload(texture);	
+        //PbDmaWait02();
 
 		// Draw to render target    
 	    
@@ -635,7 +657,6 @@ u32 start_demo( const demo_init_t* pInfo )
                             MakeCol(0x80,0x80,0x80,(int)(0x80*barsize)),
                             MakeCol(0x80,0x80,0x80,(int)(0x80*barsize)));
 
-        // fading in/out etc
         if (fadingout)
         {
             if (barsize-0.02f > 0.0f)
