@@ -20,6 +20,7 @@ Pre-requisites for compilation:
 	PS2IP (requires LWIP)
 	sbv-1.0-lite
 	AIO (currently included; requires libcdvd & libhdd)
+    bin2s ( download from www.thethirdcreation.net/tools/bin2s.c )
 	
 The goal of PS2FTP is to allow users to upload and download data such as 
 save games and programs to and from memory cards and the HDD on the 
