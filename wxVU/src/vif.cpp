@@ -8,7 +8,7 @@
 #include "vif.h"
 #include "vu.h"
 #include "parser.h"
-
+#include "debug.h"
 
 using namespace std;
 
@@ -245,7 +245,7 @@ VIF::valid() {
 uint32
 VIF::read() {
     char    raw[4];
-    uint32  data;
+    uint32  data = 0;
     if (_num == 0) {
         decode_cmd();
     } else {
@@ -282,15 +282,15 @@ VIF::decode_cmd(void) {
         case VIF_NOP:
             _cmd = VIF_NOP;
             _num = 0;
-            cout << "VIF_NOP" << endl;
+            cdbg << "VIF_NOP" << endl;
             break;
         case VIF_STCYCL:
             _cmd = VIF_STCYCL;
             _num = 0;
             _WL = (data>>8)&0xff;
             _CL = data&0xff;
-            cout << "VIF_STCYCL: ";
-            cout << "WL: " << _WL << ", CL: " << _CL << endl;
+            cdbg << "VIF_STCYCL: ";
+            cdbg << "WL: " << _WL << ", CL: " << _CL << endl;
             break;
         case VIF_OFFSET:
             _cmd = VIF_OFFSET;
@@ -304,7 +304,7 @@ VIF::decode_cmd(void) {
             _cmd = VIF_BASE;
             _num = 0;
             rVIF1_BASE = data&0x3ff;
-            cout << "VIF_BASE: " << rVIF1_BASE << endl;
+            cdbg << "VIF_BASE: " << rVIF1_BASE << endl;
             break;
         case VIF_ITOP:
             _cmd = VIF_ITOP;
@@ -336,52 +336,52 @@ VIF::decode_cmd(void) {
         case VIF_FLUSHE:
             _cmd = VIF_FLUSHE;
             _num = 0;
-            cout << "VIF_FLUSHE" << endl;
+            cdbg << "VIF_FLUSHE" << endl;
 			// end of micro program
             break;
         case VIF_FLUSH:
             _cmd = VIF_FLUSH;
             _num = 0;
-            cout << "VIF_FLUSH" << endl;
+            cdbg << "VIF_FLUSH" << endl;
 			// end of micro program
 			// end of transfer to GIF from PATH1 and PATH2
             break;
         case VIF_FLUSHA:
             _cmd = VIF_FLUSHA;
-            cout << "VIF_FLUSHA" << endl;
+            cdbg << "VIF_FLUSHA" << endl;
 			// waits no request state from path3
 			// end of micro program
 			// end of transfer to GIF from PATH1 and PATH2
             break;
         case VIF_MSCAL:
             _cmd = VIF_MSCAL;
-            cout << "VIF_MSCAL" << endl;
+            cdbg << "VIF_MSCAL" << endl;
             _addr = data&0xFFFF;
             break;
 		case VIF_MSCNT:
             _cmd = VIF_MSCNT;
-            cout << "VIF_MSCNT" << endl;
+            cdbg << "VIF_MSCNT" << endl;
 			break;
         case VIF_MSCALF:
             _cmd = VIF_MSCALF;
-            cout << "VIF_MSCALF" << endl;
+            cdbg << "VIF_MSCALF" << endl;
             _addr = data&0xFFFF;
             break;
 		case VIF_STMASK:
-			cout << "VIF_STMASK" << endl;
+			cdbg << "VIF_STMASK" << endl;
             _cmd = VIF_STMASK;
             rVIF0_MASK = data;
             rVIF1_MASK = data;
 			break;
         case VIF_STROW:
-            cout << "VIF_STROW" << endl;
+            cdbg << "VIF_STROW" << endl;
             cmd_strow();
             break;
         case VIF_STCOL:
             cmd_stcol();
             break;
         case VIF_MPG:
-            cout << "VIF_MPG" << endl;
+            cdbg << "VIF_MPG" << endl;
             _cmd = VIF_MPG;
             _num = (data>>16)&0xFF;
             _addr = data&0xffff;
@@ -392,7 +392,7 @@ VIF::decode_cmd(void) {
             break;
 		case VIF_DIRECT:
             // should be redirected to gsexec directly
-			cout << "VIF_DIRECT" << endl;
+			cdbg << "VIF_DIRECT" << endl;
             // num = code&0xFFFF;
             // if (num == 0) {
             //     num = 65536;
@@ -400,7 +400,7 @@ VIF::decode_cmd(void) {
 			break;
 		case VIF_DIRECTHL:
             // should be redirected to gsexec directly
-			cout << "VIF_DIRECTHL" << endl;
+			cdbg << "VIF_DIRECTHL" << endl;
             // num = code&0xFFFF;
             // if (num == 0) {
             //     num = 65536;
@@ -410,7 +410,7 @@ VIF::decode_cmd(void) {
 
     if ( (cmd&VIF_UNPACK) == VIF_UNPACK) {
         _memIndex = 0;
-        cout << "VIF_UNPACK: ";
+        cdbg << "VIF_UNPACK: ";
         _cmd = VIF_UNPACK;
         _num = (data>>16)&0xFF;
         _unpack = (data>>24)&0xF;
@@ -428,9 +428,9 @@ VIF::decode_cmd(void) {
         }
 
         _unpack = (vn<<2)+vl;
-        cout << "length: " << _length << ", ";
-        cout << "usn: " << _usn << ", ";
-        cout << "flg: " << _flg << endl;
+        cdbg << "length: " << _length << ", ";
+        cdbg << "usn: " << _usn << ", ";
+        cdbg << "flg: " << _flg << endl;
         if ( _flg == 1 ) {
             _memIndex = rVIF1_TOPS; 
         }
@@ -470,7 +470,7 @@ VIF::cmd_unpack(void) {
         }
         switch(_unpack) {
             case UNPACK_S32:
-                cout << "unpacking S32" << endl;
+                cdbg << "unpacking S32" << endl;
                 _fin.read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
@@ -498,7 +498,7 @@ VIF::cmd_unpack(void) {
                 }
                 break;
             case UNPACK_S16:
-                cout << "unpacking S16" << endl;
+                cdbg << "unpacking S16" << endl;
                 _fin.read(rhword, 2);
                 hword_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
@@ -524,7 +524,7 @@ VIF::cmd_unpack(void) {
                 }
                 break;
             case UNPACK_S8:
-                cout << "unpacking S8" << endl;
+                cdbg << "unpacking S8" << endl;
                 _fin.read(rbyte, 1);
                 byte_x = (unsigned char)rbyte[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
@@ -549,7 +549,7 @@ VIF::cmd_unpack(void) {
                 }
                 break;
             case UNPACK_V232:
-                cout << "unpacking V2_32" << endl;
+                cdbg << "unpacking V2_32" << endl;
                 _fin.read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
@@ -573,7 +573,7 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].y = word_y;
                 break;
             case UNPACK_V216:
-                cout << "unpacking V2_16" << endl;
+                cdbg << "unpacking V2_16" << endl;
                 _fin.read(rword, 2);
                 hword_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
@@ -596,7 +596,7 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].y = word_y;
                 break;
             case UNPACK_V28:
-                cout << "unpacking V2_8" << endl;
+                cdbg << "unpacking V2_8" << endl;
                 _fin.read(rbyte, 1);
                 byte_x = (unsigned char)rbyte[0];
                 _fin.read(rbyte, 1);
@@ -618,7 +618,7 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].y = word_y;
                 break;
             case UNPACK_V332:
-                cout << "unpacking V3_32" << endl;
+                cdbg << "unpacking V3_32" << endl;
                 _fin.read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
@@ -651,7 +651,7 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].z = word_z;
                 break;
             case UNPACK_V316:
-                cout << "unpacking V3_16" << endl;
+                cdbg << "unpacking V3_16" << endl;
                 _fin.read(rhword, 2);
                 hword_x = ((unsigned char)rhword[1]<<8) +
                     (unsigned char)rhword[0];
@@ -682,7 +682,7 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].z = word_z;
                 break;
             case UNPACK_V38:
-                cout << "unpacking V3_8" << endl;
+                cdbg << "unpacking V3_8" << endl;
                 _fin.read(rbyte, 1);
                 byte_x = (unsigned char)rbyte[0];
                 _fin.read(rbyte, 1);
@@ -710,7 +710,7 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].z = word_z;
                 break;
             case UNPACK_V432:
-                cout << "unpacking V4_32" << endl;
+                cdbg << "unpacking V4_32" << endl;
                 _fin.read(rword, 4);
                 word_x = ((unsigned char)rword[3]<<24) +
                     ((unsigned char)rword[2]<<16) +
