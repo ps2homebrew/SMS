@@ -67,6 +67,8 @@ TVector3D VERTEXLIST_square[4]={
 	{  1.000f,  1.000f,  1.000f, 0, 0}, // left
 };
 
+int scrollsize = 34; // number of lines for scroller
+
 static char *scrolltext[] =
 {
   "Oddments",
@@ -83,10 +85,26 @@ static char *scrolltext[] =
   "Haujobb",
   "Kewlers",
   "TBL",
+  "Tubgirl",
   "and all we forgot!",
   "",
   "", 
-  "Now a few words from the team:",
+  "We would like to give",
+  "special thanks to",
+  "Drukluft & Gibson / Soopadoopa",
+  "for letting us use this font.",
+  "",
+  "Big thanks also to Trinodia",
+  "for providing the soundtrack",
+  "to this demo.",
+  "",
+  "Check out Trinodia's great work:",
+  "www.trinodia.net",
+  "",
+  "",
+  "As is traditional in demos,",
+  "a few words from the team...",
+  "",
   /*"a b c d e f g h i j k l m",
   "n o p q r s t u v w x y z",
   "A B C D E F G H I J K L M",
@@ -325,14 +343,14 @@ int foff = 256;
 void DrawScroller()
 {
     int i;
-    for (i=0; i<15; i++)
+    for (i=0; i<scrollsize; i++)
     {
         //s_TextLine(fox,foff+(54*i),scrolltext[i]);
         gsw_TextLine(scrolltext[i], 50, foff+(40*i), 99, GS_ALIGN_CENTER, 0); 
     }
     foff--;
 
-    if (foff==-(16*50))
+    if (foff==-(scrollsize*50))
     {
         foff = 256;
     }
