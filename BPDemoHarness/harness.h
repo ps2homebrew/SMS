@@ -10,7 +10,7 @@ typedef struct _demo_init
 {
   int  (*printf)(const char *s, ...);   /* Pointer to the printf function for debugging,
                    will set to a dummy function in release */
-  float *(*get_fft)();          /* Gets the current FFT block */
+  u16 *(*get_fft)();          /* Gets the current FFT block */
   u32  screen_mode;            /* The PCRTC mode configured */
   volatile u32  curr_frame;    /* The current frame number from start of demo */
   volatile s32  frame_count;   /* Number of frames the demo has */
