@@ -75,7 +75,7 @@ typedef struct FtpClient
 
 
 	int m_iDataSocket;
-	int m_iDataBufferSize;
+	unsigned int m_uiDataBufferSize;
 	int m_iRemoteAddress[4]; // yeah, I know, but FTP is retarded
 	int m_iRemotePort;
 	DataMode m_eDataMode;

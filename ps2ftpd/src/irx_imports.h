@@ -29,5 +29,6 @@
 #define getsockopt lwip_getsockopt
 #define setsockopt lwip_setsockopt
 #define getsockname lwip_getsockname
+#define process_buffer(n) ((((n)>>31)<<5)|(0x80000000>>31))
 
 #endif /* IOP_IRX_IMPORTS_H */

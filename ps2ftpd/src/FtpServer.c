@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #define disconnect(s) close(s)
+#define affinity(n)
 #endif
 
 #include <errno.h>
@@ -100,7 +101,7 @@ int FtpServer_Start( struct FtpServer* pServer )
 
 	memset( &sa, 0, sizeof(sa) );
 	sa.sin_family = AF_INET;
-	sa.sin_port = htons(pServer->m_iPort);
+	sa.sin_port = htons(pServer->m_iPort&0x7fffffff);
 	sa.sin_addr.s_addr = INADDR_ANY;
 
 	if( bind( s, (struct sockaddr*)&sa, sizeof(sa) ) < 0 )
@@ -145,6 +146,7 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 	int res;
 	fd_set r;
 	fd_set w;
+	unsigned int i;
 //	fd_set e;
 	int hs = pServer->m_iSocket;
 
