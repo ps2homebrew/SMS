@@ -1,0 +1,870 @@
+############################################################
+# This file was created by Javier Nieto. 
+# You may use, distribute and do wathever you want. 
+# Only 2 restrictions:
+# 1 - Any improve or bug detected should be posted to m3ntol@yahoo.es
+# 2 - Keep this header in all distributions you do
+#
+#############################
+# INSTRUCTION FILE DEFINITION
+#
+#INTRUCTION DEFNITION FORMAT:
+#TYPE OF INSTRUCION: 0-UPPER 1-LOWER
+#NEMOTECTIC OF ISTRUCTION
+#FLAVORS 0-NO FLAVORS 1-3 FLAVORS 2-8 FLAVORS
+#NUM PARAMS
+#TYPE OF PARAM 1	VI VF VIdest VFdest ACC Imm24 Imm15 Imm12 Imm11 Imm5 I
+#TYPE OF PARAM 2        Imm11(VI) Imm11(VI)dest (VI)dest (--VI) (VI++) P Q R VI01 Fmm32
+# .... TYPE OF PARAM N
+#THROUGHPUT
+#LATENCY
+###############################
+#
+#
+###############################
+#     UPPER INSTRUCIONS       #
+###############################
+# ABS.dest VF[ft]dest, VF[fs]dest 
+0
+ABS.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# ADD.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (ADDi, ADDq, ADDbc, ADDA, ADDAi, ADDAq, ADDAbc)
+0
+ADD.dest
+2
+3
+VFdest
+VFdest
+VFdest
+1
+4
+# CLIPw.dest VF[fs]dest, VF[ft]w
+0
+CLIPw.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# FTOI0.dest VF[ft]dest, VF[fs]dest
+0
+FTOI0.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# FTOI4.dest VF[ft]dest, VF[fs]dest
+0
+FTOI4.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# FTOI12.dest VF[ft]dest, VF[fs]dest
+0
+FTOI12.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# FTOI15.dest VF[ft]dest, VF[fs]dest
+0
+FTOI15.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# ITOF0.dest VF[ft]dest, VF[fs]dest
+0
+ITOF0.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# ITOF4.dest VF[ft]dest, VF[fs]dest
+0
+ITOF4.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# ITOF12.dest VF[ft]dest, VF[fs]dest
+0
+ITOF12.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# ITOF15.dest VF[ft]dest, VF[fs]dest
+0
+ITOF15.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# MADD.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (MADDi, MADDq, MADDbc, MADDA, MADDAi, MADDAq, MADDAbc)
+0
+MADD.dest
+2
+3
+VFdest
+VFdest
+VFdest
+1
+4
+# MAX.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (MAXi, MAXbc)
+0
+MAX.dest
+2
+3
+VFdest
+VFdest
+VFdest
+1
+4
+# MINI.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (MINi, MINbc)
+0
+MINI.dest
+1
+3
+VFdest
+VFdest
+VFdest
+1
+4
+# MSUB.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (MSUBi, MSUBq, MSUBbc, MSUBA, MSUBAi, MSUBAq, MSUBAbc)
+0
+MSUB.dest
+2
+3
+VFdest
+VFdest
+VFdest
+1
+4
+# MUL.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (MULi, MULq, MULbc, MULA, MULAi, MULAq, MULAbc)
+0
+MUL.dest
+2
+3
+VFdest
+VFdest
+VFdest
+1
+4
+# NOP
+0
+NOP
+0
+0
+1
+4
+# OPMULA.xyz ACCxyz, VF[fs]xyz, VF[ft]xyz 
+0
+OPMULA.xyz
+0
+3
+ACC
+VF
+VF
+1
+4
+# OPMSUB.xyz VF[fd]xyz, VF[fs]xyz, VF[ft]xyz 
+0
+OPMSUB.xyz
+0
+3
+VF
+VF
+VF
+1
+4
+# SUB.dest VF[fd]dest, VF[fs]dest, VF[ft]dest (SUBi, SUBq, SUBbc, SUBA, SUBAi, SUBAq, SUBAbc)
+0
+SUB.dest
+2
+3
+VFdest
+VFdest
+VFdest
+1
+4
+###############################
+#   END UPPER INSTRUCIONS     #
+###############################
+#
+#
+#
+###############################
+#     LOWER INSTRUCIONS       #
+###############################
+# B Imm11
+1
+B
+0
+1
+Imm11
+2
+2
+# BAL VI[it], Imm11
+1
+BAL
+0
+2
+VI
+Imm11
+2
+2
+# DIV Q, VF[fs]fsf, VF[ft]ftf
+1
+DIV
+0
+3
+Q
+VFdest
+VFdest
+7
+7
+# EATAN P, VF[fs]fsf
+1
+EATAN
+0
+2
+P
+VFdest
+53
+54
+# EATANxy P, VF[fs]
+1
+EATANxy
+0
+2
+P
+VF
+53
+54
+# EATANxz P, VF[fs]
+1
+EATANxz
+0
+2
+P
+VF
+53
+54
+# EEXP P, VF[fs]
+1
+EEXP
+0
+2
+P
+VF
+43
+44
+# ELENG P, VF[fs]
+1
+ELENG
+0
+2
+P
+VF
+17
+18
+# ERCPR P, VF[fs]fsf
+1
+ERCPR
+0
+2
+P
+VFdest
+11
+12
+# ERLENG P, VF[fs]
+1
+ERLENG
+0
+2
+P
+VF
+23
+24
+# ERSADD P, VF[fs]
+1
+ERSADD
+0
+2
+P
+VF
+17
+18
+# ERSQRT P, VF[fs]fsf
+1
+ERSQRT
+0
+2
+P
+VFdest
+17
+18
+# ESADD P, VF[fs]
+1
+ESADD
+0
+2
+P
+VF
+10
+11
+# ESIN P, VF[fs]fsf
+1
+ESIN
+0
+2
+P
+VFdest
+28
+29
+# ESQRT P, VF[fs]fsf
+1
+ESQRT
+0
+2
+P
+VFdest
+11
+12
+# ESUM P, VF[fs]
+1
+ESUM
+0
+2
+P
+VF
+11
+12
+# FCAND VI01, Imm24
+1
+FCAND
+0
+2
+VI01
+Imm24
+1
+1
+# FCEQ VI01, Imm24
+1
+FCEQ
+0
+2
+VI01
+Imm24
+1
+1
+# FCGET VI[fs]
+1
+FCAND
+0
+1
+VI
+1
+1
+# FCOR VI01, Imm24
+1
+FCOR
+0
+2
+VI01
+Imm24
+1
+1
+# FCSET Imm24
+1
+FCSET
+0
+1
+VI
+1
+4
+# FMAND VI[it], VI[is]
+1
+FMAND
+0
+2
+VI
+VI
+1
+1
+# FMEQ VI[it], VI[is]
+1
+FMEQ
+0
+2
+VI
+VI
+1
+1
+# FMOR VI[it], VI[is]
+1
+FMOR
+0
+2
+VI
+VI
+1
+1
+# FSAND VI[it], Imm12
+1
+FSAND
+0
+2
+VI
+Imm24
+1
+1
+# FSEQ VI[it], Imm24
+1
+FSEQ
+0
+2
+VI
+Imm24
+1
+1
+# FSOR VI[it], Imm12
+1
+FSOR
+0
+2
+VI
+Imm24
+1
+1
+# FSSET Imm24
+1
+FSSET
+0
+1
+VI
+1
+4
+# IADD VI[id], VI[is], VI[it]
+1
+IADD
+0
+3
+VI
+VI
+VI
+1
+1
+# IADDI VI[id], VI[is], Imm5
+1
+IADDI
+0
+3
+VI
+VI
+Imm5
+1
+1
+# IADDIU VI[id], VI[is], Imm15
+1
+IADDIU
+0
+3
+VI
+VI
+Imm15
+1
+1
+# IAND VI[id], VI[is], VI[it]
+1
+IAND
+0
+3
+VI
+VI
+VI
+1
+1
+# IBEQ VI[id], VI[is], Imm11
+1
+IBEQ
+0
+3
+VI
+VI
+Imm11
+2
+2
+# IBGEZ VI[is], Imm11
+1
+IBGEZ
+0
+2
+VI
+Imm11
+2
+2
+# IBGTZ VI[is], Imm11
+1
+IBGTZ
+0
+2
+VI
+Imm11
+2
+2
+# IBLEZ VI[is], Imm11
+1
+IBLEZ
+0
+2
+VI
+Imm11
+2
+2
+# IBLTZ VI[is], Imm11
+1
+IBLTZ
+0
+2
+VI
+Imm11
+2
+2
+# IBNE VI[id], VI[is], Imm11
+1
+IBNE
+0
+3
+VI
+VI
+Imm11
+2
+2
+# ILW.dest VI[it], Imm11(VI[is])dest
+1
+ILW.dest
+0
+2
+VI
+Imm11(VI)dest
+1
+4
+# ILWR.dest VI[it], (VI[is])dest
+1
+ILWR.dest
+0
+2
+VI
+(VI)dest
+1
+4
+# IOR VI[id], VI[is], VI[it]
+1
+IOR
+0
+3
+VI
+VI
+VI
+1
+1
+# ISUB VI[id], VI[is], VI[it]
+1
+ISUB
+0
+3
+VI
+VI
+VI
+1
+1
+# ISUBIU VI[id], VI[is], Imm15
+1
+ISUBIU
+0
+3
+VI
+VI
+Imm15
+1
+1
+# ISW.dest VI[it], Imm11(VI[is])dest
+1
+ISW.dest
+0
+2
+VI
+Imm11(VI)dest
+1
+4
+# ISWR.dest VI[it], (VI[is])dest
+1
+ISWR.dest
+0
+2
+VI
+(VI)dest
+1
+4
+# JALR VI[it], VI[is]
+1
+JALR
+0
+2
+VI
+VI
+2
+2
+# JR VI[it]
+1
+JR
+0
+1
+VI
+2
+2
+# LQ.dest VF[it].dest, Imm11(VI[is])
+1
+LQ.dest
+0
+2
+VFdest
+Imm11(VI)
+1
+4
+# LQD.dest VF[it].dest, (--VI[is])
+1
+LQD.dest
+0
+2
+VFdest
+(--VI)
+1
+4
+# LQI.dest VF[it].dest, (VI[is]++)
+1
+LQI.dest
+0
+2
+VFdest
+(VI++)
+1
+4
+# MFIR.dest VF[it].dest, VI[is]
+1
+MFIR.dest
+0
+2
+VFdest
+VI
+1
+4
+# MFP.dest VF[it].dest, P
+1
+MFP.dest
+0
+2
+VFdest
+P
+1
+4
+# MOVE.dest VF[it].dest, VF[is].dest
+1
+MOVE.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# MR32.dest VF[it].dest, VF[is].dest
+1
+MR32.dest
+0
+2
+VFdest
+VFdest
+1
+4
+# MTIR VI[it], VF[is].dest
+1
+MTIR
+0
+2
+VI
+VFdest
+1
+4
+# NOP  .In fact there is no nop lower instruction but compilers support it
+1
+NOP
+0
+0
+1
+4
+# RGET.dest VF[it].dest, R
+1
+RGET.dest
+0
+2
+VFdest
+R
+1
+4
+# RINIT R, VF[it].dest
+1
+RINIT
+0
+2
+R
+VFdest
+1
+4
+# RNEXT.dest VF[it].dest, R
+1
+RNEXT.dest
+0
+2
+VFdest
+R
+1
+4
+# RSQRT Q, VF[it].dest, VF[is].dest
+1
+RSQRT
+0
+3
+Q
+VFdest
+VFdest
+13
+13
+# RXOR R, VF[it].dest
+1
+RXOR
+0
+2
+R
+VFdest
+1
+1
+# SQ.dest VF[it].dest, Imm11(VI[is])
+1
+SQ.dest
+0
+2
+VFdest
+Imm11(VI)
+1
+4
+# SQD.dest VF[it].dest, (--VI[is])
+1
+SQD.dest
+0
+2
+VFdest
+(--VI)
+1
+4
+# SQI.dest VF[it].dest, (VI[is]++)
+1
+SQI.dest
+0
+2
+VFdest
+(VI++)
+1
+4
+# SQRT Q, VF[it].dest
+1
+SQRT
+0
+2
+Q
+VFdest
+7
+7
+# WAITP
+1
+WAITP
+0
+0
+1
+1
+# WAITQ
+1
+WAITQ
+0
+0
+1
+1
+# XGKICK VI[it]
+1
+XGKICK
+0
+1
+VI
+1
+1
+# XITOP VI[it]
+1
+XITOP
+0
+1
+VI
+1
+1
+# XTOP VI[it]
+1
+XTOP
+0
+1
+VI
+1
+1
+###############################
+#     SPECIAL INSTRUCIONS     #
+###############################
+# LOI Fmm32
+1
+LOI
+0
+1
+Fmm32
+1
+1
+# MAXI.dest VF[fd]dest, VF[fs]dest, I
+0
+MAXI.dest
+2
+3
+VFdest
+VFdest
+I
+1
+4
