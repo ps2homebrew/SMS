@@ -1,7 +1,7 @@
 /*
   _____     ___ ____ 
    ____|   |    ____|      PS2FTP
-  |      __|   |____       (C)2003, John Kelley (warren@halifrag.com)
+  |     ___|   |____       (C)2003, John Kelley (warren@halifrag.com)
   ---------------------------------------------------------------------
   ps2ftp.c
             Simple single threaded FTP server for the EE.
@@ -11,16 +11,15 @@
 
 /* function prototypes */
 void serverThread ();
-void HandleClient (int, struct sockaddr_in *);
-enum command_types get_command (int com_sock, char *buf, int bufsize);
-void retrieve (char *filename, struct sockaddr_in *data_address, int data_length, int com_sock, char *buf);
-void processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum command_modes *command_mode);
+void HandleClient (const int);
+enum command_types get_command (const int com_sock, const char *buf, const int bufsize);
+void processCommand(const int com_sock, const enum command_types ftpcommand, const char *cmd_buf, enum command_modes *command_mode);
 
 /* Variables */
-u8 buffer[BUFFER_SIZE] __attribute__ ((aligned (64))); //for sending files
+//static u8 buffer[BUFFER_SIZE] __attribute__ ((aligned (64))); //for sending files
 FSMan *vfs;
-char currentDir[128];
-char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+//static char currentDir[128];
+static char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 /*
  *	Send a FTP reply to the client
@@ -29,7 +28,7 @@ char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
  *  next, allows multiline status msgs to be returned to client
  */
 int
-reply (int sock, int code, char *msg)
+reply (const int sock, const int code, const char *msg)
 {
 	static char replybuf[256] __attribute__ ((aligned (64)));
 	int ret;
@@ -58,30 +57,31 @@ reply (int sock, int code, char *msg)
 		  hdd modules
 */
 static inline int 
-connect_tcpip (struct sockaddr_in *data_address, int data_length, int com_sock)
+connect_tcpip (const struct sockaddr_in *data_address, const int data_length, const int com_sock)
 {
 	int sock;
-perror("pre sock\n");
+
+	perror("Creating new socket...\n");
 	sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock < 0) {
 		reply (com_sock, 550, "connect_tcpip:sock() failed");
 		printf ("connect_tcpip:sock() failed %d", sock);
 		return -1;
 	}
-perror("post sock\n");
+	perror("Connecting socket to remote host...\n");
 	if (connect(sock, (struct sockaddr *) data_address, data_length) < 0) {
 		reply (com_sock, 550, "connect_tcpip:connect() failed");
 		printf ("FATAL: connect_tcpip:connect() failed\n");
 		return -1;
 	}
-	printf("sock is: %d\n", sock);
+	printf("Connected to remote host, socket is #%d\n", sock);
 	return sock;
 }
 
 /* Get a ftp command from the command stream, convert to command code and
 parse command argument */
 enum command_types
-get_command (int com_sock, char *buf, unsigned int bufsize)
+get_command (const int com_sock, char *buf, const unsigned int bufsize)
 {
 	char cmd[5];
 	unsigned int i, j, rcvSize;
@@ -96,33 +96,33 @@ get_command (int com_sock, char *buf, unsigned int bufsize)
 
 	//advance i to the start of the command argument
 	i = strlen (cmd);
-	while (!isPrintable (buf[i]) || buf[i] == 0x20)
+	while (i < rcvSize && !isPrintable(buf[i]) || buf[i] == 0x20)
 		i++;
 
 	//copy the command argument into buf stopping at
 	// a non printable char or when we hit the size 
 	// of our buffer
 	j = 0;
-	while (isPrintable (buf[i]) && i < bufsize - 1) {
+	while (i < rcvSize && isPrintable (buf[i])) {
 		buf[j] = buf[i];
 		i++;
 		j++;
 	}
+
 	//terminate string
 	buf[j] = '\0';
 	// Fix Buffer Overflow
 	buf[bufsize - 1] = '\0';
 
-	//printf("CMD='%s', ARG='%s'\n", cmd, buf);
 	//Find FTP Command and return its enum
 	for (i = 0; i < sizeof (command_lookup) / sizeof (command_lookup[0]); ++i)
 		if (strncmp (cmd, command_lookup[i].command, 4) == 0)
 			return command_lookup[i].command_code;
 
 	//Return error as we don't recognize that command
-	//printf ("UNKNOWN COMMAND: %s\n", cmd);
 	return ERROR;
 }
+
 void setupIP() {
 	int i;
 	memset(if_conf, 0x00, sizeof(if_conf));
@@ -138,6 +138,7 @@ void setupIP() {
 
 	if_conf_len = i;
 }
+
 int
 main (int argc, char **argv)
 {
@@ -166,16 +167,14 @@ main (int argc, char **argv)
 		setupIP();
 		SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
 		printf("\tLoaded PS2IP: %d\n", ret);
+		SifExecModuleBuffer(&ps2ips_irx, size_ps2ips_irx, 0, NULL, &ret);
+		printf("\tLoaded PS2IPS: %d\n", ret);
 		SifExecModuleBuffer(&ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], &ret);
 		printf("\tLoaded PS2SMAP: %d\n", ret);
 	}
 	
-	SifExecModuleBuffer(&ps2ips_irx, size_ps2ips_irx, 0, NULL, &ret);
-	printf("\tLoaded PS2IPS: %d\n", ret);
-
 	printf("Initialising IP stack...\n");
 	ps2ip_init();
-
 
 	printf("Initialising filesystems:\n");
 	vfs = new FSMan(true /*mc*/, false /*cdvd*/, false /*hdd*/);
@@ -187,21 +186,16 @@ main (int argc, char **argv)
 void
 serverThread ()
 {
-	int sh;
-	int command_socket;
-	struct sockaddr_in ftpServAddr;
-	struct sockaddr_in ftpClntAddr;
-	int clntLen;
-	int rc;
+	static int sh, command_socket, clntLen, rc;
+	static struct sockaddr_in ftpServAddr;
+	static struct sockaddr_in ftpClntAddr;
 
 	printf("Server started.\n");
 
-	if ((sh = socket(AF_INET, SOCK_STREAM, 0/*IPPROTO_TCP*/)) < 0) {
+	if ((sh = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
 		printf("FATAL: Failed to create socket: %d\n", sh);
 		SleepThread ();
 	}
-	//perror ("PS2FTP: Got socket.. %i\n", sh);
-
 
 	memset (&ftpServAddr, 0, sizeof (ftpServAddr));
 	ftpServAddr.sin_family = AF_INET;
@@ -213,14 +207,12 @@ serverThread ()
 		perror ("FATAL: Failed to bind socket!\n");
 		SleepThread ();
 	}
-	//perror ("PS2FTP: bind returned %i\n", rc);
 
 	rc = listen (sh, 2);
 	if (rc < 0) {
 		perror ("FATAL: Could not listen on socket!\n");
 		SleepThread ();
 	}
-	//perror ("PS2FTP: listen returned %i\n", rc);
 
 	while (1) {
 		clntLen = sizeof (ftpClntAddr);
@@ -229,18 +221,17 @@ serverThread ()
 			perror ("FATAL: Could not accept connection!\n");
 			SleepThread ();
 		}
-		//perror ("PS2FTP: accept returned %i.\n", command_socket);
 
-		HandleClient (command_socket, &ftpClntAddr);
+		HandleClient (command_socket);
 	}
 }
 
 void
-HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
+HandleClient (const int com_sock)
 {
 	/* Create buffered file descriptors for reading and writing */
 	/* Data buffer for reading FTP command codes */
-	char buf[256];
+	static char buf[256] __attribute__ ((aligned (64)));
 
 	/* The initial command mode */
 	enum command_modes command_mode = LOGIN;
@@ -260,11 +251,9 @@ HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 				if (ftpcommand == USER) {
 					if (strcmp (buf, "anonymous") == 0 || strcmp (buf, "ftp") == 0) {
 						command_mode = PASSWORD;
-						reply (com_sock, 331,
-							"anonymous login accepted, enter email as password");
+						reply (com_sock, 331, "anonymous login accepted, enter email as password");
 					} else {
-						printf("user: >%s<\n", buf);
-						reply (com_sock, 504, buf);
+						reply (com_sock, 504, "Invalid username");
 					}
 				} else
 					reply (com_sock, 530, "user not logged in");
@@ -290,17 +279,16 @@ HandleClient (int com_sock, struct sockaddr_in *ftpClntAddr)
 }
 
 void 
-processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum command_modes *command_mode) {
-	char filename[256];
-	char buf[128];
-	char buf2[128];
-	char *tok; //for strtok in PORT
-	t_aioDent fileEntry; //for SIZE command
-
-	int ret=0, i, ls_sock, fd, sock, bytes;
+processCommand(const int com_sock, const enum command_types ftpcommand, const char *cmd_buf, enum command_modes *command_mode) {
+//	static char filename[256];
+	static char buf[256] __attribute__ ((aligned (64)));
+	//static char buf2[256];
+	static char *tok; //for strtok in PORT
+	//static t_aioDent fileEntry; //for SIZE command
+	int ret=0, i, ls_sock;//, fd, bytes;
 
 	/* Address of the data port used to transfer files */
-	struct sockaddr_in data_address;
+	static struct sockaddr_in data_address;
 	int data_length = sizeof (data_address);
 
 	/* Temporary Storage for tcp/ip address (PORT command)*/
@@ -343,9 +331,9 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 			if (isDir (buf2)) {
 			sprintf (currentDir, "%s%s", currentDir, buf);
 			reply (com_sock, 250, "CWD command successful 2.");
-			} else
+			} else*/
 			reply (com_sock, 550, "No such directory");
-			}*/
+			//}
 			break;
 		case CDUP:
 			/*i = strlen (currentDir);
@@ -365,9 +353,9 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 			currentDir[1] = '\0';
 			} else {
 			currentDir[i] = '\0';
-			}
-			reply (com_sock, 250, "CDUP command successful.");
 			}*/
+			reply (com_sock, 250, "CDUP command successful.");
+			//}
 			break;
 		case TYPE:  /* Accept file TYPE commands, but always translate to BIN */
 			reply (com_sock, 200, "Type set to I.");
@@ -386,19 +374,20 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 			//        to work. CWD and other commands depend on FSMan which I
 			//        have not finished writing (I wanted to haev this working
 			//        to test it with.
-			//ls_sock = connect_tcpip (&data_address, data_length, com_sock);
-			ls_sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-			if (sock < 0) {
+			ls_sock = connect_tcpip (&data_address, data_length, com_sock);
+			/*ls_sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+			if (ls_sock < 0) {
 				reply (com_sock, 550, "connect_tcpip:sock() failed");
-				printf ("connect_tcpip:sock() failed %d", sock);
+				printf ("connect_tcpip:sock() failed %d", ls_sock);
 
-			}
-			perror("post sock\n");
-			if (connect(ls_sock, (struct sockaddr *) &data_address, data_length) < 0) {
-				reply (com_sock, 550, "connect_tcpip:connect() failed");
-				printf ("FATAL: connect_tcpip:connect() failed\n");
-
-			}
+			} else {
+				perror("post sock\n");
+				if (connect(ls_sock, (struct sockaddr *) &data_address, data_length) < 0) {
+					reply (com_sock, 550, "connect_tcpip:connect() failed");
+					printf ("FATAL: connect_tcpip:connect() failed\n");
+	
+				}
+			}*/
 			perror("connection opened\n");
 			if (ls_sock < 0) {
 				reply (com_sock, 500, "data connection failed");
@@ -445,7 +434,8 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 			break;
 		case PORT:  /* Set the tcp/ip address based on the given argument */
 			/* Grab data port address from command argument */
-			tok = strtok (cmd_buf, ",");
+			strncpy(buf, cmd_buf, 256);
+			tok = strtok (buf, ",");
 			a1 = atoi (tok);
 			tok = strtok (NULL, ",");
 			a2 = atoi (tok);
@@ -471,9 +461,9 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 
 			if ((fd = vfs->currentDevice->open(filename, O_RDONLY)) < 0) {
 				sprintf (buf, "File Does Not Exist: '%s'", filename);
-				reply (com_sock, 550, buf);
+			*/	reply (com_sock, 550, "File does not exist");//buf);
 				break;
-			} else
+			/*} else
 				perror ("Opened %s", filename);
 
 			// Everything OK, so make data connection 
@@ -518,9 +508,9 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 				perror ("permission denied\n");
 				sprintf (buf2, "Permission denied. Could not create file: '%s'",
 					filename);
-				reply (com_sock, 553, buf2);
+			*/	reply (com_sock, 553, "Permission denied."); //buf2);
 				break;
-			} else {
+			/*} else {
 				perror ("opened\n");
 			}
 			// Everything OK, so make data connection 
@@ -562,6 +552,7 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 				sprintf (buf2, "Error %d returned from remove(%s).", ret, buf);
 				reply (com_sock, 550, buf2);
 			}*/
+			reply (com_sock, 250, "Error executing DELE command");
 			break;
 		case RMD:
 			//TODO: STRIP OFF VFS DEVICE DIRECTORY
@@ -572,6 +563,7 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 				sprintf (buf2, "Error %d returned from rmdir(%s).", ret, buf);
 				reply (com_sock, 550, buf2);
 			}*/
+			reply (com_sock, 250, "Error executing RMD command");
 			break;
 		case MKD:
 			//TODO: STRIP OFF VFS DEVICE DIRECTORY
@@ -589,6 +581,7 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 				sprintf (buf, "\"%s\" created.\n", buf2);
 				reply (com_sock, 257, buf);
 			}*/
+			reply (com_sock, 250, "Error executing MKDIR command");
 			break;
 		case SIZE:
 			//TODO: STRIP OFF VFS DEVICE DIRECTORY
@@ -604,6 +597,7 @@ processCommand(int com_sock, enum command_types ftpcommand, char *cmd_buf, enum 
 				sprintf (buf2, "%d", bytes);
 				reply (com_sock, 250, buf2);
 			}*/
+			reply (com_sock, 250, "Error executing SIZE command");
 			break;
 		case PLNK: /*command to (re)load ps2link*/
 			disconnect (com_sock);

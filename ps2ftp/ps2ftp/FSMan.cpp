@@ -1,12 +1,16 @@
 #include "FSMan.h"
-#include <kernel.h>
+
 #define printf scr_printf
 
 FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 	int dirPos = 0;
+
+	currentDir = (char *) malloc(1024);
 	zeromem(currentDir, sizeof(currentDir));
-	zeromem(rootDir, sizeof(t_aioDent)*4);
+	dirlisting = (t_aioDent*) malloc(sizeof(t_aioDent)*256);
 	zeromem(dirlisting, sizeof(t_aioDent)*256);
+	zeromem(rootDir, sizeof(t_aioDent)*4);
+
 	mc0On = mc1On = cdvdOn = hddOn = false;
 	strcpy(currentDir, "/");
 	currentDevice = NULL;
@@ -30,7 +34,6 @@ FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 				strcpy(rootDir[dirPos].name, "mc0");
 				rootDir[dirPos].size = 2048;
 				rootDir[dirPos].attrib = AIO_ATTRIB_DIR;
-				printf("rootdir[%d] = >%s<\n", dirPos, rootDir[dirPos].name);
 				dirPos++;
 			} else 
 				printf("NOT PRESENT\n");
@@ -64,5 +67,4 @@ FSMan::FSMan(BOOL mc = true, BOOL cdvd = false, BOOL hdd = false) {
 		//unload modules if hdd not present
 	}
 	memcpy(dirlisting, rootDir, sizeof(t_aioDent)*4);
-	printf("dir #1: %s\n", dirlisting[0].name);
 }

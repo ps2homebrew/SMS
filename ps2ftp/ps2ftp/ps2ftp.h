@@ -18,7 +18,6 @@
 /* define DEBUG if you want to print status msgs via the 'perror' command
 ie if running under naplink or ps2link*/
 #define DEBUG
-#define ARRAY_ENTRIES 64
 
 #define printf scr_printf
 /* 'perror' definition for printf */
