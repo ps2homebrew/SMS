@@ -28,7 +28,7 @@ static char *get_ftf(uint32);
 static void get_params(int, uint32, char *, OPCODE *);
 static bool LoadBinaryCode(ifstream *, char*);
 static bool LoadAsciiCode(ifstream *, char*, int);
-static char *getLine(char *, char *, int);
+static char *getLine(char *, char *);
 
 static const int vid = 6;
 static const int vis = 11;
@@ -887,7 +887,7 @@ LoadCode(char *file) {
         LoadAsciiCode(&fin, data, st.st_size);
     }
 
-    while((data = getLine(Line, data, 250))) {
+    while((data = getLine(Line, data))) {
         j = 0;
         while(Line[j]) {
             if(Line[j]==';') {
@@ -918,7 +918,7 @@ LoadCode(char *file) {
 }
 
 char *
-getLine(char *line, char *data, int limit){
+getLine(char *line, char *data){
     int i;
     if ( *data == NULL ) {
         return NULL;
@@ -939,7 +939,6 @@ LoadAsciiCode(ifstream *fin, char *code, int size) {
 
 bool
 LoadBinaryCode(ifstream *fin, char *data) {
-    uint64 code;
     uint32 ucode, lcode;
     int uidx, lidx;
     char lparam[50];
@@ -956,8 +955,6 @@ LoadBinaryCode(ifstream *fin, char *data) {
         if ( lcode == 0 ) {
             break;
         }
-        // ucode = (code>>32);
-        // lcode = (code&0xffffffff);
         uidx = get_upper(ucode);
         lidx = get_lower(lcode);
 

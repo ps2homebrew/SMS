@@ -490,7 +490,7 @@ int VU::Stalling(VUParam &a)
     return 0;
 }
 
-int
+void
 VU::updateRegisters() {
     if ( specialRegisterWrite ) {
         switch (specialFloatIndex) {
@@ -565,7 +565,7 @@ int VU::DoUpper() {
             i = VU_MUL(program[PC]);
             break;
         case 16:
-            i = VU_NOP(program[PC]);
+            i = VU_NOP();
             break;
         case 17:
             i = VU_OPMULA(program[PC]);
@@ -754,7 +754,7 @@ VU::DoLower() {
             i = VU_MTIR(program[PC]);
             break;
         case 75:
-            i = VU_NOP(program[PC]);
+            i = VU_NOP();
             break;
         case 76:
             i = VU_RGET(program[PC]);
@@ -784,10 +784,10 @@ VU::DoLower() {
             i = VU_SQRT(program[PC]);
             break;
         case 85:
-            i = VU_WAITP(program[PC]);
+            i = VU_WAITP();
             break;
         case 86:
-            i = VU_WAITQ(program[PC]);
+            i = VU_WAITQ();
             break;
         case 87:
             i = VU_XGKICK(program[PC]);

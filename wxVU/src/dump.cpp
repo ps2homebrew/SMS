@@ -234,5 +234,6 @@ dumpDisplayList(char *file, uint32 *data, uint32 size) {
            return sock;
        }
     }
-    return pko_gsexec_req(sock, file, size);
+    pko_gsexec_req(sock, file, size);
+	return 0;
 }

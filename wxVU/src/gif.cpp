@@ -23,50 +23,50 @@ static const int XYZ3      = 0xD;
 static const int AD        = 0xE;
 static const int NOP       = 0xF;
 
-static const char tRegisters[16][8] = {
+static const string tRegisters[16] = {
     "PRIM", "RGBAQ", "ST", "UV", "XYZF2", "XYZ2", 
     "TEX0_1", "TEX0_2", "CLAMP_1", "CLAMP_2", "FOG",
     "RSRVD", "XYZF3", "XYZ3", "AD", "NOP"
 };
 
-static const char tGIFTag[7][6] = {
+static const string tGIFTag[7] = {
     "REGS", "NREG", "FLG", "PRIM", "PRE", "EOP", "NLOOP"
 };
 
-static const char tPRIM[7][15] = {
+static const string tPRIM[7] = {
     "Point", "Line", "Line strip", "Triangle",
     "Triangle strip", "Triangle fan", "Sprite"
 };
 
-static const char tIIP[2][17] = {
+static const string tIIP[2] = {
     "Flat Shading", "Gouraud Shading"
 };
 
-static const char tTME[2][21] = {
+static const string tTME[2] = {
     "Texture mapping OFF", "Texture mapping ON"
 };
 
-static const char tFGE[2][13] = {
+static const string tFGE[2] = {
     "Fogging OFF", "Fogging ON"
 };
 
-static const char tABE[2][20] = {
+static const string tABE[2] = {
     "Alpha Blending OFF", "Alpha Blending ON"
 };
 
-static const char tAA1[2][18] = {
+static const string tAA1[2] = {
     "Antialiasing OFF", "Antialiasing ON"
 };
 
-static const char tFST[2][16] = {
+static const string tFST[2] = {
     "STQ", "UV"
 };
 
-static const char tCTXT[2][16] = {
+static const string tCTXT[2] = {
     "Context 1", "Context 2"
 };
 
-static const char tFIX[2][16] = {
+static const string tFIX[2] = {
     "Unfixed", "Fixed"
 };
 
@@ -461,7 +461,8 @@ GIF::getRegisterText(const int reg) {
             return unpack_p3tag(reg);
             break;
         default:
-            cout << "Error" << endl;
+            vector<string> v;
+            return v;
             break;
     }
 }

@@ -32,8 +32,8 @@ class PreferenceDlg: public wxDialog {
 public:
     //! constructor
     PreferenceDlg (wxWindow *parent,
-                   Prefs *prefs,
-                   long style = 0);
+                   Prefs *prefs
+                   );
 
     //! destructor
     ~PreferenceDlg ();
@@ -113,6 +113,9 @@ private:
     wxTextCtrl      *m_yOffset;
     wxTextCtrl      *m_primText;
     wxTextCtrl      *m_colorText;
+    wxTextCtrl      *m_x1Scissor;
+    wxTextCtrl      *m_y1Scissor;
+    wxTextCtrl      *m_alpha;
     wxChoice        *m_prim;
     wxRadioBox      *m_tagShow;
     wxRadioBox      *m_sendPrim;

@@ -1918,7 +1918,7 @@ VU::VU_SQRT(VUInstruction &A) {
 }
 
 int
-VU::VU_WAITP(VUInstruction &A) {
+VU::VU_WAITP(void) {
     while(P.stall()) {
         program[PC].tics++;
         clock++;
@@ -1929,7 +1929,7 @@ VU::VU_WAITP(VUInstruction &A) {
 }
 
 int
-VU::VU_WAITQ(VUInstruction &A) {
+VU::VU_WAITQ(void) {
     while(Q.stall()) {
         program[PC].tics++;
         clock++;
@@ -1950,11 +1950,13 @@ VU::VU_XGKICK(VUInstruction &A) {
 
 int
 VU::VU_XITOP(VUInstruction &A) {
+    RegInt[A.Params[1][0].index].value(0);
     return 0;
 }
 
 int
 VU::VU_XTOP(VUInstruction &A) {
+    RegInt[A.Params[1][0].index].value(0);
     return 0;
 }
 

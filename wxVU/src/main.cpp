@@ -56,6 +56,24 @@ static const wxString regSelectChoices[] =
 static int running = 0;
 static int accumulatedTicks = 0;
 
+static uint32 tagInitGs[24] = {
+    0x00008005, 0x10000000, 0xe, 0x0,
+    10<<16, 0x0, 0x4c, 0x0,                     // frame_1
+    (10<<24)+(640*512*4/8192), 0x0, 0x4E, 0x0,  // zbuf_1
+    32000, 32000, 0x18, 0x0,                    // xyoffset_1
+    (639<<16), (511<<16), 0x40, 0x0,                    // scissor_1
+    0x0, 0x0, 0x42, 0x0                         // alpha_1
+};
+
+static uint32 tagClearGs[24] = {
+    0x00008005, 0x10000000, 0xe, 0x0,
+    0x6, 0x0, 0x0, 0x0,                         // prim
+    0x00030000, 0x0, 0x47, 0x0,                 // test_1
+    0x00000000, 0x3F800000, 0x1, 0x0,           // rgbaq
+    (32000<<16) + 32000, 0x0, 0x5, 0x0,         // xyz2
+    ((32000+(512<<4))<<16) + 32000+(640<<4), 0x0, 0x5, 0x0 // xyz2
+};
+
 //---------------------------------------------------------------------------
 // GUI builder functions
 //---------------------------------------------------------------------------
@@ -245,7 +263,6 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
 
 void
 VUFrame::OnMiscRegSelect(wxTreeEvent &event) {
-    int i;
     miscRegTree->Toggle(event.GetItem());
 }
 
@@ -402,7 +419,6 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
 
 void
 VUFrame::OnRestart(wxCommandEvent &WXUNUSED(event)) {
-    char buffer[200];
     int i,j;
 
 	accumulatedTicks = 0;
@@ -750,18 +766,8 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    uint32 size;
-    // we will send 7 GIF tags
-    // FRAME_1,
-    // ZBUF_1
-    // XOFFSET, YOFFSET
-    // SCISSOR_1
-    // PRMODECONT
-    // DTHE
-    // COLCLAMP
-    uint32 data[7*4];
     
-    if ( dumpDisplayList((char *)regTmpFile.c_str(), data, size) != 0) {
+    if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagInitGs, 96) != 0) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
     }
@@ -769,6 +775,15 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnCLR(wxCommandEvent &WXUNUSED(event)) {
+    if ( gsTmpFile == "" ) {
+        wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
+        return;
+    }
+    
+    if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagClearGs, 96) != 0) {
+        wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
+            wxOK|wxICON_INFORMATION, this);
+    }
 }
 
 //
@@ -846,7 +861,8 @@ void VUFrame::OnSaveCode(wxCommandEvent &WXUNUSED(event)) {
 void VUFrame::OnSaveState(wxCommandEvent &WXUNUSED(event)) {
 	FILE *fd;
 	float x,y,z,w;
-	int i, r;
+	int r;
+    uint32 i;
 	// Save memory
 	if ( (fd = fopen(memStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
 		for(i = 0; i < MAX_VUDATA_SIZE; i++ ) {
@@ -1011,7 +1027,6 @@ VUFrame::codeMouseDown(wxCommandEvent &WXUNUSED(event), wxMouseEvent
 void
 VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
     char line[255];
-    char token[255];
     char *ptr;
 	wxFileDialog *dlgOpenFile = new wxFileDialog(this, "Choose a project file");
 	if(dlgOpenFile->ShowModal() == wxID_OK) {
@@ -1072,15 +1087,14 @@ VUFrame::OnLoadCode(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void
-VUFrame::OnNotebookOne(wxNotebookEvent &event) {
+VUFrame::OnNotebookOne(wxNotebookEvent &WXUNUSED(event)) {
     // if ( event.GetOldSelection() != -1 ) {
     //     DrawMemory();
     // }
 }
 
 void
-VUFrame::OnRegRadioBox(wxCommandEvent &event) {
-    // hm should do a if(left_notebook == memory_tab)
+VUFrame::OnRegRadioBox(wxCommandEvent &WXUNUSED(event)) {
     DrawMemory();
     gridMemory->ForceRefresh();
 }

@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include "intc.h"
 
-const char tINTC_STAT[2][30] = {
+const string tINTC_STAT[2] = {
     "No interrupt request exists",
     "An interrupt request exists"
 };
-const char tINTC_MASK[2][20] = {
+const string tINTC_MASK[2] = {
     "Interrupt masked",
     "Interrupt enabled"
 };

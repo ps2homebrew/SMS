@@ -30,8 +30,7 @@ BEGIN_EVENT_TABLE (PreferenceDlg, wxDialog)
 END_EVENT_TABLE()
 
 PreferenceDlg::PreferenceDlg (wxWindow *parent,
-                              Prefs *prefs,
-                              long style)
+                              Prefs *prefs)
              : wxDialog (parent, -1, _T("Settings"),
                          wxDefaultPosition, wxDefaultSize) {
 
@@ -186,16 +185,16 @@ void
 PreferenceDlg::updateTextPrim(void) {
     PRIM = (GIFFST<<8)+(GIFAA1<<7)+(GIFABE<<6)+(GIFFGE<<5)+
         (GIFTME<<4)+(GIFIIP<<3)+GIFPRIM;
-    m_primText->SetValue(wxString::Format("0x%x", PRIM));
+    // m_primText->SetValue(wxString::Format("0x%x", PRIM));
 }
 void
 PreferenceDlg::OnTextPrim(wxCommandEvent &WXUNUSED(event)) {
-    PRIM = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
-    updatePrimChoices();
+    // PRIM = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
+    // updatePrimChoices();
 }
 void
 PreferenceDlg::OnTextColor(wxCommandEvent &WXUNUSED(event)) {
-    g_GIFPrefs.clrcol = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
+    // g_GIFPrefs.clrcol = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
 }
 void
 PreferenceDlg::updatePrimChoices(void) {
@@ -223,7 +222,7 @@ wxPanel *PreferenceDlg::CreatePageLoad() {
     const int ch = GetCharWidth();
     const int sz1 = 20*ch; // width of a text lable
 
-    // GIF/GS preferences
+    // 
     wxString choices3[2] = {"Row", "Column"};
     m_regOrder = new wxRadioBox(panel, -1, "Register layout order",
             wxDefaultPosition, wxDefaultSize, 2, choices3, 2, wxRA_SPECIFY_ROWS);
@@ -298,9 +297,9 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
     const int sz1 = 20*ch; // width of a text lable
     
     // toggle for Automatic gsexec on xgkick
-    wxString cAutoGSexec[2] = {"Yes", "No"};
-    m_AutoGSExec = new wxRadioBox(panel, -1, "Automatic gsexec on xgkick",
-        wxDefaultPosition, wxDefaultSize, 2, cAutoGSexec, 2, wxRA_SPECIFY_ROWS);
+    // wxString cAutoGSexec[2] = {"Yes", "No"};
+    // m_AutoGSExec = new wxRadioBox(panel, -1, "Automatic gsexec on xgkick",
+    //     wxDefaultPosition, wxDefaultSize, 2, cAutoGSexec, 2, wxRA_SPECIFY_ROWS);
 
     // temp register filename to use for dumping from ps2
     wxStaticBoxSizer *tmpFileBox = new wxStaticBoxSizer (
@@ -357,7 +356,7 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
     tmpFileBox->Add(gsTmpFile, 0, wxALIGN_LEFT|wxEXPAND);
       // 
     wxBoxSizer *panelpane = new wxBoxSizer (wxVERTICAL);
-    panelpane->Add(m_AutoGSExec, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    // panelpane->Add(m_AutoGSExec, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panelpane->Add(tmpFileBox, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panel->SetSizer(panelpane);
     return panel;
@@ -365,7 +364,7 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::GetValuesPageRemote() {
-    g_RemotePrefs.autoGSExec = m_AutoGSExec->GetSelection();
+    // g_RemotePrefs.autoGSExec = m_AutoGSExec->GetSelection();
     g_RemotePrefs.binTmpFile = strdup(m_binTmpFile->GetValue());
     g_RemotePrefs.datTmpFile = strdup(m_datTmpFile->GetValue());
     g_RemotePrefs.regTmpFile = strdup(m_regTmpFile->GetValue());
@@ -374,7 +373,7 @@ void PreferenceDlg::GetValuesPageRemote() {
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::SetValuesPageRemote() {
-    m_AutoGSExec->SetSelection(g_RemotePrefs.autoGSExec);
+    // m_AutoGSExec->SetSelection(g_RemotePrefs.autoGSExec);
     m_binTmpFile->SetValue(g_RemotePrefs.binTmpFile);
     m_datTmpFile->SetValue(g_RemotePrefs.datTmpFile);
     m_regTmpFile->SetValue(g_RemotePrefs.regTmpFile);
@@ -544,6 +543,7 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
     // width of a text lable
     const int sz1 = 20*ch;
 
+    // xybox
     m_xOffset = new wxTextCtrl(panel, -1, "2048");
     m_yOffset = new wxTextCtrl(panel, -1, "2048");
     wxBoxSizer *oXffset = new wxBoxSizer (wxHORIZONTAL);
@@ -562,73 +562,120 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
     oYffset->Add (6, 0);
     oYffset->Add (m_yOffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
-    wxStaticBoxSizer *gifbox = new wxStaticBoxSizer (
-                     new wxStaticBox (panel, -1, _("GIF/GS Preferences")),
+    wxStaticBoxSizer *xybox = new wxStaticBoxSizer (
+                     new wxStaticBox (panel, -1, _("XYOFFSET_1")),
                      wxVERTICAL);
-    gifbox->Add (oXffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    gifbox->Add (0, 6);
-    gifbox->Add (oYffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    gifbox->Add (0, 4);
+    xybox->Add (oXffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    xybox->Add (0, 6);
+    xybox->Add (oYffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    xybox->Add (0, 4);
 
-    wxString cSendPrim[2] = {"Yes", "No"};
-    m_sendPrim = new wxRadioBox(panel, -1, "Always send PRIM before xgkick",
-        wxDefaultPosition, wxDefaultSize, 2, cSendPrim, 2, wxRA_SPECIFY_ROWS);
+    // scissorbox
+    m_x1Scissor = new wxTextCtrl(panel, -1, "640");
+    m_y1Scissor = new wxTextCtrl(panel, -1, "512");
+    wxBoxSizer *x1Scissor = new wxBoxSizer (wxHORIZONTAL);
+    x1Scissor->Add (4, 0);
+    x1Scissor->Add (new wxStaticText (panel, -1, _("Scissor X1"),
+                                     wxDefaultPosition, wxSize(sz1, -1)),
+                   0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    x1Scissor->Add (6, 0);
+    x1Scissor->Add (m_x1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+
+    wxBoxSizer *y1Scissor = new wxBoxSizer (wxHORIZONTAL);
+    y1Scissor->Add (4, 0);
+    y1Scissor->Add (new wxStaticText (panel, -1, _("Scissor Y1"),
+                                        wxDefaultPosition, wxSize(sz1, -1)),
+                      0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    y1Scissor->Add (6, 0);
+    y1Scissor->Add (m_y1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+
+    wxStaticBoxSizer *scissorbox = new wxStaticBoxSizer (
+                     new wxStaticBox (panel, -1, _("Scissor_1")),
+                     wxVERTICAL);
+    scissorbox->Add (x1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    scissorbox->Add (0, 6);
+    scissorbox->Add (y1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    scissorbox->Add (0, 4);
+
+    // alpahbox
+    m_alpha = new wxTextCtrl(panel, -1, "0");
+    wxBoxSizer *alpha = new wxBoxSizer (wxHORIZONTAL);
+    alpha->Add (4, 0);
+    alpha->Add (new wxStaticText (panel, -1, _("Alpha_1"),
+                                        wxDefaultPosition, wxSize(sz1, -1)),
+                      0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    alpha->Add (6, 0);
+    alpha->Add (m_alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+
+    wxStaticBoxSizer *alphabox = new wxStaticBoxSizer (
+                     new wxStaticBox (panel, -1, _("Alpha_1")),
+                     wxVERTICAL);
+    alphabox->Add (alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    alphabox->Add (0, 4);
+
+
+    // wxString cSendPrim[2] = {"Yes", "No"};
+    // m_sendPrim = new wxRadioBox(panel, -1, "Always send PRIM before xgkick",
+    //     wxDefaultPosition, wxDefaultSize, 2, cSendPrim, 2, wxRA_SPECIFY_ROWS);
 
     // Prim textual representation
-    wxBoxSizer *primText = new wxBoxSizer (wxHORIZONTAL);
-    m_primText = new wxTextCtrl(panel, ID_PRIM_TEXT, wxEmptyString,
-                               wxDefaultPosition, wxSize(sz1,-1));
-    primText->Add (4, 0);
-    primText->Add (new wxStaticText (panel, -1, _("GIF PRIM:"),
-                                       wxDefaultPosition, wxSize(sz1, -1)),
-                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    primText->Add (6, 0);
-    primText->Add (m_primText, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    primText->Add (4, 0);
+//     wxBoxSizer *primText = new wxBoxSizer (wxHORIZONTAL);
+//     m_primText = new wxTextCtrl(panel, ID_PRIM_TEXT, wxEmptyString,
+//                                wxDefaultPosition, wxSize(sz1,-1));
+//     primText->Add (4, 0);
+//     primText->Add (new wxStaticText (panel, -1, _("GIF PRIM:"),
+//                                        wxDefaultPosition, wxSize(sz1, -1)),
+//                      0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+//     primText->Add (6, 0);
+//     primText->Add (m_primText, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+//     primText->Add (4, 0);
 
-    wxString choices[7] = {"Point", "Line", "Line Strip", "Triangle",
-        "Triangle Strip", "Triangle Fan", "Sprite"};
-    m_prim = new wxChoice(panel, ID_PRIM, wxDefaultPosition,
-        wxDefaultSize, 7, choices);
-    wxString cIIP[2] = {"Flat", "Gouraud"};
-    m_iip = new wxRadioBox(panel, ID_PRIM, "Shading method",
-        wxDefaultPosition, wxDefaultSize, 2, cIIP, 2,
-        wxRA_SPECIFY_ROWS);
-    wxString cOnOff[2] = {"Off", "On"};
-    m_tme = new wxRadioBox(panel, ID_PRIM, "Texture mapping",
-        wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
-        wxRA_SPECIFY_ROWS);
-    m_fge = new wxRadioBox(panel, ID_PRIM, "Fogging",
-        wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
-        wxRA_SPECIFY_ROWS);
-    m_abe = new wxRadioBox(panel, ID_PRIM, "Alpha blending",
-        wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
-        wxRA_SPECIFY_ROWS);
-    m_aa1 = new wxRadioBox(panel, ID_PRIM, "Antialiasing",
-        wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
-        wxRA_SPECIFY_ROWS);
-    m_fst = new wxRadioBox(panel, ID_PRIM, "Texture coordinates",
-        wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
-        wxRA_SPECIFY_ROWS);
+//     wxString choices[7] = {"Point", "Line", "Line Strip", "Triangle",
+//         "Triangle Strip", "Triangle Fan", "Sprite"};
+//     m_prim = new wxChoice(panel, ID_PRIM, wxDefaultPosition,
+//         wxDefaultSize, 7, choices);
+//     wxString cIIP[2] = {"Flat", "Gouraud"};
+//     m_iip = new wxRadioBox(panel, ID_PRIM, "Shading method",
+//         wxDefaultPosition, wxDefaultSize, 2, cIIP, 2,
+//         wxRA_SPECIFY_ROWS);
+//     wxString cOnOff[2] = {"Off", "On"};
+//     m_tme = new wxRadioBox(panel, ID_PRIM, "Texture mapping",
+//         wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
+//         wxRA_SPECIFY_ROWS);
+//     m_fge = new wxRadioBox(panel, ID_PRIM, "Fogging",
+//         wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
+//         wxRA_SPECIFY_ROWS);
+//     m_abe = new wxRadioBox(panel, ID_PRIM, "Alpha blending",
+//         wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
+//         wxRA_SPECIFY_ROWS);
+//     m_aa1 = new wxRadioBox(panel, ID_PRIM, "Antialiasing",
+//         wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
+//         wxRA_SPECIFY_ROWS);
+//     m_fst = new wxRadioBox(panel, ID_PRIM, "Texture coordinates",
+//         wxDefaultPosition, wxDefaultSize, 2, cOnOff, 2,
+//         wxRA_SPECIFY_ROWS);
 
-    wxStaticBoxSizer *primbox = new wxStaticBoxSizer (
-                     new wxStaticBox (panel, -1, _("Prim register settings")),
-                     wxVERTICAL);
-    primbox->Add(primText, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_sendPrim, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_prim, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_iip, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_tme, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_fge, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_abe, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_aa1, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    primbox->Add(m_fst, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     wxStaticBoxSizer *primbox = new wxStaticBoxSizer (
+//                      new wxStaticBox (panel, -1, _("Prim register settings")),
+//                      wxVERTICAL);
+//     primbox->Add(m_sendPrim, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(primText, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_prim, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_iip, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_tme, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_fge, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_abe, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_aa1, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+//     primbox->Add(m_fst, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
     wxString cTagRecog[2] = {"Yes", "No"};
     m_tagShow = new wxRadioBox(panel, -1, "Color giftags in memory tab.",
         wxDefaultPosition, wxDefaultSize, 2, cTagRecog, 2, wxRA_SPECIFY_ROWS);
 
     // colorbox sizer 
+    
+
+    // clear/fill framebuffer and zbuffer
     wxBoxSizer *colorText = new wxBoxSizer (wxHORIZONTAL);
     m_colorText = new wxTextCtrl(panel, ID_PRIM_TEXT, wxEmptyString,
                                wxDefaultPosition, wxSize(sz1,-1));
@@ -643,9 +690,11 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
     // panelpane->Add(colorBox, 0, wxALIGN_LEFT|wxEXPAND, 10);
     wxBoxSizer *panelpane = new wxBoxSizer (wxVERTICAL);
     panelpane->Add(m_tagShow, 0, wxALIGN_LEFT|wxEXPAND, 10);
-    panelpane->Add(gifbox, 0, wxALIGN_LEFT|wxEXPAND, 10);
-    panelpane->Add(primbox, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    panelpane->Add(xybox, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    // panelpane->Add(primbox, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panelpane->Add(colorText, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    panelpane->Add(scissorbox);
+    panelpane->Add(alphabox);
 
     panel->SetSizer(panelpane);
     return panel;
@@ -655,8 +704,8 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
 void PreferenceDlg::GetValuesPageGIF() {
     g_GIFPrefs.xOffset = atoi(m_xOffset->GetValue().c_str());
     g_GIFPrefs.yOffset = atoi(m_yOffset->GetValue().c_str());
-    g_GIFPrefs.prim = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
-    g_GIFPrefs.sendPrim = m_sendPrim->GetSelection();
+    // g_GIFPrefs.prim = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
+    // g_GIFPrefs.sendPrim = m_sendPrim->GetSelection();
     g_GIFPrefs.tagShow = m_tagShow->GetSelection();
     g_GIFPrefs.clrcol = strtol(m_colorText->GetValue().c_str(), (char **)NULL, 0);
 }
@@ -665,10 +714,10 @@ void PreferenceDlg::GetValuesPageGIF() {
 void PreferenceDlg::SetValuesPageGIF() {
     m_xOffset->SetValue(wxString::Format("%d", g_GIFPrefs.xOffset));
     m_yOffset->SetValue(wxString::Format("%d", g_GIFPrefs.yOffset));
-    m_primText->SetValue(wxString::Format("0x%x", g_GIFPrefs.prim));
+    // m_primText->SetValue(wxString::Format("0x%x", g_GIFPrefs.prim));
     m_colorText->SetValue(wxString::Format("0x%x", g_GIFPrefs.clrcol));
-    m_sendPrim->SetSelection(g_GIFPrefs.sendPrim);
+    // m_sendPrim->SetSelection(g_GIFPrefs.sendPrim);
     m_tagShow->SetSelection(g_GIFPrefs.tagShow);
     PRIM = g_GIFPrefs.prim;
-    updatePrimChoices();
+    // updatePrimChoices();
 }

@@ -126,5 +126,9 @@ VIF0::getRegisterText(const int reg) {
         case VIF0_C3:
             return unpack_VIF_C(reg);
             break;
+        default:
+            vector<string> v;
+            return v;
+            break;
     }
 }

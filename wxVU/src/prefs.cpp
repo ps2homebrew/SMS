@@ -42,6 +42,7 @@ const GIFInfo g_GIFTable = {
     0,
     0,
     0,
+    0,
     0 
 };
 GIFInfo g_GIFPrefs = g_GIFTable;
@@ -161,7 +162,7 @@ void Prefs::DeleteValuesPageRemote() {
 }
 
 //----------------------------------------------------------------------------
-void Prefs::LoadValuesPageStyles (bool dflt) {
+void Prefs::LoadValuesPageStyles(bool dflt) {
     g_StylePrefs = g_StyleTable;
     wxString key = PAGE_STYLE;
     key.Append (_T("/"));
@@ -194,8 +195,7 @@ void Prefs::SaveValuesPageStyles () {
 
 //----------------------------------------------------------------------------
 void Prefs::DeleteValuesPageStyles () {
-    StyleInfo *g_StylePrefs;
-
+    // StyleInfo *g_StylePrefs;
     // g_StylePrefs = &g_StylePrefs [typeNr];
     // if (g_StyleTable [typeNr].foreground != g_StylePrefs->foreground) {
     //     delete g_StylePrefs->foreground;

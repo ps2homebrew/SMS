@@ -2,47 +2,47 @@
 #include <stdio.h>
 #include "timer.h"
 
-const char tMODE_CLKS[4][30] = {
+static const string tMODE_CLKS[4] = {
     "BUSCLK (147.456)",
     "1/16th of BUSCLK",
     "1/256th of BUSCLK",
     "External clock (H-BLNK)",
 };
-const char tMODE_GATE[2][30] = {
+static const string tMODE_GATE[2] = {
     "Gate function not used",
     "Gate function is used"
 };
-const char tMODE_GATS[2][10] = {
+static const string tMODE_GATS[2] = {
     "H-BLNK",
     "V-BLNK"
 };
-const char tMODE_GATM[4][70] = {
+static const string tMODE_GATM[4] = {
     "Counts while the gate signal is low",
     "Resets and starts counting at the gate signals rising edge",
     "Resets and starts counting at the gate signals falling edge",
     "Resets and starts counting at both edges of the gate signal",
 };
-const char tMODE_ZRET[2][90] = {
+static const string tMODE_ZRET[2] = {
     "The counter keeps counting, ignoring the reference value",
     "The counter is cleared to 0 when the counter value is equal to the reference value"
 };
-const char tMODE_CUE[2][30] = {
+static const string tMODE_CUE[2] = {
     "Stops counting",
     "Starts/restarts counting"
 };
-const char tMODE_CMPE[2][80] = {
+static const string tMODE_CMPE[2] = {
     "A compare-interrupt is not generated",
     "An interrupt is generated when the counter is equal to the reference value"
 };
-const char tMODE_OVFE[2][60] = {
+static const string tMODE_OVFE[2] = {
     "An overflow interrupt is not generated",
     "An interrupt is generated when an overflow occurs"
 };
-const char tMODE_EQUF[2][60] = {
+static const string tMODE_EQUF[2] = {
     "The value is set to 1 when a compare-interrupt occurs",
     "Writing 1 clears the equal flag"
 };
-const char tMODE_OVFF[2][60] = {
+static const string tMODE_OVFF[2] = {
     "The value is set to 1 when an overflow-interrupt occurs",
     "Writing 1 clears the equal flag"
 };
@@ -136,27 +136,8 @@ TIMER::getRegisterText(const int reg) {
             return unpack_Tn_HOLD(reg);
             break;
         default:
+            vector<string> v;
+            return v;
             break;
     }
 }
-
-// uint32
-// TIMER::readRegister(const int reg) {
-//     return REGISTERS[reg];
-// }
-
-// uint32
-// TIMER::writeRegister(const int reg, uint32 value) {
-//     cout << reg << endl;
-//     cout << TIMER_REGISTERS(reg) << endl;
-//     REGISTERS[reg] = value;
-//     return 0;
-// }
-
-// uint32
-// TIMER::initRegisters(uint32 *data) {
-//     int i;
-//     for (i = 0; i < nREGISTERS ; i++) {
-//         REGISTERS[i] = *(data++);
-//     }
-// }

@@ -1,11 +1,11 @@
 SUFFIXES : .cpp .cc .asm
-VPATH = src:utils
+VPATH = src:utils:obj
 
 CFLAGS = -g `wx-config --cflags`
-# CFLAGS += -W -Wall -Wpointer-arith -Wcast-align
-# CFLAGS += -Wbad-function-cast -Wsign-compare
-# CFLAGS += -Wmissing-noreturn -Wnested-externs
-# CFLAGS += -Wchar-subscripts -Wformat-security
+CFLAGS += -W -Wall -Wpointer-arith -Wcast-align
+CFLAGS += -Wsign-compare
+CFLAGS += -Wmissing-noreturn
+CFLAGS += -Wchar-subscripts -Wformat-security
 
 LIBS = `wx-config --libs` -lc_r
 CPP = c++
@@ -42,6 +42,8 @@ regcmp: regcmp.cpp
 clean:
 	$(RM) obj/*.o
 	$(RM) bin/vuemu
+	$(RM) bin/regcmp
+	$(RM) bin/memcmp
 
 dist:
 	$(ZIP) wxVU.zip $(FILES)

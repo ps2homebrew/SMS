@@ -22,12 +22,17 @@ enum DMA_REGISTERS {
 static const char *tDMA_REGISTERS[] = {
     "DMA Ctrl", "DMA Stat", "DMA PCR",
     "DMA SQWC", "DMA RBOR", "DMA RBSR",
-    "DMA STADR", "DMA EnableR"
-};
-
-static const char *tDMA_CHANNELS[] = {
-    "VIF 0", "VIF 1", "GIF", "IPU", "IPU 2",
-    "SIF 0", "SIF 1", "SIF 2", "SPR", "SPR 2"
+    "DMA STADR", "DMA EnableR",
+    // VIF 0
+    // VIF 1
+    // GIF
+    // IPU
+    // IPU 2
+    // SIF 0
+    // SIF 1
+    // SIF 2
+    // SPR
+    // SPR 2
 };
 
 class DMA {

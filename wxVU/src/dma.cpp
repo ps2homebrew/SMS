@@ -6,54 +6,45 @@
 #include <sys/stat.h>
 #include "dma.h"
 
-// DMA CTRL
-struct DMA_CTRL {
-    bool DMAE;
-    bool RELE;
-    unsigned int MFD;
-    unsigned int STS;
-    unsigned int STD;
-    unsigned int RCYC;
-};
-const char tDMA_CTRL[6][50] = {
+const string tDMA_CTRL[6] = {
     "DMA Enable", "Release signal enable",
     "Memory FIFO drain channel", "Stall Control source channel",
     "Stall control drain channel", "Release Cycle" };
 
-const char tDMAE[2][18] = {
+const string tDMAE[2] = {
     "Disables all DMAs",
     "Enables all DMAs"
 };
 
-const char tRELE[2][20] = {
+const string tRELE[2] = {
     "Cycle Stealing off",
     "Cycle Stealing on"
 };
 
-const char tMFD[4][30] = {
+const string tMFD[4] = {
     "Does not use MFIFO function",
     "RESERVED",
     "VIF1 channel ( ch-1 )",
     "GIF channel ( ch-2 )"
 };
-const char tSTS[4][30] = {
+const string tSTS[4] = {
     "Non-specified",
     "SIF0 channel (ch-5)",
     "fromSPR channel (ch-8)",
     "fromIPU channel (ch-3)"
 };
-const char tSTD[4][40] = {
+const string tSTD[4] = {
     "Does not perform stall control",
     "VIF1 channel (ch-1)",
     "GIF channel (ch-2)",
     "SIF1 channel (ch-6)"
 };
-const char tRCYC[6][4] = {
+const string tRCYC[6] = {
     "8", "16", "32", "64", "128", "256"
 };
 
 // DMA_STAT
-const char tDMA_STAT[25][20] = {
+const string tDMA_STAT[25] = {
     "CIS0", "CIS1", "CIS2", "CIS3", "CIS4",
     "CIS5", "CIS6", "CIS7", "CIS8", "CIS9",
     "Stall status", "MFIFO empty status", "BUSERR status",
@@ -62,151 +53,129 @@ const char tDMA_STAT[25][20] = {
     "Stall mask", "MFIFO empty mask"
 };
 
-const char tCIS[2][20] = {
+const string tCIS[2] = {
     "in progress",
     "transfer ended"
 };
 
-const char tSIS[2][20] = {
+const string tSIS[2] = {
     "Stalled",
     "Not stalled"
 };
 
-const char tMEIS[2][10] = {
+const string tMEIS[2] = {
     "Not empty",
     "Empty"
 };
-const char tBEIS[2][10] = {
+const string tBEIS[2] = {
     "No error",
     "Error"
 };
-const char tCIM[2][10] = {
+const string tCIM[2] = {
     "Disable",
     "Enable"
 };
-const char tSIM[2][10] = {
+const string tSIM[2] = {
     "Disable",
     "Enable"
 };
-const char tMEIM[2][10] = {
+const string tMEIM[2] = {
     "Disable",
     "Enable"
 };
 
-// //
-// // DMA_PCR
-// //
-
-// const int DMA_PCR = 0x10003000;
-
-// const char *tDMA_PCR[][] = {
+// static const string tDMA_PCR[21] = {
 //     "CPC0", "CPC1", "CPC2", "CPC3", "CPC4",
 //     "CPC5", "CPC6", "CPC7", "CPC8", "CPC9",
 //     "CDE0", "CDE1", "CDE2", "CDE3", "CDE4",
 //     "CDE5", "CDE6", "CDE7", "CDE8", "CDE9",
 //     "Priority Control"
 // };
-const char tCPC[2][40] = {
+static const string tCPC[2] = {
     "Does not output channel status",
     "Outputs channel status"
 };
-const char tCDE[2][10] = {
+static const string tCDE[2] = {
     "Disable",
     "Enable"
 };
-const char tPCE[2][30] = {
+static const string tPCE[2] = {
     "CDEn bit disable",
     "CDEn bit enable"
 };
 
-// //
-// // DMA_SQWC
-// //
-// const int DMA_SQWC = 0x10003000;
-
-// const char *tDMA_SQWC[][] = {
+// static const string tDMA_SQWC[2] = {
 //     "Skip quadword counter",
 //     "Transfer quadword counter"
 // };
 
-const char *tSQWC = "Size of the part not transferred(qword): ";
-const char *tTQWC = "Size of the part transferred(qword): ";
+static const string tSQWC = "Size of the part not transferred(qword): ";
+static const string tTQWC = "Size of the part transferred(qword): ";
 
-// //
-// // DMA_RBOR
-// //
-// const int DMA_RBOR = 0x10003000;
-
-// const char *tDMA_RBOR[][] = {
+// static const string *tDMA_RBOR[][] = {
 //     "ADDR"
 // };
-// const char *tRBOR[][] = { "Ring buffer offset address" };
+// static const string *tRBOR[][] = { "Ring buffer offset address" };
 // //
 // // DMA_RBSR
 // //
 // const int DMA_RBSR = 0x10003000;
-// const char *tDMA_RBSR[][] = {
+// static const string *tDMA_RBSR[][] = {
 //     "RMSK"
 // };
-// const char *tRMSK = "Ring buffer size mask";
+// static const string *tRMSK = "Ring buffer size mask";
 
 // //
 // // DMA_STADR
 // //
 // const int DMA_STADR = 0x10003000;
-// const char *tDMA_STADR = "ADDR";
-// const char *STADR = "Stall address";
+// static const string *tDMA_STADR = "ADDR";
+// static const string *STADR = "Stall address";
 // //
 // // DMA_ENABLEW
 // //
 // // const int DMA_ENABLEHW = 0x10003000;
-// // const char *tDMA_ENABLEHW = "CPND";
-const char tENABLEW_CPND[2][40] = {
+// // static const string *tDMA_ENABLEHW = "CPND";
+static const string tENABLEW_CPND[2] = {
     "Enables all channels(restarts)",
     "Holds all channel transfer(suspends)"
 };
-//
 // DMA_ENABLER
-//
 // const int DMA_ENABLEHR = 0x10003000;
-const char tENABLER_CPND[2][40] = {
+static const string tENABLER_CPND[2] = {
     "All channel transfer enabled",
     "All channel transfer being held"
 };
 
-// //
-// // Channel Registers
-// //
+//
+// Channel Registers
+//
 
-// //
-// // Dn_CHCR
-// //
-
-const char tCHCR_DIR[2][20] = {
+static const string tCHCR_DIR[2] = {
     "to Memory",
     "from Memory"
 };
-const char tCHCR_MOD[3][15] = {
+static const string tCHCR_MOD[3] = {
     "Normal", "Chain", "Interleave"
 };
-const char tCHCR_ASP[3][40] = {
+static const string tCHCR_ASP[3] = {
     "No address pushed by call tag",
     "1 address pushed",
     "2 addresses pushed"
 };
-const char tCHCR_TTE[2][40] = {
+static const string tCHCR_TTE[2] = {
     "Does not transfer DMAtag itself",
     "Transfers DMAtag"
 };
-const char tCHCR_TIE[2][30] = {
+static const string tCHCR_TIE[2] = {
     "Disables IRQ bit of DMATag",
     "Enables IRQ bit of DMATag"
 };
-const char tCHCR_STR[2][12] = {
+static const string tCHCR_STR[2] = {
     "DMA stopped",
     "DMA running"
 };
-// const char DMA_TAG[3][4] = {
+// static const string DMA_TAG[3][4] = {
 //     // Maintains bit 31-16 of the DMAtag read most recently in chain mode
 //     "IRQ", "ID", "PCE"
 // };
@@ -214,61 +183,61 @@ const char tCHCR_STR[2][12] = {
 // //
 // // Dn_MADR
 // //
-// const char *Dn_MADR[][] = {
+// static const string *Dn_MADR[][] = {
 //     "ADDR", "SPR"
 // };
-const char *tCHCR_ADDR = "Transfer memory address: ";
-const char tCHCR_SPR[2][20] = {
+static const string tCHCR_ADDR = "Transfer memory address: ";
+static const string tCHCR_SPR[2] = {
     "Memory address",
     "SPR address"
 };
 // //
 // // Dn_TADR
 // //
-// const char *Dn_TADR[][] = {
+// static const string *Dn_TADR[][] = {
 //     "ADDR", "SPR"
 // };
-// const char *TADR_ADDR[][] = {
+// static const string *TADR_ADDR[][] = {
 //     "Address of the next tag",
 // };
-// const char *TADR_SPR[][] = {
+// static const string *TADR_SPR[][] = {
 //     "Memory address",
 //     "SPR address"
 // };
 // //
 // // Dn_ASR0
 // //
-// const char *Dn_ASR0[][] = {
+// static const string *Dn_ASR0[][] = {
 //     "ADDR",
 //     "SPR"
 // };
-// const char *ASR0_ADDR = "Tag address pushed by call tag";
-// const char *ASR0_SPR[][] = {
+// static const string *ASR0_ADDR = "Tag address pushed by call tag";
+// static const string *ASR0_SPR[][] = {
 //     "aaMemory address",
 //     "SPR address"
 // };
 // //
 // // Dn_ASR1
 // //
-// const char *Dn_ASR1[][] = {
+// static const string *Dn_ASR1[][] = {
 //     "ADDR",
 //     "SPR"
 // };
-// const char *ASR1_ADDR = "Tag address pushed by call tag";
-// const char ASR1_SPR[2][20] = {
+// static const string *ASR1_ADDR = "Tag address pushed by call tag";
+// static const string ASR1_SPR[2][20] = {
 //     "Memory address",
 //     "SPR address"
 // };
 // //
 // // Dn_SADR
 // //
-// const char *Dn_SADR = "ADDR";
-// const char *SADR_ADDR = "SPR address";
+// static const string *Dn_SADR = "ADDR";
+// static const string *SADR_ADDR = "SPR address";
 // //
 // // Dn_QWC
 // //
-// const char *Dn_QWC = "QWC";
-// const char *SADR_ADDR = "Transfer data size (in qwords) = ";
+// static const string *Dn_QWC = "QWC";
+// static const string *SADR_ADDR = "Transfer data size (in qwords) = ";
 
 DMA::DMA() {
     REGISTERS = new uint32[nREGISTERS];
@@ -280,7 +249,6 @@ DMA::~DMA() {
 vector<string>
 DMA::unpack_ctrl(const int reg) {
     vector<string> v;
-    char val[100];
     v.push_back("DMAE");
     v.push_back(tDMAE[(REGISTERS[reg]&0x1)]);
     v.push_back("RELE");
@@ -299,7 +267,6 @@ DMA::unpack_ctrl(const int reg) {
 vector<string>
 DMA::unpack_stat(const int reg) {
     vector<string> v;
-    char val[100];
     v.push_back("CIS0");
     v.push_back(tCIS[(REGISTERS[reg]&0x1)]);
     v.push_back("CIS1");
@@ -620,7 +587,8 @@ DMA::getRegisterText(const int reg) {
             return unpack_Dn_SADR(reg);
             break;
         default:
-            cout << "ERROR" << endl;
+            vector<string> v;
+            return v; 
             break;
     }    
 }

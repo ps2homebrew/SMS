@@ -951,7 +951,7 @@ int VU::VU_MUL(VUInstruction &A)
 }
 
 int
-VU::VU_NOP(VUInstruction &A) {
+VU::VU_NOP(void) {
     return 0;
 }
 

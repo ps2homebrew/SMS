@@ -17,7 +17,6 @@
 static const uint32 MAX_VUDATA_SIZE = 1024;
 static const uint32 MAX_VUCODE_SIZE = 2048;
 
-static int nVU_REGISTERS = 2;
 static const char *tVU_REGISTERS[] = {
 	"cmsar", "fbrst"
 };
@@ -126,6 +125,7 @@ public:
 
 class VU {
 public:
+    static const int nREGISTERS = 2;
 	VFReg           RegFloat[32];       //32 float registers
 	VIReg           RegInt[16];         //16 integer registers
 	VFReg           ACC, I, Q, P, R;    //special registers
@@ -133,7 +133,7 @@ public:
 	int64           clock;              //clock ticks
 	dataquad        dataMem[MAX_VUDATA_SIZE];   //data memory 16 Kb
 	VUInstruction   program[MAX_VUCODE_SIZE];   //programm to be executed
-	int             NInstructions;
+	uint32          NInstructions;
 	Symbol          Labels[MAX_VUCODE_SIZE];
 	int             NSymbols;
 	Symbol          MemDir[MAX_VUCODE_SIZE];
@@ -146,7 +146,7 @@ public:
 	void            Tic(void);
 	int             DoUpper();
 	int             DoLower();
-    int             updateRegisters();
+    void            updateRegisters();
 	void            Reset();
 	void            DecStall();
 	int             Stalling(VUParam &a);
@@ -171,7 +171,7 @@ public:
 	int VU_MIN(VUInstruction &a);
 	int VU_MSUB(VUInstruction &a);
 	int VU_MUL(VUInstruction &a);
-	int VU_NOP(VUInstruction &a);
+	int VU_NOP(void);
 	int VU_OPMULA(VUInstruction &a);
 	int VU_OPMSUB(VUInstruction &a);
 	int VU_SUB(VUInstruction &a);
@@ -241,8 +241,8 @@ public:
 	int VU_SQD(VUInstruction &A);
 	int VU_SQI(VUInstruction &A);
 	int VU_SQRT(VUInstruction &A);
-	int VU_WAITP(VUInstruction &A);
-	int VU_WAITQ(VUInstruction &A);
+	int VU_WAITP(void);
+	int VU_WAITQ(void);
 	int VU_XGKICK(VUInstruction &A);
 	int VU_XITOP(VUInstruction &A);
 	int VU_XTOP(VUInstruction &A);
