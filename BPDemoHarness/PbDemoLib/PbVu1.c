@@ -9,6 +9,7 @@
 
 #include "PbVu1.h"
 #include "PbFile.h"
+#include "PbDma.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // void PbVu1Dump()
@@ -16,6 +17,8 @@
 
 void PbVu1Dump()
 {
+  PbDmaWait01();
+  PbVu1Wait();
   PbFileWrite( "host:VU1MICROMEM",((void*)0x11008000),1024*16 );
   PbFileWrite( "host:VU1MEM", ((void*)0x1100c000),1024*16 );
 }
