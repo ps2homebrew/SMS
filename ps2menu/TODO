@@ -8,7 +8,8 @@ PS2MENU is a Hard Drive project meant at start to offer hdd booting that dms3 ha
 
 Todo:
 
-- Dump files to hard drive without host:
 - More improved visuals
-- Recursive folder deletion (delete a folder and its contents)
-- Partion/Formating functions
+- Recursive folder copying
+- Partitioning/Formatting PS2 HDD functions
+- Support for both memory card slots
+- *Your comments and/or suggestions are welcomed

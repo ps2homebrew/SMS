@@ -34,6 +34,7 @@
 #include "fileXio_rpc.h"
 #include "errno.h"
 #include "libhdd.h"
+#include "sbv_patches.h"
 
 #define DEBUG
 #ifdef DEBUG
@@ -296,7 +297,10 @@ int main(int argc, char *argv[])
 	hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)pid);
 	init_scr();
 	wipeUserMem();
-	scr_printf("Welcome to PS2Menu Loader v2.0\nPlease wait...loading.\n");
+	scr_printf("Welcome to PS2Menu Loader v2.1\nPlease wait...loading.\n");
+	scr_printf("Init MrBrown sbv_patches\n");
+	sbv_patch_enable_lmb();			// not sure we really need to do this again
+	sbv_patch_disable_prefix_check();	// here, but will it do any harm?
 	scr_printf("Loading poweroff.irx %i bytes\n", size_poweroff_irx);
 	SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
 
@@ -340,7 +344,6 @@ int main(int argc, char *argv[])
 	scr_printf("Loading fakehost.irx %i bytes\n", size_fakehost_irx);
 	scr_printf("%s\n", fakepart);
 	SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
-//	SifLoadModule("host:fakecdfs.irx", 11, "pfs0:/spec/");
 
 	FlushCache(0);
 	FlushCache(2);

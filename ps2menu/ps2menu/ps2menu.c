@@ -1,5 +1,5 @@
 /*
-	PS2Menu v2.3b
+	PS2Menu v2.4b
 	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
@@ -24,15 +24,19 @@
 					- added sbv-patches (c) MrBrown - fix for SifLoadModuleBuffer
 					- reintroduced memory card
 					- added cdfs (c) Hiryu / Sjeep
-					- added R2 device list, and restrict access to inactive devices
+					- added R1 device list, and restrict access to inactive devices
 					- updated host: device to use fioDread if available
 					- replaced hw.s and hardware.c with libito for graphics
 					- added configuration screen and configuration file on mc0:
 					- 	now possible to customize graphics to you own liking
 					-	resolution / centering / menu color scheme
+					- added extra pad testing to allow scrolling menu when button
+					- 	is held down for a handful of cycles
+					- added recursive delete for folder on pfs0: or mc0:
+					- added 'basic' nPort npo extraction (still testing)
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
-	and libhdd v1.0, ps2drv, ps2link v1.2, ps2 Independence Day
+	and libhdd v1.2, ps2drv, ps2link v1.2, ps2 Independence Day
 */
 
 #include "tamtypes.h"
@@ -62,7 +66,7 @@
 
 typedef struct
 {
-	u32	fileLBA;
+	u32	fileLBA;			// struct definition for cdfs:	
 	u32	fileSize;
 	u8	fileProperties;
 	u8	padding1[3];
@@ -85,7 +89,7 @@ static char padBuf[256] __attribute__((aligned(64)));
 
 typedef struct
 {
-	u8	ident[16];
+	u8	ident[16];			// struct definition for ELF object header
 	u16	type;
 	u16	machine;
 	u32	version;
@@ -103,7 +107,7 @@ typedef struct
 
 typedef struct
 {
-	u32	type;
+	u32	type;				// struct definition for ELF program section header
 	u32	offset;
 	void	*vaddr;
 	u32	paddr;
@@ -115,8 +119,8 @@ typedef struct
 
 typedef struct
 {
-	unsigned int WIDTH;
-	unsigned int HEIGHT;
+	unsigned int WIDTH;		// struct definition for PS2MENU.CNF user
+	unsigned int HEIGHT;		// configuration file
 	unsigned int OFFSETX;
 	unsigned int OFFSETY;
 	unsigned int DITHER;
@@ -128,6 +132,16 @@ typedef struct
 	uint64 FGCOL2;
 	uint64 FGCOL3;
 	} ps2menuset;
+
+typedef struct
+{
+	unsigned char nPort[5];
+	u8 padding1[3];
+	u32 notsure1;
+	u32 iconptr;
+	u32 notsure2;
+	u32 notsure3;
+	} npoHeader;
 
 extern u8 *iomanx_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
 extern int size_iomanx_irx;		// from PS2DRV to handle 'standard' PS2 device IO
@@ -160,21 +174,16 @@ extern void *_end;
 //#define TYPE_XMC
 #define ROM_PADMAN
 
-//#define WIDTH	512
-//#define HEIGHT	512
-//#define WIDTH	640
-//#define HEIGHT	480
-//#define FRAMERATE	4
-#define STATUS_Y	206
-#define MAX_PARTITIONS	10
-#define MAX_PATH	1025
-#define MAX_ENTRY	2048
+#define STATUS_Y	206			// vertical screen position of program status line
+#define MAX_PARTITIONS	10		// maximum number of partitions selectable on PS2 HDD
+#define MAX_PATH	1025			// maximum length of string for dev:folder/file
+#define MAX_ENTRY	2048			// maximum number of files/folders to list in menu
 #define TRUE	1
 #define FALSE	0
 
-int paletteindex = 0;
-char sStatus[MAX_PATH];
-char foldername[128]="\0";
+int paletteindex = 0;			// pointer to next unused palette cell in table
+char sStatus[MAX_PATH];			// program status string
+char foldername[128]="\0";		// new folder string
 
 char HDDfiles[MAX_ENTRY][MAX_PATH] __attribute__((aligned(64)));
 unsigned int HDDstats[MAX_ENTRY] __attribute__((aligned(64)));
@@ -186,9 +195,9 @@ char MCPath[MAX_PATH] __attribute__((aligned(64)));
 char CDpath[MAX_PATH] __attribute__((aligned(64)));
 char destination[MAX_PATH] __attribute__((aligned(64)));
 t_hddFilesystem parties[MAX_PARTITIONS] __attribute__((aligned(64)));
-uint64 mypalette[65536];
-ps2menuset* settings;
-itoGsEnv screen_env;
+uint64 mypalette[65536];		// palette table
+ps2menuset* settings;			// pointer to user configurable options
+itoGsEnv screen_env;			// display settings
 
 void drawChar(char c, int x, int y, uint64 colour);
 void printXY(char *s, int x, int y, uint64 colour);
@@ -199,9 +208,10 @@ int showDir(char *dir);
 int dowereformat();
 void ReadHDDFiles();
 void LoadModules();
-void LoadAndRunMCElf(char *filename);
+void RunLoaderElf(char *filename);
 void MenuKeyboard(char *s);
 void jprintf(char *s);
+char *strrchr(const char *sp, int i);
 
 static mcTable mcDir[MAX_ENTRY] __attribute__((aligned(64)));
 static int mc_Type, mc_Free, mc_Format;
@@ -211,6 +221,139 @@ unsigned char romver[16];
 int topfil=0, elfload=0, activeHDD, activeMC, activeHOST;
 int screenx,screeny;
 char mcport = 0;
+
+int npoExtract(char *filename)
+{
+	npoHeader *npofile;
+
+	int fd, size=0, ret, nfile,i;
+	char npocontent[48];
+	uint32 nposize;
+	unsigned char *npoptr;
+	char *strip;
+
+	if(elfhost==1)
+	{
+		ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
+		if ((fd = fileXioOpen(fullpath, O_RDONLY, fileMode)) < 0)
+		{
+			sprintf(sStatus,"Failed in fileXioOpen %s",fullpath);
+			fileXioUmount("pfs0:");
+			goto error;
+			}
+		size = fileXioLseek(fd, 0, SEEK_END);
+		if (!size)
+		{
+			sprintf(sStatus,"Failed in fileXioLseek %s",fullpath);
+			fileXioClose(fd);
+			fileXioUmount("pfs0:");
+			goto error;
+			}
+		fileXioLseek(fd, 0, SEEK_SET);
+		npofile=(npoHeader *)malloc(size);
+		fileXioRead(fd, (char *)npofile, size);
+		fileXioClose(fd);
+		fileXioUmount("pfs0:");
+		}
+	else
+	{
+		if ((fd = fioOpen(fullpath, O_RDONLY)) < 0)
+		{
+			sprintf(sStatus,"Failed in fioOpen %s",fullpath);
+			goto error;
+			}
+		size = fioLseek(fd, 0, SEEK_END);
+		if (!size)
+		{
+			sprintf(sStatus,"Failed in fioLseek %s", fullpath);
+			fioClose(fd);
+			goto error;
+			}
+		fioLseek(fd, 0, SEEK_SET);
+		npofile=(npoHeader *)malloc(size);
+		fioRead(fd, npofile, size);
+		fioClose(fd);
+		}
+	dbgprintf("npofile=%x size=%i\n",npofile,size);
+	npoptr=(void *)npofile + 24;
+	size-=24;
+	nfile=1;
+	if(!strncmp(npofile->nPort,"nPort",5))
+	{
+		jprintf("Please wait while npo is extracted to mc0:");
+		dbgprintf("Looks like a real NPO file, %s\n",npofile->nPort);
+		dbgprintf("Icon pointer? %x\n",npofile->iconptr);
+		strip = strrchr(filename, '/');
+		if (strip == NULL)
+		{
+			strip = strrchr(filename, '\\');
+			if (strip == NULL)
+			{
+				strip = strrchr(filename, ':');
+				}
+			}
+		strip++;
+		strcpy(npocontent,strip);
+		i=strlen(npocontent);
+		npocontent[i-4]='\0';
+		dbgprintf("Make a folder %s\n",npocontent);
+		mcMkDir(mcport, 0, npocontent);
+		mcSync(0, NULL, &ret);
+		mcChdir(mcport, 0, npocontent, npocontent);
+		mcSync(0, NULL, &ret);
+		while(size>56)
+		{
+			strcpy(npocontent,(char *)npoptr);
+			npoptr+=48;
+			size-=48;
+			nposize=*npoptr++;
+			nposize+=(*npoptr++)*256;
+			nposize+=(*npoptr++)*65536;
+			npoptr++;
+			npoptr+=4;
+			size-=8;
+			dbgprintf("File %i %s [%i] %x\n",nfile,npocontent,nposize,npoptr);
+			if(nposize)
+			{
+				fd = mcOpen(mcport, 0, npocontent, O_CREAT);
+				mcSync(0, NULL, &ret);
+				if(fd>=0)
+				{
+					mcWrite(fd, npoptr, nposize);
+					mcSync(0, NULL, &ret);
+					mcClose(fd);
+					mcSync(0, NULL, &ret);
+					}
+				}
+			else
+			{
+				if(strlen(npocontent))
+				{
+					mcMkDir(mcport, 0, npocontent);
+					mcSync(0, NULL, &ret);
+					mcChdir(mcport, 0, npocontent, npocontent);
+					mcSync(0, NULL, &ret);
+					}
+				}
+			npoptr+=nposize;
+			size-=nposize;
+			dbgprintf("Bytes remaining %i\n",size);
+			nfile++;
+			}
+		mcChdir(mcport, 0, "/", npocontent);
+		mcSync(0, NULL, &ret);
+		sprintf(sStatus,"%s extracted to memory card",filename);
+		}
+	else
+	{
+		return -1;
+		}
+	free(npofile);
+	return 0;
+error:
+	return -1;
+	}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Tests for valid ELF file 
@@ -229,8 +372,6 @@ int checkELFheader(char *filename)
 	if(elfhost==1)
 	{
 		ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
-//		strcpy(fullpath,HDDpath);
-//		strcat(fullpath,filename);
 		if ((fd = fileXioOpen(fullpath, O_RDONLY, fileMode)) < 0)
 		{
 			sprintf(sStatus,"Failed in fileXioOpen %s",fullpath);
@@ -250,7 +391,6 @@ int checkELFheader(char *filename)
 		fileXioClose(fd);
 		fileXioUmount("pfs0:");
 		}
-//	if(elfhost==2 || elfhost==3 || elfhost==4)
 	else
 	{
 		if ((fd = fioOpen(fullpath, O_RDONLY)) < 0)
@@ -276,8 +416,6 @@ int checkELFheader(char *filename)
 		goto error;
 		}
 	sprintf(sStatus,"Valid ELF. %s [%i]",fullpath,size);
-//	dbgprintf("e_type = %x\n",eh->type);
-//	dbgprintf("e_machine = %x\n",eh->machine);
 	return 1;
 error:
 	return -1;
@@ -566,8 +704,6 @@ void ReadCDDir()
 {
 	TocEntry TocEntryList[MAX_ENTRY] __attribute__((aligned(64)));
 
-//	TocEntryList = (TocEntry*)memalign(64,MAX_ENTRY*sizeof(TocEntry));
-
 	CDVD_FlushCache();
 	num_cd_files = CDVD_GetDir(CDpath, NULL, CDVD_GET_FILES_AND_DIRS, TocEntryList,MAX_ENTRY, CDpath);
 	CDVD_Stop();
@@ -577,7 +713,6 @@ void ReadCDDir()
 		if(TocEntryList[num_hdd_files].fileProperties & 0x02) HDDstats[num_hdd_files]=FIO_S_IFDIR;
 		else HDDstats[num_hdd_files]=FIO_S_IFREG;
 		}
-//	free(TocEntryList);
 	}
 
 void ReadMCDir()
@@ -586,7 +721,6 @@ void ReadMCDir()
 
 	mcGetDir(mcport, 0, MCPath, 0, MAX_ENTRY - 10, mcDir);
 	mcSync(0, NULL, &ret);
-//	dbgprintf("mcGetDir returned %d listing system directory %s on memory card %d\n\n", ret, MCPath, mcport);
 	num_mc_files = ret;
 	for(num_hdd_files=0;num_hdd_files<num_mc_files;num_hdd_files++)
 	{
@@ -633,19 +767,12 @@ void ReadHDDFiles()
 // array
 int ReadHOSTFiles()
 {
-	int rv,fd=0,i;
+	int rv,fd=0;
 	fio_dirent_t dirbuf;
 	char filesname[MAX_PATH];
 	char READpath[MAX_PATH];
 
 	strcpy(READpath,HOSTpath);
-	i=strlen(READpath)-1;
-	if(READpath[i]=='/')
-	{
-		READpath[i]='\\';
-		}
-//	strcat(READpath,".");
-	printf(READpath);
 	if((fd = fioDopen(READpath)) < 0) return fd;
 	num_hdd_files=0;
 	while((rv=fioDread(fd, (void *)&dirbuf)))
@@ -654,8 +781,7 @@ int ReadHOSTFiles()
 		sprintf (HDDfiles[num_hdd_files],"%s",filesname);
 		if(dirbuf.stat.mode & FIO_SO_IFDIR) HDDstats[num_hdd_files]=FIO_S_IFDIR;
 		else if(dirbuf.stat.mode & FIO_SO_IFREG) HDDstats[num_hdd_files]=FIO_S_IFREG;
-		printf("ret=%i stat.mode=%i %s %i\n",rv,dirbuf.stat.mode,HDDfiles[num_hdd_files],HDDstats[num_hdd_files]);
-//		HDDstats[num_hdd_files]=dirbuf.stat.mode;
+		else HDDstats[num_hdd_files]=0;
 		if ((HDDstats[num_hdd_files] & FIO_S_IFDIR) || (HDDstats[num_hdd_files] & FIO_S_IFREG)) num_hdd_files++;
 		if (num_hdd_files>MAX_ENTRY) break;
 		}
@@ -700,7 +826,6 @@ void PrintHDDFiles(int highlighted)
 	char *ptr;
 
 	texcol=1;
-//	maxrows=20;
 	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
 	{
 		maxchars=(settings->WIDTH/12)-5;
@@ -837,29 +962,30 @@ int tomcopy(char *sourcefile)
 	xiosource=FALSE;
 	xiodest=FALSE;
 	strcpy(savedestination,destination);
-		ptr = strrchr(sourcefile, '/');
+	ptr = strrchr(sourcefile, '/');
+	if (ptr == NULL)
+	{
+		ptr = strrchr(sourcefile, '\\');
 		if (ptr == NULL)
 		{
-			ptr = strrchr(sourcefile, '\\');
-			if (ptr == NULL)
-			{
-				ptr = strrchr(sourcefile, ':');
-				}
+			ptr = strrchr(sourcefile, ':');
 			}
-		ptr++;
+		}
+	ptr++;
 
-	if(elfhost==2)
+	strcat(destination,ptr);
+	ptr = strrchr(sourcefile, '.');
+	if (ptr != NULL)
 	{
-//	strcpy(destination,"pfs0:");
-//	strcpy(destination,HDDpath);
-		strcat(destination,ptr);
-		ptr = strrchr(sourcefile, '.');
-		if (ptr != NULL)
+		ptr++;
+		strcpy(filetype,ptr);
+		if((!strncmp(filetype,"tgz",3))||(!strncmp(filetype,"tar",3))
+			||(!strncmp(filetype,"TGZ",3))||(!strncmp(filetype,"TAR",3))
+			||(!strncmp(filetype,"gz",2))||(!strncmp(filetype,"GZ",2)))
 		{
-			ptr++;
-			strcpy(filetype,ptr);
-			if((!strncmp(filetype,"tgz",3))||(!strncmp(filetype,"tar",3))||(!strncmp(filetype,"gz",2)))
+			if(!strncmp(destination,"pfs0:",5))
 			{
+				sprintf(sStatus,"Compressed file selected, please wait for iuntar to finish.");
 				argv[1]=sourcefile;
 				argv[2]=parties[party].filename;
 				dbgprintf("Loading %s %s\n", argv[1],argv[2]);
@@ -868,9 +994,20 @@ int tomcopy(char *sourcefile)
 				strcpy(destination,savedestination);
 				return ret;
 				}
+			else
+			{
+				sprintf(sStatus,"Compressed files can only be extracted to PS2 HDD.");
+				strcpy(destination,savedestination);
+				return -1;
+				}
+			}
+		else if((!strncmp(filetype,"npo",3))||(!strncmp(filetype,"NPO",3)))
+		{
+			ret=npoExtract(sourcefile);
+			strcpy(destination,savedestination);
+			return ret;
 			}
 		}
-	else strcat(destination,ptr);
 	if(!strncmp(destination,"pfs0:",5)) xiodest=TRUE;
 	if(!strncmp(sourcefile,"pfs0:",5)) xiosource=TRUE;
 	if(xiodest || xiosource) fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
@@ -923,13 +1060,15 @@ int tomcopy(char *sourcefile)
 						}
 					if(xiodest)	fileXioClose(boot_fd2);
 					else fioClose(boot_fd2);
+					sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
 					}
 				free(boot_buffer);
 				}
+			else sprintf(sStatus,"File too big to be copied from host, try it as .tgz");
 			if(xiosource) fileXioClose(boot_fd);
 			else fioClose(boot_fd);
+			if(xiosource || xiodest) fileXioUmount("pfs0:"); 
 			strcpy(destination,savedestination);
-			sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
 			return -1; // a file too big for memory cannot be copied
 			}
 		if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
@@ -959,6 +1098,69 @@ int tomcopy(char *sourcefile)
 	}
 
 ////////////////////////////////////////////////////////////////////////
+// Delete all contents of a folder on pfs0: or mc0:
+void RecursiveDelete(char *folder)
+{
+	int rv,ret,fd=0;
+	iox_dirent_t dirbuf;
+	char path[MAX_PATH];
+	
+	strcpy(path,folder);
+	if(elfhost==1)
+	{
+		fd = fileXioDopen(path);
+		while((rv=fileXioDread(fd, &dirbuf)))
+		{
+			strcpy(path,folder);
+			strcat(path,"/");
+			strcat(path,(char *)&dirbuf.name);
+			if(dirbuf.stat.mode & FIO_S_IFREG) fileXioRemove(path);
+			else if(dirbuf.stat.mode & FIO_S_IFDIR && strncmp((char *)&dirbuf.name,".",1))
+			{
+				RecursiveDelete(path);
+				fileXioRmdir(path);
+				}
+			}
+		fileXioDclose(fd);
+		}
+	else if(elfhost==3)
+	{
+		strcat(path,"/*");
+		mcGetDir(mcport, 0, path, 0, MAX_ENTRY - 10, mcDir);
+		mcSync(0, NULL, &ret);
+		num_mc_files = ret;
+		rv=2;
+		if(num_mc_files>2)
+		{
+			while(rv<num_mc_files)
+			{
+				strcpy(path,folder);
+				strcat(path,"/");
+				strcat(path,(char *)mcDir[rv].name);
+				if(mcDir[rv].attrFile & MC_ATTR_SUBDIR)
+				{
+					RecursiveDelete(path);
+					mcDelete(mcport, 0, path);
+					mcSync(0, NULL, &ret);
+					strcpy(path,folder);
+					strcat(path,"/*");
+					mcGetDir(mcport, 0, path, 0, MAX_ENTRY - 10, mcDir);
+					mcSync(0, NULL, &ret);
+					num_mc_files=ret;
+					rv=2;
+					}
+				else
+				{
+					mcDelete(mcport, 0, path);
+					mcSync(0, NULL, &ret);
+					rv++;
+					}
+				}
+			}
+		}
+	}
+
+////////////////////////////////////////////////////////////////////////
 // Main screen drawing function
 void ReDraw(int highlighted)
 {
@@ -975,7 +1177,8 @@ void ReDraw(int highlighted)
 	drawPCX(&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
 	printBIGXY("Adam & Tom's HDD Menu", 8, 8, 0, mypalette[1]);
 	printXY("Working volume:", 8, 30, mypalette[1]);
-	printXY(parties[party].filename, 136, 30, mypalette[2]);
+	sprintf(fullpath,"%s [%iMB free]",parties[party].filename,parties[party].freeSpace);
+	printXY(fullpath, 136, 30, mypalette[2]);
 	printXY("Copy from ", 8, 38, mypalette[2]);
 	itoLine(mypalette[1], 16, 58, 0, mypalette[1], settings->WIDTH-32, 58, 0);
 	itoLine(mypalette[1], 16, screenend-39, 0, mypalette[1], settings->WIDTH-32, screenend-39, 0);
@@ -1016,9 +1219,11 @@ void ReDraw(int highlighted)
 	PutImage();
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Show a window of active devices and allow user to choose one
 void selecthost(u32 old_pad)
 {
-	int enterkey = 0, keyrow=0, ret, i, savehost;
+	int enterkey = 0, ret, i, savehost;
 	struct padButtonStatus buttons;
 	u32 paddata;
 //	u32 old_pad = 0;
@@ -1097,14 +1302,17 @@ void selecthost(u32 old_pad)
 //	return keycol;
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Display/color configuration screen, changes are saved to memory card
 void setupmenu(u32 old_pad)
 {
 	int exitsetup, i, ret, middle;
+	int held;
 	u8 red,green,blue,alpha,changecol,changecol2;
 	struct padButtonStatus buttons;
 	u32 paddata;
 //	u32 old_pad = 0;
-	u32 new_pad;
+	u32 new_pad = 0;
 	char menutext[80];
 	uint64 colour;
 	char *palptr;
@@ -1112,6 +1320,7 @@ void setupmenu(u32 old_pad)
 	exitsetup=0;
 	changecol=0;
 	changecol2=0;
+	held=0;
 	itoSetBgColor(settings->FGCOL1);
 	while(!exitsetup)
 	{
@@ -1173,7 +1382,10 @@ void setupmenu(u32 old_pad)
 		if (ret != 0)
 		{
 			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
-			new_pad = paddata & ~old_pad;
+			if (paddata && paddata==old_pad) held++;
+			else held=0;
+			if (held>20) new_pad = paddata;
+			else new_pad = paddata & ~old_pad;
 			old_pad = paddata;
 			if(new_pad & PAD_LEFT)
 			{
@@ -1375,12 +1587,12 @@ void showhelp(u32 old_pad)
 
 ////////////////////////////////////////////////////////////////////////
 // Display a simple YES/NO window for user confirmation of argument
-int ConfirmYN(char *s)
+int ConfirmYN(char *s, u32 old_pad)
 {
 	int enterkey = 0, keycol=0, ret, i;
 	struct padButtonStatus buttons;
 	u32 paddata;
-	u32 old_pad = 0;
+//	u32 old_pad = 0;
 	u32 new_pad;
 
 	enterkey=0;
@@ -1446,15 +1658,17 @@ void MenuKeyboard(char *s)
 {
 	int i,ret,keyrow=0,keycol=0,nameptr=0;
 	int enterkey = 0;
+	int held;
 	struct padButtonStatus buttons;
 	u32 paddata;
 	u32 old_pad = 0;
-	u32 new_pad;
+	u32 new_pad = 0;
 	char keysrow1[130]="0 1 2 3 4 5 6 7 8 9 ( ) .\0A B C D E F G H I J K L M\0N O P Q R S T U V W X Y Z\0a b c d e f g h i j k l m\0n o p q r s t u v w x y z\0";
 	char funcrow[19]="SPACE   DEL   ENTER";
 
 	enterkey=0;
 	nameptr=0;
+	held=0;
 	foldername[nameptr]='\0';
 	while(!enterkey)
 	{
@@ -1491,7 +1705,10 @@ void MenuKeyboard(char *s)
 		if (ret != 0)
 		{
 			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
-			new_pad = paddata & ~old_pad;
+			if (paddata && paddata==old_pad) held++;
+			else held=0;
+			if (held>20) new_pad = paddata;
+			else new_pad = paddata & ~old_pad;
 			old_pad = paddata;
 
 // Directions
@@ -1570,11 +1787,15 @@ void MenuKeyboard(char *s)
 // Print user feedback to the status line on the screen
 void jprintf(char *s)
 {
-	int i;
+	int i,screenend;
 
+	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
+		screenend=464;
+	else
+		screenend=216;
 //	dbgprintf("%s\n", s);
-	for(i=STATUS_Y;i<STATUS_Y+8;i++) drawHorizontal(0,i,settings->WIDTH,mypalette[0]);
-	printXY(s, 4, STATUS_Y, mypalette[2]);
+	for(i=screenend-28;i<screenend-20;i++) drawHorizontal(0,i,settings->WIDTH,mypalette[0]);
+	printXY(s, 8, screenend-28, mypalette[2]);
 	PutImage();
 	}
 
@@ -1586,10 +1807,11 @@ char *SelectELF(void)
 	int ret, i, maxrows;
 	int selected = 0;
 	int highlighted = 0;
+	int held;
 	struct padButtonStatus buttons;
 	u32 paddata;
 	u32 old_pad = 0;
-	u32 new_pad;
+	u32 new_pad = 0;
 	int changed=1,minpath;
 	char botcap,botcap2;
 	char tmppath[MAX_PATH];
@@ -1599,14 +1821,19 @@ char *SelectELF(void)
 	else
 		maxrows=13;
 	strcpy(HDDpath,"pfs0:/\0");
+	held = 0;
 	while(!selected)
 	{
+		CDVD_Stop();
 		ret = padRead(0, 0, &buttons); // port, slot, buttons
             
 		if (ret != 0)
 		{
 			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
-			new_pad = paddata & ~old_pad;
+			if (paddata && paddata==old_pad) held++;
+			else held=0;
+			if (held>20) new_pad = paddata;
+			else new_pad = paddata & ~old_pad;
 			old_pad = paddata;
 
 // Directions
@@ -1680,11 +1907,6 @@ char *SelectELF(void)
 				}
 			else if(new_pad & PAD_R1)
 			{
-/*				elfhost++;
-				if (elfhost>4) elfhost=1;
-				if (elfhost==1 && activeHDD==FALSE) elfhost++;
-				else if (elfhost==2 && activeHOST==FALSE) elfhost++;
-				else if (elfhost==3 && activeMC==FALSE) elfhost++;*/
 				selecthost(new_pad);
 				highlighted=0;
 				topfil=0;
@@ -1720,7 +1942,7 @@ char *SelectELF(void)
 				}
 			else if((new_pad & PAD_CIRCLE) && (elfhost==1 || elfhost==3))
 			{
-				if(ConfirmYN("Delete?"))
+				if(ConfirmYN("Delete?",new_pad))
 				{
 				if(HDDstats[highlighted]&FIO_S_IFDIR)
 				{
@@ -1729,6 +1951,7 @@ char *SelectELF(void)
 						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 						strcpy(tmppath,HDDpath);
 						strcat(tmppath,HDDfiles[highlighted]);
+						RecursiveDelete(tmppath);
 						fileXioRmdir(tmppath);
 						fileXioUmount("pfs0:");
 						}
@@ -1738,12 +1961,13 @@ char *SelectELF(void)
 						}*/
 					if(elfhost==3)
 					{
-						strcpy(tmppath,"mc0:");
-						strcat(tmppath,MCPath);
+						strcpy(tmppath,MCPath);
 						i=strlen(tmppath);
 						tmppath[i-1]='\0';
 						strcat(tmppath,HDDfiles[highlighted]);
-						fioRmdir(tmppath);
+						RecursiveDelete(tmppath);
+						mcDelete(mcport, 0, tmppath);
+						mcSync(0, NULL, &ret);
 						}
 					sprintf(sStatus,"Deleted folder %s",fullpath);
 					changed=1;
@@ -1766,15 +1990,29 @@ char *SelectELF(void)
 						}*/
 					if(elfhost==3)
 					{
-						fioRemove(fullpath);	// I'm not sure why this happens, fioRemove on mc0:
-						fioRmdir(fullpath);	// appears to create a folder with the same name
-						}				// as the deleted file!!!
+						strcpy(tmppath,MCPath);
+						i=strlen(tmppath);
+						tmppath[i-1]='\0';
+						strcat(tmppath,HDDfiles[highlighted]);
+						mcDelete(mcport, 0, tmppath);
+						mcSync(0, NULL, &ret);
+						}
 					sprintf(sStatus,"Deleted file %s",fullpath);
 					changed=1;
 					highlighted=0;
 					topfil=0;
 					}
 				}
+				else if(ConfirmYN("Rename?",new_pad))
+				{
+					MenuKeyboard("Enter new file/foldername");
+					if(strlen(foldername)>0)
+					{
+						highlighted=0;
+						topfil=0;
+						changed=1;
+						}
+					}
 				else
 				{
 				highlighted=0;
@@ -1790,16 +2028,13 @@ char *SelectELF(void)
 					if(elfhost==1)
 					{
 						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
-//						dbgprintf("%i Trying to cd %s\n%s\n",strlen(HDDpath),HDDpath,parties[party].filename);
 						fileXioChdir(HDDpath);
 						strcat(HDDpath,foldername);
-//						dbgprintf("Trying to create %s\n",HDDpath);
 						fileXioMkdir(HDDpath, fileMode);
 						fileXioUmount("pfs0:");
 						i=strlen(HDDpath);
 						HDDpath[i]='/';
 						HDDpath[i+1]='\0';
-//						strcat(HDDpath, "/\0");
 						}
 					/*if(elfhost==2)
 					{
@@ -1814,9 +2049,8 @@ char *SelectELF(void)
 						i=strlen(MCPath);
 						MCPath[i-1]='\0';
 						strcat(MCPath,foldername);
-						strcpy(tmppath,"mc0:\0");
-						strcat(tmppath,MCPath);
-						fioMkdir(tmppath);
+						mcMkDir(mcport, 0, MCPath);
+						mcSync(0, NULL, &ret);
 						i=strlen(MCPath);
 						MCPath[i]='/';
 						MCPath[i+1]='*';
@@ -1835,8 +2069,8 @@ char *SelectELF(void)
 				}
 			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
 			{
-//				if(elfhost==1 || elfhost==3 || elfhost==4)
-//				{
+				if(elfhost==1 || (elfhost==2 && HDDstats[highlighted]&FIO_S_IFDIR) || elfhost==3 || elfhost==4)
+				{
 					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
 						botcap=HDDfiles[highlighted][0];
@@ -1916,7 +2150,7 @@ char *SelectELF(void)
 							selected = 1;
 							}
 						}
-//					}
+					}
 				}
 			}
 		if (changed)
@@ -1932,7 +2166,6 @@ char *SelectELF(void)
 		}
 
 	return HDDfiles[highlighted];
-//	return fullpath;
 	}
 
 // Init MC stuff and get which port the MC is plugged into
@@ -1949,18 +2182,13 @@ int InitMC(void)
 		SleepThread();
 		}
 
-//	dbgprintf("mcInit() OK!\n");
 	mcGetInfo(0, 0, &mc_Type, &mc_Free, &mc_Format);
 	mcSync(0, NULL, &ret);
-//	dbgprintf("mcGetInfo returned %d\n",ret);
-//	dbgprintf("Type: %d Free: %d Format: %d\n\n", mc_Type, mc_Free, mc_Format);
 
 	if( -1 == ret || 0 == ret) return 0;
 
 	mcGetInfo(1,0,&mc_Type,&mc_Free,&mc_Format);
 	mcSync(0, NULL, &ret);
-//	dbgprintf("mcGetInfo returned %d\n",ret);
-//	dbgprintf("Type: %d Free: %d Format: %d\n\n", mc_Type, mc_Free, mc_Format);
 
 	if( -1 == ret || 0 == ret ) return 1;
 
@@ -2070,7 +2298,7 @@ int main(int argc, char *argv[])
 		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.3b\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.4b\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
@@ -2309,17 +2537,17 @@ checkmc:
 		i=strlen(s);
 		s[i-1]='\0';
 		}
-	if(elfhost==2)
-	{
-		strcpy(s, "host:");
-		for(i=0;i<(elfsubdir-1);i++) strcat(s,"..\\");
-		}
+//	if(elfhost==2)
+//	{
+//		strcpy(s, "host:");
+//		for(i=0;i<(elfsubdir-1);i++) strcat(s,"..\\");
+//		}
 	if(elfhost==1) strcpy(s, HDDpath);
 	strcat(s, pc);
 	dbgprintf("Executing %s ...", s);
 	ReDraw(0);
 
-	LoadAndRunMCElf(s);
+	RunLoaderElf(s);
 	}
 
 ////////////////////////////////////////////////////////////////////////
@@ -2415,7 +2643,7 @@ void LoadModules()
 // Modified version of loader from Independence
 //	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
 //
-void LoadAndRunMCElf(char *filename)
+void RunLoaderElf(char *filename)
 {
 	u8 *boot_elf = (u8 *)&loader_elf;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
@@ -2449,7 +2677,7 @@ void LoadAndRunMCElf(char *filename)
 		}
 
 /* Let's go.  */
-//	fioExit();
+	fioExit();
 //	SifResetIop();
 
 //	SifExitRpc();

@@ -4,7 +4,7 @@ ps2menu
 				Thomas Hawcroft 2003/04
 
 
-Version 2.23
+Version 2.24b
 
 PS2MENU is a Hard Drive project, born from mcbootloader and PS2 Independence MC loader,
 meant at start to offer hdd booting similar to that of dms3, on a no-mod or other ps2.
@@ -72,3 +72,10 @@ IOP if the program is loaded from a CD.
 
 2.3 Replaced graphics library with libito, added configuration screen and PS2MENU.CNF on
 mc0:. Graphics resolution / centering / colors can be user configured.
+
+2.4 Added extra pad testing to allow scrolling menu when button is held down.
+Added recursive delete for folder on pfs0: or mc0:.
+Added 'basic' nPort npo extraction, select an npo file to copy and menu will attempt to
+extract it to memory card.
+Fixed bug where partition was left mounted at end of large file copy to PS2 hdd, causing
+subsequent hdd operations to fail.
