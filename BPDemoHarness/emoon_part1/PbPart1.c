@@ -97,11 +97,11 @@ void PbPart1_Normal( float DeltaTime )
   //////////////////////////////////////////////////////////////////////////////////////
   // Setup the render target
 
-  *((u64*)p_data)++ = DMA_CNT_TAG( 4 );
+  *((u64*)p_data)++ = DMA_CNT_TAG( 3 );
   *((u32*)p_data)++ = VIF_CODE( VIF_NOP, 0, 0 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_DIRECT, 0, 4 );
+  *((u32*)p_data)++ = VIF_CODE( VIF_DIRECT, 0, 3 );
   
-  *((u64*)p_data)++ = GS_GIF_TAG( 1, 0, 0, 0, 1, 3 );
+  *((u64*)p_data)++ = GS_GIF_TAG( 1, 0, 0, 0, 1, 2 );
   *((u64*)p_data)++ = GS_AD;
 
   *((u64*)p_data)++ = GS_SETREG_FRAME_1( RenderTarget / 2048, 256 / 64, 0, 0 );
@@ -109,9 +109,6 @@ void PbPart1_Normal( float DeltaTime )
 
   *((u64*)p_data)++ = PS2_GS_SETREG_SCISSOR_1(0, 256-1, 0, 256-1);
   *((u64*)p_data)++ = PS2_GS_SCISSOR_1;
-
-  *((u64*)p_data)++ = PS2_GS_SETREG_XYOFFSET_1( 1000 << 4, 1000 << 4 );
-  *((u64*)p_data)++ = PS2_GS_XYOFFSET_1;
 
   *((u64*)p_data)++ = DMA_END_TAG( 0 );
   *((u32*)p_data)++ = VIF_CODE( VIF_FLUSHA, 0, 0 );
@@ -162,8 +159,8 @@ void PbPart1_Normal( float DeltaTime )
   r.col = 0;
   r.v[1].col = 0;
   r.v[1].lit = 255;
-  r.v[1].u   = 255;
-  r.v[1].v   = 255;
+  r.v[1].u   = 256;
+  r.v[1].v   = 256;
   r.v[1].x   = 640;
   r.v[1].y   = 256;
 
