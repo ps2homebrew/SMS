@@ -39,11 +39,11 @@ Log::Error(const wxString& message) {
 }
 
 void
-Log::Error(const int32 errno) {
+Log::Error(const int32 errNumber) {
     if ( m_pOut == NULL ) {
         return;
     }
-    m_mapIterator it = object.lower_bound(errno);
+    m_mapIterator it = object.lower_bound(errNumber);
     m_pOut->SetDefaultStyle(wxTextAttr(cERROR));
     m_pOut->AppendText("Error: " + it->second + "\n");
     m_pOut->SetDefaultStyle(wxTextAttr(cNORMAL));
@@ -52,11 +52,11 @@ Log::Error(const int32 errno) {
 }
 
 void
-Log::Error(const int32 errno, const wxString& message) {
+Log::Error(const int32 errNumber, const wxString& message) {
     if ( m_pOut == NULL ) {
         return;
     }
-    m_mapIterator it = object.lower_bound(errno);
+    m_mapIterator it = object.lower_bound(errNumber);
     m_pOut->SetDefaultStyle(wxTextAttr(cERROR));
     m_pOut->AppendText("Error: " + it->second + " " + message + "\n");
     m_pOut->SetDefaultStyle(wxTextAttr(cNORMAL));
@@ -88,12 +88,12 @@ Log::Warning(const wxString& message) {
 }
 
 void
-Log::Warning(const int32 errno) {
+Log::Warning(const int32 errNumber) {
     if ( m_pOut == NULL ) {
         return;
     }
     m_pOut->SetDefaultStyle(wxTextAttr(cWARNING));
-    // m_pOut->AppendText(warningMap<errno>);
+    // m_pOut->AppendText(warningMap<errNumber>);
     m_pOut->SetDefaultStyle(wxTextAttr(cNORMAL));
     return;
 }

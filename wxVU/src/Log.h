@@ -40,10 +40,10 @@ public:
     void			SetFrame(wxFrame* frame);
     void			SetTextCtrl(wxTextCtrl* out);
     void            Error(const wxString& message);
-    void            Error(const int32 errno);
-    void            Error(const int32 errno, const wxString& message);
+    void            Error(const int32 errNumber);
+    void            Error(const int32 errNumber, const wxString& message);
     void            Warning(const wxString& message);
-    void            Warning(const int32 errno);
+    void            Warning(const int32 errNumber);
     void            Trace(const wxString& message);
     void            Trace(int32 level, const wxString& message);
 protected:
