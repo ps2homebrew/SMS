@@ -66,5 +66,6 @@ Authentication is ignored, so be cautious if your PS2 is connected directly
 to the internet.
 
 Right now there's a temporary filesystem in place displaying both
-memorycard-slots and the host (/mc0/, /mc1/, /host/). CDROM and HDD are
-inaccessible due to incomplete support.
+memorycard-slots and the host (/mc0/, /mc1/, /host/). HDD is accessible if
+mounted, but not listed in the device list and must be entered manually.
+CDROM is as of yet untested.

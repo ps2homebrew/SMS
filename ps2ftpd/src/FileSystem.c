@@ -235,22 +235,36 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 	{
 		case FS_IODEVICE:
 		{
-			io_dirent_t ent;
-
 			if( !pContext->m_kFile.device || !(pContext->m_kFile.mode & O_DIROPEN) )
 				break;
 
-			if( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &ent ) > 0 )
+			if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
 			{
-        strcpy(pDirectory->m_Name,ent.name);
-        pDirectory->m_iSize = ent.stat.size;
+				// legacy device
 
-				if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
+				io_dirent_t ent;
+
+				if( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &ent ) > 0 )
+				{
+					strcpy(pDirectory->m_Name,ent.name);
+					pDirectory->m_iSize = ent.stat.size;
 					pDirectory->m_eType = FIO_SO_ISDIR(ent.stat.mode) ? FT_DIRECTORY : FT_FILE;
-				else
-					pDirectory->m_eType = ent.stat.mode&FIO_S_IFDIR ? FT_DIRECTORY : FT_FILE;
+					return 0;					
+				}
+			}
+			else
+			{
+				// new device
 
-				return 0;					
+				iox_dirent_t ent;
+
+				if( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &ent ) > 0 )
+				{
+					strcpy(pDirectory->m_Name,ent.name);
+					pDirectory->m_iSize = ent.stat.size;
+					pDirectory->m_eType = ent.stat.mode&FIO_S_IFDIR ? FT_DIRECTORY : FT_FILE;
+					return 0;					
+				}
 			}
 		}
 		break;
@@ -458,7 +472,12 @@ const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath )
 	if( NULL != (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMAN_IDENT,FS_IOMAN_DEVICES,pPath)) )
 	{
 		pContext->m_eType = FS_IODEVICE;
-		return end+1;
+
+		// even if buffer was passed in it shoulb be ok
+		buffer[0] = '\0';
+		strcat(buffer,"/");
+		strcat(buffer,end+1);
+		return buffer;
 	}
 
 	// scan iomanX devices
@@ -466,7 +485,12 @@ const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath )
 	if( NULL != (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMANX_IDENT,FS_IOMANX_DEVICES,pPath)) )
 	{
 		pContext->m_eType = FS_IODEVICE;
-		return end+1;
+
+		// even if buffer was passed in it shoulb be ok
+		buffer[0] = '\0';
+		strcat(buffer,"/");
+		strcat(buffer,end+1);
+		return buffer;
 	}
 
 	return NULL;
