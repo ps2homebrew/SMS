@@ -141,7 +141,7 @@ static int tLoadElf(char *filename)
 	fileXioLseek(fd, 0, SEEK_SET);
 	fileXioRead(fd, boot_elf, 52);
 	dbgprintf("Read elf header from file\n");
-	fileXioLseek(fd, (void *)eh->phoff, SEEK_SET);
+	fileXioLseek(fd, eh->phoff, SEEK_SET);
 	eph = (elf_pheader_t *)(boot_elf + eh->phoff);
 	size=eh->phnum*eh->phentsize;
 	size=fileXioRead(fd, (void *)eph, size);
@@ -170,7 +170,7 @@ static int tLoadElf(char *filename)
 		}
 	
 	dbgprintf("entry=%x\n",eh->entry);
-	elfdata.epc=(int *)eh->entry;
+	elfdata.epc=eh->entry;
 	return 0;
 error:
 	elfdata.epc=0;
@@ -289,7 +289,7 @@ char *strrchr(const char *sp, int i)
 int main(int argc, char *argv[])
 {
 	char s[256],fakepart[128], *ptr;
-	int pid,ret;
+	int pid=-1,ret;
 
 // Initialise
 	SifInitRpc(0);

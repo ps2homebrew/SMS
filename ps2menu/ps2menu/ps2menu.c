@@ -370,7 +370,6 @@ int npoExtract(char *filename)
 		fioRead(fd, npofile, size);
 		fioClose(fd);
 		}
-	dbgprintf("npofile=%x size=%i\n",npofile,size);
 	npoptr=(void *)npofile + 24;
 	size-=24;
 	nfile=1;
@@ -408,7 +407,7 @@ int npoExtract(char *filename)
 			npoptr++;
 			npoptr+=4;
 			size-=8;
-			dbgprintf("File %i %s [%i] %x\n",nfile,npocontent,nposize,npoptr);
+			dbgprintf("File %i %s [%i]\n",nfile,npocontent,nposize);
 			if(nposize)
 			{
 				fd = mcOpen(mcport, 0, npocontent, O_CREAT);
@@ -662,7 +661,7 @@ void drawPCX(u8 *pcxfile, int pcxlength, int xpos, int ypos)
 	int color,num,xadd;
 	int xsize,ysize,row,col,imagelength;
 
-	pcxHeader=pcxfile;
+	pcxHeader=(pcxHead *)pcxfile;
 	xsize=(pcxHeader->xmax-pcxHeader->xmin)+1;
 	ysize=(pcxHeader->ymax-pcxHeader->ymin)+1;
 	imagelength=pcxlength-(128+769);
@@ -726,7 +725,7 @@ void readPCXheader(u8 *pcxfile, int pcxlength)
 	unsigned char *colors;
 	int palette,color,num;
 
-	pcxHeader=pcxfile;
+	pcxHeader=(pcxHead *)pcxfile;
 	if(pcxHeader->nplanes==1)				// check for 256 color palette
 	{
 		palette=pcxlength-769;
@@ -801,7 +800,7 @@ void ReadCDDir()
 	TocEntry TocEntryList[MAX_ENTRY] __attribute__((aligned(64)));
 
 	CDVD_FlushCache();
-	num_cd_files = CDVD_GetDir(CDpath, NULL, CDVD_GET_FILES_AND_DIRS, TocEntryList,MAX_ENTRY, CDpath);
+	num_cd_files = CDVD_GetDir(CDpath, NULL, CDVD_GET_FILES_AND_DIRS, (void *)TocEntryList,MAX_ENTRY, NULL);
 //	CDVD_Stop();
 	for(num_hdd_files=0;num_hdd_files<num_cd_files;num_hdd_files++)
 	{
@@ -916,8 +915,8 @@ char *strrchr(const char *sp, int i)
 // contents array, folders are marked accordingly
 void PrintHDDFiles(int highlighted)
 {
-	int i,texcol,maxrows,maxchars;
-	char s[MAX_PATH];
+	int i,j,texcol,maxrows,maxchars;
+//	char s[MAX_PATH];
 	char textfit[80];
 	char *ptr;
 
@@ -945,36 +944,26 @@ void PrintHDDFiles(int highlighted)
 				}
 			}
 
-		if(ptr == NULL)
+		if(ptr == NULL) ptr = (char *)&HDDfiles[i+topfil];
+		else ptr++;
+//			for (j=0;j<80;j++) textfit[j]='\0';
+		j=strlen(ptr);
+		if (j>maxchars) j=maxchars;
+		textfit[j]='\0';
+		if ((HDDstats[i+topfil])&FIO_S_IFDIR)
 		{
-			if ((HDDstats[i+topfil])&FIO_S_IFDIR)
-			{
-				strncpy(s, HDDfiles[i+topfil], maxchars-6);
-				strcat(s, " (dir)");
-				}
-			if ((HDDstats[i+topfil])&FIO_S_IFREG)
-			{
-				strncpy(s, HDDfiles[i+topfil], maxchars);
-				}
+			strncpy(textfit, ptr, maxchars-6);
+			strcat(textfit, " (dir)");
 			}
-		else
+		if ((HDDstats[i+topfil])&FIO_S_IFREG)
 		{
-			ptr++;
-			if ((HDDstats[i+topfil])&FIO_S_IFDIR)
-			{
-				strncpy(s, ptr, maxchars-6);
-				strcat(s, " (dir)");
-				}
-			if ((HDDstats[i+topfil])&FIO_S_IFREG)
-			{
-				strncpy(s, ptr, maxchars);
-				}
+			strncpy(textfit, ptr, maxchars);
 			}
 		if(highlighted == i+topfil) texcol=2;
 		if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
-			printBIGXY(s, 24, i*14 + 58, 0, mypalette[texcol]);
+			printBIGXY(textfit, 24, i*14 + 58, 0, mypalette[texcol]);
 		else
-			printXY(s, 24, i*8 + 58, mypalette[texcol]);
+			printXY(textfit, 24, i*8 + 58, mypalette[texcol]);
 		texcol=1;
 		}
 	}
@@ -1050,8 +1039,7 @@ int copytodest(char *sourcefile)
 	int ret,xiosource,xiodest;
 	int boot_fd,boot_fd2; 
 	size_t boot_size;
-	char *boot_buffer, *ptr, *argv[2];
-	char empty='\0';
+	char *boot_buffer, *ptr;
 	static char iuntar[512];
 	char savedestination[MAX_PATH];
 
@@ -1094,7 +1082,7 @@ int copytodest(char *sourcefile)
 		{
 			if(elfhost!=2)
 			{
-				dbgprintf("Malloc failed. %i\n", boot_buffer);
+				dbgprintf("Malloc failed. Attempting chunkcopy\n");
 				boot_buffer = malloc(1048576);
 				if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
 				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
@@ -1244,7 +1232,7 @@ int tomcopy(char *sourcefile)
 		{
 			if(elfhost!=2)
 			{
-				dbgprintf("Malloc failed. %i\n", boot_buffer);
+				dbgprintf("Malloc failed. Attempting chunkcopy\n");
 				boot_buffer = malloc(1048576);
 				if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
 				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
@@ -1312,7 +1300,7 @@ int tomcopy(char *sourcefile)
 
 ////////////////////////////////////////////////////////////////////////
 // Delete all contents of a folder on pfs0: or mc0:
-void RecursiveDelete(char *folder)
+int RecursiveDelete(char *folder)
 {
 	int rv,ret,fd=0;
 	iox_dirent_t dirbuf;
@@ -1321,26 +1309,30 @@ void RecursiveDelete(char *folder)
 	strcpy(path,folder);
 	if(elfhost==1)
 	{
-		fd = fileXioDopen(path);
+		if ((fd = fileXioDopen(path)) < 0) return fd;
 		while((rv=fileXioDread(fd, &dirbuf)))
 		{
 			strcpy(path,folder);
 			strcat(path,"/");
 			strcat(path,(char *)&dirbuf.name);
-			if(dirbuf.stat.mode & FIO_S_IFREG) fileXioRemove(path);
+			if(dirbuf.stat.mode & FIO_S_IFREG) ret = fileXioRemove(path);
 			else if(dirbuf.stat.mode & FIO_S_IFDIR && strncmp((char *)&dirbuf.name,".",1))
 			{
-				RecursiveDelete(path);
-				fileXioRmdir(path);
+				if ((ret = RecursiveDelete(path)) < 0) goto error1;
+				if ((ret = fileXioRmdir(path)) < 0) goto error1;
 				}
 			}
+		ret = 0;
+error1:
 		fileXioDclose(fd);
+		return ret;
 		}
 	else if(elfhost==3)
 	{
 		strcat(path,"/*");
 		mcGetDir(mcport, 0, path, 0, MAX_ENTRY - 10, mcDir);
 		mcSync(0, NULL, &ret);
+		if(ret < 0) return ret;
 		num_mc_files = ret;
 		rv=2;
 		if(num_mc_files>2)
@@ -1352,13 +1344,15 @@ void RecursiveDelete(char *folder)
 				strcat(path,(char *)mcDir[rv].name);
 				if(mcDir[rv].attrFile & MC_ATTR_SUBDIR)
 				{
-					RecursiveDelete(path);
+					if ((ret = RecursiveDelete(path)) < 0) return ret;
 					mcDelete(mcport, 0, path);
 					mcSync(0, NULL, &ret);
+					if (ret < 0) return ret;
 					strcpy(path,folder);
 					strcat(path,"/*");
 					mcGetDir(mcport, 0, path, 0, MAX_ENTRY - 10, mcDir);
 					mcSync(0, NULL, &ret);
+					if (ret < 0) return ret;
 					num_mc_files=ret;
 					rv=2;
 					}
@@ -1366,11 +1360,13 @@ void RecursiveDelete(char *folder)
 				{
 					mcDelete(mcport, 0, path);
 					mcSync(0, NULL, &ret);
+					if (ret < 0) return ret;
 					rv++;
 					}
 				}
 			}
 		}
+	return 0;
 	}
 
 ////////////////////////////////////////////////////////////////////////
@@ -1386,6 +1382,7 @@ void RecursiveCopy(char *folder)
 	char cdfile[MAX_PATH];
 	char *ptr;
 	
+	printf("Recursive copy %s to %s\n",folder,destination);
 	strcpy(path,folder);
 	if(elfhost==1)
 	{
@@ -1437,20 +1434,20 @@ void RecursiveCopy(char *folder)
 		ptr = strrchr(folder,':');
 		if (ptr != NULL)
 		{
-			ptr+=2;
+			ptr++;
 			strcpy(path,ptr);
 			}
 		else strcpy(path,folder);
 		strcat(path,"/");
 //		TocEntryList=(TocEntry*)malloc((sizeof(TocEntry))*MAX_ENTRY);
 		CDVD_FlushCache();
-		ret = CDVD_GetDir(path, NULL, CDVD_GET_FILES_AND_DIRS, TocEntryList,MAX_ENTRY, NULL);
+		ret = CDVD_GetDir(path, NULL, CDVD_GET_FILES_AND_DIRS, (void *)TocEntryList,MAX_ENTRY, NULL);
 		for(rv=0;rv<ret;rv++)
 		{
 			ptr = strrchr(folder,':');
 			if (ptr != NULL)
 			{
-				ptr+=2;
+				ptr++;
 				strcpy(path,ptr);
 				}
 			else strcpy(path,folder);
@@ -1495,7 +1492,7 @@ void ReDraw(int highlighted)
 	else
 		screenend=216;
 	clrEmuScreen(mypalette[0]);
-	drawPCX(&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
+	drawPCX((void *)&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
 	printBIGXY("Adam & Tom's HDD Menu", 8, 8, 0, mypalette[1]);
 	printXY("Working volume:", 8, 30, mypalette[1]);
 	sprintf(fullpath,"%s [%iMB free]",parties[party].filename,parties[party].freeSpace);
@@ -1529,7 +1526,7 @@ void ReDraw(int highlighted)
 	{
 		strcpy(fullpath, "cdfs:");
 		strcat(fullpath, CDpath);
-		strcat(fullpath, "/");
+//		strcat(fullpath, "/");
 		strcat(fullpath, HDDfiles[highlighted]);
 		}
 	printXY(fullpath, 88, 38, mypalette[2]);
@@ -1693,7 +1690,7 @@ void setupmenu(u32 old_pad)
 {
 	int exitsetup, i, ret, middle;
 	int held;
-	u8 red,green,blue,alpha,changecol,changecol2;
+	u8 red,green,blue,alpha = 0,changecol,changecol2;
 	struct padButtonStatus buttons;
 	u32 paddata;
 //	u32 old_pad = 0;
@@ -1713,7 +1710,7 @@ void setupmenu(u32 old_pad)
 		clrEmuScreen(mypalette[0]);
 		if(changecol) colour=mypalette[3];
 		else colour=mypalette[1];
-		drawPCX(&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
+		drawPCX((void *)&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
 		sprintf(menutext, "(L1,L2) SCREEN SIZE %ix%i",settings->WIDTH, settings->HEIGHT);
 		printXY(menutext, 8, 8, colour);
 		sprintf(menutext, "(DPAD) XYOFFSET %ix%i",settings->OFFSETX, settings->OFFSETY);
@@ -1732,25 +1729,25 @@ void setupmenu(u32 old_pad)
 		printXY("(CIRCLE) to switch to color change mode:", 8, 84, colour);
 		printXY("(LEFT/RIGHT) selects RGB component to modify", 8, 92, colour);
 		printXY("(UP/DOWN) increases/decreases component value.", 8, 100, colour);
-		palptr=&mypalette[0];
+		palptr=(void *)&mypalette[0];
 		red=*palptr++;
 		green=*palptr++;
 		blue=*palptr++;
 		sprintf(menutext, "BGcolor1: %03i:%03i:%03i", red, green, blue);
 		printBIGXY(menutext, middle, 28, 0, mypalette[1]);
-		palptr=&mypalette[1];
+		palptr=(void *)&mypalette[1];
 		red=*palptr++;
 		green=*palptr++;
 		blue=*palptr++;
 		sprintf(menutext, "FGcolor1: %03i:%03i:%03i", red, green, blue);
 		printBIGXY(menutext, middle, 42, 0, mypalette[1]);
-		palptr=&mypalette[2];
+		palptr=(void *)&mypalette[2];
 		red=*palptr++;
 		green=*palptr++;
 		blue=*palptr++;
 		sprintf(menutext, "FGcolor2: %03i:%03i:%03i", red, green, blue);
 		printBIGXY(menutext, middle, 56, 0, mypalette[2]);
-		palptr=&mypalette[3];
+		palptr=(void *)&mypalette[3];
 		red=*palptr++;
 		green=*palptr++;
 		blue=*palptr++;
@@ -1808,7 +1805,7 @@ void setupmenu(u32 old_pad)
 			{
 				if (changecol)
 				{
-					palptr=&mypalette[changecol-1];
+					palptr=(void *)&mypalette[changecol-1];
 					for(i=0;i<=changecol2;i++) alpha=*palptr++;
 					palptr--;
 					if(alpha<255) alpha++;
@@ -1828,7 +1825,7 @@ void setupmenu(u32 old_pad)
 			{
 				if (changecol)
 				{
-					palptr=&mypalette[changecol-1];
+					palptr=(void *)&mypalette[changecol-1];
 					for(i=0;i<=changecol2;i++) alpha=*palptr++;
 					palptr--;
 					if(alpha>0) alpha--;
@@ -1912,7 +1909,6 @@ void setupmenu(u32 old_pad)
 		settings->FGCOL2=mypalette[2];
 		settings->FGCOL3=mypalette[3];
 		ret=fioOpen("mc0:/SYS-CONF/PS2MENU.CNF",O_CREAT | O_WRONLY | O_TRUNC);
-		printf("write %i bytes from %x to fd:%i\n",sizeof(ps2menuset),settings,ret);
 		fioWrite(ret,settings,sizeof(ps2menuset));
 		fioClose(ret);
 		}
@@ -2179,7 +2175,7 @@ void jprintf(char *s)
 	else
 		screenend=216;
 //	dbgprintf("%s\n", s);
-	for(i=screenend-28;i<screenend-20;i++) drawHorizontal(0,i,settings->WIDTH,mypalette[0]);
+	for(i=screenend-28;i<screenend-12;i++) drawHorizontal(0,i,settings->WIDTH,mypalette[0]);
 	printXY(s, 8, screenend-28, mypalette[2]);
 	PutImage();
 	}
@@ -2206,6 +2202,7 @@ char *SelectELF(void)
 		maxrows=24;
 	else
 		maxrows=13;
+	strcpy(CDpath,"/\0");
 	strcpy(HDDpath,"pfs0:/\0");
 	held = 0;
 	while(!selected)
@@ -2357,8 +2354,8 @@ char *SelectELF(void)
 							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 							strcpy(tmppath,HDDpath);
 							strcat(tmppath,HDDfiles[highlighted]);
-							RecursiveDelete(tmppath);
-							fileXioRmdir(tmppath);
+							ret = RecursiveDelete(tmppath);
+							if (ret >= 0) fileXioRmdir(tmppath);
 							fileXioUmount("pfs0:");
 							}
 						/*if(elfhost==2)
@@ -2371,11 +2368,13 @@ char *SelectELF(void)
 							i=strlen(tmppath);
 							tmppath[i-1]='\0';
 							strcat(tmppath,HDDfiles[highlighted]);
-							RecursiveDelete(tmppath);
+							ret = RecursiveDelete(tmppath);
+							if (ret >= 0) {
 							mcDelete(mcport, 0, tmppath);
-							mcSync(0, NULL, &ret);
+							mcSync(0, NULL, &ret); }
 							}
-						sprintf(sStatus,"Deleted folder %s",fullpath);
+						if (ret >= 0) sprintf(sStatus,"Deleted folder %s",fullpath);
+						else sprintf(sStatus,"Delete failed %s",fullpath);
 						changed=1;
 						highlighted=0;
 						topfil=0;
@@ -2387,7 +2386,7 @@ char *SelectELF(void)
 							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 							strcpy(tmppath,HDDpath);
 							strcat(tmppath,HDDfiles[highlighted]);
-							fileXioRemove(tmppath);
+							ret = fileXioRemove(tmppath);
 							fileXioUmount("pfs0:");
 							}
 						/*if(elfhost==2)
@@ -2403,7 +2402,8 @@ char *SelectELF(void)
 							mcDelete(mcport, 0, tmppath);
 							mcSync(0, NULL, &ret);
 							}
-						sprintf(sStatus,"Deleted file %s",fullpath);
+						if (ret >= 0) sprintf(sStatus,"Deleted file %s",fullpath);
+						else sprintf(sStatus,"Delete failed %s",fullpath);
 						changed=1;
 						highlighted=0;
 						topfil=0;
@@ -2520,7 +2520,7 @@ char *SelectELF(void)
 							}
 						strcpy(destination,tmppath);
 						}
-					else if(elfhost != 2) //this adv. copy method seems to crash0r from host:
+					else //if(elfhost != 2) //this adv. copy method seems to crash0r from host:
 					{
 						ptr = strrchr(fullpath,'/');
 						if(ptr == NULL)
@@ -2577,7 +2577,7 @@ char *SelectELF(void)
 						else if(elfhost==4)
 						{
 							strcpy(tmppath,CDpath);
-							minpath=0;
+							minpath=1;
 							}
 						if((botcap=='.')&(botcap2=='.'))
 						{
@@ -2973,7 +2973,7 @@ checkmc:
 	itoSetBgColor(settings->BGCOL1);
 	clrEmuScreen(mypalette[0]);
 	PutImage();
-	readPCXheader(&ps2menu_pcx,size_ps2menu_pcx);
+	readPCXheader((void *)&ps2menu_pcx,size_ps2menu_pcx);
 // *** Required BEFORE calling ReadMCDir etc
 
 	ReDraw(0);
