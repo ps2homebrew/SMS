@@ -10,6 +10,7 @@
 
 #include "FtpClient.h"
 #include "FtpServer.h"
+#include "FtpMessages.h"
 
 #ifndef LINUX
 #include "irx_imports.h"
@@ -94,6 +95,8 @@ void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocke
 	pClient->m_CommandBuffer[0] = '\0';
 
 	FileSystem_Create(&pClient->m_kContext);
+
+	pClient->m_pMessages = FtpMessage;
 }
 
 void FtpClient_Destroy( FtpClient* pClient )
@@ -129,7 +132,7 @@ void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString )
 
 void FtpClient_OnConnect( FtpClient* pClient )
 {
-	Ftpclient_Send( pClient, 220, "ps2ftpd ready." );
+	Ftpclient_Send( pClient, 220, pClient->m_pMessages[FTPMSG_SERVER_READY] );
 }
 
 void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
@@ -164,7 +167,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 					if(user)
 						FtpClient_OnCmdUser(pClient,user);
 					else
-						FtpClient_Send( pClient, 500, "Requires parameters." );
+						FtpClient_Send( pClient, 500,  pClient->m_pMessages[FTPMSG_REQUIRES_PARAMETERS] );
 				}
 				break;
 
@@ -176,7 +179,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 					if(pass)
 						FtpClient_OnCmdPass(pClient,pass);
 					else
-						FtpClient_Send( pClient, 530, "Login incorrect." );
+						FtpClient_Send( pClient, 530,  pClient->m_pMessages[FTPMSG_LOGIN_INCORRECT] );
 				}
 				break;
 
@@ -187,7 +190,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				}
 				break;
 
-				case FTPCMD_NOOP: FtpClient_Send( pClient, 200, "NOOP command successful." ); break;
+				case FTPCMD_NOOP: FtpClient_Send( pClient, 200,  pClient->m_pMessages[FTPMSG_COMMAND_SUCCESSFUL] ); break;
 			}
 
 			return;
@@ -198,7 +201,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			case FTPCMD_USER:
 			case FTPCMD_PASS:
 			{
-				FtpClient_Send( pClient, 503, "Already authenticated." );
+				FtpClient_Send( pClient, 503,  pClient->m_pMessages[FTPMSG_ALREADY_AUTHENTICATED] );
 			}
 			break;
 
@@ -240,7 +243,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(6 == i)
 					FtpClient_OnCmdPort(pClient,ip,port);
 				else
-					FtpClient_Send( pClient, 501, "Illegal command." );
+					FtpClient_Send( pClient, 501,  pClient->m_pMessages[FTPMSG_ILLEGAL_COMMAND] );
 			}
 			break;
 
@@ -282,53 +285,49 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			}
 			break;
 
-			// TYPE <type>
+			// these all share the same setup
+
 			case FTPCMD_TYPE:
-			{
-				char* type = strtok(NULL,"");
-
-				if(type)
-					FtpClient_OnCmdType(pClient,type);
-				else
-					FtpClient_Send( pClient, 501, "Illegal Command." );
-			}
-			break;
-
-			// RETR <file>
 			case FTPCMD_RETR:
-			{
-				char* file = strtok(NULL,"");
-
-				if(file)
-					FtpClient_OnCmdRetr(pClient,file);
-				else
-					FtpClient_Send( pClient, 501, "Illegal Command." );
-			}
-			break;
-
-			// STOR <file>
 			case FTPCMD_STOR:
-			{
-				char* file = strtok(NULL,"");
-
-				if(file)
-					FtpClient_OnCmdStor(pClient,file);
-				else
-					FtpClient_Send( pClient, 501, "Illegal Command." );
-			}
-			break;
-
-			// APPE <file>
 			case FTPCMD_APPE:
+			case FTPCMD_CWD:
+			case FTPCMD_XCWD:
+			case FTPCMD_DELE:
+			case FTPCMD_MKD:
+			case FTPCMD_XMKD:
+			case FTPCMD_RMD:
+			case FTPCMD_XRMD:
+			case FTPCMD_SITE:
+			case FTPCMD_MODE:
+			case FTPCMD_STRU:
+			case FTPCMD_SIZE:
 			{
-				char* file = strtok(NULL,"");
+				char* arg = strtok(NULL,"");
 
-				if(file)
-					FtpClient_OnCmdAppe(pClient,file);
+				if( arg )
+				{
+					switch( result )
+					{
+						case FTPCMD_TYPE: FtpClient_OnCmdType(pClient,arg); break;
+						case FTPCMD_RETR: FtpClient_OnCmdRetr(pClient,arg); break;
+						case FTPCMD_STOR: FtpClient_OnCmdStor(pClient,arg); break;
+						case FTPCMD_APPE: FtpClient_OnCmdAppe(pClient,arg); break;
+						case FTPCMD_CWD: case FTPCMD_XCWD: FtpClient_OnCmdCwd(pClient,arg); break;
+						case FTPCMD_DELE: FtpClient_OnCmdDele(pClient,arg); break;
+						case FTPCMD_MKD: case FTPCMD_XMKD: FtpClient_OnCmdMkd(pClient,arg); break;
+						case FTPCMD_RMD: case FTPCMD_XRMD: FtpClient_OnCmdRmd(pClient,arg); break;
+						case FTPCMD_SITE: FtpClient_OnCmdSite(pClient,arg); break;
+						case FTPCMD_MODE: FtpClient_OnCmdMode(pClient,arg); break;
+						case FTPCMD_STRU: FtpClient_OnCmdStru(pClient,arg); break;
+						case FTPCMD_SIZE: FtpClient_OnCmdSize(pClient,arg); break;
+					}
+				}
 				else
-					FtpClient_Send( pClient, 501, "Illegal Command." );
+					FtpClient_Send( pClient, 501, pClient->m_pMessages[FTPMSG_REQUIRES_PARAMETERS] );
 			}
 			break;
+			// TYPE <type>
 
 			case FTPCMD_PWD:
 			case FTPCMD_XPWD:
@@ -337,17 +336,6 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			}
 			break;
 
-			case FTPCMD_CWD:
-			case FTPCMD_XCWD:
-			{
-				char* path = strtok(NULL,"");
-
-				if(path)
-					FtpClient_OnCmdCwd(pClient,path);
-				else
-					FtpClient_Send( pClient, 501, "Illegal command." );
-			}
-			break;
 
 			case FTPCMD_CDUP:
 			{
@@ -355,84 +343,6 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			}
 			break;
 
-			case FTPCMD_DELE:
-			{
-				char* file = strtok(NULL,"");
-
-				if(file)
-					FtpClient_OnCmdDele(pClient,file);
-				else
-					FtpClient_Send( pClient, 501, "Illegal command." );
-			}
-			break;
-
-			case FTPCMD_MKD:
-			case FTPCMD_XMKD:
-			{
-				char* dir = strtok(NULL,"");
-
-				if(dir)
-					FtpClient_OnCmdMkd(pClient,dir);
-				else
-					FtpClient_Send( pClient, 501, "Illegal command." );
-			}
-			break;
-
-			case FTPCMD_RMD:
-			case FTPCMD_XRMD:
-			{
-				char* dir = strtok(NULL,"");
-
-				if(dir)
-					FtpClient_OnCmdRmd(pClient,dir);
-				else
-					FtpClient_Send( pClient, 501, "Illegal command." );
-			}
-			break;
-
-			case FTPCMD_SITE:
-			{
-				char* cmd = strtok(NULL,"");
-
-				if(cmd)
-					FtpClient_OnCmdSite(pClient,cmd);
-				else
-					FtpClient_Send( pClient, 500, "Requires parameters." );
-			}
-			break;
-
-			case FTPCMD_MODE:
-			{
-				char* mode = strtok(NULL,"");
-
-				if(mode)
-					FtpClient_OnCmdMode(pClient,mode);
-				else
-					FtpClient_Send( pClient, 500, "Requires parameters." );
-			}
-			break;
-
-			case FTPCMD_STRU:
-			{
-				char* structure = strtok(NULL,"");
-
-				if(structure)
-					FtpClient_OnCmdStru(pClient,structure);
-				else
-					FtpClient_Send( pClient, 500, "Requires parameters." );
-			}
-			break;
-
-			case FTPCMD_SIZE:
-			{
-				char* file = strtok(NULL,"");
-
-				if(file)
-					FtpClient_OnCmdSize(pClient,file);
-				else
-					FtpClient_Send( pClient, 500, "Requires parameters." );
-			}
-			break;
 
 			case FTPCMD_REST:
 			{
@@ -452,19 +362,19 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 						FtpClient_OnCmdRest( pClient, (!*c) ? strtol( marker, NULL, 10 ) : -1 );
 				}
 				else
-					FtpClient_Send( pClient, 500, "Requires parameters." );
+					FtpClient_Send( pClient, 500,  pClient->m_pMessages[FTPMSG_REQUIRES_PARAMETERS] );
 			}
 			break;
 
-			case FTPCMD_NOOP: FtpClient_Send( pClient, 200, "NOOP command successful." ); break;
+			case FTPCMD_NOOP: FtpClient_Send( pClient, 200,  pClient->m_pMessages[FTPMSG_COMMAND_SUCCESSFUL] ); break;
 
 			default:
-				FtpClient_Send( pClient, 500, "Not understood." );
+				FtpClient_Send( pClient, 500,  pClient->m_pMessages[FTPMSG_NOT_UNDERSTOOD] );
 			break;
 		}
 	}
 	else
-		FtpClient_Send( pClient, 500, "Not understood." );
+		FtpClient_Send( pClient, 500,  pClient->m_pMessages[FTPMSG_NOT_UNDERSTOOD] );
 }
 
 void FtpClient_OnDataConnect( FtpClient* pClient,  int* ip, int port )
@@ -546,7 +456,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 			pClient->m_eDataMode = DATAMODE_WRITE;
 			pClient->m_eConnState = CONNSTATE_RUNNING;
 
-			FtpClient_Send( pClient, 150, "Opening ASCII mode data connection for file list" );
+			FtpClient_Send( pClient, 150,  pClient->m_pMessages[FTPMSG_OPENING_ASCII_CONNECTION] );
 		}
 		break;
 
@@ -555,7 +465,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 			pClient->m_eDataMode = DATAMODE_WRITE;
 			pClient->m_eConnState = CONNSTATE_RUNNING;
 
-			FtpClient_Send( pClient, 150, "Opening BINARY Connection for file transfer" );
+			FtpClient_Send( pClient, 150, pClient->m_pMessages[FTPMSG_OPENING_BINARY_CONNECTION] );
 		}
 		break;
 
@@ -565,7 +475,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 			pClient->m_eDataMode = DATAMODE_READ;
 			pClient->m_eConnState = CONNSTATE_RUNNING;
 
-			FtpClient_Send( pClient, 150, "Opening BINARY Connection for file transfer" );
+			FtpClient_Send( pClient, 150,  pClient->m_pMessages[FTPMSG_OPENING_BINARY_CONNECTION] );
 		}
 		break;
 	
@@ -604,7 +514,7 @@ void FtpClient_OnDataRead( FtpClient* pClient )
 				// write failed? then abort transfer
 
 				if( sv <= 0 )
-					FtpClient_OnDataFailed(pClient,"Local write failed");
+					FtpClient_OnDataFailed(pClient,  pClient->m_pMessages[FTPMSG_LOCAL_WRITE_FAILED] );
 				else
 					pClient->m_uiDataOffset += sv;
 			}
@@ -639,7 +549,7 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 			{
 				// if read failed, abort transfer
 
-				FtpClient_OnDataFailed(pClient,"Failed reading data");
+				FtpClient_OnDataFailed(pClient, pClient->m_pMessages[FTPMSG_FAILED_READING_DATA] );
 				return;
 			}
 
@@ -652,7 +562,7 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 				// if client closed the connection, shut down transfer
 
 				if( sv <= 0 )
-					FtpClient_OnDataFailed(pClient,"Premature client disconnect");
+					FtpClient_OnDataFailed(pClient,  pClient->m_pMessages[FTPMSG_PREMATURE_CLIENT_DISCONNECT] );
 				else
 					pClient->m_uiDataOffset += sv;
 			}
@@ -748,7 +658,7 @@ void FtpClient_OnDataComplete( FtpClient* pClient, int iReturnCode, const char* 
 			case DATAACTION_LIST:
 			case DATAACTION_RETR:
 			case DATAACTION_STOR:
-				FtpClient_Send( pClient, 226, "Command successful." ); break;
+				FtpClient_Send( pClient, 226,  pClient->m_pMessages[FTPMSG_COMMAND_SUCCESSFUL] ); break;
 			
 			default:
 			break;
@@ -775,7 +685,7 @@ void FtpClient_OnDataFailed( FtpClient* pClient, const char* pMessage  )
 	assert( pClient );
 
 	pClient->m_eDataAction = DATAACTION_NONE;
-	FtpClient_OnDataComplete(pClient, 500, pMessage ? pMessage : "Transfer failed" );
+	FtpClient_OnDataComplete(pClient, 500, pMessage ? pMessage :  pClient->m_pMessages[FTPMSG_TRANSFER_FAILED] );
 }
 
 void FtpClient_OnDataCleanup( FtpClient* pClient )
@@ -817,7 +727,7 @@ void FtpClient_HandleDataConnect( FtpClient* pClient )
 		else if( CONNSTATE_LISTEN != pClient->m_eConnState )
 		{
 			// no connection mode has yet been chosen
-			FtpClient_OnDataFailed( pClient, "Unable to build data connection." );
+			FtpClient_OnDataFailed( pClient,  pClient->m_pMessages[FTPMSG_UNABLE_TO_BUILD_DATA_CONNECTION] );
 		}
 	}
 }

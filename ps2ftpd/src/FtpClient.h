@@ -141,6 +141,8 @@ typedef struct FtpClient
 	char m_CommandBuffer[512];
 
 	FSContext m_kContext;
+
+	const char** m_pMessages;
 } FtpClient;
 
 void FtpClient_Create( FtpClient* pClient, struct FtpServer* pServer, int iControlSocket );
