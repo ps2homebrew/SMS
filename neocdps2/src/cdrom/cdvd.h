@@ -1,6 +1,8 @@
 #ifndef _CDVD_H
 #define _CDVD_H
 
+#include <tamtypes.h>
+
 // This header contains the common definitions for libcdvd
 // that are used by both IOP and EE sides
 

@@ -4,15 +4,21 @@
 
 //-- Include files -----------------------------------------------------------
 #include <stdio.h>
-#include <stdlib.h>
 #include <fileio.h> 
 #include <string.h>
 #include <libcdvd.h>
 #include <sifcmd.h>
 #include <sifrpc.h>
 #include <loadfile.h>
+#include <kernel.h>
 #include "cdrom.h"
 #include "cdvd_rpc.h"
+#include "../sound/sjpcm.h"
+#ifdef USE_MAMEZ80
+#include "../mz80/mz80interf.h"
+#else
+#include "../z80/z80intrf.h"
+#endif
 #include "../neocd.h"
 
 
@@ -47,7 +53,7 @@
 
 char cdpath[128] __attribute__((aligned(64))) = "cdfs:\\"; 
 
-char bootpath[128];
+char bootpath[128] __attribute__((aligned(64)));
 
 #define BUFFER_SIZE 131072
 #define PRG_TYPE    0
@@ -58,6 +64,9 @@ char bootpath[128];
 #define PCM_TYPE    5
 #define OBJ_TYPE    6 
 #define min(a, b) ((a) < (b)) ? (a) : (b)
+
+#define	ExitHandler()	__asm__ volatile("sync.l; ei")
+#define WAIT_HSYNC	480
 
 /*-- Exported Functions ----------------------------------------------------*/
 int    cdrom_init1(void);
@@ -79,7 +88,7 @@ void   cdrom_apply_patch(short *source, int offset, int bank);
 
 //-- Private Variables -------------------------------------------------------
 static char    cdrom_buffer[BUFFER_SIZE] __attribute__((aligned(64)));
-static char    Path[64] ;//__attribute__((aligned(64)));
+static char    Path[64]  __attribute__((aligned(64)));
 
 //-- Private Function --------------------------------------------------------
 static    int    recon_filetype(char *);
@@ -90,12 +99,33 @@ int spr_length;
 int        img_display = 1;
 
 //----------------------------------------------------------------------------
+static void CB_DelayTh(int id, uint16 time, void *sema_id)
+{
+	iSignalSema((int)sema_id);
+	ExitHandler();
+}
+void delayThread(uint16 hsync)
+{
+	struct t_ee_sema sparam;
+	int sema_id;
+	
+	sparam.init_count = 0;
+	sparam.max_count = 1;
+	sparam.option = 0;
+	
+	sema_id = CreateSema(&sparam);
+	SetAlarm(hsync,CB_DelayTh,(void *)sema_id);
+	WaitSema(sema_id);
+
+	DeleteSema(sema_id);
+}
+//----------------------------------------------------------------------------
 // return 0 if game detected on local "host", under "cd" folder
 // return 1 in other case (-> cdrom0)
 int cdrom_init1(void)
 {    
-    int neocd_disc=0;
-    int fd;
+    int neocd_disc, swap_disc;
+    int fd, disk_type,trayflg,traycnt;
     
     // try to read the IPL.TXT file from host
     strcpy (bootpath,path_prefix);
@@ -115,31 +145,58 @@ int cdrom_init1(void)
     // else
     printf("CD-ROM detect....\n");
     
+    
     // INIT CDFS SYSTEM
     printf("Init CDFS\n");
     CDVD_Init();
+    CDVD_DiskReady(CdBlock);
     
-        
+    neocd_disc=0;
+    swap_disc=0;
+    /* Look for disc exchange */
     while (!neocd_disc)
     {
-      // try to read the IPL.TXT file from the CD
       // flush cache
-      printf("Flush Cache\n");
       CDVD_FlushCache();
-      // wait for CD to be ready
-      while (CDVD_DiskReady(CdBlock)!=CdComplete) ; 
-
+      
+      if (swap_disc)
+      {
+      	traycnt=0;
+      	display_insertscreen(); // insert CD
+      	cdTrayReq(CdTrayCheck,&trayflg);
+      	printf("Waiting for disc swap....\n");
+      	waitforX();
+      	display_loadingscreen(); // disc Access
+      
+      	while(CDVD_DiskReady(CdBlock)==CdNotReady) ;
+                        
+      	do
+      	{
+      	    delayThread(WAIT_HSYNC * 15);
+	    while(!cdTrayReq(CdTrayCheck,&trayflg)){
+	        delayThread(WAIT_HSYNC);
+	    }
+	    traycnt+= trayflg;
+  	    while(CDVD_DiskReady(CdBlock)==CdNotReady) ;
+	    disk_type = cdGetDiscType();
+	    printf ("disc_type : %d",disk_type);
+      	}
+      	while((disk_type == CDVD_TYPE_NODISK) || 
+              (disk_type == CDVD_TYPE_DETECT) || 
+              (disk_type == CDVD_TYPE_DETECT_CD));
+      }
+      
+      // try to open IPL.TXT
+      while(CDVD_DiskReady(CdBlock)==CdNotReady) ;
       fd = fioOpen("cdfs:\\IPL.TXT", O_RDONLY);
       if (fd<0)
       {
       	 fioClose(fd);
 	 printf("No Neogeo CD detected\n");
-	 display_insertscreen(); // insert CD
-	 waitforX();
-	 display_loadingscreen(); // disc Access
+	 swap_disc++;
       }
       else (neocd_disc=1);
-    }
+    } // end while
         
     printf("NeogeoCD Discs detected!\n");
     fioClose(fd);
@@ -169,8 +226,9 @@ int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
 
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-//    	strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
     
 
     fd = fioOpen(Path, O_RDONLY);
@@ -208,8 +266,10 @@ int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
     
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
+
 
 
     printf("LOADING Z80 FILE\n");
@@ -218,8 +278,12 @@ int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
         printf("Could not open %s", Path);
         return 0;
     }
-
-    fioRead(fd, &subcpu_memspace[Offset], 0x10000);
+        
+    #ifdef USE_MAMEZ80
+    fioRead(fd, &mame_z80mem[Offset], Z80_MEMSIZE);
+    #else
+    fioRead(fd, &subcpu_memspace[Offset], Z80_MEMSIZE);
+    #endif
 
     fioClose(fd);
     return 1;
@@ -242,8 +306,9 @@ int    cdrom_load_fix_file(char *FileName, unsigned int Offset)
     
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -284,8 +349,9 @@ int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
     
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -304,12 +370,6 @@ int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
     } while( Readed == BUFFER_SIZE );
     fioClose(fd);
     
-    /*
-    if (((Offset) / 128) > no_of_tiles)
-    {
-    	no_of_tiles = (Offset) / 128 ; //(length / 128)
-    } 
-    */   
     return 1;
 }
 //----------------------------------------------------------------------------
@@ -329,8 +389,9 @@ int    cdrom_load_obj_file(char *FileName, unsigned int Offset)
     
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -354,7 +415,6 @@ int    cdrom_load_obj_file(char *FileName, unsigned int Offset)
 int    cdrom_load_pcm_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
-
     char        *Ptr;
 
     if (game_boot_mode == BOOT_CD)
@@ -367,8 +427,9 @@ int    cdrom_load_pcm_file(char *FileName, unsigned int Offset)
           
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
 
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -399,8 +460,9 @@ int    cdrom_load_pat_file(char *FileName, unsigned int Offset, unsigned int Ban
     
     strcat(Path, FileName);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -447,13 +509,14 @@ int    cdrom_process_ipl(void)
 {
     
     int		fd;
-    char	Path[128];
-    char	Line[32]  __attribute__((aligned(64)));
+    char	Path[128] __attribute__((aligned(64)));
+    char	iplBuffer[1024] __attribute__((aligned(64))); // should be largely enough
     char	FileName[16]  __attribute__((aligned(64)));
     int        	FileType;
     int        	Bnk;
     int        	Off;
     int        	i, j;
+    int		ipl_size;
 
 
     printf("opening IPL.TXT...\n");
@@ -468,27 +531,30 @@ int    cdrom_process_ipl(void)
     
     strcat(Path, IPL_TXT);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
 
     fd = fioOpen(Path, O_RDONLY);
-    
-    
-    if (fd<0) {
+    if (fd<0) 
+    {
         printf("Could not open IPL.TXT!\n");
         return 0;
     }
-    while (fioGets(fd, Line, 32)>0)
+    ipl_size = fioRead(fd, iplBuffer, 1024);
+    fioClose(fd);
+    
+    i=0;
+    while (i<(ipl_size-2))
     {
         Bnk=0;
 	Off=0;
-        i=0;
         j=0;
-        
+
         processEvents();
         
-        while((Line[i] != ',')&&(Line[i]!=0))
-            FileName[j++] = CHANGECASE(Line[i++]);
+        while((iplBuffer[i] != ',')&&(iplBuffer[i]!=0))
+            FileName[j++] = CHANGECASE(iplBuffer[i++]);
         FileName[j]=0;
 
         j -= 3;
@@ -497,20 +563,20 @@ int    cdrom_process_ipl(void)
             FileType = recon_filetype(&FileName[j]);
             i++;
             j=0;
-            while(Line[i] != ',')
+            while(iplBuffer[i] != ',')
             {
                 Bnk*=10;
-		Bnk+=Line[i]-'0';
+		Bnk+=iplBuffer[i]-'0';
 		i++;
 	    }
 
             i++;
             j=0;
 
-            while(Line[i] != 0x0D)
+            while(iplBuffer[i] != 0x0D)
             {
 		Off*=16;
-		Off+=hextodec(Line[i++]);
+		Off+=hextodec(iplBuffer[i++]);
 	    }
             Bnk &= 3;
             
@@ -519,51 +585,51 @@ int    cdrom_process_ipl(void)
             switch( FileType ) {
             case PRG_TYPE:
                 if (!cdrom_load_prg_file(FileName, Off)) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             case FIX_TYPE:
                 if (!cdrom_load_fix_file(FileName, (Off>>1))) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             case SPR_TYPE:
                 if (!cdrom_load_spr_file(FileName, (Bnk*0x100000) + Off)) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             case OBJ_TYPE: // TEST
                 if (!cdrom_load_obj_file(FileName, (Bnk*0x100000) + Off)) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             case Z80_TYPE:
                 if (!cdrom_load_z80_file(FileName, (Off>>1))) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             case PAT_TYPE:
                 if (!cdrom_load_pat_file(FileName, Off, Bnk)) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             case PCM_TYPE:
                 if (!cdrom_load_pcm_file(FileName, (Bnk*0x80000) + (Off>>1))) {
-                    fioClose(fd);
+                    //fioClose(fd);
                     return 0;
                 }
                 break;
             }
         }
+        i+=2;
     }
-    
-    fioClose(fd);
+   
     printf("LOADING COMPLETE...\n");
 
     return 1;
@@ -618,9 +684,11 @@ void    cdrom_load_files(void)
     char    *Ptr, *Ext;
     int     i, j, Bnk, Off, Type, Reliquat;
     
-    //sound_mute();
+    if (neocdSettings.soundOn)
+       SjPCM_Pause();
 
-    if (m68k_read_memory_8(m68k_get_reg(NULL,M68K_REG_A0))==0)
+
+    if (m68k_read_memory_8(M68K_GetAReg(0))==0)
         return;
 
 
@@ -644,7 +712,8 @@ void    cdrom_load_files(void)
     display_loadingscreen();
 
 
-    Ptr = neogeo_prg_memory + m68k_get_reg(NULL,M68K_REG_A0);
+    Ptr = neogeo_prg_memory + M68K_GetAReg(0);
+
 
     do {
         Reliquat = ((int)Ptr)&1;
@@ -723,8 +792,11 @@ void    cdrom_load_files(void)
 
     } while( Entry[i] != 0);
 	
-	// update neocd time
-	//neocd_time=PS2_GetTicks()+REFRESHTIME;
+    // update neocd time
+    //neocd_time=PS2_GetTicks()+REFRESHTIME;
+    if (neocdSettings.soundOn)
+		SjPCM_Play();
+
 
 }
 
@@ -1084,7 +1156,11 @@ void neogeo_upload(void)
     case    3:    // Z80
 
         Source = neogeo_prg_memory + m68k_read_memory_32(0x10FEF8);
-        Dest = subcpu_memspace + (m68k_read_memory_32(0x10FEF4)>>1);
+        #ifdef USE_MAMEZ80
+    	Dest = mame_z80mem + (m68k_read_memory_32(0x10FEF4)>>1);
+    	#else
+    	Dest = subcpu_memspace + (m68k_read_memory_32(0x10FEF4)>>1);
+    	#endif
         Taille = m68k_read_memory_32(0x10FEFC);
         
         swab( Source, Dest, Taille);        
@@ -1155,13 +1231,14 @@ void cdrom_load_title(void)
     file[6] = jue[m68k_read_memory_8(0x10FD83)&3];
     strcat(Path, file);
     
-    //if (game_boot_mode == BOOT_CD)
-    	//strcat(Path, ";1");
+    // if games loaded from CD and from "cd" directory
+    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    	strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0)
     {
-    	printf ("cannot open TITLE_X.SYS\n");
+    	printf ("cannot find any TITLE_X.SYS\n");
     	return;
     }
     
@@ -1196,11 +1273,17 @@ void cdrom_load_title(void)
 
 }
 
+#ifdef USE_MAMEZ80
 #define PATCH_Z80(a, b) { \
-                            subcpu_memspace[(a)] = (b)&0xFF; \
+    			    mame_z80mem[(a)] = (b)&0xFF; \
+                            mame_z80mem[(a+1)] = ((b)>>8)&0xFF; \
+                        }
+#else
+#define PATCH_Z80(a, b) { \
+	                    subcpu_memspace[(a)] = (b)&0xFF; \
                             subcpu_memspace[(a+1)] = ((b)>>8)&0xFF; \
                         }
-
+#endif
 void cdrom_apply_patch(short *source, int offset, int bank)
 {
     int master_offset;
