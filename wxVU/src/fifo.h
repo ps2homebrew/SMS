@@ -22,5 +22,4 @@ private:
     vector<string>      unpack_VIF1_FIFO(const int reg);
     vector<string>      unpack_IPU_out_FIFO(const int reg);
 };
-const int FIFO::nREGISTERS = 2;
 #endif
