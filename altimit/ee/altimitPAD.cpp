@@ -5,6 +5,7 @@
 ========================================================================*/
 
 #include "altimit.h"
+//#include "screenshot.h"
 
 static char padBuf[256] __attribute__((aligned(64)));
 struct padButtonStatus buttons;
@@ -12,11 +13,13 @@ PS2MouseData mouse;
 char keypress;
 
 extern altimitGS altGS;
+extern gsDriver altGsDriver;
 extern int heldtime, heldbutton;
 extern int insmode;
 extern int pointerX, pointerY;
 extern int dualshockPAD, usepointer, activeMOUSE, activeKEYBD;
 extern unsigned int paddata, old_pad, new_pad;
+extern int boot;
 
 int waitPadReady(int port, int slot)
 {
@@ -105,9 +108,7 @@ void startpad()
 
 int readpadbutton()
 {
-// *** need to add some code to check for a held button, perhaps a global
-// *** int buttonHeld, -1 when no button held, old_pad when paddata==old_pad
- int pad, Xlimit, Ylimit;
+ int pad, Xlimit, Ylimit; //, display;
 
  Xlimit = altGS.WIDTH - 16;
  Ylimit = altGS.HEIGHT - 16;
@@ -168,6 +169,13 @@ int readpadbutton()
 			}
 		}
 	}
+/*	if ((new_pad & PAD_R2) && boot == HOST_BOOT)
+	{
+		display = altGsDriver.getCurrentDisplayBuffer();
+		ps2_screenshot_file("host:altimit.tga", 
+			altGsDriver.getFrameBufferBase(display)/256,
+			altGS.WIDTH, altGS.HEIGHT, 1);
+	}*/
 	return new_pad;
  }
  return 0;

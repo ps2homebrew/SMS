@@ -1,13 +1,13 @@
 EE_BIN = ../bin/altimit.elf
 EE_OBJS = altimit.o altimitFS.o abstractFS.o altimitGS.o altimitGUI.o altimitPAD.o \
-			loader.o buttons.o lucida.o
+			loader.o lucida.o # buttons.o
 
 #
 # "make LOADIRX=1" to build modules into final elf executable
 #
 ifeq ($(LOADIRX),1)
 EE_OBJS += poweroff.o iomanx.o filexio.o ps2dev9.o ps2ip.o ps2smap.o ps2host.o ps2netfs.o \
-			dns.o ps2http.o ps2atad.o ps2hdd.o ps2fs.o cdvd.o ps2mouse.o ps2kbd.o
+			ps2ftpd.o dns.o ps2http.o ps2atad.o ps2hdd.o ps2fs.o cdvd.o ps2mouse.o ps2kbd.o
 EE_INCS += -DLOADIRX=$(LOADIRX)
 endif
 
@@ -26,8 +26,8 @@ all: $(EE_BIN)
 loader.s:
 	bin2s ./loader/loader.elf loader.s loader_elf
 
-buttons.s:
-	bin2s ../bin/buttons.iif buttons.s buttons_iif
+#buttons.s:
+#	bin2s ../bin/buttons.iif buttons.s buttons_iif
 
 lucida.s:
 	bin2s ../bin/lucida.fnt lucida.s lucida_fnt
@@ -52,10 +52,13 @@ ps2smap.s:
 	bin2s $(PS2DEV)/ps2eth/smap/ps2smap.irx ps2smap.s ps2smap_irx
 
 ps2host.s:
-	bin2s $(PS2SDK)/iop/irx/ps2host.irx ps2host.s ps2host_irx
+	bin2s ../iop/ps2host.irx ps2host.s ps2host_irx
 
 ps2netfs.s:
 	bin2s $(PS2SDK)/iop/irx/ps2netfs.irx ps2netfs.s ps2netfs_irx
+
+ps2ftpd.s:
+	bin2s $(PS2DEV)/ps2ftpd/bin/ps2ftpd.irx ps2ftpd.s ps2ftpd_irx
 
 dns.s:
 	bin2s $(PS2SDK)/iop/irx/dns.irx dns.s dns_irx

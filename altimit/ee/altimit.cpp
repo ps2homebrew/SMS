@@ -9,7 +9,7 @@
 //#include "smem.h"
 
 //#define VERBOSE 1					// output extra runtime info to screen or tty
-//#define LOADIRX 1
+//#define LOADIRX 1					// use 'make LOADIRX=1' instead
 //#define LOADTTY 1					// udptty.irx needs to be compiled with your own IP
 #define IPCONF_MAX_LEN  (3*16)		// max size for IP setting strings
 
@@ -21,7 +21,7 @@ int activeMC = false, loadedMC = false;
 int activeHTTP = false, loadedHTTP = false;
 int activeHOST = false, loadedHOST = false;
 int activeCDFS = false, loadedCDFS = false;
-int loadedPAD = false, dualshockPAD = false; // staus of joypad and joypad type
+int loadedPAD = false, dualshockPAD = false; // status of joypad and joypad type
 int loadedMOUSE = false, loadedKEYBD = false;
 int activeMOUSE = false, activeKEYBD = false;
 int usepointer = true;				// on screen pointer option
@@ -49,6 +49,8 @@ extern u8 *ps2host_irx;
 extern int size_ps2host_irx;
 extern u8 *ps2netfs_irx;
 extern int size_ps2netfs_irx;
+extern u8 *ps2ftpd_irx;
+extern int size_ps2ftpd_irx;
 extern u8 *dns_irx;
 extern int size_dns_irx;
 extern u8 *ps2http_irx;
@@ -72,6 +74,7 @@ char elfloadpath[MAX_PATHNAME];		// full path/filename of program
 char loadpath[MAX_PATHNAME];		// path to program folder
 char elfrunpath[MAX_PATHNAME];
 char filesystem[40];
+char copytostring[80];
 char printstring[80];				// screen output text
 int heldtime, heldbutton;			// counter for held pad button, and button involved
 int insmode = false;
@@ -94,7 +97,7 @@ char netmask[16] __attribute__((aligned(16))) = "255.255.255.0"; // default IP n
 char gw[16] __attribute__((aligned(16))) = "192.168.0.1"; // default gateway IP address
 
 extern "C" {
-extern void _init(); }
+extern void _init(void); }
 void initGS();						// function to initialise GS
 void ButtonMenu();					// main screen
 void infoModule();					// info module
@@ -173,25 +176,31 @@ getIpConfig(void)
 
 ////////////////////////////////////////////////////////////////////////
 // Loads program configuration from memory card, or sets defaults and
-// creates file if not found
+// creates file if not found or size of file is wrong. Could probably use
+// stricter error checking here.
 void loadMCconfig()
 {
- int fd, fdir;
+ int fd, fdir, fsize;
  char *cfgbuffer;
  char *sysconf = "mc0:/SYS-CONF";
 
  cfgbuffer=(char *)&altGS.WIDTH;
  fd = fioOpen("mc0:/SYS-CONF/ALTIMIT.CFG", O_RDONLY);
- if (fd < 0)
+ if (fd >= 0)
+ {
+	fsize = fioLseek(fd, 0, SEEK_END);
+	fioLseek(fd, 0, SEEK_SET);
+ }
+ if (fd < 0 || fsize != sizeof(altimitGS))
  {
 	altGS.WIDTH = 640;
-	altGS.HEIGHT = 224;
+	altGS.HEIGHT = 480;
 	altGS.OFFSETX = 160;
 	altGS.OFFSETY = 20;
 	altGS.PALORNTSC = GS_TV_AUTO;
-	altGS.INTERLACING = GS_TV_NONINTERLACE;
-	altGS.SCREENCOL1 = GS_SET_RGBA(255,153,0x00,0x80);
-	altGS.SCREENCOL2 = GS_SET_RGBA(255,204,0x00,0x80);
+	altGS.INTERLACING = GS_TV_INTERLACE;
+	altGS.SCREENCOL1 = GS_SET_RGBA(0x80,0x80,0x80,0x80);
+	altGS.SCREENCOL2 = GS_SET_RGBA(0x90,0x90,0x80,0x80);
 	altGS.POINTERCOL = GS_SET_RGBA(0xFF,0x00,0x00,0xFF);
 	altGS.WINBACKCOL = GS_SET_RGBA(0x00,0x00,0x30,0x30);
 	altGS.WINFORECOL = GS_SET_RGBA(0x9C,0x9C,0x9C,0xFF);
@@ -203,8 +212,10 @@ void loadMCconfig()
 	altGS.USEPOINTER = false;
 	altGS.LOADMOUSE = false;
 	altGS.LOADKEYBD = false;
+	altGS.LOADFTPD = false;
  	if ((fdir = fioDopen(sysconf) < 0)) fioMkdir(sysconf); // create mc folder if not present
 	else fioDclose(fdir);
+	if (fd >= 0) fioClose(fd);
 	fd = fioOpen("mc0:/SYS-CONF/ALTIMIT.CFG", O_CREAT | O_WRONLY | O_TRUNC); // create file
 	fioWrite(fd, cfgbuffer, sizeof(altimitGS)); // write config data
 	fioClose(fd);
@@ -302,6 +313,17 @@ int tSifLoadModule(char *pathname, int argc, char *argv)
 }
 
 #ifdef LOADIRX
+void tSifExecModuleBuffer(char *name, void *module, int size, int arglen, const char *args, int *ret)
+{
+#ifndef VERBOSE
+ scr_printf(".");
+#endif
+#ifdef VERBOSE
+ scr_printf("Loading buffer module %s\n", name);
+#endif
+ SifExecModuleBuffer(module, size, arglen, args, ret);
+}
+
 void loadIOPbuffers()
 {
  static char dnsarg[] = "204.127.198.4"; // this should NOT be hard coded
@@ -314,35 +336,35 @@ void loadIOPbuffers()
  && (tSifLoadModule("rom0:MCSERV", 0, NULL))) loadedMC = true; // all needed for MC
  loadMCconfig();		// load or initialise configuration
  if((tSifLoadModule("rom0:PADMAN", 0, NULL))) loadedPAD = true; // definately need pad
- SifExecModuleBuffer(&iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
- SifExecModuleBuffer(&filexio_irx, size_filexio_irx, 0, NULL, &ret);
- if(altGS.LOADHDDS || altGS.LOADNETFS || altGS.LOADHOST || boot == HOST_BOOT || loadhttp) 
-	SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
+ tSifExecModuleBuffer("iomanx.irx", &iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
+ tSifExecModuleBuffer("filexio.irx", &filexio_irx, size_filexio_irx, 0, NULL, &ret);
+ tSifExecModuleBuffer("poweroff.irx", &poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
  if(boot != HOST_BOOT)
  {
-	if (altGS.LOADNETFS || altGS.LOADHOST || loadhttp) getIpConfig();// reads IPCONFIG.DAT
-	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADHDDS || loadhttp)
-		SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &ret);
-	if (altGS.LOADNETFS || altGS.LOADHOST || loadhttp)
+	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADFTPD || loadhttp) getIpConfig();// reads IPCONFIG.DAT
+	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADHDDS || altGS.LOADFTPD || loadhttp)
+		tSifExecModuleBuffer("ps2dev9.irx", &ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &ret);
+	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADFTPD || loadhttp)
 	{
-		SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
+		tSifExecModuleBuffer("ps2ip.irx", &ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
 		if (ret == 0)
 		{
-			SifExecModuleBuffer(&ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], &ret);
+			tSifExecModuleBuffer("ps2smap.irx", &ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], &ret);
 			if (ret == 0)
 			{
 				if (altGS.LOADHOST)
 				{
-					SifExecModuleBuffer(&ps2host_irx, size_ps2host_irx, 0, NULL, &ret);
+					tSifExecModuleBuffer("ps2host.irx", &ps2host_irx, size_ps2host_irx, 0, NULL, &ret);
 					if (ret == 0) loadedHOST = true;
 				}
-				else if (altGS.LOADNETFS) SifExecModuleBuffer(&ps2netfs_irx, size_ps2netfs_irx, 0, NULL, &ret);
+				else if (altGS.LOADNETFS) tSifExecModuleBuffer("ps2netfs.irx", &ps2netfs_irx, size_ps2netfs_irx, 0, NULL, &ret);
+				else if (altGS.LOADFTPD) tSifExecModuleBuffer("ps2ftpd.irx", &ps2ftpd_irx, size_ps2ftpd_irx, 0, NULL, &ret);
 				else if (loadhttp)
 				{
-					SifExecModuleBuffer(&dns_irx, size_dns_irx, sizeof(dnsarg), dnsarg, &ret);
+					tSifExecModuleBuffer("dns.irx", &dns_irx, size_dns_irx, sizeof(dnsarg), dnsarg, &ret);
 					if (ret == 0)
 					{
-						SifExecModuleBuffer(&ps2http_irx, size_ps2http_irx, 0, NULL, &ret);
+						tSifExecModuleBuffer("ps2http.irx", &ps2http_irx, size_ps2http_irx, 0, NULL, &ret);
 						if (ret == 0) loadedHTTP = true;
 					}
 				}
@@ -355,13 +377,13 @@ void loadIOPbuffers()
  }
  if (altGS.LOADHDDS)
  {
-	SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
+	tSifExecModuleBuffer("ps2atad.irx", &ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
 	if (ret == 0)
 	{
-		SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &ret);
+		tSifExecModuleBuffer("ps2hdd.irx", &ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &ret);
 		if (ret == 0)
 		{
-			SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret);
+			tSifExecModuleBuffer("ps2fs.irx", &ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret);
 			if (ret == 0) loadedHDD = true;
 		}
 	}
@@ -372,21 +394,22 @@ void loadIOPbuffers()
 	{
 		if(altGS.LOADMOUSE)
 		{
-			SifExecModuleBuffer(&ps2mouse_irx, size_ps2mouse_irx, 0, NULL, &ret);
+			tSifExecModuleBuffer("ps2mouse.irx", &ps2mouse_irx, size_ps2mouse_irx, 0, NULL, &ret);
 			if (ret == 0) loadedMOUSE = true;
 		}
 		if(altGS.LOADKEYBD)
 		{
-			SifExecModuleBuffer(&ps2kbd_irx, size_ps2kbd_irx, 0, NULL, &ret);
+			tSifExecModuleBuffer("ps2kbd.irx", &ps2kbd_irx, size_ps2kbd_irx, 0, NULL, &ret);
 			if (ret == 0) loadedKEYBD = true;
 		}
 	}
  }
- SifExecModuleBuffer(&cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
+ tSifExecModuleBuffer("cdvd.irx", &cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
  if (ret == 0) loadedCDFS = true;
 }
 #endif
 
+#ifndef LOADIRX
 ////////////////////////////////////////////////////////////////////////
 // loads all required modules, depending on configuration and how this
 // program was loaded
@@ -404,19 +427,19 @@ void loadIOPmodules()
  if((tSifLoadModule("rom0:PADMAN", 0, NULL))) loadedPAD = true; // definately need pad
  tSifLoadModule("IOMANX.IRX", 0, NULL);	// always required
  tSifLoadModule("FILEXIO.IRX", 0, NULL); // this too
- if(altGS.LOADHDDS || altGS.LOADNETFS || altGS.LOADHOST || boot == HOST_BOOT || loadhttp) 
-	tSifLoadModule("POWEROFF.IRX", 0, NULL); // regain control of power/reset button
+ tSifLoadModule("POWEROFF.IRX", 0, NULL); // regain control of power/reset button
  if(boot != HOST_BOOT)	// HOST_BOOT hopefully means ps2link, which loads these for us
  {						// so we only load these when we think we know we need them :)
-	if (altGS.LOADNETFS || altGS.LOADHOST || loadhttp) getIpConfig();// reads IPCONFIG.DAT
-	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADHDDS || loadhttp)
+	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADFTPD || loadhttp) getIpConfig();// reads IPCONFIG.DAT
+	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADHDDS || altGS.LOADFTPD || loadhttp)
 		tSifLoadModule("PS2DEV9.IRX", 0, NULL); // required for any network or hdd support
-	if (altGS.LOADNETFS || altGS.LOADHOST || loadhttp)
+	if (altGS.LOADNETFS || altGS.LOADHOST || altGS.LOADFTPD || loadhttp)
 	if ((tSifLoadModule("PS2IP.IRX", 0, NULL)) // required for network
 	&& (tSifLoadModule("PS2SMAP.IRX", if_conf_len, &if_conf[0]))) // likewise
 	{
 		if (altGS.LOADHOST) if (tSifLoadModule("PS2HOST.IRX", 0, NULL)) loadedHOST = true;
-		else if (tSifLoadModule("PS2NETFS.IRX", 0, NULL)) loadedHOST = true; // either of these work well
+		else if (altGS.LOADNETFS) if (tSifLoadModule("PS2NETFS.IRX", 0, NULL)) loadedHOST = true; // either of these work well
+		else if (altGS.LOADFTPD) tSifLoadModule("PS2FTPD.IRX", 0, NULL);
 		else if (loadhttp)
 		{
 			if (tSifLoadModule("DNS.IRX", sizeof(dnsarg), dnsarg)
@@ -444,6 +467,8 @@ void loadIOPmodules()
  if (tSifLoadModule("CDVD.IRX", 0, NULL)) loadedCDFS = true;
  scr_printf("\n");
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // if on screen pointer is being used, check if it is pointing at
@@ -627,13 +652,13 @@ void ButtonMenuSet()
 void ButtonMenu()
 {
  int pad, activebutton;
-// char testtext[80];
 
  pad = 0;
  activebutton = -1;
  ButtonMenuSet();
  while(loadedPAD)
  {
+	snprintf(copytostring, 79, "Welcome to Altimit (c)2004 t0mb0la");
 	pad = readpadbutton();
 	drawMainWindow();
 	if (usepointer && pointerX < 96)
@@ -658,15 +683,15 @@ void ButtonMenu()
 		buttontips.Content = buttontip[activebutton];
 		drawTooltipWindow(buttontips);
 	}
+	if ((pad & PAD_CROSS) && activebutton==0)
+	{
+	}
 	if ((pad & PAD_CROSS) && activebutton==1)
 	{
 		browserModule();
 	}
 	if ((pad & PAD_CROSS) && activebutton==2)
 	{
-//		strcpy(testtext, "Just wondering what will happen if the source string is too long for the editor");
-//		oskModule(testtext);
-//		printf(testtext);
 	}
 	if ((pad & PAD_CROSS) && activebutton==3)
 	{
@@ -692,22 +717,24 @@ void drawMainWindow()
 	altGsDriver.drawPipe.setZTestEnable(GS_DISABLE);	// disable Z-depth
 	altGsDriver.drawPipe.RectGouraud(0, 0, altGS.SCREENCOL1,
 		altGS.WIDTH,altGS.HEIGHT, altGS.SCREENCOL2, 0);	// to clear screen
-	altGsDriver.drawPipe.setZTestEnable(GS_ENABLE);
-	altGsDriver.drawPipe.TextureSet(altGsDriver.getTextureBufferBase(),
-		256, GS_TEX_SIZE_256, GS_TEX_SIZE_512, GS_PSMCT32, 0, 0, 0, 0);
+//	altGsDriver.drawPipe.TextureSet(altGsDriver.getTextureBufferBase(),
+//		256, GS_TEX_SIZE_256, GS_TEX_SIZE_512, GS_PSMCT32, 0, 0, 0, 0);
 	for (i=0;i<=4;i++)							// draw icons with texture at animation point
 	{
-		altGsDriver.drawPipe.RectTexture(button[i][0], button[i][1], 
-			((button[i][4]/10)*64), 256+(i*32), button[i][2], button[i][3],
-			(((button[i][4]/10)+1)*64), 256+((i+1)*32), 2,
-			GS_SET_RGBA(0x80,0x80,0x80,0x60));
+//		altGsDriver.drawPipe.RectTexture(button[i][0], button[i][1], 
+//			((button[i][4]/10)*64), 256+(i*32), button[i][2], button[i][3],
+//			(((button[i][4]/10)+1)*64), 256+((i+1)*32), 2,
+//			GS_SET_RGBA(0x80,0x80,0x80,0x60));
 
 		altGsDriver.drawPipe.RectLine(button[i][0], button[i][1],
 			button[i][2], button[i][3], 2, GS_SET_RGBA(0x00,0x00,0x00,0x80)); // icon border
 		if(button[i][4] > 0) button[i][4]--;	// animation runs in reverse until stop
 	}
-	altFont.Print(0, altGS.WIDTH, altGS.HEIGHT - FONT_HEIGHT, 2,
+	altFont.Print(0, altGS.WIDTH, button[4][3] + 1, 2,
+		GS_SET_RGBA(0x00,0x00,0x00,0x80), GSFONT_ALIGN_LEFT, copytostring);
+	altFont.Print(0, altGS.WIDTH, button[4][3] + (FONT_HEIGHT2 - 2), 2,
 		GS_SET_RGBA(0x00,0x00,0x00,0x80), GSFONT_ALIGN_LEFT, printstring);
+	altGsDriver.drawPipe.setZTestEnable(GS_ENABLE);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -892,7 +919,6 @@ int copyfile(altimitFS *source, altimitFS *destination, char *filename, int size
 int recursivecopy(altimitFS *source, altimitFS *destination, char *folder)
 {
  int entries, rv;
-// char sourcepath[MAX_PATHNAME], destpath[MAX_PATHNAME];
  char *sourcepath, *destpath;
  altDentry *filelist;
 
@@ -966,7 +992,6 @@ rcend:
 int recursivedelete(altimitFS *source, char *folder)
 {
  int entries,rv;
-// char sourcepath[MAX_PATHNAME];
  char *sourcepath;
  altDentry *filelist;
 
@@ -1055,9 +1080,6 @@ void browserModule()
  char edittext[64];
  char winbuttontip[MAX_BUTTONS][30];	// array of labels for window buttons
  char browsertitle[80];
-// char devfolder[MAX_PATHNAME];
-// char pathfile[MAX_PATHNAME];
-// char newfile[MAX_PATHNAME];
  char *devfolder, *pathfile, *newfile;
  char device[4];
  char *devptr, *ptr;
@@ -1084,7 +1106,7 @@ void browserModule()
  winfilelist.Ypos = 8;
  winfilelist.Zpos = 3;
  winfilelist.Xsize = 528;
- if (altGS.HEIGHT == 224) winfilelist.Ysize = 192;
+ if (altGS.HEIGHT == 224 || altGS.HEIGHT == 256) winfilelist.Ysize = 192;
  else { winfilelist.Ysize = 384; winfilelist.Ypos = 16; }
  winfilelist.Foreground = altGS.WINFORECOL;
  winfilelist.Background = altGS.WINBACKCOL;
@@ -1119,13 +1141,14 @@ void browserModule()
  activeFS=abstractFS1;
  strcpy(devfolder,activeFS->currentdir);
  strcpy(device,activeFS->currentdev);
+ snprintf(copytostring, 79, "Destination not set, SELECT to set active folder as destination");
  activebutton=-1;
  if (activeFS->activedevice)
  {
 	winfilelist.Content = filelist;
 	rv = activeFS->activedevice->getdir(devfolder, filelist);
-	if (rv < 0) snprintf(printstring, 79, "ERROR %d in getdir", rv);
-	else snprintf(printstring, 79, "%d entries found", rv);
+	if (rv < 0) snprintf(printstring, 79, "ERROR %i in getdir", rv);
+	else snprintf(printstring, 79, "%u entries found", rv);
  }	
  while (!closemodule)
  {
@@ -1136,9 +1159,9 @@ void browserModule()
 		if (remain >= 1024)
 		{
 			remain/=1024;
-			snprintf(browsertitle, 79, "[%iMB free] %s%s", remain, device, devfolder);
+			snprintf(browsertitle, 79, "[%uMB free] %s%s", remain, device, devfolder);
 		}
-		else snprintf(browsertitle, 79, "[%iKB free] %s%s", remain, device, devfolder);
+		else snprintf(browsertitle, 79, "[%uKB free] %s%s", remain, device, devfolder);
 	}
 	else snprintf(browsertitle, 79, "%s%s",device,devfolder);
 	pad = readpadbutton();
@@ -1185,8 +1208,8 @@ void browserModule()
 			if (devptr==NULL) strcpy(devfolder, "/");
 			else { devptr++; *devptr = '\0'; }
 			rv = activeFS->activedevice->getdir(devfolder, filelist);
-			if (rv < 0) snprintf(printstring, 79, "ERROR %d in getdir", rv);
-			else snprintf(printstring, 79, "%d entries found", rv);
+			if (rv < 0) snprintf(printstring, 79, "ERROR %i in getdir", rv);
+			else snprintf(printstring, 79, "%u entries found", rv);
 			winfilelist.Highlighted = 0;
 			winfilelist.Top = 0;
 		}
@@ -1201,8 +1224,13 @@ void browserModule()
 			{
 				winfilelist.Content=filelist;
 				rv = activeFS->activedevice->getdir("/", filelist);
-				if (rv < 0) snprintf(printstring, 79, "ERROR %d in getdir", rv);
-				else snprintf(printstring, 79, "%d entries found", rv);
+				if (rv < 0) 
+				{
+					snprintf(printstring, 79, "ERROR %i in getdir", rv);
+					strcpy(devfolder,activeFS->currentdir);
+					strcpy(device,activeFS->currentdev);
+				}
+				else snprintf(printstring, 79, "%u entries found", rv);
 				winfilelist.Highlighted = 0;
 				winfilelist.Top = 0;
 			}
@@ -1214,8 +1242,12 @@ void browserModule()
 				strncat(devfolder, filelist[winfilelist.Highlighted].filename, MAX_PATHNAME-1);
 				strncat(devfolder, "/", MAX_PATHNAME-1);
 				rv = activeFS->activedevice->getdir(devfolder, filelist);
-				if (rv < 0) snprintf(printstring, 79, "ERROR %d in getdir", rv);
-				else snprintf(printstring, 79, "%d entries found", rv);
+				if (rv < 0)
+				{
+					snprintf(printstring, 79, "ERROR %i in getdir", rv);
+					strcpy(devfolder,activeFS->currentdir);
+				}
+				else snprintf(printstring, 79, "%u entries found", rv);
 				winfilelist.Highlighted = 0;
 				winfilelist.Top = 0;
 			}
@@ -1225,14 +1257,15 @@ void browserModule()
 	{
 		if(activeFS==abstractFS1) activeFS=abstractFS2;
 		else activeFS=abstractFS1;
+		snprintf(copytostring, 79, "Destination: %s%s", device, devfolder);
 		strcpy(devfolder,activeFS->currentdir);
 		strcpy(device,activeFS->currentdev);
 		if(activeFS->activedevice)
 		{
 			winfilelist.Content=filelist;
 			rv = activeFS->activedevice->getdir(devfolder, filelist);
-			if (rv < 0) snprintf(printstring, 79, "ERROR %d in getdir", rv);
-			else snprintf(printstring, 79, "%d entries found", rv);
+			if (rv < 0) snprintf(printstring, 79, "ERROR %i in getdir", rv);
+			else snprintf(printstring, 79, "%u entries found", rv);
 		}
 		else winfilelist.Content = activeFS->dircontents;
 		winfilelist.Highlighted = 0;
@@ -1355,14 +1388,14 @@ void browserModule()
 						{
 							rv = recursivecopy(activeFS, abstractFS2,
 								filelist[winfilelist.Highlighted].filename);
-							if (rv < 0) snprintf(printstring, 79, "ERROR %d in recursive copy", rv);
+							if (rv < 0) snprintf(printstring, 79, "ERROR %i in recursive copy", rv);
 						}
 						else
 						{
 							rv = copyfile(activeFS, abstractFS2,
 								filelist[winfilelist.Highlighted].filename,
 								filelist[winfilelist.Highlighted].size);
-							if (rv < 0) snprintf(printstring, 79, "ERROR %d in copy", rv);
+							if (rv < 0) snprintf(printstring, 79, "ERROR %i in copy", rv);
 							else snprintf(printstring, 79, "Copied %s", filelist[winfilelist.Highlighted].filename);
 						}
 					}
@@ -1372,14 +1405,14 @@ void browserModule()
 						{
 							rv = recursivecopy(activeFS, abstractFS1,
 								filelist[winfilelist.Highlighted].filename);
-							if (rv < 0) snprintf(printstring, 79, "ERROR %d in recursive copy", rv);
+							if (rv < 0) snprintf(printstring, 79, "ERROR %i in recursive copy", rv);
 						}
 						else
 						{
 							rv = copyfile(activeFS, abstractFS1,
 								filelist[winfilelist.Highlighted].filename,
 								filelist[winfilelist.Highlighted].size);
-							if (rv < 0) snprintf(printstring, 79, "ERROR %d in copy", rv);
+							if (rv < 0) snprintf(printstring, 79, "ERROR %i in copy", rv);
 							else snprintf(printstring, 79, "Copied %s", filelist[winfilelist.Highlighted].filename);
 						}
 					}
@@ -1418,8 +1451,8 @@ void browserModule()
 				winfilelist.Highlighted = 0;
 				winfilelist.Top = 0;
 				rv = activeFS->activedevice->getdir(devfolder, filelist);
-				if (rv < 0) snprintf(printstring, 79, "ERROR %d in getdir", rv);
-				else snprintf(printstring, 79, "%d entries found", rv);
+				if (rv < 0) snprintf(printstring, 79, "ERROR %i in getdir", rv);
+				else snprintf(printstring, 79, "%u entries found", rv);
 				refresh = false;
 			}
 			drawPointer();
@@ -1446,8 +1479,9 @@ void browserModule()
 // on screen pointer option
 void configModule()
 {
+ int fd,len;
  int closemodule = false, activebutton, activeoptions;
- int pad, i, j, resetmode, moved, modded;
+ int pad, i, j, resetmode, moved, modded;//, magv, magh;
  int winbutton[MAX_BUTTONS][5];		// array of button data for window buttons
  int winbutton2[MAX_BUTTONS][5];
  char winbuttontip[MAX_BUTTONS][30];	// array of labels for window buttons
@@ -1457,11 +1491,12 @@ void configModule()
  char *cfgtext = "Configuration is saved to mc0:/SYS-CONF/ALTIMIT.CFG\n"
  "Use the following buttons to customise your settings.\n\0";
  char *cfgbuffer;
+ char buf[IPCONF_MAX_LEN];
  cfgscreen.Xpos = 96;
  cfgscreen.Ypos = 8;
  cfgscreen.Zpos = 3;
  cfgscreen.Xsize = 528;
- if (altGS.HEIGHT == 224) cfgscreen.Ysize = 192;
+ if (altGS.HEIGHT == 224 || altGS.HEIGHT == 256) cfgscreen.Ysize = 192;
  else { cfgscreen.Ysize = 384; cfgscreen.Ypos = 16; }
  cfgscreen.Foreground = altGS.WINFORECOL;
  cfgscreen.Background = altGS.WINBACKCOL;
@@ -1510,7 +1545,7 @@ void configModule()
 	winbutton[i+4][2] = winbutton[i+4][0] + (FONT_WIDTH*10);
 	winbutton[i+4][3] = winbutton[i][3];
  }
- for (i=3;i<=4;i++)
+ for (i=3;i<=6;i++)
  {
 	for (j=0;j<4;j++)
 	{
@@ -1522,13 +1557,15 @@ void configModule()
  strcpy (winbuttontip[4], "Video Format");
  strcpy (winbuttontip2[4], "Load Keyboard");
  strcpy (winbuttontip[5], "Screen Offset");
+ strcpy (winbuttontip2[5], "IPCONFIG.DAT");
  strcpy (winbuttontip[6], "More Options");
+ strcpy (winbuttontip2[6], "Use Pointer");
  strcpy (winbuttontip[7], "PS2HDD");
  strcpy (winbuttontip[8], "PS2HOST");
  strcpy (winbuttontip[9], "PS2NETFS");
- strcpy (winbuttontip[10], "POINTER");
+ strcpy (winbuttontip[10], "PS2FTPD");
  winbutton[11][0] = -1;
- winbutton2[5][0] = -1;
+ winbutton2[7][0] = -1;
  resetmode = false;
  moved = false;
  modded = false;
@@ -1542,10 +1579,9 @@ void configModule()
  if (activeoptions == 0)
  {
 	drawButtons(winbutton, winbuttontip, 0);
-	if (altGS.HEIGHT == 224) altFont.Print(winbutton[3][2]+(FONT_WIDTH*4), winbutton[3][2]+(FONT_WIDTH*24),
-		winbutton[3][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "640x224");
-	else altFont.Print(winbutton[3][2]+(FONT_WIDTH*4), winbutton[3][2]+(FONT_WIDTH*24),
-		winbutton[3][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "640x480");
+	sprintf(buf, "%ix%i", altGS.WIDTH, altGS.HEIGHT);
+	altFont.Print(winbutton[3][2]+(FONT_WIDTH*4), winbutton[3][2]+(FONT_WIDTH*24),
+		winbutton[3][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, buf);
 	if (altGS.PALORNTSC == GS_TV_PAL) altFont.Print(winbutton[4][2]+(FONT_WIDTH*4), winbutton[4][2]+(FONT_WIDTH*24),
 		winbutton[4][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "PAL");
 	else altFont.Print(winbutton[4][2]+(FONT_WIDTH*4), winbutton[4][2]+(FONT_WIDTH*24),
@@ -1562,7 +1598,7 @@ void configModule()
 		winbutton[9][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "On");
 	else altFont.Print(winbutton[9][2]+(FONT_WIDTH*2), winbutton[9][2]+(FONT_WIDTH*8),
 		winbutton[9][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "Off");
-	if (altGS.USEPOINTER) altFont.Print(winbutton[10][2]+(FONT_WIDTH*2), winbutton[10][2]+(FONT_WIDTH*8),
+	if (altGS.LOADFTPD) altFont.Print(winbutton[10][2]+(FONT_WIDTH*2), winbutton[10][2]+(FONT_WIDTH*8),
 		winbutton[10][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "On");
 	else altFont.Print(winbutton[10][2]+(FONT_WIDTH*2), winbutton[10][2]+(FONT_WIDTH*8),
 		winbutton[10][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "Off");
@@ -1605,14 +1641,32 @@ void configModule()
 	{
 		if (activebutton == 3)
 		{
-			if (altGS.HEIGHT == 224) { altGS.HEIGHT = 480; altGS.INTERLACING = GS_TV_INTERLACE; }
-			else { altGS.HEIGHT = 224; altGS.INTERLACING = GS_TV_NONINTERLACE; }
+			if (altGS.PALORNTSC == GS_TV_NTSC)
+			{
+				if (altGS.HEIGHT == 224) { altGS.HEIGHT = 480; altGS.INTERLACING = GS_TV_INTERLACE; }
+				else { altGS.HEIGHT = 224; altGS.INTERLACING = GS_TV_NONINTERLACE; }
+			}
+			else
+			{
+				if (altGS.HEIGHT == 256) { altGS.HEIGHT = 480; altGS.INTERLACING = GS_TV_INTERLACE; }
+				else { altGS.HEIGHT = 256; altGS.INTERLACING = GS_TV_NONINTERLACE; }
+			}
 			resetmode = true;
 		}
 		else if (activebutton == 4)
 		{
-			if (altGS.PALORNTSC == GS_TV_PAL) altGS.PALORNTSC = GS_TV_NTSC;
-			else altGS.PALORNTSC = GS_TV_PAL;
+			if (altGS.PALORNTSC == GS_TV_PAL) 
+			{
+				altGS.PALORNTSC = GS_TV_NTSC;
+				if (altGS.HEIGHT == 256) altGS.HEIGHT = 224;
+				else altGS.HEIGHT = 480;
+			}
+			else
+			{
+				altGS.PALORNTSC = GS_TV_PAL;
+				if (altGS.HEIGHT == 224) altGS.HEIGHT = 256;
+				else altGS.HEIGHT = 480;
+			}
 			resetmode = true;
 		}
 		else if (activebutton == 5)
@@ -1655,21 +1709,20 @@ void configModule()
 		else if (activebutton == 8)
 		{
 			if (altGS.LOADHOST) altGS.LOADHOST = false;
-			else { altGS.LOADHOST = true; altGS.LOADNETFS = false; }
+			else { altGS.LOADHOST = true; altGS.LOADNETFS = false; altGS.LOADFTPD = false; }
 			modded = true;
 		}
 		else if (activebutton == 9)
 		{
 			if (altGS.LOADNETFS) altGS.LOADNETFS = false;
-			else { altGS.LOADNETFS = true; altGS.LOADHOST = false; }
+			else { altGS.LOADNETFS = true; altGS.LOADHOST = false; altGS.LOADFTPD = false; }
 			modded = true;
 		}
 		else if (activebutton == 10)
 		{
-			if (altGS.USEPOINTER) altGS.USEPOINTER = false;
-			else altGS.USEPOINTER = true;
-			moved = true;
-			usepointer = altGS.USEPOINTER;
+			if (altGS.LOADFTPD) altGS.LOADFTPD = false;
+			else { altGS.LOADFTPD = true; altGS.LOADHOST = false; altGS.LOADNETFS = false; }
+			modded = true;
 		}
 	}
  }
@@ -1684,6 +1737,10 @@ void configModule()
 		winbutton2[4][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "On");
 	else altFont.Print(winbutton2[4][2]+(FONT_WIDTH*4), winbutton2[4][2]+(FONT_WIDTH*24),
 		winbutton2[4][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "Off");
+	if (altGS.USEPOINTER) altFont.Print(winbutton2[6][2]+(FONT_WIDTH*4), winbutton2[6][2]+(FONT_WIDTH*24),
+		winbutton2[6][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "Yes");
+	else altFont.Print(winbutton2[6][2]+(FONT_WIDTH*4), winbutton2[6][2]+(FONT_WIDTH*24),
+		winbutton2[6][1], 4, altGS.WINFORECOL, GSFONT_ALIGN_LEFT, "No");
 	if ((usepointer) &&
 		pointerX > cfgscreen.Xpos && 
 		pointerX < (cfgscreen.Xpos + cfgscreen.Xsize) &&
@@ -1702,11 +1759,11 @@ void configModule()
 	else if (pad & PAD_UP)
 	{
 		if (activebutton>3) activebutton--;
-		else activebutton=4;
+		else activebutton=6;
 	}
 	else if (pad & PAD_DOWN)
 	{
-		if (activebutton<4) activebutton++;
+		if (activebutton<6) activebutton++;
 		else activebutton=3;
 	}
 	if (pad & PAD_CROSS)
@@ -1722,6 +1779,33 @@ void configModule()
 			if (altGS.LOADKEYBD) altGS.LOADKEYBD = false;
 			else altGS.LOADKEYBD = true;
 			modded = true;
+		}
+		else if (activebutton == 5)
+		{
+			fd = fioOpen("mc0:/SYS-CONF/IPCONFIG.DAT", O_RDONLY);
+			if (fd < 0) 
+			{
+				sprintf(buf, "%s %s %s", ip, netmask, gw);
+			}
+			else
+			{
+				memset(buf, 0x00, IPCONF_MAX_LEN);
+				len = fioRead(fd, buf, IPCONF_MAX_LEN - 1); // Let the last byte be '\0'
+				fioClose(fd);
+			}
+			if (oskModule(buf, "Edit IPCONFIG.DAT") >= 0)
+			{
+				fd = fioOpen("mc0:/SYS-CONF/IPCONFIG.DAT", O_CREAT | O_WRONLY | O_TRUNC);
+				fioWrite(fd, buf, strlen(buf));
+				fioClose(fd);
+			}
+		}
+		else if (activebutton == 6)
+		{
+			if (altGS.USEPOINTER) altGS.USEPOINTER = false;
+			else altGS.USEPOINTER = true;
+			moved = true;
+			usepointer = altGS.USEPOINTER;
 		}
 	}
  }
@@ -1793,7 +1877,7 @@ int oskModule(char *edittext, char *osktitle)
  oskscreen.Ypos = 8;
  oskscreen.Zpos = 3;
  oskscreen.Xsize = 528;
- if (altGS.HEIGHT == 224) oskscreen.Ysize = 192;
+ if (altGS.HEIGHT == 224 || altGS.HEIGHT == 256) oskscreen.Ysize = 192;
  else { oskscreen.Ysize = 384; oskscreen.Ypos = 16; }
  oskscreen.Foreground = altGS.WINFORECOL;
  oskscreen.Background = altGS.WINBACKCOL;
@@ -2125,7 +2209,7 @@ void infoModule()
  testscreen.Ypos = 8;
  testscreen.Zpos = 3;
  testscreen.Xsize = 528;
- if (altGS.HEIGHT == 224) testscreen.Ysize = 192;
+ if (altGS.HEIGHT == 224 || altGS.HEIGHT == 256) testscreen.Ysize = 192;
  else { testscreen.Ysize = 384; testscreen.Ypos = 16; }
  testscreen.Foreground = altGS.WINFORECOL;
  testscreen.Background = altGS.WINBACKCOL;

@@ -193,6 +193,7 @@ typedef struct
  unsigned int USEPOINTER;
  unsigned int LOADMOUSE;
  unsigned int LOADKEYBD;
+ unsigned int LOADFTPD;
  } altimitGS;
 
 class altimitIO
@@ -209,6 +210,8 @@ class altimitIO
  virtual int rmdir(const char *pathname) = 0;
  virtual int getdir(const char *pathname, altDentry contents[]) = 0;
  virtual int getpath(const char *pathname, char *fullpath) = 0;
+ virtual int getstat(const char *pathname, iox_stat_t *filestat) = 0;
+ virtual int chstat(const char *pathname, iox_stat_t *filestat) = 0;
  virtual int freespace() = 0;
  virtual int getstatus() = 0;
 
@@ -235,14 +238,17 @@ class hddIO : public altimitIO
  int rmdir(const char *pathname);
  int getdir(const char *pathname, altDentry contents[]);
  int getpath(const char *pathname, char *fullpath);
+ int getstat(const char *pathname, iox_stat_t *filestat);
+ int chstat(const char *pathname, iox_stat_t *filestat);
  int freespace();
  int getstatus();
 
  private:
  iox_dirent_t *hddcontents;
- int pfsmounted;
+ int pfsmounted, parts;
  char *hddpathname;
  char *hddnewname;
+ t_hddFilesystem *partitions;
 };
 
 class httpIO : public altimitIO
@@ -261,6 +267,8 @@ class httpIO : public altimitIO
  int rmdir(const char *pathname);
  int getdir(const char *pathname, altDentry contents[]);
  int getpath(const char *pathname, char *fullpath);
+ int getstat(const char *pathname, iox_stat_t *filestat);
+ int chstat(const char *pathname, iox_stat_t *filestat);
  int freespace();
  int getstatus();
 
@@ -285,6 +293,8 @@ class hostIO : public altimitIO
  int rmdir(const char *pathname);
  int getdir(const char *pathname, altDentry contents[]);
  int getpath(const char *pathname, char *fullpath);
+ int getstat(const char *pathname, iox_stat_t *filestat);
+ int chstat(const char *pathname, iox_stat_t *filestat);
  int freespace();
  int getstatus();
 
@@ -311,6 +321,8 @@ class mcIO : public altimitIO
  int rmdir(const char *pathname);
  int getdir(const char *pathname, altDentry contents[]);
  int getpath(const char *pathname, char *fullpath);
+ int getstat(const char *pathname, iox_stat_t *filestat);
+ int chstat(const char *pathname, iox_stat_t *filestat);
  int freespace();
  int getstatus();
 
@@ -338,6 +350,8 @@ class cdfsIO : public altimitIO
  int rmdir(const char *pathname);
  int getdir(const char *pathname, altDentry contents[]);
  int getpath(const char *pathname, char *fullpath);
+ int getstat(const char *pathname, iox_stat_t *filestat);
+ int chstat(const char *pathname, iox_stat_t *filestat);
  int freespace();
  int getstatus();
 

@@ -7,6 +7,7 @@
 #include "altimit.h"
 
 static int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
+static int statMode =  FIO_CST_MODE | FIO_CST_ATTR | FIO_CST_SIZE | FIO_CST_CT | FIO_CST_AT | FIO_CST_MT | FIO_CST_PRVT;
 int hddIOdevice = 0;
 int oskModule(char *edittext, char *osktitle);	// on screen keyboard module
 
@@ -30,6 +31,7 @@ hddIO::~hddIO()
  fileXioUmount(device);
  hddIOdevice = 0;
  pfsmounted = false;
+ if (partitions) free(partitions);
  if (hddpathname) free(hddpathname);
  if (hddnewname) free(hddnewname);
 }
@@ -127,9 +129,8 @@ int hddIO::rmdir(const char *pathname)
 
 int hddIO::getdir(const char *pathname, altDentry contents[])
 {
- t_hddFilesystem *partitions;
  iox_dirent_t hddcontent;
- int hfd, rv, hddcount, parts;
+ int hfd, rv, hddcount, parptr;
  char *ptr;
  char filesystem[40];
 
@@ -142,23 +143,25 @@ int hddIO::getdir(const char *pathname, altDentry contents[])
  	strcpy(contents[0].filename,"..");
  	contents[0].mode = FIO_S_IFDIR;
  	contents[0].size = 0;
-	partitions = (t_hddFilesystem *) memalign(64, sizeof(t_hddFilesystem)*MAX_PARTITIONS);
-	parts = hddGetFilesystemList(partitions, MAX_PARTITIONS);
+	if (partitions == NULL)
+	{
+		partitions = (t_hddFilesystem *) memalign(64, sizeof(t_hddFilesystem)*MAX_ENTRIES);
+		parts = hddGetFilesystemList(partitions, MAX_ENTRIES);
+	}
 	for (hddcount=1;hddcount<(parts+1);hddcount++)
 	{
 		strcpy(contents[hddcount].filename, partitions[hddcount-1].filename);
 		contents[hddcount].mode = FIO_S_IFDIR;
 		contents[hddcount].size = 0;
 	}
-	free(partitions);
  }
  else 
  {
-	parts = 0;
+	parptr = 0;
 	ptr = (char *)pathname; ptr++;
-	while (*ptr != '/' && *ptr != '\0') filesystem[parts++]=*ptr++;
+	while (*ptr != '/' && *ptr != '\0') filesystem[parptr++]=*ptr++;
 	if (*ptr == '\0') return -1;
-	filesystem[parts]='\0';
+	filesystem[parptr]='\0';
 	fileXioUmount(device);
 	if ((rv = fileXioMount(device, filesystem, FIO_MT_RDWR)) < 0) return rv;
 	strcpy(hddpathname, device);
@@ -198,12 +201,35 @@ int hddIO::getpath(const char *pathname, char *fullpath)
  return 0;
 }
 
+int hddIO::getstat(const char *pathname, iox_stat_t *filestat)
+{
+ char *ptr;
+
+ if(!pfsmounted) return -1;
+ ptr = (char *)pathname; ptr++;
+ while (*ptr != '/') ptr++;
+ snprintf(hddpathname, MAX_PATHNAME-1, "%s%s", device, ptr);
+ dbgprintf("hddIO getstat %s\n", hddpathname);
+ return fileXioGetStat(hddpathname, filestat);
+}
+
+int hddIO::chstat(const char *pathname, iox_stat_t *filestat)
+{
+ char *ptr;
+
+ if(!pfsmounted) return -1;
+ ptr = (char *)pathname; ptr++;
+ while (*ptr != '/') ptr++;
+ snprintf(hddpathname, MAX_PATHNAME-1, "%s%s", device, ptr);
+ dbgprintf("hddIO chstat %s\n", hddpathname);
+ return fileXioChStat(hddpathname, filestat, statMode);
+}
+
 int hddIO::freespace()
 {
  int totalfree, freezones, zonesize;
 
  if(!pfsmounted) return 0;
-// dbgprintf("hddIO freespace\n");
  freezones = fileXioDevctl(device, PFSCTL_GET_ZONE_FREE, NULL, 0, NULL, 0);
  zonesize = fileXioDevctl(device, PFSCTL_GET_ZONE_SIZE, NULL, 0, NULL, 0);
  totalfree = (freezones * zonesize) / 1024;
@@ -282,17 +308,10 @@ int httpIO::getdir(const char *pathname, altDentry contents[])
  httpcount=0;
  parse[1] = '\0';
  oskModule(httppathname, "Enter URL");
-// snprintf(httppathname, MAX_PATHNAME-1, "%s//home.comcast.net/~tomhawcroft/test.txt", device);
- printf("opening %s\n", httppathname);
  if ((hfd = fioOpen(httppathname, O_RDONLY)) < 0) { printf("failed!\n"); return hfd; }
- printf("opened...\n");
  size = fioLseek(hfd, 0, SEEK_END);
- printf("size = %d\n", size);
-// httpcontents = (unsigned char *)memalign(64, size);
  if (size)
  {
-//	fioLseek(hfd, 0, SEEK_SET);
-//	size--;
 	strcpy(contents[ptr].filename,"");
 	while(size)
 	{
@@ -300,7 +319,6 @@ int httpIO::getdir(const char *pathname, altDentry contents[])
 		if (parse[0] == '\0') { }
 		else
 		{
-			printf("%s", parse);
 			if (parse[0] == '\n') { ptr++; strcpy(contents[ptr].filename,""); }
 			else strncat(contents[ptr].filename, parse, MAX_FILENAME);
 		}
@@ -312,11 +330,20 @@ int httpIO::getdir(const char *pathname, altDentry contents[])
 	httpcount=ptr;
 	}
  strcpy(contents[httpcount].filename, "\0");
-// free(httpcontents);
  return httpcount;
 }
 
 int httpIO::getpath(const char *pathname, char *fullpath)
+{
+ return -1;
+}
+
+int httpIO::getstat(const char *pathname, iox_stat_t *filestat)
+{
+ return 0;
+}
+
+int httpIO::chstat(const char *pathname, iox_stat_t *filestat)
 {
  return -1;
 }
@@ -517,6 +544,22 @@ int hostIO::getpath(const char *pathname, char *fullpath)
  return 0;
 }
 
+int hostIO::getstat(const char *pathname, iox_stat_t *filestat)
+{
+ pathname++;
+ snprintf(hostpathname, MAX_PATHNAME-1, "%s%s", device, pathname);
+ dbgprintf("hostIO getstat %s\n", hostpathname);
+ return fileXioGetStat(hostpathname, filestat);
+}
+
+int hostIO::chstat(const char *pathname, iox_stat_t *filestat)
+{
+ pathname++;
+ snprintf(hostpathname, MAX_PATHNAME-1, "%s%s", device, pathname);
+ dbgprintf("hostIO chstat %s\n", hostpathname);
+ return fileXioChStat(hostpathname, filestat, statMode);
+}
+
 int hostIO::freespace()
 {
  return 0;
@@ -595,16 +638,53 @@ int mcIO::remove(const char *pathname)
 
 int mcIO::rename(const char *pathname, const char *newpathname)
 {
-/* sprintf(mcpathname, "%s%s", device, pathname);
+// RENAME IS NOT SUPPORTED THROUGH MC RPC, FOR WHATEVER REASON.
+// FORTUNATELY, WE CAN ASSUME A FILE OFF MC WILL FIT IN EE RAM
+// ALLOWING US TO COPY THE FILE TO RAM, DELETE FROM MC AND
+// WRITE BACK TO MC WITH THE NEW FILENAME. WILL NEED A LITTLE
+// MORE WORK TO RENAME A FOLDER OF COURSE, SO I'LL JUST NOT
+// ALLOW MC FOLDER RENAME FOR THE TIME BEING.
+ int newfile, oldfile, mcfilesize;
+ unsigned char *buffer;
+ fio_stat_t mcfilestat;
+
+ sprintf(mcpathname, "%s%s", device, pathname);
  sprintf(mcnewname, "%s%s", device, newpathname);
  dbgprintf("mcIO rename %s to %s\n", mcpathname, mcnewname);
- return fileXioRename(mcpathname, mcnewname);*/
- int ret;
-
- dbgprintf("mcIO rename %s to %s\n", pathname, newpathname);
- mcRename(mcport, 0, pathname, newpathname);
- mcSync(MC_WAIT, NULL, &ret);
- return ret;
+ if ((fioGetstat(mcpathname, &mcfilestat)) < 0) return -1;
+ if (mcfilestat.mode & FIO_SO_IFDIR) return -1;
+ if ((oldfile = fileXioOpen(mcpathname, O_RDONLY, fileMode)) >= 0)
+ {
+	mcfilesize = fileXioLseek(oldfile, 0, SEEK_END);
+	if (mcfilesize)
+	{
+		fileXioLseek(oldfile, 0, SEEK_SET);
+		buffer = (unsigned char *)memalign(64,mcfilesize);
+ 		if (buffer)
+		{
+			fileXioRead(oldfile, buffer, mcfilesize);
+			fileXioClose(oldfile);
+			fileXioRemove(mcpathname);
+			if ((newfile = fileXioOpen(mcnewname, O_WRONLY | O_TRUNC | O_CREAT, fileMode)) >= 0)
+			{
+				fileXioWrite(newfile, buffer, mcfilesize);
+				fileXioClose(newfile);
+				fioChstat(mcnewname, &mcfilestat, statMode);
+			}
+			free(buffer);
+		}
+		else return -2;
+	}
+	else
+	{
+		fileXioClose(oldfile);
+		fileXioRemove(mcpathname);
+		newfile = fileXioOpen(mcnewname, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+		fileXioClose(newfile);
+	}
+	return 0;
+ }
+ else return -1;
 }
 
 int mcIO::mkdir(const char *pathname)
@@ -662,6 +742,20 @@ int mcIO::getpath(const char *pathname, char *fullpath)
  dbgprintf("mcIO getpath %s\n", mcpathname);
  strcpy(fullpath, mcpathname);
  return 0;
+}
+
+int mcIO::getstat(const char *pathname, iox_stat_t *filestat)
+{
+ snprintf(mcpathname, MAX_PATHNAME-1, "%s%s", device, pathname);
+ dbgprintf("mcIO getstat %s\n", mcpathname);
+ return fioGetstat(mcpathname, (fio_stat_t*)filestat);
+}
+
+int mcIO::chstat(const char *pathname, iox_stat_t *filestat)
+{
+ snprintf(mcpathname, MAX_PATHNAME-1, "%s%s", device, pathname);
+ dbgprintf("mcIO chstat %s\n", mcpathname);
+ return fioChstat(mcpathname, (fio_stat_t*)filestat, statMode);
 }
 
 int mcIO::freespace()
@@ -785,9 +879,21 @@ int cdfsIO::getdir(const char *pathname, altDentry contents[])
 int cdfsIO::getpath(const char *pathname, char *fullpath)
 {
  snprintf(cdpathname, MAX_PATHNAME-1, "%s%s", device, pathname);
- dbgprintf("cdIO getpath %s\n", cdpathname);
+ dbgprintf("cdfsIO getpath %s\n", cdpathname);
  strcpy(fullpath, cdpathname);
  return 0;
+}
+
+int cdfsIO::getstat(const char *pathname, iox_stat_t *filestat)
+{
+ snprintf(cdpathname, MAX_PATHNAME-1, "%s%s", device, pathname);
+ dbgprintf("cdfsIO getstat %s\n", cdpathname);
+ return fileXioGetStat(cdpathname, filestat);
+}
+
+int cdfsIO::chstat(const char *pathname, iox_stat_t *filestat)
+{
+ return -1;
 }
 
 int cdfsIO::freespace()

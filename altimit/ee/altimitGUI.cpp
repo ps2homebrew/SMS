@@ -221,7 +221,7 @@ void drawFilelistWindow(FilelistWindow textbox)
 	if (textbox.Content[j].mode == FIO_S_IFDIR)
 		snprintf (fileline, MAX_FILENAME-1, "%s (DIR)", textbox.Content[j].filename);
 	else
-		snprintf (fileline, MAX_FILENAME-1, "%s [%d bytes]", textbox.Content[j].filename, textbox.Content[j].size);
+		snprintf (fileline, MAX_FILENAME-1, "%s [%u bytes]", textbox.Content[j].filename, textbox.Content[j].size);
 	snprintf (textline, maxchars, "%s", fileline);
 	if (j==textbox.Highlighted)
 	{
@@ -273,7 +273,7 @@ void drawPercentWindow(PercentWindow percentbox, char *operation)
  snprintf(titletxt, maxchars, "%s %s", operation, percentbox.Title);
  altFont.Print(percentbox.Xpos, percentbox.Xpos+Xsize, percentbox.Ypos, percentbox.Zpos+1,
 	percentbox.Foreground, GSFONT_ALIGN_CENTRE, titletxt);
- snprintf(percenttxt, 8, "%d%%", pctval);
+ snprintf(percenttxt, 8, "%u%%", pctval);
  altFont.Print(percentbox.Xpos, percentbox.Xpos+Xsize, percentbox.Ypos+FONT_HEIGHT,
 	percentbox.Zpos+1, percentbox.Backhead, GSFONT_ALIGN_CENTRE, percenttxt);
  altGsDriver.drawPipe.RectFlat(percentbox.Xpos, percentbox.Ypos+FONT_HEIGHT,

@@ -8,7 +8,6 @@ IOP_LDFLAGS +=
 IOP_CFLAGS += -Wall
 
 all: $(IOP_BIN)
-	cp ps2host.irx $(PS2SDK)/iop/irx/ps2host.irx
 
 clean:
 	-rm -f $(IOP_OBJS) $(IOP_BIN)
