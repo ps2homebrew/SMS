@@ -1,7 +1,9 @@
 EE_BIN = c_skel.elf
 BIN_IMAGE = c_skel.bin
-EE_OBJS = crt0.o main.o gs.o vram_malloc.o prim.o
-EE_LIBS = 
+EE_OBJS = crt0.o main.o 
+EE_INCS = -I../PbDemoLib/
+EE_LDFLAGS=-L../PbDemoLib/
+EE_LIBS = -lpbdemo 
 all: $(EE_BIN) $(BIN_IMAGE)
 
 clean:

@@ -1,8 +1,11 @@
+/****************************************************************
+    main.c - Main code of the C skeleton for the BP demo harness
+*****************************************************************/
+
 #include <tamtypes.h>
-#include <stdio.h>
-#include "gs.h"
-#include "prim.h"
 #include "../harness.h"
+#include "PbScreen.h"
+#include "PbPrim.h"
 
 int bars[40];
 #define FALLOFF 2
@@ -13,31 +16,22 @@ int xscale[41] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17,
 u32 start_demo(const demo_init_t *t)
 
 {
-   int fb = 0;
    u32 colour = 0;
-   u32 last_time;
-   u32 curr_frame;
+   u32 curr_frame = 0;
    u16 *fft_data;
 
-   init_gs();
-   t->printf("Hello World (C)!\n");
-   set_bg_colour(0xFF, 0xFF, 0xFF);
-   set_active_fb(fb);
-   clr_scr(colour++);
+   PbScreenSetup( SCR_W, SCR_H, SCR_PSM );
 
-   set_visible_fb(fb);
-   fb ^= 1;
-   set_active_fb(fb);
-   last_time = t->time_count_i >> 16;
-   curr_frame = 0;
+   t->printf("Hello World (C)!\n");
 
    while(t->frame_count > 0)
    {
      int loop;
      int loop2;
 
+     PbScreenClear(colour++);
      fft_data = t->get_fft();
-     clr_scr(colour++); 
+
      for(loop = 0; loop < 40; loop++)
      { 
         u16 y;
@@ -61,17 +55,12 @@ u32 start_demo(const demo_init_t *t)
            if(bars[loop] < 0) bars[loop] = 0;
         }
 
-        fill_rect(loop * 16, 224 - bars[loop], loop*16 + 16, 224, 0, 0xF000);
+        PbPrimSprite(loop << 8, (SCR_H - bars[loop]) << 4, 
+                    ((loop << 4) + 16) << 4, SCR_H << 4, 0, 0xFF00);
      }
-     wait_vsync();
-     set_visible_fb(fb);
-     fb ^= 1;
-     set_active_fb(fb);
-     if(last_time != (t->time_count_i >> 16))
-     {
-        t->printf("%d\n", last_time);
-        last_time = t->time_count_i >> 16;
-     }
+
+     PbScreenSyncFlip();
+
      curr_frame++;
    }
  
