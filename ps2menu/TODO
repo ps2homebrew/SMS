@@ -9,7 +9,9 @@ PS2MENU is a Hard Drive project meant at start to offer hdd booting that dms3 ha
 Todo:
 
 - More improved visuals
-- Recursive folder copying
 - Partitioning/Formatting PS2 HDD functions
 - Support for both memory card slots
+- Support for copying between HDD partitions
+	The two above are likely to require a complete rewrite of PS2MENU
+	which is something currently in the pipeline.
 - *Your comments and/or suggestions are welcomed

@@ -1,4 +1,4 @@
-You need CVS PS2LIB, PS2DRV, libhdd, bin2s, MrBrown's sbv-1.0-lite,
+You need CVS PS2ETH, LWIP (062 Tag), PS2LIB, PS2DRV, libhdd, bin2s, MrBrown's sbv-1.0-lite,
 libito 0.2.1 and libcdvd 1.15 to compile this.
 
 We recommend a full working PS2 toolchain to build this, with fully
@@ -18,9 +18,12 @@ You need these IRX's when compiling
 -ps2atad.irx	(PS2DRV)
 -iuntar.irx		(PS2DRV)
 -fakehost.irx	(PS2DRV)
+-ps2netfs.irx	(PS2DRV)
 -poweroff.irx	(LIBHDD)
 -ps2fs.irx		(LIBHDD)
 -ps2hdd.irx		(LIBHDD)
+-ps2ip.irx		(LWIP_062)
+-ps2smap.irx	(PS2ETH)
 -cdvd.irx		(LIBCDVD)
 
 You need these libs when compiling

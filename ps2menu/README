@@ -4,7 +4,7 @@ ps2menu
 				Thomas Hawcroft 2003/04
 
 
-Version 2.24b
+Version 2.6b
 
 PS2MENU is a Hard Drive project, born from mcbootloader and PS2 Independence MC loader,
 meant at start to offer hdd booting similar to that of dms3, on a no-mod or other ps2.
@@ -25,6 +25,7 @@ L1			: Switch active partition on HDD
 R1			: Switch active device, HDD, host:(via ps2link), memory card and CD
 L2			: Access configuration screen, for display options.
 R2			: Informs if highlighted file is a valid PS2 executable (ELF), filesize.
+START			: Advanced functions, currently Rename and Advanced (recursive) copy.
 SELECT		: Display help
 
 
@@ -79,3 +80,12 @@ Added 'basic' nPort npo extraction, select an npo file to copy and menu will att
 extract it to memory card.
 Fixed bug where partition was left mounted at end of large file copy to PS2 hdd, causing
 subsequent hdd operations to fail.
+
+2.5b Added drivers to support ps2netfs (ps2ip.irx, ps2smap.irx and ps2netfs.irx).
+PS2 IP address, subnet and gateway determined from 'standard' IPCONFIG.DAT file in folder
+mc0:/SYS-CONF/IPCONFIG.DAT.
+Changed pad START button to open advanced function menu, just Rename and Adv. Copy so far.
+Rename only working on pfs0:, until I can make mcRename work!
+Recursive copy of folder an all contents from pfs0:, host:, and mc0:
+
+2.6b Recursive copy from cdfs: implemented.
