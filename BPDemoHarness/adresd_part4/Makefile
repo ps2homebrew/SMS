@@ -1,14 +1,15 @@
 EE_BIN = adresd_part4.elf
-BIN_IMAGE = adresd_part4.bin
-EE_OBJS = crt0.o main.o oddments.o odd.o Vu1Distort.o ../PbDemoLib/libpbdemo.a
+BIN_IMAGE = bin.bin
+EE_OBJS = crt0.o main.o oddments.o odd.o Vu1Distort.o ../PbDemoLib/libpbdemo.a gfx/ps2dev.o \
+          gfx/presents.o gfx/font.o font_lookup.o
 all: $(EE_BIN) $(BIN_IMAGE)
 
 EE_LDFLAGS = -L../PbDemoLib
-EE_LIBS = -lpbdemo -lgcc
+EE_LIBS = -lpbdemo -lgcc -lkernel
 EE_INCS += -I../PbDemoLib
 
 clean:
-	rm -f *.elf *.o *.a *.bin
+	rm -f adresd_part4.elf *.o *.a *.bin
 
 $(BIN_IMAGE) : $(EE_BIN)
 	ee-objcopy -O binary $(EE_BIN) $(BIN_IMAGE)
