@@ -47,7 +47,7 @@ const demo_init_t *g_pInfo;
 /*  DEFINES AND ENUMERATIONS
  */
  
-#define CUBE_SIZE 6
+#define CUBE_SIZE 10
 
 #define NUM_POINTS (CUBE_SIZE+1)*(CUBE_SIZE+1)*(CUBE_SIZE+1)
 
@@ -55,7 +55,7 @@ const demo_init_t *g_pInfo;
  */
 PbMatrix view_screen_matrix;
 PbMatrix camera_matrix;
-PbFvec points[NUM_POINTS] __attribute__((aligned(16)));
+static PbFvec points[NUM_POINTS] __attribute__((aligned(16)));
 PbFvec direction[NUM_POINTS];
 PbTexture* texture;
 static u32 texture_test_32[16*16] __attribute__((aligned(16)));
@@ -103,11 +103,11 @@ void generate_points()
 //        out( "%02d %f %f %f\n", i, points[i].x, points[i].y, points[i].z );
 
         i++;
-        x += 100;
+        x += 50;
       }
-      y += 100;
+      y += 50;
     }
-    z += 100;
+    z += 50;
   }
 }
 
@@ -143,9 +143,23 @@ void setup()
 
 void EmPart2Setup();
 void EmPart2RenderCube( PbMatrix* pCamera,PbMatrix* pScreenView,int dest, 
-                        float xs, float ys, float zs );
+                        float xs, float ys, float zs,float r, float g, float b );
 void EmPart2SetAlpha( u64 A, u64 B, u64 C, u64 D, u64 FIX );
 
+typedef struct st_Color
+{
+  float r,g,b,a;
+} Color;
+
+static Color g_ColorTable[] = 
+{
+  { 255*0.0005f, 255*0.0005f, 255*0.0005f, 0.0 }, 
+  {  30*0.0005f, 20*0.0005f,   40*0.0005f, 0.0 },
+  {  60*0.0005f, 70*0.0005f,   40*0.0005f, 0.0 },
+  {  60*0.0005f, 20*0.0005f,   80*0.0005f, 0.0 },
+};
+
+static int g_MaxColors = 4;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u32 start_demo
@@ -156,7 +170,15 @@ u32 start_demo(const demo_init_t *pInfo)
   int i = 0;
   float last_t;
   float angle      = 0.0f;
+  float zoom = 1400;
+  float stretch = 1.0f;
+  float z_offset = 1400.0f;
+  float angle_add = 0.0f;
   float angle_hold = 0.0f;
+  float time_mul = 1.0f;
+  int   has_dumped = FALSE;
+  int   cur_color = 0;
+
   PbMatrix rotate_matrix, rotate_matrix2, temprot_matrix, temprot_matrix2;
   PbMatrix points_rotate, points_rotate2;
 
@@ -177,8 +199,6 @@ u32 start_demo(const demo_init_t *pInfo)
   last_t = pInfo->curr_time;
 
 
-  EmPart2SetAlpha( GS_ALPHA_A_CS, GS_ALPHA_B_ZERO, 
-                   GS_ALPHA_C_FIX, GS_ALPHA_D_CD, 0x80 );
 
 //  EmPart2SetAlpha( 0, 1, 0, 1, 0x80 );
 
@@ -198,49 +218,143 @@ u32 start_demo(const demo_init_t *pInfo)
 
   }
 
+  PbMatrixTranslate( &camera_matrix, 0, 0, 0 ); 
+
+  EmPart2SetAlpha( GS_ALPHA_A_CS, GS_ALPHA_B_ZERO, 
+                   GS_ALPHA_C_FIX, GS_ALPHA_D_CD, 0x80 );
+
+  time_mul = 1.0f;
+
   while(pInfo->frame_count > 0)
   {
     float t= pInfo->curr_time;
+    float inv_rot = 0.0f;
     //float dt = t-last_t;
     int i = 0;
     last_t= t;
-    angle = t*1.5f;
+    angle = t*0.5f*time_mul;
 
     PbScreenClear(00);
 
-//		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
+		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
+
+
+    if( z_offset < 140 )
+    {
+      cur_color++;
+  
+      if( cur_color+1 > g_MaxColors )
+        cur_color = 0;          
+
+      z_offset = 1400;
+      stretch = 1.0f;
+      angle = 0.0f;
+      angle_add = 0.0f;
+    }
+
 
     angle_hold = 0.0f;
 
     PbMatrixRotateX( &points_rotate, t*0.5f );
+//    PbMatrixIdentity( &points_rotate );   
     PbMatrixRotateZ( &points_rotate2, t*0.5f );
     PbMatrixMultiply( &points_rotate, &points_rotate2, &points_rotate );
-    PbMatrixTranslate( &points_rotate, 0, 0, 800 );
+
+    
+    angle_hold = angle;
+
+    if( z_offset < 1400 )
+    {
+      stretch += 0.02f*time_mul;
+      angle_hold = angle*2.4;
+      angle_add = 1.5f;
+    }
+
+    z_offset -= 4.0f*time_mul;
 
     for( i = 0; i < NUM_POINTS; i += 2 )
     {
       float coords[4] __attribute__((aligned(16)));
+      float point_temp[4] __attribute__((aligned(16))); 
+      point_temp[0] = points[i+0].x * stretch;
+      point_temp[1] = points[i+0].y * stretch;
+      point_temp[2] = (points[i+0].z * stretch);
+      point_temp[3] = 1.0f;
 
-      PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i], &points_rotate );   
+      PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&point_temp, &points_rotate );   
 
-      PbMatrixRotateX( &rotate_matrix, t*0.5f );
-      PbMatrixRotateZ( &rotate_matrix2, t*0.5f );
-      PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
-      PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+400 );
-      PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
-      EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 50, 0.5f, 0.5f, 0.5f );     
 
-      PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i+1], &points_rotate );   
+      /////////////////////////////////////////////////////////////////////////
+      // Handle Center cube
 
-      PbMatrixRotateX( &rotate_matrix, t*0.5f );
-      PbMatrixRotateZ( &rotate_matrix2, t*0.5f );
-      PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
-      PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+400 );
-      PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
-      EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 150, 0.5f, 0.5f, 0.5f );     
+      if( i == 532 )
+      {
+        PbMatrixRotateX( &rotate_matrix, t*0.5f );
+        PbMatrixRotateZ( &rotate_matrix2, t*0.5f );
+        PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
+        PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+z_offset );
+        PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
+        EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 50, 
+                           0.5f, 0.5f, 0.5f, g_ColorTable[cur_color+1].r,
+                                             g_ColorTable[cur_color+1].g, 
+                                             g_ColorTable[cur_color+1].b );
+        continue;
+      }
+
+      if( coords[2]+z_offset > 220 )
+      {
+        if( ( point_temp[0]*point_temp[0] + 
+              point_temp[1]*point_temp[1] + 
+              point_temp[2]*point_temp[2] ) < 800*800 )
+        {
+      //    PbMatrixIdentity( &rotate_matrix );   
+          PbMatrixRotateX( &rotate_matrix, angle_hold );
+          PbMatrixRotateZ( &rotate_matrix2, angle_hold );
+          PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
+          PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+z_offset );
+          PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
+          EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 50, 
+                             0.5f, 0.5f, 0.5f, g_ColorTable[cur_color].r,
+                                               g_ColorTable[cur_color].g, 
+                                               g_ColorTable[cur_color].b );
+        
+          if( has_dumped == FALSE )
+          {
+            PbVu1Dump();
+            has_dumped = TRUE;
+          }
+        }
+      }
+
+      point_temp[0] = points[i+1].x * stretch;
+      point_temp[1] = points[i+1].y * stretch;
+      point_temp[2] = (points[i+1].z * stretch);
+      point_temp[3] = 1.0f;
+      PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&point_temp, &points_rotate );   
+
+      if( coords[2]+z_offset > 220 )
+      {
+    //    PbMatrixIdentity( &rotate_matrix );   
+        if( ( point_temp[0]*point_temp[0] + 
+              point_temp[1]*point_temp[1] + 
+              point_temp[2]*point_temp[2] ) < 800*800 )
+        {
+          PbMatrixRotateX( &rotate_matrix, angle_hold );
+          PbMatrixRotateZ( &rotate_matrix2, angle_hold );
+          PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
+          PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+z_offset );
+          PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
+          EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 50, 
+                             0.5f, 0.5f, 0.5f, g_ColorTable[cur_color].r,
+                                               g_ColorTable[cur_color].g, 
+                                               g_ColorTable[cur_color].b );
+        }
+      }
+
+      angle_hold += angle_add;
     }          
 
-//    GS_SET_BGCOLOR(0x00, 0x00, 0xff);
+    GS_SET_BGCOLOR(0x00, 0x00, 0xff);
         
     PbScreenSyncFlip();
   }
@@ -282,16 +396,23 @@ void EmPart2Setup()
 ///////////////////////////////////////////////////////////////////////////////
 
 void EmPart2RenderCube( PbMatrix* pCamera,PbMatrix* pScreenView,int dest, 
-                        float xs, float ys, float zs )
+                        float xs, float ys, float zs, float r, float g, 
+                        float b )
 {
-  float scale[4] __attribute__((aligned(16)));
+  float paramters[8] __attribute__((aligned(16)));
   u64* p_data;
   u64* p_store;
+  void* p_parms = &paramters;
 
-  scale[0] = xs;  
-  scale[1] = ys;  
-  scale[2] = zs;  
-  scale[3] = 1;  
+  *((float*)p_parms)++ = xs;
+  *((float*)p_parms)++ = ys;
+  *((float*)p_parms)++ = zs;
+  *((float*)p_parms)++ = 1;
+
+  *((float*)p_parms)++ = r;
+  *((float*)p_parms)++ = g;
+  *((float*)p_parms)++ = b;
+  *((float*)p_parms)++ = 1;
 
   p_data = p_store = PbSprAlloc( 10*16 );
 
@@ -311,9 +432,9 @@ void EmPart2RenderCube( PbMatrix* pCamera,PbMatrix* pScreenView,int dest,
   /////////////////////////////////////////////////////////////////////////////
   // Parameters
 
-  *((u64*)p_data)++ = DMA_REF_TAG( (u32)&scale, 1 );
+  *((u64*)p_data)++ = DMA_REF_TAG( (u32)&paramters, 2 );
   *((u32*)p_data)++ = VIF_CODE( VIF_STCYL,0,0x0404 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_UNPACK_V4_32,1,8 );
+  *((u32*)p_data)++ = VIF_CODE( VIF_UNPACK_V4_32,2,8 );
 
   /////////////////////////////////////////////////////////////////////////////
   // Add Giftag

@@ -3,17 +3,10 @@
 ;// Note that this code is highly unoptimized, but might be useful to learn from or so.
 ;//
 
-.macro crossp out,v1,v2
- nop                      move \out,\v2
- opmula.xyz  acc,\v1,\out nop
- opmsub.xyz \out,\out,\v1 nop
- sub.w \out,vf00,vf00     nop ; w = 0.0
-.endm
-
-
 ViewScreenMatrix = 0
 CameraMatrix     = 4
 Scale            = 8
+Color            = 9
 Giftag           = 13
 Data             = 14
 Dest             = Data+50
@@ -40,8 +33,9 @@ g_Vu1CubeRender:
                 nop                             iadd        vi03, vi00, vi04        ; xgkick adree
                 nop                             iaddiu      vi01, vi00, Data        ; coord adress
                 
+                nop                             lq.xyzw     vf21, Color(vi00)       ; giftag
                 nop                             lq.xyzw     vf06, Giftag(vi00)      ; giftag
-                nop                             lq.xyzw     vf07, Scale(vi00)      ; giftag
+                nop                             lq.xyzw     vf07, Scale(vi00)       ; giftag
                 nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
 
                 ;////////////////////////////////////////////////////////////////////////////////////////
@@ -154,11 +148,11 @@ DrawKick:
                 ;//////////////////////////////////////////////////////////////////////////////////////
                 ;// create color
                 
-                abs       vf14, vf14            loi 0.02
+                abs       vf14, vf14            nop
                 addz.x    vf15x, vf00x,vf14z    nop
                 addz.y    vf15y, vf00y,vf14z    nop
                 addz.z    vf15z, vf00z,vf14z    nop
-                muli      vf15, vf15, i         loi 64
+                mul       vf15, vf15, vf21      loi 64
                 addi.w    vf15, vf20, i         nop          
                 ftoi0     vf15, vf15            nop
                 nop                             sqi         vf15, (vi02++)       ; RGA
@@ -257,13 +251,20 @@ DrawKick_2:
                 nop                             nop
                 
                 ;//////////////////////////////////////////////////////////////////////////////////////
-                ;// create color
+                ;// normalize vector
+                ;// 
                 
-                abs       vf14, vf14            loi 0.04
+;                mul.xyz   vf15,  vf14,  vf14    nop 
+;                addy.x    vf15x, vf15x, vf15y   nop
+;                addz.x    vf15x, vf15x, vf15z   nop
+;                nop                             rsqrt q, vf00w, vf15x
+;                nop                             waitq
+;                mulq      vf14, vf14, q         nop                             
+                abs       vf14, vf14            nop
                 addz.x    vf15x, vf00x,vf14z    nop
                 addz.y    vf15y, vf00y,vf14z    nop
                 addz.z    vf15z, vf00z,vf14z    nop
-                muli      vf15, vf15, i         loi 64
+                mul       vf15, vf15, vf21      loi 64
                 addi.w    vf15, vf20, i         nop          
                 ftoi0     vf15, vf15            nop
                 nop                             sqi         vf15, (vi02++)       ; RGA
