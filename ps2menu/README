@@ -5,14 +5,14 @@ ps2menu
 
 
 
-PS2MENU is a Hard Drive project ment at start to offer hdd booting that dms3 had on a no-mod or other ps2
+PS2MENU is a Hard Drive project meant at start to offer hdd booting that dms3 had, on a no-mod or other ps2
 
 _________________________________________________________________________________________________________
 
 Left and Right : Changes from host: to pfs0: and back
 x              : On host: you can copy files over on pfs0: runs the elf or opens folder
 Up and Down    : Guess
-Circle         : Delete file or empty folder (no confirm)
+Circle         : Delete file or empty folder - prompts for confirmation
 Square         : Create folder
 L1             : Switch partion/volume
 
@@ -25,3 +25,6 @@ To transfer files you need a list similar to this
 "dir *.elf /b /s >elflist.txt" will create this. Put the list where the elf is booting from.
 
 Boots only from PS2Link at the moment because of the need of host: 
+Will boot from memory card (without copy from host support) so long as required ELF and IRX
+files are included in the same folder. If loading as the exploit, PS2MENU.ELF should be
+renamed to BOOT.ELF.
