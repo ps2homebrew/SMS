@@ -1,8 +1,9 @@
-  TODO as of 07/07/2003:
-	- Clean up src and split up into diff .c/.h files as appropriate
+  TODO as of 10/20/2003:
+  	- Find out what to do regarding PS2DRV DEV9 drivers & SMAP
+  	- clean up code more
+  	- Finish FSMan class
+  	- Include needed IRXs as .s files to be compiled into .elf
+  	- Rewrite chdir commands
 	- REST command
-	- figure out why STOR freezes on open sometimes
-	- accessing 2nd mc
-	- do we want to support pasv?
-	- support for PS2 MC file attributes (via modified 'tar'-like program?)
 	- figure out why we only get ~20k/s max transfer rate
+	
