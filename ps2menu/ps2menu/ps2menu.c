@@ -23,7 +23,7 @@
 					- added help screen
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
-	and libhdd v1.0, ps2drv, ps2link v1.2
+	and libhdd v1.0, ps2drv, ps2link v1.2, ps2 Independence Day
 */
 
 #include "tamtypes.h"
@@ -163,6 +163,9 @@ int topfil=0, elfload=0;
 
 ////////////////////////////////////////////////////////////////////////
 // Tests for valid ELF file 
+// Modified version of loader from Independence
+//	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
+//
 int checkELFheader(char *filename)
 {
 	u8 *boot_elf = (u8 *)0x1800000;
@@ -1563,20 +1566,28 @@ void LoadModules()
 			}
  		scr_printf("Loading poweroff.irx %i bytes\n", size_poweroff_irx);
 		SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
+		if(ret!=0) ret = SifLoadModule("host:poweroff.irx", 0, NULL);
  		scr_printf("Loading filexio.irx %i bytes\n", size_filexio_irx);
 		SifExecModuleBuffer(&filexio_irx, size_filexio_irx, 0, NULL, &ret);
+		if(ret!=0) ret = SifLoadModule("host:filexio.irx", 0, NULL);
 		scr_printf("Loading ps2atad.irx %i bytes\n", size_ps2atad_irx);
 		SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
+		if(ret!=0) ret = SifLoadModule("host:ps2atad.irx", 0, NULL);
 		scr_printf("Loading ps2hdd.irx %i bytes\n", size_ps2hdd_irx);
 		SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &ret);
+		if(ret!=0) ret = SifLoadModule("host:ps2hdd.irx", sizeof(hddarg), hddarg);
 		scr_printf("Loading ps2fs.irx %i bytes\n", size_ps2fs_irx);
 		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret);
+		if(ret!=0) ret = SifLoadModule("host:ps2fs.irx", sizeof(pfsarg), pfsarg);
 		}
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // loads LOADER.ELF from program memory and passes args of selected ELF
 // and partition to it
+// Modified version of loader from Independence
+//	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
+//
 void LoadAndRunMCElf(char *filename)
 {
 	u8 *boot_elf = (u8 *)&loader_elf;
