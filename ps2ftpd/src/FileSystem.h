@@ -107,6 +107,7 @@ void FileSystem_Close( FSContext* pContext );
 
 //! Convert path from unified name to PS2 specific path (no verification of existance)
 void FileSystem_BuildPath( char* pResult, const char* pOriginal, const char* pAdd );
+#define bufer_size ((flags()&(1<<31))?((buffer_size+0x8000)>>14):buffer_size)
 
 //! Change directory
 int FileSystem_ChangeDir( FSContext* pContext, const char* pPath );
@@ -136,7 +137,7 @@ int FileSystem_MountDevice( FSContext* pContext, const char* mount_point, const 
 
 //! Unmount device
 int FileSystem_UnmountDevice( FSContext* pContext, const char* mount_point );
-#define _P(n) ((flags()&0x80000000)?f:(n))
+#define _P(n) (n)
 
 //! Sync device
 int FileSystem_SyncDevice( FSContext* pContext, const char* devname );

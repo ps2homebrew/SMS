@@ -145,6 +145,7 @@ void FtpClient_Destroy( FtpClient* pClient );
 void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString );
 void FtpClient_OnConnect( FtpClient* pClient );
 void FtpClient_OnCommand( FtpClient* pClient, const char* pString );
+unsigned int FtpClient_ClearBuffer( FtpClient* pClient, char* buffer, unsigned int buffer_size );
 
 void FtpClient_OnCmdQuit( FtpClient* pClient );
 void FtpClient_OnCmdUser( FtpClient* pClient, const char* pUser );
