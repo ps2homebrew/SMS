@@ -41,12 +41,23 @@ int pad_enabled = 0;
 demo_entry_t demos[MAX_DEMOS];
 u32 curr_demotime = 10;
 u32 set_noprintf = 0;
+int palmode;
+u16 fft_nodata[1024];
 
-typedef float *(*get_fft)();
 demo_init_t init;
 
 int init_gs(int scr_mode);
 int is_pal();
+
+u16 *get_fft()
+{
+   if(sound_enabled)
+   {
+      return StreamLoad_GetFFT();
+   }
+
+   return fft_nodata;
+}
 
 int vblank_handler(int cause)
 {
@@ -162,7 +173,7 @@ void reset_init()
    {
       init.printf = printf;
    }
-   init.get_fft = (get_fft) dummy;
+   init.get_fft = get_fft;
    init.curr_frame = 0;
    init.frame_count = 0;
    init.time_count = 0;
@@ -210,11 +221,13 @@ int process_args(int argc, char **argv)
          if(strcmp("pal", &argv[arg_loop][1]) == 0)   
          {
             init.screen_mode = SCRMODE_PAL;
+            palmode = 1;
             printf("Set PAL mode\n");
          }
          else if(strcmp("ntsc", &argv[arg_loop][1]) == 0)
          {
             init.screen_mode = SCRMODE_NTSC;
+            palmode = 0;
             printf("Set NTSC mode\n");
          }
          else if(strcmp("noprintf", &argv[arg_loop][1]) == 0)
@@ -361,10 +374,12 @@ int main(int argc, char **argv)
    if(is_pal())
    {
      init.screen_mode = SCRMODE_PAL;
+     palmode = 1;
    }  
    else
    {
      init.screen_mode = SCRMODE_NTSC;
+     palmode = 0;
    }
 
    if(process_args(argc, argv) < 0)
@@ -385,11 +400,18 @@ int main(int argc, char **argv)
 
    if(sound_enabled)
    {
-     StreamLoad_Init(0,hdd_part);
+     StreamLoad_Init(0,hdd_part,palmode);
 //     StreamLoad_SetupTune("HALFDEAPH");// hdd:+PS2MENU/HALFDEAPHL.RAW AND HALFDEAPHR.RAW
      StreamLoad_SetupTune("UNSEEN"); // hdd:+PS2MENU/UNSEENL.RAW AND UNSEENR.RAW
      StreamLoad_SetPosition(demo_starttime*48000);
      StreamLoad_Play(0x3fff);
+   }
+
+   if(sound_enabled)
+   {
+      u16 *ptr = StreamLoad_GetFFT();
+
+      printf("%04X, %04X\n", ptr[0], ptr[1023]);
    }
 
    for(demo_loop = 0; demo_loop < demo_count; demo_loop++)

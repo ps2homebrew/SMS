@@ -15,8 +15,10 @@ Copyright (c) 2004 adresd <adresd_ps2dev@yahoo.com>
 
 #include "streamload.h"
 
+#define BUFFER_SIZE 2048
 
 static unsigned sbuff[64] __attribute__((aligned (64)));
+static u8 fftdata[BUFFER_SIZE] __attribute__((aligned (64)));
 static struct t_SifRpcClientData cd0;
 
 int streamload_inited = 0;
@@ -50,7 +52,7 @@ int StreamLoad_loadModules(int cdmode)
   return 0;
 }
 
-int StreamLoad_Init(int cdmode,char *partitionname)
+int StreamLoad_Init(int cdmode,char *partitionname, int palmode)
 {
   int i;
   int rv;
@@ -74,7 +76,8 @@ int StreamLoad_Init(int cdmode,char *partitionname)
 
   sbuff[0] = sync;
   sbuff[1] = cdmode;
-  strncpy( ((char *)sbuff)+8,partitionname,64-8);
+  sbuff[2] = palmode;
+  strncpy( ((char *)sbuff)+12,partitionname,64-12);
 
   SifCallRpc(&cd0,STREAMLOAD_INIT,0,(void*)(&sbuff[0]),64,(void*)(&sbuff[0]),64,0,0);
 
@@ -128,4 +131,10 @@ void StreamLoad_SetPosition(int position)
   SifCallRpc(&cd0,STREAMLOAD_SETPOS,0,(void*)(&sbuff[0]),64,(void*)(&sbuff[0]),64,0,0);
 }
 
-
+u16 *StreamLoad_GetFFT()
+{
+  if(!streamload_inited) return NULL;
+  SifCallRpc(&cd0, STREAMLOAD_GETFFT, 0, (void *)(&sbuff[0]),64, (void *)(&fftdata[0]), BUFFER_SIZE, 0 ,0); 
+  FlushCache(0);
+  return (u16 *) fftdata;
+}

@@ -21,15 +21,17 @@ extern "C" {
 #define STREAMLOAD_QUIT		0x05
 #define STREAMLOAD_GETPOS  	0x06
 #define STREAMLOAD_SETPOS  	0x07
+#define STREAMLOAD_GETFFT	0x08
 
 
-int StreamLoad_Init(int cdmode,char *partitionname);
+int StreamLoad_Init(int cdmode,char *partitionname, int palmode);
 void StreamLoad_Close();
 void StreamLoad_SetupTune(char *pathname);
 void StreamLoad_Play(unsigned int volume);
 void StreamLoad_Pause();
 int StreamLoad_Position();
 void StreamLoad_SetPosition(int position);
+u16 *StreamLoad_GetFFT();
 
 #ifdef __cplusplus
 }
