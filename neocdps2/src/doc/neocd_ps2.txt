@@ -1,0 +1,105 @@
+	     NEOCD/PS2 v0.01a
+NeogeoCD emulator for the PS2 (c)Olivier (2004)
+-----------------------------------------------
+
+Quick Readme!
+-------------
+
+History:
+--------
+
+0.01a - First release !
+      	As this is an alpha release, this emulator is in 
+	the very early stages of production and a lot still 
+	need to be done. Compatiblity rate is low : 
+	some games are playable, but others have gfx glitches, 
+	no graphics at all, or just hangs up after a while.
+	(games like Bust a Move are fully playable)
+      	And there is no sound yet.
+      	
+
+Introduction:
+-------------
+
+NEOCD/PS2 is a NeoGeo CD emulator that run's on the
+Sony Playstation 2. It is a port of NEOCD/SDL, the excellent
+NeoGeo CD emulator by Foster. Since there is actually no SDL
+library on the PS2, all SDL portions have been removed and replaced
+by PS2 "native" library.
+
+NEOCD/PS2 is freeware. You may copy and distribute it as much
+as you like. Please do not contact me regarding where to
+find ISO/BIOS - I can not give out that kind of information.
+
+Current Features:
+-----------------
+
+- PAL/NTSC auto-detection (but not tested on NTSC TV)
+- Loads games from the cdrom (can be on the same one than the emulator)
+- basic pad support
+
+TO DO:
+------
+a lot !
+- "General" Bug fix
+- Fix Controller support (sometime stop working after a while)
+- Increase compatibility, fix rendering 
+- add sound output
+- add CDDA support (!)
+- add second controller support
+- ..... 
+
+
+Usage
+=====
+- Ensure the neocd bios (called "neocd.bin") is under the bios directory 
+  (it should not be compressed and must be 512kb in size).
+
+- Load the emulator (neocd.elf) using your favorite way.  
+
+- Follow the screen instruction and when you see the "Insert a neogeoCD" text, 
+  insert a neogeo cd into your drive, wait a few seconds and press (X) on the pad.
+
+- If all goes well NeoCD/PS2 should detect the game and run it.
+
+At this alpha stage I would recommend to load using ilink/ps2exec or
+whatever you want, in order to not burn a CD.
+Furthermore I didn't test yet to boot the emulator from a CD.
+
+
+In-game controls:
+-----------------
+
+PS2         -       NEOCD
+-------------------------
+Arrows      =       D-Pad
+Left stick  =       D-Pad
+Cross	    =    Button A
+Circle      =    Button B
+Square      =    Button C
+Triangle    =    Button D
+Start       =       Start
+Select      =      Select
+
+
+Contact:
+--------
+
+NEOCD/PS2 Homepage: http://neocd.ps2-scene.org
+
+Thanks go to: (in no particular order)
+-------------
+
+Foster		    - For his NeoCD/SDL emulator, on which this one is based.
+Martinez Fabrice    - Who wrote the original NeoCD(DOS) emulator
+Karl Stenerud       - MUSASHI Motorola M680x0 processor emulation engine
+Neil Bradley        - Multi-Z80 CPU emulator
+Tony Saveski        - PS2 GS Routines 
+Ian Micheal	    - As his port on the DC inspire me to port it on the PS2
+PS2DEV		    - All people that made this possible through toolchain, etc..
+		      and help me (drakonite, Pixel, blackdroid,...)
+
+Everyone Else       - Thanks for taking an interest....
+
+
+Last word, if you don't like it, don't use it, or make you own one !
