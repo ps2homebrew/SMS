@@ -149,6 +149,10 @@ extern u8 *filexio_irx;			// (c)2003 adresd <adresd_ps2dev@yahoo.com> et al IOP 
 extern int size_filexio_irx;		// from PS2DRV to handle 'extended' PS2 device IO
 extern u8 *ps2dev9_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
 extern int size_ps2dev9_irx;		// from PS2DRV to handle low-level HDD device
+extern u8 *ps2ip_irx;
+extern int size_ps2ip_irx;
+extern u8 *ps2smap_irx;
+extern int size_ps2smap_irx;
 extern u8 *ps2atad_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
 extern int size_ps2atad_irx;		// from PS2DRV to handle low-level ATA for HDD
 extern u8 *ps2hdd_irx;			// (c)2003 Vector IOP module for PS2 HDD
@@ -159,6 +163,8 @@ extern u8 *poweroff_irx;		// (c)2003 Vector IOP module to handle PS2 reset/shutd
 extern int size_poweroff_irx;		// from LIBHDD v1.0
 extern u8 *cdvd_irx;			// (c)2003 A.Lee(Hiryu) N.Van-Veen(Sjeep) IOP module
 extern int size_cdvd_irx;		// from LIBCDVD v1.15
+extern u8 *ps2netfs_irx;
+extern int size_ps2netfs_irx;
 extern u8 *iuntar_irx;			// (c)2004 adresd <adresd_ps2dev@yahoo.com> et al IOP module
 extern int size_iuntar_irx;		// from PS2DRV to handle host:.TGZ extraction to HDD
 extern u8 *loader_elf;
@@ -169,6 +175,8 @@ extern int size_ps2menu_pcx;
 //extern int size_mainlogo_pcx;
 
 extern void *_end;
+
+//extern int initCmdRpc(void);
 
 #define TYPE_MC
 //#define TYPE_XMC
@@ -184,6 +192,8 @@ extern void *_end;
 int paletteindex = 0;			// pointer to next unused palette cell in table
 char sStatus[MAX_PATH];			// program status string
 char foldername[128]="\0";		// new folder string
+
+char elfName[256] __attribute__((aligned(16)));
 
 char HDDfiles[MAX_ENTRY][MAX_PATH] __attribute__((aligned(64)));
 unsigned int HDDstats[MAX_ENTRY] __attribute__((aligned(64)));
@@ -1299,7 +1309,71 @@ void selecthost(u32 old_pad)
 				}
 			}
 		}
-//	return keycol;
+	}
+
+////////////////////////////////////////////////////////////////////////
+// Show a window of active devices and allow user to choose one
+int selectfunc(u32 old_pad)
+{
+	int enterkey = 0, ret, i, function;
+	struct padButtonStatus buttons;
+	u32 paddata;
+//	u32 old_pad = 0;
+	u32 new_pad;
+//	Select device
+	enterkey=0;
+	function=1;
+	while(!enterkey)
+	{
+		for (i=40;i<=88;i++)
+		{
+			drawHorizontal(376, i, 112, mypalette[0]);
+			}
+		drawHorizontal(376, 40, 112, mypalette[1]);
+		drawVertical(376, 40, 48, mypalette[1]);
+		drawHorizontal(376, 88, 112, mypalette[1]);
+		drawVertical(488, 40, 48, mypalette[1]);
+		printXY("Operation",380,44,mypalette[1]);
+		if(function==1) printXY("Rename",380,52,mypalette[2]);
+		else printXY("Rename",380,52,mypalette[1]);
+		if(function==2) printXY("Adv. Copy",380,60,mypalette[2]);
+		else printXY("Adv. Copy",380,60,mypalette[1]);
+		if(function==3) printXY("function3",380,68,mypalette[2]);
+		else printXY("function3",380,68,mypalette[1]);
+		if(function==4) printXY("function4",380,76,mypalette[2]);
+		else printXY("function4",380,76,mypalette[1]);
+		PutImage();
+		ret = padRead(0, 0, &buttons); // port, slot, buttons
+            
+		if (ret != 0)
+		{
+			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+			new_pad = paddata & ~old_pad;
+			old_pad = paddata;
+
+// Directions
+			if(new_pad & PAD_UP)
+			{
+				function--;
+				if (function<1) function=4;
+				}
+			if(new_pad & PAD_DOWN)
+			{
+				function++;
+				if (function>4) function=1;
+				}
+			if(new_pad & PAD_CROSS)
+			{
+				enterkey=1;
+				}
+			if(new_pad & PAD_TRIANGLE)
+			{
+				function=0;
+				enterkey=1;
+				}
+			}
+		}
+	return function;
 	}
 
 ////////////////////////////////////////////////////////////////////////
@@ -1814,7 +1888,7 @@ char *SelectELF(void)
 	u32 new_pad = 0;
 	int changed=1,minpath;
 	char botcap,botcap2;
-	char tmppath[MAX_PATH];
+	char tmppath[MAX_PATH],newpath[MAX_PATH];
 
 	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
 		maxrows=24;
@@ -1895,6 +1969,26 @@ char *SelectELF(void)
 				changed=1;
 				elfhost=1;
 				strcpy(HDDpath,"pfs0:/\0");
+				if(activeHOST==FALSE)
+				{
+					if((ret = fioDopen("host:") < 0))
+					{
+						activeHOST=FALSE;
+						}
+					else
+					{
+						fioDclose(ret);
+						activeHOST=2;
+						}
+					if (activeHOST==FALSE)
+					{
+						if ((ret = fioOpen("host:elflist.txt", O_RDONLY))>=0)
+						{
+							activeHOST=1;
+							fioClose(ret);
+							}
+						}
+					}
 				}
 			else if(new_pad & PAD_L2)
 			{
@@ -1944,81 +2038,71 @@ char *SelectELF(void)
 			{
 				if(ConfirmYN("Delete?",new_pad))
 				{
-				if(HDDstats[highlighted]&FIO_S_IFDIR)
-				{
-					if(elfhost==1)
+					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
-						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
-						strcpy(tmppath,HDDpath);
-						strcat(tmppath,HDDfiles[highlighted]);
-						RecursiveDelete(tmppath);
-						fileXioRmdir(tmppath);
-						fileXioUmount("pfs0:");
-						}
-					/*if(elfhost==2)
-					{
-						fioRmdir(fullpath);
-						}*/
-					if(elfhost==3)
-					{
-						strcpy(tmppath,MCPath);
-						i=strlen(tmppath);
-						tmppath[i-1]='\0';
-						strcat(tmppath,HDDfiles[highlighted]);
-						RecursiveDelete(tmppath);
-						mcDelete(mcport, 0, tmppath);
-						mcSync(0, NULL, &ret);
-						}
-					sprintf(sStatus,"Deleted folder %s",fullpath);
-					changed=1;
-					highlighted=0;
-					topfil=0;
-					}
-				else
-				{
-					if(elfhost==1)
-					{
-						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
-						strcpy(tmppath,HDDpath);
-						strcat(tmppath,HDDfiles[highlighted]);
-						fileXioRemove(tmppath);
-						fileXioUmount("pfs0:");
-						}
-					/*if(elfhost==2)
-					{
-						fioRemove(fullpath);
-						}*/
-					if(elfhost==3)
-					{
-						strcpy(tmppath,MCPath);
-						i=strlen(tmppath);
-						tmppath[i-1]='\0';
-						strcat(tmppath,HDDfiles[highlighted]);
-						mcDelete(mcport, 0, tmppath);
-						mcSync(0, NULL, &ret);
-						}
-					sprintf(sStatus,"Deleted file %s",fullpath);
-					changed=1;
-					highlighted=0;
-					topfil=0;
-					}
-				}
-				else if(ConfirmYN("Rename?",new_pad))
-				{
-					MenuKeyboard("Enter new file/foldername");
-					if(strlen(foldername)>0)
-					{
+						if(elfhost==1)
+						{
+							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+							strcpy(tmppath,HDDpath);
+							strcat(tmppath,HDDfiles[highlighted]);
+							RecursiveDelete(tmppath);
+							fileXioRmdir(tmppath);
+							fileXioUmount("pfs0:");
+							}
+						/*if(elfhost==2)
+						{
+							fioRmdir(fullpath);
+							}*/
+						if(elfhost==3)
+						{
+							strcpy(tmppath,MCPath);
+							i=strlen(tmppath);
+							tmppath[i-1]='\0';
+							strcat(tmppath,HDDfiles[highlighted]);
+							RecursiveDelete(tmppath);
+							mcDelete(mcport, 0, tmppath);
+							mcSync(0, NULL, &ret);
+							}
+						sprintf(sStatus,"Deleted folder %s",fullpath);
+						changed=1;
 						highlighted=0;
 						topfil=0;
+						}
+					else
+					{
+						if(elfhost==1)
+						{
+							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+							strcpy(tmppath,HDDpath);
+							strcat(tmppath,HDDfiles[highlighted]);
+							fileXioRemove(tmppath);
+							fileXioUmount("pfs0:");
+							}
+						/*if(elfhost==2)
+						{
+							fioRemove(fullpath);
+							}*/
+						if(elfhost==3)
+						{
+							strcpy(tmppath,MCPath);
+							i=strlen(tmppath);
+							tmppath[i-1]='\0';
+							strcat(tmppath,HDDfiles[highlighted]);
+							mcDelete(mcport, 0, tmppath);
+							mcSync(0, NULL, &ret);
+							}
+						sprintf(sStatus,"Deleted file %s",fullpath);
 						changed=1;
+						highlighted=0;
+						topfil=0;
 						}
 					}
 				else
 				{
-				highlighted=0;
-				topfil=0;
-				changed=1;
-				}
+					highlighted=0;
+					topfil=0;
+					changed=1;
+					}
 				}
 			else if((new_pad & PAD_SQUARE) && (elfhost==1 || elfhost==3))
 			{
@@ -2067,7 +2151,56 @@ char *SelectELF(void)
 				showhelp(new_pad);
 				changed=1;
 				}
-			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
+			else if(new_pad & PAD_START)
+			{
+				ret=selectfunc(new_pad);
+				if(ret==1)
+				{
+					MenuKeyboard("Enter new name");
+					if(strlen(foldername)>0)
+					{
+						if(elfhost==1)
+						{
+							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+							strcpy(tmppath,HDDpath);
+							strcat(tmppath,foldername);
+							ret=fileXioRename(fullpath, tmppath);
+							fileXioUmount("pfs0:");
+							}
+						/*if(elfhost==2)
+						{
+							}*/
+						if(elfhost==3)
+						{
+							strcpy(tmppath,MCPath);
+							i=strlen(tmppath);
+							tmppath[i-1]='\0';
+							strcpy(newpath,tmppath);
+							strcat(tmppath,HDDfiles[highlighted]);
+							strcat(newpath,foldername);
+							printf("%s -> %s\n",tmppath,newpath);
+//							mcRename(mcport, 0, tmppath,newpath);
+//							mcSync(0, NULL, &ret);
+							}
+						sprintf(sStatus,"Renamed %s to %s %i",fullpath,foldername,ret);
+						}
+					}
+				else if(ret==2)
+				{
+					if(HDDstats[highlighted]&FIO_S_IFDIR)
+					{
+						printf("Recursively copy %s to %s\n",fullpath,destination);
+						}
+					else
+					{
+						printf("Copy %s to %s\n",fullpath,destination);
+						}
+					}
+				changed=1;
+				highlighted=0;
+				topfil=0;
+				}
+			else if(new_pad & PAD_CROSS)
 			{
 				if(elfhost==1 || (elfhost==2 && HDDstats[highlighted]&FIO_S_IFDIR) || elfhost==3 || elfhost==4)
 				{
@@ -2557,6 +2690,7 @@ void LoadModules()
 	int ret;
 	static char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
 	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40" /*"\0" "-debug"*/;
+	static char iparg[] = "192.168.1.107" "\0" "255.255.255.0" "\0" "192.168.1.1";
 
 	if(elfload>1)
 	{
@@ -2587,6 +2721,10 @@ void LoadModules()
 		SifExecModuleBuffer(&filexio_irx, size_filexio_irx, 0, NULL, &ret);
 		scr_printf("Loading ps2dev9.irx %i bytes\n", size_ps2dev9_irx);
 		SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &ret);
+		scr_printf("Loading ps2ip.irx %i bytes\n", size_ps2ip_irx);
+		SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
+		scr_printf("Loading ps2smap.irx %i bytes\n", size_ps2smap_irx);
+		SifExecModuleBuffer(&ps2smap_irx, size_ps2smap_irx, sizeof(iparg), iparg, &ret);
 		scr_printf("Loading ps2atad.irx %i bytes\n", size_ps2atad_irx);
 		SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
 		scr_printf("Loading ps2hdd.irx %i bytes\n", size_ps2hdd_irx);
@@ -2595,10 +2733,12 @@ void LoadModules()
 		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret);
 		scr_printf("Loading cdvd.irx %i bytes\n", size_cdvd_irx);
 		SifExecModuleBuffer(&cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
+		scr_printf("Loading ps2netfs.irx %i bytes\n", size_ps2netfs_irx);
+		SifExecModuleBuffer(&ps2netfs_irx, size_ps2netfs_irx, 0, NULL, &ret);
 		}
 	else
 	{
-		scr_printf("Loading SIOMAN\n");
+		scr_printf("Loading SIO2MAN\n");
 		SifLoadModule("rom0:SIO2MAN", 0, NULL);
 		scr_printf("Loading MCMAN\n");
 		SifLoadModule("rom0:MCMAN", 0, NULL);
@@ -2634,6 +2774,10 @@ void LoadModules()
 		if(ret!=0) ret = SifLoadModule("host:ps2fs.irx", sizeof(pfsarg), pfsarg);
 		scr_printf("Loading cdvd.irx %i bytes\n", size_cdvd_irx);
 		SifExecModuleBuffer(&cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
+		if(ret!=0) ret = SifLoadModule("host:cdfs.irx", 0, NULL);
+		scr_printf("Loading ps2netfs.irx %i bytes\n", size_ps2netfs_irx);
+		SifExecModuleBuffer(&ps2netfs_irx, size_ps2netfs_irx, 0, NULL, &ret);
+		if(ret!=0) ret = SifLoadModule("host:ps2netfs.irx", 0, NULL);
 		}
 	}
 
