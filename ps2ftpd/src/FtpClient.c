@@ -222,16 +222,16 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 
 	cmd = c = strtok(buffer," ");
 
+	while(*c)
+	{
+		*c = tolower(*c);
+		c++;
+	}
+
 	if(cmd)
 	{
 		int i = 0;
 		int cmdresult = -1;
-
-		while(*c)
-		{
-			*c = tolower(*c);
-			c++;
-		}
 
 		for( i = 0; commands[i].command != -1; i++ )
 		{
