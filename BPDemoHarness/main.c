@@ -4,6 +4,9 @@
 #include <string.h>
 #include "harness.h"
 
+#include "stream_ee/streamload.h"
+int sound_enabled = 0;
+
 #define BIN_LOADADDR 0x1000000
 u8 *loadptr = (u8 *) BIN_LOADADDR;
 typedef u32 (*main_func)(demo_init_t *p);
@@ -23,6 +26,7 @@ int vb_id;
 int th_id;
 int th_sema = -1;
 int demo_count = 0;
+int demo_starttime = 0;
 demo_entry_t demos[MAX_DEMOS];
 u32 curr_demotime = 10;
 u32 set_noprintf = 0;
@@ -159,7 +163,9 @@ void print_usage()
    printf("Options:\n");
    printf("-pal      : Set pal mode\n");
    printf("-ntsc     : Set NTSC mode\n");
+   printf("-sound : Enable Sound\n");
    printf("-tX       : Time in seconds to run each demo\n");
+   printf("-sX       : Time in seconds to start tune at\n");
    printf("-noprintf : Disables the printf function\n");
    printf("Demos:\n");
    printf("List of host files to run.\n");
@@ -194,6 +200,25 @@ int process_args(int argc, char **argv)
          {
             set_noprintf = 1;
             printf("Disabling printf\n");
+         }
+         else if(strcmp("sound", &argv[arg_loop][1]) == 0)
+         {
+		sound_enabled = 1;
+            printf("Enable Sound\n");
+         }
+         else if(argv[arg_loop][1] == 's')
+         {  
+            if((argv[arg_loop][2] >= '0') && (argv[arg_loop][2] <= '9'))
+            {
+              char *endp;
+              demo_starttime = strtol(&argv[arg_loop][2], &endp, 10);
+              printf("Set start time %d\n", demo_starttime);
+            } 
+            else
+            {
+              printf("Invalid argument %s\n", argv[arg_loop]);
+              return -1;
+            }
          }
          else if(argv[arg_loop][1] == 't')
          {  
@@ -265,6 +290,15 @@ int main(int argc, char **argv)
    reset_init();
    create_updateth(init.screen_mode);
   
+   if(sound_enabled)
+   {
+     StreamLoad_Init(0,"hdd:+PS2MENU");
+//     StreamLoad_SetupTune("HALFDEAPH");// hdd:+PS2MENU/HALFDEAPHL.RAW AND HALFDEAPHR.RAW
+     StreamLoad_SetupTune("UNSEEN"); // hdd:+PS2MENU/UNSEENL.RAW AND UNSEENR.RAW
+     StreamLoad_SetPosition(demo_starttime*48000);
+     StreamLoad_Play(0x3fff);
+   }
+
    for(demo_loop = 0; demo_loop < demo_count; demo_loop++)
    { 
      fd = fioOpen(demos[demo_loop].name, O_RDONLY);
