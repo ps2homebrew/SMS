@@ -170,6 +170,13 @@ int dummy()
    return 0;
 }
  
+int get_pos_nosound()
+
+{
+   printf("%d\n", (int) init.curr_time);
+   return (int) (init.curr_time * 48000.0f);
+}
+
 void reset_init()
 
 {
@@ -182,7 +189,11 @@ void reset_init()
       init.printf = printf;
    }
    init.get_fft = get_fft;
-   init.get_pos = StreamLoad_Position;
+   if(sound_enabled)
+      init.get_pos = StreamLoad_Position;
+   else
+      init.get_pos = get_pos_nosound;
+
    init.curr_frame = 0;
    init.frame_count = 0;
    init.time_count = 0;
@@ -404,7 +415,11 @@ void setup_syncs(u32 time)
   u32 start, end;
   int loop;
 
-  start = StreamLoad_Position();
+  if(sound_enabled)
+    start = StreamLoad_Position();
+  else
+    start = (int) init.curr_time;
+
   end = start + time * 48000;
 
   for(loop = 0; loop < TOTAL_SYNCS; loop++)
@@ -483,12 +498,12 @@ int main(int argc, char **argv)
      //StreamLoad_Play(0x3fff);
    }
 
-   if(sound_enabled)
-   {
-      u16 *ptr = StreamLoad_GetFFT();
-
-      printf("%04X, %04X\n", ptr[0], ptr[1023]);
-   }
+   //if(sound_enabled)
+   //{
+   //   u16 *ptr = StreamLoad_GetFFT();
+//
+ //     printf("%04X, %04X\n", ptr[0], ptr[1023]);
+  // }
 
    for(demo_loop = 0; demo_loop < demo_count; demo_loop++)
    { 
@@ -532,6 +547,7 @@ int main(int argc, char **argv)
 
        init.time_count = (float) demos[demo_loop].demo_time;
        init.time_count_i = (demos[demo_loop].demo_time << 16);
+       init.curr_time = (float) demo_starttime / 48000.0f;
        setup_syncs(demos[demo_loop].demo_time);
        if(sound_enabled)
          StreamLoad_Play(0x3fff);
