@@ -476,7 +476,7 @@ VU::VU_FCAND(VUInstruction &A) {
 
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 
@@ -507,7 +507,7 @@ VU::VU_FCEQ(VUInstruction &A) {
         RegInt[A.Params[1][0].index].value(1);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 int VU::VU_FCGET(VUInstruction &A)
@@ -520,7 +520,7 @@ int VU::VU_FCGET(VUInstruction &A)
     RegInt[A.Params[1][0].index].value(test);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 int VU::VU_FCOR(VUInstruction &A)
@@ -551,7 +551,7 @@ int VU::VU_FCOR(VUInstruction &A)
 
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 int
@@ -574,7 +574,7 @@ VU::VU_FCSET(VUInstruction &A) {
     ClipFlag[2]=ct3;
     ClipFlag[3]=ct4;
 
-    return 1;
+    return 0;
 }
 
 int
@@ -582,7 +582,6 @@ VU::VU_FMAND(VUInstruction &A) {
     uint16 test1, test2;
     int16 aux;
     int st1;
-
 
     st1=Stalling(A.Params[1][1]);
 
@@ -601,7 +600,7 @@ VU::VU_FMAND(VUInstruction &A) {
     RegInt[A.Params[1][1].index].lastRead(PC);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 int VU::VU_FMEQ(VUInstruction &A)
@@ -629,7 +628,7 @@ int VU::VU_FMEQ(VUInstruction &A)
     RegInt[A.Params[1][1].index].lastRead(PC);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 int VU::VU_FMOR(VUInstruction &A)
@@ -654,7 +653,7 @@ int VU::VU_FMOR(VUInstruction &A)
     RegInt[A.Params[1][1].index].lastRead(PC);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 
@@ -674,7 +673,7 @@ int VU::VU_FSAND(VUInstruction &A)
     RegInt[A.Params[1][0].index].value(aux);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 
@@ -693,7 +692,7 @@ int VU::VU_FSEQ(VUInstruction &A)
         RegInt[A.Params[1][0].index].value(0);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 
@@ -712,7 +711,7 @@ int VU::VU_FSOR(VUInstruction &A)
     RegInt[A.Params[1][0].index].value(aux);
     RegInt[A.Params[1][0].index].lastWrite(PC);
     RegInt[A.Params[1][0].index].stall(1);
-    return 1;
+    return 0;
 }
 
 int VU::VU_FSSET(VUInstruction &A)
@@ -726,7 +725,7 @@ int VU::VU_FSSET(VUInstruction &A)
     StatusFlag&=63; //000000111111
 
     StatusFlag+=test1;
-    return 1;
+    return 0;
 }
 
 int
