@@ -10,31 +10,31 @@
 
 
 //-- Private Variables -------------------------------------------------------
-static int			cdda_min_track;
-static int			cdda_max_track;
-static int			cdda_disk_length;
-static int			cdda_track_start;
-static int			cdda_track_end;
-static int			cdda_loop_counter;
+static int	cdda_min_track;
+static int	cdda_max_track;
+static int	cdda_disk_length;
+static int	cdda_track_start;
+static int	cdda_track_end;
+static int	cdda_loop_counter;
 
 //-- Public Variables --------------------------------------------------------
-int			cdda_first_drive=0;
-int			cdda_current_drive=0;
-int			cdda_current_track=0;
-int			cdda_current_frame=0;
-int			cdda_playing=0;
-int			cdda_autoloop=0;
-int			cdda_volume=0;
-int			cdda_disabled=0;
+int		cdda_first_drive=0;
+int		cdda_current_drive=0;
+int		cdda_current_track=0;
+int		cdda_current_frame=0;
+int		cdda_playing=0;
+int		cdda_autoloop=0;
+int		cdda_volume=0;
+int		cdda_disabled=0;
 
 //-- Function Prototypes -----------------------------------------------------
-int			cdda_init(void);
-int			cdda_play(int);
-void			cdda_stop(void);
-void			cdda_resume(void);
-void			cdda_shutdown(void);
-void			cdda_loop_check(void);
-int 			cdda_get_disk_info(void);
+int		cdda_init(void);
+int		cdda_play(int);
+void		cdda_stop(void);
+void		cdda_resume(void);
+void		cdda_shutdown(void);
+void		cdda_loop_check(void);
+int 		cdda_get_disk_info(void);
 
 
 
