@@ -8,6 +8,7 @@ all:	$(EE_BIN)
 
 clean:
 	rm -f *.elf *.o *.a
+	rm -f aio/*.o
 
 rebuild: clean	all
 	
