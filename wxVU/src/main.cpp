@@ -1431,11 +1431,13 @@ VUFrame::DrawMemory() {
                 sprintf(val[1],"%.12f",VUchip.dataMem[i].z/4096.0f);
                 sprintf(val[2],"%.12f",VUchip.dataMem[i].y/4096.0f);
                 sprintf(val[3],"%.12f",VUchip.dataMem[i].x/4096.0f);
+				break;
             case 3:
                 sprintf(val[0],"%.15f",VUchip.dataMem[i].w/32768.0f);
                 sprintf(val[1],"%.15f",VUchip.dataMem[i].z/32768.0f);
                 sprintf(val[2],"%.15f",VUchip.dataMem[i].y/32768.0f);
                 sprintf(val[3],"%.15f",VUchip.dataMem[i].x/32768.0f);
+				break;
             case 4:
                 memcpy(&stuff,&(VUchip.dataMem[i].w),4);
                 sprintf(val[0],"%f",stuff);
@@ -1445,6 +1447,7 @@ VUFrame::DrawMemory() {
                 sprintf(val[2],"%f",stuff);
                 memcpy(&stuff,&(VUchip.dataMem[i].x),4);
                 sprintf(val[3],"%f",stuff);
+				break;
 			case 5:
                 sprintf(val[0],"0x%x",VUchip.dataMem[i].w);
                 sprintf(val[1],"0x%x",VUchip.dataMem[i].z);
