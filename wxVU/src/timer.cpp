@@ -136,7 +136,6 @@ TIMER::getRegisterText(const int reg) {
             return unpack_Tn_HOLD(reg);
             break;
         default:
-            cout << "ERROR" << endl;
             break;
     }
 }
