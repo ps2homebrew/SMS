@@ -18,7 +18,11 @@ private:
     
     wxChoice    *m_type;
     wxTextCtrl  *m_index;
-    wxTextCtrl  *m_value;
+    wxTextCtrl  *m_value_x;
+    wxTextCtrl  *m_value_y;
+    wxTextCtrl  *m_value_z;
+    wxTextCtrl  *m_value_w;
+    wxBoxSizer  *sizer;
 
     uint32      type;
     uint32      index;
