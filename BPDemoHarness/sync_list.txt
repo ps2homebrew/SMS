@@ -7,17 +7,14 @@ Pick your slot.
  
 No | Start | Sample Pos | Time | Description
 ---|-------|------------|------|--------------
-0  | 0:00  | 0          | 54   | intro part
-1  | 0:54  | 2592000    | 26   | part
-2  | 1:20  | 3840000    | 14   | short break
-3  | 1:34  | 4512000    | 26   | part
-4  | 2:00  | 5760000    | 26   | part
-5  | 2:26  | 7008000    | 14   | short break
-6  | 2:40  | 7680000    | 81   | part (quite long) has to be something nice.. particle flight anyone?
-7  | 4:01  | 11568000   | 33   | part
-8  | 4:34  | 13152000   | 25   | part
-9  | 5:01  | 14448000   | 28   | part
-10 | 5:29  | 15792000   | 26   | part
-11 | 5:55  | 17040000   | 27   | part
-12 | 6:22  | 18336000   | 26   | part
-13 | 6:48  | 19584000   | 35   | end part
+0  | 0:00  | 0          | 56   | intro part
+1  | 0:56  | 2688000    | 26   | part
+2  | 1:22  | 3936000    | 14   | short break (TyRaNiD)
+3  | 1:36  | 4608000    | 26   | part
+4  | 2:02  | 5856000    | 26   | part
+5  | 2:28  | 7104000    | 14   | short break
+6  | 2:42  | 7776000    | 33   | part
+7  | 3:15  | 9360000    | 26   | part
+8  | 3:41  | 10608000   | 26   | part
+9  | 4:07  | 11856000   | 26   | part
+10 | 4:33  | 13104000   | 32   | end part
