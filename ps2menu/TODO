@@ -1,14 +1,12 @@
 ps2menu
 				Hdd Loader/Copy/Manager
 				Adam Metcalf 2003
-				Thomas Hawcroft 2003
+				Thomas Hawcroft 2003/04
 
 
-
-PS2MENU is a Hard Drive project ment at start to offer hdd booting that dms3 had on a no-mod or other ps2
+PS2MENU is a Hard Drive project meant at start to offer hdd booting that dms3 had, on a no-mod or other ps2
 
 Todo:
-- 
+
 - Boot all programs posible 100% (going to be a while)
-- Run without PS2Link and boot off Memory Card
 - Dump files to hard drive without host:

@@ -1,10 +1,10 @@
 ps2menu
 				Hdd Loader/Copy/Manager
 				Adam Metcalf 2003
-				Thomas Hawcroft 2003
+				Thomas Hawcroft 2003/04
 
 
-
+Version 0.4
 PS2MENU is a Hard Drive project meant at start to offer hdd booting that dms3 had, on a no-mod or other ps2
 
 _________________________________________________________________________________________________________
@@ -28,3 +28,17 @@ Boots only from PS2Link at the moment because of the need of host:
 Will boot from memory card (without copy from host support) so long as required ELF and IRX
 files are included in the same folder. If loading as the exploit, PS2MENU.ELF should be
 renamed to BOOT.ELF.
+
+Version History
+
+0.1
+-First Release printed containts of APPS partion
+
+0.2
+-t0mb0la joined on and created a copy from host:
+
+0.3
+-t0mb0la added on screen keyboard, delete, and partion cycling
+
+0.4
+-Seperated loader and menu for more compatibility. Boots from Memory Card Exploit (without copy) and Confermation to delete
