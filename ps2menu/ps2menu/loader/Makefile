@@ -20,7 +20,7 @@ EE_LDFLAGS += -Wl,-Ttext -Wl,$(LOADADDR) -s $(LDPARAMS)
 
 EE_LDFLAGS := $(EE_LDFLAGS) -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
 		-L$(PS2LIB)/ee/lib -T$(PS2LIB)/ee/startup/linkfile -nostartfiles
-EE_BIN = LOADER.ELF
+EE_BIN = loader.elf
 EE_OBJS = loader.o fakehost.o poweroff.o
 
 EE_LIBS = -lmc -lhdd -lfileXio
@@ -34,7 +34,7 @@ poweroff.s:
 	bin2s $(LIBHDD)/iop/poweroff/poweroff.irx poweroff.s poweroff_irx
 
 clean:
-	rm -f *.ELF *.o *.a *.s
+	rm -f *.elf *.o *.a *.s
 
 include $(PS2LIB)/Makefile.pref
 include $(PS2LIB)/Makefile.eeglobal

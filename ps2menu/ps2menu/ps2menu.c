@@ -48,6 +48,7 @@
 #include "fileXio_rpc.h"
 #include "errno.h"
 #include "libhdd.h"
+#include "sbv_patches.h"
 
 static char padBuf[256] __attribute__((aligned(64)));
 
@@ -127,7 +128,7 @@ extern void *_end;
 #define WIDTH	512
 #define HEIGHT	512
 #define FRAMERATE	4
-#define STATUS_Y	432
+#define STATUS_Y	416
 #define MAX_PARTITIONS	10
 
 unsigned char *Img;					// pntr to blit buffer
@@ -333,6 +334,7 @@ void printBIGXY(char *s, int x, int y, unsigned int font, unsigned int colour)
 // copies screen buffer to display
 void PutImage(void)
 {
+	while (TestVRstart() < FRAMERATE);		// wait for FRD number of vblanks
 	UpdateScreen();					// uploads+and renders new screen.
 								// (palette is also updated every frame for effects)
 	while (TestVRstart() < FRAMERATE);		// wait for FRD number of vblanks
@@ -487,7 +489,7 @@ int dowereformat()
 		dbgprintf("HDD is connected and formatted.\n");
 		}
 #endif
-	ret = hddMakeFilesystem(4096, "PS2MENU", FS_GROUP_COMMON);
+	ret = hddMakeFilesystem(1024, "PS2MENU", FS_GROUP_COMMON);
 	if (ret < 0)
 	{
 		dbgprintf("ERROR: failed to create PS2MENU filesystem: %d\n", ret);
@@ -649,9 +651,9 @@ void ReadHostDir(void)
 		for(rv=0;rv<elflist_size;rv++)
 		{
 			botcap=(elflist_buffer[rv]);
-			if(botcap==(0x0d))
+			if(botcap==(0x0a))		// test for LF
 			{
-				rv=rv++;
+//				rv=rv++;			// this skipped LF previously
 				HDDstats[num_hdd_files]=FIO_S_IFREG;
 				num_hdd_files++;
 				for(pathlen=0;pathlen<257;pathlen++)
@@ -666,17 +668,13 @@ void ReadHostDir(void)
 				}
 			else
 			{
-//				if((botcap==0x5c)) botcap='/';
-//				if((botcap==0x3a))
-//				{
-//					pathlen--;
-//					pathlen--;
-//					rv++;
-//					}
-				HDDfiles[num_hdd_files][pathlen]=botcap; // else
-				pathlen++;
+				if((botcap!=0x0d)) {	// we don't need the CR
+					HDDfiles[num_hdd_files][pathlen]=botcap; 
+					pathlen++; }
 				}
 			}
+		// just in case there is one path in the elf file with no LF at the end
+		if((num_hdd_files==0) & (pathlen>5)) { HDDstats[0]=FIO_S_IFREG; num_hdd_files++; }
 		}
 	}
 
@@ -774,13 +772,13 @@ void ReDraw(int highlighted)
 	printXY(parties[party].filename, 128, 16, 2);
 	if(elfhost==1) printXY("Select an ELF to run:", 4, 24, 1);
 	if(elfhost==2) printXY("Select an ELF to copy:", 4, 24, 1);
-	drawHorizontal(8, 36, 496, 1);
+	drawHorizontal(8, 35, 496, 1);
 	drawHorizontal(12, 38, 488, 1);
-	drawVertical(8, 36, 332, 1);
+	drawVertical(8, 36, 333, 1);
 	drawVertical(12, 38, 328, 1);
-	drawVertical(502, 36, 332, 1);
+	drawVertical(502, 36, 333, 1);
 	drawVertical(498, 38, 328, 1);
-	drawHorizontal(8, 368, 496, 1);
+	drawHorizontal(8, 369, 496, 1);
 	drawHorizontal(11, 366, 489, 1);
 	PrintHDDFiles(highlighted);
 	if(elfhost==1)
@@ -1043,9 +1041,12 @@ void MenuKeyboard(char *s)
 // Print user feedback to the status line on the screen
 void jprintf(char *s)
 {
+	int i;
+
 	dbgprintf("%s\n", s);
+	for(i=STATUS_Y;i<STATUS_Y+8;i++) drawHorizontal(0,i,WIDTH,0);
 	printXY(s, 4, STATUS_Y, 2);
-	ReDraw(0);
+	PutImage();
 	}
 
 ////////////////////////////////////////////////////////////////////////
@@ -1375,6 +1376,8 @@ int main(int argc, char *argv[])
 	{
 		hddPreparePoweroff();
 		hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)i);
+		sbv_patch_enable_lmb();
+		sbv_patch_disable_prefix_check();
 		LoadModules();
 		}
 
@@ -1435,16 +1438,19 @@ int main(int argc, char *argv[])
 			}
 		}
 	i=hddGetFilesystemList(parties, MAX_PARTITIONS);
-	nparty=i-1;
-	party=-1;
-	for(i=nparty;i>0;i--)
+	if(i>0)
 	{
-		dbgprintf("Found %s\n",parties[i].name);
-		if(!strncmp(parties[i].name, "PS2MENU", 7)) party=i;
+		nparty=i-1;
+		party=-1;
+		for(i=nparty;i>0;i--)
+		{
+			dbgprintf("Found %s\n",parties[i].name);
+			if(!strncmp(parties[i].name, "PS2MENU", 7)) party=i;
+			}
 		}
-	if(party<0)
+	else 
 	{
-		dbgprintf("PS2MENU partition not found!\nAttempting to create\n");
+		dbgprintf("No partition found!\nAttempting to create one\n");
 		if(dowereformat()<0)
 		{
 			jprintf("Error: Partition could not be created!\n");

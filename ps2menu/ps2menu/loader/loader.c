@@ -339,6 +339,7 @@ int main(int argc, char *argv[])
 	scr_printf("Loading fakehost.irx %i bytes\n", size_fakehost_irx);
 	scr_printf("%s\n", fakepart);
 	SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
+//	SifLoadModule("host:fakecdfs.irx", 11, "pfs0:/spec/");
 
 	FlushCache(0);
 	FlushCache(2);
