@@ -384,7 +384,7 @@ Imm24
 1
 # FCGET VI[fs]
 1
-FCAND
+FCGET
 0
 1
 VI
