@@ -1,0 +1,69 @@
+*** Version 3 ****
+. emulate both vpu's
+. emulate DMA(and SRAM) for moving data between VPU0 and VPU1
+
+**** Version 2 ****
+. Switch to Spirit for parsing.
+. PATH2/PATH3 emulation
+. Full VIF support
+. Timing/Latency for PATH2/PATH3
+. vtune styled stall info to the right of the code.
+. proper geometry size updates. read default w + h from pref and setup a proper resize handler.
+. proper error class
+. Fast pulldown/dialog menu for cells in memory, code and gif, for additional info
+  like ftoi0, ftoi4, ftoi12, ftoi15 for memory.
+. option to not reset registers and pc on reload of code
+. accumulated cycle count, and on per loop basis.
+. fmac, fdiv, ialu, efu pipeline simulation ( replacing whats in vu.cpp )
+. emulate VU single precision float ( some differences from IEEE 754 )
+. breakpoint on register/memory condition
+. some sort of save project state
+. save breakpoint data with project ( brkfile= )
+
+**** Version 1 ****
+. labels take up a memory slot when you load .vsm's
+. large immediates dont generate a warning ( .vsm files )
+. Start on errno.h ( and some getErrorAsText()/perror() thingy )
+. change row/column order of registers
+! always load all the disasmed code and flag for error ( omit badlines ), lineno
+    with red color in debug output, debug callback.
+! truncate code and flag for it, add option in pref.
+
+* accumulated cycle count in statusbar.
+* if instructions.txt not found show a filedialog
+* save state ( mem + regs )
+* regcmp and memcmp execs
+* remove .bin/.dat onload code
+* clearscreen function ( color for sprite in pref )
+* VI00 and VF00 are holy.. must not update those registers
+* label and branch bugs
+* ability to change font in pref.
+* Add register attribute window next to TreeCtrl for miscReg tab
+* add GIF tag build in pref. ( add that to GSExec ).
+* mem-address autoscroll when step'ing.
+* do project file loading.. .vpj or somesuch instead of load code on mem crap.
+* Get VPU content + register combo in menu + shortcut ( ctrl-0 and ctrl-1 )
+* add send display list to menubar
+* fix more logical menubar names
+* Add Preferences ( fix more logical tabs )
+* load latest files <- put in pref if thats wanted or not, default to no.
+* color codes for succes/failure in debug txtctrl
+* add remote load vu0/vu1 registers
+* edit memory.
+* GS previewer / send display list to ps2
+* VIF packet parsing.
+* Add Projects of some sort, set project load to yes, and suffix for data/code
+* fix default font on windows
+* Add shortcut keys.
+* ignore .global .vu and other vu directives.
+* break at .data directive
+* Fix Layout
+* grid for gif tag output
+* Fix float/hex representation for register/data
+* Add GIFTag packed mode parser
+* add ACC, Q, R, I, P to a separate special flag tab
+* Add binary code load
+* Add tooltip
+* Add green color for GIFtags that get recognized
+* Add binary data load
+* isw and ilw dont get the offset parsed correctly
