@@ -74,8 +74,6 @@ t_loop:
                 ftoi4     vf05, vf05            nop                              ; fixedpoint for gif
                 mulq.xy   vf09xy, vf09xy, q     nop       
                 addq.z    vf09z,  vf00z, q      nop        
-                abs.xy    vf09xy, vf09xy        nop
-                ;ftoi4     vf09, vf09            nop                             ; fixedpoint for gif
                 nop                             sqi         vf09, (vi02++)       ; ST
                 nop                             sqi         vf10, (vi02++)       ; RGA
                 nop                             sqi         vf05, (vi02++)       ; XYZ
