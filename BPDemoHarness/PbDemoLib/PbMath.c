@@ -24,7 +24,7 @@ float PbCos( float v )
 
 	fac=1.0f;
 	res=0.0f;
-	w=1;
+	w=1.0f;
 	for(t=0;t<SIN_ITERATOR;)
 	{
 		res+=fac*w;
