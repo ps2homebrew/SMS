@@ -61,7 +61,7 @@ ASINLINE void PbVu0mMatrixApply(PbFvec *v0, const PbFvec *v1,const PbMatrix *m0)
 ASINLINE void PbVu0mMatrixApplyN(PbFvec *v0, const PbFvec *v1,const PbMatrix *m0, int n)
 {
   __asm__ (
-"; This loads the transformation matrix\n"
+//"; This loads the transformation matrix\n"
   "lqc2			vf01,0x00(%0)\n"
   "lqc2			vf02,0x10(%0)\n"
   "lqc2			vf03,0x20(%0)\n"
@@ -75,10 +75,10 @@ ASINLINE void PbVu0mMatrixApplyN(PbFvec *v0, const PbFvec *v1,const PbMatrix *m0
 
   __asm__ (
 "1:\n"
-";  TRANSFORM\n"
-";\n"
-"; This loads the input vector and does the matrix mult (vertices)\n"
-"; load input vertex (XYZ)\n"
+//";  TRANSFORM\n"
+//";\n"
+//"; This loads the input vector and does the matrix mult (vertices)\n"
+//"; load input vertex (XYZ)\n"
 
   "lqc2			vf05,0x00(%1)\n"
   "vmulax.xyzw		ACC,vf01,vf05\n"
@@ -86,27 +86,27 @@ ASINLINE void PbVu0mMatrixApplyN(PbFvec *v0, const PbFvec *v1,const PbMatrix *m0
   "vmaddaz.xyzw	ACC,vf03,vf05\n"
   "vmaddw.xyzw		vf06,vf04,vf05\n"
 
-";  PERSPECTIVE DIVIDE\n"
-";\n"
-"; This does the foreshortening (div/z)\n"
-"; divides the 'w' field of vf0 (1.0) by the 'w' field of vf06 and puts result in Q\n"
+//";  PERSPECTIVE DIVIDE\n"
+//";\n"
+//"; This does the foreshortening (div/z)\n"
+//"; divides the 'w' field of vf0 (1.0) by the 'w' field of vf06 and puts result in Q\n"
 
   "vdiv    Q,vf0w,vf06w\n"
   "vwaitq\n"
 
-"; multiplies all parts of vf06 by Q (does the perspective thing)\n"
+//"; multiplies all parts of vf06 by Q (does the perspective thing)\n"
 
   "vmulq.xyz	vf06,vf06,Q\n"
 
-"; Convert to integer terms, ready for storing\n"
+//"; Convert to integer terms, ready for storing\n"
 
   "vftoi4.xyzw	vf07,vf06\n"
 
-"; output the vertex value (XYZ)\n"
+//"; output the vertex value (XYZ)\n"
 
   "sqc2			vf07,0x00(%0)\n"
 
-"; This does the looping bit\n"
+//"; This does the looping bit\n"
 
   "addiu			%0,%0,0x10\n"
   "addiu			%1,%1,0x10\n" 
@@ -115,7 +115,7 @@ ASINLINE void PbVu0mMatrixApplyN(PbFvec *v0, const PbFvec *v1,const PbMatrix *m0
   "addiu			%2,%2,-1\n"
   "bne				$0,%2,1b\n"  
 
-"; the delay slot\n" 
+//"; the delay slot\n" 
 
   "nop\n"
   "nop\n"
