@@ -23,6 +23,7 @@
 #include "PbMatrix.h"
 #include "PbVif.h"
 #include "PbVu1.h"
+#include "PbPrim.h"
 
 #include "SparmGenDot.h"
 
@@ -32,7 +33,8 @@
 
 extern u32 g_Vu1_SparmGenDots __attribute__((section(".vudata")));
 extern u32 g_Vu1_SparmGenDots_End __attribute__((section(".vudata")));
-
+extern unsigned int bg_tex[];
+PbTexture* p_texture_bg = NULL;
 
 const demo_init_t *gp_Info;
 
@@ -95,11 +97,21 @@ u32 start_demo( const demo_init_t* pInfo )
   PbMatrixIdentity( &CameraMatrix );
   PbMatrixTranslate( &CameraMatrix, 0, 0, 700  );
 
+  // create and upload bg texture
+  p_texture_bg = PbTextureCreate32( bg_tex, 640, 256 );
+  PbTextureUpload( p_texture_bg );
+  PbDmaWait02();
+
   // Enter loop
   while( pInfo->time_count > 0 )
   { 
     set_zbufcmp( 1 );
     PbScreenClear( 50<<16|20<<8|20 );
+
+    // draw background
+    PbPrimSpriteTexture( p_texture_bg, 
+                         0<<4,  0<<4,   0<<4, 0<<4, 
+                         640<<4, 256<<4, 640<<4, 256<<4, 1, 0x80808080 );
 
     set_zbufcmp( 2 );
 #define SPLIT_TIME1 201
@@ -114,7 +126,6 @@ u32 start_demo( const demo_init_t* pInfo )
       SparmGenDot_Render(&ViewScreenMatrix, &CameraMatrix,NULL, (int)(pInfo->time_count)-SPLIT_TIME3);
       PbVu1Wait();
 //    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Sync and flipscreen
     PbScreenSyncFlip();   
