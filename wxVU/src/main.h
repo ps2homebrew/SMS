@@ -72,11 +72,21 @@ enum {
     ID_REGINFOBOX
 };
 
-class VUemu : public wxApp {
-    virtual bool OnInit();
-};
+class VUFrame;
 
-IMPLEMENT_APP(VUemu)
+class VUemu : public wxApp {
+  public :
+
+  virtual bool OnInit();
+
+  // not very nice
+
+  static inline VUFrame*  GetVuFrame() { return ms_pFrame; }
+
+  private :
+
+  static VUFrame*         ms_pFrame;
+};
 
 static int READY = 1;
 static int RESET = 2;
@@ -287,39 +297,3 @@ public:
         // void    OnSize(wxSizeEvent &);
         DECLARE_EVENT_TABLE()
 };
-
-BEGIN_EVENT_TABLE(VUFrame, wxFrame)
-	EVT_MENU(ID_FILE_LOADCODE, VUFrame::OnLoadCode)
-	EVT_MENU(ID_FILE_LOADMEM, VUFrame::OnLoadMem)
-	EVT_MENU(ID_FILE_LOADPROJECT, VUFrame::OnLoadProject)
-	EVT_MENU(ID_FILE_LOADVIF, VUFrame::OnLoadVIF)
-	EVT_MENU(ID_FILE_LOADDMA, VUFrame::OnLoadDMA)
-	EVT_MENU(ID_FILE_SAVECODE, VUFrame::OnSaveCode)
-	EVT_MENU(ID_FILE_SAVESTATE, VUFrame::OnSaveState)
-	EVT_MENU(ID_TOOL_RESET, VUFrame::OnReset)
-	EVT_MENU(ID_TOOL_RESTART, VUFrame::OnRestart)
-	EVT_MENU(ID_TOOL_STEP, VUFrame::OnStep)
-	EVT_MENU(ID_TOOL_RUN, VUFrame::OnRun)
-	EVT_MENU(ID_OPTION_SETTINGS, VUFrame::OnSettings)
-	EVT_MENU(ID_HELP, VUFrame::OnHelp)
-	EVT_MENU(ID_FILE_QUIT, VUFrame::OnQuit)
-	EVT_MENU(ID_REMOTE_VU0, VUFrame::OnVu0)
-	EVT_MENU(ID_REMOTE_VU1, VUFrame::OnVu1)
-	EVT_MENU(ID_REMOTE_VU0ALL, VUFrame::OnVu0All)
-	EVT_MENU(ID_REMOTE_VU1ALL, VUFrame::OnVu1All)
-	EVT_MENU(ID_REMOTE_REGS, VUFrame::OnRegs)
-	EVT_MENU(ID_REMOTE_REGSVU0, VUFrame::OnRegsVu0)
-	EVT_MENU(ID_REMOTE_REGSVU1, VUFrame::OnRegsVu1)
-	EVT_MENU(ID_REMOTE_GSINIT, VUFrame::OnGSInit)
-	EVT_MENU(ID_REMOTE_CLR, VUFrame::OnCLR)
-    EVT_GRID_CELL_LEFT_DCLICK(VUFrame::OnBreakpoint)
-    EVT_GRID_CELL_CHANGE(VUFrame::OnCellChange)
-    EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK1, VUFrame::OnNotebookOne)
-    EVT_RADIOBOX(ID_MEMORYRADIO, VUFrame::OnMemoryRadio)
-    EVT_RADIOBOX(ID_INTREGRADIO, VUFrame::OnIntRegRadio)
-    EVT_RADIOBOX(ID_FLOATREGRADIO, VUFrame::OnFloatRegRadio)
-    EVT_RADIOBOX(ID_SPECREGRADIO, VUFrame::OnSpecRegRadio)
-    EVT_GRID_LABEL_LEFT_CLICK(VUFrame::OnGridLabel)
-    EVT_TREE_ITEM_ACTIVATED(ID_REGTREE, VUFrame::OnMiscRegSelect)
-    // EVT_SIZE(VUFrame::OnSize)
-END_EVENT_TABLE()
