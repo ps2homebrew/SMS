@@ -44,7 +44,7 @@ typedef union
 {
 	struct {
 		float u, v;
-	};
+	} uv;
 	u64 _st;
 } uvcoord;
 
@@ -59,7 +59,9 @@ typedef struct{
 } vertex __attribute__((aligned(16)));
 
 gridcoord coords[NUM_GRID_POINTS] __attribute__((aligned(16)));
-static u64 gif_buffer[(4+9*NUM_X*NUM_Y) + 1] __attribute__((aligned(16)));
+static u64 gif_buffer[(12*NUM_X*NUM_Y+4)*2] __attribute__((aligned(16)));
+static u64* p_data; 
+static int z_table[128];
 
 void init_grid()
 {
@@ -175,75 +177,22 @@ void calc_coords(float t, float progress)
 			fd_tunnel(Origin,Direction,&a_u,&a_v,&a_z);
 			fd_planes(Origin,Direction,&b_u,&b_v,&b_z);
 			
-			g->st.u = lerp(a_u, b_u, blend);
-			g->st.v = lerp(a_v, b_v, blend);
+			g->st.uv.u = lerp(a_u, b_u, blend);
+			g->st.uv.v = lerp(a_v, b_v, blend);
 			g->z = lerp(a_z, b_z, blend);
 		}
 	}	
 }
 
-void PbPrimTriangleTextureLit( PbTexture* pTex, int x1, int y1, int u1, int v1, int color1, 
-                                               int x2, int y2, int u2, int v2, int color2,  
-                                               int x3, int y3, int u3, int v3, int color3 ) 
-{ 
-  u64* p_store; 
-  u64* p_data; 
-  int z = 0;
-
-  x1 += 2048 << 4; 
-  y1 += 2048 << 4; 
-  x2 += 2048 << 4; 
-  y2 += 2048 << 4; 
-  x3 += 2048 << 4; 
-  y3 += 2048 << 4; 
-
-  p_store = p_data = PbSprAlloc( 12*16 ); 
-   
-  *p_data++ = GIF_TAG( 11, 1, 0, 0, 0, 1 ); 
-  *p_data++ = GIF_AD; 
-
-  *p_data++ = PbTextureGetTex0( pTex ); 
-  *p_data++ = GS_TEX0_1; 
-
-  *p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_TRIANGLE, 1, 1, 0, 0, 0, 1, 0, 0) ; 
-  *p_data++ = GS_PRIM; 
-
-  *p_data++ = color1; 
-  *p_data++ = GS_RGBAQ; 
-
-  *p_data++ = GS_SETREG_UV( u1, v1 ); 
-  *p_data++ = GS_UV; 
-
-  *p_data++ = GS_SETREG_XYZ2( x1, y1, z ); 
-  *p_data++ = GS_XYZ2; 
-
-  *p_data++ = color2; 
-  *p_data++ = GS_RGBAQ; 
-
-  *p_data++ = GS_SETREG_UV( u2, v2 ); 
-  *p_data++ = GS_UV; 
-
-  *p_data++ = GS_SETREG_XYZ2( x2, y2, z ); 
-  *p_data++ = GS_XYZ2; 
-  
-  *p_data++ = color3; 
-  *p_data++ = GS_RGBAQ;  
-  
-  *p_data++ = GS_SETREG_UV( u3, v3 ); 
-  *p_data++ = GS_UV; 
-
-  *p_data++ = GS_SETREG_XYZ2( x3, y3, z ); 
-  *p_data++ = GS_XYZ2; 
-
-  PbDmaSend02Spr( p_store, 12 ); 
-}
-
 u64 expand_color(int c)
 {
+	if(c>127) c=127;
+	else if(c<0) c=0;
+	c = z_table[c];
 	return 0x3F80000000000000|(u64)(c<<16|c<<8|c);
 }
 
-void draw_quad(u64* p_data,gridcoord*a, gridcoord*b, gridcoord*c, gridcoord*d)
+void draw_quad(gridcoord*a, gridcoord*b, gridcoord*c, gridcoord*d)
 {
 	int x0,y0,x1,y1,x2,y2,x3,y3;
 	
@@ -256,26 +205,8 @@ void draw_quad(u64* p_data,gridcoord*a, gridcoord*b, gridcoord*c, gridcoord*d)
 	x3 = FTOI4(d->x * SCR_W + 2048);
 	y3 = FTOI4(d->y * SCR_H + 2048);
 
-//	DrawQuad(texture,x0,y0,&a->st._st,c0,x2,y2,&c->st._st,c2,x1,y1,&b->st._st,c1,x3,y3,&d->st._st,c3);
 	{ 
-		u64* p_store; 
-		u64* p_data; 
-		
-		p_store = p_data = PbSprAlloc( 16*16 ); 
-		
-		*p_data++ = GIF_TAG( 15, 1, 0, 0, 0, 1 ); 
-		*p_data++ = GIF_AD; 
-		
-		*p_data++ = PbTextureGetTex0( texture ); 
-		*p_data++ = GS_TEX0_1; 
-		
-		*p_data++ = 1<<GS_TEX1_MMIN_LINEAR_MIPMAP_LINEAR;
-		*p_data++ = GS_TEX1_1; 
-		
-		*p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_TRISTRIP, 1, 1, 0, 0, 0, 0, 0, 0) ; 
-		*p_data++ = GS_PRIM; 
-		
-		
+			
 		*p_data++ = expand_color(127*a->z); 
 		*p_data++ = GS_RGBAQ; 
 		
@@ -318,46 +249,38 @@ void draw_quad(u64* p_data,gridcoord*a, gridcoord*b, gridcoord*c, gridcoord*d)
 		
 		*p_data++ = GS_SETREG_XYZ2( x3, y3, 0 ); 
 		*p_data++ = GS_XYZ2; 
-		
-		PbDmaSend02Spr( p_store, 16 ); 
 	}
-	
-//	PbPrimTriangleTextureLit(texture, x0, y0, u0, v0, c0, x1, y1, u1, v1, c1, x3, y3, u3, v3, c3);
-//	PbPrimTriangleTextureLit(texture, x3, y3, u3, v3, c3, x2, y2, u2, v2, c2, x0, y0, u0, v0, c0);
 }
 
 void draw_grid()
 {
 	int x,y;
 	
+	
+	p_data = gif_buffer; 
+
+	*p_data++ = GIF_TAG( 12*NUM_X*NUM_Y+3, 1, 0, 0, 0, 1 ); 
+	*p_data++ = GIF_AD; 
+	
+	*p_data++ = PbTextureGetTex0( texture ); 
+	*p_data++ = GS_TEX0_1; 
+	
+	*p_data++ = 1<<GS_TEX1_MMIN_LINEAR_MIPMAP_LINEAR;
+	*p_data++ = GS_TEX1_1; 
+	
+	*p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_TRISTRIP, 1, 1, 0, 0, 0, 0, 0, 0) ; 
+	*p_data++ = GS_PRIM; 
+			
 	for(y=0; y<NUM_Y; ++y)
 	{
 		for(x=0; x<NUM_X; ++x)
 		{
-			draw_quad(gif_buffer,&coords[CALC_GRID_POS(x,y)],&coords[CALC_GRID_POS(x+1,y)],&coords[CALC_GRID_POS(x,y+1)], &coords[CALC_GRID_POS(x+1,y+1)]);
+			draw_quad(&coords[CALC_GRID_POS(x,y)],&coords[CALC_GRID_POS(x+1,y)],&coords[CALC_GRID_POS(x,y+1)], &coords[CALC_GRID_POS(x+1,y+1)]);
 		}
 	}	
-	
-/*   PbPrimTriangleTexture(texture, 0<<4,  0<<4,   0<<4,   0<<4,
-   								  SCR_W<<4,  0<<4,  255<<4,   0<<4,
-   								  SCR_W<<4,  SCR_H<<4,  255<<4,   255<<4, 
-   								  0, 0x80<<16|0x80<<8|0x80);
-   								  
-   PbPrimTriangleTexture(texture, SCR_W<<4,  SCR_H<<4,  255<<4,   255<<4,
-   								  0<<4,  SCR_H<<4,  0<<4,   255<<4,
-   								  0<<4,  0<<4,   0<<4,   0<<4, 
-   								  0, 0x80<<16|0x80<<8|0x80); */
 
-	
-//  FlushCache(0);
-//	PbDmaSend02Spr( gif_buffer, (4+9*NUM_X*NUM_Y)+1 );
-	
-	/*
-    PbPrimSpriteTexture( texture, 
-                            0<<4,  0<<4,   0<<4,   0<<4, 
-                          640<<4, 224<<4, 255<<4, 255<<4, 0, 0x80<<16|0x80<<8|0x80 );
-    */
-	
+	FlushCache(0);
+	PbDmaSend02( gif_buffer, 12*NUM_X*NUM_Y+4 );
 }
 
 void init_textures()
@@ -379,27 +302,13 @@ void init_textures()
 
 void demo_init()
 {
+	int i;
 	PbScreenSetup( SCR_W, SCR_H, SCR_PSM );
 	init_textures();
 	init_grid();
+	for(i=0;i<128;++i)
+		z_table[i] = 127 * ((i*i)/(128.0f*128.0f));
 }
-
-/*void test()
-{
-	uvcoord uva,uvb,uvc,uvd;                          
-	int ax=0,ay=0;
-	int bx=SCR_W<<4,by=0;
-	int cx=0,cy=SCR_H<<4;
-	int dx=SCR_W<<4,dy=SCR_H<<4;
-	
-	uva.u = 0; uva.v = 0;
-	uvb.u = 1; uvb.v = 0;
-	uvc.u = 0; uvc.v = 1;
-	uvd.u = 1; uvd.v = 1;
-
-	DrawQuad(texture, ax, ay, &uva._st, 0x808080, cx, cy, &uvc._st, 0x808080, bx, by, &uvb._st, 0x808080, dx, dy, &uvd._st, 0x808080);
-}*/
-
 
 u32 start_demo( const demo_init_t* pInfo )
 {
@@ -418,7 +327,7 @@ u32 start_demo( const demo_init_t* pInfo )
 		PbScreenSyncFlip();
 	}
 	
-//	LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
+	LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
   
   	return pInfo->screen_mode;
 }
