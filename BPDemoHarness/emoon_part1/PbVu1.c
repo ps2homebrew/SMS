@@ -14,6 +14,9 @@ extern const demo_init_t* gp_Info; // YUCK EXTERN!
 extern u32 g_PbVu1_FlatSimple __attribute__((section(".vudata")));
 extern u32 g_PbVu1_FlatSimple_End __attribute__((section(".vudata")));
 
+extern u32 g_PbVu1_Envmap __attribute__((section(".vudata")));
+extern u32 g_PbVu1_Envmap_End __attribute__((section(".vudata")));
+
 ///////////////////////////////////////////////////////////////////////////////
 // PBVu1_Start( int adress )
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,6 +47,14 @@ void PbVu1_AddToChain( int ProgId,void* pChain,int Adress )
       p_end   = &g_PbVu1_FlatSimple_End;
       break;
     }
+
+    case 1 : 
+    {
+      p_start = &g_PbVu1_Envmap;
+      p_end   = &g_PbVu1_Envmap_End;
+      break;
+    }
+
   }
 
   if( p_start == NULL )

@@ -85,7 +85,7 @@ DECLARE_GS_PACKET(dma_buf, 4096); /*  Declare a 50 element dma buffer */
 
 static u32 fb_pointers[2]; /* Pointers to our two frame buffers */
 static u32 zbuf_pointer;   /* Poniter to z buffer */
-static u32 tex_pointer;    /* Pointer to text vram */
+u32 tex_pointer;    /* Pointer to text vram */
 static int curr_fb; /* The current fb number */
 static int vis_fb;  /* The current visible fb number */
 int offs_x, offs_y; /* Offset of framebuffer to display */
@@ -103,11 +103,16 @@ int init_gs()
   vis_fb = 0;
   max_x = SCR_W - 1; 
   max_y = SCR_H - 1; 
-  curr_size = 512 * 512; /* Assuming PSM0 */
+  curr_size = SCR_W * SCR_H; /* Assuming PSM0 */
   fb_pointers[0] = vram_malloc(curr_size);
   fb_pointers[1] = vram_malloc(curr_size);
   zbuf_pointer = vram_malloc(curr_size);
   tex_pointer = vram_malloc(curr_size);
+
+  out( "fb_pointers[0]: 0x%x\n", fb_pointers[0] );
+  out( "fb_pointers[1]: 0x%x\n", fb_pointers[1] );
+  out( "zbuf_pointer: 0x%x\n", zbuf_pointer );
+  out( "tex_pointer: 0x%x\n", zbuf_pointer );
 
   /* Statically allocate vram. No checking done */
 
@@ -137,14 +142,20 @@ int init_gs()
   
   BEGIN_GS_PACKET(dma_buf);
   
-  GIF_TAG_AD(dma_buf, 6, 1, 0, 0, 0);
+  GIF_TAG_AD(dma_buf, 6+5, 1, 0, 0, 0);
   
   GIF_DATA_AD(dma_buf, PS2_GS_PRMODECONT, 1);
   GIF_DATA_AD(dma_buf, PS2_GS_FRAME_1, PS2_GS_SETREG_FRAME_1(0, SCR_W / 64, SCR_PSM, 0));
   GIF_DATA_AD(dma_buf, PS2_GS_XYOFFSET_1, PS2_GS_SETREG_XYOFFSET_1(offs_x << 4, offs_y << 4));
   GIF_DATA_AD(dma_buf, PS2_GS_SCISSOR_1,PS2_GS_SETREG_SCISSOR_1(0, SCR_W-1, 0, SCR_H - 1));      
   GIF_DATA_AD(dma_buf, PS2_GS_ZBUF_1, PS2_GS_SETREG_ZBUF_1(zbuf_pointer / 2048, 0, 0));
-  GIF_DATA_AD(dma_buf, PS2_GS_TEST_1, PS2_GS_SETREG_TEST(1, 7, 0xFF, 0, 0, 0, 0, 0));
+  GIF_DATA_AD(dma_buf, PS2_GS_TEST_1, PS2_GS_SETREG_TEST(1, 7, 0xFF, 0, 0, 0, 1, 1));
+
+  GIF_DATA_AD(dma_buf, PS2_GS_FRAME_2, PS2_GS_SETREG_FRAME_2(0, SCR_W / 64, SCR_PSM, 0));
+  GIF_DATA_AD(dma_buf, PS2_GS_XYOFFSET_2, PS2_GS_SETREG_XYOFFSET_2(offs_x << 4, offs_y << 4));
+  GIF_DATA_AD(dma_buf, PS2_GS_SCISSOR_2,PS2_GS_SETREG_SCISSOR_2(0, SCR_W-1, 0, SCR_H - 1));      
+  GIF_DATA_AD(dma_buf, PS2_GS_ZBUF_2, PS2_GS_SETREG_ZBUF_2(zbuf_pointer / 2048, 0, 0));
+  GIF_DATA_AD(dma_buf, PS2_GS_TEST_2, PS2_GS_SETREG_TEST(1, 7, 0xFF, 0, 0, 0, 1, 1));
   
   SEND_GS_PACKET(dma_buf);
   
@@ -222,9 +233,11 @@ void set_active_fb(u8 fb)
 
 {
   BEGIN_GS_PACKET(dma_buf);
-  GIF_TAG_AD(dma_buf, 1, 1, 0, 0, 0);
+  GIF_TAG_AD(dma_buf, 2, 1, 0, 0, 0);
   
+  GIF_DATA_AD(dma_buf, PS2_GS_SCISSOR_1,PS2_GS_SETREG_SCISSOR_1(0, SCR_W-1, 0, SCR_H - 1));      
   GIF_DATA_AD(dma_buf, PS2_GS_FRAME_1, PS2_GS_SETREG_FRAME_1(fb_pointers[fb&1]/2048, SCR_W / 64, SCR_PSM, 0));
+  GIF_DATA_AD(dma_buf, PS2_GS_FRAME_2, PS2_GS_SETREG_FRAME_2(fb_pointers[fb&1]/2048, SCR_W / 64, SCR_PSM, 0));
   
   SEND_GS_PACKET(dma_buf);
 }

@@ -36,7 +36,7 @@ void PbDma_Wait01()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// void PbDma_Send01Chain
+// void PbDma_Send02Chain
 // NOTE: This function doesnt check if the DMA is ready, outside functions
 //       need to do that.
 //////////////////////////////////////////////////////////////////////////////
@@ -56,6 +56,32 @@ void PbDma_Send02Chain( void* pList, int SPR )
                        0,     // Transfer DMAtag
                        0,     // Adress stack pointer
                        1,     // ChainMode
+                       1 );   // Direction
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbDma_Send02
+// NOTE: This function doesnt check if the DMA is ready, outside functions
+//       need to do that.
+//////////////////////////////////////////////////////////////////////////////
+
+void PbDma_Send02( void* pList,int Size, int SPR )
+{
+  // We need to set the topbit if we are sending from SPR
+
+	if( SPR == 1 )
+		*D2_MADR = (u32)pList | 0x80000000;
+  else
+		*D2_MADR = (u32)pList;
+
+	*D2_QWC = Size;             // Write size
+	
+		
+ 	*D2_CHCR = DMA_CHCR( 1,     // Start DMA
+                       0,     // No Interrupts
+                       0,     // Transfer DMAtag
+                       0,     // Adress stack pointer
+                       0,     // ChainMode
                        1 );   // Direction
 }
 

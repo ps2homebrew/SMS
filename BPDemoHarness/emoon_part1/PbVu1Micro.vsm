@@ -10,11 +10,11 @@ vfAngles        = 8
 iGiftag         = 0
 vfData          = 1
 
-
-
 .global         g_PbVu1_FlatSimple
 .global         g_PbVu1_FlatSimple_End
-                
+.global         g_PbVu1_Envmap
+.global         g_PbVu1_Envmap_End
+
                 .p2align 4  ; This aligns the following data to quadword alignment
                 .vu
 
@@ -219,3 +219,95 @@ poly_loop:
                                 
 g_PbVu1_FlatSimple_End:
 
+;//////////////////////////////////////////////////////////////////////////////////////////////////
+;//
+;//
+;//                
+;//    
+                
+                
+                .p2align 4  ; This aligns the following data to quadword alignment
+
+
+g_PbVu1_Envmap:
+
+                nop                             xtop        vi14
+                                
+                nop                             lq          vf28, 0(vi00)
+                nop                             lq          vf29, 1(vi00)
+                nop                             lq          vf30, 2(vi00)
+                nop                             lq          vf31, 3(vi00)
+
+                nop                             lq          vf24, 4(vi00)
+                nop                             lq          vf25, 5(vi00)
+                nop                             lq          vf26, 6(vi00)
+                nop                             lq          vf27, 7(vi00)
+
+                nop                             iaddiu      vi02, vi14, 246         ; 
+                nop                             iaddiu      vi03, vi14, 246         ; xgkick adree
+                nop                             iaddiu      vi01, vi14, vfData      ; coord adress
+                
+                nop                             lq.xyzw     vf06, iGiftag(vi14)     ; giftag
+                nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
+                
+                nop                             iaddiu      vi05, vi00, 80
+                add.xyzw    vf06,vf00,vf00      loi 25.0
+                addi        vf07,vf00,I         nop
+t_loop:      
+                add.xyzw    vf06, vf06, vf07    nop
+                ftoi0       vf08, vf06          loi         1.0
+                sub         vf10, vf10, vf10    lqi         vf05, (vi01++)          ; XYZ
+                nop                             lqi         vf09, (vi01++)          ; Normal
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                mulax     acc,  vf28, vf05x     nop                                 
+                madday    acc,  vf29, vf05y     nop                                 
+                maddaz    acc,  vf30, vf05z     nop                                 
+                maddw     vf05, vf31, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                
+                ;/////////////////////////////////////////////////////////////////////////////////////////
+                ;// Rotate normal
+
+                mulax     acc,   vf24, vf09x    nop                                 
+                madday    acc,   vf25, vf09y    nop                                 
+                maddaz    acc,   vf26, vf09z    nop                                 
+                maddw     vf09,  vf27, vf09w    nop                                 
+               
+                ;/////////////////////////////////////////////////////////////////////////////////////////
+                ;// trunc if negative
+                
+                nop                             sqi         vf10, (vi02++)
+                nop                             waitq
+                
+                mulq      vf05, vf05, q         loi         127.0                                 
+                ftoi4     vf05, vf05            nop                                 ; fixedpoint for gif
+                
+                muli      vf09,  vf09, i        nop
+                addi.xy   vf09xy, vf09xy, i     nop
+                ftoi4     vf09, vf09            nop
+                nop                             sqi         vf09, (vi02++)
+                nop                             sqi         vf05, (vi02++)          ; store xyz
+                
+                nop                             iaddi       vi05, vi05, -1          ; 
+                nop                             nop                                 ;
+                nop                             ibne        vi05, vi00, t_loop   ; loop check
+                nop                             nop
+                nop                             xgkick      vi03
+                nop[e]                          nop
+                nop                             nop
+
+g_PbVu1_Envmap_End:
+
+/*
+                
+                max.z     vf09z, vf00z, vf09z   nop
+                addz.x    vf10x, vf00x, vf09z   loi         255.0        
+                addz.y    vf10y, vf00y, vf09z   nop        
+                addz.z    vf10z, vf00z, vf09z   nop        
+
+                muli       vf10, vf10, i        nop
+                ftoi0      vf10, vf10           nop                        
+*/

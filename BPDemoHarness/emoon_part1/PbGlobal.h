@@ -9,6 +9,14 @@
 #include "../harness.h" // dependent on tamtypes
 extern const demo_init_t* gp_Info; // nice
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 /////////////////////////////////////////////////////////////////////
 // output stuff, made with intention of being fast to type 
 /////////////////////////////////////////////////////////////////////

@@ -14,6 +14,8 @@
 #define VIF_MSCALF			0x15	
 #define VIF_MSCNT			  0x17	
 #define VIF_MPG				  0x4A	
+#define VIF_DIRECT  	  0x50
+#define VIF_DIRECTHL	  0x51	
 
 #define VIF_UNPACK			  0x60
 #define VIF_UNPACK_MASK		0x10

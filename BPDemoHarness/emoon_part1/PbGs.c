@@ -1,5 +1,46 @@
 #include "PbGs.h"
 #include "PbGlobal.h"
+#include "PbSpr.h"
+#include "PbDma.h"
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbGs_SetZbufferTest
+///////////////////////////////////////////////////////////////////////////////
+
+void PbGs_SetZbufferTest( int Mode, int Context )
+{
+  u64* p_data = PbSpr_Alloc( 2*16, TRUE );
+
+  p_data[0] = GS_GIF_TAG( 1, 0, 0, 0, 1, 1 );
+  p_data[1] = GS_AD;
+  
+  p_data[2] = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, Mode );
+  p_data[3] = GS_REG_TEST_1+Context;
+
+  PbDma_Wait02();
+  PbDma_Send02( p_data, 2, 1 ); 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbGs_SetRenderTarget
+///////////////////////////////////////////////////////////////////////////////
+
+void PbGs_SetRenderTarget( u32 Target )
+{
+  u64* p_data = NULL;
+  u64* p_store = NULL;
+
+  p_data = p_store = PbSpr_Alloc( 2*16, TRUE );
+
+  *p_data++ = GS_GIF_TAG( 1, 0, 0, 0, 1, 1 );
+  *p_data++ = GS_AD;
+
+  *p_data++ = GS_SETREG_FRAME_1( Target / 2048, 256 / 64, 0, 0 );
+  *p_data++ = GS_REG_FRAME_1;
+
+  PbDma_Wait02();
+  PbDma_Send02( p_store, 2, TRUE );
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // PbGs_ShowStats()

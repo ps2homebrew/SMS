@@ -194,6 +194,12 @@ void fill_rect(s32 x0, s32 y0, s32 x1, s32 y1, u32 z, u32 col)
   SEND_GS_PACKET(dma_buf);
 }
 
+
+void set_tex(rect r, u32 tex_p, u32 texw, u32 texh)
+{
+
+}
+
 void fill_rect_tex(rect r, u32 tex_p, u32 texw, u32 texh)
 {
   r.v[0].x += offs_x;
@@ -205,11 +211,11 @@ void fill_rect_tex(rect r, u32 tex_p, u32 texw, u32 texh)
   
   if(alpha_en)
     {
-      GIF_TAG_AD(dma_buf, 10, 1, 0, 0, 0);
+      GIF_TAG_AD(dma_buf, 11, 1, 0, 0, 0);
     }
   else
     {
-      GIF_TAG_AD(dma_buf, 9, 1, 0, 0, 0);
+      GIF_TAG_AD(dma_buf, 10, 1, 0, 0, 0);
     }
   
   GIF_DATA_AD(dma_buf, PS2_GS_TEXFLUSH, 0x42);
@@ -222,10 +228,11 @@ void fill_rect_tex(rect r, u32 tex_p, u32 texw, u32 texh)
 		      gs_texture_wh(texw),	// width
 		      gs_texture_wh(texh),	// height
 		      1,					// RGBA
-		      PS2_GS_TEX_TFX_MODULATE,		       
+		      PS2_GS_TEX_TFX_DECAL,		       
 		      0,0,0,0,0));
 
   GIF_DATA_AD(dma_buf, PS2_GS_TEX1_1, PS2_GS_SETREG_TEX1_1(0, 0, 1, 1, 0, 0, 0));
+  GIF_DATA_AD(dma_buf, PS2_GS_CLAMP_1, PS2_GS_SETREG_CLAMP( 0, 0, 0, 256, 0, 256) );
 
   if(alpha_en)
     {
@@ -233,7 +240,7 @@ void fill_rect_tex(rect r, u32 tex_p, u32 texw, u32 texh)
     }
 
   GIF_DATA_AD(dma_buf, PS2_GS_PRIM,
-	      PS2_GS_SETREG_PRIM(PS2_GS_PRIM_PRIM_SPRITE, 0, 1, 0, alpha_en, 0, 1, 0, 0));
+	      PS2_GS_SETREG_PRIM(PS2_GS_PRIM_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
   
   GIF_DATA_AD(dma_buf, PS2_GS_RGBAQ, r.col);
   

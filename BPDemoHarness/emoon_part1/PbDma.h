@@ -97,6 +97,7 @@ void PbDma_Send01Chain( void* pList, int SPR );
 void PbDma_Wait01();
 
 void PbDma_Send02Chain( void* pList, int SPR );
+void PbDma_Send02( void* pList,int Size, int SPR );
 void PbDma_Wait02();
 
 
