@@ -17,7 +17,7 @@ IOP_OBJS = obj/main.o obj/FileSystem.o obj/FtpServer.o obj/FtpClient.o obj/FtpCo
 IOP_CFLAGS += -Wall -fno-builtin
 # -DDEBUG
 IOP_LDFLAGS += -s
-IOP_INCS += -I$(PS2SDK)/iop/tcpip/tcpip/include -I$(PS2SDK)/iop/tcpip/dns/include -I$(PS2SDK)/iop/system/iopmgr/include
+IOP_INCS += -I$(PS2SDK)/iop/include
 
 all: $(IOP_OBJS_DIR) $(IOP_BIN_DIR) $(IOP_BIN)
 
