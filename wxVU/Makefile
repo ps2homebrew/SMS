@@ -24,7 +24,7 @@ ZIP = zip -9
 
 all: vuemu run
 
-vuemu: $(OBJECTS)
+wxVU: $(OBJECTS)
 	@cd obj; \
 	$(CPP) $(CFLAGS) -o ../bin/vuemu $(OBJECTS) $(LIBS)
 

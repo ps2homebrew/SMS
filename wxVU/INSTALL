@@ -1,0 +1,8 @@
+Building wxVU requires wxWidgets, go get it for your platform at
+http://www.wxwidgets.org
+
+To compile wxVU on Unix.
+    make wxVU
+
+To compile wxVU on Win32.
+    .. no nmake file comited yet.
