@@ -3,20 +3,23 @@
 //============================================================================
 
 // Load
-#define REGORDER _T("regOrder")
-#define LASTFILEMEM _T("lastFileMem")
-#define LASTFILECODE _T("lastFileCode")
-#define AUTOLOADLAST _T("autoLoadLast")
+#define REGORDER        _T("regOrder")
+#define LASTFILEMEM     _T("lastFileMem")
+#define LASTFILECODE    _T("lastFileCode")
+#define AUTOLOADLAST    _T("autoLoadLast")
 
 // Remote
-#define AUTOGSEXEC _T("autoGSExec")
-#define BINTMPFILE _T("binTmpFile")
-#define DATTMPFILE _T("datTmpFile")
-#define REGTMPFILE _T("regTmpFile")
-#define GSTMPFILE _T("gsTmpFile")
-#define MEMSTATEFILE _T("memStateFile")
-#define REGSTATEFILE _T("regStateFile")
-#define MNEMONICFILE _T("mnemonicFile")
+#define AUTOGSEXEC      _T("autoGSExec")
+#define BINTMPFILE      _T("binTmpFile")
+#define DATTMPFILE      _T("datTmpFile")
+#define REGTMPFILE      _T("regTmpFile")
+#define GSTMPFILE       _T("gsTmpFile")
+#define MEMSTATEFILE    _T("memStateFile")
+#define REGSTATEFILE    _T("regStateFile")
+#define MNEMONICFILE    _T("mnemonicFile")
+#define DUMPMEMCMD      _T("dumpMemCmd")
+#define DUMPREGCMD      _T("dumpRegCmd")
+#define GSEXECCMD       _T("gsExecCmd")
 
 // Style
 #define FOREGROUND _T("Foreground")
