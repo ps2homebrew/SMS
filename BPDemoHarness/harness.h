@@ -5,6 +5,7 @@
 #define SCRMODE_NTSC 2
 
 typedef int (*printf_t)(const char *s, ...);
+typedef int (*get_pos_t)();
 
 typedef struct _demo_init
 {
@@ -18,9 +19,9 @@ typedef struct _demo_init
   volatile s32  time_count_i;  /* Number of seconds the demo has in 16.16 fixed point */
   volatile float curr_time;    /* The current time in floating point from start of demo */
   volatile u32   curr_time_i;  /* The current time in 16.16 fixed point */
-  volatile float *sync_points; /* A list of sync points in the current demo time */
-  u32   *sync_points_i; /* A list of synx points in the current demo time (fixed point) */
+  u32   *sync_points; /* A list of synx points in the current demo time (fixed point) */
   u32   no_syncs;     /* Number of sync points available */
+  get_pos_t get_pos;
 } demo_init_t;
 
 #define SCR_W 640

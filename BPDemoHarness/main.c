@@ -48,6 +48,9 @@ u32 set_noprintf = 0;
 int palmode;
 u16 fft_nodata[1024];
 
+extern int TOTAL_SYNCS;
+extern u32 sync_samp[];
+
 demo_init_t init;
 
 int init_gs(int scr_mode);
@@ -178,6 +181,7 @@ void reset_init()
       init.printf = printf;
    }
    init.get_fft = get_fft;
+   init.get_pos = StreamLoad_Position;
    init.curr_frame = 0;
    init.frame_count = 0;
    init.time_count = 0;
@@ -185,7 +189,6 @@ void reset_init()
    init.curr_time = 0;
    init.curr_time_i = 0;
    init.sync_points = NULL;
-   init.sync_points_i = NULL;
    init.no_syncs = 0;
 }
 
@@ -367,6 +370,47 @@ void setup_pad()
    }
 }
 
+void setup_syncs(u32 time)
+
+{
+  u32 start, end;
+  int loop;
+
+  start = StreamLoad_Position();
+  end = start + time * 48000;
+
+  for(loop = 0; loop < TOTAL_SYNCS; loop++)
+  {
+     if(sync_samp[loop] > start)
+       break;
+  } 
+
+  if(loop == TOTAL_SYNCS)
+  {
+     init.sync_points = sync_samp;
+     init.no_syncs = 0;
+     return;
+  }
+
+  init.sync_points = &sync_samp[loop];
+
+  for(loop += 1; loop < TOTAL_SYNCS; loop++)
+  {
+     if(sync_samp[loop] > end)
+     {
+       loop -= 1;
+       break;
+     }
+  }
+
+  if(loop == TOTAL_SYNCS)
+  {
+     loop--;
+  }
+
+  init.no_syncs = &sync_samp[loop] - init.sync_points + 1;
+}
+
 int main(int argc, char **argv)
 
 {
@@ -460,6 +504,7 @@ int main(int argc, char **argv)
 
        init.time_count = (float) demos[demo_loop].demo_time;
        init.time_count_i = (demos[demo_loop].demo_time << 16);
+       setup_syncs(demos[demo_loop].demo_time);
        ResetEE(0xFF);
        enable_vblank();
  
