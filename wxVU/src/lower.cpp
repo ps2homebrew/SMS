@@ -36,7 +36,6 @@ VU::VU_BAL(VUInstruction &A) {
     RegInt[A.Params[1][0].index].stall(2);
     RegInt[A.Params[1][0].index].value((int16)(PC+2));
 
-
     //this instructions are due to delay slot
     a = PC;
     CallBackFn(CallBackObj, LOWER, 6);

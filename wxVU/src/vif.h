@@ -157,6 +157,7 @@ private:
     uint32          *data;
     bool            interrupt;
     bool            _maskpath3;
+    bool            _mask;
     uint32          _flg;
     uint32          _addr;
     uint32          _usn;

@@ -22,10 +22,10 @@
 * breakpoint on register/memory condition
 
 **** Version 1 ****
-. large immediates dont generate a warning ( .vsm files )
+. large immediates dont generate a warning ( .vsm files | dvp-as doesnt either )
 . Start on errno.h ( and some getErrorAsText()/perror() thingy )
 . change row/column order of registers
-. add commandline options in pref for batchtools like dumpreg/dumpmem/gsexec
+! add commandline options in pref for batchtools like dumpreg/dumpmem/gsexec
 ! generate labelnames on disasm 
 ! Full VIF support
 ! Parse DMA Tags

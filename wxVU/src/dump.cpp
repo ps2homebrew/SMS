@@ -13,6 +13,10 @@ static int32 sock = -1;
 static SOCKET sock = -1;
 #endif
 
+static  int32 dumpWaitForFile(char *file, uint32 size);
+static  int32 dumpOpen(void);
+static  char cmd[1024];
+
 static int32
 dumpOpen(void) {
 #ifdef __WIN32__
@@ -244,4 +248,131 @@ dumpDisplayList(char *file, uint32 *data, uint32 size) {
     ret = pko_gsexec_req(sock, file, size);
     dumpClose();
 	return 0;
+}
+
+// batch tool versions of the dump commands
+int32
+dumpExecVU(char *arg, char *dfile, char *cfile, uint32 vpu) {
+    FILE *fd;
+    int file_size = 0;
+    unsigned int dmem_offset = 0;
+    unsigned int cmem_offset = 0;
+
+    if (dfile == "" && cfile == "") {
+        return E_FILE_OPEN;
+    }
+    if ((fd = fopen(cfile, "wb")) == NULL ) {
+        dumpClose();
+        return E_FILE_OPEN;
+    }
+    fclose(fd);
+    if ((fd = fopen(dfile, "wb")) == NULL ) {
+        dumpClose();
+        return E_FILE_OPEN;
+    }
+    fclose(fd);
+    if ( vpu == 0 ) {
+        file_size = VU0_SIZE;
+        dmem_offset = VU0_DATA_MEM;
+        cmem_offset = VU0_CODE_MEM;
+    } else {
+        file_size = VU1_SIZE;
+        dmem_offset = VU1_DATA_MEM;
+        cmem_offset = VU1_CODE_MEM;
+    }
+    sprintf(cmd, arg, dfile, dmem_offset, file_size);
+    system(cmd);
+    dumpWaitForFile(dfile, file_size);
+
+    sprintf(cmd, cmd, cfile, dmem_offset, file_size);
+    system(cmd);
+    dumpWaitForFile(cfile, file_size);
+    return E_OK;
+}
+
+int32
+dumpExecVURegisters(char *arg, char *rfile, uint32 vpu) {
+    FILE *fd;
+    int regs;
+    int file_size;
+    if ( rfile == "" ) {
+        return E_FILE_OPEN;
+    }
+    if ( dumpOpen() < 0 ) {
+        dumpClose();
+        return sock;
+    }
+    if ( vpu == 0 ) {
+        regs = 11;
+        file_size = 896;
+    } else {
+        regs = 12;
+        file_size = 896;
+    }
+    if((fd = fopen(rfile, "wb")) == NULL) {
+        return E_FILE_OPEN;
+    }
+    fclose(fd);
+    sprintf(cmd, arg, rfile, file_size);
+    system(cmd);
+    dumpWaitForFile(rfile, file_size);
+    return E_OK;
+}
+
+int32
+dumpExecRegisters(char *arg, char *rfile) {
+    FILE *fd;
+    int regs = 10;
+    int file_size = 508;
+    if ( rfile == "" ) {
+        return E_FILE_OPEN;
+    }
+    if ( (fd = fopen(rfile, "wb")) == NULL ) {
+        return E_FILE_OPEN;
+    }
+    fclose(fd);
+    sprintf(cmd, arg, rfile, file_size, regs);
+    system(cmd);
+    dumpWaitForFile(rfile, file_size);
+    return E_OK;
+}
+
+int32
+dumpExecDisplayList(char *arg, char *file, uint32 *data, uint32 size) {
+    FILE *fd;
+    if ( file == "" ) {
+        return E_FILE_OPEN;
+    }
+    if ( (fd = fopen(file, "wb")) == NULL ) {
+        return E_FILE_OPEN;
+    }
+    fwrite(data, size, 1, fd);
+    fclose(fd);
+    sprintf(cmd, arg, file, size);
+    if ( system(cmd) != 0 ) {
+        return E_SYSTEM_CMD;
+    }
+	return E_OK;
+}
+
+static int32
+dumpWaitForFile(char *file, uint32 size) {
+    struct stat st;
+    int count = 0;
+    while(true) {
+        stat(file, &st);
+        if ( st.st_size == size) {
+            break;
+        }
+#ifdef __WIN32__
+        Sleep(1000);
+#else
+        usleep(1000);
+#endif
+        count++;
+        if ( count == 50 ) {
+            return E_TIMEOUT;
+        }
+    }
+    return E_OK;
 }

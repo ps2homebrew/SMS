@@ -354,10 +354,52 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
     gsTmpFile->Add (m_gsTmpFile, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
     gsTmpFile->Add (4, 0);
     tmpFileBox->Add(gsTmpFile, 0, wxALIGN_LEFT|wxEXPAND);
-      // 
+
+    // Set up remote batch tools
+    wxStaticBoxSizer *remoteTools = new wxStaticBoxSizer (
+                     new wxStaticBox (panel, -1, _("Remote tools")),
+                     wxVERTICAL);
+    m_memTool = new wxTextCtrl (panel, -1, wxEmptyString,
+                                   wxDefaultPosition, wxSize(sz1,-1));
+    wxBoxSizer *memTool = new wxBoxSizer (wxHORIZONTAL);
+    memTool->Add (4, 0);
+    memTool->Add (new wxStaticText (panel, -1, _("batch tool for dump memory"),
+                                       wxDefaultPosition, wxSize(sz1, -1)),
+                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    memTool->Add (6, 0);
+    memTool->Add (m_memTool, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    memTool->Add (4, 0);
+    remoteTools->Add(memTool, 0, wxALIGN_LEFT|wxEXPAND);
+
+    m_regTool = new wxTextCtrl (panel, -1, wxEmptyString,
+                                   wxDefaultPosition, wxSize(sz1,-1));
+    wxBoxSizer *regTool = new wxBoxSizer (wxHORIZONTAL);
+    regTool->Add (4, 0);
+    regTool->Add (new wxStaticText (panel, -1, _("batch tool for dump registers"),
+                                       wxDefaultPosition, wxSize(sz1, -1)),
+                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    regTool->Add (6, 0);
+    regTool->Add (m_regTool, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    regTool->Add (4, 0);
+    remoteTools->Add(regTool, 0, wxALIGN_LEFT|wxEXPAND);
+
+    m_gsTool = new wxTextCtrl (panel, -1, wxEmptyString,
+                                   wxDefaultPosition, wxSize(sz1,-1));
+    wxBoxSizer *gsTool = new wxBoxSizer (wxHORIZONTAL);
+    gsTool->Add (4, 0);
+    gsTool->Add (new wxStaticText (panel, -1, _("batch tool for gsexec"),
+                                       wxDefaultPosition, wxSize(sz1, -1)),
+                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    gsTool->Add (6, 0);
+    gsTool->Add (m_gsTool, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    gsTool->Add (4, 0);
+    remoteTools->Add(gsTool, 0, wxALIGN_LEFT|wxEXPAND);
+
+    //
     wxBoxSizer *panelpane = new wxBoxSizer (wxVERTICAL);
     // panelpane->Add(m_AutoGSExec, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panelpane->Add(tmpFileBox, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    panelpane->Add(remoteTools, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panel->SetSizer(panelpane);
     return panel;
 }

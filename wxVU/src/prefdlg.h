@@ -107,6 +107,9 @@ private:
     wxTextCtrl      *m_datTmpFile;
     wxTextCtrl      *m_regTmpFile;
     wxTextCtrl      *m_gsTmpFile;
+    wxTextCtrl      *m_memTool;
+    wxTextCtrl      *m_regTool;
+    wxTextCtrl      *m_gsTool;
 
     // declarations for PAGE_GIF
     wxTextCtrl      *m_xOffset;

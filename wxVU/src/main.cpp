@@ -35,13 +35,9 @@ using namespace std;
 extern MicroCode Instr;
 extern VU VUchip;
 
+uint32 getFLGField(uint64 data);
 uint32 getNregs(uint64);
 uint32 validateRegsField(uint64);
-uint32 getNLOOP(uint64);
-uint32 getEOP(uint64);
-uint64 getPRE(uint64);
-uint32 getPRIM(uint64);
-uint32 getFLGField(uint64);
 
 static const wxString regSelectChoices[] =
 {
@@ -348,10 +344,6 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
 void
 VUFrame::OnMiscRegSelect(wxTreeEvent &event) {
     miscRegTree->Toggle(event.GetItem());
-}
-
-void
-VUFrame::updateInfoBox(int a, int b) {
 }
 
 void
@@ -998,7 +990,7 @@ VUFrame::OnReset(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::InstFill() {
-    int i;
+    unsigned int i;
     for(i = 0; i < MAX_VUCODE_SIZE; i++) {
         insert(strdup("nop"), strdup("loi"), strdup(""), strdup("0x0"), i);
     }
@@ -1062,7 +1054,7 @@ VUFrame::OnCellChange(wxGridEvent &event) {
 
     switch(regRadioBox->GetSelection()) {
         case 0:
-            sprintf(cNum,"%ld", num);
+            sprintf(cNum,"%ld", (long)num);
             break;
         case 1:
             sprintf(cNum,"%.4f", num/16.0f);
@@ -1449,10 +1441,10 @@ VUFrame::DrawMemory() {
                 sprintf(val[3],"%f",stuff);
 				break;
 			case 5:
-                sprintf(val[0],"0x%x",VUchip.dataMem[i].w);
-                sprintf(val[1],"0x%x",VUchip.dataMem[i].z);
-                sprintf(val[2],"0x%x",VUchip.dataMem[i].y);
-                sprintf(val[3],"0x%x",VUchip.dataMem[i].x);
+                sprintf(val[0],"0x%08x",VUchip.dataMem[i].w);
+                sprintf(val[1],"0x%08x",VUchip.dataMem[i].z);
+                sprintf(val[2],"0x%08x",VUchip.dataMem[i].y);
+                sprintf(val[3],"0x%08x",VUchip.dataMem[i].x);
                 break;
 			default:
 				break;
@@ -1961,27 +1953,7 @@ validateRegsField(uint64 regs) {
 
 uint32
 getFLGField(uint64 data) {
-    return((data>>58)&0x3);
-}
-
-uint32
-getPRIM(uint64 data) {
-    return((data>>47)&0x3ff);
-}
-
-uint64
-getPRE(uint64 data) {
-    return((data>>46)&0x1);
-}
-
-uint32
-getEOP(uint64 data) {
-    return((data>>15)&0x1);
-}
-
-uint32
-getNLOOP(uint64 data) {
-   return (data&0x7FFF);
+    return ((data>>60));
 }
 
 uint32

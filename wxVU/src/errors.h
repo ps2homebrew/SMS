@@ -2,6 +2,7 @@
 #define _ERRORS
 #include "datatypes.h"
 
+const int32     E_OK            =   0;
 const int32     E_TIMEOUT       =   -10;
 // VU Errors
  
@@ -16,4 +17,7 @@ const int32     E_SOCK_CLOSE    =   -23;
 const int32     E_FILE_OPEN     =   -30;
 const int32     E_FILE_READ     =   -31;
 const int32     E_FILE_WRITE    =   -32;
+
+//
+const int32     E_SYSTEM_CMD    =   -40;
 #endif

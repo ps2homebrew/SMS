@@ -22,7 +22,7 @@ class DebugStream
 								DebugStream();
   virtual			 ~DebugStream() {}
 	        			DebugStream& flush();
-	inline				DebugStream& operator<<(DebugStream& (__cdecl * _f)(DebugStream&));
+	inline				DebugStream& operator<<(DebugStream& (DebugStream&));
 	inline				DebugStream& operator<<( const unsigned char *);
 	inline				DebugStream& operator<<( const signed char *);
 	inline				DebugStream& operator<<( const char *);
@@ -62,11 +62,11 @@ DebugStream& DebugStream::operator<<( float p ) { char a[256]; a[0] = 0; sprintf
 DebugStream& DebugStream::operator<<( double p ) { char a[256]; a[0] = 0; sprintf( a,"%f", p ); strcat( m_aBuffer, a );   return (*this); }
 DebugStream& DebugStream::operator<<( long double p ) { char a[256]; a[0] = 0; sprintf( a,"%f", p ); strcat( m_aBuffer, a );   return (*this); }
 
-inline DebugStream& DebugStream::operator<<( DebugStream& (__cdecl * _f)(DebugStream&)) { (*_f)(*this); return *this; }
+inline DebugStream& DebugStream::operator<<( DebugStream& (* _f)(DebugStream&)) { (*_f)(*this); return *this; }
 
-inline DebugStream& __cdecl flush( DebugStream& _outs ) { return _outs.flush(); }
-inline DebugStream& __cdecl endl( DebugStream& _outs ) { return (_outs << '\n').flush(); }
-inline DebugStream& __cdecl ends( DebugStream& _outs ) { return _outs << char('\0'); }
+inline DebugStream& flush( DebugStream& _outs ) { return _outs.flush(); }
+inline DebugStream& endl( DebugStream& _outs ) { return (_outs << '\n').flush(); }
+inline DebugStream& ends( DebugStream& _outs ) { return _outs << char('\0'); }
 
 extern DebugStream cdbg;
 #define cdbgfl cdbg << "file: " << __FILE__ << " line: " << __LINE__
