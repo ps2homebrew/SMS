@@ -1,7 +1,8 @@
 EE_BIN = harness.elf
 EE_OBJS = crt0.o main.o gs.o stream_ee/streamload_rpc.o
 # uncomment to add newlib support
-#EE_LIBS = $(NEWLIB)/lib/libc.a
+#EE_LIBS = $(NEWLIB)/lib/libc.a -lpad
+EE_LIBS = -lpad
 
 all: $(EE_BIN)
 
