@@ -1,4 +1,3 @@
-DVP_AS = dvp-elf-as
 
 # Include directories
 EE_INCS := -I$(PS2LIB)/ee/include -I$(PS2LIB)/common/include -I. $(EE_INCS)
@@ -37,9 +36,6 @@ EE_CXX_COMPILE = $(EE_CC) $(EE_CXXFLAGS) $(EE_INCS)
 
 %.o : %.s
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
-
-%.o : %.vsm
-	$(DVP_AS) $< -o $@
 
 $(EE_BIN) : $(EE_OBJS) $(PS2LIB)/ee/startup/crt0.o
 	$(EE_CC) -nostartfiles -Tlinkfile $(EE_LDFLAGS) \
