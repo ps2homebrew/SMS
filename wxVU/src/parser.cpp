@@ -557,7 +557,7 @@ Parser::SetParam(VuInstruction &inst, int j, int mode, char * token) {
             }
             if(v==2)
                 strcpy(inst.Params[mode][j].label,root);
-            inst.Params[mode][j].data=Imm11;
+            inst.Params[mode][j].data = Imm11;
             break;
         case 10: //Imm5
             if(!GetVal(root,&Imm5)) return 0;
@@ -943,10 +943,12 @@ Parser::LoadAsciiCode(ifstream *fin, char *code, int size) {
 bool
 Parser::LoadBinaryCode(ifstream *fin, char *data) {
     uint32 ucode, lcode;
-    int uidx, lidx;
+    int uidx, lidx, index;
     char lparam[50];
     char uparam[50];
     string test;
+
+    index = 0;
 
     while(!fin->eof() ) {
         fin->read((char *)&lcode, sizeof(uint32));
@@ -962,8 +964,8 @@ Parser::LoadBinaryCode(ifstream *fin, char *data) {
         lidx = get_lower(lcode);
         memset(lparam, 0, 50);
         memset(uparam, 0, 50);
-        get_params(uidx, ucode, uparam, uopcodes);
-        get_params(lidx, lcode, lparam, lopcodes);
+        get_params(uidx, ucode, uparam, uopcodes, index);
+        get_params(lidx, lcode, lparam, lopcodes, index);
         if ( uidx != -1 ) {
             test += uopcodes[uidx].name;
             if ( ebit == 1 ) {
@@ -981,13 +983,14 @@ Parser::LoadBinaryCode(ifstream *fin, char *data) {
             test += lparam;
         }
         test += "\n";
+        index++;
     }
     strcpy(data, test.c_str());
     return true;
 }
 
 void
-Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
+Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes, uint32 index) {
     switch(opcodes[idx].param) {
         case PARAM_FSFVFS:
             sprintf(param, "P,VF%02d%s", get_float_reg(code, vfs),
@@ -1002,7 +1005,8 @@ Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
                     get_ftf(code));
             break;
         case PARAM_IMM11:
-            sprintf(param, "0x%08x", get_imm11(code));
+            sprintf(param, "%d", get_imm11(code));
+            InsertLabel(index, get_imm11(code));
             break;
         case PARAM_IMM12:
             sprintf(param, "0x%08x", get_imm12(code));
@@ -1140,16 +1144,7 @@ Parser::get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
                     get_int_reg(code, vis));
             break;
 		case PARAM_VIT_VIS_IMM11:
-            printf("we need to insert a label\n");
-            sprintf(param, "L%d:", get_imm11(code));
-            printf("label = %s\n", param);
-            strcpy(m_pVuCore->Labels[m_pVuCore->NSymbols].symb, param);
-            m_pVuCore->Labels[m_pVuCore->NSymbols].Line=1;
-            m_pVuCore->Labels[m_pVuCore->NSymbols].Line=1;
-            m_pVuCore->program[1].SymbolIndex = 1;
-            m_pVuCore->NSymbols++;
-
-            sprintf(param, "VI%02d,VI%02d,L%d", get_int_reg(code, vit),
+            sprintf(param, "VI%02d,VI%02d,%d", get_int_reg(code, vit),
                     get_int_reg(code, vis), get_imm11(code));
             break;
 		case PARAM_VIT_VIS_IMM15:
@@ -1327,12 +1322,15 @@ Parser::insert(char *upper, char *lower, char *uparam, char *lparam, uint32 inde
         m_pVuCore->program[index].invalid = 1;
         return 0;
     }
+
     m_pVuCore->program[index].InstIndex[UPPER] = InstIndex;
     strcpy(m_pVuCore->program[index].dest[UPPER],dest);
     m_pVuCore->program[index].flavor[UPPER] = flavor;
     m_pVuCore->program[index].breakpoint = 0;
     m_pVuCore->program[index].flg = flg;
-    m_pVuCore->program[index].SymbolIndex = -1;
+    // if ( m_pVuCore->program[index].SymbolIndex == 0) {
+    //     m_pVuCore->program[index].SymbolIndex = -1;
+    // }
     for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
         memset(token, 0, 50);
         if(j==Instr.Instr[InstIndex].operands-1) { //last operand
@@ -1389,20 +1387,20 @@ Parser::insert(char *upper, char *lower, char *uparam, char *lparam, uint32 inde
 
 // disasm class
 void
-Parser::dlower(uint32 *lower, char *low, char *lparam ) {
+Parser::dlower(uint32 *lower, char *low, char *lparam, uint32 index) {
     uint32 lidx;
     memset(lparam, 0, 50);
     lidx = get_lower(*lower);
-    get_params(lidx, *lower, lparam, lopcodes);
+    get_params(lidx, *lower, lparam, lopcodes, index);
     strcpy(low, lopcodes[lidx].name);
 }
 
 void
-Parser::dupper(uint32 *upper, char *upp, char *uparam ) {
+Parser::dupper(uint32 *upper, char *upp, char *uparam, uint32 index) {
     uint32 uidx;
     memset(uparam, 0, 50);
     uidx = get_upper(*upper);
-    get_params(uidx, *upper, uparam, uopcodes);
+    get_params(uidx, *upper, uparam, uopcodes, index);
     strcpy(upp, uopcodes[uidx].name);
     if ( ebit == 1 ) {
         strcat(upp, "[e]");
@@ -1415,8 +1413,17 @@ Parser::dupper(uint32 *upper, char *upp, char *uparam ) {
 void
 Parser::InitCodeMem(void) {
     unsigned int i;
-    for(i = 0; i < 1024; i++) {
+    for(i = 0; i < MAX_VUCODE_SIZE; i++) {
         insert(strdup("nop"), strdup("loi"), strdup(""), strdup("0x0"), i);
     }
     return;
+}
+
+void
+Parser::InsertLabel(int32 index, int32 imm11) {
+    int row = index+imm11+1;
+    sprintf(m_pVuCore->Labels[m_pVuCore->NSymbols].symb, "L: %d", imm11);
+    m_pVuCore->Labels[m_pVuCore->NSymbols].Line = row;
+    m_pVuCore->program[row].SymbolIndex = m_pVuCore->NSymbols;
+    m_pVuCore->NSymbols++;
 }

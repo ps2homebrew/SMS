@@ -10,6 +10,9 @@
 
 using namespace std;
 
+const int32 VIF_STATE_STOPPED   = 0;
+const int32 VIF_STATE_READY     = 1;
+const int32 VIF_STATE_RUN       = 2;
 
 static const string tMOD[4] = {
     "No addition processing",
@@ -92,6 +95,21 @@ const int32
 Vif::Close() {
     delete m_fin;
     return E_OK;
+}
+
+const int32
+Vif::GetState() {
+    return m_state;
+}
+
+const bool
+Vif::IsStopped() {
+    return true;
+}
+
+const bool
+Vif::IsRunning() {
+    return true;
 }
 
 /////////////////////////////// PRIVATE    ///////////////////////////////////
@@ -248,8 +266,8 @@ Vif::CmdMpg(const int32& data) {
             ((unsigned char)raw[2]<<16)+
             (((unsigned char)raw[1])<<8)+
             ((unsigned char)raw[0]);
-        m_pParser->dlower(&lower, lowline, lparam );
-        m_pParser->dupper(&upper, uppline, uparam );
+        m_pParser->dlower(&lower, lowline, lparam, index);
+        m_pParser->dupper(&upper, uppline, uparam, index);
         m_pParser->insert(uppline, lowline, uparam, lparam, index);
         index++;
         m_vifCmdNum--;
@@ -514,8 +532,7 @@ Vif::CmdMscalf(const int32& data) {
     }
     m_pVu->Run(_addr);
 
-    m_stopped = true;
-
+    m_state = VIF_STATE_STOPPED;
     return E_OK;
 }
 

@@ -16,18 +16,15 @@ extern MicroCode Instr;
 int
 Vu::VU_B(VuInstruction &A) {
     int a;
-    a=PC;
+    a = PC;
     CallBackFn(CallBackObj, LOWER, 6);
     PC++;
     Tic(); //delay slot itself
-    PC=(uint16)a;
+    PC = (uint16)a;
     CallBackFn(CallBackObj, LOWER, 7);
-    if(A.Params[1][0].label[0]) {
-        PC=(uint16)(A.Params[1][0].data-1);
-    } else {
-        //need to sub 1 because of the PC++ of the TIC instruction
-        PC+=(uint16)(A.Params[1][0].data-1);
-    }
+    PC += (uint16)(A.Params[1][0].data);
+    // cout << "PC: " << PC << endl;
+    // cout << "branch: " << A.Params[1][0].data;
     return -1;
 }
 
@@ -46,13 +43,7 @@ Vu::VU_BAL(VuInstruction &A) {
     Tic(); //delay slot itself
     PC=(uint16)a;
     CallBackFn(CallBackObj, LOWER, 7);
-
-    if(A.Params[1][1].label[0]) {
-        PC=(uint16)(A.Params[1][1].data-1);
-    } else {
-        //need to sub 1 because of the PC++ of the TIC instruction
-        PC+=(uint16)(A.Params[1][1].data-1);
-    }
+    PC+=(uint16)(A.Params[1][1].data-1);
     return -1;
 }
 

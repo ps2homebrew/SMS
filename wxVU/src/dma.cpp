@@ -388,19 +388,19 @@ Dma::DecodeTag(void) {
     char   raw[8];
     m_pFileIn->read(raw, 8);
     if ( m_pFileIn->peek() == EOF ) {
-        cout << "peek sees EOF" << endl;
+        // cout << "peek sees EOF" << endl;
     }
     if(m_pFileIn->eof()) {
         return;
     }
     data = (
-        ((uint64)raw[7]<<56) +
-        ((uint64)raw[6]<<48) +
-        ((uint64)raw[5]<<40) +
-        ((uint64)raw[4]<<32) +
-        ((uint64)raw[3]<<24) +
-        ((uint64)raw[2]<<16) +
-        ((uint64)raw[1]<<8)  +
+        (((unsigned char)raw[7])<<56) +
+        (((unsigned char)raw[6])<<48) +
+        (((unsigned char)raw[5])<<40) +
+        (((unsigned char)raw[4])<<32) +
+        (((unsigned char)raw[3])<<24) +
+        (((unsigned char)raw[2])<<16) +
+        (((unsigned char)raw[1])<<8)  +
         raw[0]);
     m_qwc = data&0xffff;
     m_pce = (data>>26)&0x3;

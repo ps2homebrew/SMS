@@ -287,12 +287,6 @@ Vif1::DecodeCmd(void) {
                 }
 
                 m_unpack = (vn<<2)+vl;
-                // cout << "length: " << m_length << ", ";
-                // cout << "usn: " << _usn << ", ";
-                // cout << "flg: " << _flg << ", ";
-                // cout << "mode: " << m_unpack << ", ";
-                // cout << "num: " << m_vifCmdNum << ", ";
-                // cout << "m_memIndex: " << m_memIndex << endl;
                 if ( _flg == 1 ) {
                     m_memIndex = rVIF1_TOPS; 
                 }

@@ -17,6 +17,7 @@
 . some sort of save project state
 . save breakpoint data with project ( brkfile= )
 . add break on xgkick/mscal/mscnt/unpack to some breakpoint dialog.
+. wxGL output window for dislpaylists (Gif::SetOutput(Remote:: and/or wxGL::))
 
 ! emulate VU single precision float ( some differences from IEEE 754 )
 ! accumulated cycle count, and on per loop basis.

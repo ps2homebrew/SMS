@@ -76,18 +76,17 @@ void
 VUFrame::buildCodeTable(wxNotebook *nbook) {
     uint32 i;
     m_pGridCode = new wxGrid(nbook, ID_GRIDCODE, wxDefaultPosition);
-    // take num opcodes * 2 to allow space for labels.
-    m_pGridCode->CreateGrid(MAX_VUCODE_SIZE*2, 5);
+    m_pGridCode->CreateGrid(MAX_VUCODE_SIZE, 5);
     m_pGridCode->EnableEditing(FALSE);
     m_pGridCode->SetColLabelValue(0, "P");
-    m_pGridCode->SetColLabelValue(1, "B");
+    m_pGridCode->SetColLabelValue(1, "Label");
     m_pGridCode->SetColLabelValue(2, "T");
     m_pGridCode->SetColLabelValue(3, "Upper");
     m_pGridCode->SetColLabelValue(4, "Lower");
     m_pGridCode->SetColLabelSize(int(GetCharHeight()*1.5));
     m_pGridCode->SetRowLabelSize(m_charWidth*5);
     m_pGridCode->SetColSize(0, m_charWidth*2);
-    m_pGridCode->SetColSize(1, m_charWidth*2);
+    m_pGridCode->SetColSize(1, m_charWidth*7);
     m_pGridCode->SetColSize(2, m_charWidth*2);
     m_pGridCode->SetColSize(2, m_charWidth*2);
     m_pGridCode->SetColSize(3, m_charWidth*20);
@@ -95,7 +94,6 @@ VUFrame::buildCodeTable(wxNotebook *nbook) {
     m_pGridCode->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
     for (i = 0; i < MAX_VUCODE_SIZE; i++) {
         m_pGridCode->SetRowLabelValue(i, wxString::Format("%04d", i));
-        m_pGridCode->SetCellValue(i, 1, wxString("."));
         m_pGridCode->SetRowSize(i, int(GetCharHeight()*1.5));
     }
     m_pGridCode->DisableDragGridSize();
@@ -899,16 +897,17 @@ void VUFrame::DrawProgram() {
     m_pGridCode->SetCellBackgroundColour(0, 3, cCurCode);
     m_pGridCode->SetCellBackgroundColour(0, 4, cCurCode);
     for(i = 0; i < MAX_VUCODE_SIZE; i++) {
-        m_pGridCode->SetCellValue(i, 1, wxString("."));
+        m_pGridCode->SetCellValue(i, 1, wxString(""));
         m_pGridCode->SetCellValue(i, 2, wxString(""));
         m_pGridCode->SetCellValue(i, 3, wxString(""));
         m_pGridCode->SetCellValue(i, 4, wxString(""));
     }
     for (i = 0; i < MAX_VUCODE_SIZE; i++,l++){
         if(m_pVu1->program[i].SymbolIndex != -1) {
+            // cout << "we got a label" << endl;
             strcpy(scode,m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb);
-            strcat(scode,":");
-            m_pGridCode->SetCellValue(l++, 1, scode);
+            // cout << m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb << endl;
+            m_pGridCode->SetCellValue(l, 1, scode);
         }
         m_pVu1->program[i].addr = i;
         m_pGridCode->SetCellValue(l, 2, wxString::Format("%d",

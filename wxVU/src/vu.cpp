@@ -39,8 +39,8 @@ Vu::Vu(uint32 vpuType, MemoryPanel* memPanel) : SubSystem(0) {
 void Vu::Reset() {
     uint32 i;
     NInstructions=0;
-    NSymbols=0;
-    NMemDir=0;
+    NSymbols = 0;
+    NMemDir = 0;
     ClipFlag[0]=ClipFlag[1]=ClipFlag[2]=ClipFlag[3]=0;
     MacZ=0;
     MacS=0;

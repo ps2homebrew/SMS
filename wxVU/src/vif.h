@@ -66,6 +66,10 @@ public:
     const int32             Open(const char* filename);
     const int32             Close(void);
 
+    const int32             GetState(void);
+    const bool              IsStopped(void);
+    const bool              IsRunning(void);
+
     virtual const int32     Read(void) = 0;
     virtual const int32     Read(ifstream* fin, const uint16 numQuad) = 0;
     virtual const vector<string>    GetRegisterText(const int reg) = 0;
@@ -98,7 +102,8 @@ protected:
     uint32          vpu;
     bool            m_interrupt;
     bool            _mask;
-    bool            m_stopped;
+    int             m_state;
+
 // private:
     // vif command functions
     virtual const int32 DecodeCmd(void) = 0;

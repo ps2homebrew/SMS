@@ -14,8 +14,8 @@ class Parser {
 public:
     Parser(Vu* vpu);
     ~Parser();
-    void    dlower(uint32 *lower, char *low, char *lparam);
-    void    dupper(uint32 *upper, char *upp, char *uparam);
+    void    dlower(uint32 *lower, char *low, char *lparam, uint32 index);
+    void    dupper(uint32 *upper, char *upp, char *uparam, uint32 index);
     int     insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index);
     int     LoadCode(char *file);
     int     LoadInstructions(char *file);
@@ -39,7 +39,8 @@ private:
     char*   getLine(char* line, char* data);
     bool    LoadAsciiCode(ifstream *fin, char *code, int size);
     bool    LoadBinaryCode(ifstream *fin, char *data);
-    void    get_params(int, uint32, char *, OPCODE *);
+    void    get_params(int, uint32, char *, OPCODE *, uint32 index);
+    void    InsertLabel(int32 index, int32 imm11);
     int     get_lower(uint32);
     int     get_upper(uint32);
     int     get_int_reg(uint32, uint32);
