@@ -65,7 +65,7 @@ public:
     void            decode_cmd(void);
     void            getVifcode(void);
     void            getFloatVec(void);
-    vector<string>  getRegisterText(int) {
+    vector<string>  getRegisterText(const int reg) {
         vector<string> v;
         return v;
     };

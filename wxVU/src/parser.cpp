@@ -1401,7 +1401,7 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
 void
 dlower(uint32 *lower, char *low, char *lparam ) {
     uint32 lidx;
-    bzero(lparam, 50);
+    memset(lparam, 0, 50);
     lidx = get_lower(*lower);
     get_params(lidx, *lower, lparam, lopcodes);
     strcpy(low, lopcodes[lidx].name);
@@ -1410,8 +1410,7 @@ dlower(uint32 *lower, char *low, char *lparam ) {
 void
 dupper(uint32 *upper, char *upp, char *uparam ) {
     uint32 uidx;
-    // char uparam[50];
-    bzero(uparam, 50);
+    memset(uparam, 0, 50);
     uidx = get_upper(*upper);
     get_params(uidx, *upper, uparam, uopcodes);
     strcpy(upp, uopcodes[uidx].name);

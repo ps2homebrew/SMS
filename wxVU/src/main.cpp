@@ -767,7 +767,6 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnCLR(wxCommandEvent &WXUNUSED(event)) {
-    int i;
     if ( gsTmpFile == "" ) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;

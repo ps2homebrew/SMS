@@ -128,59 +128,97 @@ VIF::cmd_itop(void) {
 
 void
 VIF::cmd_stcol(void) {
-int32 data;
-    _fin.read(&data, 4);
+    char raw[4];
+    int32 data;
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_C0 = data;
     rVIF1_C0 = data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_C1 = data;
     rVIF1_C1 = data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_C2 = data;
     rVIF1_C2 = data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_C3 = data;
     rVIF1_C3 = data;
 }
 
 void
 VIF::cmd_strow(void) {
+    char raw[4];
     uint32 data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_R0 = data;
     rVIF1_R0 = data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_R1 = data;
     rVIF1_R1 = data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_R2 = data;
     rVIF1_R2 = data;
-    _fin.read(&data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24)+
+        (raw[2]<<16)+
+        (raw[1]<<8)+
+        raw[0];
     rVIF0_R3 = data;
     rVIF1_R3 = data;
 }
 
 void
 VIF::cmd_mpg(void) {
+    char    raw[4];
     uint32  lower;
     uint32  upper;
     uint32  index;
-    char    *uppline;
-    char    *lowline;
-    char    *uparam;
-    char    *lparam;
-    uppline = (char *)malloc(256);
-    lowline = (char *)malloc(256);
-    uparam = (char *)malloc(256);
-    lparam = (char *)malloc(256);
+    char    uppline[64];
+    char    lowline[64];
+    char    uparam[64];
+    char    lparam[64];
     index = _addr;
     while ( _num > 0 ) {
-        _fin.read(&lower, 4);
-        _fin.read(&upper, 4);
+        _fin.read(raw, 4);
+        lower = ((unsigned char)raw[3]<<24)+
+            ((unsigned char)raw[2]<<16)+
+            ((unsigned char)raw[1]<<8)+
+            (unsigned char)raw[0];
+        _fin.read(raw, 4);
+        upper = ((unsigned char)raw[3]<<24)+
+            ((unsigned char)raw[2]<<16)+
+            (((unsigned char)raw[1])<<8)+
+            ((unsigned char)raw[0]);
         dlower(&lower, lowline, lparam );
         dupper(&upper, uppline, uparam );
         insert(uppline, lowline, uparam, lparam, index);
-        // printf("%s\t\t%s\n", uppline, lowline);
         index++;
         _num--;
     }
@@ -203,11 +241,12 @@ VIF::valid() {
 
 uint32
 VIF::read() {
+    char    raw[4];
     uint32  data;
     if (_num == 0) {
         decode_cmd();
     } else {
-        _fin.read(&data, 4);
+        _fin.read(raw, 4);
         _num--;
         if ( _num == 0 ) {
             _cmd = NULL;
@@ -223,13 +262,18 @@ VIF::cmd() {
 
 void
 VIF::decode_cmd(void) {
-    uint32 *data;
+    uint32 data;
+    char raw[4];
     uint32 cmd;
-    _fin.read(data, 4);
+    _fin.read(raw, 4);
+    data = (raw[3]<<24) +
+        (raw[2]<<16) +
+        (raw[1]<<8) +
+        raw[0];
     if (_fin.eof()) {
         return;
     }
-    cmd = (*data)>>24;
+    cmd = data>>24;
     uint32 vl, vn;
     switch(cmd) {
         case VIF_NOP:
@@ -240,15 +284,15 @@ VIF::decode_cmd(void) {
         case VIF_STCYCL:
             _cmd = VIF_STCYCL;
             _num = 0;
-            _WL = (*data>>8)&0xff;
-            _CL = (*data)&0xff;
+            _WL = (data>>8)&0xff;
+            _CL = data&0xff;
             cout << "VIF_STCYCL: ";
             cout << "WL: " << _WL << ", CL: " << _CL << endl;
             break;
         case VIF_OFFSET:
             _cmd = VIF_OFFSET;
             _num = 0;
-            rVIF1_OFST = *data&0x3ff;
+            rVIF1_OFST = data&0x3ff;
             // clear DBF flag
             rVIF1_STAT = (rVIF1_STAT&0x1f803f4f);
             rVIF1_TOPS = rVIF1_BASE;
@@ -256,25 +300,25 @@ VIF::decode_cmd(void) {
         case VIF_BASE:
             _cmd = VIF_BASE;
             _num = 0;
-            rVIF1_BASE = *data&0x3ff;
+            rVIF1_BASE = data&0x3ff;
             cout << "VIF_BASE: " << rVIF1_BASE << endl;
             break;
         case VIF_ITOP:
             _cmd = VIF_ITOP;
             _num = 0;
-            rVIF0_ITOPS = *data&0x3ff;
-            rVIF1_ITOPS = *data&0x3ff;
+            rVIF0_ITOPS = data&0x3ff;
+            rVIF1_ITOPS = data&0x3ff;
             break;
         case VIF_STMOD:
             _cmd = VIF_STMOD;
             _num = 0;
-            rVIF0_MODE = *data&0x3;
-            rVIF1_MODE = *data&0x3;
+            rVIF0_MODE = data&0x3;
+            rVIF1_MODE = data&0x3;
             break;
         case VIF_MSKPATH3:
             _cmd = VIF_MSKPATH3;
             _num = 0;
-            if ( (*data&0x8000) == 0x8000 ) {
+            if ( (data&0x8000) == 0x8000 ) {
                 _maskpath3 = true;
             } else {
                 _maskpath3 = false;
@@ -283,8 +327,8 @@ VIF::decode_cmd(void) {
         case VIF_MARK:
             _cmd = VIF_MARK;
             _num = 0;
-            rVIF0_MARK = *data&0xFFFF;
-            rVIF1_MARK = *data&0xFFFF;
+            rVIF0_MARK = data&0xFFFF;
+            rVIF1_MARK = data&0xFFFF;
             break;
         case VIF_FLUSHE:
             _cmd = VIF_FLUSHE;
@@ -309,7 +353,7 @@ VIF::decode_cmd(void) {
         case VIF_MSCAL:
             _cmd = VIF_MSCAL;
             cout << "VIF_MSCAL" << endl;
-            _addr = *data&0xFFFF;
+            _addr = data&0xFFFF;
             break;
 		case VIF_MSCNT:
             _cmd = VIF_MSCNT;
@@ -318,13 +362,13 @@ VIF::decode_cmd(void) {
         case VIF_MSCALF:
             _cmd = VIF_MSCALF;
             cout << "VIF_MSCALF" << endl;
-            _addr = *data&0xFFFF;
+            _addr = data&0xFFFF;
             break;
 		case VIF_STMASK:
 			cout << "VIF_STMASK" << endl;
             _cmd = VIF_STMASK;
-            rVIF0_MASK = *(data);
-            rVIF1_MASK = *(data);
+            rVIF0_MASK = data;
+            rVIF1_MASK = data;
 			break;
         case VIF_STROW:
             cmd_strow();
@@ -335,8 +379,8 @@ VIF::decode_cmd(void) {
         case VIF_MPG:
             cout << "VIF_MPG" << endl;
             _cmd = VIF_MPG;
-            _num = (*data>>16)&0xFF;
-            _addr = *data&0xffff;
+            _num = (data>>16)&0xFF;
+            _addr = data&0xffff;
             if ( _num == 0 ) {
                 _num = 256;
             }
@@ -364,13 +408,13 @@ VIF::decode_cmd(void) {
         _memIndex = 0;
         cout << "VIF_UNPACK: ";
         _cmd = VIF_UNPACK;
-        _num = (*data>>16)&0xFF;
-        _unpack = (*data>>24)&0xF;
-        _addr = (*data)&0x3FF;
-        _usn = (*data>>14)&0x1;
-        _flg = (*data>>15)&0x1;
-        vl = (*data>>24)&3;
-        vn = (*data>>26)&3;
+        _num = (data>>16)&0xFF;
+        _unpack = (data>>24)&0xF;
+        _addr = (data)&0x3FF;
+        _usn = (data>>14)&0x1;
+        _flg = (data>>15)&0x1;
+        vl = (data>>24)&3;
+        vn = (data>>26)&3;
 
         if ( _WL <= _CL ) {
             _length = 1+(((32>>vl)*(vn+1))*_num/32);
@@ -393,14 +437,14 @@ VIF::decode_cmd(void) {
 
 uint32
 VIF::cmd_unpack(void) {
-    uint32 word, word_x, word_y, word_z, word_w;
-    uint16 hword, hword_x, hword_y, hword_z, hword_w;
-    uint8 byte, byte_x, byte_y, byte_z, byte_w;
-    uint32 _cycle = 0;
-    uint32 _write = 0;
-    uint32 _cnt = _num;
+    char    rword[4], rhword[2], rbyte[1];
+    uint32  word_x, word_y, word_z, word_w;
+    uint16  hword_x, hword_y, hword_z, hword_w;
+    uint8   byte_x, byte_y, byte_z, byte_w;
+    uint32  _cycle = 0;
+    uint32  _write = 0;
+    uint32  _cnt = _num;
     for (;_num > 0; _num--) {
-        // do skip or write fill
         if( _CL > _WL ) {
             if ( _write >= _WL ) {
                 _memIndex += _CL-_WL;
@@ -423,80 +467,95 @@ VIF::cmd_unpack(void) {
         switch(_unpack) {
             case UNPACK_S32:
                 cout << "unpacking S32" << endl;
-                _fin.read(&word, 4);
+                _fin.read(rword, 4);
+                word_x = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
-                    VUchip.dataMem[_memIndex].x = word+rVIF1_R0;
-                    VUchip.dataMem[_memIndex].y = word+rVIF1_R1;
-                    VUchip.dataMem[_memIndex].z = word+rVIF1_R2;
-                    VUchip.dataMem[_memIndex].w = word+rVIF1_R3;
+                    VUchip.dataMem[_memIndex].x = word_x+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = word_x+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = word_x+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = word_x+rVIF1_R3;
                 } else if ( rVIF1_MODE == MODE_ADDROW ) {
-                    VUchip.dataMem[_memIndex].x = word+rVIF1_R0;
-                    VUchip.dataMem[_memIndex].y = word+rVIF1_R1;
-                    VUchip.dataMem[_memIndex].z = word+rVIF1_R2;
-                    VUchip.dataMem[_memIndex].w = word+rVIF1_R3;
-                    rVIF1_R0 = word+rVIF1_R0;
-                    rVIF1_R1 = word+rVIF1_R1;
-                    rVIF1_R2 = word+rVIF1_R2;
-                    rVIF1_R3 = word+rVIF1_R3;
+                    VUchip.dataMem[_memIndex].x = word_x+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = word_x+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = word_x+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = word_x+rVIF1_R3;
+                    rVIF1_R0 = word_x+rVIF1_R0;
+                    rVIF1_R1 = word_x+rVIF1_R1;
+                    rVIF1_R2 = word_x+rVIF1_R2;
+                    rVIF1_R3 = word_x+rVIF1_R3;
                 } else {
-                    VUchip.dataMem[_memIndex].x = word;
-                    VUchip.dataMem[_memIndex].y = word;
-                    VUchip.dataMem[_memIndex].z = word;
-                    VUchip.dataMem[_memIndex].w = word;
+                    VUchip.dataMem[_memIndex].x = word_x;
+                    VUchip.dataMem[_memIndex].y = word_x;
+                    VUchip.dataMem[_memIndex].z = word_x;
+                    VUchip.dataMem[_memIndex].w = word_x;
                 }
                 break;
             case UNPACK_S16:
                 cout << "unpacking S16" << endl;
-                _fin.read(&hword, 2);
+                _fin.read(rhword, 2);
+                hword_x = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
-                    VUchip.dataMem[_memIndex].x = hword+rVIF1_R0;
-                    VUchip.dataMem[_memIndex].y = hword+rVIF1_R1;
-                    VUchip.dataMem[_memIndex].z = hword+rVIF1_R2;
-                    VUchip.dataMem[_memIndex].w = hword+rVIF1_R3;
+                    VUchip.dataMem[_memIndex].x = hword_x+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = hword_x+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = hword_x+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = hword_x+rVIF1_R3;
                 } else if ( rVIF1_MODE == MODE_ADDROW ) {
-                    VUchip.dataMem[_memIndex].x = hword+rVIF1_R0;
-                    VUchip.dataMem[_memIndex].y = hword+rVIF1_R1;
-                    VUchip.dataMem[_memIndex].z = hword+rVIF1_R2;
-                    VUchip.dataMem[_memIndex].w = hword+rVIF1_R3;
-                    rVIF1_R0 = word+rVIF1_R0;
-                    rVIF1_R1 = word+rVIF1_R1;
-                    rVIF1_R2 = word+rVIF1_R2;
-                    rVIF1_R3 = word+rVIF1_R3;
+                    VUchip.dataMem[_memIndex].x = hword_x+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = hword_x+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = hword_x+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = hword_x+rVIF1_R3;
+                    rVIF1_R0 = hword_x+rVIF1_R0;
+                    rVIF1_R1 = hword_x+rVIF1_R1;
+                    rVIF1_R2 = hword_x+rVIF1_R2;
+                    rVIF1_R3 = hword_x+rVIF1_R3;
                 } else {
-                    VUchip.dataMem[_memIndex].x = hword;
-                    VUchip.dataMem[_memIndex].y = hword;
-                    VUchip.dataMem[_memIndex].z = hword;
-                    VUchip.dataMem[_memIndex].w = hword;
+                    VUchip.dataMem[_memIndex].x = hword_x;
+                    VUchip.dataMem[_memIndex].y = hword_x;
+                    VUchip.dataMem[_memIndex].z = hword_x;
+                    VUchip.dataMem[_memIndex].w = hword_x;
                 }
                 break;
             case UNPACK_S8:
                 cout << "unpacking S8" << endl;
-                _fin.read(&byte, 1);
+                _fin.read(rbyte, 1);
+                byte_x = (unsigned char)rbyte[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
-                    VUchip.dataMem[_memIndex].x = byte+rVIF1_R0;
-                    VUchip.dataMem[_memIndex].y = byte+rVIF1_R1;
-                    VUchip.dataMem[_memIndex].z = byte+rVIF1_R2;
-                    VUchip.dataMem[_memIndex].w = byte+rVIF1_R3;
+                    VUchip.dataMem[_memIndex].x = byte_x+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = byte_x+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = byte_x+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = byte_x+rVIF1_R3;
                 } else if ( rVIF1_MODE == MODE_ADDROW ) {
-                    VUchip.dataMem[_memIndex].x = byte+rVIF1_R0;
-                    VUchip.dataMem[_memIndex].y = byte+rVIF1_R1;
-                    VUchip.dataMem[_memIndex].z = byte+rVIF1_R2;
-                    VUchip.dataMem[_memIndex].w = byte+rVIF1_R3;
-                    rVIF1_R0 = word+rVIF1_R0;
-                    rVIF1_R1 = word+rVIF1_R1;
-                    rVIF1_R2 = word+rVIF1_R2;
-                    rVIF1_R3 = word+rVIF1_R3;
+                    VUchip.dataMem[_memIndex].x = byte_x+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = byte_x+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = byte_x+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = byte_x+rVIF1_R3;
+                    rVIF1_R0 = byte_x+rVIF1_R0;
+                    rVIF1_R1 = byte_x+rVIF1_R1;
+                    rVIF1_R2 = byte_x+rVIF1_R2;
+                    rVIF1_R3 = byte_x+rVIF1_R3;
                 } else {
-                    VUchip.dataMem[_memIndex].x = byte;
-                    VUchip.dataMem[_memIndex].y = byte;
-                    VUchip.dataMem[_memIndex].z = byte;
-                    VUchip.dataMem[_memIndex].w = byte;
+                    VUchip.dataMem[_memIndex].x = byte_x;
+                    VUchip.dataMem[_memIndex].y = byte_x;
+                    VUchip.dataMem[_memIndex].z = byte_x;
+                    VUchip.dataMem[_memIndex].w = byte_x;
                 }
                 break;
             case UNPACK_V232:
                 cout << "unpacking V2_32" << endl;
-                _fin.read(&word_x, 4);
-                _fin.read(&word_y, 4);
+                _fin.read(rword, 4);
+                word_x = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
+                _fin.read(rword, 4);
+                word_y = (rword[3]<<24) +
+                    (rword[2]<<16) +
+                    (rword[1]<<8) +
+                    rword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     word_x = word_x+rVIF1_R0;
                     word_y = word_y+rVIF1_R1;
@@ -511,8 +570,12 @@ VIF::cmd_unpack(void) {
                 break;
             case UNPACK_V216:
                 cout << "unpacking V2_16" << endl;
-                _fin.read(&hword, 2);
-                _fin.read(&hword, 2);
+                _fin.read(rword, 2);
+                hword_x = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
+                _fin.read(rword, 2);
+                hword_y = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     word_x = hword_x+rVIF1_R0;
                     word_y = hword_y+rVIF1_R1;
@@ -530,8 +593,10 @@ VIF::cmd_unpack(void) {
                 break;
             case UNPACK_V28:
                 cout << "unpacking V2_8" << endl;
-                _fin.read(&byte, 1);
-                _fin.read(&byte, 1);
+                _fin.read(rbyte, 1);
+                byte_x = (unsigned char)rbyte[0];
+                _fin.read(rbyte, 1);
+                byte_y = (unsigned char)rbyte[0];
 
                 if ( rVIF1_MODE == MODE_ADD ) {
                     byte_x = byte_x+rVIF1_R0;
@@ -550,9 +615,21 @@ VIF::cmd_unpack(void) {
                 break;
             case UNPACK_V332:
                 cout << "unpacking V3_32" << endl;
-                _fin.read(&word_x, 4);
-                _fin.read(&word_y, 4);
-                _fin.read(&word_z, 4);
+                _fin.read(rword, 4);
+                word_x = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
+                _fin.read(rword, 4);
+                word_y = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
+                _fin.read(rword, 4);
+                word_z = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     word_x = word_x+rVIF1_R0;
                     word_y = word_y+rVIF1_R1;
@@ -571,9 +648,15 @@ VIF::cmd_unpack(void) {
                 break;
             case UNPACK_V316:
                 cout << "unpacking V3_16" << endl;
-                _fin.read(&hword_x, 2);
-                _fin.read(&hword_y, 2);
-                _fin.read(&hword_z, 2);
+                _fin.read(rhword, 2);
+                hword_x = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
+                _fin.read(rhword, 2);
+                hword_y = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
+                _fin.read(rhword, 2);
+                hword_z = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     hword_x = hword_x+rVIF1_R0;
                     hword_y = hword_y+rVIF1_R1;
@@ -596,9 +679,12 @@ VIF::cmd_unpack(void) {
                 break;
             case UNPACK_V38:
                 cout << "unpacking V3_8" << endl;
-                _fin.read(&byte, 1);
-                _fin.read(&byte, 1);
-                _fin.read(&byte, 1);
+                _fin.read(rbyte, 1);
+                byte_x = (unsigned char)rbyte[0];
+                _fin.read(rbyte, 1);
+                byte_y = (unsigned char)rbyte[0];
+                _fin.read(rbyte, 1);
+                byte_z = (unsigned char)rbyte[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     byte_x = byte_x+rVIF1_R0;
                     byte_y = byte_y+rVIF1_R1;
@@ -621,10 +707,26 @@ VIF::cmd_unpack(void) {
                 break;
             case UNPACK_V432:
                 cout << "unpacking V4_32" << endl;
-                _fin.read(&word_x, 4);
-                _fin.read(&word_y, 4);
-                _fin.read(&word_z, 4);
-                _fin.read(&word_w, 4);
+                _fin.read(rword, 4);
+                word_x = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
+                _fin.read(rword, 4);
+                word_y = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
+                _fin.read(rword, 4);
+                word_z = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
+                _fin.read(rword, 4);
+                word_w = ((unsigned char)rword[3]<<24) +
+                    ((unsigned char)rword[2]<<16) +
+                    ((unsigned char)rword[1]<<8) +
+                    (unsigned char)rword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     word_x = word_x+rVIF1_R0;
                     word_y = word_y+rVIF1_R1;
@@ -646,10 +748,18 @@ VIF::cmd_unpack(void) {
                 VUchip.dataMem[_memIndex].w = word_w;
                 break;
             case UNPACK_V416:
-                _fin.read(&hword, 2);
-                _fin.read(&hword, 2);
-                _fin.read(&hword, 2);
-                _fin.read(&hword, 2);
+                _fin.read(rhword, 2);
+                hword_x = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
+                _fin.read(rhword, 2);
+                hword_y = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
+                _fin.read(rhword, 2);
+                hword_z = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
+                _fin.read(rhword, 2);
+                hword_w = ((unsigned char)rhword[1]<<8) +
+                    (unsigned char)rhword[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     hword_x = hword_x+rVIF1_R0;
                     hword_y = hword_y+rVIF1_R1;
@@ -665,16 +775,20 @@ VIF::cmd_unpack(void) {
                     rVIF1_R2 = hword_z;
                     rVIF1_R3 = hword_w;
                 }
-                VUchip.dataMem[_memIndex].x = hword;
-                VUchip.dataMem[_memIndex].y = hword;
-                VUchip.dataMem[_memIndex].z = hword;
-                VUchip.dataMem[_memIndex].w = hword;
+                VUchip.dataMem[_memIndex].x = hword_x;
+                VUchip.dataMem[_memIndex].y = hword_y;
+                VUchip.dataMem[_memIndex].z = hword_z;
+                VUchip.dataMem[_memIndex].w = hword_w;
                 break;
             case UNPACK_V48:
-                _fin.read(&byte_x, 1);
-                _fin.read(&byte_y, 1);
-                _fin.read(&byte_z, 1);
-                _fin.read(&byte_w, 1);
+                _fin.read(rbyte, 1);
+                byte_x = (unsigned char)rbyte[0];
+                _fin.read(rbyte, 1);
+                byte_y = (unsigned char)rbyte[0];
+                _fin.read(rbyte, 1);
+                byte_z = (unsigned char)rbyte[0];
+                _fin.read(rbyte, 1);
+                byte_w = (unsigned char)rbyte[0];
                 if ( rVIF1_MODE == MODE_ADD ) {
                     word_x = byte_x+rVIF1_R0;
                     word_y = byte_y+rVIF1_R1;

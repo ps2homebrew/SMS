@@ -75,7 +75,7 @@ private:
     vector<string>  unpack_Dn_QWC(const int reg);
 
     uint32          *REGISTERS;
-    ifstream        _fin;
+    std::ifstream        _fin;
     int16           _id;
     uint16          _qwc;
     uint16          _pce;
