@@ -100,7 +100,7 @@ void generate_points()
         points[i].y = y;
         points[i].z = z;
  
-        out( "%02d %f %f %f\n", i, points[i].x, points[i].y, points[i].z );
+//        out( "%02d %f %f %f\n", i, points[i].x, points[i].y, points[i].z );
 
         i++;
         x += 100;
@@ -193,8 +193,8 @@ u32 start_demo(const demo_init_t *pInfo)
     float coords[4] __attribute__((aligned(16)));
     PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i], &points_rotate );   
     
-    out( "%04d org: %f %f %f: rot: %f %f %f\n", i, points[i].x, points[i].y, points[i].z,
-                                                   coords[0], coords[1], coords[2] ); 
+//    out( "%04d org: %f %f %f: rot: %f %f %f\n", i, points[i].x, points[i].y, points[i].z,
+//                                                   coords[0], coords[1], coords[2] ); 
 
   }
 
@@ -207,6 +207,8 @@ u32 start_demo(const demo_init_t *pInfo)
     angle = t*1.5f;
 
     PbScreenClear(00);
+
+//		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
 
     angle_hold = 0.0f;
 
@@ -237,6 +239,8 @@ u32 start_demo(const demo_init_t *pInfo)
       PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
       EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 150, 0.5f, 0.5f, 0.5f );     
     }          
+
+//    GS_SET_BGCOLOR(0x00, 0x00, 0xff);
         
     PbScreenSyncFlip();
   }
