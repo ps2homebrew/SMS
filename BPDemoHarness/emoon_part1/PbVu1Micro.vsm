@@ -3,6 +3,15 @@
 ;// Note that this code is highly unoptimized, but might be useful to learn from or so.
 ;//
 
+iScreenMatrix   = 0
+iCameraMatrix   = 4
+vfAngles        = 8
+
+iGiftag         = 0
+vfData          = 1
+
+
+
 .global         g_PbVu1_FlatSimple
 .global         g_PbVu1_FlatSimple_End
                 
@@ -10,18 +19,25 @@
                 .vu
 
 g_PbVu1_FlatSimple:
-                
                 nop                             xtop        vi14
-                
-                nop                             lq          vf01, 0(vi14)
-                nop                             lq          vf02, 1(vi14)
-                nop                             lq          vf03, 2(vi14)
-                nop                             lq          vf04, 3(vi14)
+                                
+                nop                             lq          vf28, iScreenMatrix+0(vi00)
+                nop                             lq          vf29, iScreenMatrix+1(vi00)
+                nop                             lq          vf30, iScreenMatrix+2(vi00)
+                nop                             lq          vf31, iScreenMatrix+3(vi00)
+
+                nop                             lq          vf24, iCameraMatrix+0(vi00)
+                nop                             lq          vf25, iCameraMatrix+1(vi00)
+                nop                             lq          vf26, iCameraMatrix+2(vi00)
+                nop                             lq          vf27, iCameraMatrix+3(vi00)
                                                 
+                nop                             lq          vf22, vfAngles(vi00)    ; h,p,b,rate
+                
                 nop                             iaddiu      vi02, vi14, 246         ; 
                 nop                             iaddiu      vi03, vi14, 246         ; xgkick adree
-                nop                             iaddiu      vi01, vi14, 5           ; coord adress
-                nop                             lq.xyzw     vf06, 4(vi14)           ; giftag
+                nop                             iaddiu      vi01, vi14, vfData      ; coord adress
+                
+                nop                             lq.xyzw     vf06, iGiftag(vi14)     ; giftag
                 nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
                 
                 ;//////////////////////////////////////////////////////////////////////////////////
@@ -39,23 +55,134 @@ g_PbVu1_FlatSimple:
                 add.xyzw    vf06,vf00,vf00      loi 2.0
                 addi        vf07,vf00,I         nop
 poly_loop:      
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Temporary color stuff
+                
                 add.xyzw    vf06, vf06, vf07    nop
-                ftoi0       vf08, vf06          nop
-                nop                             sqi         vf08, (vi02++)          ; store colors
-                nop                             lqi         vf05, (vi01++)          ; XYZ
-                ;itof0       vf05, vf05          nop                                 ; we want floats
-                ;nop                             move.w      vf05w, vf00w            ; 
-                mulax.xyzw  acc,  vf01, vf05x   nop                                 ; multiply with screen_matrix 
-                madday.xyzw acc,  vf02, vf05y   nop                                 ;
-                maddaz.xyzw acc,  vf03, vf05z   nop                                 ;
-                maddw.xyzw  vf05, vf04, vf05w   nop                                 ;
-                nop                             nop                                 ;
-                nop                             div         q, vf00w, vf05w         ; get 1/w
-                nop                             waitq                               ;
-                mulq        vf05, vf05, q       nop                                 ; multiply screen coord by 1/w
-                nop                             nop                                 ;
-                nop                             nop                                 ;
-                nop                             nop                                 ;
+                ftoi0       vf08, vf06          loi         0.65
+                
+                sub         vf19, vf19, vf19    sqi         vf08, (vi02++)          ; store colors
+                sub         vf09, vf09, vf09    lqi         vf05, (vi01++)          ; XYZ
+                                                              
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Calculate distance to origo for the vertex 
+                                
+                mul        vf08,  vf05,  vf05   nop                     ; x*x , y*y, z*z ..
+                addy.x     vf09x, vf08x, vf08y  nop                     ; x*x + y*y  
+                addz.x     vf09x, vf08x, vf08z  nop                     ; x*x + y*y + z*z
+                nop                             sqrt q, vf09x           ; sqrt(x*x + y*y + z*z)
+                nop                             waitq                   ; vf08x = distance
+                mulq.x     vf09x, vf09x, q      nop                     ; vf08x = distance * lagrate
+                mulw.x     vf09x, vf09x, vf22w  nop
+                mulx.x     vf19x, vf09x, vf22x  nop
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Calc the rotation angles from the lagrate
+                
+                mulz.w      vf19, vf00, vf19z   nop                     ; copy angle from z to w
+                addx.y      vf19, vf00, vf19x   loi 1.570796            ; copy angle from x to y                                     
+                subi.xz     vf19, vf19, i       nop                     ; phase difference for sin as cos ( pi/2 )
+                abs         vf19, vf19          nop                     ; mirror cos around zero
+                maxw        vf20, vf00, vf00w   loi -0.159155           ; initialise all 1s                                                                             
+                mulai       acc,  vf19, i       loi 12582912.0          ; scale so single cycle is range 0 to -1 ( *-1/2pi )                                   
+                msubai      acc,  vf20, i       nop                     ; apply bias to remove fractional part
+                maddai      acc,  vf20, i       loi -0.159155           ; remove bias to leave original int part                                    
+                msubai      acc,  vf19, i       loi 0.5                 ; apply original number to leave fraction range only                                             
+                msubi       vf19, vf20, i       nop                     ; ajust range: -0.5 to +0.5
+                abs         vf19, vf19          loi 0.25                ; clamp: 0 to +0.5                                         
+                subi        vf19, vf19, i       nop                     ; ajust range: -0.25 to +0.25
+                mul         vf21, vf19, vf19    loi -76.574959          ; a^2
+                muli        vf14, vf19, i       loi -41.341675          ; k4 a   
+                muli        vf16, vf19, i       loi 81.602226           ; k2 a
+                muli        vf15, vf19, i       nop                     ; k3 a
+                mul         vf18, vf21, vf21    nop                     ; a^4
+                mul         vf14, vf24, vf21    nop                     ; k4 a^3
+                mula        acc,  vf16, vf21    loi 39.710659           ; + k2 a^3                                    
+                muli        vf16, vf19, i       nop                     ; k5 a
+                mul         vf17, vf18, vf18    nop                     ; a^8
+                madda       acc,  vf14, vf18    nop                     ; + k4 a^7
+                madda       acc,  vf15, vf18    loi 6.283185            ; + k3 a^5
+                maddai      acc,  vf19, i       nop                     ; + k1 a
+                madd        vf19, vf16, vf17    nop                     ; + k5 a^9
+
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Make unit matrix
+                
+                nop                             move vf13,vf00          ; row 3
+                nop                             mr32 vf12,vf13          ; row 2
+                nop                             mr32 vf11,vf12          ; row 1
+                nop                             mr32 vf10,vf11          ; row 0        
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// insert sin/cos here                
+
+                addy.x  vf10x, vf00x, vf19y     loi -1.0                ; cos_angle, 0, 0, 0
+                addx.z  vf10z, vf00z, vf19x     nop                     ; cos_angle, 0, sin_angle, 0
+                muli.z  vf10z, vf10z, i         nop                     ; cos_angle, 0, -sin_angle, 0
+
+                addx.x  vf12x, vf00x, vf19x     nop                     ; sin_angle, 0, 0, 0
+                addy.z  vf12z, vf00z, vf19y     nop                     ; sin_angle, 0, cos_angle, 0
+                                
+                ;///////////////////////////////////////////////////////////////////////////////////
+                ;// Calculate Local Matrix * CameraMatrix
+
+                mulax     acc,  vf24, vf10      nop
+                madday    acc,  vf25, vf10      nop
+                maddaz    acc,  vf26, vf10      nop
+                maddw     vf18, vf27, vf10      nop
+                
+                mulax     acc,  vf24, vf11      nop
+                madday    acc,  vf25, vf11      nop
+                maddaz    acc,  vf26, vf11      nop
+                maddw     vf19, vf27, vf11      nop
+                
+                mulax     acc,  vf24, vf12      nop
+                madday    acc,  vf25, vf12      nop
+                maddaz    acc,  vf26, vf12      nop
+                maddw     vf20, vf27, vf12      nop
+                
+                mulax     acc,  vf24, vf13      nop
+                madday    acc,  vf25, vf13      nop
+                maddaz    acc,  vf26, vf13      nop
+                maddw     vf21, vf27, vf13      nop
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Calculate Screen * (Local * Camera)
+                
+                mulax     acc,  vf28, vf18      nop
+                madday    acc,  vf29, vf18      nop
+                maddaz    acc,  vf30, vf18      nop
+                maddw     vf01, vf31, vf18      nop
+                
+                mulax     acc,  vf28, vf19      nop
+                madday    acc,  vf29, vf19      nop
+                maddaz    acc,  vf30, vf19      nop
+                maddw     vf02, vf31, vf19      nop
+                
+                mulax     acc,  vf28, vf20      nop
+                madday    acc,  vf29, vf20      nop
+                maddaz    acc,  vf30, vf20      nop
+                maddw     vf03, vf31, vf20      nop
+                
+                mulax     acc,  vf28, vf21      nop
+                madday    acc,  vf29, vf21      nop
+                maddaz    acc,  vf30, vf21      nop
+                maddw     vf04, vf31, vf21      nop
+                                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Project vertex to screen space.
+                                
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq                               
+                mulq        vf05, vf05, q       nop                                 
+                nop                             nop                                 
+                nop                             nop                                 
+                nop                             nop                                 
                 ftoi4       vf05, vf05          nop                                 ; fixedpoint for gif
                 nop                             nop                                 ;
                 nop                             nop                                 ;
@@ -72,3 +199,29 @@ poly_loop:
                 nop                             nop
                                 
 g_PbVu1_FlatSimple_End:
+
+                ;itof0       vf05, vf05          nop                                 ; we want floats
+                ;nop                             move.w      vf05w, vf00w            ; 
+
+/*
+                mulax     acc,  vf28, vf24      nop
+                madday    acc,  vf29, vf24      nop
+                maddaz    acc,  vf30, vf24      nop
+                maddw     vf01, vf31, vf24      nop
+                
+                mulax     acc,  vf28, vf25      nop
+                madday    acc,  vf29, vf25      nop
+                maddaz    acc,  vf30, vf25      nop
+                maddw     vf02, vf31, vf25      nop
+                
+                mulax     acc,  vf28, vf26      nop
+                madday    acc,  vf29, vf26      nop
+                maddaz    acc,  vf30, vf26      nop
+                maddw     vf03, vf31, vf26      nop
+                
+                mulax     acc,  vf28, vf27      nop
+                madday    acc,  vf29, vf27      nop
+                maddaz    acc,  vf30, vf27      nop
+                maddw     vf04, vf31, vf27      nop
+
+*/
