@@ -22,6 +22,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 u32 PbVramAlloc( int Size );
+u32 GetVramPointer();
+void SetVramPointer(u32 pval);
 
 #endif // _PBVRAM_H_
 
