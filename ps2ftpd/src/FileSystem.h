@@ -13,6 +13,8 @@
 
 #ifdef LINUX
 #include <dirent.h>
+#else
+#include <iomanX.h>
 #endif
 
 #define FS_IOMAN_DEVICES 16
@@ -23,8 +25,7 @@ typedef enum
 {
 	FS_INVALID,
 	FS_DEVLIST,
-	FS_IOMAN,
-	FS_IOMANX,
+	FS_IODEVICE, // ioman or iomanX
 } FSType;
 #endif
 
@@ -40,16 +41,12 @@ typedef struct FSContext
 	char m_Path[256];
 
 #ifndef LINUX
-	FSType m_iType;
-#endif
-
-	int m_iFile;
-
+	FSType m_eType;
+	iop_file_t m_kFile;
 	char m_List[256];
-#ifdef LINUX
-	DIR* m_pDir;
 #else
-	int m_iDir;
+	int m_iFile;
+	DIR* m_pDir;
 #endif
 } FSContext;
 
@@ -93,19 +90,26 @@ int FileSystem_GetFileInfo( FSDirectory* pDirectory, const char* pPath );
 //! Close file or directory
 void FileSystem_Close( FSContext* pContext );
 
-int FileSystem_ClassifyPath( const char* pPath );
+//! Determine device needed for accessing device & fill centext with info
+const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath );
 
+//! Convert path from unified name to PS2 specific path (no verification of existance)
 void FileSystem_BuildPath( char* pResult, const char* pOriginal, const char* pAdd );
 
+//! Change directory
 int FileSystem_ChangeDir( FSContext* pContext, const char* pPath );
 
+//! Delete file
 int FileSystem_DeleteFile( FSContext* pContext, const char* pFile );
 
+//! Create new directory
 int FileSystem_CreateDir( FSContext* pContext, const char* pDir );
 
+//! Delete directory
 int FileSystem_DeleteDir( FSContext* pContext, const char* pDir );
 
-int FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath );
+//! Scan devices & return ops structure if found
+iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath );
 
 #endif
 

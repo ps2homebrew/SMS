@@ -3,10 +3,16 @@
  Copyright (c) 2004 Jesper Svennevid
 -----------------------------------------------------------------------------
 
+License:
+--------
+
+Licensed under the AFL v2.0. See the file LICENSE included with this
+distribution for licensing terms.
+
 Building:
 ---------
 
-To build this project requires the following:
+Building this project requires the following:
 
 - A working IOP C compiler
 - PS2SDK installed with $PS2SDKSRC set properly.
@@ -17,19 +23,16 @@ directory.
 Running:
 --------
 
-Running requires that the following modules already are loaded:
-
-ioman.irx
-iomanx.irx
-ps2ip.irx
+Running requires that ps2ip.irx is already loaded. ioman.irx and iomanx.irx
+are not directly required but highly recommended.
 
 When starting the module, it will detach and start listening for incoming
 connections on port 21. The server currently allows for up to 4 concurrent
 connections.
 
 If you're having trouble with "Unable to build data connection", it might be
-that your version of ps2ip.irx is too old (the older ones did only allow for
-5 sockets at one time), please upgrade to a newer version in that case.
+that your version of ps2ip.irx is too old (the older versions did only allow
+for 5 sockets at one time), please upgrade to a newer version in that case.
 ps2ftpd will only in the worst case use a maximum of 4 sockets for
 operation with one client connected.
 
@@ -54,12 +57,14 @@ XPWD
 CWD <dir>
 CDUP
 DELE <file>
+XMKD <dir>
 MKD <dir>
+XRMD <dir>
 RMD <dir>
 
 Authentication is ignored, so be cautious if your PS2 is connected directly
 to the internet.
 
 Right now there's a temporary filesystem in place displaying both
-memorycard-slots (/mc0/ and /mc1/). CDROM and HDD are inaccessible due to
-incomplete support.
+memorycard-slots and the host (/mc0/, /mc1/, /host/). CDROM and HDD are
+inaccessible due to incomplete support.

@@ -385,15 +385,3 @@ void FtpServer_OnClientDisconnect( struct FtpServer* pServer, FtpClient* pClient
 
 	FtpClient_Destroy(pClient);
 }
-
-FtpServer* FtpServer_CreateInstance()
-{
-	static FtpServer skFtpServer;
-	FtpServer* pServer;
-
-	pServer = &skFtpServer;//malloc( sizeof(FtpServer) );
-
-	FtpServer_Create(pServer);
-
-	return pServer;
-}

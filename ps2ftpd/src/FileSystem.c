@@ -15,6 +15,7 @@
 #ifndef LINUX
 #include "irx_imports.h"
 #define assert(x)
+#define isnum(c) ((c) >= '0' && (c) <= '9')
 #else
 #include <assert.h>
 #include <sys/time.h>
@@ -37,7 +38,7 @@
 
 	/mc/0/	- memory card, unit 0
 	/mc/1/	- memory card, unit 1
-	/cdfs/	- cd file system
+	/cd/0/	- cd file system
 	/hd/0/	- hdd, partition 0
 	/hd/1/	- hdd, partition 1 
 	/usb/0/	- usb mass storage, unit 0
@@ -52,15 +53,11 @@ void FileSystem_Create( FSContext* pContext )
 	strcpy(pContext->m_Path,"/");
 
 #ifndef LINUX
-	pContext->m_iType = FS_INVALID;
-#endif
-
-	pContext->m_iFile = -1;
-
-#ifdef LINUX
-	pContext->m_pDir = NULL;
+	pContext->m_eType = FS_INVALID;
+	memset( &(pContext->m_kFile), 0, sizeof(pContext->m_kFile) );
 #else
-	pContext->m_iDir = -1;
+	pContext->m_iFile = -1;
+	pContext->m_pDir = NULL;
 #endif
 }
 
@@ -71,16 +68,15 @@ void FileSystem_Destroy( FSContext* pContext )
 
 int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode )
 {
-	int mode;
+	int flags;
 
 	FileSystem_Close(pContext);
-
 	FileSystem_BuildPath( buffer, pContext->m_Path, pFile );
 
 	switch( eMode )
 	{
-		case FM_READ: mode = O_RDONLY; break;
-		case FM_CREATE: mode = O_CREAT|O_TRUNC|O_WRONLY; break;
+		case FM_READ: flags = O_RDONLY; break;
+		case FM_CREATE: flags = O_CREAT|O_TRUNC|O_WRONLY; break;
 
 		case FM_APPEND: // TODO: implement
 		default:
@@ -88,33 +84,45 @@ int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode 
 	}
 
 #ifdef LINUX
-	if( (pContext->m_iFile = open(buffer,mode,S_IRWXU|S_IRGRP)) < 0 )
+	if( (pContext->m_iFile = open(buffer,flags,S_IRWXU|S_IRGRP)) < 0 )
 		return -1;
+
+	return 0;
 #else
-	pContext->m_iType = FileSystem_ClassifyPath( buffer );
-	switch( pContext->m_iType )
+	if( NULL == (pFile = FileSystem_ClassifyPath( pContext, buffer )) )
+		return -1;
+
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: pContext->m_iFile = io_open( buffer, mode ); break;
-		case FS_IOMANX: pContext->m_iFile = open( buffer, mode ); break;
-		default: break;
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device )
+				break;
+
+			pContext->m_kFile.mode = flags;
+			if( pContext->m_kFile.device->ops->open( &(pContext->m_kFile), pFile, flags, 0 ) >= 0 )
+				return 0;
+
+		}
+		break;
+
+		default:
+			return -1;
 	}
 
-	if( pContext->m_iFile < 0 )
-		return -1;
-
-	return 0;
+	pContext->m_eType = FS_INVALID;
+	return -1;
 #endif
-
-	return 0;
 }
 
 int FileSystem_OpenDir( FSContext* pContext, const char* pDir )
 {
 	FileSystem_Close(pContext);
-
-	FileSystem_BuildPath( pContext->m_List, pContext->m_Path, pDir );
+	FileSystem_BuildPath( buffer, pContext->m_Path, pDir );
 
 #ifdef LINUX
+
+	strcpy(pContext->m_List,buffer);
 
 	// unsafe, sure
 	pContext->m_pDir = opendir(pContext->m_List);
@@ -122,54 +130,88 @@ int FileSystem_OpenDir( FSContext* pContext, const char* pDir )
 
 #else
 
-	pContext->m_iType = FileSystem_ClassifyPath( pContext->m_List );
-	switch( pContext->m_iType )
+	if( NULL == (pDir = FileSystem_ClassifyPath( pContext, buffer )) )
+		return -1;
+
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: pContext->m_iDir = io_dopen( pContext->m_List, 0 ); break;
-		case FS_IOMANX: pContext->m_iDir = dopen( pContext->m_List ); break;
-		case FS_DEVLIST: pContext->m_iDir = 0; break;
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device )
+				break;
+
+			pContext->m_kFile.mode = O_DIROPEN;
+
+			if( pContext->m_kFile.device->ops->dopen( &(pContext->m_kFile), pDir ) >=0 )
+				return 0;
+		}
+		break;
+
+		case FS_DEVLIST:
+		{
+			pContext->m_kFile.mode = 0; // we use this for an internal counter
+			return 0;
+		}
+		break;
 		default: break;
 	}
 
-	if( pContext->m_iDir < 0 )
-		return -1;
-
-	return 0;
-
+	pContext->m_eType = FS_INVALID;
+	return -1;
 #endif
 }
 
 int FileSystem_ReadFile( FSContext* pContext, char* pBuffer, int iSize )
 {
+#ifdef LINUX
 	if( pContext->m_iFile < 0 )
 		return -1;
 
-#ifdef LINUX
 	return read(pContext->m_iFile,pBuffer,iSize);
 #else
-	switch( pContext->m_iType )
+
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: return io_read( pContext->m_iFile, pBuffer, iSize ); break;
-		case FS_IOMANX: return read( pContext->m_iFile, pBuffer, iSize ); break;
-		default: return -1;
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device || !(pContext->m_kFile.mode & O_RDONLY) )
+				break;
+
+			return pContext->m_kFile.device->ops->read( &(pContext->m_kFile), pBuffer, iSize );
+		}
+		break;
+
+		default:
 	}
+
+	return -1;
 #endif
 }
 
 int FileSystem_WriteFile( FSContext* pContext, const char* pBuffer, int iSize )
 {
+#ifdef LINUX
 	if( pContext->m_iFile < 0 )
 		return -1;
 
-#ifdef LINUX
 	return write(pContext->m_iFile,pBuffer,iSize);
 #else
-	switch( pContext->m_iType )
+
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: return io_write( pContext->m_iFile, (char*)pBuffer, iSize ); // bad declaration on that function...
-		case FS_IOMANX: return write( pContext->m_iFile, (char*)pBuffer, iSize );
-		default: return -1;
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device || !(pContext->m_kFile.mode & O_WRONLY) )
+				break;
+
+			return pContext->m_kFile.device->ops->write( &(pContext->m_kFile), (char*)pBuffer, iSize );
+		}
+		break;
+
+		default:
 	}
+
+	return -1;
 #endif
 }
 
@@ -184,64 +226,62 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 	if( !ent )
 		return -1;
 
-	// TODO: FileSystem_GetFileInfo()
-
 	strcpy(pDirectory->m_Name,ent->d_name);
-
 	FileSystem_GetFileInfo( pDirectory, pContext->m_List );
 
 	return 0;
 #else
-
-	switch( pContext->m_iType )
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN:
+		case FS_IODEVICE:
 		{
-      io_dirent_t ent;
-      int r = io_dread(pContext->m_iDir,&ent);
+			io_dirent_t ent;
 
-      if (r > 0)
-      {
-        pDirectory->m_iSize = ent.stat.size;
-				pDirectory->m_eType = FIO_SO_ISDIR(ent.stat.mode) ? FT_DIRECTORY : FT_FILE;
+			if( !pContext->m_kFile.device || !(pContext->m_kFile.mode & O_DIROPEN) )
+				break;
+
+			if( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &ent ) > 0 )
+			{
         strcpy(pDirectory->m_Name,ent.name);
-				return 0;
-      }
-		}
-		break;
-
-		case FS_IOMANX:
-		{
-      iox_dirent_t ent;
-      int r = dread(pContext->m_iDir,&ent);
-
-      if (r > 0)
-      {
         pDirectory->m_iSize = ent.stat.size;
-				pDirectory->m_eType = ent.stat.mode&FIO_S_IFDIR ? FT_DIRECTORY : FT_FILE;
-        strcpy(pDirectory->m_Name,ent.name);
-				return 0;
-      }
+
+				if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
+					pDirectory->m_eType = FIO_SO_ISDIR(ent.stat.mode) ? FT_DIRECTORY : FT_FILE;
+				else
+					pDirectory->m_eType = ent.stat.mode&FIO_S_IFDIR ? FT_DIRECTORY : FT_FILE;
+
+				return 0;					
+			}
 		}
 		break;
 
 		case FS_DEVLIST:
 		{
+			const char* name = NULL;
+
 			// TODO: make a proper scan here
 
       pDirectory->m_iSize = 0;
 			pDirectory->m_eType = FT_DIRECTORY;
 
-			switch( pContext->m_iDir )
+			switch( pContext->m_kFile.mode )
 			{
-				case 0: strcpy(pDirectory->m_Name,"mc0"); pContext->m_iDir++; return 0;
-				case 1: strcpy(pDirectory->m_Name,"mc1"); pContext->m_iDir++; return 0;
+				case 0: name = "mc0"; break;
+				case 1: name = "mc1"; break;
+				case 2: name = "host"; break;
+			}
+
+			if( name )
+			{
+				strcpy(pDirectory->m_Name,name);
+				pContext->m_kFile.mode++;
+				return 0;
 			}
 		}
 		break;
 
 		default:
-		break;
+			return -1;
 	}
 
 	return -1;
@@ -270,67 +310,84 @@ int FileSystem_GetFileInfo( FSDirectory* pDirectory, const char* pPath )
 
 int FileSystem_DeleteFile( FSContext* pContext, const char* pFile )
 {
-	int type;
-
 	FileSystem_BuildPath( buffer, pContext->m_Path, pFile );
 
 #ifdef LINUX
 	return -1;
 #else
 
-	type = FileSystem_ClassifyPath( buffer );
-	switch( type )
+	if( NULL == (pFile = FileSystem_ClassifyPath( pContext, buffer )) )
+		return -1;
+
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: return io_remove( buffer );
-		case FS_IOMANX: return remove( buffer );
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device )
+				break;
+
+			return pContext->m_kFile.device->ops->remove( (&pContext->m_kFile), pFile );
+		}
+		break;
 
 		default: return -1;
 	}
 
+	return -1;
 #endif
 }
 
 int FileSystem_CreateDir( FSContext* pContext, const char* pDir )
 {
-	int type;
-
 	FileSystem_BuildPath( buffer, pContext->m_Path, pDir );
 
 #ifdef LINUX
 	return -1;
 #else
+	if( NULL == (pDir = FileSystem_ClassifyPath( pContext, buffer )) )
+		return -1;
 
-	type = FileSystem_ClassifyPath( buffer );
-	switch( type )
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: return io_mkdir( buffer );
-		case FS_IOMANX: return mkdir( buffer );
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device )
+				break;
+			return pContext->m_kFile.device->ops->mkdir( &(pContext->m_kFile), pDir, 0 );
+		}
+		break;
 
 		default: return -1;
 	}
 
+	return -1;
 #endif
 }
 
 int FileSystem_DeleteDir( FSContext* pContext, const char* pDir )
 {
-	int type;
-
 	FileSystem_BuildPath( buffer, pContext->m_Path, pDir );
 
 #ifdef LINUX
 	return -1;
 #else
+	if( NULL == (pDir = FileSystem_ClassifyPath( pContext, buffer )) )
+		return -1;
 
-	type = FileSystem_ClassifyPath( buffer );
-	switch( type )
+	switch( pContext->m_eType )
 	{
-		case FS_IOMAN: return io_rmdir( buffer );
-		case FS_IOMANX: return rmdir( buffer );
+		case FS_IODEVICE:
+		{
+			if( !pContext->m_kFile.device )
+				break;
+			return pContext->m_kFile.device->ops->rmdir( &(pContext->m_kFile), pDir );
+		}
+		break;
 
 		default: return -1;
 	}
 
+	return -1;
 #endif
 }
 
@@ -350,46 +407,69 @@ void FileSystem_Close( FSContext* pContext )
 		pContext->m_pDir = NULL;
 	}
 #else
-	if( pContext->m_iDir >= 0 )
+	switch( pContext->m_eType )
 	{
-		switch( pContext->m_iType )
+		case FS_IODEVICE:
 		{
-			case FS_IOMAN: io_dclose( pContext->m_iDir ); break;
-			case FS_IOMANX: dclose( pContext->m_iDir ); break;
-			default: break;
+			if( !pContext->m_kFile.device )
+				break;
+
+			if( pContext->m_kFile.mode & O_DIROPEN )
+				pContext->m_kFile.device->ops->dclose( &pContext->m_kFile );
+			else
+				pContext->m_kFile.device->ops->close( &pContext->m_kFile );
 		}
-		pContext->m_iDir = -1;
-	}
-	else if( pContext->m_iFile >= 0 )
-	{
-		switch( pContext->m_iType )
-		{
-			case FS_IOMAN: io_close( pContext->m_iFile ); break;
-			case FS_IOMANX: close( pContext->m_iFile ); break;
-			default: break;
-		}
-		pContext->m_iFile = -1;
+		break;
+
+		default: break;
 	}
 
-	pContext->m_iType = FS_INVALID;
+	pContext->m_eType = FS_INVALID;
+	memset( &(pContext->m_kFile), 0, sizeof(pContext->m_kFile) );
 #endif
 }
 
-int FileSystem_ClassifyPath( const char* pPath )
+const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath )
 {
-	// extract device
+	char* start;
+	char* end;
 
 	// TODO: fix this one
 	if( !strcmp(pPath,":") )
-		return FS_DEVLIST;
+	{
+		pContext->m_eType = FS_DEVLIST;
+		return pPath;
+	}
 
-	if( FileSystem_ScanDevice(IOPMGR_IOMAN_IDENT,FS_IOMAN_DEVICES,pPath) >= 0 )
-		return FS_IOMAN;
+	// extract unit number from path
 
-	if( FileSystem_ScanDevice(IOPMGR_IOMANX_IDENT,FS_IOMANX_DEVICES,pPath) >= 0 )
-		return FS_IOMANX;
+	if( !(start = end = index( pPath, ':' )) || (start == pPath) )
+		return NULL;
 
-	return FS_INVALID;
+	if( isnum(*(start-1)) )
+	{
+		do { start--; } while( (start > pPath) && isnum(*(start-1)) );
+
+		pContext->m_kFile.unit = strtol( start, NULL, 0 );
+	}
+
+	// scan ioman devices
+
+	if( NULL != (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMAN_IDENT,FS_IOMAN_DEVICES,pPath)) )
+	{
+		pContext->m_eType = FS_IODEVICE;
+		return end+1;
+	}
+
+	// scan iomanX devices
+
+	if( NULL != (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMANX_IDENT,FS_IOMANX_DEVICES,pPath)) )
+	{
+		pContext->m_eType = FS_IODEVICE;
+		return end+1;
+	}
+
+	return NULL;
 }
 
 // TODO: these two following path functions are quite terrible and should be rewritten, but
@@ -477,7 +557,7 @@ int FileSystem_ChangeDir( FSContext* pContext, const char* pPath )
 	return 0;
 }
 
-int FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath )
+iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath )
 {
 	smod_mod_info_t* pkModule = NULL;
   iop_device_t **pkDevInfoTable;
@@ -494,7 +574,7 @@ int FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPa
 	}
 
 	if(!pkModule)
-		return -1;
+		return NULL;
 
 	// get device info array
 	pkDevInfoTable = (iop_device_t **)(pkModule->text_start + pkModule->text_size + pkModule->data_size + 0x0c);
@@ -506,16 +586,11 @@ int FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPa
 		{
 			if( (pkDevInfoTable[i]->type & IOP_DT_FS))
 			{
-				printf("check: '%s'\n",pkDevInfoTable[i]->name);
-
 				if( !strncmp(pPath,pkDevInfoTable[i]->name,strlen(pkDevInfoTable[i]->name)) )
-				{
-					printf("match: '%s' '%s' '%d'\n",pPath,pkDevInfoTable[i]->name,iNumDevices);
-					return 0;
-				}
+					return pkDevInfoTable[i];
 			}
 		}
 	}
 
-	return -1;
+	return NULL;
 }

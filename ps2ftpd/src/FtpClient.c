@@ -38,24 +38,6 @@
 
 #define MAX_CLIENTS 4
 
-#ifndef LINUX
-// cheap mans atoi, no support for negative values
-int atoi( const char*t )
-{
-	int val = 0;
-
-	while((' ' == *t)||('\t' == *t)) t++;
-
-	while(*t && ((*t >= '0')&&(*t <= '9')))
-	{
-		val *= 10;
-		val += *t-'0';
-		t++;
-	}
-	return val;
-}
-#endif
-
 // cheap mans itoa
 char* itoa(char* in, int val)
 {
@@ -104,7 +86,9 @@ struct
 	{ FTPCMD_CDUP, "cdup" },
 	{ FTPCMD_DELE, "dele" },
 	{ FTPCMD_MKD, "mkd" },
+	{ FTPCMD_MKD, "xmkd" },
 	{ FTPCMD_RMD, "rmd" },
+	{ FTPCMD_RMD, "xrmd" },
 	{ -1, NULL }
 
 	// commands to implement
@@ -144,13 +128,11 @@ void FtpClient_Destroy( FtpClient* pClient )
 {
 	assert( pClient );
 
+	FtpClient_OnDataCleanup(pClient);
 	FileSystem_Destroy(&pClient->m_kContext);
 
 	if( -1 != pClient->m_iControlSocket )
 		disconnect( pClient->m_iControlSocket );
-
-	if( -1 != pClient->m_iDataSocket )
-		disconnect( pClient->m_iDataSocket );
 
 	pClient->m_pServer = NULL;
 }
@@ -258,15 +240,15 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 
 					if( i >= 0 && i < 4 )
 					{
-						ip[i] = atoi(val);
+						ip[i] = strtol(val,NULL,10);
 					}
 					else if( 4 == i )
 					{
-						port = atoi(val)*256;
+						port = strtol(val,NULL,10)*256;
 					}
 					else if( 5 == i )
 					{
-						port += atoi(val);
+						port += strtol(val,NULL,10);
 					}
 				}
 
@@ -944,6 +926,7 @@ void FtpClient_OnDataComplete( FtpClient* pClient, int iReturnCode, const char* 
 		}
 	}
 
+	// thanks to clients implemented incorrectly, we must close the connection after completed transfer
 	FtpClient_OnDataCleanup(pClient);
 }
 
