@@ -10,14 +10,14 @@
 
 
 /* Draw Single FIX character */
-inline void draw_fix(uint16 code, uint16 colour, uint16 sx, uint16 sy, uint16 * palette, char * fix_memory)
+inline void draw_fix(uint16 code, uint16 colour, uint16 sx, uint16 sy)
 {
 
-	uint8 y;
+	uint16 y;
 	uint32 mydword;
-	uint32 * fix=(uint32*)&(fix_memory[code<<5]);
+	uint32 * fix=(uint32*)&(neogeo_fix_memory[code<<5]);//fix_memory
 	uint16 * dest;
-	uint16 * paldata=&palette[colour];
+	uint16 * paldata=&video_paletteram_pc[colour]; //palette
 	uint16 col;
 
 	for(y=0;y<8;y++)
@@ -39,7 +39,7 @@ inline void draw_fix(uint16 code, uint16 colour, uint16 sx, uint16 sy, uint16 * 
 
 
 /* Draw entire Character Foreground */
-void video_draw_fix(void)
+inline void video_draw_fix(void)
 {
 
 	uint16 x, y;
@@ -51,43 +51,13 @@ void video_draw_fix(void)
 		for (x = 0; x < 40; x++)
 		{
 			code = fixarea[x << 5];
-
 			colour = (code&0xf000)>>8;
 			code  &= 0xfff;
-
-			if(video_fix_usage[code])
-				draw_fix(code,colour,(x<<3),(y<<3), video_paletteram_pc, neogeo_fix_memory);
+			if (video_fix_usage[code]==0)
+			  continue;
+			draw_fix(code,colour,x<<3,y<<3);
 		}
 		fixarea++;
 	}
 }
 
-/* FIX palette for fixputs*/
-uint16 palette[16]={0x0000,0xffff,0x0000,0x0000,
-		    0x0000,0x0000,0x0000,0x0000,
-		    0xffff,0x0000,0x0000,0x0000,
-		    0x0000,0x0000,0x0000,0xffff};
-
-void fixputs( uint16 x, uint16 y, const char * string )
-{
-
-	uint8 i;
-	int length=strlen(string);
-	
-	if ( y>27 ) return;
-	
-	if ( x+length > 40 ) {
-		length=40-x;
-	}
-	
-	if (length<0) return;
-
-
-	y<<=3;
-		
-	for (i=0; i<length; i++) {	
-		draw_fix(toupper(string[i])+0x300,0,(x+i)<<3,y,palette, &neogeo_rom_memory[458752]);
-	}
-	
-	return;
-}
