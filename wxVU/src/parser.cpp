@@ -10,6 +10,7 @@
 #include "util.h"
 #include "vu.h"
 #include "opcodes.h"
+#include "parser.h"
 
 using namespace std;
 
@@ -157,13 +158,14 @@ int IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char 
     i=0;
     dest[0]=0;
     strcpy(teststr,"XYZW");
-    while(token[i])                 //take the .dest part
+    while(token[i]) {                //take the .dest part
         if(token[i]=='.') {
             token[i]=0;
             strcpy(dest,token+i+1);
         } else {
             i++;
         }
+    }
     i=0;
 
     while(token[i]!='[' && token[i]) {
@@ -190,7 +192,7 @@ int IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char 
     if(i!=(int)strlen(dest)) {
         return 0;
     }
-    for (i=0; i<Instr.nInstructionDef; i++)
+    for (i=0; i<Instr.nInstructionDef; i++) {
         if(Instr.Instr[i].mode==Mode) {
             defdes[0]=0;
             j=0;
@@ -281,6 +283,7 @@ int IsValidInstruction(char *token, int Mode, int *InstIndex, int *flavor, char 
                         return 1;
                 }
         }
+    }
     *InstIndex=0;
     *flavor=0;
     return 0;
@@ -707,7 +710,7 @@ ProcessInstruction(char * Line) {
     token[i]=0;
     strupr(token);
     VUchip.program[VUchip.NInstructions].invalid = 0;
-    if(!IsValidInstruction(token, UPPER, &InstIndex, &flavor,dest, &flg)) {
+    if(!IsValidInstruction(token, UPPER, &InstIndex, &flavor, dest, &flg)) {
         VUchip.program[VUchip.NInstructions].invalid = 1;
         return 0;
     }
@@ -824,7 +827,7 @@ ProcessSymbol(char *Line) {
         return 1;
     }
     Line[i-1]=0;
-    strcpy(VUchip.Labels[VUchip.NSymbols].symb,Line);
+    strcpy(VUchip.Labels[VUchip.NSymbols].symb, Line);
     VUchip.Labels[VUchip.NSymbols].Line=VUchip.NInstructions;
     VUchip.Labels[VUchip.NSymbols].Line=counter;
     VUchip.NSymbols++;
@@ -936,6 +939,7 @@ getLine(char *line, char *data){
 
 bool
 LoadAsciiCode(ifstream *fin, char *code, int size) {
+    cout << "LoadAsciCode" << endl;
     fin->read(code, size);
     return true;
 }
@@ -947,6 +951,8 @@ LoadBinaryCode(ifstream *fin, char *data) {
     char lparam[50];
     char uparam[50];
     string test;
+
+    cout << "LoadBinaryCode" << endl;
 
     while(!fin->eof() ) {
         fin->read((char *)&lcode, sizeof(uint32));
@@ -1141,7 +1147,16 @@ get_params(int idx, uint32 code, char *param, OPCODE *opcodes) {
                     get_int_reg(code, vis));
             break;
 		case PARAM_VIT_VIS_IMM11:
-            sprintf(param, "VI%02d,VI%02d,0x%08x", get_int_reg(code, vit),
+            printf("we need to insert a label\n");
+            sprintf(param, "L%d:", get_imm11(code));
+            printf("label = %s\n", param);
+            strcpy(VUchip.Labels[VUchip.NSymbols].symb, param);
+            VUchip.Labels[VUchip.NSymbols].Line=1;
+            VUchip.Labels[VUchip.NSymbols].Line=1;
+            VUchip.program[1].SymbolIndex = 1;
+            VUchip.NSymbols++;
+
+            sprintf(param, "VI%02d,VI%02d,L%d", get_int_reg(code, vit),
                     get_int_reg(code, vis), get_imm11(code));
             break;
 		case PARAM_VIT_VIS_IMM15:
@@ -1304,4 +1319,69 @@ get_upper(uint32 code) {
         }
     }
     return -2;
+}
+
+// insert the upper and lower instruction at a given index
+int
+insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
+    int i=0,j,k,InstIndex, flavor=0;
+    char dest[50], flg;
+
+    strupr(upper);
+    strupr(lower);
+    VUchip.program[index].invalid = 0;
+    if(!IsValidInstruction(upper, UPPER, &InstIndex, &flavor, dest, &flg)) {
+        cout << "invalid" << endl;
+        VUchip.program[index].invalid = 1;
+        return 0;
+    }
+    VUchip.program[index].InstIndex[UPPER] = InstIndex;
+    strcpy(VUchip.program[index].dest[UPPER],dest);
+    VUchip.program[index].flavor[UPPER] = flavor;
+    VUchip.program[index].breakpoint = 0;
+    VUchip.program[index].flg = flg;
+    VUchip.program[index].SymbolIndex = -1;
+    j = 2;
+    SetParam(VUchip.program[index], j, UPPER, uparam);
+
+    if(!IsValidInstruction(lower, LOWER, &InstIndex, &flavor,dest, &flg)) {
+        VUchip.program[index].invalid = 1;
+        return 0;
+    }
+    VUchip.program[index].InstIndex[LOWER] = InstIndex;
+    strcpy(VUchip.program[index].dest[LOWER],dest);
+    VUchip.program[index].flavor[LOWER] = flavor;
+    VUchip.program[index].breakpoint = 0;
+    VUchip.program[index].flg = flg;
+    VUchip.program[index].SymbolIndex = -1;
+    j = 2;
+    SetParam(VUchip.program[index], j, LOWER, lparam);
+    return 1;
+}
+
+// disasm class
+void
+dlower(uint32 *lower, char *low, char *lparam) {
+    uint32 lidx;
+    bzero(lparam, 50);
+    lidx = get_lower(*lower);
+    get_params(lidx, *lower, lparam, lopcodes);
+    strcpy(low, lopcodes[lidx].name);
+}
+
+void
+dupper(uint32 *upper, char *upp, char *uparam) {
+    uint32 uidx;
+    // char uparam[50];
+    bzero(uparam, 50);
+    uidx = get_upper(*upper);
+    get_params(uidx, *upper, uparam, uopcodes);
+    strcpy(upp, uopcodes[uidx].name);
+    if ( uidx != -1 ) {
+        if ( ebit == 1 ) {
+            strcat(upp, "[e]");
+        } else if ( dbit == 1 ) {
+            strcat(upp, "[d]");
+        }
+    }
 }

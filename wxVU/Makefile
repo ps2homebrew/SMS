@@ -1,4 +1,4 @@
-.SUFFIXES:.cpp .cc .asm
+.SUFFIXES:.cpp .cc .asm .vsm
 VPATH = src:utils:obj
 
 CFLAGS = -g `wx-config --cflags`
@@ -10,6 +10,8 @@ CFLAGS += -Wchar-subscripts -Wformat-security
 LIBS = `wx-config --libs` -lc_r
 CPP = c++
 RM = rm -f
+DVP = dvp-elf-as
+OBJCOPY = ee-objcopy
 OBJECTS = main.o lower.o parser.o upper.o util.o vu.o \
 		gif.o prefdlg.o prefs.o dump.o linkproto_stub.o \
 		vif.o timer.o sif.o dma.o vuBreakDialog.o breakpoint.o
@@ -41,6 +43,10 @@ regcmp: regcmp.cpp
 .cpp.o :
 	$(CPP) $(CFLAGS) -c $< -o obj/$@
 
+.vsm.o :
+	$(DVP) $< -o $@
+	$(OBJCOPY) -O binary $@ $*.bin
+
 clean:
 	$(RM) obj/*.o
 	$(RM) bin/wxVU
@@ -55,3 +61,9 @@ test:
 	g++ -g `wx-config --cflags` -c src/vuBreakDialog.cpp -o obj/vuBreakDialog.o
 	g++ -g `wx-config --cflags` -o bin/testWidget src/testWidget.cpp obj/vuBreakDialog.o obj/breakpoint.o `wx-config --libs` -lc_r
 	./bin/testWidget
+
+testvif: vif.o testvif.o
+	g++ -g -o bin/testvif obj/vif.o obj/testvif.o
+
+testdma: dma.o testdma.o
+	g++ -g -o bin/testdma obj/dma.o obj/testdma.o

@@ -718,8 +718,6 @@ int VU::VU_FSSET(VUInstruction &A)
 {
     uint16 test1;
 
-
-
     test1=(uint16)A.Params[1][0].udata;
     test1&=(uint16)4032;  //111111000000
     StatusFlag&=63; //000000111111

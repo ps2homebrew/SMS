@@ -243,6 +243,12 @@ DMA::DMA() {
     REGISTERS = new uint32[DMAnREGISTERS];
 }
 
+DMA::DMA(const char *filename) : _fin(filename) {
+    _id = -1;
+    _qwc = 0;
+    _channel = VIF1;
+}
+
 DMA::~DMA() {
 }
 
@@ -591,4 +597,38 @@ DMA::getRegisterText(const int reg) {
             return v; 
             break;
     }    
+}
+
+bool
+DMA::eof(void) {
+    return _fin.eof();
+}
+
+void
+DMA::decode_tag(void) {
+    uint64 *data;
+    _fin.read(data, 8);
+    _qwc = (*data&0xffff);
+    _pce = (*data>>26)&0x3;
+    _id = (*data>>28)&0x7;
+    _irq = (*data>>31)&0x1;
+    _num = _qwc*4;
+    if ( _channel == VIF1 || _channel == VIF0 ) {
+        _num += 2;
+    }
+    // Signal back
+    cout << "QWC: " << _qwc << ", PCE: " << _pce << ", ID:" << _id << endl;
+    return;
+}
+
+uint32
+DMA::read() {
+    uint32  data;
+    if (_num == 0) {
+        decode_tag();
+    } else {
+        _fin.read(&data, 4);
+        _num--;
+    }
+    return data;
 }

@@ -22,6 +22,8 @@ const wxColour cWarning     = wxColour(255, 128, 128);
 enum {
 	ID_FILE_LOADCODE,
 	ID_FILE_LOADMEM,
+	ID_FILE_LOADVIF,
+	ID_FILE_LOADDMA,
 	ID_FILE_LOADPROJECT,
 	ID_FILE_SAVECODE,
 	ID_FILE_SAVESTATE,
@@ -162,6 +164,8 @@ public:
         void    OnLoadCode(wxCommandEvent &WXUNUSED(event));
         void    OnLoadMem(wxCommandEvent &WXUNUSED(event));
         void    OnLoadProject(wxCommandEvent &WXUNUSED(event));
+        void    OnLoadVIF(wxCommandEvent &WXUNUSED(event));
+        void    OnLoadDMA(wxCommandEvent &WXUNUSED(event));
         void    OnSaveCode(wxCommandEvent &WXUNUSED(event));
         void    OnSaveState(wxCommandEvent &WXUNUSED(event));
 		//		Menubar tool functions
@@ -232,18 +236,21 @@ private:
 		wxFileName	memStateFile;
 		wxFileName	regStateFile;
 		wxFileName	mnemonicFile;
+        wxFileName  vifFile;
         int			Status;
         // Config GIF
         int			xoffset;
         int			yoffset;
         int			sendPrim;
         int			tagShow;
+        int         ClrColor;
+        int         scissorX;
+        int         scissorY;
         int			prim;
         // Config Misc
         uint32		codeAdressStyle;
 public:
         void    DrawProgram();
-        void    SetBreakPoint(int row, int mode);        
         void    DrawMemory();
         void    DebugTic(int, int);
         void    drawGIF(uint32 offset);
@@ -269,6 +276,8 @@ BEGIN_EVENT_TABLE(VUFrame, wxFrame)
 	EVT_MENU(ID_FILE_LOADCODE, VUFrame::OnLoadCode)
 	EVT_MENU(ID_FILE_LOADMEM, VUFrame::OnLoadMem)
 	EVT_MENU(ID_FILE_LOADPROJECT, VUFrame::OnLoadProject)
+	EVT_MENU(ID_FILE_LOADVIF, VUFrame::OnLoadVIF)
+	EVT_MENU(ID_FILE_LOADDMA, VUFrame::OnLoadDMA)
 	EVT_MENU(ID_FILE_SAVECODE, VUFrame::OnSaveCode)
 	EVT_MENU(ID_FILE_SAVESTATE, VUFrame::OnSaveState)
 	EVT_MENU(ID_TOOL_RESET, VUFrame::OnReset)

@@ -10,51 +10,65 @@ typedef struct vifCode {
 };
 
 // VU CMD
-const int VIF_NOP       = 0x0;
-const int VIF_STCYCL    = 0x1;
-const int VIF_OFFSET    = 0x2;
-const int VIF_BASE      = 0x3;
-const int VIF_ITOP      = 0x4;
-const int VIF_STMOD     = 0x5;
-const int VIF_MSKPATH3  = 0x6;
-const int VIF_MARK      = 0x7;
-const int VIF_FLUSHE    = 0x10;
-const int VIF_FLUSH     = 0x11;
-const int VIF_FLUSHA    = 0x13;
-const int VIF_MSCAL     = 0x14;
-const int VIF_MSCNT     = 0x17;
-const int VIF_MSCALF    = 0x15;
-const int VIF_STMASK    = 0x20;
-const int VIF_STROW     = 0x30;
-const int VIF_STCOL     = 0x31;
-const int VIF_MPG       = 0x4A;
-const int VIF_DIRECT    = 0x50;
-const int VIF_DIRECTHL  = 0x51;
-const int VIF_UNPACK    = 0x60;
-const int CMD_IRQ       = 0x80;
+const uint32 VIF_NOP       = 0x0;
+const uint32 VIF_STCYCL    = 0x1;
+const uint32 VIF_OFFSET    = 0x2;
+const uint32 VIF_BASE      = 0x3;
+const uint32 VIF_ITOP      = 0x4;
+const uint32 VIF_STMOD     = 0x5;
+const uint32 VIF_MSKPATH3  = 0x6;
+const uint32 VIF_MARK      = 0x7;
+const uint32 VIF_FLUSHE    = 0x10;
+const uint32 VIF_FLUSH     = 0x11;
+const uint32 VIF_FLUSHA    = 0x13;
+const uint32 VIF_MSCAL     = 0x14;
+const uint32 VIF_MSCNT     = 0x17;
+const uint32 VIF_MSCALF    = 0x15;
+const uint32 VIF_STMASK    = 0x20;
+const uint32 VIF_STROW     = 0x30;
+const uint32 VIF_STCOL     = 0x31;
+const uint32 VIF_MPG       = 0x4A;
+const uint32 VIF_DIRECT    = 0x50;
+const uint32 VIF_DIRECTHL  = 0x51;
+const uint32 VIF_UNPACK    = 0x60;
+const uint32 CMD_IRQ       = 0x80;
 ;
 // Values for UNPACK;
-const int UNPACK_S32    = 0x0;
-const int UNPACK_S16    = 0x1;
-const int UNPACK_S8     = 0x2;
-const int UNPACK_V232   = 0x4;
-const int UNPACK_V216   = 0x5;
-const int UNPACK_V28    = 0x6;
-const int UNPACK_V332   = 0x8;
-const int UNPACK_V316   = 0x9;
-const int UNPACK_V38    = 0xA;
-const int UNPACK_V432   = 0xC;
-const int UNPACK_V416   = 0xD;
-const int UNPACK_V48    = 0xE;
-const int UNPACK_V45    = 0xF;
+const uint32 UNPACK_S32    = 0x0;
+const uint32 UNPACK_S16    = 0x1;
+const uint32 UNPACK_S8     = 0x2;
+const uint32 UNPACK_V232   = 0x4;
+const uint32 UNPACK_V216   = 0x5;
+const uint32 UNPACK_V28    = 0x6;
+const uint32 UNPACK_V332   = 0x8;
+const uint32 UNPACK_V316   = 0x9;
+const uint32 UNPACK_V38    = 0xA;
+const uint32 UNPACK_V432   = 0xC;
+const uint32 UNPACK_V416   = 0xD;
+const uint32 UNPACK_V48    = 0xE;
+const uint32 UNPACK_V45    = 0xF;
+
+const uint32 MODE_DIRECT   = 0x0;
+const uint32 MODE_ADD      = 0x1;
+const uint32 MODE_ADDROW   = 0x2;
 
 class VIF : public SubSystem {
 public:
     VIF(int);
+    VIF(const char *filename);
+    VIF(const char *filename, int numregs);
     ~VIF();
-    void            unpack(void);
+    bool            eof(void);
+    bool            valid(void);
+    uint32          read(void);
+    uint32          cmd(void);
+    void            decode_cmd(void);
     void            getVifcode(void);
     void            getFloatVec(void);
+    vector<string>  getRegisterText(int) {
+        vector<string> v;
+        return v;
+    };
 
     vector<string>      unpack_VIF_ITOPS(const int reg);
     vector<string>      unpack_VIF_ITOP(const int reg);
@@ -69,9 +83,7 @@ public:
     vector<string>      unpack_VIF_CODE(const int reg);
 private:
     // vif command functions
-    void            get_vifcode(uint32);
     void            cmd_nop(void);
-    void            cmd_stcycl(void);
     void            cmd_offset(void);
     void            cmd_base(void);
     void            cmd_itop(void);
@@ -90,7 +102,10 @@ private:
     void            cmd_mpg(void);
     void            cmd_direct(void);
     void            cmd_directhl(void);
-    void            cmd_unpack(uint32);
+    uint32          cmd_unpack(void);
+    void            writeCode(void);
+    void            writeRegister(void);
+    void            writeData(void);
 
 
     // VIF Registers
@@ -136,22 +151,24 @@ private:
     uint32   rVIF0_CODE;
 
     // helper vars
-    uint64          dmatag;
     uint32          vifcode;
-    uint32          WL;
-    uint32          CL;
-    uint32          currentCode;
     uint32          *data;
-    uint32          pos;
-    uint32          size;
-    uint32          vumem[1024*16];
     bool            interrupt;
-    bool            maskpath3;
-    uint32          flg;
-    uint32          addr;
-    uint32          num;
-    uint32          usn;
+    bool            _maskpath3;
+    uint32          _flg;
+    uint32          _addr;
+    uint32          _usn;
     uint32          vpu;
     uint32          nREGISTERS;
+    ifstream        _fin;
+    uint32          _cmd;
+    uint32          _num;
+    uint32          _imm;
+    uint32          _unpack;
+    uint32          _WL;
+    uint32          _CL;
+    uint32          _length;
+    uint32          _memIndex;
+    uint32          _codeIndex;
 };
 #endif

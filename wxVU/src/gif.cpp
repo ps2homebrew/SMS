@@ -233,8 +233,8 @@ GIF::NloopData() {
                        "F: " + (string)w);
                 break;
             case XYZ2:
-                sprintf(x, "%u, ", (uint32)((gifData[counter].x)>>4)-xoffset);
-                sprintf(y, "%u, ", (uint32)((gifData[counter].y)>>4)-yoffset);
+                sprintf(x, "%u, ", ((gifData[counter].x)>>4)-(uint32)xoffset);
+                sprintf(y, "%u, ", ((gifData[counter].y)>>4)-(uint32)yoffset);
                 sprintf(z, "%u", gifData[counter].z);
                 v.push_back("X: " + (string)x +
                        "Y: " + (string)y +
@@ -334,16 +334,19 @@ GIF::getNloop(void) {
 void
 GIF::unpackFlag(void) {
     flag = ((gifData[counter].y>>26)&0x3);
+    cout << "flag: " << flag << endl;
 }
 
 void
 GIF::unpackPrim(void) {
     prim = ((gifData[counter].y>>15)&0x3ff);
+    cout << "prim: " << prim << endl;
 }
 
 void
 GIF::unpackPre(void) {
     pre = ((gifData[counter].y>>14)&0x1);
+    cout << "pre: " << pre << endl;
 }
 
 void
@@ -355,12 +358,14 @@ void
 GIF::unpackNloop(void) {
    nloop = (gifData[counter].x&0x7FFF);
    curNloop = nloop;
+   cout << "curNloop: " << curNloop << endl;
 }
 
 void
 GIF::unpackNreg(void) {
     nreg = ((gifData[counter].y>>28));
     curNreg = nreg;
+    cout << "curNreg: " << curNreg << endl;
 }
 
 vector<string>

@@ -233,7 +233,7 @@ wxPanel *PreferenceDlg::CreatePageLoad() {
 
     // mem state temp file.
     wxStaticBoxSizer *stateFileBox = new wxStaticBoxSizer (
-                     new wxStaticBox (panel, -1, _("Filenames for remote saves.")),
+                     new wxStaticBox (panel, -1, _("Filenames for wxVU state saves.")),
                      wxVERTICAL);
     m_memStateFile = new wxTextCtrl (panel, -1, wxEmptyString,
                                    wxDefaultPosition, wxSize(sz1,-1));

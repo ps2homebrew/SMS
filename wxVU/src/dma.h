@@ -19,6 +19,10 @@ enum DMA_REGISTERS {
     D9_CHCR, D9_MADR, D9_QWC, D9_TADR, D9_SADR
 };
 
+enum DMA_CHANNELS {
+    VIF0, VIF1, GIF1, IPU, IPU2, SIF0, SIF1, SIF2, SPR, SPR2
+};
+
 static const char *tDMA_REGISTERS[] = {
     "DMA Ctrl", "DMA Stat", "DMA PCR",
     "DMA SQWC", "DMA RBOR", "DMA RBSR",
@@ -38,12 +42,20 @@ static const char *tDMA_REGISTERS[] = {
 class DMA {
 public:
     DMA();
+    DMA(const char *filename);
+    DMA(const char *filename, int numregs);
     ~DMA();
-    static int const nREGISTERS;
     vector<string>  getRegisterText(const int reg);
     uint64          readRegister(const int reg);
     uint32          writeRegister(const int reg, uint32 value);
     uint32          initRegisters(uint32 *data);
+
+    bool            eof(void);
+    bool            valid(void);
+    uint32          read(void);
+    void            write(uint32);
+    void            decode_tag(void);
+    // void            getDmaTag(void);
 private:
     vector<string>  unpack_ctrl(const int reg);
     vector<string>  unpack_stat(const int reg);
@@ -63,6 +75,15 @@ private:
     vector<string>  unpack_Dn_QWC(const int reg);
 
     uint32          *REGISTERS;
+    ifstream        _fin;
+    int16           _id;
+    uint16          _qwc;
+    uint16          _pce;
+    uint16          _irq;
+    uint16          _addr;
+    uint16          _spr;
+    uint32          _num;
+    uint32          _channel;
 };
 const int DMAnREGISTERS = 52;
 #endif

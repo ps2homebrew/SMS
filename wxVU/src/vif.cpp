@@ -6,8 +6,13 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "vif.h"
+#include "vu.h"
+#include "parser.h"
+
 
 using namespace std;
+
+extern VU VUchip;
 
 int limit(int , int );
 
@@ -33,9 +38,7 @@ static const string tME1[2] = {
 // boa constrictor
 VIF::VIF(int num) : SubSystem(num) {
     nREGISTERS = num;
-	currentCode = VIF_NOP;
 	interrupt = false;
-	pos = 0;
 	vpu = 0;
 	rVIF1_R0 = 0;
 	rVIF1_R1 = 0;
@@ -79,6 +82,25 @@ VIF::VIF(int num) : SubSystem(num) {
 	rVIF0_CODE = 0;
 }
 
+VIF::VIF(const char *filename) : SubSystem(0), _fin(filename) {
+    _num = 0;
+    _cmd = NULL;
+    _WL = 0;
+    _CL = 0;
+    _memIndex = 0;
+    _codeIndex = 0;
+}
+
+VIF::VIF(const char *filename, int numreg)
+    : SubSystem(numreg), _fin(filename) {
+    _num = 0;
+    _cmd = NULL;
+    _WL = 0;
+    _CL = 0;
+    _memIndex = 0;
+    _codeIndex = 0;
+}
+
 // de struct or
 VIF::~VIF() {
 }
@@ -87,27 +109,10 @@ VIF::~VIF() {
 // VIF Register functions
 //
 
-//
+// ------------------------------------------------------------------
 // VIF commands
-//
-
 void
 VIF::cmd_nop(void) {
-    pos = pos + 4;
-}
-
-void
-VIF::cmd_stcycl(void) {
-    uint8 WL, CL;
-}
-
-void
-VIF::cmd_offset(void) {
-    uint32 offset;
-    // offset = data[pos]&0x3ff;
-    // VIF1_OFST = offset;
-    // clear DBF flag in VIF1_STAT
-    // VIF1_BASE = VIF1_TOPS
 }
 
 void
@@ -122,513 +127,583 @@ VIF::cmd_itop(void) {
 }
 
 void
-VIF::cmd_stmod(void) {
+VIF::cmd_stcol(void) {
+int32 data;
+    _fin.read(&data, 4);
+    rVIF0_C0 = data;
+    rVIF1_C0 = data;
+    _fin.read(&data, 4);
+    rVIF0_C1 = data;
+    rVIF1_C1 = data;
+    _fin.read(&data, 4);
+    rVIF0_C2 = data;
+    rVIF1_C2 = data;
+    _fin.read(&data, 4);
+    rVIF0_C3 = data;
+    rVIF1_C3 = data;
 }
 
 void
-VIF::get_vifcode(uint32 code) {
-	currentCode = (uint32)code>>24;
-	interrupt = false;
-    switch(currentCode) {
+VIF::cmd_strow(void) {
+    uint32 data;
+    _fin.read(&data, 4);
+    rVIF0_R0 = data;
+    rVIF1_R0 = data;
+    _fin.read(&data, 4);
+    rVIF0_R1 = data;
+    rVIF1_R1 = data;
+    _fin.read(&data, 4);
+    rVIF0_R2 = data;
+    rVIF1_R2 = data;
+    _fin.read(&data, 4);
+    rVIF0_R3 = data;
+    rVIF1_R3 = data;
+}
+
+void
+VIF::cmd_mpg(void) {
+    uint32  lower;
+    uint32  upper;
+    uint32  index;
+    char    *uppline;
+    char    *lowline;
+    char    *uparam;
+    char    *lparam;
+    uppline = (char *)malloc(256);
+    lowline = (char *)malloc(256);
+    uparam = (char *)malloc(256);
+    lparam = (char *)malloc(256);
+    index = _addr;
+    while ( _num > 0 ) {
+        _fin.read(&lower, 4);
+        _fin.read(&upper, 4);
+        dlower(&lower, lowline, lparam);
+        dupper(&upper, uppline, uparam);
+        insert(uppline, lowline, uparam, lparam, index);
+        // printf("%s\t\t%s\n", uppline, lowline);
+        index++;
+        _num--;
+        VUchip.NInstructions++;
+    }
+
+    if ( _num == 0 ) {
+        _cmd = NULL;
+    }
+}
+
+// ------------------------------------------------------------------
+bool
+VIF::eof() {
+    return _fin.eof();
+}
+
+bool
+VIF::valid() {
+    return true;
+}
+
+uint32
+VIF::read() {
+    uint32  data;
+    if (_num == 0) {
+        decode_cmd();
+    } else {
+        _fin.read(&data, 4);
+        _num--;
+        if ( _num == 0 ) {
+            _cmd = NULL;
+        }
+    }
+    return data;
+}
+
+uint32
+VIF::cmd() {
+    return _cmd;
+}
+
+void
+VIF::decode_cmd(void) {
+    uint32 *data;
+    uint32 cmd;
+    _fin.read(data, 4);
+    if (_fin.eof()) {
+        return;
+    }
+    cmd = (*data)>>24;
+    uint32 vl, vn;
+    switch(cmd) {
         case VIF_NOP:
+            _cmd = VIF_NOP;
+            _num = 0;
             cout << "VIF_NOP" << endl;
             break;
         case VIF_STCYCL:
-            cout << "VIF_STCYCL" << endl;
-			WL = (code>>8)&0xff;
-			CL = (code)&0xff;
-			cout << " WL: " << WL << endl;
-			cout << " CL: " << CL << endl;
+            _cmd = VIF_STCYCL;
+            _num = 0;
+            _WL = (*data>>8)&0xff;
+            _CL = (*data)&0xff;
+            cout << "VIF_STCYCL: ";
+            cout << "WL: " << _WL << ", CL: " << _CL << endl;
             break;
         case VIF_OFFSET:
-            cout << "VIF_OFFSET" << endl;
+            _cmd = VIF_OFFSET;
+            _num = 0;
+            rVIF1_OFST = *data&0x3ff;
+            // clear DBF flag
+            rVIF1_STAT = (rVIF1_STAT&0x1f803f4f);
+            rVIF1_TOPS = rVIF1_BASE;
             break;
         case VIF_BASE:
-            cout << "VIF_BASE" << endl;
+            _cmd = VIF_BASE;
+            _num = 0;
+            rVIF1_BASE = *data&0x3ff;
+            cout << "VIF_BASE: " << rVIF1_BASE << endl;
             break;
         case VIF_ITOP:
-            cout << "VIF_ITOP" << endl;
+            _cmd = VIF_ITOP;
+            _num = 0;
+            rVIF0_ITOPS = *data&0x3ff;
+            rVIF1_ITOPS = *data&0x3ff;
             break;
         case VIF_STMOD:
-            cout << "VIF_STMOD" << endl;
+            _cmd = VIF_STMOD;
+            _num = 0;
+            rVIF0_MODE = *data&0x3;
+            rVIF1_MODE = *data&0x3;
             break;
         case VIF_MSKPATH3:
-            cout << "VIF_MSKPATH3" << endl;
-			if ( (code&0x80) == 1 ) {
-				maskpath3 = true;
-			} else {
-				maskpath3 = false;
-			}
+            _cmd = VIF_MSKPATH3;
+            _num = 0;
+            if ( (*data&0x8000) == 0x8000 ) {
+                _maskpath3 = true;
+            } else {
+                _maskpath3 = false;
+            }
             break;
         case VIF_MARK:
-            cout << "VIF_MARK" << endl;
-			addr = code&0xFFFF;
-			if ( vpu == 0 ) {
-				rVIF0_MARK = addr;
-			} else {
-				rVIF1_MARK = addr;
-			}
+            _cmd = VIF_MARK;
+            _num = 0;
+            rVIF0_MARK = *data&0xFFFF;
+            rVIF1_MARK = *data&0xFFFF;
             break;
         case VIF_FLUSHE:
+            _cmd = VIF_FLUSHE;
+            _num = 0;
             cout << "VIF_FLUSHE" << endl;
 			// end of micro program
             break;
         case VIF_FLUSH:
+            _cmd = VIF_FLUSH;
+            _num = 0;
             cout << "VIF_FLUSH" << endl;
 			// end of micro program
 			// end of transfer to GIF from PATH1 and PATH2
             break;
         case VIF_FLUSHA:
+            _cmd = VIF_FLUSHA;
             cout << "VIF_FLUSHA" << endl;
 			// waits no request state from path3
 			// end of micro program
 			// end of transfer to GIF from PATH1 and PATH2
             break;
         case VIF_MSCAL:
+            _cmd = VIF_MSCAL;
             cout << "VIF_MSCAL" << endl;
-			addr = code&0xFFFF;
-			// now kick addr
+            _addr = *data&0xFFFF;
             break;
 		case VIF_MSCNT:
+            _cmd = VIF_MSCNT;
             cout << "VIF_MSCNT" << endl;
-			// kick another execution after EOMP
 			break;
         case VIF_MSCALF:
+            _cmd = VIF_MSCALF;
             cout << "VIF_MSCALF" << endl;
-			addr = code&0xFFFF;
-			// waits for MP and PATH1/PATH2
+            _addr = *data&0xFFFF;
             break;
 		case VIF_STMASK:
 			cout << "VIF_STMASK" << endl;
-			if ( vpu == 0 ) {
-				rVIF0_MASK = *(data++);
-			} else {
-				rVIF1_MASK = *(data++);
-			}
-			pos += 4;
+            _cmd = VIF_STMASK;
+            rVIF0_MASK = *(data);
+            rVIF1_MASK = *(data);
 			break;
         case VIF_STROW:
-            cout << "VIF_STROW" << endl;
-			num = (code>>16)&0xFF;
-			addr = code&0xFFFF;
-			if ( vpu == 0 ) {
-				rVIF0_R0 = *(data++);
-				rVIF0_R1 = *(data++);
-				rVIF0_R2 = *(data++);
-				rVIF0_R3 = *(data++);
-			} else {
-				rVIF1_R0 = *(data++);
-				rVIF1_R1 = *(data++);
-				rVIF1_R2 = *(data++);
-				rVIF1_R3 = *(data++);
-			}
-			pos += 16;
+            cmd_strow();
             break;
         case VIF_STCOL:
-            cout << "VIF_STCOL" << endl;
-			num = (code>>16)&0xFF;
-			addr = code&0xFFFF;
-			if ( vpu == 0 ) {
-				rVIF0_C0 = *(data++);
-				rVIF0_C1 = *(data++);
-				rVIF0_C2 = *(data++);
-				rVIF0_C3 = *(data++);
-			} else {
-				rVIF1_C0 = *(data++);
-				rVIF1_C1 = *(data++);
-				rVIF1_C2 = *(data++);
-				rVIF1_C3 = *(data++);
-			}
-			pos += 16;
+            cmd_stcol();
             break;
         case VIF_MPG:
             cout << "VIF_MPG" << endl;
-			num = (code>>16)&0xFF;
-			addr = code&0xffff;
+            _cmd = VIF_MPG;
+            _num = (*data>>16)&0xFF;
+            _addr = *data&0xffff;
+            if ( _num == 0 ) {
+                _num = 256;
+            }
+            cmd_mpg();
             break;
 		case VIF_DIRECT:
+            // should be redirected to gsexec directly
 			cout << "VIF_DIRECT" << endl;
-			num = code&0xFFFF;
-			if (num == 0) {
-				num = 65536;
-			}
+            // num = code&0xFFFF;
+            // if (num == 0) {
+            //     num = 65536;
+            // }
 			break;
 		case VIF_DIRECTHL:
+            // should be redirected to gsexec directly
 			cout << "VIF_DIRECTHL" << endl;
-			num = code&0xFFFF;
-			if (num == 0) {
-				num = 65536;
-			}
-			// this one stalls until path3 is finished
-			// let drawGIF get data somehow
+            // num = code&0xFFFF;
+            // if (num == 0) {
+            //     num = 65536;
+            // }
 			break;
-        case VIF_UNPACK:
-            cout << "VIF_UNPACK" << endl;
-			num = (code>>16)&0xFF;
-			flg = (code>>15)&0x1;
-			usn = (code>>14)&0x1;
-			addr = code&0x3FF;
-			if (flg == 1) {
-				addr + rVIF1_TOPS;
-			}
-            break;
+    }
+
+    if ( (cmd&VIF_UNPACK) == VIF_UNPACK) {
+        _memIndex = 0;
+        cout << "VIF_UNPACK: ";
+        _cmd = VIF_UNPACK;
+        _num = (*data>>16)&0xFF;
+        _unpack = (*data>>24)&0xF;
+        _addr = (*data)&0x3FF;
+        _usn = (*data>>14)&0x1;
+        _flg = (*data>>15)&0x1;
+        vl = (*data>>24)&3;
+        vn = (*data>>26)&3;
+
+        if ( _WL <= _CL ) {
+            _length = 1+(((32>>vl)*(vn+1))*_num/32);
+        } else {
+            uint32 n = _CL*(_num/_WL)+limit(_num%_WL,_CL);
+            _length = 1+(((32>>vl)*(vn+1))*n/32);
+        }
+
+        _unpack = (vn<<2)+vl;
+        cout << "length: " << _length << ", ";
+        cout << "usn: " << _usn << ", ";
+        cout << "flg: " << _flg << endl;
+        if ( _flg == 1 ) {
+            _memIndex = rVIF1_TOPS; 
+        }
+        _memIndex += _addr;
+        cmd_unpack();
     }
 }
 
-void
-VIF::unpack(void) {
-    while(pos<size) {
-		vifcode = *(data++);
-        get_vifcode(vifcode);
-		pos += 4;
-    }
-}
+uint32
+VIF::cmd_unpack(void) {
+    uint32 word, word_x, word_y, word_z, word_w;
+    uint16 hword, hword_x, hword_y, hword_z, hword_w;
+    uint8 byte, byte_x, byte_y, byte_z, byte_w;
+    uint32 _cycle = 0;
+    uint32 _write = 0;
+    uint32 _cnt = _num;
+    for (;_num > 0; _num--) {
+        // do skip or write fill
+        if( _CL > _WL ) {
+            if ( _write >= _WL ) {
+                _memIndex += _CL-_WL;
+                _cycle = 0;
+                _write = 0;
+            }
+        } else if ( _CL > _WL ) {
+            if ( _write >= _CL ) {
+                for(_cnt = 0; _cnt < (_CL-_WL); _cnt++) {
+                    VUchip.dataMem[_memIndex].x = rVIF1_C0; 
+                    VUchip.dataMem[_memIndex].y = rVIF1_C1; 
+                    VUchip.dataMem[_memIndex].z = rVIF1_C2; 
+                    VUchip.dataMem[_memIndex].w = rVIF1_C3; 
+                    _memIndex++;
+                }
+                _cycle = 0;
+                _write = 0;
+            }
+        }
+        switch(_unpack) {
+            case UNPACK_S32:
+                cout << "unpacking S32" << endl;
+                _fin.read(&word, 4);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    VUchip.dataMem[_memIndex].x = word+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = word+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = word+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = word+rVIF1_R3;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    VUchip.dataMem[_memIndex].x = word+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = word+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = word+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = word+rVIF1_R3;
+                    rVIF1_R0 = word+rVIF1_R0;
+                    rVIF1_R1 = word+rVIF1_R1;
+                    rVIF1_R2 = word+rVIF1_R2;
+                    rVIF1_R3 = word+rVIF1_R3;
+                } else {
+                    VUchip.dataMem[_memIndex].x = word;
+                    VUchip.dataMem[_memIndex].y = word;
+                    VUchip.dataMem[_memIndex].z = word;
+                    VUchip.dataMem[_memIndex].w = word;
+                }
+                break;
+            case UNPACK_S16:
+                cout << "unpacking S16" << endl;
+                _fin.read(&hword, 2);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    VUchip.dataMem[_memIndex].x = hword+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = hword+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = hword+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = hword+rVIF1_R3;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    VUchip.dataMem[_memIndex].x = hword+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = hword+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = hword+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = hword+rVIF1_R3;
+                    rVIF1_R0 = word+rVIF1_R0;
+                    rVIF1_R1 = word+rVIF1_R1;
+                    rVIF1_R2 = word+rVIF1_R2;
+                    rVIF1_R3 = word+rVIF1_R3;
+                } else {
+                    VUchip.dataMem[_memIndex].x = hword;
+                    VUchip.dataMem[_memIndex].y = hword;
+                    VUchip.dataMem[_memIndex].z = hword;
+                    VUchip.dataMem[_memIndex].w = hword;
+                }
+                break;
+            case UNPACK_S8:
+                cout << "unpacking S8" << endl;
+                _fin.read(&byte, 1);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    VUchip.dataMem[_memIndex].x = byte+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = byte+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = byte+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = byte+rVIF1_R3;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    VUchip.dataMem[_memIndex].x = byte+rVIF1_R0;
+                    VUchip.dataMem[_memIndex].y = byte+rVIF1_R1;
+                    VUchip.dataMem[_memIndex].z = byte+rVIF1_R2;
+                    VUchip.dataMem[_memIndex].w = byte+rVIF1_R3;
+                    rVIF1_R0 = word+rVIF1_R0;
+                    rVIF1_R1 = word+rVIF1_R1;
+                    rVIF1_R2 = word+rVIF1_R2;
+                    rVIF1_R3 = word+rVIF1_R3;
+                } else {
+                    VUchip.dataMem[_memIndex].x = byte;
+                    VUchip.dataMem[_memIndex].y = byte;
+                    VUchip.dataMem[_memIndex].z = byte;
+                    VUchip.dataMem[_memIndex].w = byte;
+                }
+                break;
+            case UNPACK_V232:
+                cout << "unpacking V2_32" << endl;
+                _fin.read(&word_x, 4);
+                _fin.read(&word_y, 4);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    word_x = word_x+rVIF1_R0;
+                    word_y = word_y+rVIF1_R1;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = word_x+rVIF1_R0;
+                    word_y = word_y+rVIF1_R1;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                break;
+            case UNPACK_V216:
+                cout << "unpacking V2_16" << endl;
+                _fin.read(&hword, 2);
+                _fin.read(&hword, 2);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    word_x = hword_x+rVIF1_R0;
+                    word_y = hword_y+rVIF1_R1;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = hword_x+rVIF1_R0;
+                    word_y = hword_y+rVIF1_R1;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                } else {
+                    word_x = hword_x;
+                    word_y = hword_y;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                break;
+            case UNPACK_V28:
+                cout << "unpacking V2_8" << endl;
+                _fin.read(&byte, 1);
+                _fin.read(&byte, 1);
 
-void
-VIF::cmd_unpack(uint32 cmd) {
-    uint32 vl = cmd&0x0F;
-    uint32 vn = (cmd&0xF0)>>4;
-    uint32 offset = 0;
-    uint32 S1, S2, S3;
-    uint32 X1, X2, X3, Y1, Y2, Y3, Z1, Z2, Z3, W1, W2, W3;
-    uint32 RGBA1, RGBA2, RGBA3;
-    if ( (vpu = 1) && flg) {
-        offset = addr + rVIF1_TOPS;
-    } else {
-        offset = addr;
-    }
-
-    if ( WL <= CL ) {
-        1+(((32>>vl)*(vn+1))*num/32);
-    } else {
-        uint32 n = CL*(num/WL)+limit(num%WL,CL);
-        1+(((32>>vl)*(vn+1))*n/32);
-    }
-
-    switch((vn<<4)+vl) {
-        case UNPACK_S32:
-            S1 = *(data++);
-            S2 = *(data++);
-            S3 = *(data++);
-            vumem[offset+0] = S1;  
-            vumem[offset+1] = S1;  
-            vumem[offset+2] = S1;  
-            vumem[offset+3] = S1;  
-
-            vumem[offset+5] = S2;
-            vumem[offset+6] = S2;
-            vumem[offset+7] = S2;
-            vumem[offset+8] = S2;
-
-            vumem[offset+9] = S3;  
-            vumem[offset+10] = S3;  
-            vumem[offset+11] = S3;  
-            vumem[offset+12] = S3;  
-            offset += 12;
-            break;
-        case UNPACK_S16:
-            S1 = *(data++);
-            S2 = (S1>>16);
-            S1 = S1&0xFFFF;
-            S3 = *(data++);
-
-            vumem[offset+0] = S1;  
-            vumem[offset+1] = S1;  
-            vumem[offset+2] = S1;  
-            vumem[offset+3] = S1;  
-
-            vumem[offset+5] = S2;
-            vumem[offset+6] = S2;
-            vumem[offset+7] = S2;
-            vumem[offset+8] = S2;
-
-            vumem[offset+9] = S3;  
-            vumem[offset+10] = S3;  
-            vumem[offset+11] = S3;  
-            vumem[offset+12] = S3;  
-            offset += 12;
-            break;
-        case UNPACK_S8:
-            S1 = *(data++);
-            S2 = (S1>>8)&0xFF;
-            S3 = (S1>>16)&0xFF;
-            S1 = S1&0xFF;
-
-            // fix USN
-            vumem[offset+0] = S1;  
-            vumem[offset+1] = S1;  
-            vumem[offset+2] = S1;  
-            vumem[offset+3] = S1;  
-
-            vumem[offset+5] = S2;
-            vumem[offset+6] = S2;
-            vumem[offset+7] = S2;
-            vumem[offset+8] = S2;
-
-            vumem[offset+9] = S3;  
-            vumem[offset+10] = S3;  
-            vumem[offset+11] = S3;  
-            vumem[offset+12] = S3;  
-            offset += 12;
-            break;
-        case UNPACK_V232:
-            X1 = *(data++);
-            Y1 = *(data++);
-            X2 = *(data++);
-            Y2 = *(data++);
-            X3 = *(data++);
-            Y3 = *(data++);
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-
-            vumem[offset+9] = X3;
-            vumem[offset+10] = Y3;
-            offset += 12;
-            break;
-        case UNPACK_V216:
-            X1 = *(data++);
-            X2 = *(data++);
-            X3 = *(data++);
-
-            Y1 = (X1>>16);
-            Y2 = (X2>>16);
-            Y3 = (X3>>16);
-
-            X1 = X1&0xFFFF;
-            X2 = X2&0xFFFF;
-            X3 = X3&0xFFFF;
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-
-            vumem[offset+9] = X3;
-            vumem[offset+10] = Y3;
-            offset += 12;
-            break;
-        case UNPACK_V28:
-            X1 = *(data++);
-            X3 = *(data++);
-
-            Y1 = (X1>>8)&0xFF;
-            X2 = (X1>>16)&0xFF;
-            Y2 = (X2>>24)&0xFF;
-            X1 = X1&0xFF;
-
-            Y3 = (X3>>8)&0xFF;
-            X3 = X3&0xFF;
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-
-            vumem[offset+9] = X3;
-            vumem[offset+10] = Y3;
-            offset += 12;
-            break;
-        case UNPACK_V332:
-            X1 = *(data++);
-            Y1 = *(data++);
-            Z1 = *(data++);
-            X2 = *(data++);
-            Y2 = *(data++);
-            Z2 = *(data++);
-            Y3 = *(data++);
-            Z3 = *(data++);
-            X3 = *(data++);
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-            vumem[offset+2] = Z1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-            vumem[offset+7] = Z2;
-
-            vumem[offset+9] = X3;  
-            vumem[offset+10] = Y3;  
-            vumem[offset+11] = Z3;  
-            offset += 12;
-            break;
-        case UNPACK_V316:
-            X1 = *(data++);
-            Z1 = *(data++);
-            Y2 = *(data++);
-            X3 = *(data++);
-            Z3 = *(data++);
-
-            Y1 = (X1>>16)&0xFFFF;
-            X2 = (Z1>>16)&0xFFFF;
-            Z2 = (Y2>>16)&0xFFFF;
-            Y3 = (X3>>16)&0xFFFF;
-            Z3 = Z3&0xFFFF;
-            X1 = X1&0xFFFF;
-            Z1 = Z1&0xFFFF;
-            Y2 = Y2&0xFFFF;
-            X3 = X3&0xFFFF;
-            Z3 = Z3&0xFFFF;
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-            vumem[offset+2] = Z1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-            vumem[offset+7] = Z2;
-
-            vumem[offset+9] = X3;  
-            vumem[offset+10] = Y3;  
-            vumem[offset+11] = Z3;  
-            offset += 12;
-            break;
-        case UNPACK_V38:
-            X1 = (*(data))&0xFF;
-            Y1 = ((*(data))>>8)&0xFF;
-            Z1 = ((*(data))>>16)&0xFF;
-            X2 = ((*(data++))>>24)&0xFF;
-            Y2 = (*(data))&0xFF;
-            Z2 = ((*(data))>>8)&0xFF;
-            X3 = ((*(data))>>16)&0xFF;
-            Y3 = ((*(data++))>>24)&0xFF;
-            Z3 = (*(data))&0xFF;
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-            vumem[offset+2] = X1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-            vumem[offset+7] = Z2;
-
-            vumem[offset+9] = X3;  
-            vumem[offset+10] = Y3;  
-            vumem[offset+11] = Z3;  
-            offset += 12;
-            break;
-
-        case UNPACK_V432:
-            X1 = *(data++);
-            Y1 = *(data++);
-            Z1 = *(data++);
-            W1 = *(data++);
-            X2 = *(data++);
-            Y2 = *(data++);
-            Z2 = *(data++);
-            W2 = *(data++);
-            Y3 = *(data++);
-            Z3 = *(data++);
-            X3 = *(data++);
-            W3 = *(data++);
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y2;
-            vumem[offset+2] = Z3;
-            vumem[offset+3] = W3;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-            vumem[offset+7] = Z2;
-            vumem[offset+8] = W2;
-
-            vumem[offset+9] = X3;  
-            vumem[offset+10] = Y3;  
-            vumem[offset+11] = Z3;  
-            vumem[offset+12] = W3;  
-            offset += 12;
-            break;
-
-        case UNPACK_V416:
-            X1 = (*(data))&0xFFFF;
-            Y1 = (*(data++)>>16)&0xFFFF;
-            Z1 = *(data)&0xFFFF;
-            W1 = (*(data++)>>16)&0xFFFF;
-            X2 = *(data)&0xFFFF;
-            Y2 = (*(data++)>>16)&0xFFFF;
-            Z2 = *(data)&0xFFFF;
-            W2 = (*(data++)>>16)&0xFFFF;
-            X3 = *(data)&0xFFFF;
-            Y3 = (*(data++)>>16)&0xFFFF;
-            Z3 = *(data)&0xFFFF;
-            W3 = (*(data++)>>16)&0xFFFF;
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-            vumem[offset+2] = Z1;
-            vumem[offset+4] = W1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-            vumem[offset+7] = Z2;
-            vumem[offset+8] = W2;
-
-            vumem[offset+9] = Z3;  
-            vumem[offset+10] = Z3;  
-            vumem[offset+11] = Z3;  
-            vumem[offset+12] = W3;  
-            offset += 12;
-
-            break;
-        case UNPACK_V48:
-            X1 = (*(data))&0xFF;
-            Y1 = (*(data)>>8)&0xFF;
-            Z1 = (*(data)>>16)&0xFF;
-            W1 = (*(data++)>>24)&0xFF;
-            X2 = *(data)&0xFF;
-            Y2 = (*(data)>>8)&0xFF;
-            Z2 = (*(data)>>16)&0xFF;
-            W2 = (*(data++)>>24)&0xFF;
-            X3 = *(data)&0xFF;
-            Y3 = (*(data)>>8)&0xFF;
-            Z3 = (*(data)>>16)&0xFF;
-            W3 = (*(data++)>>24)&0xFF;
-
-            vumem[offset+0] = X1;
-            vumem[offset+1] = Y1;
-            vumem[offset+2] = Z1;
-            vumem[offset+3] = W1;
-
-            vumem[offset+5] = X2;
-            vumem[offset+6] = Y2;
-            vumem[offset+7] = Z2;
-            vumem[offset+8] = W2;
-
-            vumem[offset+9] = X3;  
-            vumem[offset+10] = Y3;  
-            vumem[offset+11] = Z3;  
-            vumem[offset+12] = W3;  
-            offset += 12;
-
-            break;
-        case UNPACK_V45:
-            RGBA1 = *(data)&0xFFFF;
-            RGBA2 = (*(data++)>>16)&0xFFFF;
-            RGBA3 = *(data++)&0xFFFF;
-
-            vumem[offset+0] = (RGBA1&0x1F)<<4;
-            vumem[offset+1] = ((RGBA1>>5)&0x1F)<<4;
-            vumem[offset+2] = ((RGBA1>>9)&0x1F)<<4;
-            vumem[offset+3] = ((RGBA1>>14)&0x1)<<8;
-
-            vumem[offset+5] = (RGBA2&0x1F)<<4;
-            vumem[offset+6] = ((RGBA2>>5)&0x1F)<<4;
-            vumem[offset+7] = ((RGBA2>>9)&0x1F)<<4;
-            vumem[offset+8] = ((RGBA2>>14)&0x1)<<8;
-
-            vumem[offset+9] = (RGBA3&0x1F)<<4;
-            vumem[offset+10] = ((RGBA3>>5)&0x1F)<<4;
-            vumem[offset+11] = ((RGBA3>>9)&0x1F)<<4;
-            vumem[offset+12] = ((RGBA3>>14)&0x1)<<8;
-
-            offset += 12;
-
-            break;
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    byte_x = byte_x+rVIF1_R0;
+                    byte_y = byte_y+rVIF1_R1;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = byte_x+rVIF1_R0;
+                    word_y = byte_y+rVIF1_R1;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                } else {
+                    word_x = byte_x;
+                    word_y = byte_y;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                break;
+            case UNPACK_V332:
+                cout << "unpacking V3_32" << endl;
+                _fin.read(&word_x, 4);
+                _fin.read(&word_y, 4);
+                _fin.read(&word_z, 4);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    word_x = word_x+rVIF1_R0;
+                    word_y = word_y+rVIF1_R1;
+                    word_z = word_z+rVIF1_R2;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = word_x+rVIF1_R0;
+                    word_y = word_y+rVIF1_R1;
+                    word_z = word_z+rVIF1_R2;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                    rVIF1_R2 = word_z;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                VUchip.dataMem[_memIndex].z = word_z;
+                break;
+            case UNPACK_V316:
+                cout << "unpacking V3_16" << endl;
+                _fin.read(&hword_x, 2);
+                _fin.read(&hword_y, 2);
+                _fin.read(&hword_z, 2);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    hword_x = hword_x+rVIF1_R0;
+                    hword_y = hword_y+rVIF1_R1;
+                    hword_z = hword_z+rVIF1_R2;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = hword_x+rVIF1_R0;
+                    word_y = hword_y+rVIF1_R1;
+                    word_z = hword_z+rVIF1_R2;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                    rVIF1_R2 = word_z;
+                } else {
+                    word_x = hword_x;
+                    word_y = hword_y;
+                    word_z = hword_z;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                VUchip.dataMem[_memIndex].z = word_z;
+                break;
+            case UNPACK_V38:
+                cout << "unpacking V3_8" << endl;
+                _fin.read(&byte, 1);
+                _fin.read(&byte, 1);
+                _fin.read(&byte, 1);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    byte_x = byte_x+rVIF1_R0;
+                    byte_y = byte_y+rVIF1_R1;
+                    byte_z = byte_z+rVIF1_R2;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = byte_x+rVIF1_R0;
+                    word_y = byte_y+rVIF1_R1;
+                    word_z = byte_z+rVIF1_R2;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                    rVIF1_R2 = word_z;
+                } else {
+                    word_x = byte_x;
+                    word_y = byte_y;
+                    word_z = byte_z;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                VUchip.dataMem[_memIndex].z = word_z;
+                break;
+            case UNPACK_V432:
+                cout << "unpacking V4_32" << endl;
+                _fin.read(&word_x, 4);
+                _fin.read(&word_y, 4);
+                _fin.read(&word_z, 4);
+                _fin.read(&word_w, 4);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    word_x = word_x+rVIF1_R0;
+                    word_y = word_y+rVIF1_R1;
+                    word_z = word_z+rVIF1_R2;
+                    word_w = word_w+rVIF1_R3;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = word_x+rVIF1_R0;
+                    word_y = word_y+rVIF1_R1;
+                    word_z = word_z+rVIF1_R2;
+                    word_w = word_w+rVIF1_R3;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                    rVIF1_R2 = word_z;
+                    rVIF1_R3 = word_w;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                VUchip.dataMem[_memIndex].z = word_z;
+                VUchip.dataMem[_memIndex].w = word_w;
+                break;
+            case UNPACK_V416:
+                _fin.read(&hword, 2);
+                _fin.read(&hword, 2);
+                _fin.read(&hword, 2);
+                _fin.read(&hword, 2);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    hword_x = hword_x+rVIF1_R0;
+                    hword_y = hword_y+rVIF1_R1;
+                    hword_z = hword_z+rVIF1_R2;
+                    hword_w = hword_w+rVIF1_R3;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    hword_x = hword_x+rVIF1_R0;
+                    hword_y = hword_y+rVIF1_R1;
+                    hword_z = hword_z+rVIF1_R2;
+                    hword_w = hword_w+rVIF1_R3;
+                    rVIF1_R0 = hword_x;
+                    rVIF1_R1 = hword_y;
+                    rVIF1_R2 = hword_z;
+                    rVIF1_R3 = hword_w;
+                }
+                VUchip.dataMem[_memIndex].x = hword;
+                VUchip.dataMem[_memIndex].y = hword;
+                VUchip.dataMem[_memIndex].z = hword;
+                VUchip.dataMem[_memIndex].w = hword;
+                break;
+            case UNPACK_V48:
+                _fin.read(&byte_x, 1);
+                _fin.read(&byte_y, 1);
+                _fin.read(&byte_z, 1);
+                _fin.read(&byte_w, 1);
+                if ( rVIF1_MODE == MODE_ADD ) {
+                    word_x = byte_x+rVIF1_R0;
+                    word_y = byte_y+rVIF1_R1;
+                    word_z = byte_z+rVIF1_R2;
+                    word_w = byte_w+rVIF1_R3;
+                } else if ( rVIF1_MODE == MODE_ADDROW ) {
+                    word_x = byte_x+rVIF1_R0;
+                    word_y = byte_y+rVIF1_R1;
+                    word_z = byte_z+rVIF1_R2;
+                    word_w = byte_w+rVIF1_R3;
+                    rVIF1_R0 = word_x;
+                    rVIF1_R1 = word_y;
+                    rVIF1_R2 = word_z;
+                    rVIF1_R3 = word_w;
+                }
+                VUchip.dataMem[_memIndex].x = word_x;
+                VUchip.dataMem[_memIndex].y = word_y;
+                VUchip.dataMem[_memIndex].z = word_z;
+                VUchip.dataMem[_memIndex].w = word_w;
+                break;
+            case UNPACK_V45:
+                break;
+            default:
+                break;
+        }
+        _memIndex++;
+        _cycle++;
+        _write++;
     }
 }
 
@@ -737,4 +812,17 @@ VIF::unpack_VIF_CODE(const int reg) {
     sprintf(val, "0x%x", (REGISTERS[reg]&0xff000000)>>24);
     v.push_back(val);
     return v;
+}
+
+// write functions
+void
+VIF::writeCode(void) {
+}
+
+void
+VIF::writeData(void) {
+}
+
+void
+VIF::writeRegister(void) {
 }

@@ -58,7 +58,7 @@ void VU::Reset() {
     MacS=0;
     MacU=0;
     MacO=0;
-    StatusFlag=0;
+    StatusFlag = 0;
     for(i=0; i<32; i++)
         RegFloat[i].set(0.0);
     RegFloat[0].w(1.0);
@@ -426,9 +426,9 @@ VU::Tic() {
         }
         if(j) {
             j = DoLower();              //try lower
-            if(j >= 0) {
+            // if(j >= 0) {
                 // CallBackFn(CallBackObj, LOWER, j);
-            }
+            // }
         }
     }
     updateRegisters();                  // We update registers as the last

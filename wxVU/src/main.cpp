@@ -757,7 +757,7 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
     tagInitGs[12] = yoffset<<4;
     tagInitGs[13] = xoffset<<4;
     tagInitGs[16] = scissorX<<16;
-    tagInitGs[17] = scissorY<<16;
+    tagInitGs[17] = scissorY<<1<<16;
     
     if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagInitGs, 96) != 0) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
@@ -1042,6 +1042,35 @@ VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
 
 //---------------------------------------------------------------------------
 void
+VUFrame::OnLoadVIF(wxCommandEvent &WXUNUSED(event)) {
+    dlgOpenFile = new wxFileDialog(this, "Choose a VIF file");
+    dlgOpenFile->SetWildcard("*.bin");
+    if (dlgOpenFile->ShowModal() == wxID_OK) {
+        vifFile.Assign(dlgOpenFile->GetPath());
+        VIF *vif = new VIF(vifFile.GetFullPath().c_str());
+        while(!vif->eof()) {
+            vif->read();
+        }
+        DrawMemory();
+        DrawProgram();
+    }
+}
+
+//---------------------------------------------------------------------------
+void
+VUFrame::OnLoadDMA(wxCommandEvent &WXUNUSED(event)) {
+    dlgOpenFile = new wxFileDialog(this, "Choose a DMA file");
+    if (dlgOpenFile->ShowModal() == wxID_OK) {
+        vifFile.Assign(dlgOpenFile->GetPath());
+        DMA *dma = new DMA(vifFile.GetFullPath().c_str());
+        while(!dma->eof()) {
+            dma->read();
+        }
+    }
+}
+
+//---------------------------------------------------------------------------
+void
 VUFrame::OnLoadCode(wxCommandEvent &WXUNUSED(event)) {
     dlgOpenFile = new wxFileDialog(this, "Choose a code file");
     if (dlgOpenFile->ShowModal() == wxID_OK) {
@@ -1222,7 +1251,7 @@ void VUFrame::DrawProgram() {
         gridCode->SetCellValue(i, 3, wxString(""));
         gridCode->SetCellValue(i, 4, wxString(""));
     }
-    for (i = 0; i < VUchip.NInstructions; i++,l++){
+    for (i = 0; i < MAX_VUCODE_SIZE; i++,l++){
         if ( i > 2048 ) {
             txtDebugFailed(
                 wxString("Warning. More than 2048 opcodes loaded.\n"));
@@ -1233,11 +1262,12 @@ void VUFrame::DrawProgram() {
             strcat(scode,":");
             gridCode->SetCellValue(l++, 1, scode);
         }
-        VUchip.program[i].addr=i;
+        VUchip.program[i].addr = i;
         gridCode->SetCellValue(l, 2, wxString::Format("%d",
                 VUchip.program[i].tics));
         for(m=UPPER; m<=LOWER; m++) {
             strcpy(auxi,Instr.Instr[VUchip.program[i].InstIndex[m]].nemot);
+            cout << "auxi: " << auxi << endl;
             if(VUchip.program[i].flg && !m) {
                 sprintf(aux2,"[%c]",VUchip.program[i].flg);
                 strcat(auxi, aux2);
@@ -1633,6 +1663,8 @@ VUFrame::buildToolbar(void) {
     menuFile->Append(ID_FILE_LOADCODE,  "&Load code\tCtrl-l");
     menuFile->Append(ID_FILE_LOADMEM,   "&Load mem\tCtrl-m");
     menuFile->Append(ID_FILE_LOADPROJECT,   "&Load project\tCtrl-p");
+    menuFile->Append(ID_FILE_LOADVIF,   "&Load VIF data");
+    menuFile->Append(ID_FILE_LOADDMA,   "&Load DMA data");
     menuFile->Append(ID_FILE_SAVESTATE,  "&Save state");
     menuFile->Append(ID_FILE_QUIT,      "&Exit\tCtrl-q");
 

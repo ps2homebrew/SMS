@@ -1,9 +1,10 @@
 *** Version 3 ****
 . emulate both vpu's
 . emulate DMA(and SRAM) for moving data between VPU0 and VPU1
+. workflow manager
 
 **** Version 2 ****
-. Switch to Spirit for parsing.
+. Switch to Spirit for parsing .vsm text files
 . PATH2/PATH3 emulation
 . Timing/Latency for PATH2/PATH3
 . vtune styled stall info to the right of the code.
@@ -12,18 +13,20 @@
 . Fast pulldown/dialog menu for cells in memory, code and gif, for additional info
   like ftoi0, ftoi4, ftoi12, ftoi15 for memory.
 . option to not reset registers and pc on reload of code
-! accumulated cycle count, and on per loop basis.
 . fmac, fdiv, ialu, efu pipeline simulation ( replacing whats in vu.cpp )
-* breakpoint on register/memory condition
 . some sort of save project state
 . save breakpoint data with project ( brkfile= )
 . add break on xgkick/mscal/mscnt/unpack to some breakpoint dialog.
 
+! accumulated cycle count, and on per loop basis.
+* breakpoint on register/memory condition
+
 **** Version 1 ****
-. generate labelnames on disasm 
 . large immediates dont generate a warning ( .vsm files )
 . Start on errno.h ( and some getErrorAsText()/perror() thingy )
 . change row/column order of registers
+. add commandline options in pref for batchtools like dumpreg/dumpmem/gsexec
+! generate labelnames on disasm 
 ! Full VIF support
 ! Parse DMA Tags
 ! emulate VU single precision float ( some differences from IEEE 754 )
