@@ -38,9 +38,9 @@ void PbVif1UploadPrg( int Dest, void* pStart, void* pEnd )
     *((u32*) p_chain)++ = VIF_CODE( VIF_NOP,0,0 );
     *((u32*) p_chain)++ = VIF_CODE( VIF_MPG,current_count&0xff,Dest );
 
-		pStart += count*2;
-    count -= 256; 
-    Dest += 256;
+    pStart += current_count*2;
+    count -= current_count; 
+    Dest += current_count;
   }
 
   *((u64*) p_chain)++ = DMA_END_TAG( 0 );
