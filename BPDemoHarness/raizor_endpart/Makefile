@@ -1,5 +1,5 @@
-EE_BIN = jar_part1.elf
-BIN_IMAGE = bin.bin
+EE_BIN = raizor_endpart.elf
+BIN_IMAGE = endpart.bin
 EE_OBJS = crt0.o main.o math.o \
           gfx/bg1.o gfx/bg2.o gfx/logo.o gfx/font.o font_lookup.o floattables.o
 

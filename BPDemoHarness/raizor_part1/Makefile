@@ -1,5 +1,5 @@
-EE_BIN = jar_part1.elf
-BIN_IMAGE = bin.bin
+EE_BIN = credits.elf
+BIN_IMAGE = credits.bin
 EE_OBJS = crt0.o main.o math.o texture.o \
           gfx/c_rzr.o gfx/c_emoon.o gfx/c_tyranid.o gfx/c_jar.o gfx/c_adresd.o \
           gfx/c_gfxcoding.o gfx/credits.o gfx/c_trinodia.o
