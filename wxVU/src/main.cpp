@@ -382,6 +382,7 @@ VUFrame::SetSettings() {
     prim = conf->Read(key + _T("/") + PRIM, 0L);
 
     Remote::SetGsInit(xoffset, yoffset, scissorX, scissorY, ClrColor);
+    Remote::SetGsClear(0, 0, 640, 512, ClrColor);
 }
 
 //---------------------------------------------------------------------------
@@ -539,16 +540,16 @@ void VUFrame::OnRegsVu0(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void VUFrame::OnRegsVu1(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_regTmpFile == "" ) {
         wxMessageBox("No register temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetVuRegisters(1) == 0) {
+    if ( (ret = Remote::GetVuRegisters(1)) == 0) {
         m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
         RegisterUpdate();
     } else {
-        wxMessageBox("Unable to fetch vpu1 registers from PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
@@ -560,9 +561,7 @@ VUFrame::OnGsInit(wxCommandEvent &WXUNUSED(event)) {
         return;
     }
     if ( (ret = Remote::GsInit()) != 0 ) {
-        m_pLog->Error(ret, m_gsTmpFile);
-        // wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
-        //     wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 

@@ -349,19 +349,16 @@ Gif::GetNloop(void) {
 void
 Gif::UnpackFlag(void) {
     flag = ((gifData[counter].y>>26)&0x3);
-    cout << "flag: " << flag << endl;
 }
 
 void
 Gif::UnpackPrim(void) {
     prim = ((gifData[counter].y>>15)&0x3ff);
-    cout << "prim: " << prim << endl;
 }
 
 void
 Gif::UnpackPre(void) {
     pre = ((gifData[counter].y>>14)&0x1);
-    cout << "pre: " << pre << endl;
 }
 
 void
@@ -373,14 +370,12 @@ void
 Gif::UnpackNloop(void) {
    nloop = (gifData[counter].x&0x7FFF);
    curNloop = nloop;
-   cout << "curNloop: " << curNloop << endl;
 }
 
 void
 Gif::UnpackNreg(void) {
     nreg = ((gifData[counter].y>>28));
     curNreg = nreg;
-    cout << "curNreg: " << curNreg << endl;
 }
 
 vector<string>

@@ -22,6 +22,8 @@ public:
                                     const uint32 xScissor, const uint32 yScissor,
                                     const uint32 rgba
                                     );
+    static void         SetGsClear(const uint32 x1, const uint32 x2, const
+        uint32 y1, const uint32 y2, const uint32 color);
 private:
     static const int32     Open(void);
     static const int32     Close(void);
@@ -35,5 +37,7 @@ private:
     static uint32   m_tagGsInit[24];
     static uint32   m_tagGsClear[24];
     static const char   cmd[1024];
+    static uint32   m_xOffset;
+    static uint32   m_yOffset;
 };
 #endif

@@ -19,8 +19,27 @@ char    Remote::m_vuDataFilename[256];
 char    Remote::m_vuRegFilename[256];
 char    Remote::m_gsFilename[256];
 char    Remote::m_miscFilename[256];
-uint32  Remote::m_tagGsInit[24];
-uint32  Remote::m_tagGsClear[24];
+
+uint32  Remote::m_xOffset;
+uint32  Remote::m_yOffset;
+
+uint32 Remote::m_tagGsInit[24] = {
+    0x00008005, 0x10000000, 0xe, 0x0,
+    10<<16, 0x0, 0x4c, 0x0,                     // frame_1
+    (10<<24)+(640*512*4/8192), 0x0, 0x4E, 0x0,  // zbuf_1
+    32000, 32000, 0x18, 0x0,                    // xyoffset_1
+    (639<<16), (511<<16), 0x40, 0x0,            // scissor_1
+    0x0, 0x0, 0x42, 0x0                         // alpha_1
+};
+
+uint32 Remote::m_tagGsClear[24] = {
+    0x00008005, 0x10000000, 0xe, 0x0,
+    0x6, 0x0, 0x0, 0x0,                         // prim
+    0x00030000, 0x0, 0x47, 0x0,                 // test_1
+    0x00000000, 0x3F800000, 0x1, 0x0,           // rgbaq
+    (32000<<16) + 32000, 0x0, 0x5, 0x0,         // xyz2
+    ((32000+(512<<4))<<16) + 32000+(640<<4), 0x0, 0x5, 0x0 // xyz2
+};
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 const int32
@@ -39,7 +58,7 @@ Remote::GetMiscRegisters(void) {
     if ( Open() < 0 ) {
         fclose(fd);
         Close();
-        return sock;
+        return E_NO_LINK;
     }
     count = 0;
     pko_dumpregs_req(sock, m_miscFilename, regs);
@@ -77,7 +96,7 @@ Remote::GsExec(const unsigned char* buffer, const uint32 size) {
     fclose(fd);
     if ( Open() < 0 ) {
 		Close();
-        return sock;
+        return E_NO_LINK;
     }
     ret = pko_gsexec_req(sock, m_gsFilename, size);
     Close();
@@ -86,12 +105,12 @@ Remote::GsExec(const unsigned char* buffer, const uint32 size) {
 
 const int32
 Remote::GsInit(void) {
-    return GsExec((const unsigned char*)m_tagGsInit, 24);
+    return GsExec((const unsigned char*)m_tagGsInit, 24*4);
 }
 
 const int32
 Remote::GsSetColor(void) {
-    return GsExec((const unsigned char*)m_tagGsClear, 24);
+    return GsExec((const unsigned char*)m_tagGsClear, 24*4);
 }
 
 const int32
@@ -108,7 +127,7 @@ Remote::GetVu(const uint32 vpu) {
     }
     if ( Open() < 0 ) {
         Close();
-        return sock;
+        return E_NO_LINK;
     }
     if ((fd = fopen(m_vuCodeFilename, "wb")) == NULL ) {
         Close();
@@ -182,7 +201,7 @@ Remote::GetVuRegisters(const uint32 vpu) {
     }
     if ( Open() < 0 ) {
         Close();
-        return sock;
+        return E_NO_LINK;
     }
     if ( vpu == 0 ) {
         regs = 11;
@@ -275,13 +294,21 @@ Remote::Close(void) {
 void
 Remote::SetGsInit(const uint32 xOffset, const uint32 yOffset, const uint32
     xScissor, const uint32 yScissor, const uint32 rgba) {
-
-    m_tagGsInit[12] = yOffset<<4;
-    m_tagGsInit[13] = xOffset<<4;
+    m_tagGsInit[12] = (yOffset<<4);
+    m_tagGsInit[13] = (xOffset<<4);
     m_tagGsInit[16] = xScissor<<16;
     m_tagGsInit[17] = yScissor<<16;
-    m_tagGsClear[15] = rgba;
+    m_xOffset = xOffset;
+    m_yOffset = yOffset;
     return;
+}
+
+void
+Remote::SetGsClear(const uint32 x1, const uint32 y1, const uint32 x2, const
+    uint32 y2, const uint32 color) {
+    m_tagGsClear[12] = color;
+    m_tagGsClear[16] = (((m_yOffset+y1)<<4)<<16)+((m_xOffset+x1)<<4);
+    m_tagGsClear[20] = (((m_yOffset+y2)<<4)<<16)+((m_xOffset+x2)<<4);
 }
 
 // // batch tool versions of the dump commands
@@ -334,7 +361,7 @@ Remote::SetGsInit(const uint32 xOffset, const uint32 yOffset, const uint32
 //     }
 //     if ( Open() < 0 ) {
 //         Close();
-//         return sock;
+//         return E_NO_LINK;
 //     }
 //     if ( vpu == 0 ) {
 //         regs = 11;
