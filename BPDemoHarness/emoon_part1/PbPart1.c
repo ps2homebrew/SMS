@@ -38,7 +38,6 @@ void PbPart1_Update( float DeltaTime )
 {
   PbGs_SetZbufferTest( 1, GS_CONTEXT_1 );
   PbGfx_ClearScreen();
-  PbGs_SetZbufferTest( 2, GS_CONTEXT_1 );
 
   switch( PbPart1_GetState() )
   {
@@ -122,9 +121,12 @@ void PbPart1_Normal( float DeltaTime )
   PbDma_Send01Chain( p_store, TRUE );
   PbDma_Wait01();
 
-  fill_rect( 0,0,256,256,0,0 );
+  fill_rect( 0,0,256,256,0,127 );
+  PbDma_Wait01();
 
   //PbGs_SetZbufferTest( 2, GS_CONTEXT_1 );
+
+  PbGs_SetZbufferTest( 2, GS_CONTEXT_1 );
 
   // Set render target to texture
 
