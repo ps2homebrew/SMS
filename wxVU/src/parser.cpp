@@ -915,7 +915,7 @@ Parser::LoadCode(char *file) {
         }
         if(!ProcessLine(Line)) {
             Log* log = Log::Instance();
-            log->Error(wxString::Format("bad opcode(%s) on line %d\n", Line, index));
+            log->Error(wxString::Format("bad opcode(%s) on line %d\n", Line, i));
             return 0;
         }
         i++;
