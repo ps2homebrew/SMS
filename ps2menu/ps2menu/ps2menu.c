@@ -1352,7 +1352,15 @@ int main(int argc, char *argv[])
 
 // Initialise
 //	SifInitRpc(0);
-	strcpy(s,argv[0]);
+
+	if (argc == 0) // Naplink
+	{
+		argc = 1;
+		strcpy(s,"host:");
+	}
+	else
+		strcpy(s,argv[0]);
+
 	if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
 	else if(!strncmp(s, "mc0:", 4)) elfload=2;	// loading from memory card
 	init_scr();
