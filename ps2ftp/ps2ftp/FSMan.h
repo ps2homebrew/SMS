@@ -8,8 +8,7 @@
 #include <string.h>
 
 #define zeromem(a,b) memset(a, '\0', b)
-typedef bool BOOL;
-
+typedef int BOOL;
 
 class FSMan {
 public:

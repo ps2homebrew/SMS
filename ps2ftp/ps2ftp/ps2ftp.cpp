@@ -121,7 +121,7 @@ main (int argc, char **argv)
 	printf("Loading Network Adapter drivers...\n");
 	
 	printf("Initialising IP stack...\n");
-	ps2ip_init ();
+	//ps2ip_init ();
 
 	printf("Initialising filesystems:\n");
 	vfs = new FSMan(true /*mc*/, false /*cdvd*/, false /*hdd*/);
