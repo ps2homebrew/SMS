@@ -9,7 +9,7 @@
 
 #include "PbVram.h"
 
-static u32 g_CurrentPointer;
+static u32 g_CurrentPointer = (-PB_BLOCKSIZE)&(0+PB_BLOCKSIZE-1);
 
 ///////////////////////////////////////////////////////////////////////////////
 // u32 PbVramAllocPage
@@ -17,16 +17,13 @@ static u32 g_CurrentPointer;
 
 u32 PbVramAlloc( int Size )
 {
-  u32 new_p;
+	Size=(-PB_BLOCKSIZE)&(Size+PB_BLOCKSIZE-1);
+	g_CurrentPointer+=Size;
 
-  new_p = g_CurrentPointer;
-  g_CurrentPointer += Size;
+#ifdef _DEBUG_
+  printf( "Alloced vram at: 0x%x\n", g_CurrentPointer-Size );
+#endif
 
-  if( g_CurrentPointer & 0x1FFF )
-  {
-    g_CurrentPointer = (g_CurrentPointer & 0xFFFFE000) + 0x2000;
-  }
-
-  return new_p;
+	return g_CurrentPointer-Size;
 }
 

@@ -11,6 +11,11 @@
 #define _PBVRAM_H_
 
 #include <tamtypes.h>
+#include "PbMisc.h"
+
+#define PB_BLOCKSIZE 8192
+#define PB_BLOCKSIZEW 64
+#define PB_BLOCKSIZEH 32
 
 ///////////////////////////////////////////////////////////////////////////////
 // Functions
