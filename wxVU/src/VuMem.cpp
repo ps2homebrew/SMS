@@ -69,7 +69,6 @@ VuMem::WriteX(uint32 row, uint32 x) {
         m_pLog->Warning("Writing outside VuDataMem range\n");
         return;
     }
-    cout << "x: " << (void *)x << endl;
     m_pVuMemArray[row].x = x;
     m_pMemoryPanel->WriteX(row, x);
     return;
@@ -124,7 +123,6 @@ VuMem::WriteZ(uint32 row, int32 z) {
         m_pLog->Warning("Writing outside VuDataMem range\n");
         return;
     }
-    cout << (void *)z << endl;
     m_pVuMemArray[row].z = z;
     m_pMemoryPanel->WriteZ(row, z);
     return;
@@ -159,7 +157,6 @@ VuMem::WriteW(uint32 row, int32 w) {
         m_pLog->Warning("Writing outside VuDataMem range\n");
         return;
     }
-    cout << (void *)w << endl;
     m_pVuMemArray[row].w = w;
     m_pMemoryPanel->WriteW(row, w);
     return;
