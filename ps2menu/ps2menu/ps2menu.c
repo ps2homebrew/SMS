@@ -1,5 +1,5 @@
 /*
-	PS2Menu v2.6
+	PS2Menu v2.61
 	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
@@ -42,6 +42,7 @@
 					-	mc0: ommitted until I can make mcRename work!
 					- added recursive copy for folder on pfs0:, host: or mc0:.
 					- added recursive copy from cdfs: 
+					- added '.' entry to root folder on mc0
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
 	and libhdd v1.2, ps2drv, ps2link v1.2, ps2 Independence Day
@@ -812,17 +813,25 @@ void ReadCDDir()
 
 void ReadMCDir()
 {
-	int ret;
+	int ret, top;
 
 	mcGetDir(mcport, 0, MCPath, 0, MAX_ENTRY - 10, mcDir);
 	mcSync(0, NULL, &ret);
 	num_mc_files = ret;
+	if(!strcmp(MCPath,"/*"))
+	{
+		sprintf(HDDfiles[0],".");
+		HDDstats[0]=FIO_S_IFDIR;
+		top=1;
+	}
+	else top=0;
 	for(num_hdd_files=0;num_hdd_files<num_mc_files;num_hdd_files++)
 	{
-		sprintf(HDDfiles[num_hdd_files],"%s",mcDir[num_hdd_files].name);
-		if(mcDir[num_hdd_files].attrFile & MC_ATTR_SUBDIR) HDDstats[num_hdd_files]=FIO_S_IFDIR;
-		else HDDstats[num_hdd_files]=FIO_S_IFREG;
+		sprintf(HDDfiles[num_hdd_files+top],"%s",mcDir[num_hdd_files].name);
+		if(mcDir[num_hdd_files].attrFile & MC_ATTR_SUBDIR) HDDstats[num_hdd_files+top]=FIO_S_IFDIR;
+		else HDDstats[num_hdd_files+top]=FIO_S_IFREG;
 		}
+	num_hdd_files+=top;
 	}
 
 ////////////////////////////////////////////////////////////////////////
@@ -977,6 +986,9 @@ void ReadHostDir(void)
 	char botcap;
 
 	num_hdd_files=0;
+	strcpy(HDDfiles[num_hdd_files],".");
+	HDDstats[num_hdd_files]=FIO_S_IFDIR;
+	num_hdd_files++;
 	fd=fioOpen("host:elflist.txt", O_RDONLY);
 	if(fd<0)
 	{
@@ -1025,7 +1037,7 @@ void ReadHostDir(void)
 				}
 			}
 		// just in case there is one path in the elf file with no LF at the end
-		if((num_hdd_files==0) & (pathlen>5)) { HDDstats[0]=FIO_S_IFREG; num_hdd_files++; }
+		if(pathlen>5) { HDDstats[0]=FIO_S_IFREG; num_hdd_files++; }
 		free(elflist_buffer);
 		}
 	}
@@ -2775,7 +2787,7 @@ int main(int argc, char *argv[])
 		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.6\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.61\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
