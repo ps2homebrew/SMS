@@ -16,6 +16,7 @@
 #include "shapes.h"
 #include "PbGlobal.h"
 #include "PbSpr.h"
+#include "math.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -25,10 +26,17 @@ static u64 test[1024*400];
 static float g_Time = 0.0f;
 static float angle = 0.0f;
 static int g_PbP1_State = PBP1_STATE_INIT_FLASH; // Begin Part with flash
+
 static PbMatrix ViewScreenMatrix;
 static PbMatrix CameraMatrix;
-u32 RenderTarget;
+//u32 RenderTarget;
 extern u32 tex_pointer;
+extern u32 Envmap;
+
+static PbTexture* gp_Envmap;
+static PbTexture* gp_RenderTarget;
+static PbTexture* gp_GlowBuffer1;
+static PbTexture* gp_GlowBuffer2;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // PbPart1_Update( float DeltaTime )
@@ -75,11 +83,11 @@ void PbPart1_Flash( float DeltaTime )
 
 void PbPart1_InitNormal()
 {
-  RenderTarget = vram_malloc( 256*256 );
-  out( "RenderTarget: 0x%x\n", RenderTarget );
-
   PbPart1_SetState( PBP1_STATE_NORMAL );
 }
+
+static int frames = 0;
+static int pos = 4500;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // void PbPart1_Normal
@@ -90,38 +98,23 @@ void PbPart1_Normal( float DeltaTime )
   void* p_data;  
   void* p_store;  
 
-  PbTexture_SetActive( tex_pointer, GS_CONTEXT_1 );
+  PbTexture_SetActive( gp_Envmap, GS_CONTEXT_1 );
 
   p_data = p_store = PbSpr_Alloc( 20*16, TRUE );
+
+  PbMatrix_Translate( &CameraMatrix, 0, 0,800  );
+
+  if( pos < 200 )
+    pos = 4500;
+
+  pos -= 40;
 
   //////////////////////////////////////////////////////////////////////////////////////
   // Setup the render target
 
-  *((u64*)p_data)++ = DMA_CNT_TAG( 3 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_NOP, 0, 0 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_DIRECT, 0, 3 );
-  
-  *((u64*)p_data)++ = GS_GIF_TAG( 1, 0, 0, 0, 1, 2 );
-  *((u64*)p_data)++ = GS_AD;
+  PbTexture_SetRenderTarget( gp_RenderTarget );
 
-  *((u64*)p_data)++ = GS_SETREG_FRAME_1( RenderTarget / 2048, 256 / 64, 0, 0 );
-  *((u64*)p_data)++ = GS_REG_FRAME_1;
-
-  *((u64*)p_data)++ = PS2_GS_SETREG_SCISSOR_1(0, 256-1, 0, 256-1);
-  *((u64*)p_data)++ = PS2_GS_SCISSOR_1;
-
-  *((u64*)p_data)++ = DMA_END_TAG( 0 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_FLUSHA, 0, 0 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_FLUSH, 0, 0 );
-  
-  PbDma_Wait01();
-  PbDma_Send01Chain( p_store, TRUE );
-  PbDma_Wait01();
-
-  fill_rect( 0,0,256,256,0,127 );
-  PbDma_Wait01();
-
-  //PbGs_SetZbufferTest( 2, GS_CONTEXT_1 );
+  fill_rect( 0,0,256,256,0,0 );
 
   PbGs_SetZbufferTest( 2, GS_CONTEXT_1 );
 
@@ -137,39 +130,63 @@ void PbPart1_Normal( float DeltaTime )
   while( *GIF_STAT & 1 << 10 ) 
     ;
 
+  PbGs_SetZbufferTest( 1, GS_CONTEXT_1 );
+
+
+//  PbTexture_Copy( gp_GlowBuffer1, gp_RenderTarget );
+//  PbTexture_SimpleBlur( gp_GlowBuffer1, gp_RenderTarget, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0 );
+
+  PbTexture_Copy( gp_GlowBuffer2, gp_RenderTarget );
+  PbTexture_Copy( gp_GlowBuffer1, gp_RenderTarget );
+
+  PbTexture_RadialBlur( gp_GlowBuffer1,gp_GlowBuffer2,
+                        128,128,PbSqrt(0.1),8,46,64+16);
+
+//  PbTexture_GaussianBlur( gp_GlowBuffer1,gp_GlowBuffer2,
+//                          128,128,PbSqrt(0.1),8,44,64+46);
+
+  //PbTexture_SimpleBlur( gp_GlowBuffer2, gp_RenderTarget,0,0,255,255,46,64+16);
+//  PbTexture_Blend( gp_GlowBuffer2, gp_RenderTarget, 255, 255 );
+//  PbTexture_Blend( gp_RenderTarget, gp_GlowBuffer2, 255, 255 );
+
+  frames += 1;
 
   PbGfx_SetActiveScreen();
 
-  PbDma_Wait02();
+//  PbDma_Wait02();
 
-  while( *GIF_STAT & 1 << 10 ) 
-    ;
+//  while( *GIF_STAT & 1 << 10 ) 
+//    ;
 
   rect r;
 
   r.col = 0;
   r.v[0].col = 0;
   r.v[0].lit = 255;
-  r.v[0].u   = 0;
-  r.v[0].v   = 0;
+  r.v[0].u   = 1;
+  r.v[0].v   = 1;
   r.v[0].x   = 0;
   r.v[0].y   = 0;
   r.v[0].z   = 0;
 
   r.col = 0;
   r.v[1].col = 0;
-  r.v[1].lit = 255;
-  r.v[1].u   = 256;
-  r.v[1].v   = 256;
+  r.v[1].lit = 0;
+  r.v[1].u   = 255;
+  r.v[1].v   = 255;
   r.v[1].x   = 640;
   r.v[1].y   = 256;
 
   PbGs_SetZbufferTest( 1, GS_CONTEXT_1 );
   
-  fill_rect_tex( r, RenderTarget, 256, 256 );
+
+
+  fill_rect_tex( r, gp_GlowBuffer2->Vram, 256, 256 );
     
   //p_data[0] = 
 }
+
+float angle2 = 0.03f;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // void* PbPart1_Init
@@ -183,6 +200,7 @@ void PbPart1_Main( PbMatrix* pScreenToView, PbMatrix* pCameraMatrix )
   PbMatrix RotateMatrix2;
 
   angle += 0.01;
+  angle2 += 0.03;
 
   PbMatrix_BuildPitch( &RotateMatrix2, angle );
   PbMatrix_BuildHeading( &RotateMatrix, angle );
@@ -211,8 +229,8 @@ void PbPart1_DrawEnvmapped( PbMatrix* pScreenToView,PbMatrix* pObjectToWorld, vo
   // Setup double buffering
 
   *((u64*)pChain)++ = DMA_CNT_TAG( 1 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
+  *((u32*)pChain)++ = VIF_CODE( VIF_FLUSHA, 0, 0 );
+  *((u32*)pChain)++ = VIF_CODE( VIF_FLUSH, 0, 0 );
 
   *((u32*)pChain)++ = VIF_CODE( VIF_STMOD,0,0 );  // normalmode
   *((u32*)pChain)++ = VIF_CODE( VIF_BASE,0,9 );
@@ -463,7 +481,12 @@ void PbPart1_SetupVu1()
 
 void PbPart1_SetupTextures()
 {
-  PbTexture_Send( NULL, 0 );
+  gp_Envmap       = PbTexture_Alloc( &Envmap, 256, 256, 0 );
+  gp_RenderTarget = PbTexture_Alloc( NULL, 256, 256, 0 );
+  gp_GlowBuffer1  = PbTexture_Alloc( NULL, 256, 256, 0 );
+  gp_GlowBuffer2  = PbTexture_Alloc( NULL, 256, 256, 0 );
+
+  PbTexture_Send( gp_Envmap, 0 );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -474,11 +497,10 @@ void PbPart1_SetupTextures()
 void PbPart1_SetupGeneral()
 {
   PbMatrix_CreateViewScreen( &ViewScreenMatrix, 
-                             212.0f,1.0f,1.0f, 1024+256/2,(1024+256/2),
+                             512.0f,1.0f,1.3f, 1024+256/2,(1024+256/2),
                              1.0f, 6777215.0f,64.0f, 5536.0f );
 
   PbMatrix_MakeIdentity( &CameraMatrix );
-  PbMatrix_Translate( &CameraMatrix, 0, 0, 400  );
 
 }
 
