@@ -58,7 +58,16 @@ typedef enum
 	FTPCMD_DELE,
 	FTPCMD_MKD,
 	FTPCMD_RMD,
+	FTPCMD_SITE,
 } FtpCommand;
+
+typedef enum
+{
+	SITECMD_MOUNT,
+	SITECMD_UMOUNT,
+	SITECMD_SYNC,
+	SITECMD_HELP,
+} SiteCommand;
 
 typedef struct FtpClientContainer
 {
@@ -111,7 +120,11 @@ void FtpClient_OnCmdCwd( struct FtpClient* pClient, const char* pPath );
 void FtpClient_OnCmdDele( struct FtpClient* pClient, const char* pFile );
 void FtpClient_OnCmdMkd( struct FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdRmd( struct FtpClient* pClient, const char* pDir );
+void FtpClient_OnCmdSite( struct FtpClient* pClient, const char* pCmd );
 
+void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
+void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint );
+void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName );
 
 void FtpClient_OnDataConnect( struct FtpClient* pClient,  int* ip, int port );
 void FtpClient_OnDataConnected( struct FtpClient* pClient );

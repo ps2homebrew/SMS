@@ -3,6 +3,8 @@
  Copyright (c) 2004 Jesper Svennevid
 -----------------------------------------------------------------------------
 
+Piracy ruins the industry. Don't be a moron, buy your games.
+
 License:
 --------
 
@@ -63,6 +65,16 @@ XMKD <dir>
 MKD <dir>
 XRMD <dir>
 RMD <dir>
+SITE <action>
+
+The supported site-commands are:
+
+SITE MOUNT <device> <file>
+	Mount <file> at <device>. Example: SITE MOUNT /pfs/0 hdd:+PS2MENU
+SITE UMOUNT <device>
+	Unmount mounted device. Example: SITE UMOUNT /pfs/0
+SITE SYNC <device>
+	Synchronize device. Example: SITE SYNC /pfs/0
 
 Authentication is ignored, so be cautious if your PS2 is connected directly
 to the internet.

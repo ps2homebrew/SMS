@@ -57,6 +57,8 @@ typedef enum
 	FT_DIRECTORY
 } FileType;
 
+#define bb_status() (srv_flags() & 0x80000000)
+
 typedef struct FSDirectory
 {
 	FileType	m_eType;	
@@ -108,13 +110,22 @@ int FileSystem_DeleteDir( FSContext* pContext, const char* pDir );
 
 #ifndef LINUX
 //! Determine device needed for accessing device & fill context with info
-const char* FileSystem_ClassifyPath( FSContext* pContext, char* pPath );
+const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath );
 
 //! Get a pointer to device handler
 smod_mod_info_t* FileSystem_GetModule( const char* pDevice );
 
 //! Scan devices & return ops structure if found
 iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath );
+
+//! Mount device
+int FileSystem_MountDevice( FSContext* pContext, const char* mount_point, const char* mount_file );
+
+//! Unmount device
+int FileSystem_UnmountDevice( FSContext* pContext, const char* mount_point );
+
+//! Sync device
+int FileSystem_SyncDevice( FSContext* pContext, const char* devname );
 #endif
 
 #endif

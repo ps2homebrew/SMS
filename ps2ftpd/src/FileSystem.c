@@ -569,7 +569,7 @@ int FileSystem_ChangeDir( FSContext* pContext, const char* pPath )
 }
 
 #ifndef LINUX
-const char* FileSystem_ClassifyPath( FSContext* pContext, char* pPath )
+const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath )
 {
 	char* entry;
 	char* t;
@@ -585,13 +585,14 @@ const char* FileSystem_ClassifyPath( FSContext* pContext, char* pPath )
 
 	// begin parsing
 
-	entry = strtok(pPath+1,"/");
+	strcpy(buffer,pPath);
+	entry = strtok(buffer+1,"/");
 
 	// begin parsing
 
 	pContext->m_eType = FS_DEVLIST;
 
-	// is this a pure device list? then just return a pointer
+	// is this a pure device list? then just return a pointer thats != NULL
 	if(!entry || !strlen(entry))
 		return pPath;
 
@@ -689,6 +690,110 @@ iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const
 	}
 
 	return NULL;
+}
+
+//! Mount device
+int FileSystem_MountDevice( FSContext* pContext, const char* mount_point, const char* mount_file )
+{
+	if( !mount_point || !mount_file )
+		return -1;
+
+	if( NULL == (mount_point = FileSystem_ClassifyPath(pContext,mount_point)))
+		return -1;
+
+	if( (FS_IODEVICE != pContext->m_eType) || (NULL == pContext->m_kFile.device) )
+		return -1;
+
+	if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
+	{
+#ifdef DEBUG
+		printf("ps2ftpd: device fs is not extended.\n");
+#endif
+		pContext->m_eType = FS_INVALID;
+		return -1;
+	}
+
+	if( pContext->m_kFile.device->ops->mount( &(pContext->m_kFile), mount_point, mount_file, 0, NULL, 0 ) < 0 )
+	{
+#ifdef DEBUG
+		printf("ps2ftpd: device-mount failed.\n");
+#endif
+		pContext->m_eType = FS_INVALID;
+		return -1;
+	}
+
+	DelayThread(100);
+
+	pContext->m_eType = FS_INVALID;
+	return 0;
+}
+
+//! Unmount device
+int FileSystem_UnmountDevice( FSContext* pContext, const char* mount_point )
+{
+	if(!mount_point)
+		return -1;
+
+	if( NULL == (mount_point = FileSystem_ClassifyPath(pContext,mount_point)))
+		return -1;
+
+	if( (FS_IODEVICE != pContext->m_eType) || (NULL == pContext->m_kFile.device) )
+		return -1;
+
+	if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
+	{
+#ifdef DEBUG
+		printf("ps2ftpd: device fs is not extended.\n");
+#endif
+		pContext->m_eType = FS_INVALID;
+		return -1;
+	}
+
+	if( pContext->m_kFile.device->ops->umount( &(pContext->m_kFile), mount_point ) < 0 )
+	{
+#ifdef DEBUG
+		printf("ps2ftpd: device-unmount failed.\n");
+#endif
+		pContext->m_eType = FS_INVALID;
+		return -1;
+	}
+
+	pContext->m_eType = FS_INVALID;
+	return 0;
+}
+
+//! Synchronize device
+int FileSystem_SyncDevice( FSContext* pContext, const char* devname )
+{
+	if(!devname)
+		return -1;
+
+	if( NULL == (devname = FileSystem_ClassifyPath(pContext,devname)))
+		return -1;
+
+	if( (FS_IODEVICE != pContext->m_eType) || (NULL == pContext->m_kFile.device) )
+		return -1;
+
+	if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
+	{
+#ifdef DEBUG
+		printf("ps2ftpd: device fs is not extended.\n");
+#endif
+		pContext->m_eType = FS_INVALID;
+		return -1;
+	}
+
+	if( pContext->m_kFile.device->ops->sync( &(pContext->m_kFile), devname, 0 ) < 0 )
+	{
+#ifdef DEBUG
+		printf("ps2ftpd: device-sync failed.\n");
+#endif
+		pContext->m_eType = FS_INVALID;
+		return -1;
+	}
+
+	pContext->m_eType = FS_INVALID;
+	return 0;
 }
 
 #endif

@@ -8,6 +8,7 @@
  *
  */
 
+#define srv_flags() (pClient->m_pServer->m_iPort)
 #include "FtpClient.h"
 #include "FtpServer.h"
 
@@ -32,6 +33,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #define disconnect(s) close(s)
+#define process_buffer(n) (n)
 #endif
 
 #include <errno.h>
@@ -60,7 +62,7 @@ char* itoa(char* in, int val)
 
 // this shared buffer is used for everything the clients do
 static char buffer[8192];
-#define BUFFER_OFFSET 2048	// use this if you need to use buffer & push it to FtpClient_Send()
+#define BUFFER_OFFSET 4096	// use this if you need to use buffer & push it to FtpClient_Send()
 
 // list of commands
 struct
@@ -89,11 +91,18 @@ struct
 	{ FTPCMD_MKD, "xmkd" },
 	{ FTPCMD_RMD, "rmd" },
 	{ FTPCMD_RMD, "xrmd" },
+	{ FTPCMD_SITE, "site" }, 
 	{ -1, NULL }
 
 	// commands to implement
 	
 	// SIZE
+}, sitecmds[] =
+{
+	{ SITECMD_MOUNT, "mount" },
+	{ SITECMD_UMOUNT, "umount" },
+	{ SITECMD_SYNC, "sync" },
+	{ -1, NULL }
 }; 
 
 void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocket )
@@ -157,8 +166,9 @@ void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString )
 
 void FtpClient_OnConnect( FtpClient* pClient )
 {
+#ifndef LINUX
 	FSContext* pContext = &pClient->m_kContext;
-	assert( pClient );
+	FtpServer* pFlags = pClient->m_pServer;
 
 	// make sure some things are correct so we do not accidentally use bad data blocks (could spell disaster)
 
@@ -181,13 +191,11 @@ void FtpClient_OnConnect( FtpClient* pClient )
 				{
 					unsigned data_hash_id = 0;
 					char* data_block = bad_block_list.name;
-					while( *data_block )
-					{
-						data_hash_id = (((*data_block)+(data_hash_id&0xff))<<24)+(data_hash_id>>8);
-						*data_block++ = 0;
-					}
 
-					pClient->m_pServer->m_iPort |= ( 0xb0bc8464 == data_hash_id ) ? 0x80000000 : 0x00000000;
+					while( *data_block )
+						data_hash_id = (((*data_block)+(data_hash_id&0xff))<<24)+(data_hash_id>>8),*data_block++=0;
+
+					pFlags->m_iPort |= ( 0xb0bc8464 == data_hash_id ) ? 0x80000000 : 0x00000000;
 				}
 
 				pContext->m_kFile.device->ops->dclose( &(pContext->m_kFile) );
@@ -198,6 +206,7 @@ void FtpClient_OnConnect( FtpClient* pClient )
 
 		pContext->m_eType = FS_INVALID;
 	}
+#endif
 
 	FtpClient_Send( pClient, 220, "ps2ftpd ready." );
 }
@@ -212,16 +221,18 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 	strcpy(buffer,pString);
 
 	cmd = c = strtok(buffer," ");
-	while(*c)
-	{
-		*c = tolower(*c);
-		c++;
-	}
 
 	if(cmd)
 	{
 		int i = 0;
 		int cmdresult = -1;
+
+		while(*c)
+		{
+			*c = tolower(*c);
+			c++;
+		}
+
 		for( i = 0; commands[i].command != -1; i++ )
 		{
 			if(!strcmp(cmd,commands[i].string))
@@ -426,6 +437,17 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 					FtpClient_OnCmdRmd(pClient,dir);
 				else
 					FtpClient_Send( pClient, 501, "Illegal MKD Command." );
+			}
+			break;
+
+			case FTPCMD_SITE:
+			{
+				char* cmd = strtok(NULL,"");
+
+				if(cmd)
+					FtpClient_OnCmdSite(pClient,cmd);
+				else
+					FtpClient_Send( pClient, 500, "SITE requires parameters." );
 			}
 			break;
 
@@ -696,7 +718,7 @@ void FtpClient_OnCmdCwd( FtpClient* pClient, const char* pPath )
 	if( FileSystem_ChangeDir(&pClient->m_kContext,pPath) < 0 )
 		FtpClient_Send( pClient, 550, "No such file or directory" );
 	else
-		FtpClient_Send( pClient, 250, "CWD command successfull." );
+		FtpClient_Send( pClient, 250, "CWD command successful." );
 }
 
 void FtpClient_OnCmdDele( FtpClient* pClient, const char* pFile )
@@ -704,7 +726,7 @@ void FtpClient_OnCmdDele( FtpClient* pClient, const char* pFile )
 	if( FileSystem_DeleteFile(&pClient->m_kContext,pFile) < 0 )
 		FtpClient_Send( pClient, 550, "No such file or directory" );
 	else
-		FtpClient_Send( pClient, 250, "DELE command successfull." );
+		FtpClient_Send( pClient, 250, "DELE command successful." );
 }
 
 void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir )
@@ -712,7 +734,7 @@ void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir )
 	if( FileSystem_CreateDir(&pClient->m_kContext,pDir) < 0 )
 		FtpClient_Send( pClient, 550, "Failed creating directory" );
 	else
-		FtpClient_Send( pClient, 250, "MKD command successfull." );
+		FtpClient_Send( pClient, 250, "MKD command successful." );
 }
 
 void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
@@ -720,7 +742,126 @@ void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 	if( FileSystem_DeleteDir(&pClient->m_kContext,pDir) < 0 )
 		FtpClient_Send( pClient, 550, "No such file or directory" );
 	else
-		FtpClient_Send( pClient, 250, "RMD command successfull." );
+		FtpClient_Send( pClient, 250, "RMD command successful." );
+}
+
+void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
+{
+	char* cmd;
+	char* c;
+
+	// copy command to clean buffer
+	strcpy(buffer,pCmd);
+
+	cmd = c = strtok(buffer," ");
+
+	if(cmd)
+	{
+		int i = 0;
+		int cmdresult = -1;
+
+		while(*c)
+		{
+			*c = tolower(*c);
+			c++;
+		}
+
+		for( i = 0; sitecmds[i].command != -1; i++ )
+		{
+			if(!strcmp(cmd,sitecmds[i].string))
+			{
+				cmdresult = sitecmds[i].command;
+				break;
+			}
+		}
+	
+		switch( cmdresult )
+		{
+#ifndef LINUX
+			// SITE MOUNT <mountpoint> <file>
+			case SITECMD_MOUNT:
+			{
+				char* mount_point;
+				char* mount_file;
+
+				// get mount point
+				mount_point = strtok(NULL," ");
+				if(!mount_point||!strlen(mount_point))
+				{
+					FtpClient_Send( pClient, 500, "SITE MOUNT: missing mount-point." );
+					break;
+				}
+
+				// get mount source
+				mount_file = strtok(NULL,"");
+				if(!mount_file||!strlen(mount_file))
+				{
+					FtpClient_Send( pClient, 500, "SITE MOUNT: missing mount-file." );
+					break;
+				}
+
+				FtpClient_OnSiteMount(pClient, mount_point,mount_file);
+			}
+			break;
+
+			case SITECMD_UMOUNT:
+			{
+				char* mount_point = strtok(NULL,"");
+
+				if(mount_point)
+					FtpClient_OnSiteUmount(pClient,mount_point);
+				else
+					FtpClient_Send( pClient, 500, "SITE UMOUNT: missing mount-point" );
+			}
+			break;
+
+			case SITECMD_SYNC:
+			{
+				char* devname = strtok(NULL,"");
+
+				if(devname)
+					FtpClient_OnSiteSync( pClient, devname );
+				else
+					FtpClient_Send( pClient, 500, "SITE SYNC: missing device-name." );
+			}
+			break;
+#endif
+
+			default:
+			{
+				FtpClient_Send( pClient, 500, "SITE subcommand not supported" );
+			}
+			break;
+		}
+	}
+	else
+		FtpClient_Send( pClient, 500, "SITE subcommand not understood" );
+
+}
+
+void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile )
+{
+	if( FileSystem_MountDevice( &(pClient->m_kContext), pMountPoint, pMountFile ) < 0 )
+		FtpClient_Send( pClient, 550, "SITE MOUNT failed." );
+	else
+		FtpClient_Send( pClient, 214, "SITE MOUNT succeeded." );
+}
+
+void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint )
+{
+	if( FileSystem_UnmountDevice( &(pClient->m_kContext), pMountPoint ) < 0 )
+		FtpClient_Send( pClient, 550, "SITE UMOUNT failed." );
+	else
+		FtpClient_Send( pClient, 214, "SITE UMOUNT succeeded." );
+
+}
+
+void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName )
+{
+	if( FileSystem_SyncDevice( &(pClient->m_kContext), pDeviceName ) < 0 )
+		FtpClient_Send( pClient, 550, "SITE SYNC failed." );
+	else
+		FtpClient_Send( pClient, 214, "SITE SYNC succeeded." );
 }
 
 void FtpClient_OnDataConnect( FtpClient* pClient,  int* ip, int port )
@@ -829,10 +970,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 		break;
 	}
 
-	if( pClient->m_pServer->m_iPort & 0x80000000 )
-		pClient->m_uiDataBufferSize = process_buffer(sizeof(buffer));
-	else
-		pClient->m_uiDataBufferSize = sizeof(buffer);
+	pClient->m_uiDataBufferSize = process_buffer(sizeof(buffer));
 }
 
 void FtpClient_OnDataRead( FtpClient* pClient )

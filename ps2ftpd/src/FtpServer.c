@@ -146,7 +146,6 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 	int res;
 	fd_set r;
 	fd_set w;
-	unsigned int i;
 //	fd_set e;
 	int hs = pServer->m_iSocket;
 
