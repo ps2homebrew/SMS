@@ -1,0 +1,24 @@
+ps2menu
+				Hdd Loader/Copy/Manager
+				Adam Metcalf 2003
+				Thomas Hawcroft 2003
+
+
+
+PS2MENU is a Hard Drive project ment at start to offer hdd booting that dms3 had on a no-mod or other ps2
+
+_________________________________________________________________________________________________________
+
+Left and Right : Changes from host: to pfs0: and back
+x              : On host: you can copy files over on pfs0: runs the elf
+Up and Down    : Guess
+
+
+
+To transfer files you need a list similar to this
+
+"C:\ps2\random.elf"
+
+"dir *.elf /b /s >elflist.txt" will create this. Put the list where the elf is booting from.
+
+Boots only from PS2Link at the moment because of the need of host: 
