@@ -26,10 +26,10 @@ all: wxVU run
 
 wxVU: $(OBJECTS)
 	@cd obj; \
-	$(CPP) $(CFLAGS) -o ../bin/vuemu $(OBJECTS) $(LIBS)
+	$(CPP) $(CFLAGS) -o ../bin/wxVU $(OBJECTS) $(LIBS)
 
 run:
-	./bin/vuemu
+	./bin/wxVU
 
 memcmp: memcmp.cpp
 	$(CPP) -o bin/memcmp utils/memcmp.cpp -lc
@@ -41,7 +41,7 @@ regcmp: regcmp.cpp
 
 clean:
 	$(RM) obj/*.o
-	$(RM) bin/vuemu
+	$(RM) bin/wxVU
 	$(RM) bin/regcmp
 	$(RM) bin/memcmp
 
