@@ -1257,16 +1257,16 @@ int Vu::VU_LQ(VuInstruction &A)
         return 2;
 
     RegInt[A.Params[1][1].index].lastRead(PC);
-    v1=RegInt[A.Params[1][1].index].value();
-    v2=(uint16)A.Params[1][1].data;
+    v1 = RegInt[A.Params[1][1].index].value();
+    v2 = (uint16)A.Params[1][1].data;
     // memcpy(&vx, &(dataMem[v1+v2].x),4);
     // memcpy(&vy, &(dataMem[v1+v2].y),4);
     // memcpy(&vz, &(dataMem[v1+v2].z),4);
     // memcpy(&vw, &(dataMem[v1+v2].w),4);
-    vx = m_pVuMem->ReadX(v1+v2);
-    vy = m_pVuMem->ReadY(v1+v2);
-    vz = m_pVuMem->ReadZ(v1+v2);
-    vw = m_pVuMem->ReadW(v1+v2);
+    vx = m_pVuMem->ReadFloatX(v1+v2);
+    vy = m_pVuMem->ReadFloatY(v1+v2);
+    vz = m_pVuMem->ReadFloatZ(v1+v2);
+    vw = m_pVuMem->ReadFloatW(v1+v2);
     RegFloat[A.Params[1][0].index].stall(4);
     RegFloat[A.Params[1][0].index].lastWrite(PC);
 
@@ -1310,10 +1310,10 @@ int Vu::VU_LQD(VuInstruction &A)
     v1--;
     RegInt[A.Params[1][1].index].value(v1);
 
-    vx = m_pVuMem->ReadX(v1);
-    vy = m_pVuMem->ReadY(v1);
-    vz = m_pVuMem->ReadZ(v1);
-    vw = m_pVuMem->ReadW(v1);
+    vx = m_pVuMem->ReadFloatX(v1);
+    vy = m_pVuMem->ReadFloatY(v1);
+    vz = m_pVuMem->ReadFloatZ(v1);
+    vw = m_pVuMem->ReadFloatW(v1);
     // vx=dataMem[v1].x;
     // vy=dataMem[v1].y;
     // vz=dataMem[v1].z;
@@ -1360,10 +1360,10 @@ int Vu::VU_LQI(VuInstruction &A)
     RegInt[A.Params[1][1].index].lastWrite(PC);
     v1=RegInt[A.Params[1][1].index].value();
 
-    vx = m_pVuMem->ReadX(v1);
-    vy = m_pVuMem->ReadY(v1);
-    vz = m_pVuMem->ReadZ(v1);
-    vw = m_pVuMem->ReadW(v1);
+    vx = m_pVuMem->ReadFloatX(v1);
+    vy = m_pVuMem->ReadFloatY(v1);
+    vz = m_pVuMem->ReadFloatZ(v1);
+    vw = m_pVuMem->ReadFloatW(v1);
     // vx=dataMem[v1].x;
     // vy=dataMem[v1].y;
     // vz=dataMem[v1].z;

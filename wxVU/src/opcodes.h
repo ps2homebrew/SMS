@@ -58,6 +58,8 @@
 #define PARAM_VFT_VIS_INC 94
 #define PARAM_VFS_VIT_IMM11 95
 #define PARAM_ACC_VFS_VFT 96
+#define PARAM_BRANCH_VIS 97
+#define PARAM_BRANCH_VIT_VIS 98
 
 //used typesets
 #define TYPESET_RTYPE 1

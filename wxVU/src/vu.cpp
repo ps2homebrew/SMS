@@ -208,7 +208,7 @@ Vu::UpdateRegisters() {
 }
 
 void
-Vu::MemVal16(uint16 v2,char pos, int16 *v3) {
+Vu::MemVal16(uint16 v2, char pos, int16 *v3) {
     uint32 val;
     switch(pos) {
         case 'W':

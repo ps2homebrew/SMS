@@ -222,6 +222,39 @@ VuMem::ReadW(uint32 row) {
     return m_pVuMemArray[row].w;
 }
 
+float
+VuMem::ReadFloatX(uint32 row) {
+    if ( row > m_maxRows ) {
+        m_pLog->Warning("Reading outside VuDataMem range\n");
+        return 0;
+    }
+    return *((float *)&m_pVuMemArray[row].x);
+}
+float
+VuMem::ReadFloatY(uint32 row) {
+    if ( row > m_maxRows ) {
+        m_pLog->Warning("Reading outside VuDataMem range\n");
+        return 0;
+    }
+    return *((float *)&m_pVuMemArray[row].y);
+}
+float
+VuMem::ReadFloatZ(uint32 row) {
+    if ( row > m_maxRows ) {
+        m_pLog->Warning("Reading outside VuDataMem range\n");
+        return 0;
+    }
+    return *((float *)&m_pVuMemArray[row].z);
+}
+float
+VuMem::ReadFloatW(uint32 row) {
+    if ( row > m_maxRows ) {
+        m_pLog->Warning("Reading outside VuDataMem range\n");
+        return 0;
+    }
+    return *((float *)&m_pVuMemArray[row].w);
+}
+
 // void
 // VuMem::WriteMemFromFile(char *filename) {
 //     FILE *fd;

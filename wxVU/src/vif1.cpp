@@ -263,7 +263,6 @@ Vif1::DecodeCmd(void) {
             if ( (cmd&VIF_UNPACK) == VIF_UNPACK) {
                 if ( m_trace ) {
                     m_pLog->Trace(1, "UNPACK\n");
-
                 }
                 m_memIndex = 0;
                 m_vifCmd = VIF_UNPACK;

@@ -37,6 +37,10 @@ public:
     int32   ReadY(uint32 row);
     int32   ReadZ(uint32 row);
     int32   ReadW(uint32 row);
+    float   ReadFloatX(uint32 row);
+    float   ReadFloatY(uint32 row);
+    float   ReadFloatZ(uint32 row);
+    float   ReadFloatW(uint32 row);
 private:
     Log*            m_pLog;
     quadvector*     m_pVuMemArray;

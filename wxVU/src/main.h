@@ -113,6 +113,7 @@ public:
         Vif0*       m_pVif0;
         Vu*         m_pVu1;
         Parser*     m_pParser;
+        int32       m_fileType;
 
         // KLUDGE
         // should be moved to VuRegisterPanel
@@ -142,8 +143,8 @@ public:
         void        OnLoadCode(wxCommandEvent &WXUNUSED(event));
         void        OnLoadMem(wxCommandEvent &WXUNUSED(event));
         void        OnLoadProject(wxCommandEvent &WXUNUSED(event));
-        void        OnLoadVIF(wxCommandEvent &WXUNUSED(event));
-        void        OnLoadDMA(wxCommandEvent &WXUNUSED(event));
+        void        OnLoadVif(wxCommandEvent &WXUNUSED(event));
+        void        OnLoadDma(wxCommandEvent &WXUNUSED(event));
         void        OnSaveCode(wxCommandEvent &WXUNUSED(event));
         void        OnSaveState(wxCommandEvent &WXUNUSED(event));
 		// Menubar tool functions
@@ -178,6 +179,7 @@ public:
         void        RegisterUpdate(void);
         void        SetSettings(void);
 
+
         VUFrame(const wxString &title, const wxPoint &pos, const wxSize
             &size);
 
@@ -195,7 +197,7 @@ private:
         int			m_charWidth;
         int			m_previous;
         // Config Load
-        int         autoLoadLast;
+        bool        m_autoLoadLast;
         int         autoGSExec;
         int         doProject;
         // Config Remote
@@ -208,10 +210,10 @@ private:
         wxString    m_gsExecCmd;
         wxFileName  m_codeFile;
         wxFileName  m_dataFile;
+        wxFileName  m_binFile;
 		wxFileName	m_memStateFile;
 		wxFileName	m_regStateFile;
 		wxFileName	m_mnemonicFile;
-        wxFileName  m_vifFile;
         int			Status;
         // Config GIF
         int			xoffset;
@@ -235,6 +237,9 @@ private:
         static void wrapper_DebugWarning(void *objPtr, wxString message);
         void        DebugTic(int, int);
         void        DrawGif(uint32 offset);
+        void        AutoLoadLast(void);
+        void        LoadVif(void);
+        void        LoadDma(void);
 
         DECLARE_EVENT_TABLE()
 };

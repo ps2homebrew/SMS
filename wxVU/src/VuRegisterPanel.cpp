@@ -1,6 +1,7 @@
 // (C) 2004 by Khaled Daham, <khaled@w-arts.com>
 
 #include "VuRegisterPanel.h"
+#include "NumberFormat.h"
 
 BEGIN_EVENT_TABLE(VuRegisterPanel, wxPanel)
     EVT_RADIOBOX(ID_INTREGRADIO,            VuRegisterPanel::OnIntRegRadio)
@@ -76,10 +77,10 @@ VuRegisterPanel::WriteFloat(const uint32 index, const float x, const float y,
         return;
     }
     uint32 selection = m_pFloatRegRadio->GetSelection();
-    m_pFloatRegGrid->SetCellValue(0, index, FloatToString(x, selection));
-    m_pFloatRegGrid->SetCellValue(1, index, FloatToString(y, selection));
-    m_pFloatRegGrid->SetCellValue(2, index, FloatToString(z, selection));
-    m_pFloatRegGrid->SetCellValue(3, index, FloatToString(w, selection));
+    m_pFloatRegGrid->SetCellValue(0, index, NumberFormat::ToString(x, selection));
+    m_pFloatRegGrid->SetCellValue(1, index, NumberFormat::ToString(y, selection));
+    m_pFloatRegGrid->SetCellValue(2, index, NumberFormat::ToString(z, selection));
+    m_pFloatRegGrid->SetCellValue(3, index, NumberFormat::ToString(w, selection));
     m_pFloatRegArray[index].x = x;
     m_pFloatRegArray[index].y = y;
     m_pFloatRegArray[index].z = z;
@@ -91,10 +92,10 @@ void
 VuRegisterPanel::WriteAcc(const float x, const float y, const float z, const
     float w) {
     uint32 selection = m_pSpecRegRadio->GetSelection();
-    m_pSpecRegGrid->SetCellValue(0, 0, FloatToString(x, selection));
-    m_pSpecRegGrid->SetCellValue(1, 0, FloatToString(y, selection));
-    m_pSpecRegGrid->SetCellValue(2, 0, FloatToString(z, selection));
-    m_pSpecRegGrid->SetCellValue(3, 0, FloatToString(w, selection));
+    m_pSpecRegGrid->SetCellValue(0, 0, NumberFormat::ToString(x, selection));
+    m_pSpecRegGrid->SetCellValue(1, 0, NumberFormat::ToString(y, selection));
+    m_pSpecRegGrid->SetCellValue(2, 0, NumberFormat::ToString(z, selection));
+    m_pSpecRegGrid->SetCellValue(3, 0, NumberFormat::ToString(w, selection));
     m_pSpecRegArray[0].x = x;
     m_pSpecRegArray[0].y = y;
     m_pSpecRegArray[0].z = z;
@@ -105,10 +106,10 @@ void
 VuRegisterPanel::WriteQ(const float x, const float y, const float z, const
     float w) {
     uint32 selection = m_pSpecRegRadio->GetSelection();
-    m_pSpecRegGrid->SetCellValue(0, 1, FloatToString(x, selection));
-    m_pSpecRegGrid->SetCellValue(1, 1, FloatToString(y, selection));
-    m_pSpecRegGrid->SetCellValue(2, 1, FloatToString(z, selection));
-    m_pSpecRegGrid->SetCellValue(3, 1, FloatToString(w, selection));
+    m_pSpecRegGrid->SetCellValue(0, 1, NumberFormat::ToString(x, selection));
+    m_pSpecRegGrid->SetCellValue(1, 1, NumberFormat::ToString(y, selection));
+    m_pSpecRegGrid->SetCellValue(2, 1, NumberFormat::ToString(z, selection));
+    m_pSpecRegGrid->SetCellValue(3, 1, NumberFormat::ToString(w, selection));
     m_pSpecRegArray[1].x = x;
     m_pSpecRegArray[1].y = y;
     m_pSpecRegArray[1].z = z;
@@ -119,10 +120,10 @@ void
 VuRegisterPanel::WriteP(const float x, const float y, const float z, const
     float w) {
     uint32 selection = m_pSpecRegRadio->GetSelection();
-    m_pSpecRegGrid->SetCellValue(0, 2, FloatToString(x, selection));
-    m_pSpecRegGrid->SetCellValue(1, 2, FloatToString(y, selection));
-    m_pSpecRegGrid->SetCellValue(2, 2, FloatToString(z, selection));
-    m_pSpecRegGrid->SetCellValue(3, 2, FloatToString(w, selection));
+    m_pSpecRegGrid->SetCellValue(0, 2, NumberFormat::ToString(x, selection));
+    m_pSpecRegGrid->SetCellValue(1, 2, NumberFormat::ToString(y, selection));
+    m_pSpecRegGrid->SetCellValue(2, 2, NumberFormat::ToString(z, selection));
+    m_pSpecRegGrid->SetCellValue(3, 2, NumberFormat::ToString(w, selection));
     m_pSpecRegArray[2].x = x;
     m_pSpecRegArray[2].y = y;
     m_pSpecRegArray[2].z = z;
@@ -130,12 +131,12 @@ VuRegisterPanel::WriteP(const float x, const float y, const float z, const
 }
 
 void
-VuRegisterPanel::WriteR(float x, float y, float z, float w) {
+VuRegisterPanel::WriteR(const float x, const float y, const float z, const float w) {
     uint32 selection = m_pSpecRegRadio->GetSelection();
-    m_pSpecRegGrid->SetCellValue(0, 3, FloatToString(x, selection));
-    m_pSpecRegGrid->SetCellValue(1, 3, FloatToString(y, selection));
-    m_pSpecRegGrid->SetCellValue(2, 3, FloatToString(z, selection));
-    m_pSpecRegGrid->SetCellValue(3, 3, FloatToString(w, selection));
+    m_pSpecRegGrid->SetCellValue(0, 3, NumberFormat::ToString(x, selection));
+    m_pSpecRegGrid->SetCellValue(1, 3, NumberFormat::ToString(y, selection));
+    m_pSpecRegGrid->SetCellValue(2, 3, NumberFormat::ToString(z, selection));
+    m_pSpecRegGrid->SetCellValue(3, 3, NumberFormat::ToString(w, selection));
     m_pSpecRegArray[3].x = x;
     m_pSpecRegArray[3].y = y;
     m_pSpecRegArray[3].z = z;
@@ -143,12 +144,12 @@ VuRegisterPanel::WriteR(float x, float y, float z, float w) {
 }
 
 void
-VuRegisterPanel::WriteI(float x, float y, float z, float w) {
+VuRegisterPanel::WriteI(const float x, const float y, const float z, const float w) {
     uint32 selection = m_pSpecRegRadio->GetSelection();
-    m_pSpecRegGrid->SetCellValue(0, 4, FloatToString(x, selection));
-    m_pSpecRegGrid->SetCellValue(1, 4, FloatToString(y, selection));
-    m_pSpecRegGrid->SetCellValue(2, 4, FloatToString(z, selection));
-    m_pSpecRegGrid->SetCellValue(3, 4, FloatToString(w, selection));
+    m_pSpecRegGrid->SetCellValue(0, 4, NumberFormat::ToString(x, selection));
+    m_pSpecRegGrid->SetCellValue(1, 4, NumberFormat::ToString(y, selection));
+    m_pSpecRegGrid->SetCellValue(2, 4, NumberFormat::ToString(z, selection));
+    m_pSpecRegGrid->SetCellValue(3, 4, NumberFormat::ToString(w, selection));
     m_pSpecRegArray[4].x = x;
     m_pSpecRegArray[4].y = y;
     m_pSpecRegArray[4].z = z;
@@ -335,30 +336,4 @@ VuRegisterPanel::OnEdit(wxGridEvent& event) {
     } else if ( event.GetId() == ID_SPECGRIDEDIT ) {
         // cdbg << "spec num = " << num << endl;
     }
-}
-
-wxString
-VuRegisterPanel::FloatToString(float x, uint32 format) {
-	switch(format) {
-		case 0:
-			return wxString::Format("%ld", x); 
-			break;
-		case 1:
-			return wxString::Format("%.4f", x/16.0f);
-			break;
-		case 2:
-			return wxString::Format("%.12f", x/4096.0f);
-			break;
-		case 3:
-			return wxString::Format("%.15f", x/32768.0f);
-			break;
-		case 4:
-			return wxString::Format("%f", x);
-			break;
-		case 5:
-			return wxString::Format("0x%x", x);
-			break;
-
-	}
-	return wxString("");
 }

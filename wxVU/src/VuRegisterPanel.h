@@ -35,7 +35,6 @@ private:
     void        OnFloatRegRadio(wxCommandEvent& event);
     void        OnSpecRegRadio(wxCommandEvent& event);
     void        OnEdit(wxGridEvent& event);
-    wxString    FloatToString(float x, uint32 format);
 
     wxPanel*    m_pIntRegPanel;
     wxPanel*    m_pFloatRegPanel;

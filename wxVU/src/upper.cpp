@@ -179,7 +179,6 @@ Vu::VU_ADD(VuInstruction &A) {
         p1->z(p2->z()+z);
     if(strstr(dst,"W"))
         p1->w(p2->w()+w);
-
     return 0;
 }
 

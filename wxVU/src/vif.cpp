@@ -492,11 +492,6 @@ Vif::CmdUnpack(void) {
             rVIF1_R2 = word_z;
             rVIF1_R3 = word_w;
         }
-        cout << "Writing: "
-            << (void *)word_x << ", "
-            << (void *)word_y << ", "
-            << (void *)word_z << ", "
-            << (void *)word_w << endl;
         m_pVu->WriteMemX(m_memIndex, word_x);
         m_pVu->WriteMemY(m_memIndex, word_y);
         m_pVu->WriteMemZ(m_memIndex, word_z);

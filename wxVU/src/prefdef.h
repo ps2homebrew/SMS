@@ -17,6 +17,7 @@
 #define MEMSTATEFILE    _T("memStateFile")
 #define REGSTATEFILE    _T("regStateFile")
 #define MNEMONICFILE    _T("mnemonicFile")
+#define FILETYPE        _T("fileType")
 #define DUMPMEMCMD      _T("dumpMemCmd")
 #define DUMPREGCMD      _T("dumpRegCmd")
 #define GSEXECCMD       _T("gsExecCmd")

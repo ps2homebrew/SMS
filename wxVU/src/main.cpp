@@ -33,12 +33,16 @@ extern MicroCode Instr;
 static int running = 0;
 static int accumulatedTicks = 0;
 
+static const int32 FILE_TYPE_BIN = 0;
+static const int32 FILE_TYPE_VIF = 1;
+static const int32 FILE_TYPE_DMA = 2;
+
 BEGIN_EVENT_TABLE(VUFrame, wxFrame)
     EVT_MENU(ID_FILE_LOADCODE, VUFrame::OnLoadCode)
     EVT_MENU(ID_FILE_LOADMEM, VUFrame::OnLoadMem)
     EVT_MENU(ID_FILE_LOADPROJECT, VUFrame::OnLoadProject)
-    EVT_MENU(ID_FILE_LOADVIF, VUFrame::OnLoadVIF)
-    EVT_MENU(ID_FILE_LOADDMA, VUFrame::OnLoadDMA)
+    EVT_MENU(ID_FILE_LOADVIF, VUFrame::OnLoadVif)
+    EVT_MENU(ID_FILE_LOADDMA, VUFrame::OnLoadDma)
     EVT_MENU(ID_FILE_SAVECODE, VUFrame::OnSaveCode)
     EVT_MENU(ID_FILE_SAVESTATE, VUFrame::OnSaveState)
     EVT_MENU(ID_TOOL_RESET, VUFrame::OnReset)
@@ -337,9 +341,13 @@ void
 VUFrame::SetSettings() {
     wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
     wxString key = PAGE_LOAD;
-    autoLoadLast = conf->Read(key + _T("/") + AUTOLOADLAST, 0L);
+    m_autoLoadLast = conf->Read(key + _T("/") + AUTOLOADLAST, 0L);
     m_dataFile.Assign(conf->Read(key + _T("/") + LASTFILEMEM)); 
-    m_codeFile.Assign(conf->Read(key + _T("/") + LASTFILECODE)); 
+    if ( m_fileType != FILE_TYPE_BIN ) {
+        m_binFile.Assign(conf->Read(key + _T("/") + LASTFILECODE)); 
+    } else {
+        m_codeFile.Assign(conf->Read(key + _T("/") + LASTFILECODE)); 
+    }
     m_memStateFile.Assign(conf->Read(key + _T("/") + MEMSTATEFILE));
     m_regStateFile.Assign(conf->Read(key + _T("/") + REGSTATEFILE));
     m_mnemonicFile.Assign(conf->Read(key + _T("/") + MNEMONICFILE));
@@ -389,21 +397,33 @@ void VUFrame::OnQuit(wxCommandEvent &WXUNUSED(event)) {
     wxMessageDialog *ask = new wxMessageDialog(this, "Are you sure?", "Exit",
         wxOK | wxCANCEL);
     if (ask->ShowModal() == wxID_OK) {
+        wxString key;
         wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
         if ( m_dataFile.GetFullPath()  != "" ) {
-            wxString key = PAGE_LOAD;
+            key = PAGE_LOAD;
             conf->Write(key + _T("/") + LASTFILEMEM, m_dataFile.GetFullPath());
         }
-        if (m_codeFile.GetFullPath() != "") {
-            wxString key = PAGE_LOAD;
-            conf->Write(key + _T("/") + LASTFILECODE, m_codeFile.GetFullPath());
+        if ( m_fileType == FILE_TYPE_BIN ) {
+            if (m_codeFile.GetFullPath() != "") {
+                key = PAGE_LOAD;
+                conf->Write(key + _T("/") + LASTFILECODE, m_codeFile.GetFullPath());
+            }
+        } else {
+            if (m_binFile.GetFullPath() != "") {
+                key = PAGE_LOAD;
+                conf->Write(key + _T("/") + LASTFILECODE, m_binFile.GetFullPath());
+            }
         }
         if (m_mnemonicFile.GetFullPath() != "") {
-            wxString key = PAGE_LOAD;
+            key = PAGE_LOAD;
             conf->Write(key + _T("/") + MNEMONICFILE, m_mnemonicFile.GetFullPath());
         }
+        // save loaded code/mem type [bin|vif|dma]
+        key = PAGE_LOAD;
+        conf->Write(key + _T("/") + FILETYPE, m_fileType);
 
-        wxString key = PAGE_TRACE;
+        // save trace options
+        key = PAGE_TRACE;
         conf->Write(key + _T("/") + TRACEDMA,
             m_pMenuOptions->IsChecked(ID_OPTION_TRACE_DMA));
         conf->Write(key + _T("/") + TRACEGIF,
@@ -588,6 +608,7 @@ void VUFrame::OnHelp(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnLoadMem(wxCommandEvent &WXUNUSED(event)) {
+    m_fileType = FILE_TYPE_BIN;
     wxFileDialog* dlg = new wxFileDialog(this, "Choose a data file");
     if (dlg->ShowModal() == wxID_OK &&
         dlg->GetFilename() != "") {
@@ -760,17 +781,13 @@ VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
 
 //---------------------------------------------------------------------------
 void
-VUFrame::OnLoadVIF(wxCommandEvent &WXUNUSED(event)) {
+VUFrame::OnLoadVif(wxCommandEvent &WXUNUSED(event)) {
+    m_fileType = FILE_TYPE_VIF;
     wxFileDialog* dlg = new wxFileDialog(this, "Choose a VIF file");
-    dlg->SetWildcard("*.bin");
+    dlg->SetWildcard("*.vif|*.bin");
     if (dlg->ShowModal() == wxID_OK) {
-        m_vifFile.Assign(dlg->GetPath());
-        m_pVif1->Open(m_vifFile.GetFullPath().c_str());
-        m_pVif1->Read();
-        m_pVif1->Close();
-        DrawProgram();
-        RegisterUpdate();
-        FlagsUpdate(); 
+        m_binFile.Assign(dlg->GetPath());
+        LoadVif();
     }
     delete dlg;
     return;
@@ -778,14 +795,13 @@ VUFrame::OnLoadVIF(wxCommandEvent &WXUNUSED(event)) {
 
 //---------------------------------------------------------------------------
 void
-VUFrame::OnLoadDMA(wxCommandEvent &WXUNUSED(event)) {
+VUFrame::OnLoadDma(wxCommandEvent &WXUNUSED(event)) {
+    m_fileType = FILE_TYPE_DMA;
     wxFileDialog* dlg = new wxFileDialog(this, "Choose a DMA file");
+    dlg->SetWildcard("*.dma|*.bin");
     if (dlg->ShowModal() == wxID_OK) {
-        m_vifFile.Assign(dlg->GetPath());
-        m_pDma->Open(m_vifFile.GetFullPath().c_str());
-        m_pDma->Read();
-        m_pDma->Close();
-        DrawProgram();
+        m_binFile.Assign(dlg->GetPath());
+        LoadDma();
     }
     delete dlg;
     return;
@@ -794,6 +810,7 @@ VUFrame::OnLoadDMA(wxCommandEvent &WXUNUSED(event)) {
 //---------------------------------------------------------------------------
 void
 VUFrame::OnLoadCode(wxCommandEvent &WXUNUSED(event)) {
+    m_fileType = FILE_TYPE_BIN;
     wxFileDialog* dlg = new wxFileDialog(this, "Choose a code file");
     if (dlg->ShowModal() == wxID_OK) {
         m_codeFile.Assign(dlg->GetPath());
@@ -911,10 +928,12 @@ void VUFrame::DrawProgram() {
     }
     for (i = 0; i < MAX_VUCODE_SIZE; i++,l++){
         if(m_pVu1->program[i].SymbolIndex != -1) {
-            // cout << "we got a label" << endl;
-            strcpy(scode,m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb);
-            // cout << m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb << endl;
-            m_pGridCode->SetCellValue(l, 1, scode);
+            if ( m_pVu1->program[i].SymbolIndex != 0 ) {
+                // cout << "we got a label" << endl;
+                strcpy(scode,m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb);
+                // cout << m_pVu1->Labels[m_pVu1->program[i].SymbolIndex].symb << endl;
+                m_pGridCode->SetCellValue(l, 1, scode);
+            }
         }
         m_pVu1->program[i].addr = i;
         m_pGridCode->SetCellValue(l, 2, wxString::Format("%d",
@@ -1122,6 +1141,8 @@ VUFrame::DebugTic(int mode, int error) {
 
     if(error==999) {
         m_pLog->Trace("End of program reached\n");
+        wxMessageDialog *ask = new wxMessageDialog(this, "Run program again", "Exit",
+            wxOK | wxCANCEL);
         return;
     }
     if(mode==2) {
@@ -1399,19 +1420,7 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     m_pVu1->Reset();
     m_pParser->InitCodeMem();
     RegisterUpdate();
-    if ( autoLoadLast == 0 ) {
-        if ( m_dataFile.GetFullPath() != "" ) {
-            Status = READY;
-            LoadMemory(m_dataFile);
-        }
-        if ( m_codeFile.GetFullPath() != "" ) {
-            Status = READY;
-            m_pParser->LoadCode((char *)m_codeFile.GetFullPath().c_str());
-        }
-    } else {
-        m_codeFile.Assign("");
-        m_dataFile.Assign("");
-    }
+    AutoLoadLast();
     DrawProgram();
 }
 
@@ -1438,4 +1447,60 @@ VUFrame::OnOptionTraceVif(wxCommandEvent &event) {
 void
 VUFrame::OnOptionTraceVu(wxCommandEvent &event) {
     m_pVu1->Trace(event.IsChecked());
+}
+
+/////////////////////////////// PRIVATE    ///////////////////////////////////
+void
+VUFrame::AutoLoadLast(void) {
+    if ( m_autoLoadLast == 0 ) {
+        switch(m_fileType) {
+            case FILE_TYPE_BIN:
+                if ( m_dataFile.GetFullPath() != "" ) {
+                    Status = READY;
+                    LoadMemory(m_dataFile);
+                }
+                if ( m_codeFile.GetFullPath() != "" ) {
+                    Status = READY;
+                    m_pParser->LoadCode((char *)m_codeFile.GetFullPath().c_str());
+                }
+                break;
+            case FILE_TYPE_VIF:
+                if ( m_codeFile.GetFullPath() != "") {
+                    m_binFile = m_codeFile;
+                    LoadVif();
+                }
+                break;
+            case FILE_TYPE_DMA:
+                if ( m_codeFile.GetFullPath() != "") {
+                    m_binFile = m_codeFile;
+                    LoadDma();
+                }
+                break;
+            default:
+                break;
+        }
+    } else {
+        m_codeFile.Assign("");
+        m_dataFile.Assign("");
+    }
+}
+
+void
+VUFrame::LoadVif(void) {
+    m_pVif1->Open(m_binFile.GetFullPath().c_str());
+    m_pVif1->Read();
+    m_pVif1->Close();
+    DrawProgram();
+    RegisterUpdate();
+    FlagsUpdate(); 
+}
+
+void
+VUFrame::LoadDma(void) {
+    m_pDma->Open(m_binFile.GetFullPath().c_str());
+    m_pDma->Read();
+    m_pDma->Close();
+    DrawProgram();
+    RegisterUpdate();
+    FlagsUpdate(); 
 }
