@@ -54,6 +54,8 @@ struct GIFInfo {
     int     sendPrim;
     int     tagShow;  
     int     clrcol;
+    int     scissorX;
+    int     scissorY;
 };
 extern const GIFInfo g_GIFTable;
 extern GIFInfo g_GIFPrefs;

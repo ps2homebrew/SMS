@@ -33,3 +33,5 @@
 #define SENDPRIM    _T("sendPrim")
 #define TAGSHOW     _T("tagShow")
 #define CLRCOLOR    _T("clrColor")
+#define SCISSOR_X   _T("ScissorX")
+#define SCISSOR_Y   _T("ScissorY")

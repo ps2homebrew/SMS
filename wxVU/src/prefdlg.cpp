@@ -708,6 +708,8 @@ void PreferenceDlg::GetValuesPageGIF() {
     // g_GIFPrefs.sendPrim = m_sendPrim->GetSelection();
     g_GIFPrefs.tagShow = m_tagShow->GetSelection();
     g_GIFPrefs.clrcol = strtol(m_colorText->GetValue().c_str(), (char **)NULL, 0);
+    g_GIFPrefs.scissorX = strtol(m_x1Scissor->GetValue().c_str(), (char **)NULL, 0);
+    g_GIFPrefs.scissorY = strtol(m_y1Scissor->GetValue().c_str(), (char **)NULL, 0);
 }
 
 //----------------------------------------------------------------------------
@@ -718,6 +720,8 @@ void PreferenceDlg::SetValuesPageGIF() {
     m_colorText->SetValue(wxString::Format("0x%x", g_GIFPrefs.clrcol));
     // m_sendPrim->SetSelection(g_GIFPrefs.sendPrim);
     m_tagShow->SetSelection(g_GIFPrefs.tagShow);
+    m_x1Scissor->SetValue(wxString::Format("%d", g_GIFPrefs.scissorX));
+    m_y1Scissor->SetValue(wxString::Format("%d", g_GIFPrefs.scissorY));
     PRIM = g_GIFPrefs.prim;
     // updatePrimChoices();
 }

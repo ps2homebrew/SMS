@@ -43,6 +43,8 @@ const GIFInfo g_GIFTable = {
     0,
     0,
     0,
+    0,
+    0,
     0 
 };
 GIFInfo g_GIFPrefs = g_GIFTable;
@@ -235,6 +237,12 @@ void Prefs::LoadValuesPageGIF(bool dflt) {
     if (m_config->Exists (key + CLRCOLOR)) {
         m_config->Read(key + CLRCOLOR, &g_GIFPrefs.clrcol);
     }
+    if (m_config->Exists (key + SCISSOR_X)) {
+        m_config->Read(key + SCISSOR_X, &g_GIFPrefs.scissorX);
+    }
+    if (m_config->Exists (key + SCISSOR_Y)) {
+        m_config->Read(key + SCISSOR_Y, &g_GIFPrefs.scissorY);
+    }
 }
 
 void Prefs::SaveValuesPageGIF() {
@@ -247,6 +255,8 @@ void Prefs::SaveValuesPageGIF() {
     m_config->Write(key + SENDPRIM, g_GIFPrefs.sendPrim);
     m_config->Write(key + TAGSHOW, g_GIFPrefs.tagShow);
     m_config->Write(key + CLRCOLOR, g_GIFPrefs.clrcol);
+    m_config->Write(key + SCISSOR_X, g_GIFPrefs.scissorX);
+    m_config->Write(key + SCISSOR_Y, g_GIFPrefs.scissorY);
     m_config->Flush();
 }
 
