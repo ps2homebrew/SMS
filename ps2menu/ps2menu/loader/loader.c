@@ -11,6 +11,10 @@
 ==				wipeUserMemory					==
 ==				(C) 2003 Tord Lindstrom (pukko@home.se)	==
 ==				(C) 2003 adresd (adresd_ps2dev@yahoo.com)	==
+==	Portions of this code taken from Independence MC exploit	==
+==				tLoadElf						==
+==				LoadAndRunHDDElf					==
+==				(C) 2003 Marcus Brown <mrbrown@0xd6.org>	==
 ==											==
 ==================================================================*/
 #include "tamtypes.h"
@@ -107,6 +111,8 @@ struct argData
 
 ////////////////////////////////////////////////////////////////////////
 // Read ELF from hard drive to required location(s) in memory.
+// Modified version of loader from Independence
+//	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
 //
 static int tLoadElf(char *filename)
 {
@@ -358,6 +364,9 @@ int main(int argc, char *argv[])
 // when reset is pressed to reload PS2Menu from the hard drive.
 // Doesn't work most times because, at the moment, we have limited
 // control over what a loaded ELF has done to the system.
+// Modified version of loader from Independence
+//	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
+//
 void LoadAndRunHDDElf(char *filename)
 {
 	u8 *boot_elf = (u8 *)0x1800000;
