@@ -173,7 +173,6 @@ int dummy()
 int get_pos_nosound()
 
 {
-   printf("%d\n", (int) init.curr_time);
    return (int) (init.curr_time * 48000.0f);
 }
 
