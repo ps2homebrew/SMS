@@ -10,7 +10,7 @@ No | Start | Sample Pos | Time | Description
 0  | 0:00  | 0          | 56   | intro part
 1  | 0:56  | 2688000    | 26   | part
 2  | 1:22  | 3936000    | 14   | short break (TyRaNiD)
-3  | 1:36  | 4608000    | 26   | part
+3  | 1:36  | 4608000    | 26   | emoon part1
 4  | 2:02  | 5856000    | 26   | part
 5  | 2:28  | 7104000    | 14   | short break
 6  | 2:42  | 7776000    | 33   | part
