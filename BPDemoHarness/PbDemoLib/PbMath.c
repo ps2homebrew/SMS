@@ -57,7 +57,7 @@ float PbSin( float v )
 	int i=(v)/(2.0f*M_PI);
 	v-=i*2.0f*M_PI;
 
-	fac=0.0f;
+	fac=1.0f;
 	res=0.0f;
 	w=v;
 	for(t=1;t<SIN_ITERATOR;)
