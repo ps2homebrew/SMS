@@ -1,24 +1,32 @@
 .SUFFIXES:.cpp
 OBJDIR=.\obj
+OUTDIR=.\bin
 INTDIR=.\src
 CC = cl
 VPATH=src:obj
-LINK = link
-LDFLAGS= /nologo /MD /W3 /GX /O2 /I "c:\wx2\include" /I "c:\wx2\contrib\include" /I "c:\wxWindows-2.4.2\include" /I "c:\wxWindwos-2.4.2\lib\mswu" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "__WXMSW__" /D "__WIN95__" /D "__WIN32__" /D WINVER=0x400 /D "STRICT" /YX /Fo"$(OBJDIR)\\" /c 
+LINK=link
+CFLAGS= /nologo /MD /W3 /GX /O2 /I "c:\wx2\include" /I "c:\wx2\contrib\include" /I "c:\wxWindows-2.4.2\include" /I "c:\wxWindwos-2.4.2\lib\mswu" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "__WXMSW__" /D "__WIN95__" /D "__WIN32__" /D WINVER=0x400 /D "STRICT" /YX /Fo"$(OBJDIR)\\" /c 
 
-OBJECTS=main.obj lower.obj parser.obj upper.obj util.obj vu.obj \
-		gif.obj prefdlg.obj prefs.obj dump.obj linkproto_stub.obj \
-		vif.obj timer.obj sif.obj dma.obj vuBreakDialog.obj breakpoint.obj
-SOURCES=main.cpp lower.cpp parser.cpp upper.cpp util.cpp vu.cpp \
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib wsock32.lib winmm.lib wxmsw.lib png.lib zlib.lib jpeg.lib tiff.lib /nologo /subsystem:windows /incremental:no /pdb:"$(OUTDIR)\wxVU.pdb" /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libci.lib" /nodefaultlib:"msvcrtd.lib" /out:"$(OUTDIR)\wxVU.exe" /libpath:"c:\wx2\lib" /libpath:"c:\wx2\contrib\lib" /libpath:"c:\wxWindows-2.4.2\lib" /libpath:"c:\wxWindows-2.4.2\lib\mswu" 
+
+OBJECTS=obj/main.obj obj/lower.obj obj/parser.obj obj/upper.obj obj/util.obj obj/vu.obj \
+		obj/gif.obj obj/prefdlg.obj obj/prefs.obj obj/dump.obj obj/linkproto_stub.obj \
+		obj/vif.obj obj/timer.obj obj/sif.obj obj/dma.obj obj/vuBreakDialog.obj obj/breakpoint.obj
+SOURCES=dummy2.cpp main.cpp lower.cpp parser.cpp upper.cpp util.cpp vu.cpp \
 		gif.cpp prefdlg.cpp prefs.cpp dump.cpp linkproto_stub.cpp \
-		vif.cpp timer.cpp sif.cpp dma.cpp vuBreakDialog.cpp breakpoint.cpp
+		vif.cpp timer.cpp sif.cpp dma.cpp vuBreakDialog.cpp breakpoint.cpp \
+        dummy.cpp 
 HEADERS=main.h lower.h parser.h upper.h util.h vu.h \
 		gif.h prefdlg.h prefs.h dump.h linkproto_stub.h \
 		vif.h timer.h sif.h dma.h vuBreakDialog.h breakpoint.h
 
 .cpp{$(SOURCES)}.obj::
-	$(CC) $(LDFLAGS) src\$@
+	$(CC) $(CFLAGS) src\$@
     
 all:: $(SOURCES)
+    $(LINK) $(LINK32_FLAGS) $(OBJECTS)
+
+link::
+	$(LINK) $(LINK32_FLAGS) $(OBJECTS)
 
 clean:: 
