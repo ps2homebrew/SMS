@@ -21,9 +21,9 @@ MiscRegisterPanel::MiscRegisterPanel() {};
 MiscRegisterPanel::MiscRegisterPanel(
     wxWindow*           parent,
     wxWindowID          id,
-    const wxPoint&      pos = wxDefaultPosition,
-    const wxSize&       size = wxDefaultSize,
-    long                style = wxTAB_TRAVERSAL
+    const wxPoint&      pos,
+    const wxSize&       size,
+    long                style
     ) : wxPanel(parent, id, pos, size, style)
 {
     SetParent(parent);

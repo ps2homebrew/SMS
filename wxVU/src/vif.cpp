@@ -3,10 +3,10 @@
 #include <vector>
 #include <string>
 
+#include "wx/string.h"
 #include "vif.h"
 #include "parser.h"
 #include "vu.h"
-#include "debug.h"
 
 using namespace std;
 

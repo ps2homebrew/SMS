@@ -6,7 +6,6 @@
 
 #include "datatypes.h"
 #include "sub.h"
-// #include "parser.h"
 #include "VuInstruction.h"
 #include "VuFloatReg.h"
 #include "VuIntReg.h"

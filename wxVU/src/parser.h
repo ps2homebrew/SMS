@@ -1,13 +1,14 @@
 #ifndef __PARSER__
 #define __PARSER__
 
+#include <iostream>
 #include "datatypes.h"
 #include "opcodes.h"
-// #include "opcodes.h"
+
+using namespace std;
 
 class Vu;
 class VuInstruction;
-class ifstream;
 
 class Parser {
 public:

@@ -10,16 +10,28 @@ CFLAGS= /nologo /MD /W3 /GX /O2 /I "c:\wx2\include" /I "c:\wx2\contrib\include" 
 LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib wsock32.lib winmm.lib wxmsw.lib png.lib zlib.lib jpeg.lib tiff.lib /nologo /subsystem:windows /incremental:no /pdb:"$(OUTDIR)\wxVU.pdb" /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libci.lib" /nodefaultlib:"msvcrtd.lib" /out:"$(OUTDIR)\wxVU.exe" /libpath:"c:\wx2\lib" /libpath:"c:\wx2\contrib\lib" /libpath:"c:\wxWindows-2.4.2\lib" /libpath:"c:\wxWindows-2.4.2\lib\mswu" 
 
 OBJECTS=obj/main.obj obj/lower.obj obj/parser.obj obj/upper.obj obj/util.obj obj/vu.obj \
-		obj/gif.obj obj/prefdlg.obj obj/prefs.obj obj/dump.obj obj/linkproto_stub.obj \
+		obj/gif.obj obj/prefdlg.obj obj/prefs.obj obj/linkproto_stub.obj \
 		obj/vif.obj obj/timer.obj obj/sif.obj obj/dma.obj obj/vuBreakDialog.obj \
-		obj/breakpoint.obj
+		obj/breakpoint.obj obj/debug.obj obj/VuRegisterPanel.obj \
+        obj/MiscRegisterPanel.obj obj/GifOutputPanel.obj obj/MemoryPanel.obj \
+        obj/VuParam.obj obj/VuMem.obj obj/VuReg.obj obj/VuFloatReg.obj obj/VuIntReg.obj \
+        obj/MicroCode.obj obj/VuSymbol.obj obj/Log.obj obj/NumberFormat.obj \
+        obj/vif0.obj obj/vif1.obj obj/VuInstruction.obj obj/Remote.obj
+
 SOURCES=dummy2.cpp main.cpp lower.cpp parser.cpp upper.cpp util.cpp vu.cpp \
-		gif.cpp prefdlg.cpp prefs.cpp dump.cpp linkproto_stub.cpp \
+		gif.cpp prefdlg.cpp prefs.cpp linkproto_stub.cpp \
 		vif.cpp timer.cpp sif.cpp dma.cpp vuBreakDialog.cpp breakpoint.cpp debug.cpp \
-		dummy.cpp 
+        VuRegisterPanel.cpp MiscRegisterPanel.cpp GifOutputPanel.cpp \
+        MemoryPanel.cpp VuParam.cpp VuMem.cpp VuReg.cpp VuFloatReg.cpp VuIntReg.cpp \
+        MicroCode.cpp VuSymbol.cpp Log.cpp NumberFormat.cpp \
+        vif0.cpp vif1.cpp VuInstruction.cpp Remote.cpp dummy.cpp
+
 HEADERS=main.h lower.h parser.h upper.h util.h vu.h \
-		gif.h prefdlg.h prefs.h dump.h linkproto_stub.h \
-		vif.h timer.h sif.h dma.h vuBreakDialog.h breakpoint.h
+		gif.h prefdlg.h prefs.h linkproto_stub.h \
+		vif.h timer.h sif.h dma.h vuBreakDialog.h breakpoint.h \
+        debug.h VuRegisterPanel.h MiscRegisterPanel.h GifOutputPanel.h \
+        MemoryPanel.h VuParam.h VuMem.h VuReg.h VuFloatReg.h VuIntReg.h \
+        MicroCode.h VuSymbol.h Log.h NumberFormat.h vif1.h vif0.h
 
 .cpp{$(SOURCES)}.obj::
 	$(CC) $(CFLAGS) src\$@

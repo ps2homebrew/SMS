@@ -1,6 +1,5 @@
 // (C) 2004 by Khaled Daham, <khaled@w-arts.com>
 
-#include "debug.h"
 #include "VuRegisterPanel.h"
 
 BEGIN_EVENT_TABLE(VuRegisterPanel, wxPanel)
@@ -329,11 +328,11 @@ VuRegisterPanel::OnEdit(wxGridEvent& event) {
         num = *((int *)&fnum);
     }
     if ( event.GetId() == ID_INTGRIDEDIT ) {
-        cdbg << "int num = " << num << endl;
+        // cdbg << "int num = " << num << endl;
     } else if ( event.GetId() == ID_FLOATGRIDEDIT ) {
-        cdbg << "float num = " << num << endl;
+        // cdbg << "float num = " << num << endl;
     } else if ( event.GetId() == ID_SPECGRIDEDIT ) {
-        cdbg << "spec num = " << num << endl;
+        // cdbg << "spec num = " << num << endl;
     }
 }
 

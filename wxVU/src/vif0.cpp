@@ -52,7 +52,7 @@ static const string tER1[2] = {
 };
 
 vector<string>
-Vif0::unpackStat(const int reg) {
+Vif0::UnpackStat(const int reg) {
     vector<string> v;
     char val[100];
     v.push_back("VPS");
@@ -84,49 +84,43 @@ const vector<string>
 Vif0::GetRegisterText(const int reg) {
     switch(reg) {
         case VIF0_STAT:
-            return unpackStat(reg);
+            return UnpackStat(reg);
             break;
         // case VIF0_FBRST:
             // return unpack_VIF0_FBRST(reg);
             // break;
         case VIF0_ERR:
-            return unpack_VIF_ERR(reg);
+            return UnpackErr(reg);
             break;
         case VIF0_MARK:
-            return unpack_VIF_MARK(reg);
+            return UnpackMark(reg);
             break;
         case VIF0_CYCLE:
-            return unpack_VIF_CYCLE(reg);
+            return UnpackCycle(reg);
             break;
         case VIF0_MODE:
-            return unpack_VIF_MODE(reg);
+            return UnpackMode(reg);
             break;
         case VIF0_NUM:
-            return unpack_VIF_NUM(reg);
+            return UnpackNum(reg);
             break;
         case VIF0_MASK:
-            return unpack_VIF_MASK(reg);
+            return UnpackMask(reg);
             break;
         case VIF0_CODE:
-            return unpack_VIF_CODE(reg);
-            break;
-        case VIF0_ITOPS:
-            return unpack_VIF_ITOPS(reg);
-            break;
-        case VIF0_ITOP:
-            return unpack_VIF_ITOP(reg);
+            return UnpackCode(reg);
             break;
         case VIF0_R0:
         case VIF0_R1:
         case VIF0_R2:
         case VIF0_R3:
-            return unpack_VIF_R(reg);
+            return UnpackR(reg);
             break;
         case VIF0_C0:
         case VIF0_C1:
         case VIF0_C2:
         case VIF0_C3:
-            return unpack_VIF_C(reg);
+            return UnpackC(reg);
             break;
         default:
             vector<string> v;

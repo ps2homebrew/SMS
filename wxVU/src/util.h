@@ -1,4 +1,3 @@
-#include <wx/wx.h>
 void        setdata(void* a, int b, int c, int bits);
 long        iToBin(char value);
 int         round(long double a);

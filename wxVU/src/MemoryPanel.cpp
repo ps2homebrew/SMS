@@ -1,7 +1,6 @@
 // (C) 2004 by Khaled Daham, <khaled@w-arts.com>
 #include <iostream>
 #include "MemoryPanel.h"
-#include "debug.h"
 
 BEGIN_EVENT_TABLE(MemoryPanel, wxPanel)
     EVT_RADIOBOX(ID_MEMORYRADIO, MemoryPanel::OnFormatChange)
@@ -41,10 +40,10 @@ MemoryPanel::Write(const uint32 row, const wxString& x, const wxString& y,
     m_pMemoryGrid->SetCellValue(row, 1, y);
     m_pMemoryGrid->SetCellValue(row, 2, z);
     m_pMemoryGrid->SetCellValue(row, 3, w);
-    m_pVuMemArray[row].x = x;
-    m_pVuMemArray[row].y = y;
-    m_pVuMemArray[row].z = z;
-    m_pVuMemArray[row].w = w;
+    // m_pVuMemArray[row].x = x;
+    // m_pVuMemArray[row].y = y;
+    // m_pVuMemArray[row].z = z;
+    // m_pVuMemArray[row].w = w;
     return;
 }
 

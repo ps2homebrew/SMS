@@ -1,4 +1,5 @@
 // (C) 2004 by Khaled Daham, <khaled@w-arts.com>
+#include <string.h>
 #include "VuFloatReg.h"
 
 float VuFloatReg::x(){ return data.vf.x;}

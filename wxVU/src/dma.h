@@ -3,15 +3,15 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 #include "datatypes.h"
 #include "sub.h"
+
+using namespace std;
 
 class Gif;
 class Vif0;
 class Vif1;
-class ifstream;
-
-using namespace std;
 
 enum DMA_REGISTERS {
     DMA_CTRL, DMA_STAT, DMA_PCR, DMA_SQWC,

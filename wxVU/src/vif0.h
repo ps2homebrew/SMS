@@ -30,7 +30,7 @@ public:
     static const int    nREGISTERS;
     const vector<string>    GetRegisterText(const int reg);
 private:
-    vector<string>      unpackStat(const int reg);
-    vector<string>      unpackFbrst(const int reg);
+    vector<string>      UnpackStat(const int reg);
+    vector<string>      UnpackFbrst(const int reg);
 };
 #endif

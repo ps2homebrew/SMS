@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 #include "datatypes.h"
 #include "sub.h"
 
-class ifstream;
 class Parser;
 class Vu;
 

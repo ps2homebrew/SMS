@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <iostream>
 
+#include "wx/string.h"
+
 #include "vu.h"
 #include "MemoryPanel.h"
 #include "VuMem.h"

@@ -177,7 +177,7 @@ Vif1::Read(ifstream* fin, const uint16 numQuad) {
             m_pLog->Warning("VIF Decoder failed\n");
             return ret;
         }
-        m_delta = m_fin->tellg()-m_start;
+        m_delta = ((int)m_fin->tellg())-m_start;
     }
     return 0;
 }
@@ -332,7 +332,7 @@ Vif1::CmdMaskpath3(const int32& data) {
     // TODO
     // enables/disables transfer via PATH3
     m_vifCmd = VIF_MSKPATH3;
-    m_maskPath3 = (data&0x8000)>>15;
+    m_maskPath3 = (bool)((data&0x8000)>>15);
     if ( m_trace ) {
         m_pLog->Trace(1, wxString::Format("MSKPATH3 = %d\n", m_maskPath3));
     }
@@ -379,7 +379,7 @@ Vif1::CmdDirect(const int32& data) {
             len = size - total;
         }
 
-        m_fin->read(buffer, len);
+        m_fin->read(reinterpret_cast<char *>(buffer), len);
         Remote::GsExec(buffer, len);
         total += len;
     }
@@ -406,7 +406,7 @@ Vif1::CmdDirectHl(const int32& data) {
             len = size - total;
         }
 
-        m_fin->read(buffer, len);
+        m_fin->read(reinterpret_cast<char *>(buffer), len);
         Remote::GsExec(buffer, len);
         total += len;
     }

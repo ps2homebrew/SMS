@@ -5,6 +5,8 @@
 #include <math.h>
 #include <iostream>
 
+#include "wx/string.h"
+
 #include "vu.h"
 #include "MicroCode.h"
 #include "VuMem.h"
