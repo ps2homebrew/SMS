@@ -1,5 +1,5 @@
 /*
-	PS2Menu v2.5b
+	PS2Menu v2.6b
 	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
@@ -41,7 +41,7 @@
 					- added rename function for file/folder on pfs0:
 					-	mc0: ommitted until I can make mcRename work!
 					- added recursive copy for folder on pfs0:, host: or mc0:.
-					-	recursive copy from cdfs: still needs to be implemented
+					- added recursive copy from cdfs: 
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
 	and libhdd v1.2, ps2drv, ps2link v1.2, ps2 Independence Day
@@ -802,7 +802,7 @@ void ReadCDDir()
 
 	CDVD_FlushCache();
 	num_cd_files = CDVD_GetDir(CDpath, NULL, CDVD_GET_FILES_AND_DIRS, TocEntryList,MAX_ENTRY, CDpath);
-	CDVD_Stop();
+//	CDVD_Stop();
 	for(num_hdd_files=0;num_hdd_files<num_cd_files;num_hdd_files++)
 	{
 		sprintf(HDDfiles[num_hdd_files],"%s",TocEntryList[num_hdd_files].filename);
@@ -1380,7 +1380,10 @@ void RecursiveCopy(char *folder)
 	int rv,ret,fd=0;
 	iox_dirent_t hddbuf;
 	fio_dirent_t hostbuf;
+//	static struct TocEntry* TocEntryList;
+	TocEntry TocEntryList[MAX_ENTRY] __attribute__((aligned(64)));
 	char path[MAX_PATH];
+	char cdfile[MAX_PATH];
 	char *ptr;
 	
 	strcpy(path,folder);
@@ -1408,12 +1411,12 @@ void RecursiveCopy(char *folder)
 		}
 	if(elfhost==2 || elfhost==3)
 	{
-		strcat(path,"/");
+		if (elfhost == 3 || (strlen(path)>5)) strcat(path,"/");
 		fd = fioDopen(path);
 		while((rv=fioDread(fd, &hostbuf)))
 		{
 			strcpy(path,folder);
-			strcat(path,"/");
+			if (elfhost == 3 || (strlen(path)>5)) strcat(path,"/");
 			strcat(path,(char *)&hostbuf.name);
 			strcat(destination,"/");
 			if(hostbuf.stat.mode & FIO_SO_IFREG) copytodest(path);
@@ -1428,6 +1431,53 @@ void RecursiveCopy(char *folder)
 			if (ptr != NULL) *ptr = '\0';
 			}
 		fioDclose(fd);
+		}
+	if(elfhost==4)
+	{
+		ptr = strrchr(folder,':');
+		if (ptr != NULL)
+		{
+			ptr+=2;
+			strcpy(path,ptr);
+			}
+		else strcpy(path,folder);
+		strcat(path,"/");
+//		TocEntryList=(TocEntry*)malloc((sizeof(TocEntry))*MAX_ENTRY);
+		CDVD_FlushCache();
+		ret = CDVD_GetDir(path, NULL, CDVD_GET_FILES_AND_DIRS, TocEntryList,MAX_ENTRY, NULL);
+		for(rv=0;rv<ret;rv++)
+		{
+			ptr = strrchr(folder,':');
+			if (ptr != NULL)
+			{
+				ptr+=2;
+				strcpy(path,ptr);
+				}
+			else strcpy(path,folder);
+			strcat(path,"/");
+			strcat(path,TocEntryList[rv].filename);
+			strcat(destination,"/");
+			if(TocEntryList[rv].fileProperties & 0x02)
+			{
+				if (strncmp(TocEntryList[rv].filename,".",1))
+				{
+					strcat(destination,TocEntryList[rv].filename);
+					if(strncmp(destination,"pfs0:",5)) fioMkdir(destination);
+					else fileXioMkdir(destination, fileMode);
+					RecursiveCopy(path);
+					}
+				}
+			else
+			{
+				strcpy(cdfile,"cdfs:");
+				strcat(cdfile,path);
+				copytodest(cdfile);
+				}
+			ptr = strrchr(destination,'/');
+			if (ptr != NULL) *ptr = '\0';
+			}
+//		free(TocEntryList);
+//		CDVD_Stop();
 		}
 	}
 
@@ -2149,6 +2199,7 @@ char *SelectELF(void)
 	u32 new_pad = 0;
 	int changed=1,minpath;
 	char botcap,botcap2;
+	char *ptr;
 	char tmppath[MAX_PATH], newpath[MAX_PATH] __attribute__((aligned(64)));
 
 	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
@@ -2159,7 +2210,7 @@ char *SelectELF(void)
 	held = 0;
 	while(!selected)
 	{
-		CDVD_Stop();
+		if (elfhost != 4) CDVD_Stop();
 		ret = padRead(0, 0, &buttons); // port, slot, buttons
             
 		if (ret != 0)
@@ -2452,7 +2503,6 @@ char *SelectELF(void)
 				{
 					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
-						printf("Recursively copy %s to %s\n",fullpath,destination);
 						strcpy(tmppath,destination);
 						strcat(destination,HDDfiles[highlighted]);
 						if(elfhost==1 || !(strncmp(destination,"pfs0:",5)))
@@ -2470,9 +2520,33 @@ char *SelectELF(void)
 							}
 						strcpy(destination,tmppath);
 						}
-					else
+					else if(elfhost != 2) //this adv. copy method seems to crash0r from host:
 					{
-						printf("Copy %s to %s\n",fullpath,destination);
+						ptr = strrchr(fullpath,'/');
+						if(ptr == NULL)
+						{
+							ptr = strrchr(fullpath,':');
+							if(ptr != NULL) 
+							{
+								ptr++;
+								*ptr = '\0';
+								}
+							}
+						else *ptr = '\0';
+						strcpy(tmppath,destination);
+						i = strlen(destination)-1;
+						if(destination[i]=='/') destination[i]='\0';
+						if(elfhost==1 || !(strncmp(destination,"pfs0:",5)))
+						{
+							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+							RecursiveCopy(fullpath);
+							fileXioUmount("pfs0:"); 
+							}
+						else
+						{
+							RecursiveCopy(fullpath);
+							}
+						strcpy(destination,tmppath);
 						}
 					}
 				changed=1;
@@ -2481,8 +2555,8 @@ char *SelectELF(void)
 				}
 			else if(new_pad & PAD_CROSS)
 			{
-				if(elfhost==1 || (elfhost==2 && HDDstats[highlighted]&FIO_S_IFDIR) || elfhost==3 || elfhost==4)
-				{
+//				if(elfhost==1 || (elfhost==2 && HDDstats[highlighted]&FIO_S_IFDIR) || elfhost==3 || elfhost==4)
+//				{
 					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
 						botcap=HDDfiles[highlighted][0];
@@ -2563,7 +2637,7 @@ char *SelectELF(void)
 							}
 						}
 					}
-				}
+//				}
 			}
 		if (changed)
 		{
@@ -2710,7 +2784,7 @@ int main(int argc, char *argv[])
 		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.5b\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.6b\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
@@ -2949,11 +3023,7 @@ checkmc:
 		i=strlen(s);
 		s[i-1]='\0';
 		}
-//	if(elfhost==2)
-//	{
-//		strcpy(s, "host:");
-//		for(i=0;i<(elfsubdir-1);i++) strcat(s,"..\\");
-//		}
+	if(elfhost==2) strcpy(s, HOSTpath);
 	if(elfhost==1) strcpy(s, HDDpath);
 	strcat(s, pc);
 	dbgprintf("Executing %s ...", s);
