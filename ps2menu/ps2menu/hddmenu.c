@@ -1,7 +1,7 @@
 /*
-	Hddboot
+	PS2Menu
 	Adam Metcalf 2003
-	Thomas Hawcroft 2003	- changes to make stable code
+	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
 					- 	dos command "dir *.elf /b /s >elflist.txt"
 					- added scrolling filelist and screen text clipping
@@ -10,7 +10,7 @@
 					- added on screen keyboard function
 					- added pfs0: directory changing via PAD CROSS button
 					- added delete file or empty folder via PAD CIRCLE button
-					-		still requires a user confirmation option
+					- added a user confirmation option
 					- added drawline functions to tart-up display
 
 	based on mcbootmenu.c
@@ -80,20 +80,17 @@ extern void *_end;
 #define TYPE_MC
 //#define TYPE_XMC
 #define ROM_PADMAN
-//#define DOWEFORMAT					// DMS3 formatted HDD is not supported
+//#define DOWEFORMAT					// 
 								// Only remove '//' if we really don't
 								// mind wiping incompatible filesystem
 #define PS2LINKVER
 //#define PUKKLINKVER					// LibHdd does not work with Pukklink v1.0b
 
-//#define MCARDBOOT					// Copying HDDMENU.ELF to mc0:/BxDATA-SYSTEM/BOOT.ELF
-								// Should allow booting this program via Exploit.
-								// assumes all IRX files are in mc0:/BWLINUX
-								// - this path can be changed in LoadModules
 #define WIDTH	366
 #define HEIGHT	256
 #define FRAMERATE	4
 #define STATUS_Y	232
+#define MAX_PARTITIONS	10
 
 unsigned char *Img;					// pntr to blit buffer
 int g_nWhichBuffer = 0;
@@ -101,12 +98,13 @@ int show_logo = 0;
 char sStatus[256];
 char foldername[26]="\0";
 
-iox_dirent_t dirbuf __attribute__((aligned(64)));
+iox_dirent_t dirbuf __attribute__((aligned(16)));
 char HDDfiles[128][256];
 unsigned int HDDstats[128];
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char HDDpath[256];
-t_hddFilesystem parties[10] __attribute__((aligned(64)));
+char elfpath[256];
+t_hddFilesystem parties[MAX_PARTITIONS] __attribute__((aligned(64)));
 
 void drawChar(char c, int x, int y, unsigned int colour);
 void printXY(char *s, int x, int y, unsigned int colour);
@@ -123,7 +121,7 @@ void MenuKeyboard(char *s);
 #define ARRAY_ENTRIES	64
 int num_hdd_files,elfhost=1,party=0,nparty;
 unsigned char romver[16];
-int topfil=0;
+int topfil=0, elfload=0;
 
 
 void clrEmuScreen(unsigned char colour)
@@ -233,18 +231,17 @@ int dowereformat()
 		printf("HDD is connected and formatted.\n");
 		}
 #endif
-	ret = hddMakeFilesystem(4096, "HDDMENU", FS_GROUP_COMMON);
+	ret = hddMakeFilesystem(4096, "PS2MENU", FS_GROUP_COMMON);
 	if (ret < 0)
 	{
-		printf("ERROR: failed to create APPS filesystem: %d\n", ret);
+		printf("ERROR: failed to create PS2MENU filesystem: %d\n", ret);
 		return -1;
 		}
 	else
 	{
-		printf("Created APPS filesystem with size: %dMB.\n",ret);
+		printf("Created PS2MENU filesystem with size: %dMB.\n",ret);
 		}
 
-//	ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 	return 1;
 	}
 
@@ -254,15 +251,12 @@ void ReadHDDFiles()
 	char filesname[256];
 
 	rv = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
-	printf("Mounted %s\n", parties[party].filename);
 	if(rv < 0)
 	{
 		printf("ERROR: failed to mount filesystem: %d\n", rv);
-//		rv = dowereformat();
 		}
 	if(rv == 0)
 	{
-		printf("%s\n",HDDpath);
 		fd = fileXioDopen(HDDpath);
 		num_hdd_files=0;
 		while((rv=fileXioDread(fd, &dirbuf)))
@@ -422,7 +416,6 @@ int tomcopy(char *sourcefile)
 		}
 	else
 	{
-		printf("Open %s Success\n",sourcefile);
 		boot_size = fioLseek(boot_fd,0,SEEK_END);
 		fioLseek(boot_fd,0,SEEK_SET);
 		boot_buffer = malloc(boot_size);
@@ -495,6 +488,64 @@ void ReDraw(int highlighted)
 	PutImage();
 	}
 
+int ConfirmYN(char *s)
+{
+	int enterkey = 0, keycol=0, ret, i;
+	struct padButtonStatus buttons;
+	u32 paddata;
+	u32 old_pad = 0;
+	u32 new_pad;
+
+	enterkey=0;
+	while(!enterkey)
+	{
+		for (i=79;i<112;i++)
+		{
+			drawHorizontal(138, i, 73, 0);
+			}
+		drawHorizontal(138, 87, 73, 1);
+		drawVertical(138, 87, 25, 1);
+		drawHorizontal(138, 112, 73, 1);
+		drawVertical(211, 87, 25, 1);
+		printXY(s, 146, 79, 2);
+		printXY("YES  NO", 146, 95, 1);
+		if(keycol==0)
+		{
+			printXY("NO", 186, 95, 2);
+			}
+		else
+		{
+			printXY("YES", 146, 95, 2);
+			}
+		PutImage();
+		ret = padRead(0, 0, &buttons); // port, slot, buttons
+            
+		if (ret != 0)
+		{
+			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+			new_pad = paddata & ~old_pad;
+			old_pad = paddata;
+
+// Directions
+			if(new_pad & PAD_LEFT)
+			{
+				if(keycol==0) keycol=1;
+				else keycol=0;
+				}
+			if(new_pad & PAD_RIGHT)
+			{
+				if(keycol==0) keycol=1;
+				else keycol=0;
+				}
+			if(new_pad & PAD_CROSS)
+			{
+				enterkey=1;
+				}
+			}
+		}
+	return keycol;
+	}
+	
 void MenuKeyboard(char *s)
 {
 	int i,ret,keyrow=0,keycol=0,nameptr=0;
@@ -508,6 +559,7 @@ void MenuKeyboard(char *s)
 
 	enterkey=0;
 	nameptr=0;
+	foldername[nameptr]='\0';
 	while(!enterkey)
 	{
 		for(i=63;i<128;i++)
@@ -618,7 +670,8 @@ void jprintf(char *s)
 #ifdef DEBUG
 	printf("%s\n", s);
 #endif
-	printXY(s, 4, 232, 2);
+	printXY(s, 4, 216, 2);
+	ReDraw(0);
 	}
 
 char *SelectELF(void)
@@ -695,12 +748,13 @@ char *SelectELF(void)
 				}
 			if((new_pad & PAD_CIRCLE) && elfhost==1)
 			{
+				if(ConfirmYN("Delete?"))
+				{
 				if(HDDstats[highlighted]&FIO_S_IFDIR)
 				{
 					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 					strcpy(sStatus,HDDpath);
 					strcat(sStatus,HDDfiles[highlighted]);
-					printf("Remove %s\n",sStatus);
 					fileXioRmdir(sStatus);
 					fileXioUmount("pfs0:");
 					changed=1;
@@ -719,6 +773,13 @@ char *SelectELF(void)
 					topfil=0;
 					}
 				}
+				else
+				{
+				highlighted=0;
+				topfil=0;
+				changed=1;
+				}
+				}
 			if((new_pad & PAD_SQUARE) && elfhost==1)
 			{
 				MenuKeyboard("Create folder, enter name");
@@ -727,14 +788,13 @@ char *SelectELF(void)
 					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 					fileXioChdir(HDDpath);
 					strcat(HDDpath,foldername);
-					printf("%s\n", HDDpath);
 					fileXioMkdir(HDDpath, fileMode);
 					fileXioUmount("pfs0:");
 					strcat(HDDpath, "/\0");
-					changed=1;
-					highlighted=0;
-					topfil=0;
 					}
+				changed=1;
+				highlighted=0;
+				topfil=0;
 				}
 			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
 			{
@@ -772,7 +832,6 @@ char *SelectELF(void)
 						{
 							if(botcap=='.')
 							{
-								printf("Trying to change to '.'\n");
 								}
 							else
 							{
@@ -888,8 +947,11 @@ int main(int argc, char *argv[])
 
 // Initialise
 	SifInitRpc(0);
+	strcpy(s,argv[0]);
+	strcpy(elfpath,argv[1]);				// LOADER should pass its path
+	if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
+	else if(!strncmp(s, "mc0:", 4)) elfload=2;	// loading from memory card
 	LoadModules();
-	hddPreparePoweroff();
 
 // Initialise platform stuff
 // detect system, and reset GS into that mode
@@ -922,9 +984,9 @@ int main(int argc, char *argv[])
 
 // *** Required BEFORE calling ReadMCDir etc
 	GetROMVersion();
-#ifdef DEBUG
+//#ifdef DEBUG
 	printf("Rom version: %s\n", romver);
-#endif
+//#endif
 
 	strcpy(sStatus, "Ready.\0");
 	if(hddCheckPresent() < 0)
@@ -939,9 +1001,27 @@ int main(int argc, char *argv[])
 			while(1);
 			}
 		}
-	printf("HDD is connected and formatted.\n");
-	i=hddGetFilesystemList(parties, 10);
+	i=hddGetFilesystemList(parties, MAX_PARTITIONS);
 	nparty=i-1;
+	party=-1;
+	for(i=nparty;i>0;i--)
+	{
+		if(!strncmp(parties[i].name, "PS2MENU", 7)) party=i;
+		}
+	if(party<0)
+	{
+		printf("PS2MENU partition not found!\nAttempting to create\n");
+		if(dowereformat()<0)
+		{
+			printf("Error: Partition could not be created!\n");
+			}
+		else
+		{
+			i=hddGetFilesystemList(parties, MAX_PARTITIONS);
+			nparty=i-1;
+			}
+		party=nparty;
+		}
 	strcpy(s,argv[0]);
 	i=0;
 	while(s[i]!='\0')
@@ -949,24 +1029,20 @@ int main(int argc, char *argv[])
 		if(s[i]==0x5c) elfsubdir++;
 		i++;
 		}
-		ReDraw(0);
+	ReDraw(0);
 // get the pad going
 	padInit(0);
 	if((ret = padPortOpen(0, 0, padBuf)) == 0)
 	{
-		jprintf("padOpenPort failed");
+		printf("padOpenPort failed");
 		SleepThread();
 		}
-
-	jprintf("padPortOpen() OK\n");
 
 	if(!initializePad(0, 0))
 	{
-		jprintf("pad initalization failed!");
+		printf("pad initalization failed!");
 		SleepThread();
 		}
-
-	jprintf("initializePad() OK\n");
 
 	ret=padGetState(0, 0);
 	while((ret != PAD_STATE_STABLE) && (ret != PAD_STATE_FINDCTP1))
@@ -992,77 +1068,17 @@ int main(int argc, char *argv[])
 		}
 	if(elfhost==1) strcpy(s, HDDpath);
 	strcat(s, pc);
-#ifdef DEBUG
-	printf("Path: %s\n", s);
-#endif
 	sprintf(sStatus, "Executing %s ...", s);
 	ReDraw(0);
 
 	LoadAndRunMCElf(s);
+	return 0;
 	SleepThread();
 	}
-
-////////////////////////////////////////////////////////////////////////
-// Wrapper to load module from disc/rom/mc
-// Max irx size hardcoded to 300kb atm..
-static void
-pkoLoadMcModule(char *path, int argc, char *argv)
-{
-    void *iop_mem;
-    int ret;
-
-    printf("LoadMcModule %s\n", path);
-    iop_mem = SifAllocIopHeap(1024*300);
-    if (iop_mem == NULL) {
-        printf("allocIopHeap failed\n");
-        SleepThread();
-    }
-    ret = SifLoadIopHeap(path, iop_mem);
-    if (ret < 0) {
-        printf("loadIopHeap %s ret %d\n", path, ret);
-        SleepThread();
-    }
-    else {
-        ret = SifLoadModuleBuffer(iop_mem, argc, argv);
-        if (ret < 0) {
-            printf("loadModuleBuffer %s ret %d\n", path, ret);
-            SleepThread();
-        }
-    }
-    SifFreeIopHeap(iop_mem);
-}
 
 void LoadModules()
 {
 	int ret;
-
-	static char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
-	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40" /*"\0" "-debug"*/;
-
-#ifdef MCARDBOOT
-	SifLoadModule("rom0:SIO2MAN", 0, NULL);
-	SifLoadModule("rom0:MCMAN", 0, NULL);  	
-//	SifLoadModule("rom0:MCSERV", 0, NULL); 
-	pkoLoadMcModule("mc0:/BWLINUX/POWEROFF.IRX", 0, NULL);
-	pkoLoadMcModule("mc0:/BWLINUX/IOMANX.IRX", 0, NULL);
-	pkoLoadMcModule("mc0:/BWLINUX/FILEXIO.IRX", 0, NULL);
-	pkoLoadMcModule("mc0:/BWLINUX/PS2DEV9.IRX", 0, NULL);
-	pkoLoadMcModule("mc0:/BWLINUX/PS2ATAD.IRX", 0, NULL);
-	pkoLoadMcModule("mc0:/BWLINUX/PS2HDD.IRX", sizeof(hddarg), hddarg);
-	pkoLoadMcModule("mc0:/BWLINUX/PS2FS.IRX", sizeof(pfsarg), pfsarg);
-#else
-	SifLoadModule("host:poweroff.irx", 0, NULL);
-	#ifdef PUKKLINKVER
-		SifLoadModule("host:iomanX.irx", 0, NULL);
-	#endif
-	SifLoadModule("host:fileXio.irx", 0, NULL);
-	#ifdef PUKKLINKVER
-		SifLoadModule("host:ps2dev9.irx", 0, NULL);
-	#endif
-	SifLoadModule("host:ps2atad.irx", 0, NULL);
-	SifLoadModule("host:ps2hdd.irx", sizeof(hddarg), hddarg);
-	SifLoadModule("host:ps2fs.irx", sizeof(pfsarg), pfsarg);
-#endif
 
 #ifdef ROM_PADMAN
 	ret = SifLoadModule("rom0:PADMAN", 0, NULL);
@@ -1077,40 +1093,16 @@ void LoadModules()
 
 	}
 
-void LoadAndRunMCElf(char *filename)
+void LoadAndRunMCElf(char *filename2)
 {
-	u8 *boot_elf = (u8 *)&_end;
+	u8 *boot_elf = (u8 *)&_end; //0x400000;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
 	elf_pheader_t *eph;
 	void *pdata;
-	int fd, size, i, ret;
+	int fd, size, i;
 	char *argv[1];
 
-	if(elfhost==1)
-	{
-		ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
-		if ((fd = fileXioOpen(filename, O_RDONLY, fileMode)) < 0)
-		{
-			*GS_BGCOLOR =	0xFF0000;		// RED
-			goto error;
-			}
-
-		size = fileXioLseek(fd, 0, SEEK_END);
-		if (!size)
-		{
-			fileXioClose(fd);
-			*GS_BGCOLOR =	0x00FF00;		// GREEN
-			goto error;
-			}
-
-		fileXioLseek(fd, 0, SEEK_SET);
-		fileXioRead(fd, boot_elf, size);
-		fileXioClose(fd);
-		fileXioUmount("pfs0:");
-		}
-	if(elfhost==2)
-	{
-		if ((fd = fioOpen(filename, O_RDONLY)) < 0)
+		if ((fd = fioOpen(elfpath, O_RDONLY)) < 0)
 		{
 			*GS_BGCOLOR =	0xFF0000;		// RED
 			goto error;
@@ -1127,7 +1119,6 @@ void LoadAndRunMCElf(char *filename)
 		if(fioLseek(fd, 0, SEEK_SET)<0) printf("Error in SEEK_SET.\n");
 		if(fioRead(fd, boot_elf, size)<0) printf("Error in Read.\n");
 		if(fioClose(fd)<0) printf("Error in Close.\n");
-		}
 /* Load the ELF into RAM.  */
 	if (_lw((u32)&eh->ident) != ELF_MAGIC)
 	{
@@ -1153,17 +1144,21 @@ void LoadAndRunMCElf(char *filename)
 		}
 
 /* Let's go.  */
-	argv[0] = filename;
+//	fioExit();
+//	SifResetIop();
 
-	fioExit();
-	SifResetIop();
-
+//	SifExitRpc();
+	SifInitRpc(0);
+	SifExitRpc();
 	FlushCache(0);
 	FlushCache(2);
 
-	ExecPS2((void *)eh->entry, 0, 1, argv);
+	argv[0] = filename2;
+	argv[1] = party[parties].filename;
 
+	ExecPS2((void *)eh->entry, 0, 2, argv);
 
+	return;
 error:
 	while (1) ;
 
