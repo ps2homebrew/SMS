@@ -1,6 +1,6 @@
 EE_BIN = particle_test.elf
 BIN_IMAGE = particle_test.bin
-EE_OBJS = crt0.o main.o PbParticle.o
+EE_OBJS = crt0.o main.o math.o
 
 EE_CFLAGS += -fshort-double
 
