@@ -184,9 +184,7 @@ public:
         void    OnCLR(wxCommandEvent &WXUNUSED(event));
 
         // Panel1 on event functions
-        void    codeSelectCell(wxCommandEvent &WXUNUSED(event), int ACol, int ARow,
-                    bool &CanSelect);
-        void    codeMouseDown(wxCommandEvent &WXUNUSED(event), wxMouseEvent &);
+        void    OnBreakpoint(wxGridEvent &event);
 
         // Panel2 on event functions
         void    FlagsUpdate(void);
@@ -256,7 +254,6 @@ public:
         static void wrapper_XGKICK(void *objPtr, int offset);
         static void wrapper_DebugWarning(void *objPtr, wxString message);
         void    OnSelectCodeCell(wxCommandEvent &);
-        void    OnSelectMemCell(wxCommandEvent &);
         void    OnCellChange(wxGridEvent &event);
         void    OnNotebookOne(wxNotebookEvent &);
         void    OnRegRadioBox(wxCommandEvent &);
@@ -290,8 +287,7 @@ BEGIN_EVENT_TABLE(VUFrame, wxFrame)
 	EVT_MENU(ID_REMOTE_REGSVU1, VUFrame::OnRegsVu1)
 	EVT_MENU(ID_REMOTE_GSINIT, VUFrame::OnGSInit)
 	EVT_MENU(ID_REMOTE_CLR, VUFrame::OnCLR)
-    EVT_GRID_CELL_LEFT_DCLICK(VUFrame::OnSelectCodeCell)
-    EVT_GRID_CELL_LEFT_DCLICK(VUFrame::OnSelectMemCell)
+    EVT_GRID_CELL_LEFT_DCLICK(VUFrame::OnBreakpoint)
     EVT_GRID_CELL_CHANGE(VUFrame::OnCellChange)
     EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK1, VUFrame::OnNotebookOne)
     EVT_RADIOBOX(ID_REGRADIOBOX, VUFrame::OnRegRadioBox)

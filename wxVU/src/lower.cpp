@@ -952,13 +952,10 @@ int VU::VU_IBLEZ(VUInstruction &A)
 int VU::VU_IBLTZ(VUInstruction &A)
 {
     int st1, a;
-
-
     st1=Stalling(A.Params[1][0]);
-
-    //ths instruction can not return a warning
-    if(st1>0)
+    if(st1>0) {
         return 2;
+    }
 
     RegInt[A.Params[1][0].index].lastRead(PC);
     if(RegInt[A.Params[1][0].index].value()<0) {

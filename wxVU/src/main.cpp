@@ -25,6 +25,8 @@
 #include "vif0.h"
 #include "vif1.h"
 #include "gs.h"
+#include "vuBreakDialog.h"
+#include "breakpoint.h"
 
 using namespace std;
 
@@ -505,8 +507,11 @@ void
 VUFrame::OnRun(wxCommandEvent &event) {
     uint32 i = 0;
 	running = 1;
-    while(!VUchip.program[VUchip.PC].breakpoint &&
-        VUchip.program[VUchip.PC].flg!='E' && i < MAX_VUCODE_SIZE) {
+    Breakpoint *bp = Breakpoint::Instance(); 
+    while( (VUchip.program[VUchip.PC].flg!='E') &&
+            (i < MAX_VUCODE_SIZE) &&
+            !bp->check()
+            ) {
         OnStep(event);
         i++;
     }
@@ -904,12 +909,6 @@ VUFrame::OnSelectCodeCell(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void
-VUFrame::OnSelectMemCell(wxCommandEvent &WXUNUSED(event)) {
-    gridMemory->SetCellValue(gridMemory->GetCursorRow(), 1, wxString(""));
-    gridMemory->SetCellValue(gridMemory->GetCursorRow(), 1, wxString(">"));
-}
-
-void
 VUFrame::OnCellChange(wxGridEvent &event) {
     char *end_ptr;
     int num;
@@ -981,24 +980,8 @@ VUFrame::OnCellChange(wxGridEvent &event) {
 
 //---------------------------------------------------------------------------
 void
-VUFrame::codeMouseDown(wxCommandEvent &WXUNUSED(event), wxMouseEvent
-    &Button)
-{
-    char buffer[100];
-    if( Button.Button(1) == 1 &&
-        gridCode->GetCellValue(gridCode->GetCursorRow(), 4) != "") {
-        if(gridCode->GetCellValue(gridCode->GetCursorRow(), 1) == "·") {
-            gridCode->SetCellValue(gridCode->GetCursorRow(), 1, wxString("O"));
-            SetBreakPoint(gridCode->GetCursorRow(),1);
-            sprintf(buffer,"Set breakpoint in line %d\n",gridCode->GetCursorRow());
-            txtDebug->AppendText(buffer);
-        } else {
-            gridCode->SetCellValue(gridCode->GetCursorRow(), 1, wxString("·"));
-            SetBreakPoint(gridCode->GetCursorRow(),0);
-            sprintf(buffer,"Unset breakpoint in line %d\n",gridCode->GetCursorRow());
-            txtDebug->AppendText(buffer);
-        }
-    }
+VUFrame::OnBreakpoint(wxGridEvent &event) {
+    vuBreakDialog(this, event.GetRow());
 }
 
 //---------------------------------------------------------------------------
@@ -1272,17 +1255,6 @@ void VUFrame::DrawProgram() {
             gridCode->SetCellValue(l, 3+m, scode);
         }
     }
-}
-
-void VUFrame::SetBreakPoint(int Row, int Mode) {
-    int i,l=0;
-
-    for (i=0; l<Row; i++,l++) {
-        if(VUchip.program[i].SymbolIndex!=-1) {
-            l++;
-        }
-    }
-    VUchip.program[i-1].breakpoint = Mode;
 }
 
 int VUFrame::LineInstruction(int a) {

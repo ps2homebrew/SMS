@@ -16,7 +16,7 @@
 . accumulated cycle count, and on per loop basis.
 . fmac, fdiv, ialu, efu pipeline simulation ( replacing whats in vu.cpp )
 . emulate VU single precision float ( some differences from IEEE 754 )
-. breakpoint on register/memory condition
+* breakpoint on register/memory condition
 . some sort of save project state
 . save breakpoint data with project ( brkfile= )
 

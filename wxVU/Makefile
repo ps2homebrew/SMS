@@ -1,4 +1,4 @@
-SUFFIXES : .cpp .cc .asm
+.SUFFIXES:.cpp .cc .asm
 VPATH = src:utils:obj
 
 CFLAGS = -g `wx-config --cflags`
@@ -12,13 +12,15 @@ CPP = c++
 RM = rm -f
 OBJECTS = main.o lower.o parser.o upper.o util.o vu.o \
 		gif.o prefdlg.o prefs.o dump.o linkproto_stub.o \
-		vif.o timer.o sif.o dma.o
+		vif.o timer.o sif.o dma.o vuBreakDialog.o breakpoint.o
 
 FILES = Makefile Makefile.WIN32 TODO src/datatypes.h src/defsext.h src/dma.cpp src/dma.h \
 	src/dump.cpp src/dump.h src/errors.h src/gif.cpp src/gif.h src/instructions.txt src/linkproto_stub.cpp \
 	src/linkproto_stub.h src/lower.cpp src/main.cpp src/main.h src/opcodes.h src/parser.cpp src/parser.h \
 	src/prefdef.h src/prefdlg.cpp src/prefdlg.h src/prefs.cpp src/prefs.h src/sif.cpp src/sif.h src/timer.cpp \
-	src/timer.h src/upper.cpp src/util.cpp src/util.h src/vif.cpp src/vif.h src/vu.cpp src/vu.h
+	src/timer.h src/upper.cpp src/util.cpp src/util.h src/vif.cpp src/vif.h \
+	src/vu.cpp src/vu.h src/vuBreakDialog.cpp src/vuBreakDialog.h \
+	src/breakpoint.cpp src/breakpoint.h
 
 ZIP = zip -9
 
@@ -47,3 +49,9 @@ clean:
 
 dist:
 	$(ZIP) wxVU.zip $(FILES)
+
+test:
+	g++ -g `wx-config --cflags` -c src/breakpoint.cpp -o obj/breakpoint.o
+	g++ -g `wx-config --cflags` -c src/vuBreakDialog.cpp -o obj/vuBreakDialog.o
+	g++ -g `wx-config --cflags` -o bin/testWidget src/testWidget.cpp obj/vuBreakDialog.o obj/breakpoint.o `wx-config --libs` -lc_r
+	./bin/testWidget
