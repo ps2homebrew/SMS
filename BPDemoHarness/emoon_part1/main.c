@@ -77,7 +77,7 @@ u32 start_demo( const demo_init_t* pInfo )
   while( pInfo->time_count > 0 )
   {
   	angles[2] = pInfo->curr_time;
-
+/*
     if( down == 1 )
     {
       angles[3] -= 0.04f;
@@ -97,6 +97,9 @@ u32 start_demo( const demo_init_t* pInfo )
         down = 1;
       }
     }
+*/
+    angles[0] += 0.01f;
+
 	
 		set_zbufcmp( 1 );
 		PbGfx_ClearScreen();
