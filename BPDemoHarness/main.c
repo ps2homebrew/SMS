@@ -480,7 +480,7 @@ int main(int argc, char **argv)
 //     StreamLoad_SetupTune("HALFDEAPH");// hdd:+PS2MENU/HALFDEAPHL.RAW AND HALFDEAPHR.RAW
      StreamLoad_SetupTune("UNSEEN"); // hdd:+PS2MENU/UNSEENL.RAW AND UNSEENR.RAW
      StreamLoad_SetPosition(demo_starttime);
-     StreamLoad_Play(0x3fff);
+     //StreamLoad_Play(0x3fff);
    }
 
    if(sound_enabled)
@@ -533,6 +533,8 @@ int main(int argc, char **argv)
        init.time_count = (float) demos[demo_loop].demo_time;
        init.time_count_i = (demos[demo_loop].demo_time << 16);
        setup_syncs(demos[demo_loop].demo_time);
+       if(sound_enabled)
+         StreamLoad_Play(0x3fff);
        ResetEE(0xFF);
        enable_vblank();
  
