@@ -8,6 +8,8 @@ EE_CFLAGS  := -fno-exceptions -march=5900 -ffreestanding -fno-builtin -G0 \
 		-c $(EE_INCS) $(EE_CFLAGS)
 EE_ASFLAGS := -EL -G0 $(EE_ASFLAGS)
 
+BIN2S = $(PS2SDK)/bin/bin2s
+
 LOADADDR  = 0x90000
 STACKADDR = 0xb0000
 ifeq ($(DEBUG),1)
@@ -25,10 +27,10 @@ EE_LIBS = -lkernel -lpoweroff -lmc -lhdd -lfileXio -lsbv_patches -lsyscall -lgcc
 all: $(EE_BIN)
 
 fakehost.s:
-	bin2s $(PS2SDK)/iop/irx/fakehost.irx fakehost.s fakehost_irx
+	$(BIN2S) $(PS2SDK)/iop/irx/fakehost.irx fakehost.s fakehost_irx
 
 poweroff.s:
-	bin2s $(PS2SDK)/iop/irx/poweroff.irx poweroff.s poweroff_irx
+	$(BIN2S) $(PS2SDK)/iop/irx/poweroff.irx poweroff.s poweroff_irx
 
 clean:
 	rm -f *.elf *.o *.a *.s
