@@ -284,6 +284,7 @@ void DrawDevLogo()
         }
     }
 }
+
 u32 start_demo( const demo_init_t* pInfo )
 {
   PbMatrix viewscreen_matrix;

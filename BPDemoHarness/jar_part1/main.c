@@ -161,12 +161,13 @@ void calc_coords(float t, float progress)
 	float a_u, a_v, a_z;
 	float b_u, b_v, b_z;
 	float blend = progress*1.5;//0.5f + 0.5f * PbCos(1.0f + t*0.56f);
-	if(blend>1.0f)blend=1.0f;
-	
 	vertex Origin = { 0,0,-500+t*125 };
 	vertex Direction;
 	
 	float xmov = PbSin(t)*0.5f, ymov = PbSin(t*2.2f)*0.5f;
+
+	if(blend>1.0f)blend=1.0f;
+	
 	
 	for(y=0; y<NUM_Y+1; ++y)
 	{
