@@ -528,10 +528,12 @@ void ReadHDDFiles()
 	int rv,fd=0;
 	char filesname[256];
 
+
+	fileXioUmount("pfs0:");
 	rv = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
 	if(rv < 0)
 	{
-		printf("ERROR: failed to mount filesystem: %d\n", rv);
+		dbgprintf("ERROR: failed to mount filesystem: %s %d\n", parties[party].filename, rv);
 		}
 	if(rv == 0)
 	{
@@ -694,7 +696,7 @@ int tomcopy(char *sourcefile)
 	char *boot_buffer, *ptr, *argv[2];
 	char empty='\0',destination[256],filetype[32];
 	static char iuntar[512];
-
+//fileXioDevctl("pfs:", PFSCTL_CLOSE_ALL, NULL, 0, NULL, 0);
 	ptr = strrchr(sourcefile, '/');
 	if (ptr == NULL)
 	{
@@ -719,8 +721,8 @@ int tomcopy(char *sourcefile)
 			argv[1]=sourcefile;
 			argv[2]=parties[party].filename;
 			printf("Loading %s %s\n", argv[1],argv[2]);
-			sprintf(iuntar,"%s%c%s", argv[1], empty, argv[2]);
-			SifExecModuleBuffer(&iuntar_irx, size_iuntar_irx, strlen(argv[1])+strlen(argv[2])+1, iuntar, &ret);
+			sprintf(iuntar,"%s%c%s%c", argv[1], empty, argv[2], empty);
+			SifExecModuleBuffer(&iuntar_irx, size_iuntar_irx, strlen(argv[1])+strlen(argv[2])+2, iuntar, &ret);
 			return ret;
 			}
 		}
