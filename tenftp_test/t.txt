@@ -1,0 +1,25 @@
+rm -f *.elf *.o *.a
+ps2client reset
+make -C ../tenftp clean
+make[1]: Entering directory `/cygdrive/c/ps2dev/TenCVS/tenftp'
+rm -f -r obj/ bin/
+make[1]: Leaving directory `/cygdrive/c/ps2dev/TenCVS/tenftp'
+make -C ../tenftp
+make[1]: Entering directory `/cygdrive/c/ps2dev/TenCVS/tenftp'
+mkdir obj/
+mkdir bin/
+iop-gcc -fno-builtin -O2 -G0 -c -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/tcpip/include -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/dns/include -I/cygdrive/c/ps2dev/ps2sdk/iop/kernel/include -I/cygdrive/c/ps2dev/ps2sdk/common/include -Iinclude -Wall -fno-builtin src/tenfs.c -o obj/tenfs.o
+iop-gcc -fno-builtin -O2 -G0 -c -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/tcpip/include -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/dns/include -I/cygdrive/c/ps2dev/ps2sdk/iop/kernel/include -I/cygdrive/c/ps2dev/ps2sdk/common/include -Iinclude -Wall -fno-builtin src/ftp_cache.c -o obj/ftp_cache.o
+iop-gcc -fno-builtin -O2 -G0 -c -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/tcpip/include -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/dns/include -I/cygdrive/c/ps2dev/ps2sdk/iop/kernel/include -I/cygdrive/c/ps2dev/ps2sdk/common/include -Iinclude -Wall -fno-builtin src/ftp_proto.c -o obj/ftp_proto.o
+iop-gcc -fno-builtin -O2 -G0 -c -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/tcpip/include -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/dns/include -I/cygdrive/c/ps2dev/ps2sdk/iop/kernel/include -I/cygdrive/c/ps2dev/ps2sdk/common/include -Iinclude -Wall -fno-builtin src/file_layer.c -o obj/file_layer.o
+echo "#include \"irx_imports.h\"" > obj/build-imports.c
+cat src/imports.lst >> obj/build-imports.c
+iop-gcc -fno-builtin -O2 -G0 -c -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/tcpip/include -I/cygdrive/c/ps2dev/ps2sdk/iop/tcpip/dns/include -I/cygdrive/c/ps2dev/ps2sdk/iop/kernel/include -I/cygdrive/c/ps2dev/ps2sdk/common/include -Iinclude -Wall -fno-builtin -Isrc/ obj/build-imports.c -o obj/imports.o
+rm -f obj/build-imports.c
+iop-gcc -fno-builtin -fno-builtin -nostdlib -s -o bin/tenftp.irx obj/tenfs.o obj/ftp_cache.o obj/ftp_proto.o obj/file_layer.o obj/imports.o 
+make[1]: Leaving directory `/cygdrive/c/ps2dev/TenCVS/tenftp'
+cp ../tenftp/bin/tenftp.irx ./tenftp.irx
+ee-gcc -D_EE -O2 -G0 -Wall  -I/usr/local/ps2dev/ps2sdk/ee/include -I/usr/local/ps2dev/ps2sdk/common/include -I.  -c fstest.c -o fstest.o
+ee-gcc -nostartfiles -T/usr/local/ps2dev/ps2sdk/ee/startup/linkfile -L/usr/local/ps2dev/ps2sdk/ee/lib  \
+	-o fstest.elf /usr/local/ps2dev/ps2sdk/ee/startup/crt0.o fstest.o -lc -ldebug -lkernel -lsyscall -lc -lkernel -lsyscall -lc
+ps2client execee host:fstest.elf
