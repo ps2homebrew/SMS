@@ -40,6 +40,7 @@ public:
     void			SetTextCtrl(wxTextCtrl* out);
     void            Error(const wxString& message);
     void            Error(const int32 errno);
+    void            Error(const int32 errno, const wxString& message);
     void            Warning(const wxString& message);
     void            Warning(const int32 errno);
     void            Trace(const wxString& message);

@@ -85,7 +85,7 @@ private:
     wxTextCtrl*     m_pFontsize;
 
     // declarations for PAGE_REMOTE
-    wxRadioBox      *m_AutoGSExec;
+    wxRadioBox*     m_pAutoGSExec;
     wxTextCtrl      *m_binTmpFile;
     wxTextCtrl      *m_datTmpFile;
     wxTextCtrl      *m_regTmpFile;

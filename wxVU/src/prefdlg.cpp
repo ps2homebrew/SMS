@@ -295,9 +295,9 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
     const int sz1 = 20*ch; // width of a text lable
     
     // toggle for Automatic gsexec on xgkick
-    // wxString cAutoGSexec[2] = {"Yes", "No"};
-    // m_AutoGSExec = new wxRadioBox(panel, -1, "Automatic gsexec on xgkick",
-    //     wxDefaultPosition, wxDefaultSize, 2, cAutoGSexec, 2, wxRA_SPECIFY_ROWS);
+    wxString cAutoGSexec[2] = {"Yes", "No"};
+    m_pAutoGSExec = new wxRadioBox(panel, -1, "Automatic gsexec on xgkick",
+        wxDefaultPosition, wxDefaultSize, 2, cAutoGSexec, 2, wxRA_SPECIFY_ROWS);
 
     // temp register filename to use for dumping from ps2
     wxStaticBoxSizer *tmpFileBox = new wxStaticBoxSizer (
@@ -395,7 +395,7 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
 
     //
     wxBoxSizer *panelpane = new wxBoxSizer (wxVERTICAL);
-    // panelpane->Add(m_AutoGSExec, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    panelpane->Add(m_pAutoGSExec, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panelpane->Add(tmpFileBox, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panelpane->Add(remoteTools, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panel->SetSizer(panelpane);
@@ -404,7 +404,7 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::GetValuesPageRemote() {
-    g_RemotePrefs.autoGSExec = m_AutoGSExec->GetSelection();
+    g_RemotePrefs.autoGSExec = m_pAutoGSExec->GetSelection();
     g_RemotePrefs.binTmpFile = strdup(m_binTmpFile->GetValue());
     g_RemotePrefs.datTmpFile = strdup(m_datTmpFile->GetValue());
     g_RemotePrefs.regTmpFile = strdup(m_regTmpFile->GetValue());
@@ -413,7 +413,7 @@ void PreferenceDlg::GetValuesPageRemote() {
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::SetValuesPageRemote() {
-    m_AutoGSExec->SetSelection(g_RemotePrefs.autoGSExec);
+    m_pAutoGSExec->SetSelection(g_RemotePrefs.autoGSExec);
     m_binTmpFile->SetValue(g_RemotePrefs.binTmpFile);
     m_datTmpFile->SetValue(g_RemotePrefs.datTmpFile);
     m_regTmpFile->SetValue(g_RemotePrefs.regTmpFile);

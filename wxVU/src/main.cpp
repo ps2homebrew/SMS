@@ -352,14 +352,15 @@ VUFrame::SetSettings() {
     m_datTmpFile = conf->Read(key + _T("/") + DATTMPFILE);
     m_regTmpFile = conf->Read(key + _T("/") + REGTMPFILE);
     m_gsTmpFile = conf->Read(key + _T("/") + GSTMPFILE);
-    m_dumpMemCmd = conf->Read(key + _T("/") + DUMPMEMCMD);
-    m_dumpRegCmd = conf->Read(key + _T("/") + DUMPREGCMD);
-    m_gsExecCmd = conf->Read(key + _T("/") + GSEXECCMD);
 
     Remote::SetTmpFiles(
         m_datTmpFile, m_binTmpFile, m_regTmpFile,
-        m_regTmpFile, m_gsExecCmd
+        m_regTmpFile, m_gsTmpFile
         );
+
+    m_dumpMemCmd = conf->Read(key + _T("/") + DUMPMEMCMD);
+    m_dumpRegCmd = conf->Read(key + _T("/") + DUMPREGCMD);
+    m_gsExecCmd = conf->Read(key + _T("/") + GSEXECCMD);
 
     key = PAGE_STYLE;
     wxString fontname = conf->Read(key + _T("/") + FONTNAME);
@@ -553,13 +554,15 @@ void VUFrame::OnRegsVu1(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnGsInit(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_gsTmpFile == "" ) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GsInit() != 0 ) {
-        wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+    if ( (ret = Remote::GsInit()) != 0 ) {
+        m_pLog->Error(ret, m_gsTmpFile);
+        // wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
+        //     wxOK|wxICON_INFORMATION, this);
     }
 }
 
