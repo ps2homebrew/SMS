@@ -64,7 +64,7 @@ void FileSystem_Destroy( FSContext* pContext )
 	FileSystem_Close(pContext);
 }
 
-int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode )
+int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode, int iContinue )
 {
 	int flags;
 
@@ -74,9 +74,8 @@ int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode 
 	switch( eMode )
 	{
 		case FM_READ: flags = O_RDONLY; break;
-		case FM_CREATE: flags = O_CREAT|O_TRUNC|O_WRONLY; break;
+		case FM_WRITE: flags = O_CREAT|O_TRUNC|O_WRONLY; break;
 
-		case FM_APPEND: // TODO: implement
 		default:
 			return -1;
 	}
@@ -94,8 +93,42 @@ int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode 
 	{
 		case FS_IODEVICE:
 		{
-			if( !pContext->m_kFile.device )
-				break;
+			if( iContinue )
+			{
+				int iOpened = 0;
+
+				if( flags & O_WRONLY )
+				{
+					pContext->m_kFile.mode = O_WRONLY;
+					if( pContext->m_kFile.device->ops->open( &(pContext->m_kFile), pFile, pContext->m_kFile.mode, 0 ) >= 0 )
+						iOpened = 1;
+				}
+				else
+				{
+					pContext->m_kFile.mode = O_RDONLY;
+					if( pContext->m_kFile.device->ops->open( &(pContext->m_kFile), pFile, pContext->m_kFile.mode, 0 ) >= 0 )
+						iOpened = 1;
+				}
+
+				// seek to position if we successfully opened the file
+
+				if( iOpened )
+				{
+					if( iContinue < 0 )
+					{
+						if( pContext->m_kFile.device->ops->lseek( &(pContext->m_kFile), 0, SEEK_END ) >= 0 )
+							return 0;
+					}
+					else
+					{
+						if( pContext->m_kFile.device->ops->lseek( &(pContext->m_kFile), iContinue, SEEK_SET ) >= 0 )
+							return 0;
+					}
+
+					// could not seek, close file and open normally
+					pContext->m_kFile.device->ops->close( &(pContext->m_kFile) );
+				}
+			}
 
 			pContext->m_kFile.mode = flags;
 			if( pContext->m_kFile.device->ops->open( &(pContext->m_kFile), pFile, flags, 0 ) >= 0 )

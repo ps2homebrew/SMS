@@ -14,60 +14,72 @@
 #ifndef LINUX
 #include "irx_imports.h"
 #else
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 #endif
 
-int server(void* argv);
+int process_args( FtpServer* pServer, int argc, char* argv[] )
+{
+	int i;
+
+	for( i = 1; i < argc; i++ )
+	{
+		int arg_avail = i < (argc-1);
+
+		if(!strcmp("-port",argv[i]))
+		{
+			if( !arg_avail )
+				return -1;
+
+			FtpServer_SetPort( pServer, strtol(argv[++i],NULL,10) );
+		}
+		else if(!strcmp("-anonymous",argv[i]))
+		{
+			// enable anonymous logins
+			FtpServer_SetAnonymous( pServer, 1 );
+		}
+		else if(!strcmp("-user",argv[i]))
+		{
+			// set new username
+
+			if( !arg_avail )
+				return -1;
+
+			FtpServer_SetUsername( pServer, argv[++i] );
+		}
+		else if(!strcmp("-pass",argv[0]))
+		{
+			// set new password
+
+			if( !arg_avail )
+				return -1;
+
+			FtpServer_SetPassword( pServer, argv[++i] );
+		}
+		else
+		{
+			printf("ps2ftpd: unknown argument '%s'\n",argv[i]);
+			return -1;
+		}
+	}
+
+	return 0;
+}
 
 #ifndef LINUX
 
 // placed out here to end up on the heap, not the stack
 FtpServer srv;
 
-int process_args( FtpServer* pServer, int argc, char* argv[] )
+int server(void* argv)
 {
-	argc--; argv++;
+	// run server
 
-	while( argc > 0 )
-	{
-		if(!strcmp("-port",argv[0]))
-		{
-			if( argc <= 0 )
-				return -1;
+	while(FtpServer_IsRunning(&srv))
+		FtpServer_HandleEvents(&srv);
 
-			argc--; argv++;
-			FtpServer_SetPort( pServer, strtol(argv[0],NULL,10) );
-		}
-		else if(!strcmp("-anonymous",argv[0]))
-		{
-			// enable anonymous logins
-			FtpServer_SetAnonymous( pServer, 1 );
-		}
-		else if(!strcmp("-user",argv[0]))
-		{
-			// set new username
-
-			if( argc <= 0 )
-				return -1;
-
-			argc--; argv++;
-			FtpServer_SetUsername( pServer, argv[0] );
-		}
-		else if(!strcmp("-pass",argv[0]))
-		{
-			// set new password
-
-			if( argc <= 0 )
-				return -1;
-
-			argc--; argv++;
-			FtpServer_SetPassword( pServer, argv[0] );
-		}
-
-		argc--;
-		argv++;
-	}
-
+	FtpServer_Destroy(&srv);
 	return 0;
 }
 
@@ -90,6 +102,7 @@ s32 _start(int argc, char* argv[])
 
 	if( process_args( &srv, argc, argv ) < 0 )
 	{
+		FtpServer_Destroy(&srv);
 		printf("ps2ftpd: could not parse arguments\n" );
 		return MODULE_NO_RESIDENT_END;
 	}
@@ -97,7 +110,6 @@ s32 _start(int argc, char* argv[])
 	// setup server
 
 	FtpServer_SetPort(&srv,21);
-
 
 	if( -1 == FtpServer_Start(&srv) )
 	{
@@ -136,17 +148,6 @@ s32 _start(int argc, char* argv[])
 }
 
 
-int server(void* argv)
-{
-	// run server
-
-	while(FtpServer_IsRunning(&srv))
-		FtpServer_HandleEvents(&srv);
-
-	FtpServer_Destroy(&srv);
-	return 0;
-}
-
 #else
 
 int main(int argc, char* argv[])
@@ -157,9 +158,18 @@ int main(int argc, char* argv[])
 
 	FtpServer_Create(&srv);
 
-	// setup server
+	// process arguments
 
 	FtpServer_SetPort(&srv,2500); // 21 privileged under linux
+	if( process_args( &srv, argc, argv ) < 0 )
+	{
+		printf("ps2ftpd: could not parse arguments\n" );
+		FtpServer_Destroy(&srv);
+		return 1;
+	}
+
+	// setup server
+
 	if( -1 == FtpServer_Start(&srv) )
 	{
 		FtpServer_Destroy(&srv);

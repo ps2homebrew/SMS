@@ -49,6 +49,7 @@ typedef enum
 	DATAACTION_NLST,
 	DATAACTION_RETR,
 	DATAACTION_STOR,
+	DATAACTION_APPE,
 } DataAction;
 #define m_eCOnnState m_pServer->m_iPort
 
@@ -62,38 +63,38 @@ enum
 	FTPCMD_QUIT = FCOMMAND('q','u','i','t'),
 	FTPCMD_PORT = FCOMMAND('p','o','r','t'),
 	FTPCMD_TYPE = FCOMMAND('t','y','p','e'),
-	FTPCMD_MODE = FCOMMAND('m','o','d','e'), // implement
-	FTPCMD_STRU = FCOMMAND('s','t','r','u'), // implement
+	FTPCMD_MODE = FCOMMAND('m','o','d','e'),
+	FTPCMD_STRU = FCOMMAND('s','t','r','u'),
 	FTPCMD_RETR = FCOMMAND('r','e','t','r'),
 	FTPCMD_STOR = FCOMMAND('s','t','o','r'),
-	FTPCMD_NOOP = FCOMMAND('n','o','o','p'), // implement
+	FTPCMD_NOOP = FCOMMAND('n','o','o','p'),
 
 	// additional commands
 
 	FTPCMD_PASS = FCOMMAND('p','a','s','s'),
-	FTPCMD_CWD = FCOMMAND(0,'c','w','d'),
+	FTPCMD_CWD  = FCOMMAND(  0,'c','w','d'),
 	FTPCMD_XCWD = FCOMMAND('x','c','w','d'),
 	FTPCMD_CDUP = FCOMMAND('c','d','u','p'),
 	FTPCMD_PASV = FCOMMAND('p','a','s','v'),
-	FTPCMD_APPE = FCOMMAND('a','p','p','e'), // implement
+	FTPCMD_APPE = FCOMMAND('a','p','p','e'),
 	FTPCMD_RNFR = FCOMMAND('r','n','f','r'), // implement
 	FTPCMD_RNTO = FCOMMAND('r','n','t','o'), // implement
 	FTPCMD_ABOR = FCOMMAND('a','b','o','r'), // implement
 	FTPCMD_DELE = FCOMMAND('d','e','l','e'),
-	FTPCMD_RMD = FCOMMAND(0,'r','m','d'),
+	FTPCMD_RMD  = FCOMMAND(  0,'r','m','d'),
 	FTPCMD_XRMD = FCOMMAND('x','r','m','d'),
-	FTPCMD_MKD = FCOMMAND(0,'m','k','d'),
+	FTPCMD_MKD  = FCOMMAND(  0,'m','k','d'),
 	FTPCMD_XMKD = FCOMMAND('x','m','k','d'),
-	FTPCMD_PWD = FCOMMAND(0,'p','w','d'),
+	FTPCMD_PWD  = FCOMMAND(  0,'p','w','d'),
 	FTPCMD_XPWD = FCOMMAND('x','p','w','d'),
 	FTPCMD_LIST = FCOMMAND('l','i','s','t'),
 	FTPCMD_NLST = FCOMMAND('n','l','s','t'),
 	FTPCMD_SITE = FCOMMAND('s','i','t','e'),
 	FTPCMD_SYST = FCOMMAND('s','y','s','t'),
+	FTPCMD_REST = FCOMMAND('r','e','s','t'),
 
 	// possible commands, we'll implement them if it become necessary
 
-	//FTPCMD_REST = FCOMMAND('r','e','s','t'),
 	//FTPCMD_STAT = FCOMMAND('s','t','a','t'),
 	//FTPCMD_HELP = FCOMMAND('h','e','l','p'),
 	//FTPCMD_SIZE = FCOMMAND('s','i','z','e'),
@@ -101,7 +102,7 @@ enum
 
 enum
 {
-	SITECMD_MNT = FCOMMAND(0,'m','n','t'),
+	SITECMD_MNT  = FCOMMAND(  0,'m','n','t'),
 	SITECMD_UMNT = FCOMMAND('u','m','n','t'),
 	SITECMD_SYNC = FCOMMAND('s','y','n','c'),
 	SITECMD_HELP = FCOMMAND('h','e','l','p'),
@@ -131,6 +132,7 @@ typedef struct FtpClient
 	DataAction m_eDataAction;
 	ConnState m_eConnState;
 	int m_uiDataOffset;
+	int m_iRestartMarker;	// TODO: 64-bit support?
 
 	FtpClientContainer m_kContainer;
 
@@ -163,6 +165,10 @@ void FtpClient_OnCmdDele( FtpClient* pClient, const char* pFile );
 void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd );
+void FtpClient_OnCmdMode( FtpClient* pClient, const char* pMode );
+void FtpClient_OnCmdStru( FtpClient* pClient, const char* pStructure );
+void FtpClient_OnCmdAppe( FtpClient* pClient, const char* pFile );
+void FtpClient_OnCmdRest( FtpClient* pClient, int iMarker );
 
 void FtpClient_OnSiteMount( FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
 void FtpClient_OnSiteUmount( FtpClient* pClient, const char* pMountPoint );

@@ -34,8 +34,7 @@ typedef enum
 typedef enum
 {
 	FM_READ,
-	FM_CREATE,
-	FM_APPEND,
+	FM_WRITE,
 } FileMode;
 
 typedef struct FSContext
@@ -87,7 +86,7 @@ void FileSystem_Create( FSContext* pContext );
 void FileSystem_Destroy( FSContext* pContext );
 
 //! Open file for readin or writing
-int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode );
+int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode, int iContinue );
 
 //! Open directory for listing
 int FileSystem_OpenDir( FSContext* pContext, const char* pDir );

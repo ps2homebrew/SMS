@@ -84,6 +84,7 @@ void FtpClient_Create( FtpClient* pClient, FtpServer* pServer, int iControlSocke
 	pClient->m_iRemoteAddress[2] = 0;
 	pClient->m_iRemoteAddress[3] = 0;
 	pClient->m_uiDataOffset = 0;
+	pClient->m_iRestartMarker = 0;
 
 	pClient->m_kContainer.m_pClient = pClient;
 	pClient->m_kContainer.m_pPrev = &pClient->m_kContainer;
@@ -149,6 +150,8 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 		for( i = 0; *c && i < 4; i++ )
 			result = (result<<8)|tolower(*(c++));
 
+		// if user has not logged in, we only allow a small subset of commands
+
 		if( pClient->m_eAuthState != AUTHSTATE_VALID )
 		{
 			switch( result )
@@ -161,7 +164,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 					if(user)
 						FtpClient_OnCmdUser(pClient,user);
 					else
-						FtpClient_Send( pClient, 500, "USER: Requires a parameter." );
+						FtpClient_Send( pClient, 500, "Requires parameters." );
 				}
 				break;
 
@@ -237,7 +240,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(6 == i)
 					FtpClient_OnCmdPort(pClient,ip,port);
 				else
-					FtpClient_Send( pClient, 501, "Illegal PORT command." );
+					FtpClient_Send( pClient, 501, "Illegal command." );
 			}
 			break;
 
@@ -287,7 +290,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(type)
 					FtpClient_OnCmdType(pClient,type);
 				else
-					FtpClient_Send( pClient, 501, "Illegal TYPE Command." );
+					FtpClient_Send( pClient, 501, "Illegal Command." );
 			}
 			break;
 
@@ -299,7 +302,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(file)
 					FtpClient_OnCmdRetr(pClient,file);
 				else
-					FtpClient_Send( pClient, 501, "Illegal RETR Command." );
+					FtpClient_Send( pClient, 501, "Illegal Command." );
 			}
 			break;
 
@@ -311,7 +314,19 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(file)
 					FtpClient_OnCmdStor(pClient,file);
 				else
-					FtpClient_Send( pClient, 501, "Illegal STOR Command." );
+					FtpClient_Send( pClient, 501, "Illegal Command." );
+			}
+			break;
+
+			// APPE <file>
+			case FTPCMD_APPE:
+			{
+				char* file = strtok(NULL,"");
+
+				if(file)
+					FtpClient_OnCmdAppe(pClient,file);
+				else
+					FtpClient_Send( pClient, 501, "Illegal Command." );
 			}
 			break;
 
@@ -330,7 +345,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(path)
 					FtpClient_OnCmdCwd(pClient,path);
 				else
-					FtpClient_Send( pClient, 501, "Illegal CWD Command." );
+					FtpClient_Send( pClient, 501, "Illegal command." );
 			}
 			break;
 
@@ -347,7 +362,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(file)
 					FtpClient_OnCmdDele(pClient,file);
 				else
-					FtpClient_Send( pClient, 501, "Illegal DELE Command." );
+					FtpClient_Send( pClient, 501, "Illegal command." );
 			}
 			break;
 
@@ -359,7 +374,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(dir)
 					FtpClient_OnCmdMkd(pClient,dir);
 				else
-					FtpClient_Send( pClient, 501, "Illegal MKD Command." );
+					FtpClient_Send( pClient, 501, "Illegal command." );
 			}
 			break;
 
@@ -371,7 +386,7 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(dir)
 					FtpClient_OnCmdRmd(pClient,dir);
 				else
-					FtpClient_Send( pClient, 501, "Illegal MKD Command." );
+					FtpClient_Send( pClient, 501, "Illegal command." );
 			}
 			break;
 
@@ -382,7 +397,51 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 				if(cmd)
 					FtpClient_OnCmdSite(pClient,cmd);
 				else
-					FtpClient_Send( pClient, 500, "SITE requires parameters." );
+					FtpClient_Send( pClient, 500, "Requires parameters." );
+			}
+			break;
+
+			case FTPCMD_MODE:
+			{
+				char* mode = strtok(NULL,"");
+
+				if(mode)
+					FtpClient_OnCmdMode(pClient,mode);
+				else
+					FtpClient_Send( pClient, 500, "Requires parameters." );
+			}
+			break;
+
+			case FTPCMD_STRU:
+			{
+				char* structure = strtok(NULL,"");
+
+				if(structure)
+					FtpClient_OnCmdStru(pClient,structure);
+				else
+					FtpClient_Send( pClient, 500, "Requires parameters." );
+			}
+			break;
+
+			case FTPCMD_REST:
+			{
+				char* marker = strtok(NULL,"");
+
+				if(marker)
+				{
+					char* c = marker;
+					while(*c)
+					{
+						if((*c < '0')||(*c > '9'))
+							break;
+						c++;
+					}
+
+					if(!*c)
+						FtpClient_OnCmdRest( pClient, (!*c) ? strtol( marker, NULL, 10 ) : -1 );
+				}
+				else
+					FtpClient_Send( pClient, 500, "Requires parameters." );
 			}
 			break;
 
@@ -489,6 +548,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 		}
 		break;
 
+		case DATAACTION_APPE:
 		case DATAACTION_STOR:
 		{
 			pClient->m_eDataMode = DATAMODE_READ;
@@ -517,6 +577,7 @@ void FtpClient_OnDataRead( FtpClient* pClient )
 
 	switch( pClient->m_eDataAction )
 	{
+		case DATAACTION_APPE:
 		case DATAACTION_STOR:
 		{
 			// read data from socket
@@ -671,10 +732,12 @@ void FtpClient_OnDataComplete( FtpClient* pClient, int iReturnCode, const char* 
 	{
 		switch( pClient->m_eDataAction )
 		{
-			case DATAACTION_NLST: FtpClient_Send( pClient, 226, "NLST command successful." ); break;
-			case DATAACTION_LIST: FtpClient_Send( pClient, 226, "LIST command successful." ); break;
-			case DATAACTION_RETR: FtpClient_Send( pClient, 226, "RETR command successful." ); break;
-			case DATAACTION_STOR: FtpClient_Send( pClient, 226, "STOR command successful." ); break;
+			case DATAACTION_APPE:
+			case DATAACTION_NLST:
+			case DATAACTION_LIST:
+			case DATAACTION_RETR:
+			case DATAACTION_STOR:
+				FtpClient_Send( pClient, 226, "Command successful." ); break;
 			
 			default:
 			break;

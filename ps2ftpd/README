@@ -54,27 +54,55 @@ Operation:
 The server understands the following commands:
 
 USER <name>
+	Login using <name> (or 'anonymous' if anonymous logins are allowed)
 PASS <password>
+	Send <pass> as password for account.
 PASV
+	Enter passive transfer-mode.
 PORT <ipA>,<ipB>,<ipC>,<ipD>,<pH>,<pL>
+	Enter active transfer-mode. (ipA.ipB.ipC.ipD:pH*256+pL)
 QUIT
+	Quit session.
 SYST
+	Request system information.
 LIST <path>
+	Request directory listing.
 NLST <path>
+	Request name list.
 RETR <file>
-TYPE A/I
+	Retrieve data in <file>. Affected by REST.
+TYPE <type>
+	Set transfer-type, only A & I allowed currently.
+MODE <mode>
+	Set transfer-mode. Only S(Stream) allowed.
+STRU <structure>
+	Set transfer-structure. Only F(File) allowed.
 STOR <file>
+	Save data to <file>. Affected by REST.
+APPE <file>
+	Append data to <file>. Not affected by REST.
 PWD
 XPWD
+	Query current path.
+XCWD
 CWD <dir>
+	Change current directory.
 CDUP
+	Go to parent directory.
 DELE <file>
+	Unlink <file> from filesystem.
 XMKD <dir>
 MKD <dir>
+	Create directory.
 XRMD <dir>
 RMD <dir>
+	Delete directory.
 SITE <action>
+	Perform site-specific action. See list below.
 NOOP
+	No operation.
+REST <marker>
+	Set restart-marker (for resuming transfers)
 
 The supported site-commands are:
 
@@ -84,9 +112,6 @@ SITE UMNT <device>
 	Unmount mounted device. Example: SITE UMNT /pfs/0
 SITE SYNC <device>
 	Synchronize device. Example: SITE SYNC /pfs/0
-
-Authentication is ignored, so be cautious if your PS2 is connected directly
-to the internet.
 
 The filesystem is unified, so you will find the first memory-card at
 '/mc/0/', and a mounted hdd partition at for example '/pfs/0/'. The device

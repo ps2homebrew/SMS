@@ -199,10 +199,10 @@ void FtpClient_OnCmdPort( FtpClient* pClient, int* ip, int port )
 
 		pClient->m_iRemotePort = port;
 
-		FtpClient_Send( pClient, 200, "PORT command successful." );
+		FtpClient_Send( pClient, 200, "Command successful." );
 	}
 	else
-		FtpClient_Send( pClient, 500, "Illegal PORT command." );
+		FtpClient_Send( pClient, 500, "Illegal command." );
 }
 
 void FtpClient_OnCmdSyst( FtpClient* pClient )
@@ -236,23 +236,40 @@ void FtpClient_OnCmdList( struct FtpClient* pClient, const char* pPath, int iNam
 
 void FtpClient_OnCmdType( FtpClient* pClient, const char* pType )
 {
-	assert( pClient );
-
-	// TODO: write proper handling of this command
-
-	if(!strcmp(pType,"I") || !strcmp(pType,"i"))
-		FtpClient_Send( pClient, 200, "Type set to I." );
-	else if(!strcmp(pType,"A")||!strcmp(pType,"a"))
-		FtpClient_Send( pClient, 200, "Type set to A." );
+	if( tolower(*pType) == 'i' )
+		FtpClient_Send( pClient, 200, "Command successful." );
+	else if( tolower(*pType) == 'a')
+		FtpClient_Send( pClient, 200, "Command successful." );
 	else
-		FtpClient_Send( pClient, 500, "Illegal TYPE Command." );
+		FtpClient_Send( pClient, 500, "Illegal command." );
+}
+
+void FtpClient_OnCmdMode( FtpClient* pClient, const char* pMode )
+{
+	// only stream-mode supported
+
+	if( tolower(*pMode) == 's' )
+		FtpClient_Send( pClient, 200, "Command successful." );
+	else
+		FtpClient_Send( pClient, 500, "Command failed." );
+}
+
+void FtpClient_OnCmdStru( FtpClient* pClient, const char* pStructure )
+{
+	// only file-structure supported
+
+	if( tolower(*pStructure) == 'f' )
+		FtpClient_Send( pClient, 200, "Command successful." );
+	else
+		FtpClient_Send( pClient, 500, "Command failed." );
 }
 
 void FtpClient_OnCmdRetr( FtpClient* pClient, const char* pFile )
 {
-	assert( pClient );
+	int iMarker = pClient->m_iRestartMarker;
+	pClient->m_iRestartMarker = 0;
 
-	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_READ ) < 0 )
+	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_READ, iMarker ) < 0 )
 	{
 		FtpClient_Send( pClient, 500, "File not found." );
 		return;
@@ -265,9 +282,10 @@ void FtpClient_OnCmdRetr( FtpClient* pClient, const char* pFile )
 
 void FtpClient_OnCmdStor( FtpClient* pClient, const char* pFile )
 {
-	assert( pClient );
+	int iMarker = pClient->m_iRestartMarker;
+	pClient->m_iRestartMarker = 0;
 
-	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_CREATE ) < 0 )
+	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_WRITE, iMarker ) < 0 )
 	{
 		FtpClient_Send( pClient, 500, "Could not create file." );
 		return;
@@ -276,6 +294,35 @@ void FtpClient_OnCmdStor( FtpClient* pClient, const char* pFile )
 	pClient->m_eDataAction = DATAACTION_STOR;
 
 	FtpClient_HandleDataConnect( pClient );
+}
+
+void FtpClient_OnCmdAppe( FtpClient* pClient, const char* pFile )
+{
+	assert( pClient );
+
+	if( FileSystem_OpenFile( &pClient->m_kContext, pFile, FM_WRITE, -1 ) < 0 )
+	{
+		FtpClient_Send( pClient, 500, "Could not create file." );
+		return;
+	}
+
+	pClient->m_eDataAction = DATAACTION_APPE;
+
+	FtpClient_HandleDataConnect( pClient );
+}
+
+void FtpClient_OnCmdRest( FtpClient* pClient, int iMarker )
+{
+	if( iMarker < 0 )
+	{
+		pClient->m_iRestartMarker = 0;
+		FtpClient_Send( pClient, 501, "REST requires a value greater than or equal to 0." );
+	}
+	else
+	{
+		pClient->m_iRestartMarker = iMarker;
+		FtpClient_Send( pClient, 350, "Restart set. Send STORE or RETRIEVE to initiate transfer." );
+	}
 }
 
 void FtpClient_OnCmdPwd( FtpClient* pClient )
@@ -293,25 +340,25 @@ void FtpClient_OnCmdPwd( FtpClient* pClient )
 void FtpClient_OnCmdCwd( FtpClient* pClient, const char* pPath )
 {
 	if( FileSystem_ChangeDir(&pClient->m_kContext,pPath) < 0 )
-		FtpClient_Send( pClient, 550, "No such file or directory" );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 250, "CWD command successful." );
+		FtpClient_Send( pClient, 250, "Command successful." );
 }
 
 void FtpClient_OnCmdDele( FtpClient* pClient, const char* pFile )
 {
 	if( FileSystem_DeleteFile(&pClient->m_kContext,pFile) < 0 )
-		FtpClient_Send( pClient, 550, "No such file or directory" );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 250, "DELE command successful." );
+		FtpClient_Send( pClient, 250, "Command successful." );
 }
 
 void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir )
 {
 	if( FileSystem_CreateDir(&pClient->m_kContext,pDir) < 0 )
-		FtpClient_Send( pClient, 550, "Failed creating directory" );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 250, "MKD command successful." );
+		FtpClient_Send( pClient, 250, "Command successful." );
 }
 
 void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val )
@@ -322,9 +369,9 @@ void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val )
 void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 {
 	if( FileSystem_DeleteDir(&pClient->m_kContext,pDir) < 0 )
-		FtpClient_Send( pClient, 550, "No such file or directory" );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 250, "RMD command successful." );
+		FtpClient_Send( pClient, 250, "Command successful." );
 }
 
 void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
@@ -381,7 +428,7 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 				if(mount_point)
 					FtpClient_OnSiteUmount(pClient,mount_point);
 				else
-					FtpClient_Send( pClient, 500, "SITE UMNT: missing mount-point" );
+					FtpClient_Send( pClient, 500, "Requires parameters." );
 			}
 			break;
 
@@ -393,20 +440,20 @@ void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 				if(devname)
 					FtpClient_OnSiteSync( pClient, devname );
 				else
-					FtpClient_Send( pClient, 500, "SITE SYNC: missing device-name." );
+					FtpClient_Send( pClient, 500, "Requires parameters." );
 			}
 			break;
 #endif
 
 			default:
 			{
-				FtpClient_Send( pClient, 500, "SITE command not supported" );
+				FtpClient_Send( pClient, 500, "Not supported." );
 			}
 			break;
 		}
 	}
 	else
-		FtpClient_Send( pClient, 500, "SITE command not understood" );
+		FtpClient_Send( pClient, 500, "Not understood." );
 
 }
 
@@ -416,9 +463,9 @@ void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, 
 	// mount filesystem
 
 	if( FileSystem_MountDevice( &(pClient->m_kContext), pMountPoint, pMountFile ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE MNT failed." );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 214, "SITE MNT succeeded." );
+		FtpClient_Send( pClient, 214, "Command succesful." );
 }
 
 void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint )
@@ -426,9 +473,9 @@ void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint 
 	// unmount filesystem
 
 	if( FileSystem_UnmountDevice( &(pClient->m_kContext), pMountPoint ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE UMNT failed." );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 214, "SITE UMOUNT succeeded." );
+		FtpClient_Send( pClient, 214, "Command successful." );
 
 }
 
@@ -437,8 +484,8 @@ void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName )
 	// sync data with filesystem
 
 	if( FileSystem_SyncDevice( &(pClient->m_kContext), pDeviceName ) < 0 )
-		FtpClient_Send( pClient, 550, "SITE SYNC failed." );
+		FtpClient_Send( pClient, 550, "Command failed." );
 	else
-		FtpClient_Send( pClient, 214, "SITE SYNC succeeded." );
+		FtpClient_Send( pClient, 214, "Command successful." );
 }
 #endif
