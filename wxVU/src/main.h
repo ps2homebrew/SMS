@@ -47,7 +47,10 @@ enum {
     ID_STATUSBAR,
     ID_NOTEBOOK1,
     ID_NOTEBOOK2,
-    ID_REGRADIOBOX,
+    ID_MEMORYRADIO,
+	ID_INTREGRADIO,
+	ID_FLOATREGRADIO,
+	ID_SPECREGRADIO,
     ID_GRIDMEMORY,
     ID_GRIDCODE,
     ID_GRIDREGFLOAT,
@@ -142,6 +145,12 @@ public:
         wxGrid          *gridIntRegisters;
         wxGrid          *gridFloatRegisters;
         wxGrid          *gridSpecialRegisters;
+		wxPanel			*intRegPanel;
+		wxPanel			*floatRegPanel;
+		wxPanel			*specRegPanel;
+		wxRadioBox		*intRegRadio;
+		wxRadioBox		*specRegRadio;
+		wxRadioBox		*floatRegRadio;
 
         // Misc registers panel
         wxPanel         *panelMiscRegisters;
@@ -192,7 +201,7 @@ public:
 
         // Panel2 on event functions
         void    FlagsUpdate(void);
-        void    FastRegisterUpdate(void);
+        void    registerUpdate(void);
         void    SetSettings(void);
 
         void    OnMiscRegSelect(wxTreeEvent &);
@@ -267,11 +276,14 @@ public:
         void    OnSelectCodeCell(wxCommandEvent &);
         void    OnCellChange(wxGridEvent &event);
         void    OnNotebookOne(wxNotebookEvent &);
-        void    OnRegRadioBox(wxCommandEvent &);
+        void    OnMemoryRadio(wxCommandEvent &);
         void    OnGridLabel(wxGridEvent &);
         void    OnKeyDown(wxKeyEvent &);
         void    OnKeyUp(wxKeyEvent &);
         void    OnChar(wxKeyEvent &);
+		void	OnIntRegRadio(wxCommandEvent &);
+		void	OnFloatRegRadio(wxCommandEvent &);
+		void	OnSpecRegRadio(wxCommandEvent &);
         // void    OnSize(wxSizeEvent &);
         DECLARE_EVENT_TABLE()
 };
@@ -303,7 +315,10 @@ BEGIN_EVENT_TABLE(VUFrame, wxFrame)
     EVT_GRID_CELL_LEFT_DCLICK(VUFrame::OnBreakpoint)
     EVT_GRID_CELL_CHANGE(VUFrame::OnCellChange)
     EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK1, VUFrame::OnNotebookOne)
-    EVT_RADIOBOX(ID_REGRADIOBOX, VUFrame::OnRegRadioBox)
+    EVT_RADIOBOX(ID_MEMORYRADIO, VUFrame::OnMemoryRadio)
+    EVT_RADIOBOX(ID_INTREGRADIO, VUFrame::OnIntRegRadio)
+    EVT_RADIOBOX(ID_FLOATREGRADIO, VUFrame::OnFloatRegRadio)
+    EVT_RADIOBOX(ID_SPECREGRADIO, VUFrame::OnSpecRegRadio)
     EVT_GRID_LABEL_LEFT_CLICK(VUFrame::OnGridLabel)
     EVT_TREE_ITEM_ACTIVATED(ID_REGTREE, VUFrame::OnMiscRegSelect)
     // EVT_SIZE(VUFrame::OnSize)

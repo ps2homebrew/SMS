@@ -83,8 +83,22 @@ static uint32 tagClearGs[24] = {
 void
 VUFrame::buildRegisterGrid(wxNotebook *book) {
 	int i;
+    intRegPanel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
+        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
+    floatRegPanel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
+        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
+    specRegPanel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
+        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
+
     // Build the Integer register tab
-    gridIntRegisters = new wxGrid(book, ID_GRIDREGINT, wxDefaultPosition);
+	
+    wxString choices[6] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15",
+		"Float", "Hex" };
+    intRegRadio = new wxRadioBox(intRegPanel, ID_INTREGRADIO,
+        "Number representation", wxDefaultPosition,
+        wxDefaultSize, 6, choices, 6);
+    intRegRadio->SetSelection(0);
+    gridIntRegisters = new wxGrid(intRegPanel, ID_GRIDREGINT, wxDefaultPosition);
     gridIntRegisters->CreateGrid(1, 16);
     gridIntRegisters->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
     gridIntRegisters->EnableEditing(FALSE);
@@ -98,7 +112,11 @@ VUFrame::buildRegisterGrid(wxNotebook *book) {
     }
 
     // Build the Float register tab
-    gridFloatRegisters = new wxGrid(book, ID_GRIDREGFLOAT, wxDefaultPosition);
+    floatRegRadio = new wxRadioBox(floatRegPanel, ID_FLOATREGRADIO,
+        "Number representation", wxDefaultPosition,
+        wxDefaultSize, 6, choices, 6);
+    floatRegRadio->SetSelection(4);
+    gridFloatRegisters = new wxGrid(floatRegPanel, ID_GRIDREGFLOAT, wxDefaultPosition);
     gridFloatRegisters->CreateGrid(4, 32);
     gridFloatRegisters->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
     gridFloatRegisters->EnableEditing(FALSE);
@@ -118,7 +136,11 @@ VUFrame::buildRegisterGrid(wxNotebook *book) {
     }
 
     // Build the Special register tab
-    gridSpecialRegisters = new wxGrid(book, ID_GRIDREGSPECIAL, wxDefaultPosition);
+    specRegRadio = new wxRadioBox(specRegPanel, ID_SPECREGRADIO,
+        "Number representation", wxDefaultPosition,
+        wxDefaultSize, 6, choices, 6);
+    specRegRadio->SetSelection(4);
+    gridSpecialRegisters = new wxGrid(specRegPanel, ID_GRIDREGSPECIAL, wxDefaultPosition);
     gridSpecialRegisters->CreateGrid(4, 5);
     gridSpecialRegisters->SetDefaultCellAlignment(wxALIGN_RIGHT, wxALIGN_CENTRE);
     gridSpecialRegisters->EnableEditing(FALSE);
@@ -138,6 +160,22 @@ VUFrame::buildRegisterGrid(wxNotebook *book) {
     gridSpecialRegisters->SetColLabelValue(3, wxString("R"));
     gridSpecialRegisters->SetColLabelValue(4, wxString("I"));
     gridSpecialRegisters->SetLabelFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
+
+    wxBoxSizer *intRegSizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer *floatRegSizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer *specRegSizer = new wxBoxSizer(wxVERTICAL);
+
+	intRegSizer->Add(intRegRadio);
+	intRegSizer->Add(gridIntRegisters, 1, wxEXPAND);
+	intRegPanel->SetSizer(intRegSizer);
+
+	floatRegSizer->Add(floatRegRadio);
+	floatRegSizer->Add(gridFloatRegisters, 1, wxEXPAND);
+	floatRegPanel->SetSizer(floatRegSizer);
+
+	specRegSizer->Add(specRegRadio);
+	specRegSizer->Add(gridSpecialRegisters, 1, wxEXPAND);
+	specRegPanel->SetSizer(specRegSizer);
 }
 
 wxPanel *
@@ -147,10 +185,11 @@ VUFrame::buildMemoryTable(wxNotebook *book) {
     wxPanel *panel = new wxPanel(book, -1, wxDefaultPosition, wxDefaultSize,
         wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
 
-    wxString choices[5] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15", "Float"};
-    regRadioBox = new wxRadioBox(panel, ID_REGRADIOBOX,
+    wxString choices[6] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15",
+		"Float", "Hex" };
+    regRadioBox = new wxRadioBox(panel, ID_MEMORYRADIO,
         "Number representation", wxDefaultPosition,
-        wxDefaultSize, 5, choices, 5);
+        wxDefaultSize, 6, choices, 6);
     regRadioBox->SetSelection(4);
     gridMemory = new wxGrid(panel, ID_GRIDMEMORY, wxDefaultPosition,
         wxDefaultSize);
@@ -500,7 +539,7 @@ VUFrame::OnStep(wxCommandEvent &WXUNUSED(event)) {
 		if ( VUchip.memoryUpdate ) {
 			DrawMemory();
 		}
-		FastRegisterUpdate();
+		registerUpdate();
 		FlagsUpdate(); 
 	}
     InstuctionStatus();
@@ -521,7 +560,7 @@ VUFrame::OnRun(wxCommandEvent &event) {
 	gridCode->SetGridCursor(LineInstruction(VUchip.PC), 4);
 	gridCode->MoveCursorDown(FALSE);
 	DrawMemory();
-	FastRegisterUpdate();
+	registerUpdate();
 	FlagsUpdate(); 
 	// kludge
 	running = 0;
@@ -634,7 +673,7 @@ VUFrame::OnVu0All(wxCommandEvent &WXUNUSED(event)) {
 
     if ( dumpVURegisters((char *)regTmpFile.c_str(), 0) == 0) {
         VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        FastRegisterUpdate();
+        registerUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu0 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -663,7 +702,7 @@ VUFrame::OnVu1All(wxCommandEvent &WXUNUSED(event)) {
 
     if ( dumpVURegisters((char *)regTmpFile.c_str(), 1) == 0) {
         VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        FastRegisterUpdate();
+        registerUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu1 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -731,7 +770,7 @@ void VUFrame::OnRegsVu0(wxCommandEvent &WXUNUSED(event)) {
     }
     if ( dumpVURegisters((char *)regTmpFile.c_str(), 0) == 0) {
         VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        FastRegisterUpdate();
+        registerUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu0 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -745,7 +784,7 @@ void VUFrame::OnRegsVu1(wxCommandEvent &WXUNUSED(event)) {
     }
     if ( dumpVURegisters((char *)regTmpFile.c_str(), 1) == 0) {
         VUchip.LoadRegisters((char *)regTmpFile.c_str()); 
-        FastRegisterUpdate();
+        registerUpdate();
     } else {
         wxMessageBox("Unable to fetch vpu1 registers from PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -910,7 +949,7 @@ VUFrame::OnReset(wxCommandEvent &WXUNUSED(event)) {
     InstFill();
     DrawMemory();
     DrawProgram();
-    FastRegisterUpdate();
+    registerUpdate();
     Status = RESET;
     txtDebug->AppendText("Status=EMPTY\n");
 }
@@ -1103,9 +1142,22 @@ VUFrame::OnNotebookOne(wxNotebookEvent &WXUNUSED(event)) {
 }
 
 void
-VUFrame::OnRegRadioBox(wxCommandEvent &WXUNUSED(event)) {
+VUFrame::OnMemoryRadio(wxCommandEvent &WXUNUSED(event)) {
     DrawMemory();
     gridMemory->ForceRefresh();
+}
+
+void
+VUFrame::OnIntRegRadio(wxCommandEvent &WXUNUSED(event)) {
+	registerUpdate();
+}
+void
+VUFrame::OnFloatRegRadio(wxCommandEvent &WXUNUSED(event)) {
+	registerUpdate();
+}
+void
+VUFrame::OnSpecRegRadio(wxCommandEvent &WXUNUSED(event)) {
+	registerUpdate();
 }
 
 void
@@ -1283,9 +1335,9 @@ void VUFrame::DrawProgram() {
                 strcpy(auxi,"CLIP");
             }
             strcpy(scode,auxi);
-            if(VUchip.program [i].flavor[m])
+            if(VUchip.program[i].flavor[m])
                 strcat(scode,flavors[VUchip.program [i].flavor[m]]);
-            if(VUchip.program [i].dest[m][0]) {
+            if(VUchip.program[i].dest[m][0]) {
                 strcat(scode, ".");
                 strcpy(auxi, VUchip.program [i].dest[m]);
                 strcat(scode, strlwr(auxi));
@@ -1351,7 +1403,14 @@ VUFrame::DrawMemory() {
                 sprintf(val[2],"%f",stuff);
                 memcpy(&stuff,&(VUchip.dataMem[i].x),4);
                 sprintf(val[3],"%f",stuff);
+			case 5:
+                sprintf(val[0],"0x%x",VUchip.dataMem[i].w);
+                sprintf(val[1],"0x%x",VUchip.dataMem[i].z);
+                sprintf(val[2],"0x%x",VUchip.dataMem[i].y);
+                sprintf(val[3],"0x%x",VUchip.dataMem[i].x);
                 break;
+			default:
+				break;
         }
 
         gridMemory->SetCellValue(i, 3, val[0]);
@@ -1375,71 +1434,102 @@ VUFrame::DrawMemory() {
     }
 	VUchip.memoryUpdate = false;
 }
-void VUFrame::FastRegisterUpdate() {
-    int i;
+void VUFrame::registerUpdate() {
+    int i, selection;
     VFReg *Reg;
 
     for(i = 0; i < 16; i++) {
-        gridIntRegisters->SetCellValue(0, i, wxString::Format("%d",
-                VUchip.RegInt[i].value()));
-    }
+		int intRegValue = VUchip.RegInt[i].value();
+		switch(intRegRadio->GetSelection()) {
+			case 0:
+				gridIntRegisters->SetCellValue(0, i, wxString::Format("%d",
+						VUchip.RegInt[i].value()));
+				break;
+			case 1:
+				gridIntRegisters->SetCellValue(0, i, wxString::Format("%.4f",
+						(float)VUchip.RegInt[i].value()/16));
+				break;
+			case 2:
+				gridIntRegisters->SetCellValue(0, i, wxString::Format("%.12f",
+						(float)VUchip.RegInt[i].value()/4096));
+				break;
+			case 3:
+				gridIntRegisters->SetCellValue(0, i, wxString::Format("%.12f",
+						(float)VUchip.RegInt[i].value()/32768));
+				break;
+			case 4:
+				gridIntRegisters->SetCellValue(0, i, wxString::Format("%f",
+						*((float *)&intRegValue) ));
+				break;
+			case 5:
+				gridIntRegisters->SetCellValue(0, i, wxString::Format("0x%x",
+						VUchip.RegInt[i].value()));
+				break;
+		}
+	}
 
+	selection = floatRegRadio->GetSelection();
     for(i = 0; i < 32; i++) {
         Reg = &VUchip.RegFloat[i];
-        gridFloatRegisters->SetCellValue(0, i,
-            wxString::Format("%f", Reg->x()));
-        gridFloatRegisters->SetCellValue(1, i,
-            wxString::Format("%f", Reg->y()));
-        gridFloatRegisters->SetCellValue(2, i,
-            wxString::Format("%f", Reg->z()));
-        gridFloatRegisters->SetCellValue(3, i,
-            wxString::Format("%f", Reg->w()));
+		gridFloatRegisters->SetCellValue(0, i,
+			floatToString(Reg->x(), selection)
+			);
+		gridFloatRegisters->SetCellValue(1, i,
+			floatToString(Reg->y(), selection)
+			);
+		gridFloatRegisters->SetCellValue(2, i,
+			floatToString(Reg->z(), selection)
+			);
+		gridFloatRegisters->SetCellValue(3, i,
+			floatToString(Reg->w(), selection)
+			);
     }
     
+	selection = specRegRadio->GetSelection();
     gridSpecialRegisters->SetCellValue(0, 0,
-        wxString::Format("%f", VUchip.ACC.x()));
+		floatToString(VUchip.ACC.x(), selection));
     gridSpecialRegisters->SetCellValue(1, 0,
-        wxString::Format("%f", VUchip.ACC.y()));
+		floatToString(VUchip.ACC.y(), selection));
     gridSpecialRegisters->SetCellValue(2, 0,
-        wxString::Format("%f", VUchip.ACC.z()));
+		floatToString(VUchip.ACC.z(), selection));
     gridSpecialRegisters->SetCellValue(3, 0,
-        wxString::Format("%f", VUchip.ACC.w()));
+		floatToString(VUchip.ACC.w(), selection));
 
     gridSpecialRegisters->SetCellValue(0, 1,
-        wxString::Format("%f", VUchip.Q.x()));
+		floatToString(VUchip.Q.x(), selection));
     gridSpecialRegisters->SetCellValue(1, 1,
-        wxString::Format("%f", VUchip.Q.y()));
+		floatToString(VUchip.Q.y(), selection));
     gridSpecialRegisters->SetCellValue(2, 1,
-        wxString::Format("%f", VUchip.Q.z()));
+		floatToString(VUchip.Q.z(), selection));
     gridSpecialRegisters->SetCellValue(3, 1,
-        wxString::Format("%f", VUchip.Q.w()));
+		floatToString(VUchip.Q.w(), selection));
 
     gridSpecialRegisters->SetCellValue(0, 2,
-        wxString::Format("%f", VUchip.P.x()));
+		floatToString(VUchip.P.x(), selection));
     gridSpecialRegisters->SetCellValue(1, 2,
-        wxString::Format("%f", VUchip.P.y()));
+		floatToString(VUchip.P.y(), selection));
     gridSpecialRegisters->SetCellValue(2, 2,
-        wxString::Format("%f", VUchip.P.z()));
+		floatToString(VUchip.P.z(), selection));
     gridSpecialRegisters->SetCellValue(3, 2,
-        wxString::Format("%f", VUchip.P.w()));
+		floatToString(VUchip.P.w(), selection));
 
     gridSpecialRegisters->SetCellValue(0, 3,
-        wxString::Format("%f", VUchip.R.x()));
+		floatToString(VUchip.R.x(), selection));
     gridSpecialRegisters->SetCellValue(1, 3,
-        wxString::Format("%f", VUchip.R.y()));
+		floatToString(VUchip.R.y(), selection));
     gridSpecialRegisters->SetCellValue(2, 3,
-        wxString::Format("%f", VUchip.R.z()));
+		floatToString(VUchip.R.z(), selection));
     gridSpecialRegisters->SetCellValue(3, 3,
-        wxString::Format("%f", VUchip.R.w()));
+		floatToString(VUchip.R.w(), selection));
 
     gridSpecialRegisters->SetCellValue(0, 4,
-        wxString::Format("%f", VUchip.I.x()));
+		floatToString(VUchip.I.x(), selection));
     gridSpecialRegisters->SetCellValue(1, 4,
-        wxString::Format("%f", VUchip.I.y()));
+		floatToString(VUchip.I.y(), selection));
     gridSpecialRegisters->SetCellValue(2, 4,
-        wxString::Format("%f", VUchip.I.z()));
+		floatToString(VUchip.I.z(), selection));
     gridSpecialRegisters->SetCellValue(3, 4,
-        wxString::Format("%f", VUchip.I.w()));
+		floatToString(VUchip.I.w(), selection));
 
     // Latest register in statusbar
     updateStatusBar();
@@ -1735,30 +1825,10 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     // Right notebook
     right_book = new wxNotebook(vertsplit, -1, wxDefaultPosition,
         wxDefaultSize);
-    regDetail = new wxPanel(right_book, -1, wxDefaultPosition, wxDefaultSize,
-        wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
 
     txtDebug = new wxTextCtrl(right_book, ID_TEXT_DEBUG, wxString(""),
         wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
     right_book->AddPage(txtDebug, "Debug", FALSE, -1);
-    right_book->AddPage(regDetail, "Reg Detail", TRUE, -1);
-    wxString choices[5] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15", "Float"};
-    m_regIntNum = new wxRadioBox(regDetail, ID_REGINT_REP, "Integer register representation",
-            wxDefaultPosition, wxDefaultSize, 5, choices, 3, wxRA_SPECIFY_ROWS);
-    m_regIntNum->SetSelection(0);
-    m_regFloatNum = new wxRadioBox(regDetail, ID_REGFLOAT_REP, "Float register representation",
-            wxDefaultPosition, wxDefaultSize, 5, choices, 3, wxRA_SPECIFY_ROWS);
-    m_regFloatNum->SetSelection(4);
-    m_regSpecNum = new wxRadioBox(regDetail, ID_REGSPEC_REP, "Special register representation",
-            wxDefaultPosition, wxDefaultSize, 5, choices, 3, wxRA_SPECIFY_ROWS);
-    m_regSpecNum->SetSelection(4);
-    wxBoxSizer *regNumRep = new wxBoxSizer (wxVERTICAL);
-    regNumRep->Add(m_regIntNum, 0, wxALIGN_CENTER_VERTICAL);
-    regNumRep->Add(m_regFloatNum, 0, wxALIGN_CENTER_VERTICAL);
-    regNumRep->Add(m_regSpecNum, 0, wxALIGN_CENTER_VERTICAL);
-	regDetail->SetSizerAndFit(regNumRep);
-	regDetail->SetAutoLayout(TRUE);
-	regDetail->Layout();
  
     txtStatus = new wxTextCtrl(right_book, ID_TEXT_STATUS, wxString(""),
         wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
@@ -1773,9 +1843,9 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     down_book = new wxNotebook(
         hzsplit, -1, wxDefaultPosition, wxDefaultSize);
     buildRegisterGrid(down_book);
-    down_book->AddPage(gridIntRegisters, "Integer registers", TRUE, -1);
-    down_book->AddPage(gridFloatRegisters, "Float registers", FALSE, -1);
-    down_book->AddPage(gridSpecialRegisters, "Special registers", FALSE, -1);
+    down_book->AddPage(intRegPanel, "Integer registers", TRUE, -1);
+    down_book->AddPage(floatRegPanel, "Float registers", FALSE, -1);
+    down_book->AddPage(specRegPanel, "Special registers", FALSE, -1);
     hzsplit->SetMinimumPaneSize(100);
     hzsplit->SplitHorizontally(vertsplit, down_book, 380);
 
@@ -1806,7 +1876,7 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 
     VUchip.Reset();
     InstFill();
-	FastRegisterUpdate();
+	registerUpdate();
     if ( autoLoadLast == 0 ) {
         if ( dataFile.GetFullPath() != "" ) {
             Status = READY;
