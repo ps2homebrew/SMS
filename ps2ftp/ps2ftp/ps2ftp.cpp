@@ -9,7 +9,6 @@
 
 #include "ps2ftp.h"
 
-
 void serverThread ();
 void HandleClient (int, struct sockaddr_in *);
 
@@ -21,6 +20,20 @@ u8 buffer[BUFFER_SIZE] __attribute__ ((aligned (64))); //for sending files
 FSMan *vfs;
 char currentDir[1024];
 char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+extern u8 *ps2ip_irx;
+extern int size_ps2ip_irx;
+extern u8 *ps2smap_irx;
+extern int size_ps2smap_irx;
+
+#define IPCONF_MAX_LEN  (3*16)
+
+char if_conf[IPCONF_MAX_LEN];
+int if_conf_len;
+
+char ip[16] __attribute__((aligned(16))) = "192.168.0.10";
+char netmask[16] __attribute__((aligned(16))) = "255.255.255.0";
+char gw[16] __attribute__((aligned(16))) = "192.168.0.1";
 
 int
 reply (int sock, int code, char *msg)
@@ -110,18 +123,44 @@ get_command (int com_sock, char *buf, unsigned int bufsize)
 	//printf ("UNKNOWN COMMAND: %s\n", cmd);
 	return ERROR;
 }
+void setupIP() {
+	int i;
+	memset(if_conf, 0x00, IPCONF_MAX_LEN);
+	i = 0;
+	strncpy(&if_conf[i], ip, 15);
+	i += strlen(ip) + 1;
 
+	strncpy(&if_conf[i], netmask, 15);
+	i += strlen(netmask) + 1;
+
+	strncpy(&if_conf[i], gw, 15);
+	i += strlen(gw) + 1;
+
+	if_conf_len = i;
+}
 int
 main (int argc, char **argv)
 {
+	init_scr();
 	printf("PS2FTP v%d.%d starting...\n", verMajor, verMinor);
-	SifInitRpc (0);
+	SifExitRpc();
+	SifIopReset("rom0:UDNL rom0:EELOADCNF", 0);
+	while(!SifIopSync());
+	SifInitRpc(0);
 
 	//load dev9 and smap here
 	printf("Loading Network Adapter drivers...\n");
 	
+	setupIP();
+	printf("loading ps2ip: %d\n", size_ps2ip_irx);
+	SifExecModuleBuffer(ps2ip_irx, size_ps2ip_irx, 0, NULL, NULL);
+	//loadMemModule(ps2ip, size_ps2ip, 0, NULL);
+	printf("loading ps2smap: %d\n", size_ps2smap_irx);
+	SifExecModuleBuffer(ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], NULL);
+	//loadMemModule(ps2smap, size_ps2smap, if_conf_len, &if_conf[0]);
+
 	printf("Initialising IP stack...\n");
-	//ps2ip_init ();
+	ps2ip_init ();
 
 	printf("Initialising filesystems:\n");
 	vfs = new FSMan(true /*mc*/, false /*cdvd*/, false /*hdd*/);

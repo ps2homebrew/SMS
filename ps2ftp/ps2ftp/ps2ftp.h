@@ -15,6 +15,9 @@
 #include <string.h>
 #include "FSMan.h"
 
+#include <iopcontrol.h>
+
+#define printf scr_printf
 /* 'perror' definition for printf */
 #ifdef DEBUG
 #define perror(FMT, __VA_LIST__...) printf(FMT, __VA_LIST__)

@@ -4,7 +4,6 @@
 #include <malloc.h>
 //#define AIOMC_DEBUG
 
-
 mcIO::mcIO(int port, int maxEntries)
 {
 	int type, free, format;
@@ -21,8 +20,9 @@ mcIO::mcIO(int port, int maxEntries)
 	mcGetInfo(port, 0, &type, &free, &format);
 	mcSync(MC_WAIT, NULL, &rv);
 
-	if((rv < -1) || !format)
+	if((rv < -1)) //|| !format //Since we're not using XMC format is always 0
 	{
+		printf("mcgetinfo failed\n");
 		status = AIO_STATE_ERROR;
 		return;
 	}

@@ -1,11 +1,12 @@
 EE_BIN = ps2ftp.elf
-EE_OBJS = ps2ftp.o FSMan.o irxload.o aio/aioMc.o aio/aioCdvd.o aio/aioHdd.o aio/cdvd_rpc.o
+EE_OBJS = ps2ftp.o FSMan.o aio/aioMc.o aio/aioCdvd.o aio/aioHdd.o aio/cdvd_rpc.o modules/ps2smap.s modules/ps2ip.s
 EE_INCS += -I$(PS2DEV)/ps2ip/include -I$(PS2DRV)/common/include -I$(PS2DRV)/ee/libfileXio
 EE_LDFLAGS += -L$(PS2DEV)/ps2ip/ee/lib -Lz:/projects/libhdd/ee/lib -L$(PS2DRV)/ee/libfileXio 
 EE_LIBS += -lgcc -lkernel -lmc -lhdd -lps2ip -lfileXio
 
 all:	$(EE_BIN)
-
+	ee-strip $(EE_BIN)
+	@bash sjcrunch $(EE_BIN) $(EE_BIN)
 clean:
 	rm -f *.elf *.o *.a
 	rm -f aio/*.o
