@@ -21,8 +21,6 @@ BEGIN_EVENT_TABLE (PreferenceDlg, wxDialog)
     EVT_BUTTON (ID_PREF_RESET, PreferenceDlg::OnReset)
     // preferencews pages
     EVT_COMBOBOX(ID_PREF_STYLETYPE, PreferenceDlg::OnStyletypeChoose)
-    // EVT_LISTBOX (myID_PREF_KEYWORDS,   PreferenceDlg::OnKeywordsChange)
-    // Prim builder
     EVT_CHOICE(ID_PRIM, PreferenceDlg::OnGIFPRIM)
     EVT_RADIOBOX(ID_PRIM, PreferenceDlg::OnGIFPRIM)
     EVT_TEXT_ENTER(ID_PRIM_TEXT, PreferenceDlg::OnTextPrim)
@@ -35,7 +33,7 @@ PreferenceDlg::PreferenceDlg (wxWindow *parent,
                          wxDefaultPosition, wxDefaultSize) {
 
     // set prefs
-    m_prefs = prefs;
+    m_pPrefs = prefs;
 
     //accelerators (for help)
     const int nEntries = 1 ;
@@ -61,18 +59,18 @@ PreferenceDlg::PreferenceDlg (wxWindow *parent,
                                  wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
 
     // initialize preferences
-    m_prefsBook = new wxNotebook (panel, -1, wxDefaultPosition, wxDefaultSize,
+    m_pPrefsBook = new wxNotebook (panel, -1, wxDefaultPosition, wxDefaultSize,
                                   wxNB_FIXEDWIDTH);
-    wxNotebookSizer *prefsSizer = new wxNotebookSizer (m_prefsBook);
-    m_prefsBook->AddPage(CreatePageLoad(), PAGE_LOAD, true);
+    wxNotebookSizer *prefsSizer = new wxNotebookSizer (m_pPrefsBook);
+    m_pPrefsBook->AddPage(CreatePageLoad(), PAGE_LOAD, true);
     SetValuesPageLoad();
-    m_prefsBook->AddPage (CreatePageRemote(), PAGE_REMOTE, true);
+    m_pPrefsBook->AddPage (CreatePageRemote(), PAGE_REMOTE, true);
     SetValuesPageRemote();
-    m_prefsBook->AddPage(CreatePageStyles(), PAGE_STYLE, true);
+    m_pPrefsBook->AddPage(CreatePageStyles(), PAGE_STYLE, true);
     SetValuesPageStyles();
-    m_prefsBook->AddPage(CreatePageGIF(), PAGE_GIF, true);
+    m_pPrefsBook->AddPage(CreatePageGIF(), PAGE_GIF, true);
     SetValuesPageGIF();
-    m_prefsBook->SetSelection (0);
+    m_pPrefsBook->SetSelection (0);
 
     // lauout the buttons
     wxButton *resetButton = new wxButton (panel, ID_PREF_RESET, _("Default"));
@@ -111,13 +109,13 @@ PreferenceDlg::~PreferenceDlg () {
 // event handlers
 void PreferenceDlg::OnApply (wxCommandEvent &WXUNUSED(event)) {
     GetValuesPageLoad();
-    m_prefs->SaveValuesPageLoad();
+    m_pPrefs->SaveValuesPageLoad();
     GetValuesPageRemote();
-    m_prefs->SaveValuesPageRemote();
+    m_pPrefs->SaveValuesPageRemote();
     GetValuesPageStyles();
-    m_prefs->SaveValuesPageStyles();
+    m_pPrefs->SaveValuesPageStyles();
     GetValuesPageGIF();
-    m_prefs->SaveValuesPageGIF();
+    m_pPrefs->SaveValuesPageGIF();
 }
 
 void PreferenceDlg::OnCancel (wxCommandEvent &WXUNUSED(event)) {
@@ -130,26 +128,26 @@ void PreferenceDlg::OnHelp (wxCommandEvent &WXUNUSED(event)) {
 
 void PreferenceDlg::OnOkay (wxCommandEvent &WXUNUSED(event)) {
     GetValuesPageLoad();
-    m_prefs->SaveValuesPageLoad();
+    m_pPrefs->SaveValuesPageLoad();
     GetValuesPageRemote();
-    m_prefs->SaveValuesPageRemote();
+    m_pPrefs->SaveValuesPageRemote();
     GetValuesPageStyles();
-    m_prefs->SaveValuesPageStyles();
+    m_pPrefs->SaveValuesPageStyles();
     GetValuesPageGIF();
-    m_prefs->SaveValuesPageGIF();
+    m_pPrefs->SaveValuesPageGIF();
     EndModal(ID_PREF_OK);
 }
 
 void PreferenceDlg::OnReset (wxCommandEvent &WXUNUSED(event)) {
-    int pageNr = m_prefsBook->GetSelection ();
+    int pageNr = m_pPrefsBook->GetSelection ();
     if (pageNr == 0) {
-        m_prefs->LoadValuesPageLoad(true);
+        m_pPrefs->LoadValuesPageLoad(true);
         SetValuesPageLoad();
     }else if (pageNr == 1) {
-        // m_prefs->LoadValuesPageLanguages (true);
+        // m_pPrefs->LoadValuesPageLanguages (true);
         // SetValuesPageLanguages ();
     }else if (pageNr == 2) {
-        m_prefs->LoadValuesPageStyles (true);
+        m_pPrefs->LoadValuesPageStyles (true);
         SetValuesPageStyles();
     }
 }
@@ -179,10 +177,10 @@ PreferenceDlg::OnGIFPRIM(wxCommandEvent &WXUNUSED(event)) {
     GIFABE = m_abe->GetSelection();
     GIFAA1 = m_aa1->GetSelection();
     GIFFST = m_fst->GetSelection();
-    updateTextPrim();
+    UpdateTextPrim();
 }
 void
-PreferenceDlg::updateTextPrim(void) {
+PreferenceDlg::UpdateTextPrim(void) {
     PRIM = (GIFFST<<8)+(GIFAA1<<7)+(GIFABE<<6)+(GIFFGE<<5)+
         (GIFTME<<4)+(GIFIIP<<3)+GIFPRIM;
     // m_primText->SetValue(wxString::Format("0x%x", PRIM));
@@ -190,14 +188,14 @@ PreferenceDlg::updateTextPrim(void) {
 void
 PreferenceDlg::OnTextPrim(wxCommandEvent &WXUNUSED(event)) {
     // PRIM = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
-    // updatePrimChoices();
 }
 void
 PreferenceDlg::OnTextColor(wxCommandEvent &WXUNUSED(event)) {
     // g_GIFPrefs.clrcol = strtol(m_primText->GetValue().c_str(), (char **)NULL, 0);
 }
+
 void
-PreferenceDlg::updatePrimChoices(void) {
+PreferenceDlg::UpdatePrimChoices(void) {
     GIFFST = (PRIM>>8)&0x1;
     GIFAA1 = (PRIM>>7)&0x1;
     GIFABE = (PRIM>>6)&0x1;
@@ -216,54 +214,54 @@ PreferenceDlg::updatePrimChoices(void) {
 
 //----------------------------------------------------------------------------
 // Load panel related functions
-wxPanel *PreferenceDlg::CreatePageLoad() {
-    wxPanel *panel = new wxPanel (m_prefsBook);
+wxPanel* PreferenceDlg::CreatePageLoad() {
+    wxPanel *panel = new wxPanel (m_pPrefsBook);
 
     const int ch = GetCharWidth();
     const int sz1 = 20*ch; // width of a text lable
 
     // 
     wxString choices3[2] = {"Row", "Column"};
-    m_regOrder = new wxRadioBox(panel, -1, "Register layout order",
+    m_pRegOrder = new wxRadioBox(panel, -1, "Register layout order",
             wxDefaultPosition, wxDefaultSize, 2, choices3, 2, wxRA_SPECIFY_ROWS);
 
     wxString cAutoLoad[2] = {"Yes", "No"};
-    m_autoLoad = new wxRadioBox(panel, -1, "Autoload latest used files on startup",
+    m_pAutoLoad = new wxRadioBox(panel, -1, "Autoload latest used files on startup",
         wxDefaultPosition, wxDefaultSize, 2, cAutoLoad, 2, wxRA_SPECIFY_ROWS);
 
     // mem state temp file.
-    wxStaticBoxSizer *stateFileBox = new wxStaticBoxSizer (
-                     new wxStaticBox (panel, -1, _("Filenames for wxVU state saves.")),
+    wxStaticBoxSizer *stateFileBox = new wxStaticBoxSizer(
+                     new wxStaticBox(panel, -1, _("Filenames for wxVU state saves.")),
                      wxVERTICAL);
-    m_memStateFile = new wxTextCtrl (panel, -1, wxEmptyString,
+    m_pMemStateFile = new wxTextCtrl(panel, -1, wxEmptyString,
                                    wxDefaultPosition, wxSize(sz1,-1));
     wxBoxSizer *memStateFile = new wxBoxSizer (wxHORIZONTAL);
-    memStateFile->Add (4, 0);
-    memStateFile->Add (new wxStaticText (panel, -1, _("File for saving memory state"),
+    memStateFile->Add(4, 0);
+    memStateFile->Add(new wxStaticText (panel, -1, _("File for saving memory state"),
                                        wxDefaultPosition, wxSize(sz1, -1)),
                      0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    memStateFile->Add (6, 0);
-    memStateFile->Add (m_memStateFile, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    memStateFile->Add (4, 0);
+    memStateFile->Add(6, 0);
+    memStateFile->Add(m_pMemStateFile, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    memStateFile->Add(4, 0);
     stateFileBox->Add(memStateFile, 0, wxALIGN_LEFT|wxEXPAND);
     
     // reg state temp file.
-    m_regStateFile = new wxTextCtrl (panel, -1, wxEmptyString,
+    m_pRegStateFile = new wxTextCtrl(panel, -1, wxEmptyString,
                                    wxDefaultPosition, wxSize(sz1,-1));
     wxBoxSizer *regStateFile = new wxBoxSizer (wxHORIZONTAL);
-    regStateFile->Add (4, 0);
-    regStateFile->Add (new wxStaticText (panel, -1, _("File for saving register state"),
+    regStateFile->Add(4, 0);
+    regStateFile->Add(new wxStaticText (panel, -1, _("File for saving register state"),
                                        wxDefaultPosition, wxSize(sz1, -1)),
                      0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    regStateFile->Add (6, 0);
-    regStateFile->Add (m_regStateFile, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    regStateFile->Add (4, 0);
+    regStateFile->Add(6, 0);
+    regStateFile->Add(m_pRegStateFile, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    regStateFile->Add(4, 0);
     stateFileBox->Add(regStateFile, 0, wxALIGN_LEFT|wxEXPAND);
 
     // layout panel
     wxBoxSizer *panelpane = new wxBoxSizer(wxVERTICAL);
-    panelpane->Add(m_regOrder, 0, wxEXPAND|wxALL, 5);
-    panelpane->Add(m_autoLoad, 0, wxEXPAND|wxALL, 5);
+    panelpane->Add(m_pRegOrder, 0, wxEXPAND|wxALL, 5);
+    panelpane->Add(m_pAutoLoad, 0, wxEXPAND|wxALL, 5);
     panelpane->Add(stateFileBox, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 5);
 
     // set and return panel
@@ -274,25 +272,25 @@ wxPanel *PreferenceDlg::CreatePageLoad() {
 //----------------------------------------------------------------------------
 void PreferenceDlg::GetValuesPageLoad() {
     // autoload
-    g_CommonPrefs.autoLoadLast = m_autoLoad->GetSelection();
-    g_CommonPrefs.regOrder = m_regOrder->GetSelection();
+    g_CommonPrefs.autoLoadLast = m_pAutoLoad->GetSelection();
+    g_CommonPrefs.regOrder = m_pRegOrder->GetSelection();
     // project
-    g_CommonPrefs.regStateFile = strdup(m_regStateFile->GetValue());
-    g_CommonPrefs.memStateFile = strdup(m_memStateFile->GetValue());
+    g_CommonPrefs.regStateFile = strdup(m_pRegStateFile->GetValue());
+    g_CommonPrefs.memStateFile = strdup(m_pMemStateFile->GetValue());
 }
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::SetValuesPageLoad() {
-    m_autoLoad->SetSelection(g_CommonPrefs.autoLoadLast);
-    m_regOrder->SetSelection(g_CommonPrefs.regOrder);
-    m_regStateFile->SetValue(g_CommonPrefs.regStateFile);
-    m_memStateFile->SetValue(g_CommonPrefs.memStateFile);
+    m_pAutoLoad->SetSelection(g_CommonPrefs.autoLoadLast);
+    m_pRegOrder->SetSelection(g_CommonPrefs.regOrder);
+    m_pRegStateFile->SetValue(g_CommonPrefs.regStateFile);
+    m_pMemStateFile->SetValue(g_CommonPrefs.memStateFile);
 }
 
 //----------------------------------------------------------------------------
 // Remote panel functions
 wxPanel *PreferenceDlg::CreatePageRemote() {
-    wxPanel *panel = new wxPanel (m_prefsBook);
+    wxPanel *panel = new wxPanel (m_pPrefsBook);
     const int ch = GetCharWidth();
     const int sz1 = 20*ch; // width of a text lable
     
@@ -406,7 +404,7 @@ wxPanel *PreferenceDlg::CreatePageRemote() {
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::GetValuesPageRemote() {
-    // g_RemotePrefs.autoGSExec = m_AutoGSExec->GetSelection();
+    g_RemotePrefs.autoGSExec = m_AutoGSExec->GetSelection();
     g_RemotePrefs.binTmpFile = strdup(m_binTmpFile->GetValue());
     g_RemotePrefs.datTmpFile = strdup(m_datTmpFile->GetValue());
     g_RemotePrefs.regTmpFile = strdup(m_regTmpFile->GetValue());
@@ -415,7 +413,7 @@ void PreferenceDlg::GetValuesPageRemote() {
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::SetValuesPageRemote() {
-    // m_AutoGSExec->SetSelection(g_RemotePrefs.autoGSExec);
+    m_AutoGSExec->SetSelection(g_RemotePrefs.autoGSExec);
     m_binTmpFile->SetValue(g_RemotePrefs.binTmpFile);
     m_datTmpFile->SetValue(g_RemotePrefs.datTmpFile);
     m_regTmpFile->SetValue(g_RemotePrefs.regTmpFile);
@@ -424,7 +422,7 @@ void PreferenceDlg::SetValuesPageRemote() {
 
 //----------------------------------------------------------------------------
 wxPanel *PreferenceDlg::CreatePageStyles () {
-    wxPanel *panel = new wxPanel (m_prefsBook);
+    wxPanel *panel = new wxPanel (m_pPrefsBook);
 
     const int ch = GetCharWidth();
     const int sz1 = 20*ch; // width of a text lable
@@ -434,12 +432,12 @@ wxPanel *PreferenceDlg::CreatePageStyles () {
     fontEnum.EnumerateFacenames(wxFONTENCODING_SYSTEM, true);
     wxArrayString *fontNames = fontEnum.GetFacenames();
     fontNames->Sort();
-    m_fontname = new wxComboBox (panel, -1, wxEmptyString,
+    m_pFontName = new wxComboBox (panel, -1, wxEmptyString,
                                  wxDefaultPosition, wxSize(sz1, -1),
                                  0);
     int i;
     for (i = 0; i < (int)fontNames->GetCount(); i++) {
-        m_fontname->Append (fontNames->Item (i));
+        m_pFontName->Append (fontNames->Item (i));
     }
     wxBoxSizer *fontname = new wxBoxSizer (wxHORIZONTAL);
     fontname->Add(4, 0);
@@ -447,11 +445,11 @@ wxPanel *PreferenceDlg::CreatePageStyles () {
                                      wxDefaultPosition, wxSize(sz1, -1)),
                    0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
     fontname->Add(6, 0);
-    fontname->Add(m_fontname, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    fontname->Add(m_pFontName, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
     fontname->Add(4, 0);
 
     // font size prefs
-    m_fontsize = new wxTextCtrl (panel, -1, wxEmptyString,
+    m_pFontsize = new wxTextCtrl (panel, -1, wxEmptyString,
                                  wxDefaultPosition, wxSize(3*ch,-1));
     wxBoxSizer *fontsize = new wxBoxSizer (wxHORIZONTAL);
     fontsize->Add(4, 0);
@@ -459,7 +457,7 @@ wxPanel *PreferenceDlg::CreatePageStyles () {
                                       wxDefaultPosition, wxSize(sz1, -1)),
                     0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
     fontsize->Add(6, 0);
-    fontsize->Add(m_fontsize, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    fontsize->Add(m_pFontsize, 0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
     fontsize->Add(4, 0);
 
     // layout the style types prefs
@@ -483,25 +481,25 @@ wxPanel *PreferenceDlg::CreatePageStyles () {
 //----------------------------------------------------------------------------
 void PreferenceDlg::GetValuesPageStyles () {
     long fontsize = 0;
-    g_StylePrefs.fontname = strdup (m_fontname->GetValue());
-    m_fontsize->GetValue().ToLong (&fontsize);
+    g_StylePrefs.fontname = strdup (m_pFontName->GetValue());
+    m_pFontsize->GetValue().ToLong (&fontsize);
     g_StylePrefs.fontsize = fontsize;
 }
 
 //----------------------------------------------------------------------------
 void PreferenceDlg::SetValuesPageStyles () {
     if ( strcmp(g_StylePrefs.fontname, _T("")) != 0 ) {
-        m_fontname->SetValue(g_StylePrefs.fontname);
+        m_pFontName->SetValue(g_StylePrefs.fontname);
     } else {
-        m_fontname->SetValue(m_default_fontname);
+        m_pFontName->SetValue(m_default_fontname);
     }
-    m_fontsize->SetValue(wxString::Format (_T("%d"), g_StylePrefs.fontsize));
+    m_pFontsize->SetValue(wxString::Format (_T("%d"), g_StylePrefs.fontsize));
 }
 
 //----------------------------------------------------------------------------
 // GIF panel functions
 wxPanel *PreferenceDlg::CreatePageGIF() {
-    wxPanel *panel = new wxPanel (m_prefsBook);
+    wxPanel *panel = new wxPanel (m_pPrefsBook);
     const int ch = GetCharWidth();
     // width of a text lable
     const int sz1 = 20*ch;
@@ -510,71 +508,71 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
     m_xOffset = new wxTextCtrl(panel, -1, "2048");
     m_yOffset = new wxTextCtrl(panel, -1, "2048");
     wxBoxSizer *oXffset = new wxBoxSizer (wxHORIZONTAL);
-    oXffset->Add (4, 0);
-    oXffset->Add (new wxStaticText (panel, -1, _("X offset"),
+    oXffset->Add(4, 0);
+    oXffset->Add(new wxStaticText (panel, -1, _("X offset"),
                                      wxDefaultPosition, wxSize(sz1, -1)),
                    0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    oXffset->Add (6, 0);
-    oXffset->Add (m_xOffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    oXffset->Add(6, 0);
+    oXffset->Add(m_xOffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
     wxBoxSizer *oYffset = new wxBoxSizer (wxHORIZONTAL);
-    oYffset->Add (4, 0);
-    oYffset->Add (new wxStaticText (panel, -1, _("Y offset"),
+    oYffset->Add(4, 0);
+    oYffset->Add(new wxStaticText (panel, -1, _("Y offset"),
                                         wxDefaultPosition, wxSize(sz1, -1)),
                       0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    oYffset->Add (6, 0);
-    oYffset->Add (m_yOffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    oYffset->Add(6, 0);
+    oYffset->Add(m_yOffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
     wxStaticBoxSizer *xybox = new wxStaticBoxSizer (
-                     new wxStaticBox (panel, -1, _("XYOFFSET_1")),
+                     new wxStaticBox (panel, -1, _("XYoffset_1")),
                      wxVERTICAL);
-    xybox->Add (oXffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    xybox->Add (0, 6);
-    xybox->Add (oYffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    xybox->Add (0, 4);
+    xybox->Add(oXffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    xybox->Add(0, 6);
+    xybox->Add(oYffset, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    xybox->Add(0, 4);
 
     // scissorbox
     m_x1Scissor = new wxTextCtrl(panel, -1, "640");
     m_y1Scissor = new wxTextCtrl(panel, -1, "512");
     wxBoxSizer *x1Scissor = new wxBoxSizer (wxHORIZONTAL);
-    x1Scissor->Add (4, 0);
-    x1Scissor->Add (new wxStaticText (panel, -1, _("Scissor X1"),
+    x1Scissor->Add(4, 0);
+    x1Scissor->Add(new wxStaticText (panel, -1, _("Scissor X1"),
                                      wxDefaultPosition, wxSize(sz1, -1)),
                    0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    x1Scissor->Add (6, 0);
-    x1Scissor->Add (m_x1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    x1Scissor->Add(6, 0);
+    x1Scissor->Add(m_x1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
     wxBoxSizer *y1Scissor = new wxBoxSizer (wxHORIZONTAL);
-    y1Scissor->Add (4, 0);
-    y1Scissor->Add (new wxStaticText (panel, -1, _("Scissor Y1"),
+    y1Scissor->Add(4, 0);
+    y1Scissor->Add(new wxStaticText (panel, -1, _("Scissor Y1"),
                                         wxDefaultPosition, wxSize(sz1, -1)),
                       0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    y1Scissor->Add (6, 0);
-    y1Scissor->Add (m_y1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    y1Scissor->Add(6, 0);
+    y1Scissor->Add(m_y1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
-    wxStaticBoxSizer *scissorbox = new wxStaticBoxSizer (
+    wxStaticBoxSizer* scissorbox = new wxStaticBoxSizer (
                      new wxStaticBox (panel, -1, _("Scissor_1")),
                      wxVERTICAL);
-    scissorbox->Add (x1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    scissorbox->Add (0, 6);
-    scissorbox->Add (y1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    scissorbox->Add (0, 4);
+    scissorbox->Add(x1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    scissorbox->Add(0, 6);
+    scissorbox->Add(y1Scissor, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    scissorbox->Add(0, 4);
 
     // alpahbox
     m_alpha = new wxTextCtrl(panel, -1, "0");
-    wxBoxSizer *alpha = new wxBoxSizer (wxHORIZONTAL);
-    alpha->Add (4, 0);
-    alpha->Add (new wxStaticText (panel, -1, _("Alpha_1"),
-                                        wxDefaultPosition, wxSize(sz1, -1)),
-                      0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
-    alpha->Add (6, 0);
-    alpha->Add (m_alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    wxBoxSizer* alpha = new wxBoxSizer (wxHORIZONTAL);
+    alpha->Add(4, 0);
+    alpha->Add(new wxStaticText (panel, -1, _("Alpha_1"),
+                wxDefaultPosition, wxSize(sz1, -1)),
+                0, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL);
+    alpha->Add(6, 0);
+    alpha->Add(m_alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
 
-    wxStaticBoxSizer *alphabox = new wxStaticBoxSizer (
+    wxStaticBoxSizer* alphabox = new wxStaticBoxSizer (
                      new wxStaticBox (panel, -1, _("Alpha_1")),
                      wxVERTICAL);
-    alphabox->Add (alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
-    alphabox->Add (0, 4);
+    alphabox->Add(alpha, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL);
+    alphabox->Add(0, 4);
 
     // wxString cSendPrim[2] = {"Yes", "No"};
     // m_sendPrim = new wxRadioBox(panel, -1, "Always send PRIM before xgkick",
@@ -655,8 +653,8 @@ wxPanel *PreferenceDlg::CreatePageGIF() {
     panelpane->Add(xybox, 0, wxALIGN_LEFT|wxEXPAND, 10);
     // panelpane->Add(primbox, 0, wxALIGN_LEFT|wxEXPAND, 10);
     panelpane->Add(colorText, 0, wxALIGN_LEFT|wxEXPAND, 10);
-    panelpane->Add(scissorbox);
-    panelpane->Add(alphabox);
+    panelpane->Add(scissorbox, 0, wxALIGN_LEFT|wxEXPAND, 10);
+    panelpane->Add(alphabox, 0, wxALIGN_LEFT|wxEXPAND, 10);
 
     panel->SetSizer(panelpane);
     return panel;
@@ -685,5 +683,4 @@ void PreferenceDlg::SetValuesPageGIF() {
     m_x1Scissor->SetValue(wxString::Format("%d", g_GIFPrefs.scissorX));
     m_y1Scissor->SetValue(wxString::Format("%d", g_GIFPrefs.scissorY));
     PRIM = g_GIFPrefs.prim;
-    // updatePrimChoices();
 }

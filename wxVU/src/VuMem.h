@@ -32,6 +32,7 @@ public:
     void    WriteW(uint32 row, int16 x);
 
     int32   ReadVector(uint32 row);
+    int32   ReadMem(uint32* data, uint32 offset, uint32 size);
     int32   ReadX(uint32 row);
     int32   ReadY(uint32 row);
     int32   ReadZ(uint32 row);

@@ -33,10 +33,6 @@ using namespace std;
 //---------------------------------------------------------------------------
 extern MicroCode Instr;
 
-uint32 getFLGField(uint64 data);
-uint32 getNregs(uint64);
-uint32 validateRegsField(uint64);
-
 static int running = 0;
 static int accumulatedTicks = 0;
 
@@ -373,8 +369,6 @@ VUFrame::SetSettings() {
         m_pGridCode->SetDefaultCellFont(font);
     }
     // set font here.
-    // set color for text here
-    // set bg color here.
 
     key = PAGE_GIF;
     yoffset = conf->Read(key + _T("/") + YOFFSET, 0L);
@@ -621,16 +615,7 @@ VUFrame::LoadMemory(wxFileName file) {
             m_pVu1->WriteMemZ(i, z);
             m_pVu1->WriteMemW(i, w);
             if ( tagShow == 0 ) {
-                if (
-                    (validateRegsField(((uint64)z<<32)+w) == getNregs(((uint64)x<<32)+y))
-                    && ((getFLGField(((uint64)x<<32)+y) == 0))
-                   ) {
-                    // m_pVu1->dataMem[i].gif = true;
-                } else {
-                    // m_pVu1->dataMem[i].gif = false;
-                }
             } else {
-                // m_pVu1->dataMem[i].gif = false;
             }
         }
         fclose(fd);
@@ -1036,7 +1021,7 @@ VUFrame::wrapper_DebugTic(void *objPtr, int p1, int p2) {
 void
 VUFrame::wrapper_XGKICK(void *objPtr, int offset) {
     VUFrame *self = (VUFrame*)objPtr;
-    self->drawGIF((uint32)offset);
+    self->DrawGif((uint32)offset);
 }
 
 void
@@ -1046,13 +1031,17 @@ VUFrame::wrapper_DebugWarning(void *objPtr, wxString message) {
 }
 
 void
-VUFrame::drawGIF(uint32 offset) {
+VUFrame::DrawGif(uint32 offset) {
     uint32 size = (MAX_VUDATA_SIZE-offset)*16;
     uint32 *data = (uint32 *)malloc(size);
     uint32 i, j;
 
     j = 0;
-    // m_pVu1->ReadMem(&data, offset, size);
+    // KLUDGE
+    // will be pushed down to VU kicking data directly to GIF wich then kicks
+    // to GS and GS will have the logic for sending to PS2 and/or 
+    // displaying in a GL window/display list tab
+    m_pVu1->ReadMem(data, offset, size);
 
     if (autoGSExec == 0) {
         if (sendPrim == 0) {
@@ -1436,28 +1425,4 @@ VUFrame::OnOptionTraceVif(wxCommandEvent &event) {
 void
 VUFrame::OnOptionTraceVu(wxCommandEvent &event) {
     m_pVu1->Trace(event.IsChecked());
-}
-
-uint32
-validateRegsField(uint64 regs) {
-    int counter = 0;
-    for(int i = 0; i < 16; i++) {
-        if (((regs)&0xf) != 0xf) {
-            counter++;
-        } else {
-            break;
-        }
-        regs = regs >> 4;
-    }
-    return counter;
-}
-
-uint32
-getFLGField(uint64 data) {
-    return ((data>>60));
-}
-
-uint32
-getNregs(uint64 data) {
-    return ((data>>60));
 }

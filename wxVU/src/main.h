@@ -234,7 +234,7 @@ private:
         static void wrapper_XGKICK(void *objPtr, int offset);
         static void wrapper_DebugWarning(void *objPtr, wxString message);
         void        DebugTic(int, int);
-        void        drawGIF(uint32 offset);
+        void        DrawGif(uint32 offset);
 
         DECLARE_EVENT_TABLE()
 };

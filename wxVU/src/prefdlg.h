@@ -1,5 +1,5 @@
-#ifndef _PREFDLG_H_
-#define _PREFDLG_H_
+#ifndef __PREFDLG__
+#define __PREFDLG__
 
 //! wxWindows headers
 #include <wx/notebook.h> // notebook support
@@ -39,67 +39,50 @@ public:
     ~PreferenceDlg ();
 
     //! event handlers
-    void OnApply (wxCommandEvent& event);
-    void OnCancel (wxCommandEvent& event);
-    void OnOkay (wxCommandEvent& event);
-    void OnReset (wxCommandEvent& event);
-    void OnHelp (wxCommandEvent &event);
+    void            OnApply(wxCommandEvent& event);
+    void            OnCancel(wxCommandEvent& event);
+    void            OnOkay(wxCommandEvent& event);
+    void            OnReset(wxCommandEvent& event);
+    void            OnHelp(wxCommandEvent &event);
 
-    void OnStyletypeChoose (wxCommandEvent &event);
-    void OnKeywordsChange (wxCommandEvent &event);
-    void OnGIFPRIM(wxCommandEvent &event);
-    void OnGIFIIP(wxCommandEvent &event);
-    void OnGIFTME(wxCommandEvent &event);
-    void OnGIFFGE(wxCommandEvent &event);
-    void OnGIFABE(wxCommandEvent &event);
-    void OnGIFAA1(wxCommandEvent &event);
-    void OnGIFFST(wxCommandEvent &event);
-    void OnTextPrim(wxCommandEvent &event);
-    void OnTextColor(wxCommandEvent &event);
-    void updateTextPrim(void);
-    void updatePrimChoices(void);
+    void            OnStyletypeChoose (wxCommandEvent &event);
+    void            OnKeywordsChange (wxCommandEvent &event);
+    void            OnGIFPRIM(wxCommandEvent &event);
+    void            OnTextPrim(wxCommandEvent &event);
+    void            OnTextColor(wxCommandEvent &event);
+    void            UpdateTextPrim(void);
+    void            UpdatePrimChoices(void);
 
 private:
-    Prefs *m_prefs;
+    void            GetValuesPageLoad();
+    void            SetValuesPageLoad();
+    void            GetValuesPageRemote();
+    void            SetValuesPageRemote();
+    void            GetValuesPageStyles();
+    void            SetValuesPageStyles();
+    void            GetValuesPageGIF();
+    void            SetValuesPageGIF();
+    wxPanel*        CreatePageLoad();
+    wxPanel*        CreatePageStyles();
+    wxPanel*        CreatePageRemote();
+    wxPanel*        CreatePageGIF();
 
-    wxString m_default_fontname;
+    Prefs*          m_pPrefs;
+
+    wxString        m_default_fontname;
 
     //! preferences pages
-    wxNotebook *m_prefsBook;
-    wxPanel *CreatePageLoad();
-    wxPanel *CreatePageStyles();
-    wxPanel *CreatePageRemote();
-    wxPanel *CreatePageGIF();
-    void GetValuesPageLoad();
-    void SetValuesPageLoad();
-    void GetValuesPageRemote();
-    void SetValuesPageRemote();
-    void GetValuesPageStyles();
-    void SetValuesPageStyles();
-    void GetValuesPageGIF();
-    void SetValuesPageGIF();
+    wxNotebook*     m_pPrefsBook;
 
     // declarations for Load
-    wxRadioBox      *m_regOrder;
-    wxRadioBox      *m_autoLoad;
-    wxTextCtrl      *m_regStateFile;
-    wxTextCtrl      *m_memStateFile;
+    wxRadioBox*     m_pRegOrder;
+    wxRadioBox*     m_pAutoLoad;
+    wxTextCtrl*     m_pRegStateFile;
+    wxTextCtrl*     m_pMemStateFile;
 
     // declarations for PAGE_STYLE
-    int             m_styleNr;
-    wxComboBox      *m_styletype;
-    StyleInfo       *m_curStyle;
-    wxTextCtrl      *m_foreground;
-    wxTextCtrl      *m_background;
-    wxComboBox      *m_fontname;
-    wxTextCtrl      *m_fontsize;
-    wxCheckBox      *m_stylebold;
-    wxCheckBox      *m_styleitalic;
-    wxCheckBox      *m_styleunderl;
-    wxCheckBox      *m_stylehidden;
-    wxRadioButton   *m_unchanged;
-    wxRadioButton   *m_uppercase;
-    wxRadioButton   *m_lowercase;
+    wxComboBox*     m_pFontName;
+    wxTextCtrl*     m_pFontsize;
 
     // declarations for PAGE_REMOTE
     wxRadioBox      *m_AutoGSExec;

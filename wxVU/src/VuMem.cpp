@@ -173,6 +173,18 @@ VuMem::WriteW(uint32 row, uint32 w) {
     return;
 }
 
+// Read functions
+
+int32
+VuMem::ReadMem(uint32* data, uint32 offset, uint32 size) {
+    for(int i = offset; i < size/16; i++) {
+        data[i*4+0] = m_pVuMemArray[i].x;
+        data[i*4+1] = m_pVuMemArray[i].y;
+        data[i*4+2] = m_pVuMemArray[i].z;
+        data[i*4+3] = m_pVuMemArray[i].w;
+    }
+}
+
 int32
 VuMem::ReadX(uint32 row) {
     if ( row > m_maxRows ) {

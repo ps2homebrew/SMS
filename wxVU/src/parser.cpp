@@ -936,7 +936,6 @@ Parser::getLine(char *line, char *data){
 
 bool
 Parser::LoadAsciiCode(ifstream *fin, char *code, int size) {
-    cout << "LoadAsciCode" << endl;
     fin->read(code, size);
     return true;
 }
@@ -948,8 +947,6 @@ Parser::LoadBinaryCode(ifstream *fin, char *data) {
     char lparam[50];
     char uparam[50];
     string test;
-
-    cout << "LoadBinaryCode" << endl;
 
     while(!fin->eof() ) {
         fin->read((char *)&lcode, sizeof(uint32));

@@ -34,7 +34,6 @@ Remote::GetMiscRegisters(void) {
         return E_FILE_OPEN;
     }
     if ( (fd = fopen(m_miscFilename, "wb")) == NULL ) {
-        fclose(fd);
         return E_FILE_OPEN;
     }
     if ( Open() < 0 ) {
@@ -72,7 +71,6 @@ Remote::GsExec(const unsigned char* buffer, const uint32 size) {
         return E_FILE_OPEN;
     }
     if ( (fd = fopen(m_gsFilename, "wb")) == NULL ) {
-        fclose(fd);
         return E_FILE_OPEN;
     }
     fwrite(buffer, size, 1, fd);

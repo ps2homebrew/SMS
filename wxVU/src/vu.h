@@ -53,6 +53,7 @@ public:
 	uint16          ClipFlag[4];
 	int             StatusFlag;
 	char            MacZ,MacS,MacU,MacO;
+    int32           ReadMem(uint32* data, uint32 offset, uint32 size);
     int32           ReadMemX(uint32 row);
     int32           ReadMemY(uint32 row);
     int32           ReadMemZ(uint32 row);

@@ -267,6 +267,11 @@ Vu::WriteMemW(uint32 row, uint32 w) {
 }
 
 int32
+Vu::ReadMem(uint32* data, uint32 offset, uint32 size) {
+    return m_pVuMem->ReadMem(data, offset, size);
+}
+
+int32
 Vu::ReadMemX(uint32 row) {
     return m_pVuMem->ReadX(row);
 }
