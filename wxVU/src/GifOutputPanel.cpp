@@ -49,6 +49,17 @@ GifOutputPanel::SetBackgroundColour(const wxColour& colour) {
     return true;
 }
 
+void
+GifOutputPanel::SetDefaultFont(const wxFont& font) {
+    int height;
+    height = font.GetPointSize();
+    m_pGifGrid->SetDefaultCellFont(font);
+    m_pGifGrid->SetLabelFont(font);
+    m_pGifGrid->SetColLabelSize((int)(2*height));
+    m_pGifGrid->SetDefaultRowSize((int)(1.5*height), TRUE);
+    m_pGifGrid->ForceRefresh();
+}
+
 /////////////////////////////// PRIVATE    ///////////////////////////////////
 void GifOutputPanel::BuildGifOutputPanel() {
     uint32 i;

@@ -27,6 +27,7 @@ public:
     void        WriteP(const float x, const float y, const float z, const float w);
     void        WriteR(const float x, const float y, const float z, const float w);
     void        WriteI(const float x, const float y, const float z, const float w);
+    void        SetDefaultFont(const wxFont& font);
 private:
     DECLARE_EVENT_TABLE()
 

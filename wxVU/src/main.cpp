@@ -375,6 +375,10 @@ VUFrame::SetSettings() {
     if ( m_pGridCode != NULL ) {
         wxFont font (10, wxMODERN, wxNORMAL, wxNORMAL, false, fontname);
         m_pGridCode->SetDefaultCellFont(font);
+        m_pMemoryPanel->SetDefaultFont(font);
+        m_pGifPanel->SetDefaultFont(font);
+        // m_pRemoteRegisters->SetDefaulFont(font);
+        m_pRegisterView->SetDefaultFont(font);
     }
     // set font here.
 
@@ -1425,7 +1429,9 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 }
 
 bool VUemu::OnInit() {
-    ms_pFrame = new VUFrame("VU Emu", wxPoint(10, 10), wxSize(800, 600));
+    // TODO
+    // load preferred size saved from pref.
+    ms_pFrame = new VUFrame("VU Emu", wxPoint(10, 10), wxSize(1024, 768));
     ms_pFrame->Show(TRUE);
     SetTopWindow(ms_pFrame);
     return TRUE;

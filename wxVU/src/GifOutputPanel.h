@@ -20,6 +20,7 @@ public:
     void            Write(const wxString& col1, const wxString& col2);
     void            Clear(void);
     bool            SetBackgroundColour(const wxColour& colour);
+    void            SetDefaultFont(const wxFont& font);
 private:
     DECLARE_EVENT_TABLE()
     void            BuildGifOutputPanel(void);

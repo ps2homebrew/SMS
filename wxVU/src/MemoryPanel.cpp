@@ -105,6 +105,17 @@ MemoryPanel::Clear(void) {
     return;
 }
 
+void
+MemoryPanel::SetDefaultFont(const wxFont& font) {
+    int height;
+    height = font.GetPointSize();
+    m_pMemoryGrid->SetDefaultCellFont(font);
+    m_pMemoryGrid->SetLabelFont(font);
+    m_pMemoryGrid->SetColLabelSize((int)(2*height));
+    m_pMemoryGrid->SetDefaultRowSize((int)(1.5*height), TRUE);
+    m_pMemoryGrid->ForceRefresh();
+}
+
 /////////////////////////////// PRIVATE ///////////////////////////////////
 void
 MemoryPanel::BuildMemoryPanel(uint32 maxRows) {

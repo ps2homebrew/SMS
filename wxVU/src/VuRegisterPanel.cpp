@@ -156,6 +156,36 @@ VuRegisterPanel::WriteI(const float x, const float y, const float z, const float
     m_pSpecRegArray[4].w = w;
 }
 
+void
+VuRegisterPanel::SetDefaultFont(const wxFont& font) {
+    int height;
+    height = font.GetPointSize();
+    m_pSpecRegGrid->SetDefaultCellFont(font);
+    m_pSpecRegGrid->SetLabelFont(font);
+    m_pSpecRegGrid->SetColLabelSize((int)(2*height));
+    m_pSpecRegGrid->SetDefaultRowSize((int)(1.5*height), TRUE);
+    m_pSpecRegGrid->ForceRefresh();
+
+    m_pIntRegGrid->SetDefaultCellFont(font);
+    m_pIntRegGrid->SetLabelFont(font);
+    m_pIntRegGrid->SetColLabelSize((int)(2*height));
+    m_pIntRegGrid->SetDefaultRowSize((int)(1.5*height), TRUE);
+    m_pIntRegGrid->ForceRefresh();
+
+    m_pFloatRegGrid->SetDefaultCellFont(font);
+    m_pFloatRegGrid->SetLabelFont(font);
+    m_pFloatRegGrid->SetColLabelSize((int)(2*height));
+    m_pFloatRegGrid->SetDefaultRowSize((int)(1.5*height), TRUE);
+    m_pFloatRegGrid->ForceRefresh();
+
+    m_pIntRegPanel->SetFont(font);
+    m_pIntRegPanel->Refresh();
+    m_pFloatRegPanel->SetFont(font);
+    m_pFloatRegPanel->Refresh();
+    m_pSpecRegPanel->SetFont(font);
+    m_pSpecRegPanel->Refresh();
+}
+
 /////////////////////////////// PRIVATE    ///////////////////////////////////
 void
 VuRegisterPanel::BuildVuRegisterPanel() {

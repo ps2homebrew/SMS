@@ -44,6 +44,7 @@ public:
         const int32     w
         );
     void Clear(void);
+    void        SetDefaultFont(const wxFont& font);
 private:
     DECLARE_EVENT_TABLE()
 

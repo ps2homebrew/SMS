@@ -18,23 +18,21 @@
 . save breakpoint data with project ( brkfile= )
 . add break on xgkick/mscal/mscnt/unpack to some breakpoint dialog.
 . wxGL output window for dislpaylists (Gif::SetOutput(Remote:: and/or wxGL::))
+. large immediates dont generate a warning ( .vsm files | dvp-as doesnt either )
 
 ! emulate VU single precision float ( some differences from IEEE 754 )
 ! accumulated cycle count, and on per loop basis.
 * breakpoint on register/memory condition
 
 **** Version 1 ****
-. large immediates dont generate a warning ( .vsm files | dvp-as doesnt either )
-. change row/column order of registers
 ! add commandline options in pref for batchtools like dumpreg/dumpmem/gsexec
-! always load all the disasmed code and flag for error ( omit badlines ), lineno
-    with red color in debug output, debug callback.
-! truncate code and flag for it, add option in pref.
+
+* always load all the disasmed code and flag for error
+*
 * Start on errno.h ( and some getErrorAsText()/perror() thingy )
 * generate labelnames on disasm 
 * Full VIF support ( mask write doesnt work )
 * Parse DMA Tags
-
 * labels take up a memory slot when you load .vsm's
 * accumulated cycle count in statusbar.
 * if instructions.txt not found show a filedialog
