@@ -13,6 +13,7 @@
 #include "dma.h"
 #include "math.h"
 #include "vram_malloc.h"
+#include "prim.h"
 
 #define MAX_TEXTURES 40
 
@@ -94,8 +95,6 @@ void PbTexture_SetRenderTarget( PbTexture* pTexture )
 
 void PbTexture_Copy( PbTexture* pDest, PbTexture* pSource )
 {
-  u64* p_data = NULL;
-  u64* p_store = NULL;
   rect r;
 
   PbTexture_SetRenderTarget( pDest );
@@ -119,8 +118,6 @@ void PbTexture_Copy( PbTexture* pDest, PbTexture* pSource )
   
   fill_rect_tex( r, pSource->Vram, pSource->x, pSource->x );
 }
-
-static float count = 0.002f;
 
 ///////////////////////////////////////////////////////////////////////////////
 // PbTexture_Copy
@@ -303,7 +300,7 @@ void PbTexture_Blend( PbTexture* pDest, PbTexture* pSource, int a1, int a2 )
 void PbTexture_GaussianBlur( PbTexture* pSource,PbTexture* pDest, float cx, float cy, 
                              float v, int n, int mix1, int mix2 )
 {
-  float scale=v;
+//  float scale=v;
   int t;
 
   static int printed = FALSE;

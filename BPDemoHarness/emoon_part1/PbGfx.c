@@ -8,6 +8,7 @@
 #include "PbGlobal.h"
 #include "PbGs.h"
 #include "ps2gs.h"
+#include "PbDma.h"
 
 int fb = 0;
 u32 color = 0;

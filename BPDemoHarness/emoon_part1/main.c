@@ -13,7 +13,6 @@ const demo_init_t* gp_Info;
 
 u32 start_demo( const demo_init_t* pInfo )
 {
-  float time       = 0.0f;
   float old_time   = 0.0f;
   float delta_time = 0.0f;
 
