@@ -24,7 +24,7 @@ typedef struct _demo_init
 } demo_init_t;
 
 #define SCR_W 640
-#define SCR_H 224
+#define SCR_H 256
 #define SCR_INT 0
 #define SCR_FIELD 0
 #define SCR_MAGW 4
