@@ -1,6 +1,22 @@
-/**************************************
-****  NEOCD.C  - Main Source File  ****
-**************************************/
+/*
+ *  neocd.c - Main file
+ *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 //-- Include Files -----------------------------------------------------------
 
@@ -24,8 +40,9 @@
 #include "video/video.h"
 #include "sound/sound.h"
 #include "save/mc.h"
-#include "data/startup.h"
-#include "data/patch.h"
+#include "static/startup.h"
+#include "static/patch.h"
+#include "misc/timer.h"
 
 
 
@@ -37,7 +54,6 @@ char		*neogeo_fix_memory __attribute__((aligned(64))) = NULL;
 char		*neogeo_spr_memory __attribute__((aligned(64))) = NULL;
 char		*neogeo_pcm_memory __attribute__((aligned(64))) = NULL; // 64
 
-//int		neogeo_prio_mode = 0;
 int		neogeo_ipl_done = 0;
 unsigned char	config_game_name[128]  __attribute__((aligned(64)));
 char 		neogeo_game_vectors[128]  __attribute__((aligned(64))); 
@@ -50,14 +66,16 @@ char            *OP_ROM;
 int 		boot_mode = BOOT_UNKNOW; // by defaut
 int 		game_boot_mode = BOOT_HOST; // by defaut
 
-extern 		u8 *cdvdIrx;		
-extern 		int size_cdvdIrx;
-//extern	u8 *sjpcmIrx;		
-//extern	int size_sjpcmIrx;
-extern 		u8 *isjpcmIrx;		
-extern 		int size_isjpcmIrx;
+static int frameskip_counter = 0;
 
-int z80_cycles;
+int frame_counter = 0;
+
+int fps; 
+extern unsigned vsync_freq; 
+   
+static unsigned lastime, mytime =0, elapsed, mycounter; 
+
+//int z80_run_cycles;
 
 // default emulator settings
 struct_neocdSettings neocdSettings  = 
@@ -65,12 +83,15 @@ struct_neocdSettings neocdSettings  =
 		(VERSION2_MAJOR * 10 + VERSION2_MINOR),
 		REGION_USA,	// Current region = USA
 		0,		// Filter: Nearest
-		1,		// SOUND: OFF
-		0,		// RFU: ON
+		1,		// SOUND: ON
+		1, 		// SHOW_FPS: ON
+		0,		// frameskip
 		0,		// CDDA: OFF
 		1,		// SAVE: ON
 		83, 40,		// PAL x/y offset
-		83, 17		// NTSC x/y offset
+		83, 25,		// NTSC x/y offset
+		0,		// FULLSCREEN
+		0,0,0		// RFU
 }; 
 
 // default machine settings
@@ -142,9 +163,12 @@ int	main(int argc, char* argv[])
 	    }
 	}
 	
-  	if (!strncmp(path_prefix, "cdrom", strlen("cdrom"))) {
+  	if (!strncmp(path_prefix, "cdrom", strlen("cdrom"))) 
+  	{
         	printf("Booting from cd\n");
         	boot_mode = BOOT_CD;
+        	// replace cdrom path with cdfs -> libcdvd
+        	strcpy (path_prefix,"cdfs:\\");
         } else if(!strncmp(path_prefix, "mc", strlen("mc"))) {
         	printf("Booting from mc\n");
         	boot_mode = BOOT_MC;
@@ -209,8 +233,8 @@ int	main(int argc, char* argv[])
 	
 	// Allocate needed memory buffers	
 	printf("NEOGEO: Allocating memory :\n");
+	
 	printf("PRG (2MB) ... ");
-	//neogeo_prg_memory = (char*)malloc(0x200000);
 	neogeo_prg_memory = (char*)memalign(64, 0x200000);
 	if (neogeo_prg_memory==NULL) {
 		printf("failed !\n");
@@ -219,7 +243,6 @@ int	main(int argc, char* argv[])
 	printf("DONE!\n");
 
 	printf("SPR (4MB) ... ");
-	//neogeo_spr_memory = (char*)malloc(0x400000);
 	neogeo_spr_memory = (char*)memalign(64, 0x400000);
 	if (neogeo_spr_memory==NULL) {
 		printf("failed !\n");
@@ -228,7 +251,6 @@ int	main(int argc, char* argv[])
 	printf("DONE!\n");
 	
 	printf("ROM (512kb) ... ");
-	//neogeo_rom_memory = (char*)malloc(0x80000);
 	neogeo_rom_memory = (char*)memalign(64, 0x80000);
 	if (neogeo_rom_memory==NULL) {
 		printf("failed !\n");
@@ -238,7 +260,6 @@ int	main(int argc, char* argv[])
 	printf("DONE!\n");
 
 	printf("FIX (128kb) ... ");
-	//neogeo_fix_memory = (char*)malloc(0x20000);
 	neogeo_fix_memory = (char*)memalign(64, 0x20000);
 	if (neogeo_fix_memory==NULL) {
 		printf("failed !\n");
@@ -247,7 +268,6 @@ int	main(int argc, char* argv[])
 	printf("DONE!\n");
 
 	printf("PCM (1Mb) ... ");
-	//neogeo_pcm_memory = (char*)malloc(0x100000);
 	neogeo_pcm_memory = (char*)memalign(64, 0x100000); // 64
 	if (neogeo_pcm_memory==NULL) {
 		printf("failed !\n");
@@ -261,13 +281,12 @@ int	main(int argc, char* argv[])
 	// Load BIOS
 	printf("Loading BIOS...\n");
 	strcpy (bootpath,path_prefix);
-	if (boot_mode == BOOT_CD) 
-	  strcat (bootpath,"NEOCD.BIN;1"); // "BIOS\\"
-	else strcat (bootpath,"NEOCD.BIN"); // "BIOS\\"
+        strcat (bootpath,"NEOCD.BIN"); // "BIOS"
 	fd = fioOpen(bootpath, O_RDONLY);
 	if (fd<0)
 	{  
 		printf("Fatal Error: Could not load NEOCD.BIN\n");
+		display_errorMessage("NEOCD.BIN BIOS file not found !");
 		return 0;
 	}
 	fioRead(fd, neogeo_rom_memory, 0x80000);
@@ -287,6 +306,7 @@ int	main(int argc, char* argv[])
 	if (*((short*)(neogeo_rom_memory+0xA822)) != 0x4BF9)
 	{
 		printf("Fatal Error: Invalid BIOS file.\n");
+		display_errorMessage("NEOCD.BIN is not a valid BIOS !");
 		return 0;
 	}
 	printf(" OK\n");
@@ -326,12 +346,18 @@ int	main(int argc, char* argv[])
 	
 	// Init save
 	printf("checking save on MC0...\n");
-	initSave();
+	mc_initSave();
+	
+	printf("checking neocd settings...\n");
+	mc_readSettings();
+
 
 	// Initialise input
 	printf("Initialize input...\n");
 	input_init();
 
+	// stop the cd spinning
+	CDVD_Stop();
 	// display splash/credit screen before continuing
 	display_insertscreen();
 	
@@ -347,6 +373,9 @@ int	main(int argc, char* argv[])
 	
 	// Sound init
 	init_audio();
+	
+	// timer init
+	timer_init();
 
 	// Initialize everything
 	neogeo_init();
@@ -367,7 +396,7 @@ void	neogeo_init(void)
 //----------------------------------------------------------------------------
 void	neogeo_hreset(void)
 {
-	printf("NEOGEO Hard Reset...\n");
+	printf("\nNEOGEO Hard Reset...\n");
 	
 	// read game name
 	neogeo_read_gamename();
@@ -426,11 +455,7 @@ void	neogeo_hreset(void)
 	cdda_get_disk_info();
 	
 	printf("init z80...\n");
-#ifdef USE_MAMEZ80
-	cpu_z80_init(); 
-#else
-	z80_init();
-#endif
+	_z80_init();
 	printf("all done...\n");
  
 }	
@@ -462,11 +487,8 @@ void neogeo_reset(void)
 	cdda_current_track = 0;
 
 	printf("init z80...\n");
-#ifdef USE_MAMEZ80
-	cpu_z80_init(); 
-#else
-	z80_init();
-#endif
+
+	_z80_init();
 	printf("done...\n");
 
 }
@@ -527,27 +549,45 @@ void	neogeo_run(void)
 		
 	// Main loop
 	my_timer();
+	//z80_run_cycles = machine_def.z80_cycles_slice;
 	
 	for(;;)
 	{
-		// Execute Z80 timeslice (one VBL)
-#ifdef USE_MAMEZ80
-		;//cpu_z80_raise_irq(0);
-#else
-		;//mz80int(0);
-#endif
-
+		// Time management
+		 lastime = mytime;
+		 mytime  = timer_gettime();  
+		 elapsed = mytime-lastime;
+		 if (elapsed>0xffff)
+		   elapsed = elapsed-0xffff0000; 
+		 mycounter += elapsed;
+		 if(mycounter>=vsync_freq)
+		 {
+		    fps=frame_counter;
+		    // estimated framerate with frameskip
+		    if (neocdSettings.frameskip)
+		    	fps<<=1;
+		    if (fps>machine_def.fps_rate)
+		      fps = machine_def.fps_rate;
+		      
+		    frame_counter=0;
+		    mycounter=0;   
+		 }       
+		 
 		if (neocdSettings.soundOn || neocdSettings.CDDAOn)
 		{
-		
+			
+		    // One-vbl timeslice
+		    //_z80raise(0);
+		    
 		    for( i=256; i--; ) // nb interlace
 		    {
-#ifdef USE_MAMEZ80
-			   cpu_z80_run(machine_def.z80_cycles_slice); 
-#else
-		 	   mz80exec(machine_def.z80_cycles_slice); //z80_cycles
-#endif
-			   my_timer();   
+		    	   //if (z80_run_cycles>0) 
+		    	   //{
+			      _z80exec(machine_def.z80_cycles_slice); //z80_cycles
+			      my_timer();   
+			      // z80_run_cycles=0; 
+			   //}
+			   //z80_run_cycles += machine_def.z80_cycles_slice;
 		    }
 		}
 
@@ -574,7 +614,7 @@ void	neogeo_run(void)
 		   {
 		     // write memory card here
 		     printf("writing to memory card\n");
-		     writeSave();
+		     mc_writeSave();
 		     // if you need to keep file up to date
 		   }
 		}
@@ -582,10 +622,14 @@ void	neogeo_run(void)
 		// update audio buffer
 		if (neocdSettings.soundOn)
 		  play_audio();
+		
+		if (++frameskip_counter > neocdSettings.frameskip) 
+   		{
+			// Call display routine
+			video_draw_screen1();
+			frameskip_counter = 0;
+    		}  
 
-		// Call display routine
-		video_draw_screen1();
-		// vblank
 
 		// Update paddles
 		processEvents();
@@ -684,13 +728,9 @@ void neogeo_cdda_check(void)
 
 	Offset -= 0xE00000;
 	Offset >>= 1;
-#ifdef USE_MAMEZ80
-	neogeo_do_cdda(mame_z80mem[Offset], mame_z80mem[Offset+1]);
-#else
-	neogeo_do_cdda(subcpu_memspace[Offset], subcpu_memspace[Offset+1]);
-#endif
 
-  
+	neogeo_do_cdda(subcpu_memspace[Offset], subcpu_memspace[Offset+1]);
+
 }
 
 //----------------------------------------------------------------------------
@@ -723,14 +763,9 @@ void  neogeo_do_cdda( int command, int track_number_bcd)
 		offset >>= 1;
 
 		m68k_write_memory_8(0x10F678, 1);
-#ifdef USE_MAMEZ80
 
-		mame_z80mem[offset] = 0;
-		mame_z80mem[offset+1] = 0;
-#else
 		subcpu_memspace[offset] = 0;
 		subcpu_memspace[offset+1] = 0;
-#endif
 
 	}
 	
@@ -804,23 +839,12 @@ void loadModules(void)
     
     //SifLoadModule("rom0:CDVDMAN", 0, NULL); // loaded by CDVD lib
     
-    //SifLoadModule("rom0:LIBSD", 0, NULL); // not used with isjpcm
-
     //load cdvd irx
     SifExecModuleBuffer(&cdvdIrx, size_cdvdIrx, 0, NULL, &ret);
     if (ret < 0)
     {
 	printf("Failed to load module: LIBCDVD.IRX \n");    
     }
-        
-    //load sjeep sjpcm irx
-    /*
-    SifExecModuleBuffer(&sjpcmIrx, size_sjpcmIrx, 0, NULL, &ret);
-    if (ret < 0)
-    {
-	printf("Failed to load module: SJPCM.IRX \n");    
-    }
-    */
     
     //load sjeep isjpcm irx
     SifExecModuleBuffer(&isjpcmIrx, size_isjpcmIrx, 0, NULL, &ret);
