@@ -213,6 +213,7 @@ private:
         void		LoadRegisters(char *);
         void		updateStatusBar(void);
         void		txtDebugFailed(wxString message);
+        void        InstFill(void);
         // Config stuff
         Prefs		*m_prefs;
         int			charWidth;

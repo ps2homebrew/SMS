@@ -901,20 +901,24 @@ void VUFrame::OnSaveState(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnReset(wxCommandEvent &WXUNUSED(event)) {
-    int i,j;
 	accumulatedTicks = 0;
     VUchip.Reset();
-    for(i=0; i< Instr.nInstructionDef; i++) {
-        for(j=0; j<15; j++) {
-            Instr.Instr[i].lastthr[j]=0;
-        }
-    }
+    InstFill();
     DrawMemory();
     DrawProgram();
     FastRegisterUpdate();
     Status = RESET;
     txtDebug->AppendText("Status=EMPTY\n");
 }
+
+void
+VUFrame::InstFill() {
+    int i;
+    for(i = 0; i < MAX_VUCODE_SIZE; i++) {
+        insert(strdup("nop"), strdup("loi"), strdup(""), strdup("0x0"), i);
+    }
+}
+
 
 void
 VUFrame::OnSelectCodeCell(wxCommandEvent &WXUNUSED(event)) {
@@ -1775,6 +1779,7 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 	CreateStatusBar(WXSIZEOF(widths), wxST_SIZEGRIP, ID_STATUSBAR);
     statusBar = GetStatusBar();
 
+
     // ok gui is up, lets load the mnemonics
 	if (mnemonicFile.GetFullPath() == "") {	
 		mnemonicFile.Assign("instructions.txt");
@@ -1794,6 +1799,8 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 		}
 	}
 
+    VUchip.Reset();
+    InstFill();
 	FastRegisterUpdate();
     if ( autoLoadLast == 0 ) {
         if ( dataFile.GetFullPath() != "" ) {

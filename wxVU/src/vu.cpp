@@ -32,13 +32,13 @@ VUInstruction::Reset() {
     tics=0;
     breakpoint=0;
     SymbolIndex = -1;
-    InstIndex[0]=0; InstIndex[1]=0;
-    flavor[0]=0; flavor[1]=0;
-    dest[0][0]=0; dest[1][0]=0;
-    for (i=0; i<4; i++) {
-        Params[0][i].Reset();
-        Params[1][i].Reset();   
-    }
+    // InstIndex[0]=0; InstIndex[1]=0;
+    // flavor[0]=0; flavor[1]=0;
+    // dest[0][0]=0; dest[1][0]=0;
+    // for (i=0; i<4; i++) {
+        // Params[0][i].Reset();
+        // Params[1][i].Reset();   
+    // }
 }
 
 VU::VU() {

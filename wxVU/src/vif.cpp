@@ -177,13 +177,12 @@ VIF::cmd_mpg(void) {
     while ( _num > 0 ) {
         _fin.read(&lower, 4);
         _fin.read(&upper, 4);
-        dlower(&lower, lowline, lparam);
-        dupper(&upper, uppline, uparam);
+        dlower(&lower, lowline, lparam );
+        dupper(&upper, uppline, uparam );
         insert(uppline, lowline, uparam, lparam, index);
         // printf("%s\t\t%s\n", uppline, lowline);
         index++;
         _num--;
-        VUchip.NInstructions++;
     }
 
     if ( _num == 0 ) {
@@ -705,6 +704,7 @@ VIF::cmd_unpack(void) {
         _cycle++;
         _write++;
     }
+    return 0;
 }
 
 int
@@ -782,6 +782,11 @@ VIF::unpack_VIF_ERR(const int reg) {
 vector<string>
 VIF::unpack_VIF_MARK(const int reg) {
     vector<string> v;
+    char val[100];
+    v.push_back("NUM");
+    sprintf(val, "0x%x", REGISTERS[reg]&0x000000ff);
+    v.push_back(val);
+    return v;
     return v;
 }
 vector<string>
@@ -796,6 +801,10 @@ VIF::unpack_VIF_NUM(const int reg) {
 vector<string>
 VIF::unpack_VIF_MASK(const int reg) {
     vector<string> v;
+    char val[100];
+    v.push_back("NUM");
+    sprintf(val, "0x%x", REGISTERS[reg]&0x000000ff);
+    v.push_back(val);
     return v;
 }
 vector<string>

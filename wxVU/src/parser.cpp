@@ -728,7 +728,7 @@ ProcessInstruction(char * Line) {
             while (Line[i]!=' ' && Line[i]!='\t' && Line[i]!=0) i++;
             strncpy(token,Line+k,i-k);
             token[i-k]=0;  //parameter grabbed in token
-            SetParam(VUchip.program [VUchip.NInstructions],j,UPPER,token);
+            SetParam(VUchip.program[VUchip.NInstructions],j,UPPER,token);
         }
         else { //intermediate operand, search for a ','
             while ((Line[i]==' ' || Line[i]=='\t') && Line[i]!=0) i++;
@@ -740,11 +740,14 @@ ProcessInstruction(char * Line) {
             if(Line[i]==',') i++;
         }
     }
-    if(!Line[i]) return 0; //sintax error
+    if(!Line[i]) {
+        return 0;
+    }
 
-    //eliminate heading blanks
     while ((Line[i]==' ' || Line[i]=='\t') && Line[i]!=0) i++;
-    if(!Line[i]) return 0; //sintax error
+    if(!Line[i]) {
+        return 0;
+    }
     j=i;
     while (Line[i]!=' ' && Line[i]!='\t' && Line[i]!=0) i++;
     strncpy(token,Line+j,i-j);
@@ -1324,8 +1327,8 @@ get_upper(uint32 code) {
 // insert the upper and lower instruction at a given index
 int
 insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
-    int i=0,j,k,InstIndex, flavor=0;
-    char dest[50], flg;
+    int i = 0, j = 0, k, InstIndex, flavor = 0;
+    char dest[50], token[50], flg;
 
     strupr(upper);
     strupr(lower);
@@ -1340,27 +1343,63 @@ insert(char *upper, char *lower, char *uparam, char *lparam, uint32 index) {
     VUchip.program[index].breakpoint = 0;
     VUchip.program[index].flg = flg;
     VUchip.program[index].SymbolIndex = -1;
-    j = 2;
-    SetParam(VUchip.program[index], j, UPPER, uparam);
+    for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
+        memset(token, 0, 50);
+        if(j==Instr.Instr[InstIndex].operands-1) { //last operand
+            //first eliminate heading blanks
+            while ((uparam[i]==' ' || uparam[i]=='\t') && uparam[i]!=0) i++;
+            k=i;
+            while (uparam[i]!=' ' && uparam[i]!='\t' && uparam[i]!=0) i++;
+            strncpy(token,uparam+k,i-k);
+            token[i-k]=0;  //parameter grabbed in token
+            SetParam(VUchip.program[index],j,UPPER,token);
+        }
+        else { //intermediate operand, search for a ','
+            while ((uparam[i]==' ' || uparam[i]=='\t') && uparam[i]!=0) i++;
+            k=i;
+            while(uparam[i]!=',' && uparam[i]) i++;
+            strncpy(token,uparam+k,i-k);
+            token[i-k]=0; //parameter grabbed in token
+            SetParam(VUchip.program[index],j,UPPER,token);
+            if(uparam[i]==',') i++;
+        }
+    }
 
     if(!IsValidInstruction(lower, LOWER, &InstIndex, &flavor,dest, &flg)) {
         VUchip.program[index].invalid = 1;
         return 0;
     }
     VUchip.program[index].InstIndex[LOWER] = InstIndex;
-    strcpy(VUchip.program[index].dest[LOWER],dest);
+    strcpy(VUchip.program[index].dest[LOWER], dest);
     VUchip.program[index].flavor[LOWER] = flavor;
-    VUchip.program[index].breakpoint = 0;
-    VUchip.program[index].flg = flg;
-    VUchip.program[index].SymbolIndex = -1;
-    j = 2;
-    SetParam(VUchip.program[index], j, LOWER, lparam);
+    i = 0;
+    for (j=0; j<Instr.Instr[InstIndex].operands; j++) {
+        memset(token, 0, 50);
+        if(j==Instr.Instr[InstIndex].operands-1) { //last operand
+            //first eliminate heading blanks
+            while ((lparam[i]==' ' || lparam[i]=='\t') && lparam[i]!=0) i++;
+            k=i;
+            while (lparam[i]!=' ' && lparam[i]!='\t' && lparam[i]!=0) i++;
+            strncpy(token,lparam+k,i-k);
+            token[i-k]=0;  //parameter grabbed in token
+            SetParam(VUchip.program[index],j,LOWER,token);
+        }
+        else { //intermediate operand, search for a ','
+            while ((lparam[i]==' ' || lparam[i]=='\t') && lparam[i]!=0) i++;
+            k=i;
+            while(lparam[i]!=',' && lparam[i]) i++;
+            strncpy(token,lparam+k,i-k);
+            token[i-k]=0; //parameter grabbed in token
+            SetParam(VUchip.program[index],j,LOWER,token);
+            if(lparam[i]==',') i++;
+        }
+    }
     return 1;
 }
 
 // disasm class
 void
-dlower(uint32 *lower, char *low, char *lparam) {
+dlower(uint32 *lower, char *low, char *lparam ) {
     uint32 lidx;
     bzero(lparam, 50);
     lidx = get_lower(*lower);
@@ -1369,18 +1408,16 @@ dlower(uint32 *lower, char *low, char *lparam) {
 }
 
 void
-dupper(uint32 *upper, char *upp, char *uparam) {
+dupper(uint32 *upper, char *upp, char *uparam ) {
     uint32 uidx;
     // char uparam[50];
     bzero(uparam, 50);
     uidx = get_upper(*upper);
     get_params(uidx, *upper, uparam, uopcodes);
     strcpy(upp, uopcodes[uidx].name);
-    if ( uidx != -1 ) {
-        if ( ebit == 1 ) {
-            strcat(upp, "[e]");
-        } else if ( dbit == 1 ) {
-            strcat(upp, "[d]");
-        }
+    if ( ebit == 1 ) {
+        strcat(upp, "[e]");
+    } else if ( dbit == 1 ) {
+        strcat(upp, "[d]");
     }
 }
