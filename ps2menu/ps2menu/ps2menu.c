@@ -21,6 +21,9 @@
 					- changed R1 to toggle host: / HDD view
 					- changed pad-left and pad-right to semi-page-up/page-down
 					- added help screen
+					- added sbv-patches (c) MrBrown - fix for SifLoadModuleBuffer
+					- reintroduced memory card
+					- added cdfs (c) Hiryu / Sjeep
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
 	and libhdd v1.0, ps2drv, ps2link v1.2, ps2 Independence Day
@@ -49,6 +52,18 @@
 #include "errno.h"
 #include "libhdd.h"
 #include "sbv_patches.h"
+#include "cd.h"
+#include "cdvd_rpc.h"
+
+typedef struct
+{
+	u32	fileLBA;
+	u32	fileSize;
+	u8	fileProperties;
+	u8	padding1[3];
+	u8	filename[128+1];
+	u8	padding2[3];
+	} TocEntry __attribute__((packed));
 
 static char padBuf[256] __attribute__((aligned(64)));
 
@@ -107,6 +122,8 @@ extern u8 *ps2fs_irx;			// (c)2003 Vector IOP module for PS2 Filesystem
 extern int size_ps2fs_irx;		// from LIBHDD v1.0
 extern u8 *poweroff_irx;		// (c)2003 Vector IOP module to handle PS2 reset/shutdown
 extern int size_poweroff_irx;		// from LIBHDD v1.0
+extern u8 *cdvd_irx;			// (c)2003 A.Lee(Hiryu) N.Van-Veen(Sjeep) IOP module
+extern int size_cdvd_irx;		// from LIBCDVD v1.15
 extern u8 *iuntar_irx;			// (c)2004 adresd <adresd_ps2dev@yahoo.com> et al IOP module
 extern int size_iuntar_irx;		// from PS2DRV to handle host:.TGZ extraction to HDD
 extern u8 *loader_elf;
@@ -121,28 +138,33 @@ extern void *_end;
 #define TYPE_MC
 //#define TYPE_XMC
 #define ROM_PADMAN
-//#define DOWEFORMAT					// 
-								// Only remove '//' if we really don't
-								// mind wiping incompatible filesystem
 
 #define WIDTH	512
 #define HEIGHT	512
 #define FRAMERATE	4
 #define STATUS_Y	416
 #define MAX_PARTITIONS	10
+#define MAX_PATH	1025
+#define MAX_ENTRY	2048
+#define TRUE	1
+#define FALSE	0
 
 unsigned char *Img;					// pntr to blit buffer
 int g_nWhichBuffer = 0;
 int show_logo = 0;
 int paletteindex = 0;
-char sStatus[256];
+char sStatus[MAX_PATH];
 char foldername[128]="\0";
 
 iox_dirent_t dirbuf __attribute__((aligned(16)));
-char HDDfiles[256][256];
-unsigned int HDDstats[256];
+char HDDfiles[MAX_ENTRY][MAX_PATH] __attribute__((aligned(64)));
+unsigned int HDDstats[MAX_ENTRY] __attribute__((aligned(64)));
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
-char HDDpath[256];
+char fullpath[MAX_PATH] __attribute__((aligned(64)));
+char HDDpath[MAX_PATH] __attribute__((aligned(64)));
+char MCPath[MAX_PATH] __attribute__((aligned(64)));
+char CDpath[MAX_PATH] __attribute__((aligned(64)));
+char destination[MAX_PATH] __attribute__((aligned(64)));
 t_hddFilesystem parties[MAX_PARTITIONS] __attribute__((aligned(64)));
 
 void drawChar(char c, int x, int y, unsigned int colour);
@@ -156,11 +178,15 @@ void ReadHDDFiles();
 void LoadModules();
 void LoadAndRunMCElf(char *filename);
 void MenuKeyboard(char *s);
+void jprintf(char *s);
 
-#define ARRAY_ENTRIES	64
+static mcTable mcDir[MAX_ENTRY] __attribute__((aligned(64)));
+static int mc_Type, mc_Free, mc_Format;
+int num_mc_files,num_cd_files;
 int num_hdd_files,elfhost=1,party=0,nparty;
 unsigned char romver[16];
-int topfil=0, elfload=0;
+int topfil=0, elfload=0, activeHDD, activeMC;
+char mcport = 0;
 
 ////////////////////////////////////////////////////////////////////////
 // Tests for valid ELF file 
@@ -173,33 +199,59 @@ int checkELFheader(char *filename)
 	elf_header_t *eh = (elf_header_t *)boot_elf;
 
 	int fd, size, ret;
-	char fullpath[256];
+	char fullpath[MAX_PATH];
 
-	ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
-	strcpy(fullpath,HDDpath);
-	strcat(fullpath,filename);
-	if ((fd = fileXioOpen(fullpath, O_RDONLY, fileMode)) < 0)
+	strcpy(fullpath,filename);
+	if(elfhost==1)
 	{
-		dbgprintf("Failed in fileXioOpen %s\n",fullpath);
-		goto error;
-		}
-	size = fileXioLseek(fd, 0, SEEK_END);
-	if (!size)
-	{
-		dbgprintf("Failed in fileXioLseek\n");
+		ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
+//		strcpy(fullpath,HDDpath);
+//		strcat(fullpath,filename);
+		if ((fd = fileXioOpen(fullpath, O_RDONLY, fileMode)) < 0)
+		{
+			sprintf(sStatus,"Failed in fileXioOpen %s\n",fullpath);
+			fileXioUmount("pfs0:");
+			goto error;
+			}
+		size = fileXioLseek(fd, 0, SEEK_END);
+		if (!size)
+		{
+			sprintf(sStatus,"Failed in fileXioLseek\n");
+			fileXioClose(fd);
+			fileXioUmount("pfs0:");
+			goto error;
+			}
+		fileXioLseek(fd, 0, SEEK_SET);
+		fileXioRead(fd, boot_elf, 52);
 		fileXioClose(fd);
-		goto error;
+		fileXioUmount("pfs0:");
 		}
-	fileXioLseek(fd, 0, SEEK_SET);
-	fileXioRead(fd, boot_elf, 52);
-	fileXioClose(fd);
-	fileXioUmount("pfs0:");
-
-	if (_lw((u32)&eh->ident) != ELF_MAGIC)
+	if(elfhost==3 || elfhost==4)
 	{
-		dbgprintf("Not a recognised ELF.\n");
+		if ((fd = fioOpen(fullpath, O_RDONLY)) < 0)
+		{
+			sprintf(sStatus,"Failed in fioOpen %s\n",fullpath);
+			goto error;
+			}
+		size = fioLseek(fd, 0, SEEK_END);
+		if (!size)
+		{
+			sprintf(sStatus,"Failed in fioLseek\n");
+			fioClose(fd);
+			goto error;
+			}
+		fioLseek(fd, 0, SEEK_SET);
+		fioRead(fd, boot_elf, 52);
+		fioClose(fd);
+		}
+
+	if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != 2)
+	{
+		sprintf(sStatus,"Not a recognised ELF.\n");
 		goto error;
 		}
+//	dbgprintf("e_type = %x\n",eh->type);
+//	dbgprintf("e_machine = %x\n",eh->machine);
 	return 1;
 error:
 	return -1;
@@ -477,18 +529,20 @@ int dowereformat()
 {
 	int ret;
 
-#ifdef DOWEFORMAT
-	dbgprintf("This will erase all data on the HDD!!!\n");
-	if (hddFormat() < 0)
+	if(hddCheckFormatted()<0)
 	{
-		dbgprintf("ERROR: could not format HDD!\n");
-		return -1;
+		dbgprintf("This will erase all data on the HDD!!!\n");
+		if (hddFormat() < 0)
+		{
+			dbgprintf("ERROR: could not format HDD!\n");
+			return -1;
+			}
+		else
+		{
+			dbgprintf("HDD is connected and formatted.\n");
+			}
 		}
-	else
-	{
-		dbgprintf("HDD is connected and formatted.\n");
-		}
-#endif
+
 	ret = hddMakeFilesystem(1024, "PS2MENU", FS_GROUP_COMMON);
 	if (ret < 0)
 	{
@@ -503,20 +557,53 @@ int dowereformat()
 	return 1;
 	}
 
+void ReadCDDir()
+{
+	TocEntry TocEntryList[MAX_ENTRY] __attribute__((aligned(64)));
+
+//	TocEntryList = (TocEntry*)memalign(64,MAX_ENTRY*sizeof(TocEntry));
+
+	CDVD_FlushCache();
+	num_cd_files = CDVD_GetDir(CDpath, NULL, CDVD_GET_FILES_AND_DIRS, TocEntryList,MAX_ENTRY, CDpath);
+	CDVD_Stop();
+	for(num_hdd_files=0;num_hdd_files<num_cd_files;num_hdd_files++)
+	{
+		sprintf(HDDfiles[num_hdd_files],"%s",TocEntryList[num_hdd_files].filename);
+		if(TocEntryList[num_hdd_files].fileProperties & 0x02) HDDstats[num_hdd_files]=FIO_S_IFDIR;
+		else HDDstats[num_hdd_files]=FIO_S_IFREG;
+		}
+//	free(TocEntryList);
+	}
+
+void ReadMCDir()
+{
+	int ret;
+
+	mcGetDir(mcport, 0, MCPath, 0, MAX_ENTRY - 10, mcDir);
+	mcSync(0, NULL, &ret);
+//	dbgprintf("mcGetDir returned %d listing system directory %s on memory card %d\n\n", ret, MCPath, mcport);
+	num_mc_files = ret;
+	for(num_hdd_files=0;num_hdd_files<num_mc_files;num_hdd_files++)
+	{
+		sprintf(HDDfiles[num_hdd_files],"%s",mcDir[num_hdd_files].name);
+		if(mcDir[num_hdd_files].attrFile & MC_ATTR_SUBDIR) HDDstats[num_hdd_files]=FIO_S_IFDIR;
+		else HDDstats[num_hdd_files]=FIO_S_IFREG;
+		}
+	}
+
 ////////////////////////////////////////////////////////////////////////
 // reads current partition/folder contents to our directory contents
 // array
 void ReadHDDFiles()
 {
 	int rv,fd=0;
-	char filesname[256];
+	char filesname[MAX_PATH];
 
-
-	fileXioUmount("pfs0:");
+//	fileXioUmount("pfs0:");
 	rv = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
 	if(rv < 0)
 	{
-		dbgprintf("ERROR: failed to mount filesystem: %s %d\n", parties[party].filename, rv);
+		sprintf(sStatus,"ERROR: failed to mount filesystem: %s %d\n", parties[party].filename, rv);
 		}
 	if(rv == 0)
 	{
@@ -528,6 +615,7 @@ void ReadHDDFiles()
 			sprintf (HDDfiles[num_hdd_files],"%s",filesname);
 			HDDstats[num_hdd_files]=dirbuf.stat.mode;
 			if ((HDDstats[num_hdd_files] & FIO_S_IFDIR) || (HDDstats[num_hdd_files] & FIO_S_IFREG)) num_hdd_files++;
+			if (num_hdd_files>MAX_ENTRY) break;
 			}
 		}
 	fileXioDclose(fd);
@@ -567,7 +655,7 @@ char *strrchr(const char *sp, int i)
 void PrintHDDFiles(int highlighted)
 {
 	int i,texcol,maxrows,maxchars;
-	char s[256];
+	char s[MAX_PATH];
 	char textfit[(WIDTH/12)-2];
 	char *ptr;
 
@@ -632,7 +720,7 @@ void ReadHostDir(void)
 	fd=fioOpen("host:elflist.txt", O_RDONLY);
 	if(fd<=0)
 	{
-		dbgprintf("elflist.txt not found on host.\n");
+		sprintf(sStatus,"elflist.txt not found on host.\n");
 		}
 	else
 	{
@@ -641,8 +729,7 @@ void ReadHostDir(void)
 		elflist_buffer = malloc(elflist_size);
 		fioRead(fd, elflist_buffer, elflist_size);
 		fioClose(fd);
-		free(elflist_buffer);
-		for(pathlen=0;pathlen<257;pathlen++)
+		for(pathlen=0;pathlen<=MAX_PATH;pathlen++)
 		{
 			HDDfiles[num_hdd_files][pathlen]=(0x00);
 			}
@@ -656,9 +743,13 @@ void ReadHostDir(void)
 //				rv=rv++;			// this skipped LF previously
 				HDDstats[num_hdd_files]=FIO_S_IFREG;
 				num_hdd_files++;
-				for(pathlen=0;pathlen<257;pathlen++)
+				if(num_hdd_files>=MAX_ENTRY) rv=elflist_size;
+				else
 				{
-					HDDfiles[num_hdd_files][pathlen]=(0x00);
+					for(pathlen=0;pathlen<=MAX_PATH;pathlen++)
+					{
+						HDDfiles[num_hdd_files][pathlen]=(0x00);
+						}
 					}
 				if(rv<elflist_size)
 				{
@@ -675,6 +766,7 @@ void ReadHostDir(void)
 			}
 		// just in case there is one path in the elf file with no LF at the end
 		if((num_hdd_files==0) & (pathlen>5)) { HDDstats[0]=FIO_S_IFREG; num_hdd_files++; }
+		free(elflist_buffer);
 		}
 	}
 
@@ -682,76 +774,134 @@ void ReadHostDir(void)
 // Attempt to copy specified file to active HDD partition/folder
 int tomcopy(char *sourcefile)
 {
-	int ret;
-	int boot_fd; 
+	int ret,xiosource,xiodest;
+	int boot_fd,boot_fd2; 
 	size_t boot_size;
 	char *boot_buffer, *ptr, *argv[2];
-	char empty='\0',destination[256],filetype[32];
+	char empty='\0',filetype[32];
 	static char iuntar[512];
+	char savedestination[MAX_PATH];
 
-	ptr = strrchr(sourcefile, '/');
-	if (ptr == NULL)
-	{
-		ptr = strrchr(sourcefile, '\\');
+	sprintf(sStatus,"Copy file %s\n to %s\n",sourcefile,destination);
+	xiosource=FALSE;
+	xiodest=FALSE;
+	strcpy(savedestination,destination);
+		ptr = strrchr(sourcefile, '/');
 		if (ptr == NULL)
 		{
-			ptr = strrchr(sourcefile, ':');
+			ptr = strrchr(sourcefile, '\\');
+			if (ptr == NULL)
+			{
+				ptr = strrchr(sourcefile, ':');
+				}
 			}
-		}
-	ptr++;
-
-	strcpy(destination,"pfs0:");
-	strcpy(destination,HDDpath);
-	strcat(destination,ptr);
-	ptr = strrchr(sourcefile, '.');
-	if (ptr != NULL)
-	{
 		ptr++;
-		strcpy(filetype,ptr);
-		if((!strncmp(filetype,"tgz",3))||(!strncmp(filetype,"tar",3))||(!strncmp(filetype,"gz",2)))
+
+	if(elfhost==2)
+	{
+//	strcpy(destination,"pfs0:");
+//	strcpy(destination,HDDpath);
+		strcat(destination,ptr);
+		ptr = strrchr(sourcefile, '.');
+		if (ptr != NULL)
 		{
-			argv[1]=sourcefile;
-			argv[2]=parties[party].filename;
-			dbgprintf("Loading %s %s\n", argv[1],argv[2]);
-			sprintf(iuntar,"%s%c%s%c", argv[1], empty, argv[2], empty);
-			SifExecModuleBuffer(&iuntar_irx, size_iuntar_irx, strlen(argv[1])+strlen(argv[2])+2, iuntar, &ret);
-			return ret;
+			ptr++;
+			strcpy(filetype,ptr);
+			if((!strncmp(filetype,"tgz",3))||(!strncmp(filetype,"tar",3))||(!strncmp(filetype,"gz",2)))
+			{
+				argv[1]=sourcefile;
+				argv[2]=parties[party].filename;
+				dbgprintf("Loading %s %s\n", argv[1],argv[2]);
+				sprintf(iuntar,"%s%c%s%c", argv[1], empty, argv[2], empty);
+				SifExecModuleBuffer(&iuntar_irx, size_iuntar_irx, strlen(argv[1])+strlen(argv[2])+2, iuntar, &ret);
+				strcpy(destination,savedestination);
+				return ret;
+				}
 			}
 		}
-
-	fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);	
-	boot_fd = fioOpen(sourcefile, O_RDONLY);
+	else strcat(destination,ptr);
+	if(!strncmp(destination,"pfs0:",5)) xiodest=TRUE;
+	if(!strncmp(sourcefile,"pfs0:",5)) xiosource=TRUE;
+	if(xiodest || xiosource) fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+	if(xiosource) boot_fd = fileXioOpen(sourcefile, O_RDONLY, fileMode);
+	else boot_fd = fioOpen(sourcefile, O_RDONLY);
 	if(boot_fd <= 0)
 	{
-		dbgprintf("Open %s Failed\n",sourcefile);
+		sprintf(sStatus,"Open %s Failed\n",sourcefile);
+		strcpy(destination,savedestination);
 		return boot_fd;
 		}
 	else
 	{
-		boot_size = fioLseek(boot_fd,0,SEEK_END);
-		fioLseek(boot_fd,0,SEEK_SET);
+		if(xiosource) boot_size = fileXioLseek(boot_fd,0,SEEK_END);
+		else boot_size = fioLseek(boot_fd,0,SEEK_END);
+		dbgprintf("Try to copy %i bytes of %s to %s\n", boot_size, sourcefile, destination);
+		if(xiosource) fileXioLseek(boot_fd,0,SEEK_SET);
+		else fioLseek(boot_fd,0,SEEK_SET);
 		boot_buffer = malloc(boot_size);
 		if ((boot_buffer)==NULL)
 		{
-			fioClose(boot_fd);
+			if(elfhost!=2)
+			{
+				dbgprintf("Malloc failed. %i\n", boot_buffer);
+				boot_buffer = malloc(1048576);
+				if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
+				if(boot_fd2 < 0)
+				{
+					sprintf(sStatus,"Open %s Failed\n",destination);
+					}
+				else
+				{
+					while(boot_size>=1048576)
+					{
+						boot_size=boot_size-1048576;
+						if (xiosource) fileXioRead(boot_fd, boot_buffer, 1048576);
+						else fioRead(boot_fd, boot_buffer, 1048576);
+						sprintf(iuntar,"Bytes remaining %i\n", boot_size);
+						jprintf(iuntar);
+						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,1048576);
+						else fioWrite(boot_fd2,boot_buffer,1048576);
+						}
+					if(boot_size>0)
+					{
+						if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
+						else fioRead(boot_fd, boot_buffer, boot_size);
+						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,boot_size);
+						else fioWrite(boot_fd2,boot_buffer,boot_size);
+						}
+					if(xiodest)	fileXioClose(boot_fd2);
+					else fioClose(boot_fd2);
+					}
+				free(boot_buffer);
+				}
+			if(xiosource) fileXioClose(boot_fd);
+			else fioClose(boot_fd);
+			strcpy(destination,savedestination);
 			return -1; // a file too big for memory cannot be copied
 			}
-		fioRead(boot_fd, boot_buffer, boot_size);
-		fioClose(boot_fd);
+		if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
+		else fioRead(boot_fd, boot_buffer, boot_size);
+		if(xiosource) fileXioClose(boot_fd);
+		else fioClose(boot_fd);
 		free(boot_buffer);
 		}
-	boot_fd = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+	if (xiodest) boot_fd = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+	else boot_fd = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
 	ret = boot_fd;
 	if(boot_fd < 0)
 	{
-		dbgprintf("Open %s Failed\n",destination);
+		sprintf(sStatus,"Open %s Failed\n",destination);
 		}
 	else
 	{
-		ret = fileXioWrite(boot_fd,boot_buffer,boot_size);
-		fileXioClose(boot_fd);
+		if (xiodest) fileXioWrite(boot_fd,boot_buffer,boot_size);
+		else fioWrite(boot_fd,boot_buffer,boot_size);
+		if(xiodest)	fileXioClose(boot_fd);
+		else fioClose(boot_fd);
 		}
-	fileXioUmount("pfs0:"); 
+	if(xiodest || xiosource) fileXioUmount("pfs0:"); 
+	strcpy(destination,savedestination);
 	return ret;
 	}
 
@@ -761,7 +911,6 @@ void ReDraw(int highlighted)
 {
 	int numc;
 	char txt[2];
-	char fullpath[262];
 
 	txt[1]='\0';
 	numc=1;
@@ -770,8 +919,10 @@ void ReDraw(int highlighted)
 	printXY("Adam & Tom's HDD Boot/Copy Menu", 4, 0, 1);
 	printXY("Working volume:", 4, 16, 1);
 	printXY(parties[party].filename, 128, 16, 2);
-	if(elfhost==1) printXY("Select an ELF to run:", 4, 24, 1);
-	if(elfhost==2) printXY("Select an ELF to copy:", 4, 24, 1);
+	if(elfhost==1) printXY("Contents of hdd0:", 4, 24, 1);
+	if(elfhost==2) printXY("Contents of host:", 4, 24, 1);
+	if(elfhost==3) printXY("Contents of mc0:", 4, 24, 1);
+	if(elfhost==4) printXY("Contents of cdfs:", 4, 24, 1);
 	drawHorizontal(8, 35, 496, 1);
 	drawHorizontal(12, 38, 488, 1);
 	drawVertical(8, 36, 333, 1);
@@ -786,10 +937,27 @@ void ReDraw(int highlighted)
 		strcpy(fullpath, HDDpath);
 		strcat(fullpath, HDDfiles[highlighted]);
 		}
-	else strcpy(fullpath, HDDfiles[highlighted]);
-	printXY(fullpath, 4, 374, 2);
+	if(elfhost==2) strcpy(fullpath, HDDfiles[highlighted]);
+	if(elfhost==3)
+	{
+		strcpy(fullpath, "mc0:");
+		strcat(fullpath, MCPath);
+		fullpath[strlen(fullpath)-1]='\0';
+		strcat(fullpath, HDDfiles[highlighted]);
+		}
+	if(elfhost==4)
+	{
+		strcpy(fullpath, "cdfs:");
+		strcat(fullpath, CDpath);
+		strcat(fullpath, "/");
+		strcat(fullpath, HDDfiles[highlighted]);
+		}
+	printXY("Copy from ", 4, 374, 2);
+	printXY(fullpath, 84, 374, 2);
+	printXY("to folder ", 4, 382, 2);
+	printXY(destination, 84, 382, 2);
 	printBIGXY("Press SELECT for help screen", 4, 390, 0, 1);
-//	printXY(sStatus, 4, STATUS_Y, 2);
+	printXY(sStatus, 4, STATUS_Y, 2);
 	PutImage();
 	}
 
@@ -820,15 +988,15 @@ void showhelp()
 	printXY("RIGHT:    move highlight ten steps down in list.", 66, 152, 1);
 	printXY("BUTTONS:", 66, 168, 1);
 	printXY("SQUARE:   Create folder in current path.", 66, 176, 1);
-	printXY("CIRCLE:   Delete current highlight.", 66, 184, 1);
-	printXY("TRIANGLE: Cancel pop-up from Create/Delete/HELP.", 66, 192, 1);
+	printXY("CIRCLE:   Delete file or remove folder.", 66, 184, 1);
+	printXY("TRIANGLE: Set copy to folder / copy a file.", 66, 192, 1);
 	printXY("CROSS:    PS2 PARTITION view, execute highlighted", 66, 200, 1);
 	printXY("|         file or chdir to highlighted folder.", 66, 208, 1);
 	printXY("|         HOST:ELFLIST.TXT view, copy highlighted", 66, 216, 1);
 	printXY("|         file to active PS2 folder, or extract", 66, 224, 1);
 	printXY("|________ .tgz file to active PS2 partition.", 66, 232, 1);
 	printXY("L1:       Toggle active partition on the PS2 HDD.", 66, 240, 1);
-	printXY("R1:       Toggle host:elflist.txt / PS2 HDD view.", 66, 248, 1);
+	printXY("R1:       Toggle pfs0:-host:-mc0:-cdfs: view.", 66, 248, 1);
 	PutImage();
 	while(!triangle)
 	{
@@ -1043,7 +1211,7 @@ void jprintf(char *s)
 {
 	int i;
 
-	dbgprintf("%s\n", s);
+//	dbgprintf("%s\n", s);
 	for(i=STATUS_Y;i<STATUS_Y+8;i++) drawHorizontal(0,i,WIDTH,0);
 	printXY(s, 4, STATUS_Y, 2);
 	PutImage();
@@ -1061,8 +1229,9 @@ char *SelectELF(void)
 	u32 paddata;
 	u32 old_pad = 0;
 	u32 new_pad;
-	int changed=1;
+	int changed=1,minpath;
 	char botcap,botcap2;
+	char tmppath[MAX_PATH];
 
 	strcpy(HDDpath,"pfs0:/\0");
 	while(!selected)
@@ -1125,7 +1294,7 @@ char *SelectELF(void)
 				else if(0 < highlighted) highlighted--;
 				}
 // Buttons
-			if(new_pad & PAD_L1)
+			if(new_pad & PAD_L1 && activeHDD)
 			{
 				party++;
 				if(party>nparty) party=0;
@@ -1137,34 +1306,84 @@ char *SelectELF(void)
 				}
 			if(new_pad & PAD_R1)
 			{
-				elfhost--;
-				if (elfhost<1) elfhost=2;
+				elfhost++;
+				if (elfhost>4) elfhost=1;
+				if (elfhost==1 && activeHDD==FALSE) elfhost++;
+				if (elfhost==3 && activeMC==FALSE) elfhost++;
 				highlighted=0;
 				topfil=0;
 				changed=1;
 				}
-			if((new_pad & PAD_CIRCLE) && elfhost==1)
+			if(new_pad & PAD_R2)
+			{
+				if (HDDstats[highlighted]&FIO_S_IFREG)
+				{
+					checkELFheader(fullpath);
+					}
+				}
+			if((new_pad & PAD_TRIANGLE))
+			{
+				if (HDDstats[highlighted]&FIO_S_IFREG)
+				{
+					tomcopy(fullpath);
+					}
+				else if(elfhost<4)
+				{
+					i=strlen(fullpath)-1;
+					if(fullpath[i]=='.')
+					{
+						while(fullpath[i]=='.')
+						{
+							fullpath[i]='\0';
+							i--;
+							}
+						}
+					else strcat(fullpath, "/");
+					strcpy(destination,fullpath);
+					}
+				}
+			if((new_pad & PAD_CIRCLE) && (elfhost==1 || elfhost==3))
 			{
 				if(ConfirmYN("Delete?"))
 				{
 				if(HDDstats[highlighted]&FIO_S_IFDIR)
 				{
-					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
-					strcpy(sStatus,HDDpath);
-					strcat(sStatus,HDDfiles[highlighted]);
-					fileXioRmdir(sStatus);
-					fileXioUmount("pfs0:");
+					if(elfhost==1)
+					{
+						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+						strcpy(tmppath,HDDpath);
+						strcat(tmppath,HDDfiles[highlighted]);
+						fileXioRmdir(tmppath);
+						fileXioUmount("pfs0:");
+						}
+					if(elfhost==3)
+					{
+						strcpy(tmppath,"mc0:");
+						strcat(tmppath,MCPath);
+						i=strlen(tmppath);
+						tmppath[i-1]='\0';
+						strcat(tmppath,HDDfiles[highlighted]);
+						fioRmdir(tmppath);
+						}
 					changed=1;
 					highlighted=0;
 					topfil=0;
 					}
 				else
 				{
-					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
-					strcpy(sStatus,HDDpath);
-					strcat(sStatus,HDDfiles[highlighted]);
-					fileXioRemove(sStatus);
-					fileXioUmount("pfs0:");
+					if(elfhost==1)
+					{
+						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+						strcpy(tmppath,HDDpath);
+						strcat(tmppath,HDDfiles[highlighted]);
+						fileXioRemove(tmppath);
+						fileXioUmount("pfs0:");
+						}
+					if(elfhost==3)
+					{
+						fioRemove(fullpath);	// I'm not sure why this happens, fioRemove on mc0:
+						fioRmdir(fullpath);	// appears to create a folder with the same name
+						}				// as the deleted file!!!
 					changed=1;
 					highlighted=0;
 					topfil=0;
@@ -1177,17 +1396,38 @@ char *SelectELF(void)
 				changed=1;
 				}
 				}
-			if((new_pad & PAD_SQUARE) && elfhost==1)
+			if((new_pad & PAD_SQUARE) && (elfhost==1 || elfhost==3))
 			{
 				MenuKeyboard("Create folder, enter name");
 				if(strlen(foldername)>0)
 				{
-					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
-					fileXioChdir(HDDpath);
-					strcat(HDDpath,foldername);
-					fileXioMkdir(HDDpath, fileMode);
-					fileXioUmount("pfs0:");
-					strcat(HDDpath, "/\0");
+					if(elfhost==1)
+					{
+						fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+//						dbgprintf("%i Trying to cd %s\n%s\n",strlen(HDDpath),HDDpath,parties[party].filename);
+						fileXioChdir(HDDpath);
+						strcat(HDDpath,foldername);
+//						dbgprintf("Trying to create %s\n",HDDpath);
+						fileXioMkdir(HDDpath, fileMode);
+						fileXioUmount("pfs0:");
+						i=strlen(HDDpath);
+						HDDpath[i]='/';
+						HDDpath[i+1]='\0';
+//						strcat(HDDpath, "/\0");
+						}
+					if(elfhost==3)
+					{
+						i=strlen(MCPath);
+						MCPath[i-1]='\0';
+						strcat(MCPath,foldername);
+						strcpy(tmppath,"mc0:\0");
+						strcat(tmppath,MCPath);
+						fioMkdir(tmppath);
+						i=strlen(MCPath);
+						MCPath[i]='/';
+						MCPath[i+1]='*';
+						MCPath[i+2]='\0';
+						}
 					}
 				changed=1;
 				highlighted=0;
@@ -1200,31 +1440,40 @@ char *SelectELF(void)
 				}
 			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
 			{
-				if(elfhost==1)
+				if(elfhost==1 || elfhost==3 || elfhost==4)
 				{
 					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
 						botcap=HDDfiles[highlighted][0];
 						botcap2=HDDfiles[highlighted][1];
+						minpath=6;
+						if(elfhost==1) strcpy(tmppath,HDDpath);
+						else if(elfhost==4) { strcpy(tmppath,CDpath); minpath=0; }
+						else
+						{
+							strcpy(tmppath,MCPath);
+							tmppath[strlen(MCPath)-1]='\0';
+							minpath=1;
+							}
 						if((botcap=='.')&(botcap2=='.'))
 						{
 							i=0;
 							while(botcap!='\0')
 							{
-								botcap=HDDpath[i];
+								botcap=tmppath[i];
 								i++;
 								}
 							i--;
 							i--;
-							while((i>6)&(botcap!='/'))
+							while((i>minpath)&(botcap!='/'))
 							{
 								i--;
-								botcap=HDDpath[i];
+								botcap=tmppath[i];
 								if(botcap=='/')
 								{
-									HDDpath[i+1]='\0';
+									tmppath[i+1]='\0';
 									}
-								if(i==6) HDDpath[i]='\0';
+								if(i==minpath) tmppath[i]='\0';
 								}
 							changed=1;
 							highlighted=0;
@@ -1237,40 +1486,90 @@ char *SelectELF(void)
 								}
 							else
 							{
-								strcat(HDDpath, HDDfiles[highlighted]);
-								strcat(HDDpath, "/\0");
+								strcat(tmppath, HDDfiles[highlighted]);
+								strcat(tmppath, "/\0");
 								changed=1;
 								highlighted=0;
 								topfil=0;
 								}
 							}
+						if(elfhost==1) strcpy(HDDpath,tmppath);
+						else if(elfhost==4) strcpy(CDpath, tmppath);
+						else
+						{
+							i=strlen(tmppath)+1;
+							strcpy(MCPath,tmppath);
+							MCPath[i-1]='*';
+							MCPath[i]='\0';
+							}
 						}
 					else
 					{
-						if(checkELFheader(HDDfiles[highlighted])==1)
-						{
-							sprintf(sStatus, "-  %s -", HDDfiles[highlighted]);
-							selected = 1;
+//						if(elfhost==1)
+//						{
+							if(checkELFheader(fullpath)==1)
+							{
+//								sprintf(sStatus, "-  %s -", HDDfiles[highlighted]);
+								sprintf(sStatus, "-  %s -", fullpath);
+								selected = 1;
+								}
 							}
-						}
+//						else tomcopy(fullpath);
+//						}
 					}
-				else
-				{
-					tomcopy(HDDfiles[highlighted]);
-					}
+//				else
+//				{
+//					tomcopy(HDDfiles[highlighted]);
+//					}
 				}
 			}
 		if (changed)
 		{
 			if (elfhost==1) ReadHDDFiles();
 			if (elfhost==2) ReadHostDir();
+			if (elfhost==3) ReadMCDir();
+			if (elfhost==4) ReadCDDir();
 			changed=0;
 			}
 		ReDraw(highlighted);
 		}
 
 	return HDDfiles[highlighted];
+//	return fullpath;
 	}
+
+// Init MC stuff and get which port the MC is plugged into
+// - returns 0 if there is a card in port 0
+// - else returns 1 if there is a card in port 1
+// - else returns -11
+int InitMC(void)
+{
+	int ret;
+
+	if(mcInit(MC_TYPE_MC) < 0)
+	{
+		jprintf("Failed to initialise memcard server!\n");
+		SleepThread();
+		}
+
+//	dbgprintf("mcInit() OK!\n");
+	mcGetInfo(0, 0, &mc_Type, &mc_Free, &mc_Format);
+	mcSync(0, NULL, &ret);
+//	dbgprintf("mcGetInfo returned %d\n",ret);
+//	dbgprintf("Type: %d Free: %d Format: %d\n\n", mc_Type, mc_Free, mc_Format);
+
+	if( -1 == ret || 0 == ret) return 0;
+
+	mcGetInfo(1,0,&mc_Type,&mc_Free,&mc_Format);
+	mcSync(0, NULL, &ret);
+//	dbgprintf("mcGetInfo returned %d\n",ret);
+//	dbgprintf("Type: %d Free: %d Format: %d\n\n", mc_Type, mc_Free, mc_Format);
+
+	if( -1 == ret || 0 == ret ) return 1;
+
+	return -11;
+	}
+
 
 /*
  * waitPadReady()
@@ -1351,33 +1650,53 @@ int main(int argc, char *argv[])
 {
 	int i=0,ret,elfsubdir=0;
 	char *pc;
-	char s[256];
-
+	char s[MAX_PATH];
+	char *imgcmd = "\0"; //"rom0:UDNL rom0:EELOADCNF";
 
 // Initialise
-//	SifInitRpc(0);
+	SifInitRpc(0);
 
 	if (argc == 0) // Naplink
 	{
 		argc = 1;
 		strcpy(s,"host:");
 		elfload = 2;
-	}
+		}
 	else
 	{
+		
 		strcpy(s,argv[0]);
 		if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
-		else if(!strncmp(s, "mc0:", 4)) elfload=2;	// loading from memory card
-	}
+		if(!strncmp(s, "mc0:", 4)) elfload=2;		// loading from memory card
+		if(!strncmp(s, "cdrom", 5)) elfload=3;		// loading from CD
+		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.0\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.1\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
 		hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)i);
+		if(elfload==3)
+		{
+			cdvdInit(CDVD_EXIT);
+			cdvdExit();
+			fioExit();
+			SifExitIopHeap();
+			SifLoadFileExit();
+			SifExitRpc();
+			scr_printf("Reset IOP\n");
+			SifIopReset(imgcmd, 0);
+			scr_printf("Wait for IOP sync\n");
+			while (SifIopSync());
+			scr_printf("Init RPC\n");
+			SifInitRpc(0);
+			cdvdInit(CDVD_INIT_NOWAIT);
+			}
+		scr_printf("Init MrBrown sbv_patches\n");
 		sbv_patch_enable_lmb();
 		sbv_patch_disable_prefix_check();
+		scr_printf("Load IOP modules from EE memory\n");
 		LoadModules();
 		}
 
@@ -1407,12 +1726,9 @@ int main(int argc, char *argv[])
 //	drawPCX(&mainlogo_pcx,size_mainlogo_pcx, 0, 0);
 
 // set palette
-	for(i=0; i<16; i++)
-	{
-		SetPaletteEntry(0x005A5A5A, 0);
-		SetPaletteEntry(0x00000000, 1);
-		SetPaletteEntry(0x00FFFFFF, 2);
-		}
+	SetPaletteEntry(0x005A5A5A, 0);
+	SetPaletteEntry(0x00000000, 1);
+	SetPaletteEntry(0x00FFFFFF, 2);
 	paletteindex=3;
 	clrEmuScreen(0);
 	PutImage();
@@ -1427,59 +1743,71 @@ int main(int argc, char *argv[])
 	if(hddCheckPresent() < 0)
 	{
 		jprintf("Error: supported HDD not connected!\n");
-		while(1);
+		activeHDD=FALSE;
+		goto checkmc;
 		}
 	if(hddCheckFormatted() < 0)
 	{
 		jprintf("Error: HDD is not properly formatted!\n");
 		if(dowereformat()<0)
 		{
-			while(1);
+			activeHDD=FALSE;
+			goto checkmc;
 			}
 		}
 	i=hddGetFilesystemList(parties, MAX_PARTITIONS);
-	if(i>0)
+	dbgprintf("nparties = %i\n", i);
+	if(i==1)					// just one partition, probably just __boot
 	{
-		nparty=i-1;
-		party=-1;
-		for(i=nparty;i>0;i--)
-		{
-			dbgprintf("Found %s\n",parties[i].name);
-			if(!strncmp(parties[i].name, "PS2MENU", 7)) party=i;
-			}
+		dowereformat();
+		i=hddGetFilesystemList(parties, MAX_PARTITIONS);
 		}
-	else 
+	nparty=i-1;
+	party=-1;
+	for(i=nparty;i>=0;i--)
 	{
-		dbgprintf("No partition found!\nAttempting to create one\n");
-		if(dowereformat()<0)
-		{
-			jprintf("Error: Partition could not be created!\n");
-			}
-		else
-		{
-			i=hddGetFilesystemList(parties, MAX_PARTITIONS);
-			nparty=i-1;
-			}
-		party=nparty;
+		dbgprintf("Found %s\n",parties[i].name);
+		if(!strncmp(parties[i].name, "PS2MENU", 7)) party=i;
 		}
+	if(party==-1) party=nparty;
+	activeHDD=TRUE;
+checkmc:
 	i=0;
 	while(s[i]!='\0')
 	{
 		if(s[i]==0x5c) elfsubdir++;
 		i++;
 		}
+// Initialise MC stuff and get port which MC is plugged into
+	mcport = InitMC();
+	dbgprintf("InitMC() returned %d\n", mcport);
+
+	if(mcport < 0)
+	{
+		dbgprintf("No MC found in either port!\n");
+		ReDraw(0);
+		activeMC=FALSE;
+		}
+	else
+	{
+		activeMC=TRUE;
+		strcpy(MCPath, "/*\0");
+		}
+	if (activeHDD==TRUE) strcpy(destination, "pfs0:\0");
+	else if(activeMC==TRUE) strcpy(destination, "mc0:\0");
+	else strcpy(destination, "host:\0");
 	ReDraw(0);
 // get the pad going
 	padInit(0);
 	if((ret = padPortOpen(0, 0, padBuf)) == 0)
 	{
-		jprintf("padOpenPort failed");
+		dbgprintf("padOpenPort failed!\n");
 		SleepThread();
 		}
 
 	if(!initializePad(0, 0))
 	{
-		jprintf("pad initalization failed!");
+		dbgprintf("pad initialization failed!\n");
 		SleepThread();
 		}
 
@@ -1488,11 +1816,11 @@ int main(int argc, char *argv[])
 	{
 		if(ret==PAD_STATE_DISCONN)
 		{
-			jprintf("Pad is disconnected");
+			dbgprintf("Pad is disconnected");
 			}
 		ret=padGetState(0, 0);
 		}
-
+	CDVD_Init();
 	dbgprintf("Starting SelectELF()...\n");
 
 // main ELF select loop
@@ -1500,6 +1828,19 @@ int main(int argc, char *argv[])
 
 // build correct path to ELF
 	padPortClose(0,0);
+
+	if(elfhost==4)
+	{
+		strcpy(s, "cdfs:");
+		strcat(s, CDpath);
+		}
+	if(elfhost==3)
+	{
+		strcpy(s, "mc0:");
+		strcat(s, MCPath);
+		i=strlen(s);
+		s[i-1]='\0';
+		}
 	if(elfhost==2)
 	{
 		strcpy(s, "host:");
@@ -1521,10 +1862,14 @@ void LoadModules()
 	static char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
 	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40" /*"\0" "-debug"*/;
 
-	if(elfload==2)
+	if(elfload>1)
 	{
 		scr_printf("Loading SIO2MAN\n");
 		SifLoadModule("rom0:SIO2MAN", 0, NULL);
+		scr_printf("Loading MCMAN\n");
+		SifLoadModule("rom0:MCMAN", 0, NULL);
+		scr_printf("Loading MCSERV\n");
+		SifLoadModule("rom0:MCSERV", 0, NULL);
 #ifdef ROM_PADMAN
 		scr_printf("Loading PADMAN\n");
 		ret = SifLoadModule("rom0:PADMAN", 0, NULL);
@@ -1551,12 +1896,18 @@ void LoadModules()
 		scr_printf("Loading ps2hdd.irx %i bytes\n", size_ps2hdd_irx);
 		SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &ret);
 		scr_printf("Loading ps2fs.irx %i bytes\n", size_ps2fs_irx);
-		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret); 
+		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret);
+		scr_printf("Loading cdvd.irx %i bytes\n", size_cdvd_irx);
+		SifExecModuleBuffer(&cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
 		}
 	else
 	{
 		scr_printf("Loading SIOMAN\n");
 		SifLoadModule("rom0:SIO2MAN", 0, NULL);
+		scr_printf("Loading MCMAN\n");
+		SifLoadModule("rom0:MCMAN", 0, NULL);
+		scr_printf("Loading MCSERV\n");
+		SifLoadModule("rom0:MCSERV", 0, NULL);
 #ifdef ROM_PADMAN
 		scr_printf("Loading PADMAN\n");
 		ret = SifLoadModule("rom0:PADMAN", 0, NULL);
@@ -1585,6 +1936,8 @@ void LoadModules()
 		scr_printf("Loading ps2fs.irx %i bytes\n", size_ps2fs_irx);
 		SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &ret);
 		if(ret!=0) ret = SifLoadModule("host:ps2fs.irx", sizeof(pfsarg), pfsarg);
+		scr_printf("Loading cdvd.irx %i bytes\n", size_cdvd_irx);
+		SifExecModuleBuffer(&cdvd_irx, size_cdvd_irx, 0, NULL, &ret);
 		}
 	}
 
