@@ -28,12 +28,13 @@
 #include "misc/misc.h"
 #include "pd4990a.h"
 
+extern char path_prefix[32];
 
 /*-- Version, date & time to display on startup ----------------------------*/
-#define VERSION1 "NeoCD/PS2 0.0.1a\n"
+#define VERSION1 "NeoCD/PS2 0.0.2a\n"
 #define VERSION2 "Compiled on: "__DATE__" "__TIME__"\n"
 
-#define AUTHOR   "PS2 version by [Evilo]\n"
+#define AUTHOR   "PS2 version by [evilo]\n"
 
 /*-- functions -------------------------------------------------------------*/
 
