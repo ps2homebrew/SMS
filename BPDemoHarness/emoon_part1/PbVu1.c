@@ -31,6 +31,7 @@ void PbVu1_AddToChain( int ProgId,void* pChain,int Adress )
 {
   u32* p_start = NULL;
   u32* p_end   = NULL;
+  int count    = 0;
 
   /////////////////////////////////////////////////////////////////////////////
   // finc the correct program
@@ -52,7 +53,7 @@ void PbVu1_AddToChain( int ProgId,void* pChain,int Adress )
   // get the size of the code as we can only send 256 instructions in
   // each MPGtag
 
-  int count = PbVu1_GetSize( p_start, p_end ); 
+  count = PbVu1_GetSize( p_start, p_end ); 
 
   gp_Info->printf( "Code Size: %d\n", count );
   gp_Info->printf( "tag: 0x%x\n", &g_PbVu1_FlatSimple );

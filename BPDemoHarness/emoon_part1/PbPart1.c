@@ -18,10 +18,13 @@ static u64 test[1024*400];
 void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
                           float* pAngles, void* pChain )
 {
-  u16 i = 0;
-  s32 num_coords;
+  s32  num_coords   = 0;
+  u32  num_sections = 0;
+  u16  i            = 0;
+  u32* p_object    = NULL;
   void* p_store_chain = pChain = (void*)&test;
-  u32* p_object = (u32*)PbMeshData_Get( 0 );
+
+  p_object = (u32*)PbMeshData_Get( 0 );
 
   /////////////////////////////////////////////////////////////////////////////////////
   // Setup double buffering
@@ -50,26 +53,22 @@ void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
   *((u32*)pChain)++ = VIF_CODE( VIF_STCYL,0,0x0404 );
   *((u32*)pChain)++ = VIF_CODE( VIF_UNPACK_V4_32,1,8 );
   
-  // add object to the list, max 240 coords for each buffer
+  // add object to the list, max 120 coords for each buffer
 
-  u32 num_sections = *(p_object);
+  num_sections = *(p_object);
   p_object += 4;  // pad
 
   num_sections = 1; // just 1 for now.
 
   for( i = 0; i < num_sections; i++ )
   {
+    int set_gif = 1;
+
     ////////////////////////////////////////////////////////////////////////////////
     // skip forward so we end up on a qword aligned adress.
 
     num_coords = (*p_object);
     p_object += 4; // pad
-
-    //num_coords = 340;
-
-    int set_gif = 1;
-  
-    //p_object += 110*4;
 
     ////////////////////////////////////////////////////////////////////////////////////
     // Add giftag we need for the drawing.
@@ -77,7 +76,6 @@ void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
     while( num_coords > 0 )
     {
       s32 current_count = num_coords > 112 ? 112 : num_coords; 
-      //s32 current_count = 220; 
     
       ////////////////////////////////////////////////////////////////////////////////////
       // Add GifTag to list
