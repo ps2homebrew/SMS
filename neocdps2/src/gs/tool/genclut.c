@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 	  g = (((fd >> 5) & 0x003F) * 0xFF) / 0x3F; 
 	  b = ((fd & 0x1f) * 0xFF)  / 0x1F;
 						
-	  fprintf (stdout, "0x%08x, ",(unsigned int)(r|g <<8|b <<16));
+	  fprintf (stdout, "0x80%x, ",(unsigned int)(r|g <<8|b <<16));
 	  
 	  
 	  cp++;
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	}
 	
 	// last one FFFFFF
-	fprintf (stdout, "0x00ffffff");
+	fprintf (stdout, "0x80ffffff");
 	fprintf(stdout, "} __attribute__((aligned(64)));\n\n");
 	fprintf(stdout,"#endif\n");
 
