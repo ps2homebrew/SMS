@@ -48,6 +48,24 @@ extern char binary_oddments_start[];;
 
 extern u32 OddmentsObject;
 
+
+extern u16 font_lookup[];
+
+u16* gsw_charSizesPointer = font_lookup;
+
+
+extern u32 ps2dev_tex[];
+
+PbTexture* p_texture_ps2dev = NULL; // ps2dev logo tex
+
+extern u32 presents_tex[];
+
+PbTexture* p_texture_presents = NULL; 
+
+
+extern u32 font_tex[];
+
+PbTexture* p_texture_font = NULL; 
 ///////////////////////////////////////////////////////////////////////////////
 // Reference to our vu1 program
 ///////////////////////////////////////////////////////////////////////////////
@@ -75,6 +93,197 @@ float abs(float x)
   if (x > 0) return x;
   else return x * -1.0f;
 }
+
+
+u32 MakeCol(u8 r, u8 g, u8 b, u8 a)
+{
+    return (r<< 0) | (g<< 8) | (b<<16) | (a<<24);
+}
+
+
+int GetCharWidth(char ch)
+{
+    return (int)(*(&gsw_charSizesPointer[(ch*4)+2]) - 
+				*(&gsw_charSizesPointer[ch*4]));
+}
+
+u8 CalcZAlpha(float z)
+{
+    if (z>1.0f)
+        return(u8)(0x80/z);
+    else 
+        return (u8)(0x80*z);
+}
+
+
+
+void zs_ZoomText(char text, s16 xp, s16 yp, int z,
+				  float zoom)
+{
+	char currentChar; // current character
+	u16	*charRect; // current char tex coords	
+    u16	x0, y0, x1, y1;	// rectangle for current character
+	u16 w, h; // width and height of above rectangle
+	u16 offsetY; // to compensate for shrunken char
+	
+	// Read the texture coordinates for current character
+	charRect = gsw_charSizesPointer+(text*4);		
+	x0 = *charRect++;
+	y0 = *charRect++;
+	x1 = *charRect++;
+	y1 = *charRect++;
+	//x0++;
+	//x1;
+	//y1++;
+	//printf("%d\n",gsw_GetCharSizes());
+	w  = x1-x0+1;
+
+	if (1) // are we scaling horizontally?
+	{
+		w  = w * zoom;
+	}	
+
+	h  = y1-y0+1;
+	
+	
+	if (1) // are we scaling vertically?
+	{
+		offsetY = h - (h * zoom);
+		h  = h * zoom;
+		offsetY = h / 2;
+		yp-=(s16)offsetY;
+	}		
+	
+
+	//printf("%d\n",text);
+
+
+    /*
+	if (gsw_stretch_font == ENABLED)
+	{
+		w = w*2;
+	}*/
+	
+    PbPrimSpriteTexture( p_texture_font, 
+                        xp<<4, yp<<4,  
+						x0<<4, y0<<4, 
+                        (xp+w)<<4, (yp+h)<<4,
+						x1<<4, y1<<4,
+						100, MakeCol(0x80,0x80,0x80,CalcZAlpha(zoom) ) ); 
+	
+
+}
+
+
+
+
+
+
+int logoFadeout = 0;
+int logoOffset = 256;
+int logoAlpha = 0x00;
+int preAlpha = 0x00;
+int preToggle = 0;
+int counter = 0;
+int drawText = 0;
+
+char strapline [] = {"THE PROJECT BREAKPOINT DEMO"};
+int strapAlpha[27];
+float strapZoom[27];
+
+void InitTextStuff()
+{
+    int i;
+    float zv = 3.0f;
+    float zvInc = 0.01f;
+
+    for (i=0; i<27; i++)
+    {   
+        strapAlpha[i]=0x00;
+        strapZoom[i]=zv;
+        zv+=zvInc;
+        zvInc+=0.1f;
+    }
+}
+
+void DrawDevLogo()
+{
+    int i;
+    int toff=0;
+
+    PbPrimSpriteTexture( p_texture_ps2dev, 
+                        100<<4, -30<<4,  
+						0<<4, 0<<4, 
+                        500<<4, 120<<4,
+						512<<4, 256<<4,
+						100, MakeCol(0x80,0x80,0x80,logoAlpha) ); 
+
+    PbPrimSpriteTexture( p_texture_presents, 
+                        170<<4, 80<<4,  
+						0<<4, 0<<4, 
+                        426<<4, 144<<4,
+						256<<4, 64<<4,
+						100, MakeCol(0x80,0x80,0x80,preAlpha) ); 
+
+    
+    if (logoFadeout)
+    {
+        if (logoAlpha>0)
+        {
+            logoAlpha--;
+        }
+    }else{
+        if (logoAlpha<0x80)
+        {
+            logoAlpha++;
+        }else{
+            if (!preToggle)
+            {
+                if (preAlpha<0x80)
+                {
+                    preAlpha++;
+                }else{
+                    preToggle=1;
+                }            
+            }else{
+                if (counter<60)
+                {
+                    counter++;
+                }else{
+                    if (preAlpha>0x00)
+                    {
+                        preAlpha--;
+                    }      
+                }
+            }
+        }
+    }
+
+    if (logoFadeout)
+    {
+        if (drawText)
+        {
+            for (i=0; i<27; i++)
+            {
+                zs_ZoomText(*(strapline+i),90+toff,215,100,strapZoom[i]);
+                toff += GetCharWidth(*(strapline+i))+1;
+                if (strapZoom[i]>0.0f)strapZoom[i]-=0.1f;
+                //printf("%c ",*(strapline+i));
+            }    
+        }
+    }else{
+        if (drawText)
+        {
+            for (i=0; i<27; i++)
+            {
+                zs_ZoomText(*(strapline+i),90+toff,215,100,strapZoom[i]);
+                toff += GetCharWidth(*(strapline+i))+1;
+                if (strapZoom[i]>1.0f)strapZoom[i]-=0.3f;
+                //printf("%c ",*(strapline+i));
+            }    
+        }
+    }
+}
 u32 start_demo( const demo_init_t* pInfo )
 {
   PbMatrix viewscreen_matrix;
@@ -95,6 +304,7 @@ u32 start_demo( const demo_init_t* pInfo )
   int up = 1;
   float twist_timer = 0.0f;
 
+  float static_timer = 0.0f;
   /////////////////////////////////////////////////////////////////////////////
   // Setup screen
 
@@ -111,9 +321,13 @@ u32 start_demo( const demo_init_t* pInfo )
   /////////////////////////////////////////////////////////////////////////////
   // Create our view to screen matrix
   PbMatrixViewScreen( &viewscreen_matrix, 512.0f,1.0f,1.0f, // 0.5,0.8// 1.3f for last
-                      offset_x+512/2,offset_y+256/2,
+                      offset_x+512/2,offset_y+200/2,
                       1.0f, 6777215.0f,64.0f, 5536.0f );
   PbDistortSetup();
+
+  
+  // init textwriter stuff
+  InitTextStuff();
 
   /////////////////////////////////////////////////////////////////////////////
   // Setup the matrix for our camera
@@ -128,6 +342,18 @@ u32 start_demo( const demo_init_t* pInfo )
   angle = 0.7f;
   up = 0;
 
+  p_texture_ps2dev = PbTextureCreate32( ps2dev_tex, 512, 256 ); 
+  PbTextureUpload( p_texture_ps2dev);
+
+  p_texture_presents = PbTextureCreate32( presents_tex, 256, 64 ); 
+  PbTextureUpload( p_texture_presents);
+
+  p_texture_font = PbTextureCreate32( font_tex, 1024, 64 ); 
+  PbTextureUpload( p_texture_font);
+
+  PbPrimSetAlpha( 0, 1, 0, 1, 0x80 );
+
+  PbSetLinearFiltering();
   /////////////////////////////////////////////////////////////////////////////
   // Loop of the demo
 
@@ -136,27 +362,39 @@ u32 start_demo( const demo_init_t* pInfo )
     // angles.x is the rotate/twist mupliplier
     if (up == 1)
     { // This is fade out
-      twist_timer += 0.013f;
-      // This is the rotation
-      angle += 0.02f;
-      if (twist_timer > 1.0f) {up = 0; angle = 0.7f;twist_timer = 1.0f;} // Finished
-      angles.x = twist_timer * -1.0f;
+        logoFadeout = 1;
+        twist_timer += 0.013f;
+        // This is the rotation
+        angle += 0.02f;
+        if (twist_timer > 1.0f) {up = 0; angle = 0.7f;twist_timer = 1.0f;} // Finished
+        angles.x = twist_timer * -1.0f;
     }
-    else
-    { // This is fade in
-      twist_timer -= 0.002f;
-      // This is the rotation
-      angle += 0.01f;
-      if (twist_timer < 0.0f){ up = 1;}
-      angles.x = twist_timer;
+    else if (up == 2)
+    {
+        drawText = 1;
+        // this is the pause
+        if (static_timer<1.0f)
+        {
+            static_timer+=0.008f;
+        }else{
+            up = 1;
+        }
+
+    }else{ // This is fade in
+        twist_timer -= 0.002f;
+        // This is the rotation
+        angle += 0.01f;
+        if (twist_timer < 0.0f){ up = 2;}
+        angles.x = twist_timer;
     }
     // effect should be 1.0f for none, 0.5 (ish) for full ( this is blur)
     angles.z = 1.0f -( twist_timer / 1.5f);
-
-    PbScreenSetCurrentActive();
+ 
+    PbScreenSetCurrentActive();   
 
     PbScreenClear( 30<<16|20<<8|40 );
 
+    
     PbTextureCopy( gp_RenderTarget2, gp_RenderTarget, TRUE );
     PbDistortRadialBlur( gp_RenderTarget2, gp_RenderTarget, 256, 128, 
                        PbSqrt(angles.z),6,115 -(int)(abs(twist_timer)*30.0f) ,20 );
@@ -164,6 +402,10 @@ u32 start_demo( const demo_init_t* pInfo )
     PbPrimSpriteTexture( gp_RenderTarget2, 
                          0<<4,  0<<4,   512<<4,   0<<4, 
                          640<<4, 256<<4, 0<<4, 255<<4, 0, 127<<16|127<<8|127 );
+
+    PbPrimSetState( PB_ALPHA_BLENDING, PB_ENABLE );
+    DrawDevLogo(); 
+    PbPrimSetState( PB_ALPHA_BLENDING, PB_DISABLE );
     PbTextureSetRenderTarget( gp_RenderTarget );
 
     PbDmaWait02();
@@ -176,8 +418,11 @@ u32 start_demo( const demo_init_t* pInfo )
     PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &camera_matrix );
     PbMatrixMultiply( &final_matrix, &temprot_matrix, &viewscreen_matrix );
     FlushCache(0);  
-
     PbDistort_DrawObject( &viewscreen_matrix,&temprot_matrix,&angles);
+
+    //PbTextureSetRenderTarget( gp_RenderTarget );
+
+    //PbScreenSetCurrentActive();
     
     PbScreenSyncFlip();
   }
