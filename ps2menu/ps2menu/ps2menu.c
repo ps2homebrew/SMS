@@ -1453,7 +1453,6 @@ int main(int argc, char *argv[])
 			}
 		party=nparty;
 		}
-	strcpy(s,argv[0]);
 	i=0;
 	while(s[i]!='\0')
 	{
