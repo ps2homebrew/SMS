@@ -40,6 +40,10 @@ ie if running under naplink or ps2link*/
 #define isPrintable(x) isprint(x)
 
 /* Vars for loading modules embedded in the elf */
+extern u8 *iomanx_irx;
+extern int size_iomanx_irx;
+extern u8 *ps2dev9_irx;
+extern int size_ps2dev9_irx;
 extern u8 *ps2ip_irx;
 extern int size_ps2ip_irx;
 extern u8 *ps2ips_irx;
@@ -50,9 +54,9 @@ extern int size_ps2smap_irx;
 /* Default IP stuff */
 char if_conf[3*16];
 int if_conf_len;
-char ip[16] __attribute__((aligned(16))) = "192.168.0.10";
-char netmask[16] __attribute__((aligned(16))) = "255.255.255.0";
-char gw[16] __attribute__((aligned(16))) = "192.168.0.1";
+char ip[16] = "192.168.0.10";
+char netmask[16] = "255.255.255.0";
+char gw[16] = "192.168.0.1";
 
 /* FTP Command tokens */
 enum command_types

@@ -1,23 +1,6 @@
-  TODO as of 10/20/2003:
-  	- Find out what to do regarding PS2DRV DEV9 drivers & SMAP
-  	
-  	With respect to processCommand:
-  	//NOTICE: THIS AREA IS SCREWING UP, there is some kind of stack
-			//        weirdness or something going on, any help is appreciated
-			//        please only compile with -O0 right now, it seems to give
-			//        the best results. Basically, the socket is being created
-			//        and its reported that its connected to the client but it
-			//        never actually does, check it with a packet sniffer. If
-			//        you want to help with code please concentrate _only_ on
-			//        helping figure out what's going on and getting dir listing
-			//        to work. CWD and other commands depend on FSMan which I
-			//        have not finished writing (I wanted to haev this working
-			//        to test it with.
-			
-  	- clean up code more
+  TODO as of 12/18/2003:
+  	- Find out why adresd's new smap doesn't seem to be working with ps2ftp
   	- Finish FSMan class
-  	- Include needed IRXs as .s files to be compiled into .elf
   	- Rewrite chdir commands
 	- REST command
-	- figure out why we only get ~20k/s max transfer rate
 	

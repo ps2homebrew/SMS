@@ -16,11 +16,11 @@ enum command_types get_command (const int com_sock, const char *buf, const int b
 void processCommand(const int com_sock, const enum command_types ftpcommand, const char *cmd_buf, enum command_modes *command_mode);
 
 /* Variables */
-//static u8 buffer[BUFFER_SIZE] __attribute__ ((aligned (64))); //for sending files
 FSMan *vfs;
-//static char currentDir[128];
 static char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
+bool isPASV;
+int PASVport;
+int PASVSock;
 /*
  *	Send a FTP reply to the client
  *  If code is negative it means that the message is coninued
@@ -30,7 +30,7 @@ static char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 int
 reply (const int sock, const int code, const char *msg)
 {
-	static char replybuf[256] __attribute__ ((aligned (64)));
+	char replybuf[256] __attribute__ ((aligned (64)));
 	int ret;
 
 	//let - #'s for code indicate that there is another line to send
@@ -125,6 +125,7 @@ get_command (const int com_sock, char *buf, const unsigned int bufsize)
 
 void setupIP() {
 	int i;
+	scr_printf("Net settings: %s %s %s\n", ip, netmask, gw);
 	memset(if_conf, 0x00, sizeof(if_conf));
 	i = 0;
 	strncpy(&if_conf[i], ip, 15);
@@ -150,6 +151,8 @@ main (int argc, char **argv)
 	//Test to see if we're running under PS2Link
 	//f (strncmp(argv[0], "host", 4) == 0)
 	//	underPS2Link = true;
+	isPASV = false;
+	PASVport = 200;
 
 	init_scr();
 	printf("PS2FTP v%d.%d starting...\n", verMajor, verMinor);
@@ -165,6 +168,10 @@ main (int argc, char **argv)
 	printf("Loading Network Adapter drivers...\n");
 	if (!underPS2Link) {
 		setupIP();
+		SifExecModuleBuffer(&iomanx_irx, size_iomanx_irx, 0, NULL, &ret);
+		printf("\tLoaded IOMANX: %d\n", ret);
+		SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &ret);
+		printf("\tLoaded PS2DEV9: %d\n", ret);
 		SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
 		printf("\tLoaded PS2IP: %d\n", ret);
 		SifExecModuleBuffer(&ps2ips_irx, size_ps2ips_irx, 0, NULL, &ret);
@@ -186,9 +193,9 @@ main (int argc, char **argv)
 void
 serverThread ()
 {
-	static int sh, command_socket, clntLen, rc;
-	static struct sockaddr_in ftpServAddr;
-	static struct sockaddr_in ftpClntAddr;
+	int sh, command_socket, clntLen, rc;
+	struct sockaddr_in ftpServAddr __attribute__ ((aligned (64)));
+	struct sockaddr_in ftpClntAddr __attribute__ ((aligned (64)));
 
 	printf("Server started.\n");
 
@@ -213,7 +220,7 @@ serverThread ()
 		perror ("FATAL: Could not listen on socket!\n");
 		SleepThread ();
 	}
-
+	printf("entering accept loop\n");
 	while (1) {
 		clntLen = sizeof (ftpClntAddr);
 		command_socket = accept (sh, (struct sockaddr *) &ftpClntAddr, &clntLen);
@@ -221,9 +228,38 @@ serverThread ()
 			perror ("FATAL: Could not accept connection!\n");
 			SleepThread ();
 		}
-
+	printf("I got a client\n");
 		HandleClient (command_socket);
 	}
+}
+
+bool setupPASV() {
+	int rc;
+	struct sockaddr_in ftpPASVAddr;
+
+	if ((PASVSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+		printf("PASV: Failed to create socket: %d\n", PASVSock);
+		return false;
+	}
+
+	memset (&ftpPASVAddr, 0, sizeof (ftpPASVAddr));
+	ftpPASVAddr.sin_family = AF_INET;
+	ftpPASVAddr.sin_addr.s_addr = htonl (INADDR_ANY);
+	ftpPASVAddr.sin_port = htons (PASVport);
+
+	rc = bind (PASVSock, (struct sockaddr *) &ftpPASVAddr, sizeof (ftpPASVAddr));
+	if (rc < 0) {
+		perror ("PASV: Failed to bind socket!\n");
+		return false;
+	}
+
+	rc = listen (PASVSock, 2);
+	if (rc < 0) {
+		perror ("PASV: Could not listen on socket!\n");
+		return false;
+	}
+
+	return true;
 }
 
 void
@@ -235,8 +271,6 @@ HandleClient (const int com_sock)
 
 	/* The initial command mode */
 	enum command_modes command_mode = LOGIN;
-
-	/* Get the default data address for the transfer */
 
 	/* Initiate connection by indicating that FTP server is ready to accept
 	commands */
@@ -273,7 +307,7 @@ HandleClient (const int com_sock)
 			case EXIT:
 				break;
 		}
-	};
+	}
 	//Disconnect
 	disconnect (com_sock);
 }
@@ -281,14 +315,18 @@ HandleClient (const int com_sock)
 void 
 processCommand(const int com_sock, const enum command_types ftpcommand, const char *cmd_buf, enum command_modes *command_mode) {
 //	static char filename[256];
-	static char buf[256] __attribute__ ((aligned (64)));
+	char buf[256] __attribute__ ((aligned (64)));
 	//static char buf2[256];
-	static char *tok; //for strtok in PORT
+	char *tok; //for strtok in PORT
 	//static t_aioDent fileEntry; //for SIZE command
 	int ret=0, i, ls_sock;//, fd, bytes;
-
+	
+	//PASV stuff
+	struct sockaddr_in PASVClntAddr;
+	int clntLen;
+	
 	/* Address of the data port used to transfer files */
-	static struct sockaddr_in data_address;
+	struct sockaddr_in data_address;
 	int data_length = sizeof (data_address);
 
 	/* Temporary Storage for tcp/ip address (PORT command)*/
@@ -361,79 +399,102 @@ processCommand(const int com_sock, const enum command_types ftpcommand, const ch
 			reply (com_sock, 200, "Type set to I.");
 			break;
 		case LIST:
+
 			perror("In List\n");
 			//open socket to client
-			//NOTICE: THIS AREA IS SCREWING UP, there is some kind of stack
-			//        weirdness or something going on, any help is appreciated
-			//        please only compile with -O0 right now, it seems to give
-			//        the best results. Basically, the socket is being created
-			//        and its reported that its connected to the client but it
-			//        never actually does, check it with a packet sniffer. If
-			//        you want to help with code please concentrate _only_ on
-			//        helping figure out what's going on and getting dir listing
-			//        to work. CWD and other commands depend on FSMan which I
-			//        have not finished writing (I wanted to haev this working
-			//        to test it with.
-			ls_sock = connect_tcpip (&data_address, data_length, com_sock);
-			/*ls_sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-			if (ls_sock < 0) {
-				reply (com_sock, 550, "connect_tcpip:sock() failed");
-				printf ("connect_tcpip:sock() failed %d", ls_sock);
-
-			} else {
-				perror("post sock\n");
-				if (connect(ls_sock, (struct sockaddr *) &data_address, data_length) < 0) {
-					reply (com_sock, 550, "connect_tcpip:connect() failed");
-					printf ("FATAL: connect_tcpip:connect() failed\n");
-	
+			if (isPASV) {
+				printf("Handling PASV transfer\n");
+				clntLen = sizeof (PASVClntAddr);
+				ls_sock = accept (PASVSock, (struct sockaddr *) &PASVClntAddr, &clntLen);
+				if (ls_sock < 0) {
+					perror ("PASV: Could not accept connection!\n");
+					break;
 				}
-			}*/
-			perror("connection opened\n");
-			if (ls_sock < 0) {
-				reply (com_sock, 500, "data connection failed");
 			} else {
-				//get dir listing
-				reply (com_sock, 150, "Opening BINARY mode data connection for /bin/ls.");
-				i = 0;
-				while (vfs->dirlisting[i].name[0] != '\0') {
-
-					if (vfs->dirlisting[i].attrib && AIO_ATTRIB_DIR)
-						sprintf(buf, "drw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %d %02d:%02d %s\r\n",
-						vfs->dirlisting[i].size,
-						months[0], //month
-						1, //day
-						0, //hour
-						1, //min
-						vfs->dirlisting[i].name);	
-					else
-						sprintf(buf, "-rw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %2d %02d:%02d %s\r\n",
-						vfs->dirlisting[i].size,
-						months[0], //month
-						1, //day
-						0, //hour
-						1, //min
-						vfs->dirlisting[i].name);
-
-					perror("%s", buf);
-					ret = send (ls_sock, buf, strlen (buf), 0);
-					printf("sent %d bytes\n", ret);
-					if (ret < 0) {
-						perror ("Error sending dir listing: %d\n", ret);
-						reply (com_sock, 500, "Error Sending directory listing");
-						break;
-					}
-					i++;
+				printf("Handling PORT transfer\n");
+				reply(com_sock, -150, "I don't know how you're here, PORT based xfers are not supported");
+				reply(com_sock, -150, "due to a bug in ps2ip(s)'s connect function");
+				//NOTICE: THIS AREA IS SCREWING UP, there is some kind of stack
+				//        weirdness or something going on, any help is appreciated
+				//        please only compile with -O0 right now, it seems to give
+				//        the best results. Basically, the socket is being created
+				//        and its reported that its connected to the client but it
+				//        never actually does, check it with a packet sniffer. If
+				//        you want to help with code please concentrate _only_ on
+				//        helping figure out what's going on and getting dir listing
+				//        to work. CWD and other commands depend on FSMan which I
+				//        have not finished writing (I wanted to haev this working
+				//        to test it with.
+				ls_sock = connect_tcpip (&data_address, data_length, com_sock);
+				perror("connection opened\n");
+				if (ls_sock < 0) {
+					reply (com_sock, 500, "PORT data connection failed");
+					break;
 				}
-				disconnect (ls_sock);
-				if (ret >= 0)
-					reply (com_sock, 226, "Transfer complete.");
+			} //end of PASV or PORT setup
+			//get dir listing
+			reply (com_sock, 150, "Opening BINARY mode data connection for /bin/ls.");
+			i = 0;
+			while (vfs->dirlisting[i].name[0] != '\0') {
+				if (vfs->dirlisting[i].attrib && AIO_ATTRIB_DIR)
+					sprintf(buf, "drw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %d %02d:%02d %s\r\n",
+					vfs->dirlisting[i].size,
+					months[0], //month
+					1, //day
+					0, //hour
+					1, //min
+					vfs->dirlisting[i].name);	
+				else
+					sprintf(buf, "-rw-rw-rw-  1 ps2ftp ps2ftp  %8d %s %2d %02d:%02d %s\r\n",
+					vfs->dirlisting[i].size,
+					months[0], //month
+					1, //day
+					0, //hour
+					1, //min
+					vfs->dirlisting[i].name);
+
+				perror("%s", buf);
+				ret = send (ls_sock, buf, strlen (buf), 0);
+				printf("sent %d bytes\n", ret);
+				if (ret < 0) {
+					perror ("Error sending dir listing: %d\n", ret);
+					reply (com_sock, 500, "Error Sending directory listing");
+					break;
+				}
+				i++;
 			}
+			disconnect (ls_sock);
+			if (ret >= 0)
+				reply (com_sock, 226, "Transfer complete.");
 			break;
 		case NOOP:  /* Acknowledge NOOP command */
 			reply (com_sock, 200, "OK");
 			break;
+		case PASV:
+			if (setupPASV()) {
+				isPASV = true;
+				tok = strtok (ip, ".");
+				a1 = atoi (tok);
+				tok = strtok (NULL, ".");
+				a2 = atoi (tok);
+				tok = strtok (NULL, ".");
+				a3 = atoi (tok);
+				tok = strtok (NULL, ".");
+				a4 = atoi (tok);
+				sprintf(buf, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", a1, a2, a3, a4, PASVport/256, PASVport - (PASVport/256));
+				reply(com_sock, 227, buf);
+			} else {
+				isPASV = false;
+				reply(com_sock, 550, "PASV Command Failed");
+			}
+			break;
 		case PORT:  /* Set the tcp/ip address based on the given argument */
-			/* Grab data port address from command argument */
+			
+			//disable this as ps2ip(s)'s connect doesn't like to work
+			/*
+			isPASV = false;
+			disconnect (PASVSock);
+			// Grab data port address from command argument
 			strncpy(buf, cmd_buf, 256);
 			tok = strtok (buf, ",");
 			a1 = atoi (tok);
@@ -453,7 +514,9 @@ processCommand(const int com_sock, const enum command_types ftpcommand, const ch
 			perror ("port: %d\n", p1 * 256 + p2);
 			data_address.sin_port = htons ((p1 * 256) + p2);
 
-			reply (com_sock, 200, "PORT command successful"); //
+			reply (com_sock, 200, "PORT command successful");
+			*/
+			reply(com_sock, 550, "PORT command not supported due to ps2ip(s) bug. Use Passive transfers");
 			break;
 		case RETR:  /* Retrieve File and transfer it to data address */
 			//TODO: STRIP OFF VFS DEVICE DIRECTORY

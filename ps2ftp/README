@@ -10,22 +10,25 @@ PS2FTP is loosely based on SimpleFTP from http://www.erc.msstate.edu/~lush/
 fl1999/cs4733/assignments/simpleftp.html and makes use of an snprintf 
 implementation from http://www.ijs.si/software/snprintf/
 
-The goal of PS2FTP is to allow users to upload and download data such as 
-save games and programs to and from memory cards on the Playstation 2
-gaming console.
+NOTE: for now you may have to the old version of SMAP, i can't seem to ping the
+      ps2 when using the new smap (suggestions?)
 
-NOTES: In current state, src is very unorganised but it works. This will be 
-       fixed soon.
-       PS2FTP will bind to any IPs setup on PS2 if run under PS2Link, else
-       change value in loader.c to the desired IP.
-       This is runnable under ps2link by increasing the max socket values in
-       ps2ip\iop\ps2ip\include\lwipopts.h and then recompiling ps2ip and 
-       ps2ftp. Variables changed:
-       		MEMP_NUM_SYS_TIMEOUT to 5
-       		MEMP_NUM_NETBUF to 8
-       		MEMP_NUM_NETCONN to 8
-       So far, untested under naplink.
-       *WILL NOT* work under pukklink and never will (due to network stack).
+Pre-requisites for compilation:
+	PS2LIB
+	PS2DRV (ps2dev9 and iomanx)
+	PS2ETH (adresd's smap)
+	PS2IP (requires LWIP)
+	sbv-1.0-lite
+	AIO (currently included; requires libcdvd & libhdd)
+	
+The goal of PS2FTP is to allow users to upload and download data such as 
+save games and programs to and from memory cards and the HDD on the 
+Playstation 2 gaming console.
+
+NOTES: In current state, src is more organised than before and it works.
+       PS2FTP now includes all needed modules in the .elf itself and loads
+       them from EE memory after rebooting the IOP, therefore it should 
+       work anyway you load it.
        
 Thanks to Oobles, SJeep, MRBrown, Longchair, Jenova0 and the rest of the crew
 in #ps2dev on EFNet
