@@ -162,13 +162,18 @@ typedef struct st_Color
 static Color g_ColorTable[] = 
 {
   { 125*0.0005f, 125*0.0005f, 125*0.0005f, 0.0 }, 
-  { 140*0.0005f, 120*0.0005f, 130*0.0005f, 0.0 },
-  {  60*0.0005f,  70*0.0005f,  40*0.0005f, 0.0 },
-  {  60*0.0005f,  20*0.0005f,  80*0.0005f, 0.0 },
+  {  10*0.0005f,  70*0.0005f, 100*0.0005f, 0.0 },
+  {  80*0.0005f,  70*0.0005f,  40*0.0005f, 0.0 },
+  {  80*0.0005f,  70*0.0005f, 120*0.0005f, 0.0 },
   {  45*0.0005f,  45*0.0005f,  45*0.0005f, 0.0 }, 
 };
 
+
+
 static int g_MaxColors = 4;
+static int g_Flash     = 255;
+
+void EmPart2Flash( int strength );
 
 ///////////////////////////////////////////////////////////////////////////////
 // u32 start_demo
@@ -189,10 +194,11 @@ u32 start_demo(const demo_init_t *pInfo)
   int   cur_color = 0;
   int   end_render = FALSE;
   float fade_down = 1.0f;
-
+  int   syncs_left = 400;
+  int   flash_color;
   PbMatrix rotate_matrix, rotate_matrix2, temprot_matrix, temprot_matrix2;
   PbMatrix points_rotate, points_rotate2;
-
+  volatile u32 *syncs = pInfo->sync_points;
   g_pInfo = pInfo;
 
   PbMiscSetOutput( pInfo->printf );
@@ -200,6 +206,8 @@ u32 start_demo(const demo_init_t *pInfo)
   EmPart2Setup();
   
   last_t = pInfo->curr_time;
+
+  
 
   PbMatrixTranslate( &camera_matrix, 0, 0, 0 ); 
 
@@ -211,7 +219,7 @@ u32 start_demo(const demo_init_t *pInfo)
   while(pInfo->frame_count > 0)
   {
     float inv_rot = 0.0f;
-    angle += (3.14*3/((2400.0f-250.0f)/6.0f));
+    angle += (3.14*3/((2400.0f-250.0f)/8.5f));
 
     PbScreenClear(00);
 
@@ -228,6 +236,8 @@ u32 start_demo(const demo_init_t *pInfo)
   
       if( cur_color+1 > g_MaxColors )
         cur_color = 0;          
+
+      g_Flash = 255;
 
       fade_down = 1.0f;
       z_offset = 2400;
@@ -246,14 +256,15 @@ u32 start_demo(const demo_init_t *pInfo)
     
     angle_hold = angle;
 
-    if( z_offset < 1200 )
+    if( z_offset < 1400 )
     {
       stretch += 0.03f*time_mul;
       angle_hold = angle*2.4;
       angle_add = 1.5f;
     }
 
-    z_offset -= 6.0f*time_mul;
+    z_offset -= 8.5f*time_mul;
+    g_Flash -= 5;
 
     for( i = 0; i < NUM_POINTS; i += 2 )
     {
@@ -289,9 +300,9 @@ u32 start_demo(const demo_init_t *pInfo)
 
       if( coords[2]+z_offset > 230 )
       {
-        if( ( point_temp[0]*point_temp[0] + 
-              point_temp[1]*point_temp[1] + 
-              point_temp[2]*point_temp[2] ) < 750*800 )
+        if( ( coords[0]*coords[0] + 
+              coords[1]*coords[1] + 
+              coords[2]*coords[2] ) < 750*800 )
         {
           PbMatrixRotateX( &rotate_matrix, angle_hold );
           PbMatrixRotateZ( &rotate_matrix2, angle_hold );
@@ -321,10 +332,9 @@ u32 start_demo(const demo_init_t *pInfo)
 
       if( coords[2]+z_offset > 230 )
       {
-    //    PbMatrixIdentity( &rotate_matrix );   
-        if( ( point_temp[0]*point_temp[0] + 
-              point_temp[1]*point_temp[1] + 
-              point_temp[2]*point_temp[2] ) < 750*750 )
+        if( ( coords[0]*coords[0] + 
+              coords[1]*coords[1] + 
+              coords[2]*coords[2] ) < 750*750 )
         {
           PbMatrixRotateX( &rotate_matrix, angle_hold );
           PbMatrixRotateZ( &rotate_matrix2, angle_hold );
@@ -346,10 +356,52 @@ u32 start_demo(const demo_init_t *pInfo)
       angle_hold += angle_add;
     }          
         
+     if(syncs_left > 0)
+     {
+        if(*syncs < pInfo->get_pos())
+        {
+          syncs++;
+          syncs_left--;
+        } 
+
+        if(syncs_left&1)
+        {
+       		//GS_SET_BGCOLOR(0x00, 0x00, 0x00);
+        }
+        else
+        {
+       		//GS_SET_BGCOLOR(0xff, 0xff, 0xff);
+          //out( "%d\n", 400-syncs_left );
+        }
+    }
+
+    // Flashy flashy
+
+
+    EmPart2Flash( g_Flash );
+
     PbScreenSyncFlip();
   }
   
   return pInfo->screen_mode;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void EmPart2Flahs
+///////////////////////////////////////////////////////////////////////////////
+
+void EmPart2Flash( int strength )
+{
+  if( strength < 0 )
+    strength = 0;
+
+  PbPrimSetContext( PB_CONTEXT_2 );
+  PbPrimSetState( PB_ALPHA_BLENDING, PB_ENABLE );
+  PbPrimSetAlpha( GS_ALPHA_A_CS, GS_ALPHA_B_ZERO, 
+                    GS_ALPHA_C_FIX, GS_ALPHA_D_CD, 0x80 );
+  PbPrimSprite( 0<<4, 0<<4, 640<<4, 256<<4, 0, (127<<24)|(strength<<16)|(strength<<8)|strength );
+  PbPrimSetState( PB_ALPHA_BLENDING, PB_DISABLE );
+  PbPrimSetContext( PB_CONTEXT_1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
