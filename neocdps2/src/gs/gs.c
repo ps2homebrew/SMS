@@ -164,35 +164,127 @@ void GS_SetEnv(int width, int height, int fbp1, int fbp2, int psm, int zbp, int 
 // interlace: 0 = non-interlace, 1 = interlace
 void GS_InitGraph(int mode, int interlace)
 {
-__asm("
-	addiu $29, -8
-    sd $4, 0($29)
-	addiu $29, -8
- 	sd $5, 0($29)
+	__asm("
+		addiu $29, -8
+	    	sd $4, 0($29)
+		addiu $29, -8
+	 	sd $5, 0($29)
+	
+	    	lui $3, 0x1200
+	    	daddiu $2, $0, 0x0200
+	    	sd $2, 0x1000($3)       # reset GS
+	    	sync.p
+	    	sd $0, 0x1000($3)
+	
+	    	# putIMR thru bios (GsPutIMR)
+	    	ori $4, $0, 0xff00
+	    	addiu $3, $0, 0x0071
+	    	syscall
+	    	nop
+	
+	    	# sceSetGSCrt
+		ld $4, 0($29)           # Interlace/Non-interlace mode
+		ld $5, 8($29)           # NTSC/PAL mode
+	    	ori $6, $0, 0           # field mode
+	    	addiu $3, $0, 2
+	    	syscall
+	    	nop
+	
+	    	addiu $29, 16
+	
+	    	jr $31
+	    	nop
+	");
+}
 
-    lui $3, 0x1200
-    daddiu $2, $0, 0x0200
-    sd $2, 0x1000($3)       # reset GS
-    sync.p
-    sd $0, 0x1000($3)
 
-    # putIMR thru bios (GsPutIMR)
-    ori $4, $0, 0xff00
-    addiu $3, $0, 0x0071
-    syscall
-    nop
+// Returns the ID of the VSync Callback
+unsigned int addVSyncCallback(void (*func_ptr)())
+{
+	unsigned int AddCallbackID;
 
-    # sceSetGSCrt
- 	ld $4, 0($29)           # Interlace/Non-interlace mode
-    ld $5, 8($29)           # NTSC/PAL mode
-    ori $6, $0, 0           # field mode
-    addiu $3, $0, 2
-    syscall
-    nop
+	asm __volatile__ ("
+		di
 
-    addiu $29, 16
+		# 'func_ptr' param will have been passed in $4, so move it to $5 (needed for syscall)
 
-    jr $31
-    nop
-");
+		addu  $5, $0, %1
+		addiu $4, $0, 2		# 2 = vsync_start	
+
+		addiu $6, $0, 0
+		addiu $3, $0, 16	# AddIntcHandler
+
+		syscall			# Returns assigned ID in $2
+		nop
+
+		addu  %0, $0, $2
+		
+		addiu $4, $0, 2	 
+		addiu $3, $0, 20
+
+		syscall
+		nop
+
+		ei"
+		: "=r" (AddCallbackID)
+		: "g" (func_ptr)
+	);
+
+//		la $4, AddCallbackID	# Store ID in var
+//		sw $2, 0($4)
+
+
+	// Enable VSync callbacks if not already enabled
+	enableVSyncCallbacks();
+
+	return AddCallbackID;
+}
+
+
+void removeVSyncCallback(unsigned int RemoveID)
+{
+	asm __volatile__ ("
+		di
+
+		addu  $5, $0, %0	# RemoveID will have already been passed into this func in $4
+		addiu $4, $0, 2		# 2 = vsync_start
+		addiu $3, $0, 17	# RemoveIntcHandler
+		syscall
+		nop
+
+		ei"
+		: 
+		: "g" (RemoveID)
+		);
+}
+
+void enableVSyncCallbacks(void)
+{
+	asm __volatile__ ("
+		di
+
+		addiu $4, $0, 2	 
+		addiu $3, $0, 20
+
+		syscall
+		nop
+
+		ei
+	");
+}
+
+void disableVSyncCallbacks(void)
+{
+	asm __volatile__ ("
+		di
+
+		addiu $4, $0, 2	 
+		addiu $3, $0, 21
+
+		syscall
+		nop
+
+
+		ei
+	");
 }

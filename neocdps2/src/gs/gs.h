@@ -38,8 +38,6 @@
 #define GS_NONINTERLACE	0
 #define GS_PAL			3
 #define GS_NTSC			2
-#define GS_AUTO			((*((char*)0x1FC7FF52))=='E')+2
-
 
 #define GS_PSMCT32		0x00
 #define GS_PSMCT24		0x01
@@ -221,5 +219,12 @@ typedef struct {
 #define DMA_ID_CALL		0x05
 #define DMA_ID_RET		0x06
 #define DMA_ID_END		0x07
+
+//VSync Interrupt Handler Routines 
+unsigned int addVSyncCallback(void (*func_ptr)());
+void removeVSyncCallback(unsigned int RemoveID);
+void enableVSyncCallbacks(void);
+void disableVSyncCallbacks(void);
+
 
 #endif /* _HW1_H_ */

@@ -3,7 +3,6 @@
 #ifndef _GFXPIPE_H_
 #define _GFXPIPE_H_
 
-//#include "3dmath.h"
 
 #define GP_MINSPACE     18      // minimum space left in pipeline before flush (must be at least 36 dwords)
 

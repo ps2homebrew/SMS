@@ -1,25 +1,35 @@
-/*******************************
-*                              *
-* gsPipe module:               *
-* Based on GFX-Pipe by Vzzrzzn *
-* (and modifications by Sjeep) *
-*                              *
-*******************************/
+/************************************
+ *                                  *
+ * gsPipe module:                   *
+ * Based on GFX-Pipe by Vzzrzzn     *
+ * (and modifications by Sjeep)     *
+ * clean up by evilo based on gslib *
+ ************************************/
 
 
 #include <tamtypes.h>
-#include <kernel.h>
 #include "malloc.h"
 #include "gfxpipe.h"
 #include "hw.h"
 #include "gs.h"
 
 
-
  
 gfxpipe thegp;
 
 unsigned long* gp_buffer=NULL;
+
+/*
+the rules:
+    - the list is sendable via gsPipe::Flush after ANY gsPipe:: function call
+    - each function must advance the giftag pointer to empty space
+    - a function is guaranteed GSPIPE_MINSPACE dwords to work with;
+      if it needs more, it must check against the remaining size
+      of the pipeline ((m_CurrentDmaAddr + (m_MemSize / 2)) - m_CurrentGifTag)
+    - a function must call gsPipe::FlushCheck after it is done adding to the queue
+    - a function must update the size field of the dmatag
+    - the current dmatag is of the 'count' style after a function returns
+*/
 
 
 void initializeGfxPipe(unsigned long *dmatadr)
@@ -31,7 +41,7 @@ void initializeGfxPipe(unsigned long *dmatadr)
 }
 
 // size must be less than 1MB
-int createGfxPipe(gfxpipe *pipeline /*,void *buffer*/, int size)
+int createGfxPipe(gfxpipe *pipeline, int size)
 {
       
     if (size < 0x1000)
@@ -72,7 +82,7 @@ unsigned int gp_bytesLeft(gfxpipe *p)
 void gp_hardflush(gfxpipe *p)
 {
     Dma02Wait();
-    FlushCache(0); 
+    DCacheFlush();
     SendDma02(p->curpipe);
 
     if (p->curpipe == p->dmatadrA)
@@ -116,21 +126,6 @@ void gp_textureflush(gfxpipe *p)
 }
 
 
-
-
-/*
-the rules:
-    - the list is sendable via gp_hardflush after ANY gp_* function call
-    - each function must advance the giftag pointer to empty space
-    - a function is guaranteed GP_MINSPACE dwords to work with;
-      if it needs more, it must check against the remaining size
-      of the pipeline ((gp->curdmatadr + (gp->memsize / 2)) - gp->curgiftag)
-    - a function must call gp_checkflush after it is done adding to the queue
-    - a function must update the size field of the dmatag
-    - the current dmatag is of the 'count' style after a function returns
-*/
-
-
 void gp_line(gfxpipe *p, unsigned x1, unsigned y1, unsigned x2, unsigned y2, unsigned z, unsigned color)
 {
     unsigned long dt = *(p->curdmatadr);
@@ -146,29 +141,6 @@ void gp_line(gfxpipe *p, unsigned x1, unsigned y1, unsigned x2, unsigned y2, uns
 
     gp_checkflush(p);
 }
-
-/*
-// bigger memory version of the above
-void gp_line(gfxpipe *p, unsigned x1, unsigned y1, unsigned x2, unsigned y2, unsigned color)
-{
-    unsigned long dt = *p->curdmatadr;
-    *p->curdmatadr = (dt & 0xffffffffffff0000) | ((dt & 0xffff) + 5);
-
-    p->curgiftag[0] = 0x1000000000008004;
-    p->curgiftag[1] = 0xfffffffffffffffe;
-
-    p->curgiftag[2] = 1;
-    p->curgiftag[3] = 0;
-    p->curgiftag[4] = 0x3f80000000000000 | color;
-    p->curgiftag[5] = 1;
-    p->curgiftag[6] = (y1 << 16) | x1;
-    p->curgiftag[7] = 0xd;
-    p->curgiftag[8] = (y2 << 16) | x2;
-    p->curgiftag[9] = 5;
-    p->curgiftag = &p->curgiftag[10];
-
-    gp_checkflush(p);
-} */
 
 void gp_ltriangle(gfxpipe *p, unsigned x1, unsigned y1, unsigned z1, unsigned c1,
                               unsigned x2, unsigned y2, unsigned z2, unsigned c2,
@@ -288,28 +260,6 @@ void gp_setFilterMethod(int filter)
 }
 
 
-// assumes already converted data
-// vtl->numv must be strictly less than 65535 (that's ~ 1MB !)
-// format: color, point, normal
-/*
-void gp_drawVTL_inplace_cpn(gfxpipe *p, vecTriList *vtl)
-{
-    unsigned long dt = *p->curdmatadr;
-    *p->curdmatadr = (dt & 0xffffffff8fff0000) | (1 << 28);
-
-    p->curdmatadr = p->curgiftag;
-    p->curdmatadr[0] = (0x0000000030000000 + vtl->numv + 1) | (((unsigned long)(&vtl->giftag[0]) & 0x7fffffff) << 32);
-    p->curdmatadr[1] = 0;
-    p->curdmatadr += 2;
-    p->curdmatadr[0] = 0x0000000070000000;
-    p->curdmatadr[1] = 0x0000000000000000;
-
-    p->curgiftag = p->curdmatadr + 2;
-
-    gp_checkflush(p);
-}
-*/
-
 // send a byte-packed texture from RDRAM to VRAM
 // TBP = VRAM_address
 // TBW = buffer_width_in_pixels  -- dependent on pxlfmt
@@ -362,92 +312,6 @@ void gp_uploadTexture(gfxpipe *p, int TBP, int TBW, int xofs, int yofs, int pxlf
     gp_checkflush(p);
 }
 
-/*
-void gp_uploadTexture(gfxpipe *p, unsigned int TBP, int TBW, int xofs, int yofs, int pxlfmt, const void *tex, int wpxls, int hpxls)
-{
-    int numq;
-    unsigned long dt = *p->curdmatadr;
-    *p->curdmatadr = (dt & 0xffffffff8fff0000) | (1 << 28) | ((dt & 0xffff) + 5); // change tag from refe to cnt
-    
-    // first, setup transfer
-    p->curgiftag[0] = GIF_SET_TAG(4,1,0,0,0,1); // 0x1000000000008004;
-    p->curgiftag[1] = 0xfffffffffffffffe;
-    p->curgiftag[2] = GS_SET_BITBLTBUF(0, 0, 0, (TBP>>8) & 0x3fff, (TBW>>6) & 0x3f, pxlfmt & 0x3f);
-    p->curgiftag[3] = GS_REG_BITBLTBUF;
-    p->curgiftag[4] = GS_SET_TRXPOS(0, 0, xofs, yofs, 0);
-    p->curgiftag[5] = GS_REG_TRXPOS;
-    p->curgiftag[6] = GS_SET_TRXREG(wpxls, hpxls);
-    p->curgiftag[7] = GS_REG_TRXREG;
-    p->curgiftag[8] = 0;
-    p->curgiftag[9] = GS_REG_TRXDIR;
-
-    p->curdmatadr = &p->curgiftag[10];
-    p->curgiftag = p->curdmatadr + 2;
-	
-    gp_checkflush(p);
-
-    numq = wpxls * hpxls;
-    switch (pxlfmt)
-    {
-    case GS_PSMCT32:
-		numq = (numq >> 2) + ((numq & 0x03) != 0 ? 1 : 0);
-		break;
-	case GS_PSMCT24:
-		numq = (numq / 3)  + ((numq & 0x02) != 0 ? 1 : 0);
-		break;
-	case GS_PSMCT16:
-	case GS_PSMCT16S:
-		numq = (numq >> 3) + ((numq & 0x07) != 0 ? 1 : 0);
-		break;
-
-    case GS_PSMT8: 
-		numq = (numq >> 4) + ((numq & 0x0f) != 0 ? 1 : 0);
-		break;
-
-    case GS_PSMT4:
-		numq = (numq >> 5) + ((numq & 0x1f) != 0 ? 1 : 0);
-		break;
-
-    default:   numq = 0;
-    }
-	
-	// Send IMAGE mode giftags until all image data is sent
-	while(numq)
-	{
-		int currq;
-		
-		if(numq > IMAGE_MAX_QWORD) 
-			currq = IMAGE_MAX_QWORD;
-		else 
-			currq = numq;
-		
-		// dmatag to transfer image mode giftag
-		*p->curdmatadr = (1 << 28) | 1;
-		
-		// image mode giftag
-	   	p->curgiftag[0]= 0x0800000000000000 + currq; // IMAGE mode giftag. Flg = 10b, nloop = currq
-		p->curgiftag[1]= 0;
-		
-		// dmatag to transfer image data
-	    	p->curdmatadr = &p->curgiftag[2]; // set up dma tag for image transfer. next = tex addr, id = 11b, qwc = numq
-		p->curdmatadr[0] = ((((unsigned long)((int)tex)) & 0x7fffffff) << 32) | (0x0000000030000000 + currq);
-	    	p->curdmatadr[1] = 0;
-		
-	    	p->curdmatadr += 2; // + 16 bytes
-		p->curdmatadr[0] = 0x0000000070000000; // next dma tag, id = end.
-		p->curdmatadr[1] = 0x0000000000000000;
-		p->curgiftag = p->curdmatadr + 2;
-		
-		gp_checkflush(p);
-		
-		numq -= currq;
-		tex += (currq <<4); // *16
-	}
-	gp_checkflush(p);
-	gp_textureflush(p);
-}
-
-*/
 
 void gp_uvftriangle(gfxpipe *p, unsigned x1, unsigned y1, unsigned z1, unsigned u1, unsigned v1,
                                 unsigned x2, unsigned y2, unsigned z2, unsigned u2, unsigned v2,
@@ -471,29 +335,6 @@ void gp_uvftriangle(gfxpipe *p, unsigned x1, unsigned y1, unsigned z1, unsigned 
     gp_checkflush(p);
 }
 
-/*
-void gp_stftriangle(gfxpipe *p, unsigned x1, unsigned y1, unsigned z1, float s1, float t1,
-                                unsigned x2, unsigned y2, unsigned z2, float s2, float t2,
-                                unsigned x3, unsigned y3, unsigned z3, float s3, float t3,unsigned color)
-{
-    unsigned long dt = *(p->curdmatadr);
-    *(p->curdmatadr) = (dt & 0xffffffffffff0000) | ((dt & 0xffff) + 5);
-
-    p->curgiftag[0] = 0x8400000000008001;
-    p->curgiftag[1] = 0xffffffff52525210;
-    p->curgiftag[2] = 0x0000000000000153;
-    p->curgiftag[3] = 0x3f80000000000000 | color;
-    p->curgiftag[4] = (*(unsigned long *)&t1 << 32) | *(unsigned long *)&s1;
-    p->curgiftag[5] = ((unsigned long)z1 << 32) | (y1 << 16) | x1;
-    p->curgiftag[6] = (*(unsigned long *)&t2 << 32) | *(unsigned long *)&s2;
-    p->curgiftag[7] = ((unsigned long)z2 << 32) | (y2 << 16) | x2;
-    p->curgiftag[8] = (*(unsigned long *)&t3 << 32) | *(unsigned long *)&s3;
-    p->curgiftag[9] = ((unsigned long)z3 << 32) | (y3 << 16) | x3;
-    p->curgiftag = &p->curgiftag[10];        // advance the packet pointer
-
-    gp_checkflush(p);
-}
-*/
 
 void gp_setTex(gfxpipe *p, u32 tbp, u32 tbw, u32 texwidth, u32 texheight, u32 tpsm, u32 cbp, u32 cbw, u32 cpsm)
 {
