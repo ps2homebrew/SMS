@@ -29,10 +29,13 @@
 #include "math.h"
 
 extern u8 binary_texture_start[];
+extern u8 binary_logo_start[];
+extern u8 binary_logo_alpha_start[];
 static u32 texture_test_32[256*256] __attribute__((aligned(16)));
 PbTexture* texture;
 PbTexture* rendertarget;
 PbTexture* rendertarget2;
+PbTexture* logo;
 float max_time;
 
 
@@ -160,7 +163,8 @@ void calc_coords(float t, float progress)
 	
 	float a_u, a_v, a_z;
 	float b_u, b_v, b_z;
-	float blend = progress;//0.5f + 0.5f * PbCos(1.0f + t*0.56f);
+	float blend = progress*1.5;//0.5f + 0.5f * PbCos(1.0f + t*0.56f);
+	if(blend>1.0f)blend=1.0f;
 	
 	vertex Origin = { 0,0,-1+t*100 };
 	vertex Direction;
@@ -179,13 +183,15 @@ void calc_coords(float t, float progress)
 			
 			Rotate(&Direction, t*1.2f);
 		
-#if 0
+#if 1
 			fd_tunnel(Origin,Direction,&a_u,&a_v,&a_z);
 			fd_planes(Origin,Direction,&b_u,&b_v,&b_z);
 			
 			g->st.uv.u = lerp(a_u, b_u, blend);
 			g->st.uv.v = lerp(a_v, b_v, blend);
-			g->z = lerp(a_z, b_z, blend);
+			g->z = a_z*(2.0f-blend)+b_z*blend*2-1; /*lerp(a_z, b_z, blend)*/
+			if(g->z < 0) g->z=0;
+			if(g->z > 1) g->z=1;
 #else
 			fd_tunnel(Origin,Direction,&g->st.uv.u,&g->st.uv.v,&g->z);
 #endif			
@@ -318,6 +324,19 @@ void init_textures()
 	texture = PbTextureCreate32(texture_test_32, 256, 256); 
 	PbTextureUpload(texture);
 	PbDmaWait02();
+	
+	for(cnt=0; cnt<256*128; ++cnt)
+	{
+		u32 r = binary_logo_start[cnt*3+0]>>1;
+		u32 g = binary_logo_start[cnt*3+1]>>1;
+		u32 b = binary_logo_start[cnt*3+2]>>1;
+		u32 a = binary_logo_alpha_start[cnt]>>1;
+		texture_test_32[cnt] = r | (g<<8) | (b<<16) | (a<<24UL);
+	}
+	FlushCache(0);
+	logo = PbTextureCreate32(texture_test_32, 256, 128); 
+	PbTextureUpload(logo);
+	PbDmaWait02();	
 }
 
 void demo_init()
@@ -361,8 +380,8 @@ void draw_fullscreen_texture(PbTexture *tex, int xoff, int yoff, int c)
 }
 
 
-#define BLUR_RATIO 26
-#define MAX_INTENS 28
+#define BLUR_RATIO 20
+#define MAX_INTENS 25
 void blury_thingie_with_bad_function_name(float t)
 {
 	int i;
@@ -382,6 +401,49 @@ void blury_thingie_with_bad_function_name(float t)
    	
 }
 
+
+void faetter_sort(int c)
+{
+	int x1 = (0+2048) << 4;
+	int y1 = (0+2048) << 4;
+	int x2 = (SCR_W+2048) << 4;
+	int y2 = (SCR_H+2048) << 4;	
+
+	PbGifListBegin();
+	PbGifListAdd( GS_PRIM, GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 1, 1, 1, 0, 0 ));	
+	PbGifListAdd( GS_TEST_1, GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 ) );	
+	PbGifListAdd( GS_PABE, 0 );	
+	PbGifListAdd( GS_ALPHA_1, GS_SETREG_ALPHA(0,1,0,1,0x00));	
+	PbGifListAdd( GS_RGBAQ, c<<24 );
+	PbGifListAdd( GS_XYZ2, GS_SETREG_XYZ2( x1, y1, 0 ) );	
+	PbGifListAdd( GS_XYZ2, GS_SETREG_XYZ2( x2, y2, 0 ) );	
+	PbGifListSend();
+}
+
+
+void draw_logo(PbTexture *tex, int c)
+{
+	int x1 = ((SCR_W-tex->x)/2+2048) << 4;
+	int y1 = ((SCR_H-tex->y)/2+2048) << 4;
+	int x2 = ((SCR_W+tex->x)/2+2048) << 4;
+	int y2 = ((SCR_H+tex->y)/2+2048) << 4;	
+
+	PbGifListBegin();
+	PbGifListAdd( GS_PRIM, GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 ));	
+	PbGifListAdd( GS_TEST_1, GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 ) );	
+	PbGifListAdd( GS_PABE, 0 );	
+	PbGifListAdd( GS_ALPHA_1, ALPHA_BLEND_NORMAL);	
+	PbGifListAdd( GS_TEX1_1, 0x00 );
+	PbGifListAdd( GS_TEX0_1, PbTextureGetTex0( tex ) );
+	PbGifListAdd( GS_RGBAQ, 0x808080 | (c<<24));
+	PbGifListAdd( GS_UV, GS_SETREG_UV( 0, 0) );	
+	PbGifListAdd( GS_XYZ2, GS_SETREG_XYZ2( x1, y1, 0 ) );	
+	PbGifListAdd( GS_UV, GS_SETREG_UV( (tex->x-1) << 4, (tex->y-1) << 4) );
+	PbGifListAdd( GS_XYZ2, GS_SETREG_XYZ2( x2, y2, 0 ) );	
+	PbGifListAdd( GS_TEST_1, GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 2 ) );
+	PbGifListSend();
+}
+
 //#define TEST
 
 u32 start_demo( const demo_init_t* pInfo )
@@ -393,6 +455,8 @@ u32 start_demo( const demo_init_t* pInfo )
 	while( pInfo->time_count > 0 )
 	{
 		float t= pInfo->curr_time;
+		float progress = t / max_time;
+		
 		
 		#ifdef TEST
 		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
@@ -402,7 +466,7 @@ u32 start_demo( const demo_init_t* pInfo )
 	    
 	    PbTextureSetRenderTarget(rendertarget);	    
 	    PbPrimSpriteNoZtest( 0, 0, RENDERTARGET_W<<4, RENDERTARGET_H<<4, 0, 0x00 );
-	    calc_coords(t, pInfo->curr_time / max_time);
+	    calc_coords(t, progress);
 	    draw_grid(texture,RENDERTARGET_W,RENDERTARGET_H);
 	    
 	    #ifdef TEST
@@ -423,6 +487,11 @@ u32 start_demo( const demo_init_t* pInfo )
 	    // Now combine	    
 	    PbScreenSetCurrentActive();
    		blury_thingie_with_bad_function_name(t);
+   		
+   		faetter_sort(progress*0x80);
+   		
+   		if(progress>0.5)
+   			draw_logo(logo, (progress-0.5)*0x80*2);
    		
    		#ifdef TEST
    		GS_SET_BGCOLOR(0x00, 0x00, 0x00);

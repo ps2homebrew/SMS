@@ -1,6 +1,6 @@
 EE_BIN = jar_part1.elf
 BIN_IMAGE = jar_part1.bin
-EE_OBJS = crt0.o main.o math.o texture.o
+EE_OBJS = crt0.o main.o math.o texture.o logo.o logo_alpha.o
 
 EE_CFLAGS += -fshort-double
 
