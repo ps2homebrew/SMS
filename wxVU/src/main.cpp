@@ -227,37 +227,37 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
         dmaItemIds[i] = miscRegTree->AppendItem(id, tDMA_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "Intc");
-    for( i = 0; i < INTC::nREGISTERS; i++ ) {
-        intcItemIds[i] = miscRegTree->AppendItem(id, tINTC_REGISTERS[i]);
-    }
+	// for( i = 0; i < INTC::nREGISTERS; i++ ) {
+	//     intcItemIds[i] = miscRegTree->AppendItem(id, tINTC_REGISTERS[i]);
+	// }
     id = miscRegTree->AppendItem(root, "Timer");
     for( i = 0; i < TIMERnREGISTERS; i++ ) {
         timerItemIds[i] = miscRegTree->AppendItem(id, tTIMER_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "GS");
-    for( i = 0; i < GS::nREGISTERS; i++ ) {
-        gsItemIds[i] = miscRegTree->AppendItem(id, tGS_REGISTERS[i]);
-    }
+	// for( i = 0; i < GS::nREGISTERS; i++ ) {
+	//     gsItemIds[i] = miscRegTree->AppendItem(id, tGS_REGISTERS[i]);
+	// }
     id = miscRegTree->AppendItem(root, "SIF");
     for( i = 0; i < SIFnREGISTERS; i++ ) {
         dmaItemIds[i] = miscRegTree->AppendItem(id, tSIF_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "FIFO");
-    for( i = 0; i < FIFO::nREGISTERS; i++ ) {
-        fifoItemIds[i] = miscRegTree->AppendItem(id, tFIFO_REGISTERS[i]);
-    }
+	// for( i = 0; i < FIFO::nREGISTERS; i++ ) {
+	//     fifoItemIds[i] = miscRegTree->AppendItem(id, tFIFO_REGISTERS[i]);
+	// }
     id = miscRegTree->AppendItem(root, "GIF");
     for( i = 0; i < GIFnREGISTERS; i++ ) {
         gifItemIds[i] = miscRegTree->AppendItem(id, tGIF_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "VIF0");
-    for( i = 0; i < VIF0::nREGISTERS; i++ ) {
-        vif0ItemIds[i] = miscRegTree->AppendItem(id, tVIF0_REGISTERS[i]);
-    }
+	// for( i = 0; i < VIF0::nREGISTERS; i++ ) {
+	//     vif0ItemIds[i] = miscRegTree->AppendItem(id, tVIF0_REGISTERS[i]);
+	// }
     id = miscRegTree->AppendItem(root, "VIF1");
-    for( i = 0; i < VIF1::nREGISTERS; i++ ) {
-        vif1ItemIds[i] = miscRegTree->AppendItem(id, tVIF1_REGISTERS[i]);
-    }
+	// for( i = 0; i < VIF1::nREGISTERS; i++ ) {
+	//     vif1ItemIds[i] = miscRegTree->AppendItem(id, tVIF1_REGISTERS[i]);
+	// }
 
     boxMiscRegs->Add(miscRegTree, 1, wxALIGN_LEFT|wxEXPAND, 10);
     boxMiscRegs->Add(regInfoBox, 1, wxALIGN_LEFT|wxEXPAND, 10);
@@ -497,7 +497,9 @@ VUFrame::OnStep(wxCommandEvent &WXUNUSED(event)) {
 	accumulatedTicks += VUchip.program[cur].tics;
 
 	if ( running == 0 ) {
-		DrawMemory();
+		if ( VUchip.memoryUpdate ) {
+			DrawMemory();
+		}
 		FastRegisterUpdate();
 		FlagsUpdate(); 
 	}
@@ -552,6 +554,9 @@ VUFrame::SetSettings() {
     datTmpFile = conf->Read(key + _T("/") + DATTMPFILE);
     regTmpFile = conf->Read(key + _T("/") + REGTMPFILE);
     gsTmpFile = conf->Read(key + _T("/") + GSTMPFILE);
+    dumpMemCmd = conf->Read(key + _T("/") + DUMPMEMCMD);
+    dumpRegCmd = conf->Read(key + _T("/") + DUMPREGCMD);
+    gsExecCmd = conf->Read(key + _T("/") + GSEXECCMD);
 
     key = PAGE_STYLE;
     wxString fontname = conf->Read(key + _T("/") + FONTNAME);
@@ -1368,6 +1373,7 @@ VUFrame::DrawMemory() {
             }
         }
     }
+	VUchip.memoryUpdate = false;
 }
 void VUFrame::FastRegisterUpdate() {
     int i;

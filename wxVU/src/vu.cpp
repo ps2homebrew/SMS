@@ -84,6 +84,7 @@ void VU::Reset() {
     upperRegisterWrite = false;
     lowerRegisterWrite = false;
     specialRegisterWrite = false;
+    memoryUpdate = true;
 }
 
 int VUReg::stall(){ return vstall;}

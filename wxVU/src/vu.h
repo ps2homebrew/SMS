@@ -155,6 +155,7 @@ public:
 	void            *XGKICKCallBackObj;
 	void            (*XGKICKCallBackFn)(void *, int);
 	uint32          LoadRegisters(char *file);
+    bool            memoryUpdate;
 
 	void MemVal2(uint16 v2,int16 *v3);
 	void MemVal16(uint16 v2,char pos, int16 *v3);

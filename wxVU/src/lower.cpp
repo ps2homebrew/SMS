@@ -1004,7 +1004,6 @@ int VU::VU_IBNE(VUInstruction &A)
     return 0;
 }
 
-
 int VU::VU_ILW(VUInstruction &A)
 {
     int st1;
@@ -1192,6 +1191,7 @@ VU::VU_ISW(VUInstruction &A) {
     if(strstr(dst,"W")) {
         MemSetVal16((uint16)(v2+v1),'W', v3);
     }
+    memoryUpdate = true;
     return 0;
 }
 
@@ -1224,6 +1224,7 @@ VU::VU_ISWR(VUInstruction &A) {
     if(strstr(dst,"w"))
         MemSetVal16(v1,'W', v2);
 
+    memoryUpdate = true;
     return 0;
 }
 
@@ -1774,6 +1775,7 @@ VU::VU_SQ(VUInstruction &A) {
     if(strstr(dst,"W")) {
         memcpy(&(dataMem[v1+v2].w),&vw,4);
     }
+    memoryUpdate = true;
     return 0;
 }
 
@@ -1821,6 +1823,7 @@ VU::VU_SQD(VUInstruction &A) {
         memcpy(&(dataMem[v1].w),&vw,4);
 
     RegInt[A.Params[1][1].index].stall(4);
+    memoryUpdate = true;
     return 0;
 }
 
@@ -1869,6 +1872,8 @@ int VU::VU_SQI(VUInstruction &A)
     }
     RegInt[A.Params[1][1].index].stall(4);
     RegInt[A.Params[1][1].index].lastWrite(PC);
+
+    memoryUpdate = true;
     return 0;
 }
 
