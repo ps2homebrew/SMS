@@ -1,0 +1,283 @@
+;//////////////////////////////////////////////////////////////////////////////////////////////////
+;//
+;// Note that this code is highly unoptimized, but might be useful to learn from or so.
+;//
+
+.macro crossp out,v1,v2
+ nop                      move \out,\v2
+ opmula.xyz  acc,\v1,\out nop
+ opmsub.xyz \out,\out,\v1 nop
+ sub.w \out,vf00,vf00     nop ; w = 0.0
+.endm
+
+
+ViewScreenMatrix = 0
+CameraMatrix     = 4
+Scale            = 8
+Giftag           = 13
+Data             = 14
+Dest             = Data+50
+
+.global         g_Vu1CubeRender
+.global         g_Vu1CubeRender_End                
+                        
+                .p2align 4  ; This aligns the following data to quadword alignment
+                .vu
+
+g_Vu1CubeRender:
+                nop                             lq          vf28, ViewScreenMatrix+0(vi00)
+                nop                             lq          vf29, ViewScreenMatrix+1(vi00)
+                nop                             lq          vf30, ViewScreenMatrix+2(vi00)
+                nop                             lq          vf31, ViewScreenMatrix+3(vi00)
+
+                nop                             lq          vf24, CameraMatrix+0(vi00)
+                nop                             lq          vf25, CameraMatrix+1(vi00)
+                nop                             lq          vf26, CameraMatrix+2(vi00)
+                nop                             lq          vf27, CameraMatrix+3(vi00)
+
+                nop                             xitop       vi04
+                nop                             iadd        vi02, vi00, vi04        ; 
+                nop                             iadd        vi03, vi00, vi04        ; xgkick adree
+                nop                             iaddiu      vi01, vi00, Data        ; coord adress
+                
+                nop                             lq.xyzw     vf06, Giftag(vi00)      ; giftag
+                nop                             lq.xyzw     vf07, Scale(vi00)      ; giftag
+                nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Calculate Screen * Camera
+
+                mulax     acc,  vf28, vf24      nop
+                madday    acc,  vf29, vf24      nop
+                maddaz    acc,  vf30, vf24      nop
+                maddw     vf01, vf31, vf24      nop
+                
+                mulax     acc,  vf28, vf25      nop
+                madday    acc,  vf29, vf25      nop
+                maddaz    acc,  vf30, vf25      nop
+                maddw     vf02, vf31, vf25      nop
+                
+                mulax     acc,  vf28, vf26      nop
+                madday    acc,  vf29, vf26      nop
+                maddaz    acc,  vf30, vf26      nop
+                maddw     vf03, vf31, vf26      nop
+                
+                mulax     acc,  vf28, vf27      nop
+                madday    acc,  vf29, vf27      nop
+                maddaz    acc,  vf30, vf27      nop
+                maddw     vf04, vf31, vf27      nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Static color for now
+                
+                nop                             loi 20.0
+                addi        vf10,vf00,I         nop
+                ftoi0       vf10, vf10          nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Do the loop
+                ;// first pass render backface culled
+
+                sub         vf20, vf20, vf20    nop
+                nop                             iaddiu      vi05, vi00, 12
+p_loop:
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                nop                             lqi         vf05, (vi01++)       ; XYZ
+                mul       vf05, vf05, vf07      nop
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq
+                mulq      vf05, vf05, q         nop                                 
+                nop                             move        vf11, vf05
+                ftoi4     vf18, vf05            nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                nop                             lqi         vf05, (vi01++)       ; XYZ
+                mul       vf05, vf05, vf07      nop
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq
+                mulq      vf05, vf05, q         nop                                 
+                nop                             move        vf12, vf05
+                ftoi4     vf19, vf05            nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                nop                             lqi         vf05, (vi01++)       ; XYZ
+                mul       vf05, vf05, vf07      nop
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq
+                mulq      vf05, vf05, q         nop                                 
+                nop                             move        vf13, vf05
+                ftoi4     vf05, vf05            nop
+                
+                ;///////////////////////////////////////////////////////////////////////////////////////
+                ;// do bfc
+                
+                sub        vf12, vf12, vf11     nop     ; v2 - v1
+                sub        vf13, vf13, vf11     nop     ; v3 - v1
+                opmula.xyz acc, vf13,vf12       nop
+                opmsub.xyz vf14,vf12,vf13       nop
+                                
+                ;///////////////////////////////////////////////////////////////////////////////////////
+                ;/ check if z is negative
+                
+                mulw.z     vf14,vf14,vf00       nop
+                nop                             iaddiu      vi11,   vi00, 0x20
+                nop                             fmand       vi07,   vi11              
+                nop                             ibne        vi07,   vi00, DrawKick
+                nop                             nop
+                nop                             iaddiu      vi12, vi00, 0x7fff
+                nop                             iaddiu      vi12, vi12, 0x1
+                nop                             mfir.w      vf05w,  vi12   
+                nop                             mfir.w      vf18w,  vi12   
+                nop                             mfir.w      vf19w,  vi12   
+DrawKick:                
+                nop                             nop
+                
+                ;//////////////////////////////////////////////////////////////////////////////////////
+                ;// create color
+                
+                abs       vf14, vf14            loi 0.02
+                addz.x    vf15x, vf00x,vf14z    nop
+                addz.y    vf15y, vf00y,vf14z    nop
+                addz.z    vf15z, vf00z,vf14z    nop
+                muli      vf15, vf15, i         loi 64
+                addi.w    vf15, vf20, i         nop          
+                ftoi0     vf15, vf15            nop
+                nop                             sqi         vf15, (vi02++)       ; RGA
+                nop                             sqi         vf18, (vi02++)       ; XYZ
+                nop                             sqi         vf19, (vi02++)       ; XYZ
+                nop                             sqi         vf05, (vi02++)       ; XYZ
+                nop                             nop                
+                nop                             iaddi       vi05, vi05, -1       ; 
+                nop                             nop                              ;
+                nop                             ibne        vi05, vi00, p_loop   ; loop check
+                nop                             nop
+                nop                             xgkick      vi03
+                nop                             nop
+                nop                             nop
+                nop                             nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Do the loop
+                
+                nop                             iaddiu      vi01, vi00, Data        ; coord adress
+                nop                             iadd        vi03, vi00, vi02
+                nop                             lq.xyzw     vf06, Giftag(vi00)      ; giftag
+                nop                             lq.xyzw     vf07, Scale(vi00)      ; giftag
+                nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
+                nop                             iaddiu      vi05, vi00, 12
+                
+p_loop_2:
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                nop                             lqi         vf05, (vi01++)       ; XYZ
+                mul       vf05, vf05, vf07      nop
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq
+                mulq      vf05, vf05, q         nop                                 
+                nop                             move        vf11, vf05
+                ftoi4     vf18, vf05            nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                nop                             lqi         vf05, (vi01++)       ; XYZ
+                mul       vf05, vf05, vf07      nop
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq
+                mulq      vf05, vf05, q         nop                                 
+                nop                             move        vf12, vf05
+                ftoi4     vf19, vf05            nop
+
+                ;////////////////////////////////////////////////////////////////////////////////////////
+                ;// Project point
+
+                nop                             lqi         vf05, (vi01++)       ; XYZ
+                mul       vf05, vf05, vf07      nop
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq
+                mulq      vf05, vf05, q         nop                                 
+                nop                             move        vf13, vf05
+                ftoi4     vf05, vf05            nop
+                
+                ;///////////////////////////////////////////////////////////////////////////////////////
+                ;// do bfc
+                
+                sub        vf12, vf12, vf11     nop     ; v2 - v1
+                sub        vf13, vf13, vf11     nop     ; v3 - v1
+                opmula.xyz acc, vf13,vf12       nop
+                opmsub.xyz vf14,vf12,vf13       nop
+                                
+                ;///////////////////////////////////////////////////////////////////////////////////////
+                ;/ check if z is negative
+                
+                mulw.z     vf14,vf14,vf00       nop
+                nop                             iaddiu      vi11,   vi00, 0x20
+                nop                             fmand       vi07,   vi11              
+                nop                             ibeq        vi07,   vi00, DrawKick_2
+                nop                             nop
+                nop                             iaddiu      vi12, vi00, 0x7fff
+                nop                             iaddiu      vi12, vi12, 0x1
+                nop                             mfir.w      vf05w,  vi12   
+                nop                             mfir.w      vf18w,  vi12   
+                nop                             mfir.w      vf19w,  vi12   
+DrawKick_2:                
+                nop                             nop
+                
+                ;//////////////////////////////////////////////////////////////////////////////////////
+                ;// create color
+                
+                abs       vf14, vf14            loi 0.04
+                addz.x    vf15x, vf00x,vf14z    nop
+                addz.y    vf15y, vf00y,vf14z    nop
+                addz.z    vf15z, vf00z,vf14z    nop
+                muli      vf15, vf15, i         loi 64
+                addi.w    vf15, vf20, i         nop          
+                ftoi0     vf15, vf15            nop
+                nop                             sqi         vf15, (vi02++)       ; RGA
+                nop                             sqi         vf18, (vi02++)       ; XYZ
+                nop                             sqi         vf19, (vi02++)       ; XYZ
+                nop                             sqi         vf05, (vi02++)       ; XYZ
+                nop                             nop                
+                nop                             iaddi       vi05, vi05, -1       ; 
+                nop                             nop                              ;
+                nop                             ibne        vi05, vi00, p_loop_2 ; loop check
+                nop                             nop
+                nop                             xgkick      vi03
+                nop[e]                          nop
+                nop                             nop
+
+g_Vu1CubeRender_End:
+
