@@ -22,7 +22,7 @@ FILES = Makefile Makefile.WIN32 TODO src/datatypes.h src/defsext.h src/dma.cpp s
 
 ZIP = zip -9
 
-all: vuemu run
+all: wxVU run
 
 wxVU: $(OBJECTS)
 	@cd obj; \
