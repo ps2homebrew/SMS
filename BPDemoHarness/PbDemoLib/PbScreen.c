@@ -69,9 +69,9 @@ void PbScreenSetup( int Width, int Height, int PSM )
   ////////////////////////////////////////////////////////////////////////////
   // Alloc data for the screens and zbuffer
 
-  g_ScreenBuffer[0] = PbVramAlloc( Width*Height );  
-  g_ScreenBuffer[1] = PbVramAlloc( Width*Height );  
-  g_Zbuffer         = PbVramAlloc( Width*Height );  
+  g_ScreenBuffer[0] = PbVramAlloc( 256*640*4 );  
+  g_ScreenBuffer[1] = PbVramAlloc( 256*640*4 );  
+  g_Zbuffer         = PbVramAlloc( 256*640*4 );  
   p_data = p_store  = PbSprAlloc( 8*16 );
   
   ////////////////////////////////////////////////////////////////////////////
@@ -171,6 +171,15 @@ void PbScreenVsync()
 void PbScreenClear( int Color )
 {
   PbPrimSpriteNoZtest( 0, 0, g_Width<<4, g_Height<<4, 0, Color );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbScreenDisplayAt
+///////////////////////////////////////////////////////////////////////////////
+
+void PbScreenDisplayAt( u32 Pos, int Width )
+{
+  GS_SET_DISPFB2( Pos / 2048, Width / 64, 0, 0, 0 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
