@@ -5,9 +5,13 @@
 
 #include <iostream>
 #include <map>
+#include <iterator>
 
 #include <wx/wx.h>
+#include <wx/string.h>
 #include "Log.h"
+
+using namespace std;
 
 static const wxColour cERROR	= wxColour(128, 0, 0);
 static const wxColour cWARNING	= wxColour(255, 64, 64);
