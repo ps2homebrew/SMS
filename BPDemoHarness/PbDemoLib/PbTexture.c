@@ -382,3 +382,27 @@ void  PbTextureSetupPal( PbTexture* pTexture )
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// void PbTextureSetRenderTarget
+///////////////////////////////////////////////////////////////////////////////
+
+void PbTextureSetRenderTarget( PbTexture* pTexture )
+{
+	u64* p_data = NULL;
+	u64* p_store = NULL;
+	
+	p_data = p_store = PbSprAlloc( 3*16 );
+	
+	*p_data++ = GIF_TAG( 2, 1, 0, 0, 0, 1 );
+	*p_data++ = GIF_AD;
+	
+	*p_data++ = GS_SETREG_SCISSOR_1( 0, pTexture->x - 1, 0, pTexture->y - 1 ); 
+	*p_data++ = GS_SCISSOR_1;
+	
+	*p_data++ = GS_SETREG_FRAME_1( pTexture->Vram / 8192, pTexture->x / 64, pTexture->psm, 0 );  
+	*p_data++ = GS_FRAME_1; 
+	
+	
+	PbDmaSend02Spr(p_store, 3);
+	PbDmaWait02();
+}
