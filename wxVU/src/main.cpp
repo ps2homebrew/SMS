@@ -416,6 +416,7 @@ void VUFrame::OnQuit(wxCommandEvent &WXUNUSED(event)) {
 //---------------------------------------------------------------------------
 void
 VUFrame::OnVu0All(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
@@ -424,27 +425,26 @@ VUFrame::OnVu0All(wxCommandEvent &WXUNUSED(event)) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetVu(0) == 0) {
+    if ( (ret = Remote::GetVu(0)) == 0) {
         m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
         LoadMemory(m_datTmpFile);
     } else {
-        wxMessageBox("Unable to fetch vpu0 content\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 
-    if ( Remote::GetVuRegisters(0) == 0) {
+    if ( (ret = Remote::GetVuRegisters(0)) == 0) {
         m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
         RegisterUpdate();
     } else {
-        wxMessageBox("Unable to fetch vpu0 registers from PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
 //---------------------------------------------------------------------------
 void
 VUFrame::OnVu1All(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
@@ -453,26 +453,25 @@ VUFrame::OnVu1All(wxCommandEvent &WXUNUSED(event)) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetVu(1) == 0) {
+    if ( (ret = Remote::GetVu(1)) == 0) {
         m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
         LoadMemory(m_datTmpFile);
     } else {
-        wxMessageBox("Unable to fetch vpu1 content\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 
-    if ( Remote::GetVuRegisters(1) == 0) {
+    if ( (ret =Remote::GetVuRegisters(1)) == 0) {
         m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
         RegisterUpdate();
     } else {
-        wxMessageBox("Unable to fetch vpu1 registers from PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
 //---------------------------------------------------------------------------
 void VUFrame::OnVu0(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
@@ -481,18 +480,18 @@ void VUFrame::OnVu0(wxCommandEvent &WXUNUSED(event)) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetVu(0) == 0) {
+    if ( (ret = Remote::GetVu(0)) == 0) {
         m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
         LoadMemory(m_datTmpFile);
     } else {
-        wxMessageBox("Unable to fetch vpu0 content\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
 //---------------------------------------------------------------------------
 void VUFrame::OnVu1(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_binTmpFile == "" ) {
         wxMessageBox("No binary temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
@@ -567,14 +566,14 @@ VUFrame::OnGsInit(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnGsClear(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_gsTmpFile == "" ) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
 
-    if ( Remote::GsSetColor() != 0 ) {
-        wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+    if ( (ret = Remote::GsSetColor()) != 0 ) {
+        m_pLog->Error(ret);
     }
 }
 
@@ -1095,9 +1094,6 @@ VUFrame::DrawGif(uint32 offset) {
         m_pLog->Error(
             wxString::Format("Invalid Gif tag at offset: %d", offset)
             );
-        // wxMessageBox(
-        //     wxString::Format("Invalid GIF Tag at offset: %d", offset),
-        //     "", wxOK|wxICON_INFORMATION, this);
     }
 
     free(data);
@@ -1119,7 +1115,6 @@ VUFrame::DebugTic(int mode, int error) {
 
     if(error==999) {
         m_pLog->Trace("End of program reached\n");
-        // wxMessageBox("End of Program", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
     if(mode==2) {
@@ -1370,16 +1365,12 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
 	}
 	if (!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
         m_pLog->Error("Failed to load instructions");
-        // wxMessageBox("Failed to load instructions", "",
-        //     wxOK|wxICON_INFORMATION, this);
 		wxFileDialog* dlg = new wxFileDialog(this, "Open instructions.txt file");
 		if (dlg->ShowModal() == wxID_OK &&
 			dlg->GetFilename() != "") {
 			m_mnemonicFile.Assign(dlg->GetPath());
 			if(!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
                 m_pLog->Error("Failed to load instructions, Exiting");
-                // wxMessageBox("Failed to load instructions, Exiting", "",
-                //     wxOK|wxICON_INFORMATION, this);
 				Close(TRUE);
 			}
 		}

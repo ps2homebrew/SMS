@@ -18,7 +18,7 @@ static const wxColour cWARNING	= wxColour(255, 64, 64);
 static const wxColour cTRACE	= wxColour(255, 128, 128);
 static const wxColour cNORMAL	= wxColour(0, 0, 0);
 
-typedef multimap<int32, wxString>::iterator m_mapIterator;
+typedef map<int32, wxString>::iterator m_mapIterator;
 pair<int32, wxString>
 m_map[] = {
     pair<int32, wxString>(0, ""),
@@ -38,7 +38,7 @@ m_map[] = {
     // pair<int32, wxString>( ),
 };
 
-multimap<int32, wxString>
+map<int32, wxString>
     object(&m_map[0], &m_map[9]);
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
