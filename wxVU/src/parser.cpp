@@ -870,6 +870,7 @@ LoadCode(char *file) {
     char Line[250];
     string line;
     int j = 0;
+    int i;
     VUchip.Reset();
     ifstream fin(file, ios::binary);
     struct stat st;
@@ -897,6 +898,7 @@ LoadCode(char *file) {
     }
 
     while((data = getLine(Line, data))) {
+        i++;
         j = 0;
         while(Line[j]) {
             if(Line[j]==';') {
@@ -915,8 +917,9 @@ LoadCode(char *file) {
         if(!strncmp(Line, ".data", 5)) {
             break;
         }
-        if(Line[0]==';' || Line[0]==0 || Line[0]=='#') //comment or empty line
+        if(Line[0]==';' || Line[0]==0 || Line[0]=='#') {
             continue;
+        }
         if(!ProcessLine(Line)) {
             return 0;
         }
@@ -969,7 +972,6 @@ LoadBinaryCode(ifstream *fin, char *data) {
         }
         uidx = get_upper(ucode);
         lidx = get_lower(lcode);
-
         memset(lparam, 0, 50);
         memset(uparam, 0, 50);
         get_params(uidx, ucode, uparam, uopcodes);
@@ -1223,7 +1225,7 @@ get_imm12(uint32 code) {
 
 int
 get_imm15(uint32 code) {
-    return ((code>>10)&0x3C00)+((code)&0x7FF);
+    return ((code>>10)&0x7800)+((code)&0x7FF);
 }
 
 int
