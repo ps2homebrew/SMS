@@ -1,0 +1,11 @@
+You need CVS PS2LIB, libhdd, bin2s, PS2DRV, MrBrown's sbv-1.0-lite to compile this.
+
+type "make" in the root folder of ps2menu to built it yourself
+
+You need these Irx's when compiling
+-fileXio.irx
+-hddfsd.irx
+-poweroff.irx
+-ps2atad.irx
+-ps2fs.irx
+-ps2hdd

@@ -1,34 +1,38 @@
 ps2menu
 				Hdd Loader/Copy/Manager
-				Adam Metcalf 2003
+				Adam Metcalf 2003/04
 				Thomas Hawcroft 2003/04
 
 
-Version 0.4
+Version 1.0
 PS2MENU is a Hard Drive project meant at start to offer hdd booting that dms3 had, on a no-mod or other ps2
 
 _________________________________________________________________________________________________________
 
-Left and Right : Changes from host: to pfs0: and back
-x              : On host: you can copy files over on pfs0: runs the elf or opens folder
-Up and Down    : Guess
+Left and Right : Move down ten files
+x              : On host: you can copy files over or untar/gzip a file into the root directory
+	       : On pfs0: runs the elf or opens folder
+Up and Down    : Move up and down the files
 Circle         : Delete file or empty folder - prompts for confirmation
 Square         : Create folder
+Tiangle	       : On pfs checks to see if is a valid ELF and will load it. If not you can select a differnt ELF
 L1             : Switch partion/volume
+R1	       : Switch from running hard drive programs to host to hard drive copy
 
 
 
 To transfer files you need a list similar to this
 
-"C:\ps2\random.elf"
+C:\ps2\random.elf
+C:\ps2\random.irx
 
 "dir *.elf /b /s >elflist.txt" will create this. Put the list where the elf is booting from.
 
-Boots only from PS2Link at the moment because of the need of host: 
-Will boot from memory card (without copy from host support) so long as required ELF and IRX
-files are included in the same folder. If loading as the exploit, PS2MENU.ELF should be
+Boots only from PS2Link at the moment because we need host: 
+Will boot from memory card (without copy from host support) If loading as the exploit, PS2MENU.ELF should be
 renamed to BOOT.ELF.
 
+You can recieve/read sources at http://cvs.ps2dev.org
 Version History
 
 0.1
@@ -42,3 +46,6 @@ Version History
 
 0.4
 -Seperated loader and menu for more compatibility. Boots from Memory Card Exploit (without copy) and Confermation to delete
+
+1.0 Binary Release
+-t0mb0la added nice visuals, better loading compatibity, fakehost, iuntar, helpscreen and various other additions.
