@@ -63,6 +63,7 @@ PbTexture* PbTextureAlloc( int Width, int Height, int Psm )
   return pTexture;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // void PbTextureUpload
 ///////////////////////////////////////////////////////////////////////////////
@@ -380,6 +381,58 @@ void  PbTextureSetupPal( PbTexture* pTexture )
       pTexture->pClut[i+8] = temp;
     }
   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbTextureSetRenderTarget
+///////////////////////////////////////////////////////////////////////////////
+
+void PbTextureCopy( PbTexture* pDest, PbTexture* pSource, int Bilinear )
+{
+  u64* p_store;
+  u64* p_data;
+
+  PbTextureSetRenderTarget( pDest );
+
+  p_store = p_data = PbSprAlloc( 11*16 );
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // Setup for drawing
+
+  *p_data++ = GIF_TAG( 10, 1, 0, 0, 0, 1 );
+  *p_data++ = GIF_AD;
+
+  *p_data++ = PbTextureGetTex0( pSource );
+  *p_data++ = GS_TEX0_1;
+
+  *p_data++ = GS_SETREG_TEX1_1( 0, 0, Bilinear, Bilinear, 0, 0, 0 );
+  *p_data++ = GS_TEX1_1;
+
+  *p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0) ;
+  *p_data++ = GS_PRIM;
+
+  *p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 );     
+  *p_data++ = GS_TEST_1;   
+
+  *p_data++ = 0x7f7f7f7f;
+  *p_data++ = GS_RGBAQ;
+
+  *p_data++ = GS_SETREG_XYZ2( 2048<<4, 2048<<4, 0 );
+  *p_data++ = GS_XYZ2;
+
+  *p_data++ = GS_SETREG_UV( 8, 8 );
+  *p_data++ = GS_UV;
+
+  *p_data++ = GS_SETREG_XYZ2( (pDest->x+2048)<<4, (pDest->y+2048)<<4, 0 );
+  *p_data++ = GS_XYZ2;
+
+  *p_data++ = GS_SETREG_UV( ((pSource->x-1)<<4)+8, ((pSource->y-1)<<4)+8 );
+  *p_data++ = GS_UV;
+
+  *p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 2 );     
+  *p_data++ = GS_TEST_1;     
+  
+  PbDmaSend02Spr( p_store, 11 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

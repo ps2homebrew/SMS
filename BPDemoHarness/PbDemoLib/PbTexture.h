@@ -41,13 +41,12 @@ typedef struct st_PbTexture
 // Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-
 void        PbTextureUpload( PbTexture* pTexture );
 PbTexture*  PbTextureCreate32( u32* pData, int Width, int Height );
 PbTexture*  PbTextureCreate8( char* pData,u32* pPal, int Width, int Height );
 PbTexture*  PbTextureAlloc( int Widht, int Height, int Psm );
-
 u64         PbTextureGetTex0( PbTexture* pTexture );
+void        PbTextureCopy( PbTexture* pDest, PbTexture* pSource,int Bilinear );
 
 void 		PbTextureSetRenderTarget( PbTexture* pTexture );
 
