@@ -25,6 +25,7 @@
 #include "vif0.h"
 #include "vif1.h"
 #include "gs.h"
+#include "gif.h"
 #include "vuBreakDialog.h"
 #include "breakpoint.h"
 
@@ -63,7 +64,7 @@ static uint32 tagInitGs[24] = {
     10<<16, 0x0, 0x4c, 0x0,                     // frame_1
     (10<<24)+(640*512*4/8192), 0x0, 0x4E, 0x0,  // zbuf_1
     32000, 32000, 0x18, 0x0,                    // xyoffset_1
-    (639<<16), (511<<16), 0x40, 0x0,                    // scissor_1
+    (639<<16), (511<<16), 0x40, 0x0,            // scissor_1
     0x0, 0x0, 0x42, 0x0                         // alpha_1
 };
 
@@ -568,6 +569,9 @@ VUFrame::SetSettings() {
     xoffset = conf->Read(key + _T("/") + XOFFSET, 0L);
     sendPrim = conf->Read(key + _T("/") + SENDPRIM, 0L);
     tagShow = conf->Read(key + _T("/") + TAGSHOW, 0L);
+    ClrColor = conf->Read(key + _T("/") + CLRCOLOR, 0L);
+    scissorX = conf->Read(key + _T("/") + SCISSOR_X, 0L);
+    scissorY = conf->Read(key + _T("/") + SCISSOR_Y, 0L);
     prim = conf->Read(key + _T("/") + PRIM, 0L);
 }
 
@@ -749,6 +753,11 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
+
+    tagInitGs[12] = yoffset<<4;
+    tagInitGs[13] = xoffset<<4;
+    tagInitGs[16] = scissorX<<16;
+    tagInitGs[17] = scissorY<<16;
     
     if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagInitGs, 96) != 0) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
@@ -758,11 +767,16 @@ VUFrame::OnGSInit(wxCommandEvent &WXUNUSED(event)) {
 
 void
 VUFrame::OnCLR(wxCommandEvent &WXUNUSED(event)) {
+    int i;
     if ( gsTmpFile == "" ) {
         wxMessageBox("No GS temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    
+
+    tagClearGs[12] = ClrColor;
+    tagClearGs[20] = (((scissorY<<4)+(yoffset<<4))<<16) +
+        ((scissorX<<4)+(xoffset<<4));
+
     if ( dumpDisplayList((char *)gsTmpFile.c_str(), tagClearGs, 96) != 0) {
         wxMessageBox("Unable to init GS on PS2\nNo contact with ps2link client.", "",
             wxOK|wxICON_INFORMATION, this);
@@ -791,6 +805,7 @@ VUFrame::LoadMemory(wxFileName file) {
     uint32 i;
 
     if ((stat(file.GetFullPath().c_str(), &sb)) != 0 ) {
+        cout << "E_FILE_OPEN" << endl;
         return E_FILE_OPEN;
     }
     if ((fd = fopen(file.GetFullPath().c_str(), "rb")) != NULL) {
@@ -1038,8 +1053,6 @@ VUFrame::OnLoadCode(wxCommandEvent &WXUNUSED(event)) {
                     codeFile.GetFullPath() + "\n"));
             InstuctionStatus();
         } else {
-            VUchip.Reset();
-            Status = wxRESET;
             txtDebugFailed(wxString("Failed to load VU Code from file: " +
                     codeFile.GetFullPath() + "\n"));
         }
@@ -1215,6 +1228,7 @@ void VUFrame::DrawProgram() {
                 wxString("Warning. More than 2048 opcodes loaded.\n"));
         }
         if(VUchip.program[i].SymbolIndex != -1) {
+            cout << "symbol" << endl;
             strcpy(scode,VUchip.Labels[VUchip.program[i].SymbolIndex].symb);
             strcat(scode,":");
             gridCode->SetCellValue(l++, 1, scode);
@@ -1272,6 +1286,7 @@ VUFrame::DrawMemory() {
     uint32 i;
     char val[4][50];
     float stuff;
+    cout << "DrawMemory" << endl;
     for (i = 0; i < MAX_VUDATA_SIZE; i++) {
         switch(regRadioBox->GetSelection()) {
             case 0:
@@ -1409,7 +1424,7 @@ VUFrame::wrapper_DebugTic(void *objPtr, int p1, int p2) {
 void
 VUFrame::wrapper_XGKICK(void *objPtr, int offset) {
     VUFrame *self = (VUFrame*)objPtr;
-    self->drawGIF(offset);
+    self->drawGIF((uint32)offset);
 }
 
 void
@@ -1424,11 +1439,13 @@ VUFrame::drawGIF(uint32 offset) {
     uint32 *data = (uint32 *)malloc(size);
     uint32 i, j;
 
+    j = 0;
     for(i = offset; i < MAX_VUDATA_SIZE; i++) {
-        memcpy(&data[i*4+0], &VUchip.dataMem[i].x, 4);
-        memcpy(&data[i*4+1], &VUchip.dataMem[i].y, 4);
-        memcpy(&data[i*4+2], &VUchip.dataMem[i].z, 4);
-        memcpy(&data[i*4+3], &VUchip.dataMem[i].w, 4);
+        memcpy(&data[j*4+0], &VUchip.dataMem[i].x, 4);
+        memcpy(&data[j*4+1], &VUchip.dataMem[i].y, 4);
+        memcpy(&data[j*4+2], &VUchip.dataMem[i].z, 4);
+        memcpy(&data[j*4+3], &VUchip.dataMem[i].w, 4);
+        j++;
     }
 
     if (autoGSExec == 0) {
@@ -1460,6 +1477,9 @@ VUFrame::drawGIF(uint32 offset) {
             v = gif->NloopData();
             it = v.begin();
             while(it != v.end()) {
+                if (i > MAX_VUDATA_SIZE ) {
+                    break;
+                }
                 gridGIF->SetCellValue(i, 0, wxString(((string)*it).c_str()));
                 gridGIF->SetCellValue(i, 1, wxString(((string)*(it+1)).c_str()));
                 if(j&0x1) {
@@ -1471,6 +1491,9 @@ VUFrame::drawGIF(uint32 offset) {
                 }
                 it = it + 2;
                 i++;
+            }
+            if (i > MAX_VUDATA_SIZE ) {
+                break;
             }
         }
     } else {
@@ -1669,12 +1692,9 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     buildCodeTable(left_book);
     buildGIFTable(left_book);
     buildMiscRegistersTable(left_book);
-    txtDebug = new wxTextCtrl(left_book, ID_TEXT_DEBUG, wxString(""),
-        wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
     left_book->AddPage(gridCode, "Code", TRUE, -1);
     left_book->AddPage(buildMemoryTable(left_book), "Memory", FALSE, -1);
     left_book->AddPage(gridGIF, "GIF output", FALSE, -1);
-    left_book->AddPage(txtDebug, "Debug", FALSE, -1);
     left_book->AddPage(panelMiscRegisters, "Misc. Registers", FALSE, -1);
     left_book->Show(TRUE);
 
@@ -1684,6 +1704,9 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     regDetail = new wxPanel(right_book, -1, wxDefaultPosition, wxDefaultSize,
         wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER);
 
+    txtDebug = new wxTextCtrl(right_book, ID_TEXT_DEBUG, wxString(""),
+        wxDefaultPosition, wxSize(400, 400), wxTE_MULTILINE|wxTE_READONLY);
+    right_book->AddPage(txtDebug, "Debug", FALSE, -1);
     right_book->AddPage(regDetail, "Reg Detail", TRUE, -1);
     wxString choices[5] = {"Fixed 0", "Fixed 4", "Fixed 12", "Fixed 15", "Float"};
     m_regIntNum = new wxRadioBox(regDetail, ID_REGINT_REP, "Integer register representation",
@@ -1761,7 +1784,6 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
         codeFile.Assign("");
         dataFile.Assign("");
     }
-    DrawMemory();
 }
 
 bool VUemu::OnInit() {

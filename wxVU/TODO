@@ -20,18 +20,18 @@
 . add break on xgkick/mscal/mscnt/unpack to some breakpoint dialog.
 
 **** Version 1 ****
-! Full VIF support
-! Parse DMA Tags
-. labels take up a memory slot when you load .vsm's
 . generate labelnames on disasm 
 . large immediates dont generate a warning ( .vsm files )
 . Start on errno.h ( and some getErrorAsText()/perror() thingy )
 . change row/column order of registers
+! Full VIF support
+! Parse DMA Tags
 ! emulate VU single precision float ( some differences from IEEE 754 )
 ! always load all the disasmed code and flag for error ( omit badlines ), lineno
     with red color in debug output, debug callback.
 ! truncate code and flag for it, add option in pref.
 
+* labels take up a memory slot when you load .vsm's
 * accumulated cycle count in statusbar.
 * if instructions.txt not found show a filedialog
 * save state ( mem + regs )
