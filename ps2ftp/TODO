@@ -1,0 +1,8 @@
+  TODO as of 07/07/2003:
+	- Clean up src and split up into diff .c/.h files as appropriate
+	- REST command
+	- figure out why STOR freezes on open sometimes
+	- accessing 2nd mc
+	- do we want to support pasv?
+	- support for PS2 MC file attributes (via modified 'tar'-like program?)
+	- figure out why we only get ~20k/s max transfer rate
