@@ -1,0 +1,8 @@
+This should generate fft blocks from the audio data.
+
+You need a copy of the FFTW library to build it.
+
+Output data is an ntsc and pal data block, fft is in 1024 * unsigned short
+blocks. The imaginary and negative components have been removed so...
+
+
