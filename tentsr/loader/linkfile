@@ -1,0 +1,50 @@
+/*
+# _____     ___ ____     ___ ____
+#  ____|   |    ____|   |        | |____|
+# |     ___|   |____ ___|    ____| |    \    PS2DEV Open Source Project.
+#-----------------------------------------------------------------------
+# Copyright 2001-2004, ps2dev - http://www.ps2dev.org
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+# $Id$
+# Linkfile script for ee-ld
+*/
+
+ENTRY(_start);
+
+SECTIONS {
+	.text 0x001e0000: { *(.text) }
+	.reginfo ALIGN(128): { *(.reginfo) }
+
+	/* Static data.  */
+	.rodata ALIGN(128): { *(.rodata) }
+	.data ALIGN(128): { *(.data) }
+	.rdata ALIGN(128): { *(.rdata) }
+
+	_gp = ALIGN(128) + 0x7ff0;
+	.lit4 ALIGN(128): { *(.lit4) }
+	.lit8 ALIGN(128): { *(.lit8) }
+	.sdata ALIGN(128): { *(.sdata) }
+
+	/* Uninitialized data.  */
+	.sbss ALIGN(128) (NOLOAD): {
+		_fbss = . ;
+		*(.scommon)
+		*(.sbss)
+	}
+	.bss ALIGN(128) (NOLOAD): { *(.bss) }
+	.COMMON ALIGN(128) (NOLOAD): { *(COMMON) }
+	_end_bss = .;
+
+	_end = . ;
+	PROVIDE(end = .);
+
+	/* Symbols needed by crt0.s.  */
+	PROVIDE(_heap_size = -1);
+	PROVIDE(_stack = -1);
+	PROVIDE(_stack_size = 128 * 1024);
+
+	_ten_end = ALIGN(128) + 0x0000;
+
+}
