@@ -72,16 +72,18 @@ void PbScreenSetup( int Width, int Height, int PSM )
   g_ScreenBuffer[0] = PbVramAlloc( 256*640*4 );  
   g_ScreenBuffer[1] = PbVramAlloc( 256*640*4 );  
   g_Zbuffer         = PbVramAlloc( 256*640*4 );  
-  p_data = p_store  = PbSprAlloc( 8*16 );
-  
+  p_data = p_store  = PbSprAlloc( (8+5)*16 );
+
   ////////////////////////////////////////////////////////////////////////////
   // Setup diffrent default values for the registers
 
-  *p_data++ = GIF_TAG( 7, 1, 0, 0, 0, 1 );
+  *p_data++ = GIF_TAG( 7+5, 1, 0, 0, 0, 1 );
   *p_data++ = GIF_AD;
 
   *p_data++ = 1;  
   *p_data++ = GS_PRMODECONT,    
+
+  // Setup for context 1
 
   *p_data++ = GS_SETREG_FRAME_1( 0, Width / 64, PSM, 0 );  
   *p_data++ = GS_FRAME_1,    
@@ -100,11 +102,28 @@ void PbScreenSetup( int Width, int Height, int PSM )
 
   *p_data++ = GS_SETREG_COLCLAMP( 255 );                    
   *p_data++ = GS_COLCLAMP,   
+
+  // Setup for context 2
+
+  *p_data++ = GS_SETREG_FRAME_1( 0, Width / 64, PSM, 0 );  
+  *p_data++ = GS_FRAME_2,    
+
+  *p_data++ = GS_SETREG_XYOFFSET_1( g_OffsetX << 4, g_OffsetY << 4 );
+  *p_data++ = GS_XYOFFSET_2, 
+
+  *p_data++ = GS_SETREG_SCISSOR_1( 0, Width-1, 0, Height-1 ); 
+  *p_data++ = GS_SCISSOR_2,  
+
+  *p_data++ = GS_SETREG_ZBUF_1( g_Zbuffer / 2048, 0, 0 );   
+  *p_data++ = GS_ZBUF_2,     
+
+  *p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 );     
+  *p_data++ = GS_TEST_2,     
   
   ////////////////////////////////////////////////////////////////////////////
   // Send the data to gif
   
-  PbDmaSend02Spr( p_store, 8 );
+  PbDmaSend02Spr( p_store, 8+5 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,22 +155,33 @@ void PbScreenSetActive( int Buffer )
   u64* p_data;
   u64* p_store;
 
-  p_data = p_store = PbSprAlloc( 3*16 );
+  p_data = p_store = PbSprAlloc( (3+2)*16 );
 
-  *p_data++ = GIF_TAG( 2, 1, 0, 0, 0, 1 );
+  *p_data++ = GIF_TAG( 2+2, 1, 0, 0, 0, 1 );
   *p_data++ = GIF_AD;
 
+  // context 1
+
   *p_data++ = GS_SETREG_SCISSOR_1( 0, g_Width-1, 0, g_Height - 1 ); 
-  *p_data++ = GS_SCISSOR_1,  
+  *p_data++ = GS_SCISSOR_1;
 
   *p_data++ = GS_SETREG_FRAME_1( g_ScreenBuffer[Buffer & 1] / 2048, 
                                  g_Width / 64, g_Psm, 0 );  
-  *p_data++ = GS_FRAME_1,    
+  *p_data++ = GS_FRAME_1; 
+
+  // context 2
+
+  *p_data++ = GS_SETREG_SCISSOR_1( 0, g_Width-1, 0, g_Height - 1 ); 
+  *p_data++ = GS_SCISSOR_2;
+
+  *p_data++ = GS_SETREG_FRAME_1( g_ScreenBuffer[Buffer & 1] / 2048, 
+                                 g_Width / 64, g_Psm, 0 );  
+  *p_data++ = GS_FRAME_2; 
   
   ////////////////////////////////////////////////////////////////////////////
   // Send the data to gif
   
-  PbDmaSend02Spr( p_store, 3 );
+  PbDmaSend02Spr( p_store, 3+2 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -179,7 +209,7 @@ void PbScreenClear( int Color )
 
 void PbScreenDisplayAt( u32 Pos, int Width )
 {
-  GS_SET_DISPFB2( Pos / 2048, Width / 64, 0, 0, 0 );
+  GS_SET_DISPFB2( Pos / 2048*(256/64), Width / 64, 0, 0, 0 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
