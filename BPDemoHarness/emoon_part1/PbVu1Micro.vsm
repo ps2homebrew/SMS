@@ -1,0 +1,74 @@
+;////////////////////////////////////////////////////////////////////////////////////////
+;//
+;// Note that this code is highly unoptimized, but might be useful to learn from or so.
+;//
+
+.global         g_PbVu1_FlatSimple
+.global         g_PbVu1_FlatSimple_End
+                
+                .p2align 4  ; This aligns the following data to quadword alignment
+                .vu
+
+g_PbVu1_FlatSimple:
+                
+                nop                             xtop        vi14
+                
+                nop                             lq          vf01, 0(vi14)
+                nop                             lq          vf02, 1(vi14)
+                nop                             lq          vf03, 2(vi14)
+                nop                             lq          vf04, 3(vi14)
+                                                
+                nop                             iaddiu      vi02, vi14, 246         ; 
+                nop                             iaddiu      vi03, vi14, 246         ; xgkick adree
+                nop                             iaddiu      vi01, vi14, 5           ; coord adress
+                nop                             lq.xyzw     vf06, 4(vi14)           ; giftag
+                nop                             sqi.xyzw    vf06, (vi02++)          ; store the giftag
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Get the lower part of the viftag to see how many coords we ill draw
+                
+                ;//nop                             iaddiu      vi13, vi14, 4
+                ;//nop                             ilwr.w      vi06, (vi13)w
+                ;//nop                             iaddiu      vi13, vi00, 0x3ff
+                ;//nop                             iand        vi05, vi05, vi13
+                nop                             iaddiu      vi05, vi00, 110
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Temporary for colors right now.
+                                
+                add.xyzw    vf06,vf00,vf00      loi 2.0
+                addi        vf07,vf00,I         nop
+poly_loop:      
+                add.xyzw    vf06, vf06, vf07    nop
+                ftoi0       vf08, vf06          nop
+                nop                             sqi         vf08, (vi02++)          ; store colors
+                nop                             lqi         vf05, (vi01++)          ; XYZ
+                ;itof0       vf05, vf05          nop                                 ; we want floats
+                ;nop                             move.w      vf05w, vf00w            ; 
+                mulax.xyzw  acc,  vf01, vf05x   nop                                 ; multiply with screen_matrix 
+                madday.xyzw acc,  vf02, vf05y   nop                                 ;
+                maddaz.xyzw acc,  vf03, vf05z   nop                                 ;
+                maddw.xyzw  vf05, vf04, vf05w   nop                                 ;
+                nop                             nop                                 ;
+                nop                             div         q, vf00w, vf05w         ; get 1/w
+                nop                             waitq                               ;
+                mulq        vf05, vf05, q       nop                                 ; multiply screen coord by 1/w
+                nop                             nop                                 ;
+                nop                             nop                                 ;
+                nop                             nop                                 ;
+                ftoi4       vf05, vf05          nop                                 ; fixedpoint for gif
+                nop                             nop                                 ;
+                nop                             nop                                 ;
+                nop                             sqi         vf05, (vi02++)          ; store xyz
+                nop                             nop                                 ;
+                nop                             nop                                 ;
+                nop                             iaddi       vi05, vi05, -1          ; 
+                nop                             nop                                 ;
+                nop                             nop                                 ;
+                nop                             ibne        vi05, vi00, poly_loop   ; loop check
+                nop                             nop
+                nop                             xgkick      vi03
+                nop[e]                          nop
+                nop                             nop
+                                
+g_PbVu1_FlatSimple_End:
