@@ -1,6 +1,6 @@
 /*
-	PS2Menu
-	Adam Metcalf 2003
+	PS2Menu v2.0
+	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
 					- 	dos command "dir *.elf /b /s >elflist.txt"
@@ -22,8 +22,8 @@
 					- changed pad-left and pad-right to semi-page-up/page-down
 					- added help screen
 
-	based on mcbootmenu.c
-	and libhdd v1, ps2drv, ps2link 
+	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
+	and libhdd v1.0, ps2drv, ps2link v1.2
 */
 
 #include "tamtypes.h"
@@ -92,22 +92,22 @@ typedef struct
 	u32	align;
 	} elf_pheader_t;
 
-extern u8 *iomanx_irx;
-extern int size_iomanx_irx;
-extern u8 *filexio_irx;
-extern int size_filexio_irx;
-extern u8 *ps2dev9_irx;
-extern int size_ps2dev9_irx;
-extern u8 *ps2atad_irx;
-extern int size_ps2atad_irx;
-extern u8 *ps2hdd_irx;
-extern int size_ps2hdd_irx;
-extern u8 *ps2fs_irx;
-extern int size_ps2fs_irx;
-extern u8 *poweroff_irx;
-extern int size_poweroff_irx;
-extern u8 *iuntar_irx;
-extern int size_iuntar_irx;
+extern u8 *iomanx_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
+extern int size_iomanx_irx;		// from PS2DRV to handle 'standard' PS2 device IO
+extern u8 *filexio_irx;			// (c)2003 adresd <adresd_ps2dev@yahoo.com> et al IOP module
+extern int size_filexio_irx;		// from PS2DRV to handle 'extended' PS2 device IO
+extern u8 *ps2dev9_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
+extern int size_ps2dev9_irx;		// from PS2DRV to handle low-level HDD device
+extern u8 *ps2atad_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
+extern int size_ps2atad_irx;		// from PS2DRV to handle low-level ATA for HDD
+extern u8 *ps2hdd_irx;			// (c)2003 Vector IOP module for PS2 HDD
+extern int size_ps2hdd_irx;		// from LIBHDD v1.0
+extern u8 *ps2fs_irx;			// (c)2003 Vector IOP module for PS2 Filesystem
+extern int size_ps2fs_irx;		// from LIBHDD v1.0
+extern u8 *poweroff_irx;		// (c)2003 Vector IOP module to handle PS2 reset/shutdown
+extern int size_poweroff_irx;		// from LIBHDD v1.0
+extern u8 *iuntar_irx;			// (c)2004 adresd <adresd_ps2dev@yahoo.com> et al IOP module
+extern int size_iuntar_irx;		// from PS2DRV to handle host:.TGZ extraction to HDD
 extern u8 *loader_elf;
 extern int size_loader_elf;
 extern u8 *ps2menu_pcx;
@@ -135,7 +135,7 @@ int g_nWhichBuffer = 0;
 int show_logo = 0;
 int paletteindex = 0;
 char sStatus[256];
-char foldername[26]="\0";
+char foldername[128]="\0";
 
 iox_dirent_t dirbuf __attribute__((aligned(16)));
 char HDDfiles[256][256];
@@ -161,6 +161,8 @@ int num_hdd_files,elfhost=1,party=0,nparty;
 unsigned char romver[16];
 int topfil=0, elfload=0;
 
+////////////////////////////////////////////////////////////////////////
+// Tests for valid ELF file 
 int checkELFheader(char *filename)
 {
 	u8 *boot_elf = (u8 *)0x1800000;
@@ -199,6 +201,8 @@ error:
 	return -1;
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Fills screen with a colour
 void clrEmuScreen(unsigned char colour)
 {
 	unsigned char *pp;
@@ -209,7 +213,8 @@ void clrEmuScreen(unsigned char colour)
 	while(numbytes--) *pp++ = colour;
 	}
 
-// draw a char using the system font
+////////////////////////////////////////////////////////////////////////
+// draw a char using the system font (8x8)
 void drawChar(char c, int x, int y, unsigned int colour)
 {
 	unsigned int i, j;
@@ -233,6 +238,8 @@ void drawChar(char c, int x, int y, unsigned int colour)
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// draw a char using selected font (16x16)
 void drawBIGChar(char c, int x, int y, unsigned int font, unsigned int colour)
 {
 	unsigned int i, j;
@@ -258,6 +265,8 @@ void drawBIGChar(char c, int x, int y, unsigned int font, unsigned int colour)
 	}
 
 
+////////////////////////////////////////////////////////////////////////
+// draw a horizontal line
 void drawHorizontal(int x, int y, int length, unsigned int colour)
 {
 	unsigned char *pp;
@@ -271,6 +280,8 @@ void drawHorizontal(int x, int y, int length, unsigned int colour)
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// draw a vertical line
 void drawVertical(int x, int y, int length, unsigned int colour)
 {
 	unsigned char *pp;
@@ -284,7 +295,8 @@ void drawVertical(int x, int y, int length, unsigned int colour)
 		}
 	}
 
-// draw a string of characters
+////////////////////////////////////////////////////////////////////////
+// draw a string of characters (8x8) forces 'CR-LF' at screen limit
 void printXY(char *s, int x, int y, unsigned int colour)
 {
 	while(*s) {
@@ -298,7 +310,9 @@ void printXY(char *s, int x, int y, unsigned int colour)
 		}
 	}
 
-// draw a string of characters
+////////////////////////////////////////////////////////////////////////
+// draw a string of characters (16x16) trimmed to (16x12)
+// forces 'CR-LF' at screen limit
 void printBIGXY(char *s, int x, int y, unsigned int font, unsigned int colour)
 {
 	while(*s) {
@@ -312,6 +326,8 @@ void printBIGXY(char *s, int x, int y, unsigned int font, unsigned int colour)
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// copies screen buffer to display
 void PutImage(void)
 {
 	UpdateScreen();					// uploads+and renders new screen.
@@ -322,6 +338,8 @@ void PutImage(void)
 	SetupScreen( g_nWhichBuffer );		// FLIP!!!
 	}
 
+////////////////////////////////////////////////////////////////////////
+// draws a PCX file from program memory to screen buffer
 void drawPCX(u8 *pcxfile, int pcxlength, int xpos, int ypos)
 {
 	typedef struct
@@ -384,6 +402,8 @@ void drawPCX(u8 *pcxfile, int pcxlength, int xpos, int ypos)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////
+// reads PCX in program memory, mainly to extract and set up palette
 void readPCXheader(u8 *pcxfile, int pcxlength)
 {
 	typedef struct
@@ -435,6 +455,8 @@ void readPCXheader(u8 *pcxfile, int pcxlength)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////
+// reads version of PS2 ROM 
 void GetROMVersion(void)
 {
 	int fd = fioOpen("rom0:ROMVER", O_RDONLY);
@@ -443,6 +465,9 @@ void GetROMVersion(void)
 	romver[15] = 0;
 	}
 
+////////////////////////////////////////////////////////////////////////
+// try to format HDD and create default partition if one could not be
+// detected
 int dowereformat()
 {
 	int ret;
@@ -473,6 +498,9 @@ int dowereformat()
 	return 1;
 	}
 
+////////////////////////////////////////////////////////////////////////
+// reads current partition/folder contents to our directory contents
+// array
 void ReadHDDFiles()
 {
 	int rv,fd=0;
@@ -501,6 +529,11 @@ void ReadHDDFiles()
 	fileXioUmount("pfs0:");
 }
 
+////////////////////////////////////////////////////////////////////////
+// C standard strrchr func.. returns pointer to the last occurance of a
+// character in a string, or NULL if not found
+// PS2Link (C) 2003 Tord Lindstrom (pukko@home.se)
+//         (C) 2003 adresd (adresd_ps2dev@yahoo.com)
 char *strrchr(const char *sp, int i)
 {
 	const char *last = NULL;
@@ -523,6 +556,9 @@ char *strrchr(const char *sp, int i)
 	return (char *) last;
 }
 
+////////////////////////////////////////////////////////////////////////
+// Fill selectElf window with up to 20 rows of files from our directory
+// contents array, folders are marked accordingly
 void PrintHDDFiles(int highlighted)
 {
 	int i,texcol,maxrows,maxchars;
@@ -577,6 +613,10 @@ void PrintHDDFiles(int highlighted)
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Reads a list of paths from host:elflist.txt to our directory contents
+// array. This will have to do until host: support is extended to handle
+// DRead, etc.
 void ReadHostDir(void)
 {
 	int fd,rv,elflist_size,pathlen;
@@ -637,6 +677,8 @@ void ReadHostDir(void)
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Attempt to copy specified file to active HDD partition/folder
 int tomcopy(char *sourcefile)
 {
 	int ret;
@@ -712,6 +754,8 @@ int tomcopy(char *sourcefile)
 	return ret;
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Main screen drawing function
 void ReDraw(int highlighted)
 {
 	int numc;
@@ -748,6 +792,8 @@ void ReDraw(int highlighted)
 	PutImage();
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Display a window with a list of Joypad buttons and their function
 void showhelp()
 {
 	int triangle = 0, i, ret;
@@ -797,6 +843,8 @@ void showhelp()
 		}
 	} 
 
+////////////////////////////////////////////////////////////////////////
+// Display a simple YES/NO window for user confirmation of argument
 int ConfirmYN(char *s)
 {
 	int enterkey = 0, keycol=0, ret, i;
@@ -860,6 +908,10 @@ int ConfirmYN(char *s)
 	return keycol;
 	}
 	
+////////////////////////////////////////////////////////////////////////
+// Simple on screen keyboard for user input, only used for creating a
+// folder thus far. Text is written to global string foldername, and
+// limited to 24 characters at the moment
 void MenuKeyboard(char *s)
 {
 	int i,ret,keyrow=0,keycol=0,nameptr=0;
@@ -984,6 +1036,8 @@ void MenuKeyboard(char *s)
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// Print user feedback to the status line on the screen
 void jprintf(char *s)
 {
 	dbgprintf("%s\n", s);
@@ -991,6 +1045,9 @@ void jprintf(char *s)
 	ReDraw(0);
 	}
 
+////////////////////////////////////////////////////////////////////////
+// main user loop, returns a pointer to a pathname if a valid ELF file
+// is selected from the list of HDDfiles
 char *SelectELF(void)
 {
 	int ret, i;
@@ -1437,6 +1494,8 @@ int main(int argc, char *argv[])
 	LoadAndRunMCElf(s);
 	}
 
+////////////////////////////////////////////////////////////////////////
+// loads all IOP modules from program space or ROM
 void LoadModules()
 {
 	int ret;
@@ -1500,6 +1559,9 @@ void LoadModules()
 		}
 	}
 
+////////////////////////////////////////////////////////////////////////
+// loads LOADER.ELF from program memory and passes args of selected ELF
+// and partition to it
 void LoadAndRunMCElf(char *filename)
 {
 	u8 *boot_elf = (u8 *)&loader_elf;

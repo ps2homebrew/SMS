@@ -1,3 +1,18 @@
+/*==================================================================
+==											==
+==	Copyright(c)2004  Adam Metcalf(gamblore_@hotmail.com)		==
+==	Copyright(c)2004  Thomas Hawcroft(t0mb0la@yahoo.com)		==
+==	This file is subject to terms and conditions shown in the	==
+==	file LICENSE which should be kept in the top folder of	==
+==	this distribution.							==
+==											==
+==	Portions of this code taken from PS2Link:				==
+==				pkoLoadElf						==
+==				wipeUserMemory					==
+==				(C) 2003 Tord Lindstrom (pukko@home.se)	==
+==				(C) 2003 adresd (adresd_ps2dev@yahoo.com)	==
+==											==
+==================================================================*/
 #include "tamtypes.h"
 #include "kernel.h"
 #include "sifrpc.h"
@@ -23,7 +38,7 @@
 #define dbgprintf(args...) do { } while(0)
 #endif
 
-// ELF-loading stuff
+// ELF-header structures and identifiers
 #define ELF_MAGIC	0x464c457f
 #define ELF_PT_LOAD	1
 
@@ -59,22 +74,21 @@ typedef struct
 
 t_ExecData elfdata;
 
-extern u8 *fakehost_irx;
-extern int size_fakehost_irx;
-extern u8 *poweroff_irx;
-extern int size_poweroff_irx;
+extern u8 *fakehost_irx;			// adresd (adresd_ps2dev@yahoo.com) IOP module,
+extern int size_fakehost_irx;			// from PS2DRV, to mount pfs0:partition as host:
+extern u8 *poweroff_irx;			// Nicholas Van Veen <sjeep@gamebase.ca> IOP
+extern int size_poweroff_irx;			// module, from LIBHDD, to handle PS2 reset button
 
-void LoadAndRunMCElf(char *filename);
+void LoadAndRunHDDElf(char *filename);
 
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char elfName[256];
 char elfPath[256];
-char HDDpath[256]="host:hddmenu.elf";
-char partition[40];
+char HDDpath[256];
+char partition[128];
 
 const char *eeloadimg = "rom0:UDNL rom0:EELOADCNF";
 char *imgcmd;
-int elfhost=2,elfload=0;
 
 static int pkoLoadElf(char *path);
 
@@ -91,6 +105,9 @@ struct argData
     char *argv[MAX_ARGS];
 } __attribute__((packed)) userArgs;
 
+////////////////////////////////////////////////////////////////////////
+// Read ELF from hard drive to required location(s) in memory.
+//
 static int tLoadElf(char *filename)
 {
 	u8 *boot_elf = (u8 *)0x1800000;
@@ -137,25 +154,25 @@ static int tLoadElf(char *filename)
 		}		
 
 	fileXioClose(fd);
-//	fileXioUmount("pfs0:");
-/* Load the ELF into RAM.  */
+//	fileXioUmount("pfs0:");		We leave the filesystem mounted now for fakehost
 
-	if (_lw((u32)&eh->ident) != ELF_MAGIC)
-	{
-		dbgprintf("Not a recognised ELF.\n");
+	if (_lw((u32)&eh->ident) != ELF_MAGIC)		// this should have already been
+	{								// done by menu, but a double-check
+		dbgprintf("Not a recognised ELF.\n");	// doesn't do any harm
 		goto error;
 		}
 	
 	dbgprintf("entry=%x\n",eh->entry);
 	elfdata.epc=(int *)eh->entry;
 error:
-//	while (1) ;
-
+	elfdata.epc=0;
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // Load the actual elf, and create a thread for it
 // Return the thread id
+// PS2Link (C) 2003 Tord Lindstrom (pukko@home.se)
+//         (C) 2003 adresd (adresd_ps2dev@yahoo.com)
 static int
 pkoLoadElf(char *path)
 {
@@ -163,6 +180,9 @@ pkoLoadElf(char *path)
     int ret=0;
     int pid;
 
+// Some lines added here to check for loading from HDD, at the moment it should only
+// call tLoadElf, but support for loading ELF from mc0, host or any other device may
+// well be added in future
     if(!strncmp(path, "host", 4)) ret = SifLoadElf(path, &elfdata);
     else if(!strncmp(path, "mc0", 3)) ret = SifLoadElf(path, &elfdata);
     else if(!strncmp(path, "pfs0", 4)) ret = tLoadElf(path);
@@ -196,6 +216,10 @@ pkoLoadElf(char *path)
     return pid;
 }
 
+////////////////////////////////////////////////////////////////////////
+// Clear user memory
+// PS2Link (C) 2003 Tord Lindstrom (pukko@home.se)
+//         (C) 2003 adresd (adresd_ps2dev@yahoo.com)
 void
 wipeUserMem(void)
 {
@@ -210,16 +234,23 @@ wipeUserMem(void)
     }
 }
 
+////////////////////////////////////////////////////////////////////////
+// This will try to terminate an ELF program we have called and
+// try to reload the PS2Menu ELF, if the reset button is pressed
 void poweroffHandler(int i)
 {
 	dbgprintf("Trying to delete thread %i\n",i);
 	TerminateThread(i);
 	DeleteThread(i);
-	elfhost=1;
-	LoadAndRunMCElf("pfs0:/PS2MENU.ELF");
+	LoadAndRunHDDElf("pfs0:/PS2MENU.ELF");	// we should probably not do it like this
 //	HddPowerOff();
 	}
 
+////////////////////////////////////////////////////////////////////////
+// C standard strrchr func.. returns pointer to the last occurance of a
+// character in a string, or NULL if not found
+// PS2Link (C) 2003 Tord Lindstrom (pukko@home.se)
+//         (C) 2003 adresd (adresd_ps2dev@yahoo.com)
 char *strrchr(const char *sp, int i)
 {
 	const char *last = NULL;
@@ -263,57 +294,24 @@ int main(int argc, char *argv[])
 	strcpy(s,argv[0]);
 	dbgprintf("argv[0] = %s\n",s);
 	if (argc==1)
-	{									// hopefully this is the first
-		while(1);
-/*		setPathInfo(s);
-		if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
-		else if(!strncmp(s, "mc0:", 4)) 			// loading from memory card
-		{
-			elfload=2;
-			imgcmd = (char *)eeloadimg;
-			fioExit();
-			SifExitRpc();
-
-//			scr_printf("reset iop\n");
-			SifIopReset(imgcmd, 0);
-			while (!SifIopSync()) ;
-
-//			wipeUserMem();
-//			scr_printf("rpc init\n");
-			SifInitRpc(0);
-			}
-		strcpy(elfName,s);
-
-		LoadModules();
-		LoadAndRunMCElf(HDDpath);*/
+	{						// should be two params passed by menu
+		while(1);				// leave this here for adding mc0, host or other
+							// to be added in future
 		}
 	if (argc==2)				// if call came from hddmenu.elf
-	{
+	{						// arg1=path to ELF, arg2=partition to mount
 		strcpy(partition,argv[1]);
 		dbgprintf("argv[1] = %s\n", partition);
-
-/*		if(hddCheckPresent() < 0)
-		{
-			scr_printf("Error: supported HDD not connected!\n");
-			while(1);
-			}
-		if(hddCheckFormatted() < 0)
-		{
-			scr_printf("Error: HDD is not properly formatted!\n");
-			while(1);
-			}
-		scr_printf("HDD is connected and formatted.\n");*/
 		strcpy(HDDpath,s);
-		elfhost=1;
 		}
-
 	dbgprintf("Loading %s\n",HDDpath);
 	pid = pkoLoadElf(HDDpath);
 	dbgprintf("pkoLoadElf returned %i\n",pid);
-	if (pid < 0) {
-        scr_printf("Could not execute file %s\n", HDDpath);
-        return -1;
-    }
+	if (pid < 0)
+	{
+		scr_printf("Could not execute file %s\n", HDDpath);
+		return -1;
+		}
 	strcpy(fakepart,HDDpath);
 	ptr=strrchr(fakepart,'/');
 	if(ptr==NULL) strcpy(fakepart,"pfs0:");
@@ -334,95 +332,31 @@ int main(int argc, char *argv[])
 	scr_printf("%s\n", fakepart);
 	SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
 
-    FlushCache(0);
-    FlushCache(2);
+	FlushCache(0);
+	FlushCache(2);
 
-    userThreadID = pid;
+	userThreadID = pid;
 
-    userArgs.argc=1;
-    userArgs.argv[0]=HDDpath;
-//    userArgs.argv[1]=elfName;
-    userArgs.flag = (int)&userThreadID;
+	userArgs.argc=1;
+	userArgs.argv[0]=HDDpath;
+	userArgs.flag = (int)&userThreadID;
 
-    ret = StartThread(userThreadID, &userArgs);
-    if (ret < 0) {
-        scr_printf("EE: Start user thread failed %d\n", ret);
-        DeleteThread(userThreadID);
-        return -1;
-    }
-    SleepThread();
-	}
-
-////////////////////////////////////////////////////////////////////////
-// Wrapper to load module from disc/rom/mc
-// Max irx size hardcoded to 300kb atm..
-/*static void
-pkoLoadMcModule(char *path, int argc, char *argv)
-{
-    void *iop_mem;
-    int ret;
-
-    scr_printf("LoadMcModule %s\n", path);
-    iop_mem = SifAllocIopHeap(1024*300);
-    if (iop_mem == NULL) {
-        scr_printf("SifallocIopHeap failed\n");
-        SleepThread();
-    }
-    ret = SifLoadIopHeap(path, iop_mem);
-    if (ret < 0) {
-        scr_printf("SifloadIopHeap %s ret %d\n", path, ret);
-        SleepThread();
-    }
-    else {
-        ret = SifLoadModuleBuffer(iop_mem, argc, argv);
-        if (ret < 0) {
-            scr_printf("SifloadModuleBuffer %s ret %d\n", path, ret);
-            SleepThread();
-        }
-    }
-    SifFreeIopHeap(iop_mem);
-}
-
-static void
-pkoSifLoadModule(char *path, int argc, char *argv)
-{
-	int ret;
-
-	scr_printf("Loading %s\n",path);
-	ret = SifLoadModule(path, argc, argv);
+	ret = StartThread(userThreadID, &userArgs);
 	if (ret < 0)
 	{
-		scr_printf("Failed\n");
-		SleepThread();
+		scr_printf("EE: Start user thread failed %d\n", ret);
+		DeleteThread(userThreadID);
+		return -1;
 		}
-	}
-	
-void LoadModules()
-{
-	static char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
-	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40";
+	SleepThread();
+}
 
-	if(elfload==2)
-	{
-		SifLoadModule("rom0:SIO2MAN", 0, NULL);
-		SifLoadModule("rom0:MCMAN", 0, NULL);
-		pkoLoadMcModule(iomanX_path, 0, NULL);
-		pkoLoadMcModule(fileXio_path, 0, NULL);
-		pkoLoadMcModule(ps2dev9_path, 0, NULL);
-		pkoLoadMcModule(ps2atad_path, 0, NULL);
-		pkoLoadMcModule(ps2hdd_path, sizeof(hddarg), hddarg);
-		pkoLoadMcModule(ps2fs_path, sizeof(pfsarg), pfsarg);
-		}
-	else
-	{
-		pkoSifLoadModule(fileXio_path, 0, NULL);
-		pkoSifLoadModule(ps2atad_path, 0, NULL);
-		pkoSifLoadModule(ps2hdd_path, sizeof(hddarg), hddarg);
-		pkoSifLoadModule(ps2fs_path, sizeof(pfsarg), pfsarg);
-		}
-	}*/
-
-void LoadAndRunMCElf(char *filename)
+////////////////////////////////////////////////////////////////////////
+// I hope to remove this eventually, for the moment it is only used
+// when reset is pressed to reload PS2Menu from the hard drive.
+// Doesn't work most times because, at the moment, we have limited
+// control over what a loaded ELF has done to the system.
+void LoadAndRunHDDElf(char *filename)
 {
 	u8 *boot_elf = (u8 *)0x1800000;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
@@ -432,51 +366,26 @@ void LoadAndRunMCElf(char *filename)
 	int fd, size, i, ret;
 	char *argv[1];
 
-	dbgprintf("Start of LoadAndRunElf\nelfhost=%i\nfilename=%s\n",elfhost,filename);
+	dbgprintf("Start of LoadAndRunElf\nfilename=%s\n",filename);
 
-	if(elfhost==1)
+	ret = fileXioMount("pfs0:", "hdd0:+PS2MENU", FIO_MT_RDONLY);
+	if ((fd = fileXioOpen(filename, O_RDONLY, fileMode)) < 0)
 	{
-		ret = fileXioMount("pfs0:", "hdd0:+PS2MENU", FIO_MT_RDONLY);
-		if ((fd = fileXioOpen(filename, O_RDONLY, fileMode)) < 0)
-		{
-			dbgprintf("Failed in fileXioOpen %s\n",filename);
-			goto error;
-			}
-
-		size = fileXioLseek(fd, 0, SEEK_END);
-		if (!size)
-		{
-			dbgprintf("Failed in fileXioLseek\n");
-			fileXioClose(fd);
-			goto error;
-			}
-
-		fileXioLseek(fd, 0, SEEK_SET);
-		fileXioRead(fd, boot_elf, size);
+		dbgprintf("Failed in fileXioOpen %s\n",filename);
+		goto error;
+		}
+	size = fileXioLseek(fd, 0, SEEK_END);
+	if (!size)
+	{
+		dbgprintf("Failed in fileXioLseek\n");
 		fileXioClose(fd);
-		fileXioUmount("pfs0:");
+		goto error;
 		}
-	if(elfhost==2)
-	{
-		if ((fd = fioOpen(filename, O_RDONLY)) < 0)
-		{
-			scr_printf("%i Failed in fioOpen %s\n",fd,filename);
-			goto error;
-			}
+	fileXioLseek(fd, 0, SEEK_SET);
+	fileXioRead(fd, boot_elf, size);
+	fileXioClose(fd);
+	fileXioUmount("pfs0:");
 
-		scr_printf("Before fioLseek\n");
-		size = fioLseek(fd, 0, SEEK_END);
-		if (!size)
-		{
-			scr_printf("Failed in fioLseek\n");
-			fioClose(fd);
-			goto error;
-			}
-
-		if(fioLseek(fd, 0, SEEK_SET)<0) scr_printf("Error in SEEK_SET.\n");
-		if(fioRead(fd, boot_elf, size)<0) scr_printf("Error in Read.\n");
-		if(fioClose(fd)<0) scr_printf("Error in Close.\n");
-		}
 	if (_lw((u32)&eh->ident) != ELF_MAGIC)
 	{
 		goto error;
@@ -510,5 +419,4 @@ void LoadAndRunMCElf(char *filename)
 
 error:
 	while (1) ;
-
 	}
