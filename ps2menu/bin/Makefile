@@ -1,2 +1,2 @@
 clean:
-	rm -f *.ELF
+	rm -f *.elf
