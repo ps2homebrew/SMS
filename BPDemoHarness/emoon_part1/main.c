@@ -45,6 +45,9 @@ void EmPart1Update( PbMatrix* pScreenToView,PbMatrix* pObjectToWorld );
 void EmPart1SetTexture( PbTexture* pTexture );
 void EmPart1RadialBlur( PbTexture* pSource,PbTexture* pDest, float cx, float cy, 
                         float v, int n, int mix1, int mix2 );
+#define MIN_ZOOM      1400
+#define MAX_ZOOM       300
+#define ZOOM_FALLOFF    40
 
 ///////////////////////////////////////////////////////////////////////////////
 // DoStuff
@@ -65,6 +68,11 @@ u32 start_demo( const demo_init_t* pInfo )
   int      offset_y;
   float    angle = 0.0f;
   int      i = 0;
+  int      color;
+  float    brighness = 5.0f;
+  float    zoom      = MAX_ZOOM;
+  u32 syncs_left = pInfo->no_syncs;
+  volatile u32* p_syncs = pInfo->sync_points;
 
   /////////////////////////////////////////////////////////////////////////////
   // Setup screen
@@ -94,29 +102,48 @@ u32 start_demo( const demo_init_t* pInfo )
   PbMatrixIdentity( &camera_matrix );
   PbMatrixIdentity( &rotate_matrix );
   PbMatrixIdentity( &rotate_matrix2 );
-  PbMatrixTranslate( &camera_matrix, 0, 0, 800 );
 
   /////////////////////////////////////////////////////////////////////////////
   // Loop of the demo
 
   while( pInfo->time_count > 0 )
   {
+    PbMatrixTranslate( &camera_matrix, 0, 0, zoom );
+
+    zoom += ZOOM_FALLOFF;
+
+    if( zoom > MIN_ZOOM )
+      zoom = MIN_ZOOM;
+
     angle += 0.01f;
 
     PbScreenSetCurrentActive();
 
-    PbScreenClear( 30<<16|20<<8|40 );
+    PbScreenClear( 0 );
 
     PbTextureCopy( gp_RenderTarget2, gp_RenderTarget, TRUE );
 
     EmPart1RadialBlur( gp_RenderTarget2, gp_RenderTarget, 128, 128, 
-                       PbSqrt(0.1f),8,46,66+16 );
+                       PbSqrt(0.1f),10,46,66+16 );
 
     PbScreenSetCurrentActive();
 
+    color = 127;
+
+    if(syncs_left > 0)
+    {
+      if(*p_syncs < pInfo->get_pos())
+      {
+        zoom = MAX_ZOOM;
+        p_syncs++;
+        syncs_left--;
+      } 
+    }
+ 
+
     PbPrimSpriteTexture( gp_RenderTarget2, 
-                          10<<4,  10<<4,   0<<4,   0<<4, 
-                         640<<4, 256<<4, 255<<4, 255<<4, 0, 127<<16|127<<8|127 );
+                          10<<4,  10<<4,   2<<4,   2<<4, 
+                         640<<4, 255<<4, 255<<4, 255<<4, 0, color<<16|color<<8|color );
 
     PbTextureSetRenderTarget( gp_RenderTarget );
     PbDmaWait02();
