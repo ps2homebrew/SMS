@@ -1,0 +1,77 @@
+;////////////////////////////////////////////////////////////////////////////////////////
+;//
+;//  vu1prog.vsm - A simple vu1 programs that draws a triangle
+;// 
+;//  Copyright (c) 2004   emoon <daniel@collin.com>
+;//
+;//  Licensed under the AFL v2.0. See the file LICENSE included with this
+;//  distribution for licensing terms.
+;//
+
+ViewScreenMatrix = 0
+Giftag           = 4
+Color            = 5
+Data             = 6
+Dest             = 30
+
+.global         g_Vu1_Triangle
+.global         g_Vu1_Triangle_End
+
+                .p2align 4  ; This aligns the following data to quadword alignment
+                .vu
+
+g_Vu1_Triangle:
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;//Load the matrix
+                
+                nop                             lq          vf01, ViewScreenMatrix+0(vi00)
+                nop                             lq          vf02, ViewScreenMatrix+1(vi00)
+                nop                             lq          vf03, ViewScreenMatrix+2(vi00)
+                nop                             lq          vf04, ViewScreenMatrix+3(vi00)
+                                                                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Setup indexregisters to the dest and source of the data
+                
+                nop                             iaddiu      vi02, vi00, Dest
+                nop                             iaddiu      vi03, vi00, Dest
+                nop                             iaddiu      vi01, vi00, Data
+                
+                nop                             lq.xyzw     vf06, Giftag(vi00)
+                nop                             sqi.xyzw    vf06, (vi02++)
+
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// First value of the data is the color, load it and store it
+
+                nop                             lq.xyzw     vf06, Color(vi00)
+                nop                             sqi.xyzw    vf06, (vi02++)
+                nop                             iaddiu      vi05, vi00, 3
+vertex_loop:      
+                nop                             lqi.xyzw    vf05, (vi01++)
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// Project vertex to screen space.
+                                
+                mulax     acc,  vf01, vf05x     nop                                 
+                madday    acc,  vf02, vf05y     nop                                 
+                maddaz    acc,  vf03, vf05z     nop                                 
+                maddw     vf05, vf04, vf05w     nop                                 
+                nop                             div         q, vf00w, vf05w         
+                nop                             waitq                               
+                mulq        vf05, vf05, q       nop                                 
+                
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// convert to 12.4 fixed point to fit the gs and then store it
+                
+                ftoi4       vf05, vf05          nop                                 
+                nop                             sqi         vf05, (vi02++)          
+                nop                             iaddi       vi05, vi05, -1           
+                nop                             nop                                 
+                nop                             ibne        vi05, vi00, vertex_loop
+                nop                             nop
+                nop                             xgkick      vi03
+                nop[e]                          nop
+                nop                             nop
+                                
+g_Vu1_Triangle_End:
+
