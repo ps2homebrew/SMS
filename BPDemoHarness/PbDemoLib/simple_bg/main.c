@@ -7,6 +7,7 @@
  * distribution for licensing terms.
  */
 
+#include <tamtypes.h>
 #include "../../harness.h"
 #include "PbScreen.h"
 
