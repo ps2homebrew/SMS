@@ -1,7 +1,8 @@
 EE_INCS := $(EE_INCS) -I$(LIBHDD)/ee/include -I$(LIBHDD)/common/include \
 	   -I$(PS2DRV)/common/include -I$(PS2DRV)/ee/libfileXio \
 	   -I$(PS2LIB)/ee/include -I$(PS2LIB)/common/include \
-	   -I$(PS2DEV)/sbv-1.0-lite/include -I.
+	   -I$(PS2DEV)/sbv-1.0-lite/include -I$(PS2DEV)/libcdvd/ee \
+	   -I$(PS2DEV)/libcdvd/common -I.
 
 D_EE -mips3 -mcpu=r5900 -ffreestanding -fno-builtin \
 		-fshort-double -mlong64 -mhard-float -mno-abicalls -O2 -EL -Wall
@@ -13,12 +14,13 @@ EE_ASFLAGS := -EL -G0 $(EE_ASFLAGS)
 
 EE_LDFLAGS := $(EE_LDFLAGS) -s -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
 		-L$(PS2LIB)/ee/lib -L$(PS2DEV)/sbv-1.0-lite/lib \
+		-L$(PS2DEV)/libcdvd/lib \
 		-T$(PS2LIB)/ee/startup/linkfile -nostartfiles
 EE_BIN = ../bin/ps2menu.elf
 EE_OBJS = ps2menu.o hw.o hardware.o iomanx.o filexio.o ps2atad.o ps2dev9.o \
-		ps2hdd.o ps2fs.o loader.o poweroff.o iuntar.o ps2menupcx.o
+		ps2hdd.o ps2fs.o loader.o poweroff.o iuntar.o cdvd.o ps2menupcx.o cd.o
 
-EE_LIBS = -lmc -lpad -lhdd -lfileXio -lsbv_patches
+EE_LIBS = -lmc -lpad -lhdd -lfileXio -lsbv_patches -lcdvdfs
 
 all: $(EE_BIN)
 
@@ -46,6 +48,9 @@ poweroff.s:
 iuntar.s:
 	bin2s $(PS2DRV)/iop/iuntar/iuntar.irx iuntar.s iuntar_irx
 
+cdvd.s:
+	bin2s $(PS2DEV)/libcdvd/lib/cdvd.irx cdvd.s cdvd_irx
+
 loader.s:
 	bin2s ./loader/loader.elf loader.s loader_elf
 
@@ -56,7 +61,7 @@ ps2menupcx.s:
 #	bin2s images/mainlogo.pcx mainlogo.s mainlogo_pcx
 
 clean:
-	rm -f *.elf *.o *.a iomanx.s filexio.s ps2atad.s ps2dev9.s ps2fs.s ps2hdd.s poweroff.s iuntar.s loader.s ps2menupcx.s
+	rm -f *.elf *.o *.a iomanx.s filexio.s ps2atad.s ps2dev9.s ps2fs.s ps2hdd.s poweroff.s iuntar.s cdvd.s loader.s ps2menupcx.s
 
 include $(PS2LIB)/Makefile.pref
 include $(PS2LIB)/Makefile.eeglobal
