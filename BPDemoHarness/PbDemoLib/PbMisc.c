@@ -9,6 +9,13 @@
 
 #include "PbMisc.h"
 
+int dummy_out( const char * pTemp,... ) 
+{
+  return 0;
+}
+
+int (*out)(const char *,...) = dummy_out;
+
 ///////////////////////////////////////////////////////////////////////////////
 // const char* PbMiscGetAsBits
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,5 +67,14 @@ void PbMiscPrintReg( const char* pName, u64 value, u64 reg )
   PbMiscGetAsBits( temp2, reg >> 32 );
 
 //  printf( "%s REGTR: %s| %s\n",pName, temp, temp2 );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// const char* PbMiscGetAsBits
+///////////////////////////////////////////////////////////////////////////////
+
+void PbMiscSetOutput( int (*pFunction)(const char *,...) )
+{
+  out = pFunction;
 }
 

@@ -24,8 +24,20 @@
 #define NULL 0
 #endif
 
+#define _DEBUG_
+
+void PbMiscSetOutput( int (*pFunction)(const char *,...) );
+
+///////////////////////////////////////////////////////////////////////////////
+// Functions (mostly debug stuff)
+///////////////////////////////////////////////////////////////////////////////
+
 void PbMiscGetAsBits( char* pDest, unsigned int value );
 void PbMiscPrintReg( const char* pName, u64 value, u64 reg );
+
+extern int (*out)(const char *,...);
+
+#define PB_LINE out( "LINE: %d\n", __LINE__ );
 
 #endif // _PBMISC_H_
 
