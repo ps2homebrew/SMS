@@ -162,9 +162,9 @@ typedef struct st_Color
 static Color g_ColorTable[] = 
 {
   { 125*0.0005f, 125*0.0005f, 125*0.0005f, 0.0 }, 
-  {  10*0.0005f,  70*0.0005f, 100*0.0005f, 0.0 },
-  {  80*0.0005f,  70*0.0005f,  40*0.0005f, 0.0 },
-  {  80*0.0005f,  70*0.0005f, 120*0.0005f, 0.0 },
+  {  10*0.0005f,  60*0.0005f,  70*0.0005f, 0.0 },
+  {  70*0.0005f,  60*0.0005f,  40*0.0005f, 0.0 },
+  {  70*0.0005f,  50*0.0005f,  70*0.0005f, 0.0 },
   {  45*0.0005f,  45*0.0005f,  45*0.0005f, 0.0 }, 
 };
 
@@ -219,9 +219,9 @@ u32 start_demo(const demo_init_t *pInfo)
   while(pInfo->frame_count > 0)
   {
     float inv_rot = 0.0f;
-    angle += (3.14*3/((2400.0f-250.0f)/8.5f));
-
-    PbScreenClear(00);
+    angle += (3.14*2/((2400.0f-250.0f)/8.5f));
+  
+    PbScreenClear(0);
 
     if( z_offset < 550 )
     {
@@ -281,9 +281,7 @@ u32 start_demo(const demo_init_t *pInfo)
       /////////////////////////////////////////////////////////////////////////
       // Handle Center cube
 
-      if( EmAbs( coords[0] ) < 10.1 && 
-          EmAbs( coords[1] ) < 10.1 &&
-          EmAbs( coords[2] ) < 10.1 )
+      if( i == 532 )
       {
 //        PbMatrixIdentity( &rotate_matrix );   
         PbMatrixRotateX( &rotate_matrix, angle );
@@ -377,7 +375,6 @@ u32 start_demo(const demo_init_t *pInfo)
 
     // Flashy flashy
 
-
     EmPart2Flash( g_Flash );
 
     PbScreenSyncFlip();
@@ -392,6 +389,8 @@ u32 start_demo(const demo_init_t *pInfo)
 
 void EmPart2Flash( int strength )
 {
+  float z = 5536.0f;
+
   if( strength < 0 )
     strength = 0;
 
@@ -399,7 +398,7 @@ void EmPart2Flash( int strength )
   PbPrimSetState( PB_ALPHA_BLENDING, PB_ENABLE );
   PbPrimSetAlpha( GS_ALPHA_A_CS, GS_ALPHA_B_ZERO, 
                     GS_ALPHA_C_FIX, GS_ALPHA_D_CD, 0x80 );
-  PbPrimSprite( 0<<4, 0<<4, 640<<4, 256<<4, 0, (127<<24)|(strength<<16)|(strength<<8)|strength );
+  PbPrimSprite( 0<<4, 0<<4, 640<<4, 256<<4, 10000, (127<<24)|(strength<<16)|(strength<<8)|strength );
   PbPrimSetState( PB_ALPHA_BLENDING, PB_DISABLE );
   PbPrimSetContext( PB_CONTEXT_1 );
 }
