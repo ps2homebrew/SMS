@@ -47,7 +47,7 @@ g_PbVu1_FlatSimple:
                 ;//nop                             ilwr.w      vi06, (vi13)w
                 ;//nop                             iaddiu      vi13, vi00, 0x3ff
                 ;//nop                             iand        vi05, vi05, vi13
-                nop                             iaddiu      vi05, vi00, 110
+                nop                             iaddiu      vi05, vi00, 112
                 
                 ;//////////////////////////////////////////////////////////////////////////////////
                 ;// Temporary for colors right now.
@@ -75,7 +75,7 @@ poly_loop:
                 nop                             waitq
                 addq.x     vf09x, vf00x, q      nop                     ; vf09x = distance
                 mulw.x     vf09x, vf09x, vf22w  nop                     ; distance * lagrate
-                addx.x     vf19x, vf09x, vf22x  nop                     
+                mulx.x     vf19x, vf09x, vf22x  nop                     
                                 
                 ;//////////////////////////////////////////////////////////////////////////////////
                 ;// Calc the rotation angles from the lagrate
@@ -192,28 +192,3 @@ poly_loop:
                                 
 g_PbVu1_FlatSimple_End:
 
-                ;itof0       vf05, vf05          nop                                 ; we want floats
-                ;nop                             move.w      vf05w, vf00w            ; 
-
-/*
-                mulax     acc,  vf28, vf24      nop
-                madday    acc,  vf29, vf24      nop
-                maddaz    acc,  vf30, vf24      nop
-                maddw     vf01, vf31, vf24      nop
-                
-                mulax     acc,  vf28, vf25      nop
-                madday    acc,  vf29, vf25      nop
-                maddaz    acc,  vf30, vf25      nop
-                maddw     vf02, vf31, vf25      nop
-                
-                mulax     acc,  vf28, vf26      nop
-                madday    acc,  vf29, vf26      nop
-                maddaz    acc,  vf30, vf26      nop
-                maddw     vf03, vf31, vf26      nop
-                
-                mulax     acc,  vf28, vf27      nop
-                madday    acc,  vf29, vf27      nop
-                maddaz    acc,  vf30, vf27      nop
-                maddw     vf04, vf31, vf27      nop
-
-*/
