@@ -61,6 +61,11 @@ void PbPrimTriangleTexture( PbTexture* pTex, int x1, int y1, int u1, int v1,
                                              int x3, int y3, int u3, int v3,  
                                              int z, int color  ); 
 
+void PbPrimQuadTextureGouraud(PbTexture* pTex, int x1, int y1, int u1, int v1,
+                               int x2, int y2, int u2, int v2, 
+                               int x3, int y3, int u3, int v3, 
+                               int x4, int y4, int u4, int v4, int z,
+                               int color1, int color2, int color3, int color4);
 
 #define PbGifListAdd(REG, DATA) { *PbGifPtr++ = (u64)(DATA); *PbGifPtr++ = (u64)(REG); PbGifLength++; } 
 
