@@ -1357,12 +1357,15 @@ int main(int argc, char *argv[])
 	{
 		argc = 1;
 		strcpy(s,"host:");
+		elfload = 2;
 	}
 	else
+	{
 		strcpy(s,argv[0]);
+		if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
+		else if(!strncmp(s, "mc0:", 4)) elfload=2;	// loading from memory card
+	}
 
-	if(!strncmp(s, "host:", 5)) elfload=1;		// assume loading from PS2LINK
-	else if(!strncmp(s, "mc0:", 4)) elfload=2;	// loading from memory card
 	init_scr();
 	scr_printf("Welcome to PS2MENU v2.0\nPlease wait...\n");
 	if(argc!=2)
