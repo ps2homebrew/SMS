@@ -325,25 +325,28 @@ int main(int argc, char *argv[])
 		scr_printf("Could not execute file %s\n", HDDpath);
 		return -1;
 		}
-	strcpy(fakepart,HDDpath);
-	ptr=strrchr(fakepart,'/');
-	if(ptr==NULL) strcpy(fakepart,"pfs0:");
-	else
+	if(!strncmp(HDDpath, "pfs0", 4))
 	{
-		ptr++;
-		*ptr='\0';
+		strcpy(fakepart,HDDpath);
+		ptr=strrchr(fakepart,'/');
+		if(ptr==NULL) strcpy(fakepart,"pfs0:");
+		else
+		{
+			ptr++;
+			*ptr='\0';
+			}
+		ptr=strrchr(s,'/');
+		if(ptr==NULL) ptr=strrchr(s,':');
+		if(ptr!=NULL)
+		{
+			ptr++;
+			strcpy(HDDpath,"host:");
+			strcat(HDDpath,ptr);
+			}
+		scr_printf("Loading fakehost.irx %i bytes\n", size_fakehost_irx);
+		scr_printf("%s\n", fakepart);
+		SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
 		}
-	ptr=strrchr(s,'/');
-	if(ptr==NULL) ptr=strrchr(s,':');
-	if(ptr!=NULL)
-	{
-		ptr++;
-		strcpy(HDDpath,"host:");
-		strcat(HDDpath,ptr);
-		}
-	scr_printf("Loading fakehost.irx %i bytes\n", size_fakehost_irx);
-	scr_printf("%s\n", fakepart);
-	SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
 
 	FlushCache(0);
 	FlushCache(2);
