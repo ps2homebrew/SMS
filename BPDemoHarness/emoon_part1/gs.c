@@ -107,12 +107,6 @@ int init_gs()
   fb_pointers[0] = vram_malloc(curr_size);
   fb_pointers[1] = vram_malloc(curr_size);
   zbuf_pointer = vram_malloc(curr_size);
-  tex_pointer = vram_malloc(curr_size);
-
-  out( "fb_pointers[0]: 0x%x\n", fb_pointers[0] );
-  out( "fb_pointers[1]: 0x%x\n", fb_pointers[1] );
-  out( "zbuf_pointer: 0x%x\n", zbuf_pointer );
-  out( "tex_pointer: 0x%x\n", zbuf_pointer );
 
   /* Statically allocate vram. No checking done */
 
@@ -142,7 +136,7 @@ int init_gs()
   
   BEGIN_GS_PACKET(dma_buf);
   
-  GIF_TAG_AD(dma_buf, 6+5, 1, 0, 0, 0);
+  GIF_TAG_AD(dma_buf, 6+6, 1, 0, 0, 0);
   
   GIF_DATA_AD(dma_buf, PS2_GS_PRMODECONT, 1);
   GIF_DATA_AD(dma_buf, PS2_GS_FRAME_1, PS2_GS_SETREG_FRAME_1(0, SCR_W / 64, SCR_PSM, 0));
@@ -150,6 +144,7 @@ int init_gs()
   GIF_DATA_AD(dma_buf, PS2_GS_SCISSOR_1,PS2_GS_SETREG_SCISSOR_1(0, SCR_W-1, 0, SCR_H - 1));      
   GIF_DATA_AD(dma_buf, PS2_GS_ZBUF_1, PS2_GS_SETREG_ZBUF_1(zbuf_pointer / 2048, 0, 0));
   GIF_DATA_AD(dma_buf, PS2_GS_TEST_1, PS2_GS_SETREG_TEST(1, 7, 0xFF, 0, 0, 0, 1, 1));
+  GIF_DATA_AD(dma_buf, PS2_GS_COLCLAMP, PS2_GS_SETREG_COLCLAMP( 255 ) );
 
   GIF_DATA_AD(dma_buf, PS2_GS_FRAME_2, PS2_GS_SETREG_FRAME_2(0, SCR_W / 64, SCR_PSM, 0));
   GIF_DATA_AD(dma_buf, PS2_GS_XYOFFSET_2, PS2_GS_SETREG_XYOFFSET_2(offs_x << 4, offs_y << 4));
@@ -226,6 +221,7 @@ void clr_scr(u32 col) /* Clear the screen using col */
 void set_visible_fb(u8 fb)
 
 {
+//  GS_SET_DISPFB2(0x8c000 / 2048, 256 / 64, SCR_PSM, 0, 0);
   GS_SET_DISPFB2(fb_pointers[fb & 1] / 2048, SCR_W / 64, SCR_PSM, 0, 0);
 }
 
