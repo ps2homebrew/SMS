@@ -38,7 +38,7 @@ void PbPart1_Update( float DeltaTime )
 {
   PbGs_SetZbufferTest( 1, GS_CONTEXT_1 );
   PbGfx_ClearScreen();
-  //PbGs_SetZbufferTest( 1, GS_CONTEXT_1 );
+  PbGs_SetZbufferTest( 2, GS_CONTEXT_1 );
 
   switch( PbPart1_GetState() )
   {
@@ -102,7 +102,7 @@ void PbPart1_Normal( float DeltaTime )
   *((u32*)p_data)++ = VIF_CODE( VIF_NOP, 0, 0 );
   *((u32*)p_data)++ = VIF_CODE( VIF_DIRECT, 0, 4 );
   
-  *((u64*)p_data)++ = GS_GIF_TAG( 3, 0, 0, 0, 1, 1 );
+  *((u64*)p_data)++ = GS_GIF_TAG( 1, 0, 0, 0, 1, 3 );
   *((u64*)p_data)++ = GS_AD;
 
   *((u64*)p_data)++ = GS_SETREG_FRAME_1( RenderTarget / 2048, 256 / 64, 0, 0 );
@@ -115,8 +115,8 @@ void PbPart1_Normal( float DeltaTime )
   *((u64*)p_data)++ = PS2_GS_XYOFFSET_1;
 
   *((u64*)p_data)++ = DMA_END_TAG( 0 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_NOP, 0, 0 );
-  *((u32*)p_data)++ = VIF_CODE( VIF_NOP, 0, 0 );
+  *((u32*)p_data)++ = VIF_CODE( VIF_FLUSHA, 0, 0 );
+  *((u32*)p_data)++ = VIF_CODE( VIF_FLUSH, 0, 0 );
   
   PbDma_Wait01();
   PbDma_Send01Chain( p_store, TRUE );
@@ -141,6 +141,11 @@ void PbPart1_Normal( float DeltaTime )
 
   PbGfx_SetActiveScreen();
 
+  PbDma_Wait02();
+
+  while( *GIF_STAT & 1 << 10 ) 
+    ;
+
   rect r;
 
   r.col = 0;
@@ -159,6 +164,8 @@ void PbPart1_Normal( float DeltaTime )
   r.v[1].v   = 255;
   r.v[1].x   = 640;
   r.v[1].y   = 256;
+
+  PbGs_SetZbufferTest( 1, GS_CONTEXT_1 );
   
   fill_rect_tex( r, RenderTarget, 256, 256 );
     
@@ -304,8 +311,8 @@ void PbPart1_DrawEnvmapped( PbMatrix* pScreenToView,PbMatrix* pObjectToWorld, vo
   *((u64*)pChain)++ = PS2_GS_TEXFLUSH;
 
   *((u64*)pChain)++ = DMA_END_TAG( 0 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
+  *((u32*)pChain)++ = VIF_CODE( VIF_FLUSHA, 0, 0 );
+  *((u32*)pChain)++ = VIF_CODE( VIF_FLUSH, 0, 0 );
 
   FlushCache(0);
 
