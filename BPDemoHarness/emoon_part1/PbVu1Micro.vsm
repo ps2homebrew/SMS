@@ -76,9 +76,11 @@ poly_loop:
                 addq.x     vf09x, vf00x, q      nop                     ; vf09x = distance
                 mulw.x     vf09x, vf09x, vf22w  nop                     ; distance * lagrate
                 mulx.x     vf19x, vf09x, vf22x  nop                     
+
+                addx.x     vf19x, vf00x, vf22x  nop
                                 
                 ;//////////////////////////////////////////////////////////////////////////////////
-                ;// Calc the rotation angles from the lagrate
+                ;// Calc the rotation angles from the lagrate and make identity y matrix
                 
                 mulz.w      vf19, vf00, vf19z   nop                     ; copy angle from z to w
                 addx.y      vf19, vf00, vf19x   loi 1.570796            ; copy angle from x to y                                     
@@ -100,75 +102,100 @@ poly_loop:
                 mul         vf14, vf24, vf21    nop                     ; k4 a^3
                 mula        acc,  vf16, vf21    loi 39.710659           ; + k2 a^3                                    
                 muli        vf16, vf19, i       nop                     ; k5 a
-                mul         vf17, vf18, vf18    nop                     ; a^8
-                madda       acc,  vf14, vf18    nop                     ; + k4 a^7
+                mul         vf17, vf18, vf18    move vf13,vf00          ; a^8
+                madda       acc,  vf14, vf18    mr32 vf12,vf13          ; + k4 a^7
                 madda       acc,  vf15, vf18    loi 6.283185            ; + k3 a^5
-                maddai      acc,  vf19, i       nop                     ; + k1 a
-                madd        vf19, vf16, vf17    nop                     ; + k5 a^9
-
-                ;//////////////////////////////////////////////////////////////////////////////////
-                ;// Make unit matrix
-                
-                nop                             move vf13,vf00          ; row 3
-                nop                             mr32 vf12,vf13          ; row 2
-                nop                             mr32 vf11,vf12          ; row 1
-                nop                             mr32 vf10,vf11          ; row 0        
+                maddai      acc,  vf19, i       mr32 vf11,vf12          ; + k1 a
+                madd        vf19, vf16, vf17    mr32 vf10,vf11          ; + k5 a^9
                 
                 ;//////////////////////////////////////////////////////////////////////////////////
-                ;// insert sin/cos here                
+                ;// setup sin/cos for y rotation matrix and creates idetity for x matrix                
 
                 addy.x  vf10x, vf00x, vf19y     loi -1.0                ; cos_angle, 0, 0, 0
-                addx.z  vf10z, vf00z, vf19x     nop                     ; cos_angle, 0, sin_angle, 0
-                muli.z  vf10z, vf10z, i         nop                     ; cos_angle, 0, -sin_angle, 0
+                addx.z  vf10z, vf00z, vf19x     move vf17,vf00          ; cos_angle, 0, sin_angle, 0
+                muli.z  vf10z, vf10z, i         mr32 vf16,vf17          ; cos_angle, 0, -sin_angle, 0
 
-                addx.x  vf12x, vf00x, vf19x     nop                     ; sin_angle, 0, 0, 0
-                addy.z  vf12z, vf00z, vf19y     nop                     ; sin_angle, 0, cos_angle, 0
+                addx.x  vf12x, vf00x, vf19x     mr32 vf15,vf16          ; sin_angle, 0, 0, 0
+                addy.z  vf12z, vf00z, vf19y     mr32 vf14,vf15          ; sin_angle, 0, cos_angle, 0
+
+                ;//////////////////////////////////////////////////////////////////////////////////
+                ;// setup sin/cos for x rotation matrix               
+
+                addy.y  vf16y, vf00y, vf19y     loi -1.0                ; 0, cos_angle, 0, 0
+                addx.z  vf16z, vf00z, vf19x     nop                     ; 0, cos_angle, sin_angle, 0
+
+                addx.y  vf15y, vf00y, vf19x     nop                     ; 0,  sin_angle, 0, 0
+                muli.y  vf15y, vf15y, i         nop                     ; 0, -sin_angle, 0, 0
+                addy.z  vf15z, vf00z, vf19y     nop                     ; 0,  -sin_angle, cos_angle, 0
+
+                ;///////////////////////////////////////////////////////////////////////////////////
+                ;// Calculate Local Y * Local X
+
+                mulax     acc,  vf10, vf14      nop
+                madday    acc,  vf11, vf14      nop
+                maddaz    acc,  vf12, vf14      nop
+                maddw     vf18, vf13, vf14      nop
+                
+                mulax     acc,  vf10, vf15      nop
+                madday    acc,  vf11, vf15      nop
+                maddaz    acc,  vf12, vf15      nop
+                maddw     vf19, vf13, vf15      nop
+                
+                mulax     acc,  vf10, vf16      nop
+                madday    acc,  vf11, vf16      nop
+                maddaz    acc,  vf12, vf16      nop
+                maddw     vf20, vf13, vf16      nop
+                
+                mulax     acc,  vf10, vf17      nop
+                madday    acc,  vf11, vf17      nop
+                maddaz    acc,  vf12, vf17      nop
+                maddw     vf21, vf13, vf17      nop
                                 
                 ;///////////////////////////////////////////////////////////////////////////////////
                 ;// Calculate Local Matrix * CameraMatrix
 
-                mulax     acc,  vf24, vf10      nop
-                madday    acc,  vf25, vf10      nop
-                maddaz    acc,  vf26, vf10      nop
-                maddw     vf18, vf27, vf10      nop
+                mulax     acc,  vf24, vf18      nop
+                madday    acc,  vf25, vf18      nop
+                maddaz    acc,  vf26, vf18      nop
+                maddw     vf14, vf27, vf18      nop
                 
-                mulax     acc,  vf24, vf11      nop
-                madday    acc,  vf25, vf11      nop
-                maddaz    acc,  vf26, vf11      nop
-                maddw     vf19, vf27, vf11      nop
+                mulax     acc,  vf24, vf19      nop
+                madday    acc,  vf25, vf19      nop
+                maddaz    acc,  vf26, vf19      nop
+                maddw     vf15, vf27, vf19      nop
                 
-                mulax     acc,  vf24, vf12      nop
-                madday    acc,  vf25, vf12      nop
-                maddaz    acc,  vf26, vf12      nop
-                maddw     vf20, vf27, vf12      nop
+                mulax     acc,  vf24, vf20      nop
+                madday    acc,  vf25, vf20      nop
+                maddaz    acc,  vf26, vf20      nop
+                maddw     vf16, vf27, vf20      nop
                 
-                mulax     acc,  vf24, vf13      nop
-                madday    acc,  vf25, vf13      nop
-                maddaz    acc,  vf26, vf13      nop
-                maddw     vf21, vf27, vf13      nop
+                mulax     acc,  vf24, vf21      nop
+                madday    acc,  vf25, vf21      nop
+                maddaz    acc,  vf26, vf21      nop
+                maddw     vf17, vf27, vf21      nop
                 
                 ;//////////////////////////////////////////////////////////////////////////////////
                 ;// Calculate Screen * (Local * Camera)
                 
-                mulax     acc,  vf28, vf18      nop
-                madday    acc,  vf29, vf18      nop
-                maddaz    acc,  vf30, vf18      nop
-                maddw     vf01, vf31, vf18      nop
+                mulax     acc,  vf28, vf14      nop
+                madday    acc,  vf29, vf14      nop
+                maddaz    acc,  vf30, vf14      nop
+                maddw     vf01, vf31, vf14      nop
                 
-                mulax     acc,  vf28, vf19      nop
-                madday    acc,  vf29, vf19      nop
-                maddaz    acc,  vf30, vf19      nop
-                maddw     vf02, vf31, vf19      nop
+                mulax     acc,  vf28, vf15      nop
+                madday    acc,  vf29, vf15      nop
+                maddaz    acc,  vf30, vf15      nop
+                maddw     vf02, vf31, vf15      nop
                 
-                mulax     acc,  vf28, vf20      nop
-                madday    acc,  vf29, vf20      nop
-                maddaz    acc,  vf30, vf20      nop
-                maddw     vf03, vf31, vf20      nop
+                mulax     acc,  vf28, vf16      nop
+                madday    acc,  vf29, vf16      nop
+                maddaz    acc,  vf30, vf16      nop
+                maddw     vf03, vf31, vf16      nop
                 
-                mulax     acc,  vf28, vf21      nop
-                madday    acc,  vf29, vf21      nop
-                maddaz    acc,  vf30, vf21      nop
-                maddw     vf04, vf31, vf21      nop
+                mulax     acc,  vf28, vf17      nop
+                madday    acc,  vf29, vf17      nop
+                maddaz    acc,  vf30, vf17      nop
+                maddw     vf04, vf31, vf17      nop
                                 
                 ;//////////////////////////////////////////////////////////////////////////////////
                 ;// Project vertex to screen space.
