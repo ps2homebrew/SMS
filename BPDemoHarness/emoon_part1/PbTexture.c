@@ -96,10 +96,9 @@ void PbTexture_Copy( PbTexture* pDest, PbTexture* pSource )
 {
   u64* p_data = NULL;
   u64* p_store = NULL;
+  rect r;
 
   PbTexture_SetRenderTarget( pDest );
-
-  rect r;
 
   r.col = 0;
   r.v[0].col = 0;

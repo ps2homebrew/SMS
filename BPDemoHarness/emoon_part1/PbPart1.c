@@ -97,6 +97,7 @@ void PbPart1_Normal( float DeltaTime )
 {
   void* p_data;  
   void* p_store;  
+  rect r;
 
   PbTexture_SetActive( gp_Envmap, GS_CONTEXT_1 );
 
@@ -157,8 +158,6 @@ void PbPart1_Normal( float DeltaTime )
 
 //  while( *GIF_STAT & 1 << 10 ) 
 //    ;
-
-  rect r;
 
   r.col = 0;
   r.v[0].col = 0;
