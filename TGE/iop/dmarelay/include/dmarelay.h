@@ -25,6 +25,7 @@
 
 #include "dev9regs.h"
 #include "speedregs.h"
+#include "smapregs.h"
 
 #define MODNAME "dmarelay"
 
@@ -63,6 +64,15 @@ extern struct eng_args eng_args;
 #define  RPCF_DmaWrite		2
 
 #define RPCS_ATA_DMA_END	0x2001
+
+#define RPCS_SMAP_TX_BEGIN	0x2002
+/* These are repeated for TX and RX */
+#define RPCF_SMAP_GetBufAddr	0
+#define RPCF_SMAP_Go		1
+
+#define RPCS_SMAP_TX_END	0x2003
+#define RPCS_SMAP_RX_BEGIN	0x2004
+#define RPCS_SMAP_RX_END	0x2005
 
 int ata_engine_init(struct eng_args *args);
 int smap_engine_init(struct eng_args *args);
