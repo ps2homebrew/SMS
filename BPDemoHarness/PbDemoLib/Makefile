@@ -1,6 +1,6 @@
 EE_LIB = libpbdemo.a
 EE_OBJS = PbMatrix.o PbMath.o PbDma.o PbSpr.o PbVif.o PbScreen.o PbVram.o  \
-          PbPrim.o PbMisc.o PbTexture.o PbFile.o PbVu1.o
+          PbPrim.o PbMisc.o PbTexture.o PbFile.o PbVu1.o Particles/PbParticle.o
 
 all: $(EE_LIB)
 

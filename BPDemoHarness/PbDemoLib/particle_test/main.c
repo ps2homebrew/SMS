@@ -176,11 +176,12 @@ u32 start_demo(const demo_init_t *pInfo)
 		PbScreenClear(0);
 		
 		{
+			PbMatrix rotate_matrix, temprot_matrix, final_matrix;
+
 			//GS_SET_BGCOLOR(0xFF, 0x00, 0x00);
 			
 			move_points(dt);
 			
-			PbMatrix rotate_matrix, temprot_matrix, final_matrix;
 		    PbMatrixRotateY( &rotate_matrix, t*1.5f );
 		    PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &camera_matrix );
 		    PbMatrixMultiply( &final_matrix, &temprot_matrix, &view_screen_matrix );
