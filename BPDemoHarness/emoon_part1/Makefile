@@ -2,7 +2,7 @@ EE_BIN = emoon_part1.elf
 BIN_IMAGE = emoon_part1.bin
 EE_OBJS = crt0.o main.o gs.o vram_malloc.o prim.o \
           PbGfx.o PbVu1.o PbMatrix.o PbGlobal.o \
-	  math.o PbVu1Micro.o PbDma.o PbFile.o PbPart1.o PbMeshData.o PbGs.o data\PbData.o
+	  math.o PbDma.o PbFile.o PbPart1.o PbMeshData.o PbGs.o data/PbData.o PbVu1Micro.o
 all: $(EE_BIN) $(BIN_IMAGE)
 
 clean:
