@@ -92,14 +92,37 @@ u32 start_demo( const demo_init_t* pInfo )
   angles[0] = angles[1] = angles[2] = angles[3] = 0.0f;
 	angles[0] = 0.05f;
 
-  angles[3] = 0.001; // this is the lagrate
+  angles[3] = 0.101; // this is the lagrate
 
   float angle = 0.0f;
+  int down = 1;
 
   while( pInfo->time_count > 0 )
   {
   	angles[2] = pInfo->curr_time;
-  	angles[0] += 0.01f;
+
+    if( down == 1 )
+    {
+      angles[3] -= 0.01f;
+    	angles[0] -= 0.01f;
+
+      if( angles[3] < -2.0f )
+        down = 0;
+    }
+    else
+    {
+      angles[3] += 0.01f;
+    	angles[0] += 0.01f;
+
+      if( angles[3] > 2.0f )
+      {
+        angles[3] = 2.0;
+        down = 1;
+      }
+    }
+
+    //pInfo->printf( "time: %f\n", pInfo->curr_time );
+
 
 		//PbMatrix_BuildPitch( &RotateMatrix2, angle );
 		//PbMatrix_BuildHeading( &RotateMatrix, angle );
