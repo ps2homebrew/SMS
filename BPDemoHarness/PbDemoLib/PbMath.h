@@ -27,6 +27,7 @@
 float PbSin( float angle );
 float PbCos( float angle );
 float PbSqrt( float value );
+int   PbLog( int Value );
 
 #endif // _PBMATH_H_
 
