@@ -32,18 +32,15 @@
 #include <fcntl.h>
 #endif
 
-/*
+// present in FtpClient.c
+extern char* itoa(char* in, int val);
 
-	plan for future unified path system
+// these offsets depend on the layout of both ioman & iomanX ... ps2netfs does
+// something similar, so if it breaks, we all go down.
+#define DEVINFO_IOMAN_OFFSET 0x0c
+#define DEVINFO_IOMANX_OFFSET 0
 
-	/mc/0/	- memory card, unit 0
-	/mc/1/	- memory card, unit 1
-	/cd/0/	- cd file system
-	/hd/0/	- hdd, partition 0
-	/hd/1/	- hdd, partition 1 
-	/usb/0/	- usb mass storage, unit 0
-
-*/
+#define DEVINFOARRAY(d,ofs) ((iop_device_t **)((d)->text_start + (d)->text_size + (d)->data_size + (ofs)))
 
 // buffer used for concating filenames internally
 static char buffer[512];
@@ -135,21 +132,24 @@ int FileSystem_OpenDir( FSContext* pContext, const char* pDir )
 
 	switch( pContext->m_eType )
 	{
+		// directory listing from I/O device
 		case FS_IODEVICE:
 		{
 			if( !pContext->m_kFile.device )
 				break;
 
-			pContext->m_kFile.mode = O_DIROPEN;
+			// attempt to open device directory
 
+			pContext->m_kFile.mode = O_DIROPEN;
 			if( pContext->m_kFile.device->ops->dopen( &(pContext->m_kFile), pDir ) >=0 )
 				return 0;
 		}
 		break;
 
+		// either device-list or unit-list (depending on if pContext->m_kFile.device was set)
 		case FS_DEVLIST:
 		{
-			pContext->m_kFile.mode = 0; // we use this for an internal counter
+			pContext->m_kFile.unit = 0; // we use this for enumeration
 			return 0;
 		}
 		break;
@@ -177,6 +177,8 @@ int FileSystem_ReadFile( FSContext* pContext, char* pBuffer, int iSize )
 			if( !pContext->m_kFile.device || !(pContext->m_kFile.mode & O_RDONLY) )
 				break;
 
+			// read data from I/O device
+
 			return pContext->m_kFile.device->ops->read( &(pContext->m_kFile), pBuffer, iSize );
 		}
 		break;
@@ -203,6 +205,8 @@ int FileSystem_WriteFile( FSContext* pContext, const char* pBuffer, int iSize )
 		{
 			if( !pContext->m_kFile.device || !(pContext->m_kFile.mode & O_WRONLY) )
 				break;
+
+			// write data to device
 
 			return pContext->m_kFile.device->ops->write( &(pContext->m_kFile), (char*)pBuffer, iSize );
 		}
@@ -271,26 +275,80 @@ int FileSystem_ReadDir( FSContext* pContext, FSDirectory* pDirectory )
 
 		case FS_DEVLIST:
 		{
-			const char* name = NULL;
-
-			// TODO: make a proper scan here
-
-      pDirectory->m_iSize = 0;
-			pDirectory->m_eType = FT_DIRECTORY;
-
-			switch( pContext->m_kFile.mode )
+			if( pContext->m_kFile.device )
 			{
-				case 0: name = "mc0"; break;
-				case 1: name = "mc1"; break;
-				case 2: name = "host"; break;
-			}
+				// evaluating units below a device
 
-			if( name )
-			{
-				strcpy(pDirectory->m_Name,name);
-				pContext->m_kFile.mode++;
-				return 0;
+				while( pContext->m_kFile.unit < 16 ) // find a better value, and make a define
+				{
+					iox_stat_t stat;
+					int ret;
+					int unit = pContext->m_kFile.unit;
+
+					memset(&stat,0,sizeof(stat));
+
+					// get status from root directory of device
+					ret = pContext->m_kFile.device->ops->getstat( &(pContext->m_kFile), "/", (io_stat_t*)&stat );
+
+					// dummy devices does not set mode properly, so we can filter them out easily
+					if( (ret >= 0) && !stat.mode  )
+						ret = -1;
+
+					// increase to next unit
+					pContext->m_kFile.unit++;
+
+					// currently we stop evaluating devices if one was not found (so if mc 1 exists and not mc 0, it will not show)
+					if( ret < 0 )
+						return -1;
+
+					itoa(pDirectory->m_Name,unit);
+					pDirectory->m_iSize = 0;
+					pDirectory->m_eType = FT_DIRECTORY;
+					return 0;
+				}
 			}
+			else
+			{
+				// evaluating devices
+
+				smod_mod_info_t* pkModule;
+				iop_device_t** ppkDevices;
+				int num_devices;
+				int dev_offset;
+
+				// get module
+
+				num_devices = FS_IOMANX_DEVICES;
+				dev_offset = DEVINFO_IOMANX_OFFSET;
+				if( NULL == (pkModule = FileSystem_GetModule(IOPMGR_IOMANX_IDENT)) )
+				{
+					dev_offset = DEVINFO_IOMAN_OFFSET;
+					num_devices = FS_IOMAN_DEVICES;
+					if( NULL == (pkModule = FileSystem_GetModule(IOPMGR_IOMAN_IDENT)) )
+						return -1;
+				}
+
+				// scan filesystem devices
+
+				ppkDevices = DEVINFOARRAY(pkModule,dev_offset);
+				while( pContext->m_kFile.unit < num_devices )
+				{
+					int unit = pContext->m_kFile.unit;
+					pContext->m_kFile.unit++;
+
+					if( !ppkDevices[unit] )
+						continue;
+
+					if( !(ppkDevices[unit]->type & IOP_DT_FS) )
+						continue;
+
+					strcpy(pDirectory->m_Name,ppkDevices[unit]->name);
+					pDirectory->m_iSize = 0;
+					pDirectory->m_eType = FT_DIRECTORY;
+
+					return 0;
+				}
+			}				
 		}
 		break;
 
@@ -443,72 +501,9 @@ void FileSystem_Close( FSContext* pContext )
 #endif
 }
 
-const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath )
-{
-	char* start;
-	char* end;
-
-	// TODO: fix this one
-	if( !strcmp(pPath,":") )
-	{
-		pContext->m_eType = FS_DEVLIST;
-		return pPath;
-	}
-
-	// extract unit number from path
-
-	if( !(start = end = index( pPath, ':' )) || (start == pPath) )
-		return NULL;
-
-	if( isnum(*(start-1)) )
-	{
-		do { start--; } while( (start > pPath) && isnum(*(start-1)) );
-
-		pContext->m_kFile.unit = strtol( start, NULL, 0 );
-	}
-
-	// scan ioman devices
-
-	if( NULL != (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMAN_IDENT,FS_IOMAN_DEVICES,pPath)) )
-	{
-		pContext->m_eType = FS_IODEVICE;
-
-		// even if buffer was passed in it shoulb be ok
-		buffer[0] = '\0';
-		strcat(buffer,"/");
-		strcat(buffer,end+1);
-		return buffer;
-	}
-
-	// scan iomanX devices
-
-	if( NULL != (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMANX_IDENT,FS_IOMANX_DEVICES,pPath)) )
-	{
-		pContext->m_eType = FS_IODEVICE;
-
-		// even if buffer was passed in it shoulb be ok
-		buffer[0] = '\0';
-		strcat(buffer,"/");
-		strcat(buffer,end+1);
-		return buffer;
-	}
-
-	return NULL;
-}
-
-// TODO: these two following path functions are quite terrible and should be rewritten, but
-// I want to see if my idea is working first
-
 void FileSystem_BuildPath( char* pResult, const char* pOriginal, const char* pAdd )
 {
-	const char* pO;
-	char* pR;
-
 	pResult[0] = '\0';
-
-#ifdef LINUX
-	strcat(pResult,".");
-#endif
 
 	// absolute path?
 	if(pAdd[0] == '/')
@@ -517,20 +512,12 @@ void FileSystem_BuildPath( char* pResult, const char* pOriginal, const char* pAd
 		pAdd = NULL;
 	}
 
-	pO = pOriginal;
-	pR = pResult;
+#ifdef LINUX
+	strcat(pResult,"./");
+#endif
 
-	pO++;
-	while((*pO != '/') && (*pO))
-		*(pR++) = *(pO++);
-	*pR++ = ':';
-	*pR = '\0';
-
-	if( *pO )
-	{
-		pO++;
-		strcat(pResult,pO);
-	}
+	if( pOriginal )
+		strcat(pResult,pOriginal);
 
 	if( pAdd )
 	{
@@ -560,12 +547,12 @@ int FileSystem_ChangeDir( FSContext* pContext, const char* pPath )
 			if(!strcmp(entry,".."))
 			{
 				char* t = strrchr(pContext->m_Path,'/');
-				while( --t > pContext->m_Path)
+				while( --t >= pContext->m_Path)
 				{
+					*(t+1) = 0;
+
 					if( *t == '/')
 						break;
-
-					*t = 0;
 				}
 			}
 			else
@@ -581,11 +568,74 @@ int FileSystem_ChangeDir( FSContext* pContext, const char* pPath )
 	return 0;
 }
 
-iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath )
+#ifndef LINUX
+const char* FileSystem_ClassifyPath( FSContext* pContext, char* pPath )
+{
+	char* entry;
+	char* t;
+
+	// make sure the I/O has been closed before
+
+	FileSystem_Close(pContext);
+
+	// must start as a valid path
+
+	if( pPath[0] != '/' )
+		return NULL;
+
+	// begin parsing
+
+	entry = strtok(pPath+1,"/");
+
+	// begin parsing
+
+	pContext->m_eType = FS_DEVLIST;
+
+	// is this a pure device list? then just return a pointer
+	if(!entry || !strlen(entry))
+		return pPath;
+
+	// attempt to find device
+	if( NULL == (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMANX_IDENT,FS_IOMANX_DEVICES,entry)) )
+	{
+		if( NULL == (pContext->m_kFile.device = FileSystem_ScanDevice(IOPMGR_IOMAN_IDENT,FS_IOMAN_DEVICES,entry)) )
+			return NULL;
+	}
+
+	// extract unit number if present
+	entry = strtok(NULL,"/");
+
+	// no entry present? then we do a unit listing of the current device
+	if(!entry || !strlen(entry))
+		return pPath;
+
+	t = entry;
+	while(*t)
+	{
+		// enforcing unit nubering
+		if(!isnum(*t))
+			return NULL;
+
+		t++;
+	}
+
+	pContext->m_kFile.unit = strtol(entry, NULL, 0);
+
+	// extract local path
+
+	pContext->m_eType = FS_IODEVICE;
+	entry = strtok(NULL,"");
+	strcpy(buffer,"/");
+
+	if(entry)
+		strcat(buffer,entry);	// even if buffer was passed in as an argument, this will yield a valid result
+
+	return buffer;
+}
+
+smod_mod_info_t* FileSystem_GetModule( const char* pDevice )
 {
 	smod_mod_info_t* pkModule = NULL;
-  iop_device_t **pkDevInfoTable;
-	int i;
 
 	// scan module list
 
@@ -594,27 +644,51 @@ iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const
 	{
 		if (!strcmp(pkModule->name, pDevice))
 			break;
+
 		pkModule = pkModule->next;
 	}
 
-	if(!pkModule)
+	return pkModule;
+}
+
+iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath )
+{
+	smod_mod_info_t* pkModule;
+  iop_device_t **ppkDevices;
+	int i;
+	int offset;
+
+	// get module
+
+	if( NULL == (pkModule = FileSystem_GetModule(pDevice)) )
 		return NULL;
 
+	// determine offset
+	
+	if( !strcmp(IOPMGR_IOMANX_IDENT,pkModule->name) )
+		offset = DEVINFO_IOMANX_OFFSET;
+	else if( !strcmp(IOPMGR_IOMAN_IDENT,pkModule->name) )
+		offset = DEVINFO_IOMAN_OFFSET;
+	else
+		return NULL; // unknown device, we cannot determine the offset here...
+
 	// get device info array
-	pkDevInfoTable = (iop_device_t **)(pkModule->text_start + pkModule->text_size + pkModule->data_size + 0x0c);
+	ppkDevices = DEVINFOARRAY(pkModule,offset);
 
 	// scan array
 	for( i = 0; i < iNumDevices; i++ )
 	{
-		if( NULL != pkDevInfoTable[i] )
+		if( (NULL != ppkDevices[i]) ) // note, last compare is to avoid a bug when mounting partitions right now that I have to track down
 		{
-			if( (pkDevInfoTable[i]->type & IOP_DT_FS))
+			if( (ppkDevices[i]->type & IOP_DT_FS))
 			{
-				if( !strncmp(pPath,pkDevInfoTable[i]->name,strlen(pkDevInfoTable[i]->name)) )
-					return pkDevInfoTable[i];
+				if( !strncmp(pPath,ppkDevices[i]->name,strlen(ppkDevices[i]->name)) )
+					return ppkDevices[i];
 			}
 		}
 	}
 
 	return NULL;
 }
+
+#endif

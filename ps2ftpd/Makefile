@@ -24,6 +24,20 @@ all: $(IOP_OBJS_DIR) $(IOP_BIN_DIR) $(IOP_BIN)
 clean:
 	rm -f -r $(IOP_OBJS_DIR) $(IOP_BIN_DIR)
 
+# this is just a testcase, might not work on your setup
+runhd:
+	ps2client reset
+	ps2client -t 1 execiop mc:ps2atad.irx
+	ps2client -t 8 execiop mc:ps2hdd.irx -n 20
+	ps2client -t 1 execiop mc:ps2fs.irx -n 12
+	ps2client -t 1 execiop mc:ps2netfs.irx
+	ps2client mount pfs0: hdd:__boot
+	ps2client execiop host:bin/ps2ftpd.irx
+
+run:
+	ps2client reset
+	ps2client execiop host:bin/ps2ftpd.irx
+
 include $(PS2SDKSRC)/Defs.make
 include $(PS2SDKSRC)/iop/Rules.make
 include $(PS2SDKSRC)/iop/Rules.release

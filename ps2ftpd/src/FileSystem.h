@@ -14,19 +14,20 @@
 #ifdef LINUX
 #include <dirent.h>
 #else
+
 #include <iomanX.h>
-#endif
+#include <iopmgr.h>
 
 #define FS_IOMAN_DEVICES 16
 #define FS_IOMANX_DEVICES 32
 
-#ifndef LINUX
 typedef enum
 {
 	FS_INVALID,
 	FS_DEVLIST,
 	FS_IODEVICE, // ioman or iomanX
 } FSType;
+
 #endif
 
 typedef enum
@@ -43,10 +44,10 @@ typedef struct FSContext
 #ifndef LINUX
 	FSType m_eType;
 	iop_file_t m_kFile;
-	char m_List[256];
 #else
 	int m_iFile;
 	DIR* m_pDir;
+	char m_List[256];
 #endif
 } FSContext;
 
@@ -90,9 +91,6 @@ int FileSystem_GetFileInfo( FSDirectory* pDirectory, const char* pPath );
 //! Close file or directory
 void FileSystem_Close( FSContext* pContext );
 
-//! Determine device needed for accessing device & fill centext with info
-const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath );
-
 //! Convert path from unified name to PS2 specific path (no verification of existance)
 void FileSystem_BuildPath( char* pResult, const char* pOriginal, const char* pAdd );
 
@@ -108,8 +106,15 @@ int FileSystem_CreateDir( FSContext* pContext, const char* pDir );
 //! Delete directory
 int FileSystem_DeleteDir( FSContext* pContext, const char* pDir );
 
+#ifndef LINUX
+//! Determine device needed for accessing device & fill context with info
+const char* FileSystem_ClassifyPath( FSContext* pContext, char* pPath );
+
+//! Get a pointer to device handler
+smod_mod_info_t* FileSystem_GetModule( const char* pDevice );
+
 //! Scan devices & return ops structure if found
 iop_device_t* FileSystem_ScanDevice( const char* pDevice, int iNumDevices, const char* pPath );
-
 #endif
 
+#endif

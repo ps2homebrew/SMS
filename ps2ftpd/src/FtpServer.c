@@ -236,25 +236,23 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 
 				if( nofs )
 				{
-					char cmdbuffer[512]; // TODO: get rid of this
 					int cmdlen = rofs ? (rofs-pClient->m_CommandBuffer) : (nofs-pClient->m_CommandBuffer);
 
 					// extract commandline
 
-					memcpy( cmdbuffer, pClient->m_CommandBuffer, cmdlen );
-					cmdbuffer[cmdlen] = '\0';
+					pClient->m_CommandBuffer[cmdlen] = '\0';
 
-					// get remaining data
+					// execute command
+
+#ifdef DEBUG
+					printf("%08x << %s\r\n",(unsigned int)pClient,pClient->m_CommandBuffer);
+#endif
+					FtpClient_OnCommand(pClient,pClient->m_CommandBuffer);
+
+					// get remaining data (safe even if client has disconnected, as it is never freed)
 
 					memcpy( pClient->m_CommandBuffer, nofs+1, sizeof(pClient->m_CommandBuffer)-((nofs+1)-pClient->m_CommandBuffer) );
 					pClient->m_iCommandOffset -= (nofs+1)-pClient->m_CommandBuffer;
-
-					// execute command
-#ifdef DEBUG
-					printf("%08x << %s\r\n",(unsigned int)pClient,cmdbuffer);
-#endif
-					FtpClient_OnCommand(pClient,cmdbuffer);
-
 				}
 			}
 			else

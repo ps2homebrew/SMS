@@ -20,15 +20,17 @@ Building this project requires the following:
 Just run make and if all went OK there should be a ps2ftpd.irx in the bin/
 directory.
 
-Running:
---------
+Operation:
+----------
 
-Running requires that ps2ip.irx is already loaded. ioman.irx and iomanx.irx
-are not directly required but highly recommended.
+ps2ftpd.irx requires that ps2ip.irx is already present. It accesses ioman.irx
+and iomanx.irx, but does not absolutely require that they are present when
+started. It hampers functionality greatly if they are not present or at least
+loaded at a later time.
 
-When starting the module, it will detach and start listening for incoming
-connections on port 21. The server currently allows for up to 4 concurrent
-connections.
+When starting the module, it will start listening for incoming connections
+on port 21. The server currently allows for up to 4 concurrent clients. This
+is configurable at compile-time if you need more.
 
 If you're having trouble with "Unable to build data connection", it might be
 that your version of ps2ip.irx is too old (the older versions did only allow
@@ -65,7 +67,10 @@ RMD <dir>
 Authentication is ignored, so be cautious if your PS2 is connected directly
 to the internet.
 
-Right now there's a temporary filesystem in place displaying both
-memorycard-slots and the host (/mc0/, /mc1/, /host/). HDD is accessible if
-mounted, but not listed in the device list and must be entered manually.
-CDROM is as of yet untested.
+The filesystem is unified, so you will find the first memory-card at
+'/mc/0/', and a mounted hdd partition at for example '/pfs/0/'. The device
+list show all devices present, but you may not access them all depending
+on if they have implemented all required functionality. The unit list will
+stop listing devices if the device is not present, so if you have a MC in
+slot 1 but not in slot 0, the card in slot 1 will not show (but can be
+accessed by going directly to '/mc/1/').

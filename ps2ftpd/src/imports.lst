@@ -44,3 +44,9 @@ I_lwip_setsockopt
 I_lwip_connect
 I_lwip_getsockname
 ps2ip_IMPORTS_end
+
+/*
+cdvdman_IMPORTS_start
+I_sceCdInit
+cdvdman_IMPORTS_end
+*/
