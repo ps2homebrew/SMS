@@ -9,7 +9,6 @@
 #include <kernel.h>
 #include <tamtypes.h>
 
-static int offset = 1024;
 static u64 test[1024*400];
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -20,6 +19,7 @@ void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
                           float* pAngles, void* pChain )
 {
   u16 i = 0;
+  s32 num_coords;
   void* p_store_chain = pChain = (void*)&test;
   u32* p_object = (u32*)PbMeshData_Get( 0 );
 
@@ -50,29 +50,12 @@ void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
   *((u32*)pChain)++ = VIF_CODE( VIF_STCYL,0,0x0404 );
   *((u32*)pChain)++ = VIF_CODE( VIF_UNPACK_V4_32,1,8 );
   
-  ////////////////////////////////////////////////////////////////////////////////////
-  // Setup tags for difference mode
-  // sets the ROWtag to 0,0,0,0. There is more optimal ways to use the row registers
-  // that will improve the accuracy of the 7bit values, but we do this for now.
-/*
-  *((u64*)pChain)++ = DMA_CNT_TAG( 1 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_STMOD,0,0 );  // normalmode
-  *((u32*)pChain)++ = VIF_CODE( VIF_STROW,0,0 );
-
-  *((u32*)pChain)++ = 0;
-  *((u32*)pChain)++ = 0;
-  *((u32*)pChain)++ = 0;
-  *((u32*)pChain)++ = 0;
-*/
-
   // add object to the list, max 240 coords for each buffer
 
   u32 num_sections = *(p_object);
   p_object += 4;  // pad
 
   num_sections = 1; // just 1 for now.
-
-  s32 num_coords;
 
   for( i = 0; i < num_sections; i++ )
   {
@@ -93,7 +76,7 @@ void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
 
     while( num_coords > 0 )
     {
-      s32 current_count = num_coords > 110 ? 110 : num_coords; 
+      s32 current_count = num_coords > 112 ? 112 : num_coords; 
       //s32 current_count = 220; 
     
       ////////////////////////////////////////////////////////////////////////////////////
@@ -130,12 +113,12 @@ void* PbPart1_DrawObject( PbMatrix* pCameraToScreen,PbMatrix* pWorlToCamera,
       *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
 
       *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
-      *((u32*)pChain)++ = VIF_CODE( VIF_MSCAL,0,0 );  // lets start the shit.
+      *((u32*)pChain)++ = VIF_CODE( VIF_MSCAL,0,0 );
       *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
       *((u32*)pChain)++ = VIF_CODE( VIF_NOP,0,0 );
 
-      p_object += 110*4;
-      num_coords -= 110;
+      p_object += 112*4;
+      num_coords -= 112;
     }
   }
 
