@@ -193,6 +193,7 @@ pkoLoadElf(char *path)
 // well be added in future
     if(!strncmp(path, "host", 4)) ret = SifLoadElf(path, &elfdata);
     else if(!strncmp(path, "mc0", 3)) ret = SifLoadElf(path, &elfdata);
+    else if(!strncmp(path, "cdfs", 4)) ret = SifLoadElf(path, &elfdata);
     else if(!strncmp(path, "pfs0", 4)) ret = tLoadElf(path);
 
     FlushCache(0);
