@@ -6,7 +6,6 @@
 #include <loadfile.h>
 #include "../harness.h"
 #include "PbGfx.h"
-#include "../stream_ee/sjpcmstr.h"
 #include "PbDma.h"
 #include "PbVif.h"
 #include "PbVu1.h"
@@ -41,6 +40,7 @@ u32 start_demo( const demo_init_t* pInfo )
 	PbMatrix FinalMatrix;
 	PbMatrix RotateMatrix;
 	PbMatrix RotateMatrix2;
+  float    angles[4] __attribute__((aligned(16)));
 
   PbGfx_Setup();
   
@@ -81,27 +81,38 @@ u32 start_demo( const demo_init_t* pInfo )
 
 	PbMatrix_Print( "FinalMatrix", &FinalMatrix );	
 */
+
+ 	//PbPart1_DrawObject( &ViewScreenMatrix, &CameraMatrix, &angles,  NULL );
+	//PbVu1_Wait();
+	//PbVu1_DumpMem();
+
 	///////////////////////////////////////////////////////////////////////////////////////
 	// Enter loop
 
-	float angle = 0.0f;
+  angles[0] = angles[1] = angles[2] = angles[3] = 0.0f;
+	angles[0] = 0.05f;
+
+  angles[3] = 0.001; // this is the lagrate
+
+  float angle = 0.0f;
 
   while( pInfo->time_count > 0 )
   {
-		angle += 0.01f;
+  	angles[2] = pInfo->curr_time;
+  	angles[0] += 0.01f;
 
-		PbMatrix_BuildPitch( &RotateMatrix2, angle );
-		PbMatrix_BuildHeading( &RotateMatrix, angle );
-		PbMatrix_Multiply( &RotateMatrix, &RotateMatrix, &RotateMatrix2 );
-		PbMatrix_Multiply( &CombindedMatrix, &RotateMatrix, &CameraMatrix );
- 	  PbMatrix_Multiply( &FinalMatrix, &CombindedMatrix, &ViewScreenMatrix );
+		//PbMatrix_BuildPitch( &RotateMatrix2, angle );
+		//PbMatrix_BuildHeading( &RotateMatrix, angle );
+		//PbMatrix_Multiply( &RotateMatrix, &RotateMatrix, &RotateMatrix2 );
+		//PbMatrix_Multiply( &CombindedMatrix, &RotateMatrix, &CameraMatrix );
+ 	  //PbMatrix_Multiply( &FinalMatrix, &CombindedMatrix, &ViewScreenMatrix );
 	
 		set_zbufcmp( 1 );
 		PbGfx_ClearScreen();
 
 		set_zbufcmp( 2 );
 
-  	PbPart1_DrawObject( &FinalMatrix, NULL );
+  	PbPart1_DrawObject( &ViewScreenMatrix, &CameraMatrix, &angles,  NULL );
 				
     PbGfx_Update();
 
