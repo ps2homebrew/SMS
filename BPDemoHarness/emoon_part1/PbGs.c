@@ -22,27 +22,6 @@ void PbGs_SetZbufferTest( int Mode, int Context )
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// void PbGs_SetRenderTarget
-///////////////////////////////////////////////////////////////////////////////
-
-void PbGs_SetRenderTarget( u32 Target )
-{
-  u64* p_data = NULL;
-  u64* p_store = NULL;
-
-  p_data = p_store = PbSpr_Alloc( 2*16, TRUE );
-
-  *p_data++ = GS_GIF_TAG( 1, 0, 0, 0, 1, 1 );
-  *p_data++ = GS_AD;
-
-  *p_data++ = GS_SETREG_FRAME_1( Target / 2048, 256 / 64, 0, 0 );
-  *p_data++ = GS_REG_FRAME_1;
-
-  PbDma_Wait02();
-  PbDma_Send02( p_store, 2, TRUE );
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // PbGs_ShowStats()
 ///////////////////////////////////////////////////////////////////////////////
 
