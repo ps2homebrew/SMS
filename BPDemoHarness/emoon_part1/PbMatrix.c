@@ -84,8 +84,8 @@ void PbMatrix_Multiply( PbMatrix* pDest,const PbMatrix* pSrc1,const PbMatrix* pS
 
 void PbMatrix_BuildHeading( PbMatrix* pMatrix, float angle )
 {
-  float sin_angle = (float)sin( angle );
-  float cos_angle = (float)cos( angle );
+  float sin_angle = (float)PbSin( angle );
+  float cos_angle = (float)PbCos(angle );
 
 	pMatrix->m_fMatrix[(0<<2)+0] = cos_angle;
 	pMatrix->m_fMatrix[(0<<2)+1] = 0;
@@ -114,8 +114,8 @@ void PbMatrix_BuildHeading( PbMatrix* pMatrix, float angle )
 
 void PbMatrix_BuildPitch( PbMatrix* pMatrix, float angle )
 {
-  float sin_angle = (float)sin( angle );
-  float cos_angle = (float)cos( angle );
+  float sin_angle = (float)PbSin( angle );
+  float cos_angle = (float)PbCos(angle );
 
 	pMatrix->m_fMatrix[(0<<2)+0] = 1;
 	pMatrix->m_fMatrix[(0<<2)+1] = 0;
@@ -144,8 +144,8 @@ void PbMatrix_BuildPitch( PbMatrix* pMatrix, float angle )
 
 void PbMatrix_BuildBank( PbMatrix* pMatrix, float angle )
 {
-  float sin_angle = (float)sin( angle );
-  float cos_angle = (float)cos( angle );
+  float sin_angle = (float)PbSin( angle );
+  float cos_angle = (float)PbCos(angle );
 
 	pMatrix->m_fMatrix[(0<<2)+0] = cos_angle;
 	pMatrix->m_fMatrix[(0<<2)+1] = sin_angle;
