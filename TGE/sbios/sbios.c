@@ -1,5 +1,5 @@
 /*
- * sbios.c -
+ * sbios.c - SBIOS entrypoint and dispatch table.
  *
  * Copyright (c) 2003 Marcus R. Brown <mrbrown@0xd6.org>
  *

@@ -1,5 +1,5 @@
 /*
- * sif.h - SIF protypes header file
+ * sif.h - SIF routines internal to the SBIOS.
  *
  * Copyright (c) 2003 Marcus R. Brown <mrbrown@0xd6.org>
  *

@@ -1,0 +1,90 @@
+The Great Experiment
+Version D.0.A
+Copyright (c) 2004 Marcus R. Brown <mrbrown@0xd6.org>
+
+[NOTE: This README talks about TGE as if it were already finished and released.
+It's not even close.  The features described here are what is planned, and they
+could be deleted or revised at any time.]
+
+Introduction
+------------
+
+In 2001, Sony Computer Entertainment (SCE) released their highly anticipated
+PlayStation 2 Linux Kit in Japan.  The Linux Kit was released worldwide in May
+2002.  The Linux Kit consists of a network adapter, a 40GB hard drive, a
+keyboard, a mouse, and a VGA connector.  It also includes a boot disc
+containing the Linux operating system, a set of hardware manuals, and SCE's
+proprietary Runtime Environment or RTE.  The RTE is a software interface that
+sits in between the Linux kernel and the PS2's I/O Processor (IOP).  It
+facilitates the development of GPL-compatible source code without revealing the
+proprietary source code SCE uses to communicate with the IOP.  The IOP governs
+the use of the PS2's DVD drive, memory cards, controllers, and sound processor.
+It is also responsible for data transfers to and from the network adapter, hard
+drive, and USB ports.
+
+Although Linux is free in terms of beer and speech, Linux on the PS2 is only
+free in terms of speech - you must purchase the Linux Kit in order to run Linux
+(or other Open Source operating systems such as NetBSD) on the PS2.
+
+
+The Great Experiment
+--------------------
+
+The Great Experiment, or TGE, is an Open Source RTE replacement.  Using TGE,
+you can run Linux on your PS2 in the same way as if you owned SCE's Linux Kit.
+However, TGE also includes features that SCE's RTE doesn't or cannot support,
+making it an viable alternative for users that already own the Linux Kit.
+
+Here's a list of some of the features that TGE supports.  Features that are not
+supported by the original RTE marked with a (*):
+
+	- Boot Linux from the memory card.
+	* Boot Linux from an installed hard drive.
+	* Boot Linux from over the network.
+	- Linux access to DVD, memory cards, controllers, and the sound
+	  processor.
+	- Linux access to USB ports, the official PS2 network adapter, and any
+	  compatible hard drive.
+	* Linux access to the IEEE1394 (FireWire or i.Link) port.
+	* Linux access to the official DVD remote control.
+	* Linux access to the remote control built-in on the SCPH-50000 series.
+	* Compatibility with recent PS2 models, including the PSX.
+
+
+Philosophy
+----------
+
+The term "The Great Experiment" is used in Africology (the study of Africa) to
+refer to the struggle of African Americans to gain acceptance in the United
+States throughout its history.  The majority of African Americans were brought
+into the United States originally as slaves, and subsequently freed and granted
+basic civil rights in 1865.  One hundred years later, African Americans were
+finally granted full civil rights.  From the time they were brought into the
+country and even today, African Americans have struggled to be accepted as
+equals in the nearly all aspects of American society.
+
+The PlayStation 2 Linux community, which is publically endorsed by SCE at
+www.playstation2-linux.com, is a thriving group of Linux enthusiasts and
+homebrew PS2 software developers.  However, there are a few individuals in this
+community who view it as a "members only" club.  In other words, if you haven't
+bought the Linux Kit, then you don't have a right to participate in or benefit
+from the community.  Furthermore, because Linux cannot even run on the PS2
+without the Linux Kit's official boot disc and RTE, there is a very effective
+barrier of entry for anyone interested in developing homebrew software for the
+PS2.
+
+Although there are many talented individuals working with the Linux Kit, there
+are many individuals who have developed exceptional PS2 software without any
+official SCE support or development kits.  Calling themselves the "ps2dev
+community", they too have been guilty of discriminating against the PS2 Linux
+community, often shunning or ignoring it.
+
+I've chosen "The Great Experiment" as the name of this project, because like
+the African Americans who struggled for and demanded their acceptance into the
+United States' civil society, the ps2dev community demands acceptance from both
+the PS2 Linux community and SCE as a whole.  On the same token, the ps2dev
+community must also learn to accept the PS2 Linux community as equals, and
+together _the_ community can conquer the PS2, and any other funky systems SCE
+tosses at us :).
+
+TGE promises to unify both the ps2dev and PS2 Linux communities, or die trying.
