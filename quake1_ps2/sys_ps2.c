@@ -38,6 +38,100 @@ cvar_t  sys_linerefresh = {"sys_linerefresh","0"};// set for entity display
 
 qboolean			isDedicated;
 
+//////////////////////////////////////////////////////////////////////////////////////
+// SYSCALLS NECESSARY
+//////////////////////////////////////////////////////////////////////////////////////
+int H_EnableIntcHandler(int inter)
+{
+	__asm __volatile__  (
+							"addiu  $3, $0, 0x0014  \n"      
+							"syscall				\n"   
+							"nop					\n"
+						);
+	return 0;
+}
+int H_DisableIntcHandler(int inter)
+{
+	__asm __volatile__  (
+							"addiu  $3, $0, 0x0015  \n"      
+							"syscall				\n"   
+							"nop					\n"
+						);
+	return 0;
+}
+
+// LIST OF ID FOR INTERRUPTS
+
+enum
+{
+INT_GS,
+INT_SBUS,
+INT_VBLANK_START,
+INT_VBLANK_END,
+INT_VIF0,
+INT_VIF1,
+INT_VU0,
+INT_VU1,
+INT_IPU,
+INT_TIMER0,
+INT_TIMER1
+};
+
+//////////////////////////////////////////////////////////////////////////////////////
+// REGISTERS FOR TIMERS
+//////////////////////////////////////////////////////////////////////////////////////
+
+// timer T0
+#define T0_COUNT      *((volatile unsigned long*)0x10000000)
+#define T0_MODE         *((volatile unsigned long*)0x10000010)
+#define T0_COMP         *((volatile unsigned long*)0x10000020)
+#define T0_HOLD         *((volatile unsigned long*)0x10000030)
+
+// timer T1
+#define T1_COUNT      *((volatile unsigned long*)0x10000800)
+#define T1_MODE         *((volatile unsigned long*)0x10000810)
+#define T1_COMP         *((volatile unsigned long*)0x10000820)
+#define T1_HOLD         *((volatile unsigned long*)0x10000830)
+
+unsigned count_time=0;
+
+//////////////////////////////////////////////////////////////////////////////////////
+// interrupt handler
+//////////////////////////////////////////////////////////////////////////////////////
+int handlerItim(int ca)
+{
+	count_time+=1; // count in steps of 2 ms
+
+	T0_MODE|=1024; // enable next interrupt
+	return -1; // only this handler
+}
+
+#define TIME_MS 1.0
+#define CLOCK_BUS 147456.0
+
+int id_TIM; // id handler
+
+void start_ps2_timer()
+{
+	T0_MODE=0; // disable timer
+	id_TIM=AddIntcHandler(INT_TIMER0,handlerItim,0); // set handler
+	H_EnableIntcHandler(INT_TIMER0); // enable handler
+
+	count_time=0; // counter
+
+	T0_COMP=(unsigned) (TIME_MS/(256.0/CLOCK_BUS)); //  adjust comparator to 2 ms
+	T0_COUNT=0; // counter at zero
+	T0_MODE=256+128+64+2; // set mode to clock=BUSCLK/256, reset to 0,count and interrupt if comparator equal...
+}
+
+void stop_ps2_timer()
+{
+	T0_MODE=0; // disable timer
+	H_DisableIntcHandler(INT_TIMER0); // disable handler
+	RemoveIntcHandler(INT_TIMER0,id_TIM); // kill handler
+}
+//////////////////////////////////////////////////////////////////////////
+
 void LoadModules(void)
 {
     int ret;
@@ -254,13 +348,11 @@ void Sys_Quit (void)
 	exit (0);
 }
 
-double Sys_FloatTime (void)
+float Sys_FloatTime (void)
 {
-	static double t;
-	
-	t += 0.1;
-	
-	return t;
+	static float t;
+	t = count_time/100;
+	return t;	
 }
 
 char *Sys_ConsoleInput (void)
@@ -289,6 +381,7 @@ void Sys_LowFPPrecision (void)
 int main (int argc, char **argv)
 {
 	static quakeparms_t    parms;
+	float  time, oldtime, newtime;
 
 	signal(SIGFPE, SIG_IGN);
 	SifInitRpc(0);
@@ -302,7 +395,7 @@ int main (int argc, char **argv)
 */
 	inithandle();
 	
-	parms.memsize = 8*1024*1024;
+	parms.memsize = 24*1024*1024;
 	parms.membase = malloc (parms.memsize);
 	parms.basedir = ".";
 
@@ -313,10 +406,21 @@ int main (int argc, char **argv)
 
 	printf ("Host_Init\n");
 	Host_Init (&parms);
-	while (1)
-	{
-		Host_Frame (0.1);
-	}
+	
+	start_ps2_timer();
+	
+	oldtime = Sys_FloatTime () - 0.1;
+    while (1)
+    {
+// find time spent rendering last frame
+        newtime = Sys_FloatTime ();
+        time = newtime - oldtime;
+
+		oldtime = newtime;
+
+        Host_Frame (time);
+    }
+	stop_ps2_timer();
 	
 	return 0;
 }
