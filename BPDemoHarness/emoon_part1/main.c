@@ -32,16 +32,12 @@ void set_zbufcmp(int cmpmode);
 
 u32 start_demo( const demo_init_t* pInfo )
 {
-  gp_Info = pInfo;
  	PbMatrix ViewScreenMatrix;
 	PbMatrix CameraMatrix;
-	PbMatrix CombindedMatrix;
-	PbMatrix FinalMatrix;
-	PbMatrix RotateMatrix;
-	PbMatrix RotateMatrix2;
   float    angles[4] __attribute__((aligned(16)));
-  float    angle = 0.0f;
   int      down = 1;
+
+  gp_Info = pInfo;
 
   PbGfx_Setup();
   
@@ -63,29 +59,13 @@ u32 start_demo( const demo_init_t* pInfo )
 	PbMatrix_MakeIdentity( &CameraMatrix );
 	PbMatrix_Translate( &CameraMatrix, 0, 0, 500  );
 
-	PbMatrix_Multiply( &CombindedMatrix, &CameraMatrix, &ViewScreenMatrix );
-/*
-	set_zbufcmp( 2 );
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // Debugdump
 
-	float angle = 0.20f;
 
-	PbMatrix_BuildHeading( &RotateMatrix, angle );
-	PbMatrix_Multiply( &CombindedMatrix, &RotateMatrix, &CameraMatrix );
-  PbMatrix_Multiply( &FinalMatrix, &CombindedMatrix, &ViewScreenMatrix );
-
-	PbMatrix_Print( "FinalMatrix", &FinalMatrix );	
-
- 	PbPart1_DrawObject( &FinalMatrix, NULL );
-
+ 	PbPart1_DrawObject( &ViewScreenMatrix, &CameraMatrix, (float*)&angles,  NULL );
 	PbVu1_Wait();
 	PbVu1_DumpMem();
-
-	PbMatrix_Print( "FinalMatrix", &FinalMatrix );	
-*/
-
- 	//PbPart1_DrawObject( &ViewScreenMatrix, &CameraMatrix, &angles,  NULL );
-	//PbVu1_Wait();
-	//PbVu1_DumpMem();
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	// Enter loop
@@ -101,16 +81,16 @@ u32 start_demo( const demo_init_t* pInfo )
 
     if( down == 1 )
     {
-      angles[3] -= 0.01f;
-    	angles[0] -= 0.01f;
+      angles[3] -= 0.04f;
+    	angles[0] -= 0.02f;
 
       if( angles[3] < -2.0f )
         down = 0;
     }
     else
     {
-      angles[3] += 0.01f;
-    	angles[0] += 0.01f;
+      angles[3] += 0.04f;
+    	angles[0] += 0.02f;
 
       if( angles[3] > 2.0f )
       {
@@ -118,22 +98,13 @@ u32 start_demo( const demo_init_t* pInfo )
         down = 1;
       }
     }
-
-    //pInfo->printf( "time: %f\n", pInfo->curr_time );
-
-
-		//PbMatrix_BuildPitch( &RotateMatrix2, angle );
-		//PbMatrix_BuildHeading( &RotateMatrix, angle );
-		//PbMatrix_Multiply( &RotateMatrix, &RotateMatrix, &RotateMatrix2 );
-		//PbMatrix_Multiply( &CombindedMatrix, &RotateMatrix, &CameraMatrix );
- 	  //PbMatrix_Multiply( &FinalMatrix, &CombindedMatrix, &ViewScreenMatrix );
 	
 		set_zbufcmp( 1 );
 		PbGfx_ClearScreen();
 
 		set_zbufcmp( 2 );
 
-  	PbPart1_DrawObject( &ViewScreenMatrix, &CameraMatrix, &angles,  NULL );
+  	PbPart1_DrawObject( &ViewScreenMatrix, &CameraMatrix, (float*)&angles,  NULL );
 				
     PbGfx_Update();
 
