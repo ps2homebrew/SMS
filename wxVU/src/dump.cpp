@@ -1,5 +1,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef	__WIN32__
+#include <winsock2.h>
+#endif
 #include "linkproto_stub.h"
 #include "vu.h"
 #include "errors.h"
@@ -36,7 +39,6 @@ dumpOpen(void) {
                 sizeof(struct sockaddr_in))) < 0) {
         return E_NO_LINK;
     }
-	// printf("opened sock = %d\n", sock);
     return 0;
 }
 
@@ -50,6 +52,7 @@ dumpClose(void) {
 #ifndef __WIN32__
     return close(sock);
 #else
+	shutdown(sock, SD_SEND);
     WSACleanup();
     return closesocket(sock);
 #endif
@@ -239,9 +242,6 @@ dumpDisplayList(char *file, uint32 *data, uint32 size) {
         return sock;
     }
     ret = pko_gsexec_req(sock, file, size);
-#ifdef __WIN32__
-	Sleep(1000);
-#endif
     dumpClose();
 	return 0;
 }
