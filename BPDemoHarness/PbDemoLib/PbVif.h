@@ -20,6 +20,7 @@
 #define VIF_STCYL			  0x01 
 #define VIF_OFFSET		  0x02
 #define VIF_BASE			  0x03	
+#define VIF_ITOP        0x04
 #define VIF_STMOD			  0x05	
 #define VIF_STROW			  0x30	
 #define VIF_FLUSH			  0x11	
