@@ -191,8 +191,8 @@ void init_objs()
       g_boxes[(loopy * BOX_X) + loopx].strips = &box0_strips;
       //g_boxes[(loopy * BOX_X) + loopx].colour[0] = loopx * loopy;
       g_boxes[(loopy * BOX_X) + loopx].colour[0] = 0xFF;
-      g_boxes[(loopy * BOX_X) + loopx].colour[1] = 0;
-      g_boxes[(loopy * BOX_X) + loopx].colour[2] = 0;
+      g_boxes[(loopy * BOX_X) + loopx].colour[1] = 0xFF;
+      g_boxes[(loopy * BOX_X) + loopx].colour[2] = 0xFF;
       g_boxes[(loopy * BOX_X) + loopx].colour[3] = 128.0f;
       update_obj(&g_boxes[(loopy * BOX_X) + loopx]);
     }
