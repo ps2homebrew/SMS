@@ -168,8 +168,8 @@ vuBreakDialog::OnOkay(wxCommandEvent &WXUNUSED(event)) {
         w = *((int32 *)&fw);
     }
 
-    bp->add(row, m_type->GetSelection(), index, x, y, z, w);
-    bp->list();
+    bp->Add(row, m_type->GetSelection(), index, x, y, z, w);
+    bp->List();
     EndModal(wxID_OK);
 }
 

@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include <list>
+
 #include "breakpoint.h"
 #include "vu.h"
 
@@ -58,7 +60,7 @@ Breakpoint::check() {
 }
 
 void
-Breakpoint::add(uint32 row, uint32 type, uint32 index, int32 value_x, int32
+Breakpoint::Add(uint32 row, uint32 type, uint32 index, int32 value_x, int32
     value_y, int32 value_z, int32 value_w) {
     m_cur = new bplist;
     m_cur->row = row;
@@ -88,12 +90,13 @@ Breakpoint::add(uint32 row, uint32 type, uint32 index, int32 value_x, int32
             m_cur->index = 0;
             break;
     }
+    // m_list.push_back(node);
     m_cur->next = m_head;
     m_head = m_cur;
 }
 
 void
-Breakpoint::list(void) {
+Breakpoint::List(void) {
     m_cur = m_head;
     while(m_cur) {
         printf("row: %d, type: %d, index: %d, x: %d\n", m_cur->row, m_cur->type,
@@ -103,13 +106,15 @@ Breakpoint::list(void) {
 }
 
 void
-Breakpoint::remove() {
+Breakpoint::Delete() {
+    // m_list.()
 }
 
 /////////////////////////////// PRIVATE ///////////////////////////////////////
 Breakpoint::Breakpoint() {
     m_cur = NULL;
     m_head = NULL;
+    m_count = 0;
 }
 
 Breakpoint::~Breakpoint() {
