@@ -126,7 +126,9 @@ u32 start_demo( const demo_init_t* pInfo )
       SparmGenDot_Render(&ViewScreenMatrix, &CameraMatrix,NULL, (int)(pInfo->time_count)-SPLIT_TIME3);
       PbVu1Wait();
 //    }
-    ///////////////////////////////////////////////////////////////////////////
+    
+    SparmGenDot_SetIntens(0.5f);
+///////////////////////////////////////////////////////////////////////////
     // Sync and flipscreen
     PbScreenSyncFlip();   
   }

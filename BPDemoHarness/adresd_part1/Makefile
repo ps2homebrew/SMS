@@ -6,7 +6,7 @@ EE_INCS = -I../PbDemoLib
 EE_LDFLAGS = -L../PbDemoLib
 EE_LIBS = -lpbdemo -lgcc -lkernel
 
-all: clean $(EE_BIN) $(BIN_IMAGE)
+all: $(EE_BIN) $(BIN_IMAGE)
 
 clean:
 	rm -f adresd_part1.elf *.o *.a *.bin

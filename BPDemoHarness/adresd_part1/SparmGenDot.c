@@ -38,6 +38,7 @@ typedef struct {
   fvec iMF46;
   ivec iRESOLI;
   ivec iRESOLJ;
+  fvec iCOLOR;
   ivec iGIFTAGJ;
 } PbPart2_Datat __attribute__((aligned(16)));;
 
@@ -89,6 +90,7 @@ void PbPart2_setparam(PbPart2_Datat *data,
 //iRESOLJ         = 19    ;resolution-j (int)
   set_ivec(&data->iRESOLJ,resolj);
 //iGIFTAGJ        = 20	;gif tag (for j verts)
+
 }
 
 static PbPart2_Datat pPart2Param;
@@ -124,16 +126,16 @@ void* PbPart2_DrawObject( PbMatrix* pLocalToScreen,int resolj, void *pChain)
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Add parameters  to the list
-  *((u64*)pChain)++ = DMA_REF_TAG( (u32)&pPart2Param, 8 );
+  *((u64*)pChain)++ = DMA_REF_TAG( (u32)&pPart2Param, 9 );
   *((u32*)pChain)++ = VIF_CODE( VIF_STCYL,0,0x0404 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_UNPACK_V4_32,8,12 );
+  *((u32*)pChain)++ = VIF_CODE( VIF_UNPACK_V4_32,9,12 );
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Add GifTag to list
 
   *((u64*)pChain)++ = DMA_CNT_TAG( 1 );
   *((u32*)pChain)++ = VIF_CODE( VIF_STCYL,0,0x0404 );
-  *((u32*)pChain)++ = VIF_CODE( VIF_UNPACK_V4_32,1,20 );
+  *((u32*)pChain)++ = VIF_CODE( VIF_UNPACK_V4_32,1,21 );
 
 //    GIF_TAG(NLOOP,EOP,PRE,PRIM,FLG,NREG)
   *((u64*)pChain)++ = GIF_TAG( resolj-1, 1, 1, GS_SETREG_PRIM( GS_PRIM_PRIM_POINT,
@@ -195,4 +197,9 @@ void *SparmGenDot_Render(PbMatrix *pCameraToScreen, PbMatrix *pWorldToCamera,voi
   PbPart2_DrawObject( &pLocalToScreen, resolj,pChain);
 
   return NULL;
+}
+
+SparmGenDot_SetIntens(float value)
+{
+  set_fvec(&pPart2Param.iCOLOR,value);
 }
