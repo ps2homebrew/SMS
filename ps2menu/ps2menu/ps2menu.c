@@ -1504,12 +1504,13 @@ void LoadModules()
 
 	if(elfload==2)
 	{
-		scr_printf("Loading SIOMAN\n");
+		scr_printf("Loading SIO2MAN\n");
 		SifLoadModule("rom0:SIO2MAN", 0, NULL);
-		scr_printf("Loading PADMAN\n");
 #ifdef ROM_PADMAN
+		scr_printf("Loading PADMAN\n");
 		ret = SifLoadModule("rom0:PADMAN", 0, NULL);
 #else
+		scr_printf("Loading XPADMAN\n");
 		ret = SifLoadModule("rom0:XPADMAN", 0, NULL);
 #endif 
 		if (ret < 0)
@@ -1535,9 +1536,13 @@ void LoadModules()
 		}
 	else
 	{
+		scr_printf("Loading SIOMAN\n");
+		SifLoadModule("rom0:SIO2MAN", 0, NULL);
 #ifdef ROM_PADMAN
+		scr_printf("Loading PADMAN\n");
 		ret = SifLoadModule("rom0:PADMAN", 0, NULL);
 #else
+		scr_printf("Loading XPADMAN\n");
 		ret = SifLoadModule("rom0:XPADMAN", 0, NULL);
 #endif 
 		if (ret < 0)
