@@ -10,7 +10,7 @@ EE_CFLAGS  :=	-mips3 -mcpu=r5900 -ffreestanding -fno-builtin -G0 \
 		-c $(EE_INCS) $(EE_CFLAGS)
 EE_ASFLAGS := -EL -G0 $(EE_ASFLAGS)
 
-EE_LDFLAGS := $(EE_LDFLAGS) -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
+EE_LDFLAGS := $(EE_LDFLAGS) -s -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
 		-L$(PS2LIB)/ee/lib -T$(PS2LIB)/ee/startup/linkfile -nostartfiles
 EE_BIN = ../bin/PS2MENU.ELF
 EE_OBJS = ps2menu.o hw.o hardware.o iomanx.o filexio.o ps2atad.o ps2dev9.o \
@@ -45,7 +45,7 @@ iuntar.s:
 	bin2s $(PS2DRV)/iop/iuntar/iuntar.irx iuntar.s iuntar_irx
 
 loader.s:
-	bin2s ../bin/loader.elf loader.s loader_elf
+	bin2s ./loader/LOADER.ELF loader.s loader_elf
 
 ps2menupcx.s:
 	bin2s images/ps2menu.pcx ps2menupcx.s ps2menu_pcx
@@ -54,7 +54,7 @@ ps2menupcx.s:
 #	bin2s images/mainlogo.pcx mainlogo.s mainlogo_pcx
 
 clean:
-	rm -f *.elf *.o *.a
+	rm -f *.elf *.o *.a iomanx.s filexio.s ps2atad.s ps2dev9.s ps2fs.s ps2hdd.s poweroff.s iuntar.s loader.s ps2menupcx.s
 
 include $(PS2LIB)/Makefile.pref
 include $(PS2LIB)/Makefile.eeglobal

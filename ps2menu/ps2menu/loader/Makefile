@@ -16,12 +16,12 @@ LOADADDR  = 0x1700000
 STACKADDR = 0x1720000
 endif
 LDPARAMS := -Wl,--defsym -Wl,_stack_size=0x8000 -Wl,--defsym -Wl,_stack=$(STACKADDR)
-EE_LDFLAGS += -Wl,-Ttext -Wl,$(LOADADDR) $(LDPARAMS)
+EE_LDFLAGS += -Wl,-Ttext -Wl,$(LOADADDR) -s $(LDPARAMS)
 
 EE_LDFLAGS := $(EE_LDFLAGS) -L$(LIBHDD)/ee/lib -L$(PS2DRV)/ee/libfileXio \
 		-L$(PS2LIB)/ee/lib -T$(PS2LIB)/ee/startup/linkfile -nostartfiles
-EE_BIN = ../../bin/LOADER.ELF
-EE_OBJS = loader.o fakehost.o
+EE_BIN = LOADER.ELF
+EE_OBJS = loader.o fakehost.o poweroff.o
 
 EE_LIBS = -lmc -lhdd -lfileXio
 
@@ -30,8 +30,11 @@ all: $(EE_BIN)
 fakehost.s:
 	bin2s $(PS2DRV)/iop/fakehost/fakehost.irx fakehost.s fakehost_irx
 
+poweroff.s:
+	bin2s $(LIBHDD)/iop/poweroff/poweroff.irx poweroff.s poweroff_irx
+
 clean:
-	rm -f *.elf *.o *.a
+	rm -f *.ELF *.o *.a *.s
 
 include $(PS2LIB)/Makefile.pref
 include $(PS2LIB)/Makefile.eeglobal

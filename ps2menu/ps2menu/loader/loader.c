@@ -61,6 +61,10 @@ t_ExecData elfdata;
 
 extern u8 *fakehost_irx;
 extern int size_fakehost_irx;
+extern u8 *poweroff_irx;
+extern int size_poweroff_irx;
+
+void LoadAndRunMCElf(char *filename);
 
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char elfName[256];
@@ -142,23 +146,6 @@ static int tLoadElf(char *filename)
 		goto error;
 		}
 	
-//	eph = (elf_pheader_t *)(boot_elf + eh->phoff);
-
-/* Scan through the ELF's program headers and copy them into RAM, then
-									zero out any non-loaded regions.  */
-/*	for (i = 0; i < eh->phnum; i++)
-	{
-		if (eph[i].type != ELF_PT_LOAD)
-		continue;
-
-		pdata = (void *)(boot_elf + eph[i].offset);
-		dbgprintf("vaddr=%x pdata=%x filesz=%x",eph[i].vaddr, pdata, eph[i].filesz);
-		memcpy(eph[i].vaddr, pdata, eph[i].filesz);
-
-		if (eph[i].memsz > eph[i].filesz)
-			memset(eph[i].vaddr + eph[i].filesz, 0,
-					eph[i].memsz - eph[i].filesz);
-		}*/
 	dbgprintf("entry=%x\n",eh->entry);
 	elfdata.epc=(int *)eh->entry;
 error:
@@ -228,7 +215,9 @@ void poweroffHandler(int i)
 	dbgprintf("Trying to delete thread %i\n",i);
 	TerminateThread(i);
 	DeleteThread(i);
-	hddPowerOff();
+	elfhost=1;
+	LoadAndRunMCElf("pfs0:/PS2MENU.ELF");
+//	HddPowerOff();
 	}
 
 char *strrchr(const char *sp, int i)
@@ -264,10 +253,12 @@ int main(int argc, char *argv[])
 // Initialise
 	SifInitRpc(0);
 	hddPreparePoweroff();
-	hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)userThreadID);
+	hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)pid);
 	init_scr();
 	wipeUserMem();
 	scr_printf("Welcome to PS2Menu Loader v2.0\nPlease wait...loading.\n");
+	scr_printf("Loading poweroff.irx %i bytes\n", size_poweroff_irx);
+	SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
 
 	strcpy(s,argv[0]);
 	dbgprintf("argv[0] = %s\n",s);
@@ -331,6 +322,14 @@ int main(int argc, char *argv[])
 		ptr++;
 		*ptr='\0';
 		}
+	ptr=strrchr(s,'/');
+	if(ptr==NULL) ptr=strrchr(s,':');
+	if(ptr!=NULL)
+	{
+		ptr++;
+		strcpy(HDDpath,"host:");
+		strcat(HDDpath,ptr);
+		}
 	scr_printf("Loading fakehost.irx %i bytes\n", size_fakehost_irx);
 	scr_printf("%s\n", fakepart);
 	SifExecModuleBuffer(&fakehost_irx, size_fakehost_irx, strlen(fakepart), fakepart, &ret);
@@ -340,9 +339,9 @@ int main(int argc, char *argv[])
 
     userThreadID = pid;
 
-    userArgs.argc=2;
+    userArgs.argc=1;
     userArgs.argv[0]=HDDpath;
-    userArgs.argv[1]=elfName;
+//    userArgs.argv[1]=elfName;
     userArgs.flag = (int)&userThreadID;
 
     ret = StartThread(userThreadID, &userArgs);
@@ -421,7 +420,7 @@ void LoadModules()
 		pkoSifLoadModule(ps2hdd_path, sizeof(hddarg), hddarg);
 		pkoSifLoadModule(ps2fs_path, sizeof(pfsarg), pfsarg);
 		}
-	}
+	}*/
 
 void LoadAndRunMCElf(char *filename)
 {
@@ -437,17 +436,17 @@ void LoadAndRunMCElf(char *filename)
 
 	if(elfhost==1)
 	{
-		ret = fileXioMount("pfs0:", partition, FIO_MT_RDONLY);
+		ret = fileXioMount("pfs0:", "hdd0:+PS2MENU", FIO_MT_RDONLY);
 		if ((fd = fileXioOpen(filename, O_RDONLY, fileMode)) < 0)
 		{
-			scr_printf("Failed in fileXioOpen %s\n",filename);
+			dbgprintf("Failed in fileXioOpen %s\n",filename);
 			goto error;
 			}
 
 		size = fileXioLseek(fd, 0, SEEK_END);
 		if (!size)
 		{
-			scr_printf("Failed in fileXioLseek\n");
+			dbgprintf("Failed in fileXioLseek\n");
 			fileXioClose(fd);
 			goto error;
 			}
@@ -499,7 +498,7 @@ void LoadAndRunMCElf(char *filename)
 		}
 
 
-	scr_printf("Starting %s\n",elfName);
+	dbgprintf("Starting %x\n",(void *)eh->entry);
 	SifExitRpc();
 	SifInitRpc(0);
 	SifExitRpc();
@@ -512,4 +511,4 @@ void LoadAndRunMCElf(char *filename)
 error:
 	while (1) ;
 
-	}*/
+	}

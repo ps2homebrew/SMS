@@ -14,9 +14,16 @@
 					- added drawline functions to tart-up display
 					- added PCX import and display functions
 					- changed display resolution to 512x512
+					- added two new larger fonts and display routines
+					- added fakehost to loader and iuntar to menu
+					- added triangle button to quit pop-up windows
+					- cleared screen buffer before redraw at start of program
+					- changed R1 to toggle host: / HDD view
+					- changed pad-left and pad-right to semi-page-up/page-down
+					- added help screen
 
 	based on mcbootmenu.c
-	and libhdd v1
+	and libhdd v1, ps2drv, ps2link 
 */
 
 #include "tamtypes.h"
@@ -52,7 +59,7 @@ static char padBuf[256] __attribute__((aligned(64)));
 #endif
 
 // ELF-loading stuff
-#define ELF_MAGIC	0x464c457f
+#define ELF_MAGIC		0x464c457f
 #define ELF_PT_LOAD	1
 
 typedef struct
@@ -117,8 +124,6 @@ extern void *_end;
 								// Only remove '//' if we really don't
 								// mind wiping incompatible filesystem
 
-//#define WIDTH	366
-//#define HEIGHT	256
 #define WIDTH	512
 #define HEIGHT	512
 #define FRAMERATE	4
@@ -133,8 +138,8 @@ char sStatus[256];
 char foldername[26]="\0";
 
 iox_dirent_t dirbuf __attribute__((aligned(16)));
-char HDDfiles[128][256];
-unsigned int HDDstats[128];
+char HDDfiles[256][256];
+unsigned int HDDstats[256];
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char HDDpath[256];
 t_hddFilesystem parties[MAX_PARTITIONS] __attribute__((aligned(64)));
@@ -160,9 +165,8 @@ int checkELFheader(char *filename)
 {
 	u8 *boot_elf = (u8 *)0x1800000;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
-	elf_pheader_t *eph;
 
-	int fd, size, i, ret;
+	int fd, size, ret;
 	char fullpath[256];
 
 	ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
@@ -173,9 +177,7 @@ int checkELFheader(char *filename)
 		dbgprintf("Failed in fileXioOpen %s\n",fullpath);
 		goto error;
 		}
-	dbgprintf("Opened file %s\n",fullpath);
 	size = fileXioLseek(fd, 0, SEEK_END);
-	dbgprintf("File size = %i\n",size);
 	if (!size)
 	{
 		dbgprintf("Failed in fileXioLseek\n");
@@ -184,7 +186,6 @@ int checkELFheader(char *filename)
 		}
 	fileXioLseek(fd, 0, SEEK_SET);
 	fileXioRead(fd, boot_elf, 52);
-	dbgprintf("Read elf header from file\n");
 	fileXioClose(fd);
 	fileXioUmount("pfs0:");
 
@@ -247,8 +248,6 @@ void drawBIGChar(char c, int x, int y, unsigned int font, unsigned int colour)
 	pp = pScreen + x + (g_nScreen_X * y);
 	for(i=0; i<16; i++) {
 		cc = *pc++;
-//		cc = cc<<8;
-//		cc = cc + *pc++;
 		for(j=0; j<16; j++) {
 			if(cc & 0x8000) *pp = colour;
 			cc = cc << 1;
@@ -315,10 +314,6 @@ void printBIGXY(char *s, int x, int y, unsigned int font, unsigned int colour)
 
 void PutImage(void)
 {
-//    U8 *pScr;
-//    U8 *pLine;
-//    int x, y;
-
 	UpdateScreen();					// uploads+and renders new screen.
 								// (palette is also updated every frame for effects)
 	while (TestVRstart() < FRAMERATE);		// wait for FRD number of vblanks
@@ -352,7 +347,7 @@ void drawPCX(u8 *pcxfile, int pcxlength, int xpos, int ypos)
 	pcxHead *pcxHeader;
 	unsigned char *pp;
 	unsigned char *colors;
-	int palette,color,num;
+	int color,num;
 	int xsize,ysize,row,col,imagelength;
 
 	pcxHeader=pcxfile;
@@ -416,47 +411,6 @@ void readPCXheader(u8 *pcxfile, int pcxlength)
 	int palette,color,num;
 
 	pcxHeader=pcxfile;
-/*	printf("pcxfile =%x\n",pcxfile);
-	if(pcxHeader->manufacturer==10) printf("ZSoft .PCX\n");
-	else printf("Unknown manufacturer = %i!",pcxHeader->manufacturer);
-	printf("Version ");
-	switch(pcxHeader->version)
-	{
-		case 0:
-			printf("2.5\n");
-			break;
-		case 2:
-			printf("2.8 w/palette information\n");
-			break;
-		case 3:
-			printf("2.8 w/o palette information\n");
-			break;
-		case 5:
-			printf("3.0\n");
-			break;
-		default:
-			printf("unknown!\n");
-		}
-	if(pcxHeader->encoding==1) printf(".PCX run length encoding\n");
-	printf("Bits per pixel = %i\n",pcxHeader->bitsperpel);
-	printf("Xmin = %i , Ymin = %i\n", pcxHeader->xmin, pcxHeader->ymin);
-	printf("Xmax = %i , Ymax = %i\n", pcxHeader->xmax, pcxHeader->ymax);
-	printf("Horizontal Resolution of creating device = %i\n", pcxHeader->hrez);
-	printf("Vertical Resolution of creating device = %i\n", pcxHeader->vrez);
-	printf("Number of color planes = %i\n", pcxHeader->nplanes);
-	printf("Bytes per line = %i\n", pcxHeader->bytesperline);
-	switch(pcxHeader->paletteinfo)
-	{
-		case 1:
-			printf("Color/BW ");
-			break;
-		case 2:
-			printf("Grayscale ");
-			break;
-		default:
-			printf("Unknown ");
-		}
-	printf("palette interpretation\n");*/
 	if(pcxHeader->nplanes==1)				// check for 256 color palette
 	{
 		palette=pcxlength-769;
@@ -464,12 +418,10 @@ void readPCXheader(u8 *pcxfile, int pcxlength)
 
 		if(colors[0]==12)
 		{
-//			printf("Found palette preceder value %i\n",colors[0]);
 			num=paletteindex;
 			pcxHeader->reserved=paletteindex;
 			for(color=1;color<(256*3);color=color+3)
 			{
-//				printf("R%x:G%x:B%x:",colors[color],colors[color+1],colors[color+2]);
 				if(((colors[color] + colors[color+1]) + colors[color+2])==0) color=(256*3);
 				else
 				{
@@ -478,10 +430,8 @@ void readPCXheader(u8 *pcxfile, int pcxlength)
 				num++;
 			}
 			num--;
-//			printf("Found %i colors in palette\n",(num-paletteindex));
 			paletteindex=num;
 		}
-//		else printf("Are we looking in the right place? %i\n",colors[0]);
 	}
 }
 
@@ -498,26 +448,26 @@ int dowereformat()
 	int ret;
 
 #ifdef DOWEFORMAT
-	printf("This will erase all data on the HDD!!!\n");
+	dbgprintf("This will erase all data on the HDD!!!\n");
 	if (hddFormat() < 0)
 	{
-		printf("ERROR: could not format HDD!\n");
+		dbgprintf("ERROR: could not format HDD!\n");
 		return -1;
 		}
 	else
 	{
-		printf("HDD is connected and formatted.\n");
+		dbgprintf("HDD is connected and formatted.\n");
 		}
 #endif
 	ret = hddMakeFilesystem(4096, "PS2MENU", FS_GROUP_COMMON);
 	if (ret < 0)
 	{
-		printf("ERROR: failed to create PS2MENU filesystem: %d\n", ret);
+		dbgprintf("ERROR: failed to create PS2MENU filesystem: %d\n", ret);
 		return -1;
 		}
 	else
 	{
-		printf("Created PS2MENU filesystem with size: %dMB.\n",ret);
+		dbgprintf("Created PS2MENU filesystem with size: %dMB.\n",ret);
 		}
 
 	return 1;
@@ -575,7 +525,7 @@ char *strrchr(const char *sp, int i)
 
 void PrintHDDFiles(int highlighted)
 {
-	int i,texcol,nchars,maxrows,maxchars;
+	int i,texcol,maxrows,maxchars;
 	char s[256];
 	char textfit[(WIDTH/12)-2];
 	char *ptr;
@@ -621,9 +571,8 @@ void PrintHDDFiles(int highlighted)
 				strncpy(s, ptr, maxchars);
 				}
 			}
-		if(highlighted == i+topfil) texcol=2; //s[0] = '*';
+		if(highlighted == i+topfil) texcol=2;
 		printBIGXY(s, 16, i*16 + 40, 0, texcol);
-//		else printXY(s, 16, i*8 + 40, texcol);
 		texcol=1;
 		}
 	}
@@ -638,7 +587,7 @@ void ReadHostDir(void)
 	fd=fioOpen("host:elflist.txt", O_RDONLY);
 	if(fd<=0)
 	{
-		printf("elflist.txt not found on host.\n");
+		dbgprintf("elflist.txt not found on host.\n");
 		}
 	else
 	{
@@ -696,7 +645,7 @@ int tomcopy(char *sourcefile)
 	char *boot_buffer, *ptr, *argv[2];
 	char empty='\0',destination[256],filetype[32];
 	static char iuntar[512];
-//fileXioDevctl("pfs:", PFSCTL_CLOSE_ALL, NULL, 0, NULL, 0);
+
 	ptr = strrchr(sourcefile, '/');
 	if (ptr == NULL)
 	{
@@ -720,7 +669,7 @@ int tomcopy(char *sourcefile)
 		{
 			argv[1]=sourcefile;
 			argv[2]=parties[party].filename;
-			printf("Loading %s %s\n", argv[1],argv[2]);
+			dbgprintf("Loading %s %s\n", argv[1],argv[2]);
 			sprintf(iuntar,"%s%c%s%c", argv[1], empty, argv[2], empty);
 			SifExecModuleBuffer(&iuntar_irx, size_iuntar_irx, strlen(argv[1])+strlen(argv[2])+2, iuntar, &ret);
 			return ret;
@@ -731,7 +680,7 @@ int tomcopy(char *sourcefile)
 	boot_fd = fioOpen(sourcefile, O_RDONLY);
 	if(boot_fd <= 0)
 	{
-		printf("Open %s Failed\n",sourcefile);
+		dbgprintf("Open %s Failed\n",sourcefile);
 		return boot_fd;
 		}
 	else
@@ -741,27 +690,6 @@ int tomcopy(char *sourcefile)
 		boot_buffer = malloc(boot_size);
 		if ((boot_buffer)==NULL)
 		{
-//			boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
-//			if(boot_fd2 < 0)
-//			{
-//				printf("Open %s Failed\n",destination);
-//				}
-//			else
-//			{
-//				while(boot_size>=128)
-//				{
-//					boot_size=boot_size-128;
-//					fioRead(boot_fd, &sStatus, 128);
-//					printf("%i%s\n", boot_size, sStatus);
-//					fileXioWrite(boot_fd2,&sStatus,128);
-//					}
-//				if(boot_size>0)
-//				{
-//					fioRead(boot_fd,&sStatus,boot_size);
-//					fileXioWrite(boot_fd2,&sStatus,boot_size);
-//					}
-//				fileXioClose(boot_fd2);
-//				} The above 'chunk copy' was removed because it appeared not to work
 			fioClose(boot_fd);
 			return -1; // a file too big for memory cannot be copied
 			}
@@ -773,7 +701,7 @@ int tomcopy(char *sourcefile)
 	ret = boot_fd;
 	if(boot_fd < 0)
 	{
-		printf("Open %s Failed\n",destination);
+		dbgprintf("Open %s Failed\n",destination);
 		}
 	else
 	{
@@ -786,36 +714,20 @@ int tomcopy(char *sourcefile)
 
 void ReDraw(int highlighted)
 {
-	int cols,numc;
+	int numc;
 	char txt[2];
 	char fullpath[262];
 
 	txt[1]='\0';
 	numc=1;
 	clrEmuScreen(0);
-/*	for(cols=0;cols<(WIDTH>>4);cols++)
-	{
-		txt[0]=(numc+'0');
-		if(numc==0)
-		{
-			printBIGXY(txt, cols*8, 320, 1, 2);
-			printBIGXY(txt, 0, (cols*16), 0, 2);
-			}
-		else
-		{
-			printBIGXY(txt, cols*8, 320, 1, 1);
-			printBIGXY(txt, 0, (cols*16), 0, 1);
-			}
-		numc++;
-		if(numc==10) numc=0;
-		}*/
 	drawPCX(&ps2menu_pcx,size_ps2menu_pcx, 264, 0);
 	printXY("Adam & Tom's HDD Boot/Copy Menu", 4, 0, 1);
 	printXY("Working volume:", 4, 16, 1);
 	printXY(parties[party].filename, 128, 16, 2);
 	if(elfhost==1) printXY("Select an ELF to run:", 4, 24, 1);
 	if(elfhost==2) printXY("Select an ELF to copy:", 4, 24, 1);
-	drawHorizontal(8, 36, 496, 1);	//x+-3, y+-2
+	drawHorizontal(8, 36, 496, 1);
 	drawHorizontal(12, 38, 488, 1);
 	drawVertical(8, 36, 332, 1);
 	drawVertical(12, 38, 328, 1);
@@ -831,9 +743,59 @@ void ReDraw(int highlighted)
 		}
 	else strcpy(fullpath, HDDfiles[highlighted]);
 	printXY(fullpath, 4, 374, 2);
+	printBIGXY("Press SELECT for help screen", 4, 390, 0, 1);
 //	printXY(sStatus, 4, STATUS_Y, 2);
 	PutImage();
 	}
+
+void showhelp()
+{
+	int triangle = 0, i, ret;
+	struct padButtonStatus buttons;
+	u32 paddata;
+	u32 old_pad = 0;
+	u32 new_pad;
+
+	triangle=0;
+	for(i=96;i<=264;i++)
+	{
+		drawHorizontal(58, i, 408, 0);
+		}
+	drawHorizontal(58,96,408,2);
+	drawHorizontal(58,264,408,2);
+	drawVertical(58,96,168,2);
+	drawVertical(466,96,168,2);
+	printXY("Functions of the Joypad in PS2MENU", 66, 104, 1);
+	printXY("D-PAD:", 66, 120, 1);
+	printXY("UP:       move highlight one step up in list.", 66, 128, 1);
+	printXY("DOWN:     move highlight one step down in list.", 66, 136, 1);
+	printXY("LEFT:     move highlight ten steps up in list.", 66, 144, 1);
+	printXY("RIGHT:    move highlight ten steps down in list.", 66, 152, 1);
+	printXY("BUTTONS:", 66, 168, 1);
+	printXY("SQUARE:   Create folder in current path.", 66, 176, 1);
+	printXY("CIRCLE:   Delete current highlight.", 66, 184, 1);
+	printXY("TRIANGLE: Cancel pop-up from Create/Delete/HELP.", 66, 192, 1);
+	printXY("CROSS:    PS2 PARTITION view, execute highlighted", 66, 200, 1);
+	printXY("|         file or chdir to highlighted folder.", 66, 208, 1);
+	printXY("|         HOST:ELFLIST.TXT view, copy highlighted", 66, 216, 1);
+	printXY("|         file to active PS2 folder, or extract", 66, 224, 1);
+	printXY("|________ .tgz file to active PS2 partition.", 66, 232, 1);
+	printXY("L1:       Toggle active partition on the PS2 HDD.", 66, 240, 1);
+	printXY("R1:       Toggle host:elflist.txt / PS2 HDD view.", 66, 248, 1);
+	PutImage();
+	while(!triangle)
+	{
+		ret = padRead(0, 0, &buttons); // port, slot, buttons
+            
+		if (ret != 0)
+		{
+			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+			new_pad = paddata & ~old_pad;
+			old_pad = paddata;
+			if(new_pad & PAD_TRIANGLE) triangle=1;
+			}
+		}
+	} 
 
 int ConfirmYN(char *s)
 {
@@ -1024,11 +986,9 @@ void MenuKeyboard(char *s)
 
 void jprintf(char *s)
 {
-#ifdef DEBUG
-	printf("%s\n", s);
-#endif
-//	printXY(s, 4, 216, 2);
-//	ReDraw(0);
+	dbgprintf("%s\n", s);
+	printXY(s, 4, STATUS_Y, 2);
+	ReDraw(0);
 	}
 
 char *SelectELF(void)
@@ -1057,11 +1017,15 @@ char *SelectELF(void)
 // Directions
 			if(new_pad & PAD_LEFT)
 			{
-				elfhost--;
-				if (elfhost<1) elfhost=2;
-				highlighted=0;
-				topfil=0;
-				changed=1;
+				for(i=0;i<10;i++)
+				{
+					if((topfil==highlighted) && (0 < highlighted))
+					{
+						topfil--;
+						highlighted--;
+						}
+					else if(0 < highlighted) highlighted--;
+					}
 				}
             	if(new_pad & PAD_DOWN)
 			{
@@ -1077,11 +1041,18 @@ char *SelectELF(void)
 				}
 			if(new_pad & PAD_RIGHT)
 			{
-				elfhost++;
-				if (elfhost>2) elfhost=1;
-				highlighted=0;
-				topfil=0;
-				changed=1;
+				for(i=0;i<10;i++)
+				{
+					if((highlighted-topfil > 18) & (highlighted < num_hdd_files-1))
+					{
+						topfil++;
+						highlighted++;
+						}
+					else
+					{
+						if(highlighted < num_hdd_files-1) highlighted++;
+						}
+					}
 				}
 			if(new_pad & PAD_UP)
 			{
@@ -1102,6 +1073,14 @@ char *SelectELF(void)
 				changed=1;
 				elfhost=1;
 				strcpy(HDDpath,"pfs0:/\0");
+				}
+			if(new_pad & PAD_R1)
+			{
+				elfhost--;
+				if (elfhost<1) elfhost=2;
+				highlighted=0;
+				topfil=0;
+				changed=1;
 				}
 			if((new_pad & PAD_CIRCLE) && elfhost==1)
 			{
@@ -1152,6 +1131,11 @@ char *SelectELF(void)
 				changed=1;
 				highlighted=0;
 				topfil=0;
+				}
+			if(new_pad & PAD_SELECT)
+			{
+				showhelp();
+				changed=1;
 				}
 			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
 			{
@@ -1281,8 +1265,7 @@ int initializePad(int port, int slot)
 			}
 		}
 
-	sprintf(s, "It is currently using mode %d",
-	padInfoMode(port, slot, PAD_MODECURID, 0));
+	sprintf(s, "It is currently using mode %d", padInfoMode(port, slot, PAD_MODECURID, 0));
 	jprintf(s);
 
 // If modes == 0, this is not a Dual shock controller 
@@ -1317,9 +1300,12 @@ int main(int argc, char *argv[])
 	else if(!strncmp(s, "mc0:", 4)) elfload=2;	// loading from memory card
 	init_scr();
 	scr_printf("Welcome to PS2MENU v2.0\nPlease wait...\n");
-	hddPreparePoweroff();
-	hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)i);
-	LoadModules();
+	if(argc!=2)
+	{
+		hddPreparePoweroff();
+		hddSetUserPoweroffCallback((void *)poweroffHandler,(void *)i);
+		LoadModules();
+		}
 
 // Initialise platform stuff
 // detect system, and reset GS into that mode
@@ -1345,7 +1331,6 @@ int main(int argc, char *argv[])
 
 //	readPCXheader(&mainlogo_pcx,size_mainlogo_pcx);
 //	drawPCX(&mainlogo_pcx,size_mainlogo_pcx, 0, 0);
-//	PutImage();
 
 // set palette
 	for(i=0; i<16; i++)
@@ -1353,24 +1338,26 @@ int main(int argc, char *argv[])
 		SetPaletteEntry(0x005A5A5A, 0);
 		SetPaletteEntry(0x00000000, 1);
 		SetPaletteEntry(0x00FFFFFF, 2);
-//		SetPaletteEntry(0x00000000, 3);
 		}
 	paletteindex=3;
+	clrEmuScreen(0);
+	PutImage();
 	readPCXheader(&ps2menu_pcx,size_ps2menu_pcx);
 // *** Required BEFORE calling ReadMCDir etc
 	GetROMVersion();
 //#ifdef DEBUG
-	printf("Rom version: %s\n", romver);
+	dbgprintf("Rom version: %s\n", romver);
 //#endif
 
 	strcpy(sStatus, "Ready.\0");
 	if(hddCheckPresent() < 0)
 	{
-		printf("Error: supported HDD not connected!\n");
+		jprintf("Error: supported HDD not connected!\n");
+		while(1);
 		}
 	if(hddCheckFormatted() < 0)
 	{
-		printf("Error: HDD is not properly formatted!\n");
+		jprintf("Error: HDD is not properly formatted!\n");
 		if(dowereformat()<0)
 		{
 			while(1);
@@ -1381,15 +1368,15 @@ int main(int argc, char *argv[])
 	party=-1;
 	for(i=nparty;i>0;i--)
 	{
-		printf("Found %s\n",parties[i].name);
+		dbgprintf("Found %s\n",parties[i].name);
 		if(!strncmp(parties[i].name, "PS2MENU", 7)) party=i;
 		}
 	if(party<0)
 	{
-		printf("PS2MENU partition not found!\nAttempting to create\n");
+		dbgprintf("PS2MENU partition not found!\nAttempting to create\n");
 		if(dowereformat()<0)
 		{
-			printf("Error: Partition could not be created!\n");
+			jprintf("Error: Partition could not be created!\n");
 			}
 		else
 		{
@@ -1410,13 +1397,13 @@ int main(int argc, char *argv[])
 	padInit(0);
 	if((ret = padPortOpen(0, 0, padBuf)) == 0)
 	{
-		printf("padOpenPort failed");
+		jprintf("padOpenPort failed");
 		SleepThread();
 		}
 
 	if(!initializePad(0, 0))
 	{
-		printf("pad initalization failed!");
+		jprintf("pad initalization failed!");
 		SleepThread();
 		}
 
@@ -1430,7 +1417,7 @@ int main(int argc, char *argv[])
 		ret=padGetState(0, 0);
 		}
 
-	printf("Starting SelectELF()...\n");
+	dbgprintf("Starting SelectELF()...\n");
 
 // main ELF select loop
 	pc = SelectELF();
@@ -1468,8 +1455,9 @@ void LoadModules()
 #endif 
 		if (ret < 0)
 		{
-			printf("Failed to load PAD module");
-			SleepThread();
+			scr_printf("Failed to load PAD module");
+			while(1);
+//			SleepThread();
 			}
  		scr_printf("Loading poweroff.irx %i bytes\n", size_poweroff_irx);
 		SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
@@ -1495,8 +1483,9 @@ void LoadModules()
 #endif 
 		if (ret < 0)
 		{
-			printf("Failed to load PAD module");
-			SleepThread();
+			scr_printf("Failed to load PAD module");
+			while(1);
+//			SleepThread();
 			}
  		scr_printf("Loading poweroff.irx %i bytes\n", size_poweroff_irx);
 		SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &ret);
@@ -1564,4 +1553,3 @@ error:
 	while (1) ;
 
 	}
-
