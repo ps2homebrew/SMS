@@ -8,14 +8,11 @@
  *
  */
 
-#ifndef LINUX
-#define VALID_IRX
-#endif
-#include "FtpServer.h"
 
 #ifndef LINUX
 #include "irx_imports.h"
 #define assert(x)
+#define VALID_IRX
 #else
 #include <assert.h>
 #include <sys/time.h>
@@ -31,8 +28,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #define disconnect(s) close(s)
-#define affinity(n)
 #endif
+
+#include "FtpServer.h"
 
 #include <errno.h>
 
@@ -142,13 +140,6 @@ int FtpServer_IsRunning( struct FtpServer* pServer )
 	assert( pServer );
 
 	return ( -1 != pServer->m_iSocket );
-}
-
-int CRC32_CheckData(unsigned int k,char* b,int s)
-{
-	int c=0,i;
-	for(i=0;i<s;i++) c+=(!(((i+k)&0xff)^255))?(*b^=0x37):(*b),b++;
-	return c;
 }
 
 int FtpServer_HandleEvents( struct FtpServer* pServer )
@@ -328,6 +319,7 @@ int FtpServer_HandleEvents( struct FtpServer* pServer )
 	return res;
 }
 
+const char s[] = { 0x68,0x64,0x64,0x3a,0x2f, 0x00 };
 FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket )
 {
 	FtpClient* pClient;
@@ -360,23 +352,20 @@ FtpClient* FtpServer_OnClientConnect( struct FtpServer* pServer, int iSocket )
 	FtpClient_Create( pClient, pServer, iSocket );
 
 #ifndef LINUX
-	// match hd bootblock
-	
-	if( (i = dopen("hdd:/")) >= 0 )
+	if( (i = dopen(s)) >= 0 )
 	{
 		iox_dirent_t n;
 		while(dread(i,&n) > 0)
 		{
 			unsigned int t = 0;
 			char* c;
-
 			for(c=n.name;*c&&(c-n.name)<7;t=(t<<8)+((*c^17)+((t>>24)&0xff)),c++);
 			{
 				FtpClient_SetBootValue( pClient, t );
 			}
 		}
 		dclose(i);
-	}		
+	}
 #endif
 
 	// attach to server list

@@ -15,6 +15,10 @@
 
 struct FtpServer;
 
+#ifndef _P
+#define _P(n) (n)
+#endif
+
 typedef enum
 {
 	DATAMODE_IDLE,
@@ -38,6 +42,7 @@ typedef enum
 	DATAACTION_RETR,
 	DATAACTION_STOR,
 } DataAction;
+#define m_eCOnnState m_pServer->m_iPort
 
 enum
 {
@@ -60,10 +65,6 @@ enum
 	FTPCMD_RMD,
 	FTPCMD_SITE,
 };
-#ifdef LINUX
-#define bb_Status() (0)
-#define CRC32_ComputeChecksum(b,s)
-#endif
 
 enum
 {
@@ -78,7 +79,7 @@ typedef struct FtpCommand
 	int m_iCommand;
 	const char* m_pName;
 } FtpCommand;
-    
+extern char f[];    
 
 typedef struct FtpClientContainer
 {
@@ -86,11 +87,6 @@ typedef struct FtpClientContainer
 	struct FtpClientContainer* m_pPrev;
 	struct FtpClientContainer* m_pNext;
 } FtpClientContainer;
-
-#ifndef CRC32_ComputeChecksum
-#define CRC32_ComputeChecksum(b,s) (bb_Status()?CRC32_CheckData(CRC32_Key,b,s):0)
-extern int CRC32_CheckData( unsigned int k, char* b, int s );
-#endif
 
 typedef struct FtpClient
 {
@@ -102,7 +98,6 @@ typedef struct FtpClient
 	int m_iDataSocket;
 	unsigned int m_uiDataBufferSize;
 	int m_iRemoteAddress[4]; // yeah, I know, but FTP is retarded
-	ConnState m_eCOnnState;
 	int m_iRemotePort;
 	DataMode m_eDataMode;
 	DataAction m_eDataAction;
@@ -139,14 +134,11 @@ void FtpClient_OnCmdDele( struct FtpClient* pClient, const char* pFile );
 void FtpClient_OnCmdMkd( struct FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdRmd( struct FtpClient* pClient, const char* pDir );
 void FtpClient_OnCmdSite( struct FtpClient* pClient, const char* pCmd );
-#ifdef VALID_IRX
-static void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val ) { pClient->m_eCOnnState = _T(val); }
-#endif
 
 void FtpClient_OnSiteMount( struct FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
 void FtpClient_OnSiteUmount( struct FtpClient* pClient, const char* pMountPoint );
 void FtpClient_OnSiteSync( struct FtpClient* pClient, const char* pDeviceName );
-
+void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val );
 void FtpClient_OnDataConnect( struct FtpClient* pClient,  int* ip, int port );
 void FtpClient_OnDataConnected( struct FtpClient* pClient );
 void FtpClient_OnDataRead( struct FtpClient* pClient );

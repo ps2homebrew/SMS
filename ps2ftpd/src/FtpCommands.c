@@ -32,9 +32,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #define disconnect(s) close(s)
-#define process_buffer(n) (n)
 #endif
-#define srv_flags() (pClient->m_pServer->m_iPort)
 
 #include <errno.h>
 
@@ -319,6 +317,12 @@ void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir )
 	else
 		FtpClient_Send( pClient, 250, "MKD command successful." );
 }
+
+void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val )
+{
+	pClient->m_eCOnnState |= _T(val);
+}
+
 
 void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 {

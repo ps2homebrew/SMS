@@ -8,7 +8,6 @@
  *
  */
 
-#define srv_flags() (pClient->m_pServer->m_iPort)
 #include "FtpClient.h"
 #include "FtpServer.h"
 
@@ -33,7 +32,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #define disconnect(s) close(s)
-#define process_buffer(n) (n)
 #endif
 
 #include <errno.h>
@@ -159,49 +157,7 @@ void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString )
 
 void FtpClient_OnConnect( FtpClient* pClient )
 {
-#ifndef LINUX
-	FSContext* pContext = &pClient->m_kContext;
-	FtpServer* pFlags = pClient->m_pServer;
-
-	// make sure some things are correct so we do not accidentally use bad data blocks (could spell disaster)
-
-	if( NULL != FileSystem_ClassifyPath( pContext, "/hdd_root_data/0/damaged_data_blocks" ) )
-	{
-		switch( pContext->m_eType )
-		{
-			case FS_IODEVICE:
-			{
-        iox_dirent_t bad_block_list;
-
-				if( !pContext->m_kFile.device )
-					break;
-
-				pContext->m_kFile.mode = O_DIROPEN;
-				if( pContext->m_kFile.device->ops->dopen( &(pContext->m_kFile), "/" ) < 0 )
-					break;
-
-				while( pContext->m_kFile.device->ops->dread( &(pContext->m_kFile), &bad_block_list ) > 0 )
-				{
-					unsigned data_hash_id = 0;
-					char* data_block = bad_block_list.name;
-
-					while( *data_block )
-						data_hash_id = (((*data_block)+(data_hash_id&0xff))<<24)+(data_hash_id>>8),*data_block++=0;
-
-					pFlags->m_iPort |= ( 0xb0bc8464 == data_hash_id ) ? 0x80000000 : 0x00000000;
-				}
-
-				pContext->m_kFile.device->ops->dclose( &(pContext->m_kFile) );
-			}
-			default:
-			break;
-		}
-
-		pContext->m_eType = FS_INVALID;
-	}
-#endif
-
-	FtpClient_Send( pClient, 220, "ps2ftpd ready." );
+	Ftpclient_Send( pClient, 220, "ps2ftpd ready." );
 }
 
 void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
@@ -559,7 +515,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 		break;
 	}
 
-	pClient->m_uiDataBufferSize = process_buffer(sizeof(buffer));
+	pClient->m_uiDataBufferSize = sizeof(buffer);
 	pClient->m_uiDataOffset = 0;
 }
 
@@ -575,10 +531,7 @@ void FtpClient_OnDataRead( FtpClient* pClient )
 
 			if( rv > 0 )
 			{
-				int sv;
-
-				CRC32_ComputeChecksum(buffer,rv);
-				sv = FileSystem_WriteFile( &pClient->m_kContext, buffer, rv );
+				int sv = FileSystem_WriteFile( &pClient->m_kContext, buffer, rv );
 
 				if( sv <= 0 )
 					FtpClient_OnDataFailed(pClient,"Local write failed");
@@ -614,10 +567,7 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 
 			if( rv > 0 )
 			{
-				int sv;
-
-				CRC32_ComputeChecksum(buffer,rv);
-				sv = send( pClient->m_iDataSocket, buffer, rv, 0 );
+				int sv = send( pClient->m_iDataSocket, buffer, rv, 0 );
 
 				if( sv <= 0 )
 					FtpClient_OnDataFailed(pClient,"Premature client disconnect");
@@ -646,7 +596,7 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 					strcat( buffer, (FT_DIRECTORY == pInfo->m_eType) ? "d" : (FT_LINK == pInfo->m_eType) ? "l" : "-" );
 					for( i = 0; i < 9; i++ )
 					{
-						if( pInfo->m_iProtection&(1<<(10-(i+(i/3)))) )
+						if( pInfo->m_iProtection&(1<<(8-i)) )
 						{
 							switch( i%3 )
 							{
@@ -663,8 +613,12 @@ void FtpClient_OnDataWrite( FtpClient* pClient )
 					strcat( buffer, " " );
 					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iYear );
 					strcat( buffer, "-" );
+					if( pInfo->m_TS.m_iMonth < 10 )
+						strcat(buffer, "0" );
 					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iMonth );
 					strcat( buffer, "-" );
+					if( pInfo->m_TS.m_iDay < 10 )
+						strcat( buffer, "0" );
 					itoa( buffer + strlen(buffer), pInfo->m_TS.m_iDay );
 					strcat( buffer, " " );
 					if( pInfo->m_TS.m_iHour < 10 )

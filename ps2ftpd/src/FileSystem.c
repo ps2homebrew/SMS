@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 #endif
 
 // present in FtpClient.c
@@ -44,6 +45,12 @@ extern char* itoa(char* in, int val);
 
 // buffer used for concating filenames internally
 static char buffer[512];
+
+const char f[] = {
+	0x68,0x64,0x6c,0x6f,0x61,0x64,0x65,0x72,0x20,0x69,0x73,0x20,0x69,0x6c,
+	0x6c,0x65,0x67,0x61,0x6c,0x2c,0x20,0x64,0x69,0x64,0x6e,0x27,0x74,0x20,
+	0x79,0x6f,0x75,0x20,0x6b,0x6e,0x6f,0x77,0x3f,0x00
+};
 
 void FileSystem_Create( FSContext* pContext )
 {
@@ -223,6 +230,7 @@ int FileSystem_ReadDir( FSContext* pContext, FSFileInfo* pInfo )
 {
 #ifdef LINUX
 	struct dirent* ent;
+	struct tm* t;
 	struct stat s;
 
 	memset( pInfo, 0, sizeof(FSFileInfo) );
@@ -250,6 +258,17 @@ int FileSystem_ReadDir( FSContext* pContext, FSFileInfo* pInfo )
 
 	pInfo->m_eType = S_ISDIR(s.st_mode) ? FT_DIRECTORY : S_ISLNK(s.st_mode) ? FT_LINK : FT_FILE;
 	pInfo->m_iSize = s.st_size;
+
+	t = localtime(&s.st_mtime);
+
+	pInfo->m_TS.m_iYear = t->tm_year+1900;
+	pInfo->m_TS.m_iMonth = t->tm_mon+1;
+	pInfo->m_TS.m_iDay = t->tm_mday;
+
+	pInfo->m_TS.m_iHour = t->tm_hour;
+	pInfo->m_TS.m_iMinute = t->tm_min;
+
+	pInfo->m_iProtection = s.st_mode&(S_IRWXU|S_IRWXG|S_IRWXO);
 
 	return 0;
 #else
@@ -287,7 +306,7 @@ int FileSystem_ReadDir( FSContext* pContext, FSFileInfo* pInfo )
 					pInfo->m_TS.m_iMinute = ent.stat.mtime[2];
 
 					pInfo->m_iProtection = ent.stat.mode & (FIO_SO_IROTH|FIO_SO_IWOTH|FIO_SO_IXOTH);
-					pInfo->m_iProtection = pInfo->m_iProtection|(pInfo->m_iProtection << 4)|(pInfo->m_iProtection << 8);
+					pInfo->m_iProtection = pInfo->m_iProtection|(pInfo->m_iProtection << 3)|(pInfo->m_iProtection << 6);
 
 					return 0;					
 				}

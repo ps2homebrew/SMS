@@ -47,8 +47,8 @@ ps2ip_IMPORTS_end
 
 iomanX_IMPORTS_start
 I_dopen
-I_dclose
 I_dread
+I_dclose
 iomanX_IMPORTS_end
 
 /*
