@@ -21,10 +21,10 @@ EE_LIBS = -lmc -lpad -lhdd -lfileXio
 all: $(EE_BIN)
 
 iomanx.s:
-	bin2s $(PS2DRV)/iop/iomanX/iomanx.irx iomanx.s iomanx_irx
+	bin2s $(PS2DRV)/iop/iomanX/iomanX.irx iomanx.s iomanx_irx
 
 filexio.s:
-	bin2s $(PS2DRV)/iop/fileXio/filexio.irx filexio.s filexio_irx
+	bin2s $(PS2DRV)/iop/fileXio/fileXio.irx filexio.s filexio_irx
 
 ps2atad.s:
 	bin2s $(PS2DRV)/iop/ps2atad/ps2atad.irx ps2atad.s ps2atad_irx
