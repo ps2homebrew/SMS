@@ -69,15 +69,13 @@ poly_loop:
                                 
                 mul        vf08,  vf05,  vf05   nop                     ; x*x , y*y, z*z ..
                 addy.x     vf09x, vf08x, vf08y  nop                     ; x*x + y*y  
-                addz.x     vf09x, vf08x, vf08z  nop                     ; x*x + y*y + z*z
-                nop                             sqrt q, vf09x           ; sqrt(x*x + y*y + z*z)
+                addz.x     vf09x, vf08x, vf08z  loi 100.0               ; x*x + y*y + z*z
+                addi.x     vf08x, vf00x, i      nop
+                nop                             rsqrt q, vf08x, vf09x   ; sqrt(x*x + y*y + z*z)
                 nop                             waitq
-                ;addz.x     vf08x, vf00x, vf22z  nop
-                sub        vf08,  vf08,  vf08   nop                        
-                subq.x     vf09x, vf08x, q      nop                     
-                mulw.x     vf09x, vf09x, vf22w  nop
-                mulx.x     vf19x, vf09x, vf22x  nop
-                mini.x     vf19x, vf19x, vf00x  nop
+                addq.x     vf09x, vf00x, q      nop                     ; vf09x = distance
+                mulw.x     vf09x, vf09x, vf22w  nop                     ; distance * lagrate
+                addx.x     vf19x, vf09x, vf22x  nop                     
                                 
                 ;//////////////////////////////////////////////////////////////////////////////////
                 ;// Calc the rotation angles from the lagrate
@@ -179,21 +177,12 @@ poly_loop:
                 madday    acc,  vf02, vf05y     nop                                 
                 maddaz    acc,  vf03, vf05z     nop                                 
                 maddw     vf05, vf04, vf05w     nop                                 
-                nop                             nop                                 
                 nop                             div         q, vf00w, vf05w         
                 nop                             waitq                               
                 mulq        vf05, vf05, q       nop                                 
-                nop                             nop                                 
-                nop                             nop                                 
-                nop                             nop                                 
                 ftoi4       vf05, vf05          nop                                 ; fixedpoint for gif
-                nop                             nop                                 ;
-                nop                             nop                                 ;
                 nop                             sqi         vf05, (vi02++)          ; store xyz
-                nop                             nop                                 ;
-                nop                             nop                                 ;
                 nop                             iaddi       vi05, vi05, -1          ; 
-                nop                             nop                                 ;
                 nop                             nop                                 ;
                 nop                             ibne        vi05, vi00, poly_loop   ; loop check
                 nop                             nop
