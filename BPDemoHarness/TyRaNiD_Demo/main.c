@@ -13,6 +13,7 @@
 #include "obj_types.h"
 #include "matrix.h"
 #include "vu_code.h"
+#include "random.h"
 
 #define PROJ_DIV 5.0f
 #define Z_NEAR 10.0f
@@ -182,7 +183,7 @@ void init_objs()
       g_boxes[(loopy * BOX_X) + loopx].rotz = 0;
       g_boxes[(loopy * BOX_X) + loopx].tx = (loopx * 120.0f) - offsetx;
       g_boxes[(loopy * BOX_X) + loopx].ty = (loopy * 120.0f) - offsety;
-      g_boxes[(loopy * BOX_X) + loopx].tz = -BOX_Z;
+      g_boxes[(loopy * BOX_X) + loopx].tz = -BOX_Z + (float) (gen_rand(1600) - 800);
       g_boxes[(loopy * BOX_X) + loopx].sx = 1.0f;
       g_boxes[(loopy * BOX_X) + loopx].sy = 1.0f;
       g_boxes[(loopy * BOX_X) + loopx].sz = 1.0f;
@@ -216,6 +217,7 @@ void init_demo()
   vu1_upload_code(&vucodebegin, 0, vucode_size); /* Always upload code */
   vu1_send_chain();
   vu1_wait_dma();
+  sgenrand(0xFD421);
   init_objs();
   PbPrimSetState( PB_ALPHA_BLENDING, PB_ENABLE);
   PbPrimSetAlpha(0, 1, 2, 2, 0x80);
@@ -234,6 +236,7 @@ void do_demo()
    
    PbScreenClear(0);
    PbScreenSyncFlip();
+   
    
    while(init->frame_count > 0)
      {
