@@ -47,13 +47,15 @@ const demo_init_t *g_pInfo;
 /*  DEFINES AND ENUMERATIONS
  */
  
-#define NUM_POINTS 110
+#define CUBE_SIZE 6
+
+#define NUM_POINTS (CUBE_SIZE+1)*(CUBE_SIZE+1)*(CUBE_SIZE+1)
 
 /*  DATA
  */
 PbMatrix view_screen_matrix;
 PbMatrix camera_matrix;
-PbFvec points[NUM_POINTS];
+PbFvec points[NUM_POINTS] __attribute__((aligned(16)));
 PbFvec direction[NUM_POINTS];
 PbTexture* texture;
 static u32 texture_test_32[16*16] __attribute__((aligned(16)));
@@ -76,20 +78,37 @@ void build_matrices()
 
 void generate_points()
 {
-  int i;
+  int xi;
+  int yi;
+  int zi;  
+  int i = 0;
+  float x,y,z;
   
-  g_pInfo->printf( "bla\n" );
+  z = -200.0f;
 
-  for(i=0; i<NUM_POINTS; ++i)
+  for( zi = 0; zi < CUBE_SIZE+1; zi++ )
   {
-    points[i].x = frandom()*400-200;
-    points[i].y = frandom()*400-200;
-    points[i].z = frandom()*400-200;
-    points[i].z += 800;
-    points[i].w = 1.0f;
-    
-    direction[i].x = direction[i].y = direction[i].z = direction[i].w = 0.0f;
-  } 
+    y = -200;
+
+    for( yi = 0; yi < CUBE_SIZE+1; yi++ )
+    {
+      x = -200;
+
+      for( xi = 0; xi < CUBE_SIZE+1; xi++ )
+      {
+        points[i].x = x;
+        points[i].y = y;
+        points[i].z = z;
+ 
+        out( "%02d %f %f %f\n", i, points[i].x, points[i].y, points[i].z );
+
+        i++;
+        x += 100;
+      }
+      y += 100;
+    }
+    z += 100;
+  }
 }
 
 
@@ -134,12 +153,17 @@ void EmPart2SetAlpha( u64 A, u64 B, u64 C, u64 D, u64 FIX );
 
 u32 start_demo(const demo_init_t *pInfo)
 {
+  int i = 0;
   float last_t;
   float angle      = 0.0f;
   float angle_hold = 0.0f;
   PbMatrix rotate_matrix, rotate_matrix2, temprot_matrix, temprot_matrix2;
+  PbMatrix points_rotate, points_rotate2;
 
   g_pInfo = pInfo;
+
+  PbMiscSetOutput( pInfo->printf );
+
 
   setup();
   EmPart2Setup();
@@ -159,6 +183,21 @@ u32 start_demo(const demo_init_t *pInfo)
 //  EmPart2SetAlpha( 0, 1, 0, 1, 0x80 );
 
 
+  PbMatrixRotateY( &points_rotate, 0.5f );
+  PbMatrixTranslate( &points_rotate, 111110, 110, 1800 );
+
+  FlushCache(0);
+
+  for( i = 0; i < NUM_POINTS; i++ )
+  {
+    float coords[4] __attribute__((aligned(16)));
+    PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i], &points_rotate );   
+    
+    out( "%04d org: %f %f %f: rot: %f %f %f\n", i, points[i].x, points[i].y, points[i].z,
+                                                   coords[0], coords[1], coords[2] ); 
+
+  }
+
   while(pInfo->frame_count > 0)
   {
     float t= pInfo->curr_time;
@@ -167,34 +206,36 @@ u32 start_demo(const demo_init_t *pInfo)
     last_t= t;
     angle = t*1.5f;
 
-    PbScreenClear(0);
+    PbScreenClear(00);
 
-    angle_hold = angle;
-/*
-    PbMatrixRotateY( &rotate_matrix, t*0.5f );
-    PbMatrixTranslate( &rotate_matrix, 0.0f, 0.0f, 400.0f );
-    PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &camera_matrix );
-    PbMatrixMultiply( &final_matrix, &temprot_matrix, &view_screen_matrix );
-    PbParticleSetup(&final_matrix, texture, 12.0f *16.0f, 1.0f, 0x40404040);
-		PbParticleDraw(points, NUM_POINTS);
-*/
+    angle_hold = 0.0f;
+
+    PbMatrixRotateX( &points_rotate, t*0.5f );
+    PbMatrixRotateZ( &points_rotate2, t*0.5f );
+    PbMatrixMultiply( &points_rotate, &points_rotate2, &points_rotate );
+    PbMatrixTranslate( &points_rotate, 0, 0, 800 );
+
     for( i = 0; i < NUM_POINTS; i += 2 )
     {
-      PbMatrixRotateY( &rotate_matrix, angle_hold );
-      PbMatrixRotateX( &rotate_matrix2, angle_hold );
-      PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &rotate_matrix2 );
-      PbMatrixTranslate( &temprot_matrix, points[i+0].x, points[i+0].y, points[i+0].z );
+      float coords[4] __attribute__((aligned(16)));
+
+      PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i], &points_rotate );   
+
+      PbMatrixRotateX( &rotate_matrix, t*0.5f );
+      PbMatrixRotateZ( &rotate_matrix2, t*0.5f );
+      PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
+      PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+400 );
       PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
       EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 50, 0.5f, 0.5f, 0.5f );     
 
-      PbMatrixRotateY( &rotate_matrix, angle_hold );
-      PbMatrixRotateX( &rotate_matrix2, angle_hold );
-      PbMatrixMultiply( &temprot_matrix, &rotate_matrix, &rotate_matrix2 );
-      PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
-      PbMatrixTranslate( &temprot_matrix2, points[i+1].x, points[i+1].y, points[i+1].z );
-      EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 150, 0.5f, 0.5f, 0.5f );     
+      PbVu0mMatrixApply( (PbFvec*)&coords, (PbFvec*)&points[i+1], &points_rotate );   
 
-      angle_hold += 0.05f;
+      PbMatrixRotateX( &rotate_matrix, t*0.5f );
+      PbMatrixRotateZ( &rotate_matrix2, t*0.5f );
+      PbMatrixMultiply( &temprot_matrix, &rotate_matrix2, &rotate_matrix );
+      PbMatrixTranslate( &temprot_matrix, coords[0], coords[1], coords[2]+400 );
+      PbMatrixMultiply( &temprot_matrix2, &temprot_matrix, &camera_matrix );
+      EmPart2RenderCube( &temprot_matrix2, &view_screen_matrix, 150, 0.5f, 0.5f, 0.5f );     
     }          
         
     PbScreenSyncFlip();
