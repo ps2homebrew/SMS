@@ -65,11 +65,11 @@ float PbSin(float v)
 	return res;
 }
 
-float sqrt(float a)
+float PbSqrt(float a)
 {
 	float b;
 	
-	asm(
+	asm volatile(
 	"sqrt.s %0,%1\n"
 	: "=f" (b)
 	: "f" (a));
