@@ -250,7 +250,8 @@ int checkELFheader(char *filename)
 		fileXioClose(fd);
 		fileXioUmount("pfs0:");
 		}
-	if((elfhost==2 && activeHOST==2) || elfhost==3 || elfhost==4)
+//	if(elfhost==2 || elfhost==3 || elfhost==4)
+	else
 	{
 		if ((fd = fioOpen(fullpath, O_RDONLY)) < 0)
 		{
@@ -769,7 +770,7 @@ void ReadHostDir(void)
 
 	num_hdd_files=0;
 	fd=fioOpen("host:elflist.txt", O_RDONLY);
-	if(fd<=0)
+	if(fd<0)
 	{
 		sprintf(sStatus,"elflist.txt not found on host.");
 		}
