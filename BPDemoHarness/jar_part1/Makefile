@@ -22,7 +22,7 @@ run: all
 	ps2client -h 10.0.0.10 execee host:..\harness.elf host:jar_part1.bin
 	
 longtest: all
-	ps2client -h 10.0.0.10 execee host:..\harness.elf -t25 host:jar_part1.bin	
+	ps2client -h 10.0.0.10 execee host:..\harness.elf -t250 host:jar_part1.bin	
 
 $(BIN_IMAGE) : $(EE_BIN)
 	ee-objcopy -O binary $(EE_BIN) $(BIN_IMAGE)

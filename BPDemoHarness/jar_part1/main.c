@@ -32,6 +32,7 @@ extern u8 binary_texture_start[];
 static u32 texture_test_32[256*256] __attribute__((aligned(16)));
 PbTexture* texture;
 PbTexture* rendertarget;
+PbTexture* rendertarget2;
 float max_time;
 
 
@@ -66,7 +67,6 @@ typedef struct{
 gridcoord coords[NUM_GRID_POINTS] __attribute__((aligned(16)));
 static u64 gif_buffer[(6*NUM_X*NUM_Y+4)*2] __attribute__((aligned(16)));
 static u64* p_data; 
-static int z_table[128];
 
 void init_grid()
 {
@@ -113,7 +113,7 @@ static void fd_tunnel(vertex Origin, vertex Direction, float* u, float* v, float
 	if(*z < 0.0f) *z = 0.0f;
 }
 
-#define PLANE_OFFSET 650
+#define PLANE_OFFSET 200 //650
 void fd_planes(vertex Origin, vertex Direction, float *u, float *v, float *z)
 {
 	vertex Intersect;
@@ -125,8 +125,8 @@ void fd_planes(vertex Origin, vertex Direction, float *u, float *v, float *z)
 	Intersect.y = Origin.y + Direction.y*t;
 	Intersect.z = Origin.z + Direction.z*t;
 
-	*u = fabs(Intersect.x)*0.001171875f;
-	*v = fabs(Intersect.z)*0.001171875f;
+	*u = fabs(Intersect.x)*0.0008;
+	*v = fabs(Intersect.z)*0.0008;
 
 	t = sqr(Intersect.x-Origin.x) + sqr(Intersect.z-Origin.z);
 	if (t <= 0.001f) 
@@ -136,8 +136,7 @@ void fd_planes(vertex Origin, vertex Direction, float *u, float *v, float *z)
 	else
 	{
 		t = 50000.0 / PbSqrt(t);
-		*z = log(1.2f * (t > 63 ? 63 : t)/63.0f) * 2.7182818284590452353602874713527f;
-		if(*z > 1) *z = 1;
+		*z = (t > 63 ? 63 : t)/63.0f;
 	}
 }
 
@@ -180,7 +179,7 @@ void calc_coords(float t, float progress)
 			
 			Rotate(&Direction, t*1.2f);
 		
-#if 1
+#if 0
 			fd_tunnel(Origin,Direction,&a_u,&a_v,&a_z);
 			fd_planes(Origin,Direction,&b_u,&b_v,&b_z);
 			
@@ -188,7 +187,7 @@ void calc_coords(float t, float progress)
 			g->st.uv.v = lerp(a_v, b_v, blend);
 			g->z = lerp(a_z, b_z, blend);
 #else
-			fd_planes(Origin,Direction,&g->st.uv.u,&g->st.uv.v,&g->z);
+			fd_tunnel(Origin,Direction,&g->st.uv.u,&g->st.uv.v,&g->z);
 #endif			
 		}
 	}	
@@ -199,10 +198,10 @@ void calc_coords2(float t, float progress)
 	int x,y;
 	gridcoord* g;
 	
-	float cx = 0.5f + 0.3f * PbCos(t*1.4f);
-	float cy = 0.5f + 0.2f * PbSin(t*-0.37564f + 3);
-	float xit = 0.03f * PbCos(t*1.4f);
-	float yit = 0.03f * PbSin(-t*0.8f+4);
+	float whirl_x = 0.5f + 0.3f * PbCos(t*1.4f);
+	float whirl_y = 0.5f + 0.2f * PbSin(t*-0.37564f + 3);
+	float radius = 0.4f;
+	float ratio = 1.0f/radius;
 	
 	for(y=0; y<NUM_Y+1; ++y)
 	{
@@ -218,11 +217,17 @@ void calc_coords2(float t, float progress)
 			}
 			else
 			{
-				float a = g->x - cx;
-				float b = g->y - cy;
-				float d= PbSqrt(a*a+b*b);
-				g->st.uv.u = g->x+xit*PbSin(g->y * 10.2f + t * 0.5f + 15*d);
-				g->st.uv.v = g->y+yit*PbSin(g->x * 24.8f + t * -1.7f + 3 -3.783f*d);
+				float cx,cy,dist,angle,ca,sa;
+	
+				cx = g->x-whirl_x;
+				cy = g->y-whirl_y;
+				dist = PbSqrt(cx*cx+cy*cy);
+				dist = (dist>radius)? 0 : ((radius-dist)*(radius-dist))/radius;
+				angle = M_PI*2*dist;    
+				ca = PbCos(angle);   
+				sa = PbSin(angle);
+				g->st.uv.u = whirl_x + (cx*ca+cy*sa);
+				g->st.uv.v = whirl_y + (-cx*sa+cy*ca);
 				g->z = 1.0f;
 			}
 		}
@@ -240,7 +245,6 @@ u64 expand_color(int c)
 {
 	if(c>127) c=127;
 	else if(c<0) c=0;
-	c = z_table[c];
 	return 0x3F80000000000000|(u64)(c<<16|c<<8|c);
 }
 
@@ -295,21 +299,20 @@ void init_textures()
 {
 	int cnt;
 
-	// create render target texture
+	// create render target textures
 	
 	rendertarget = PbTextureCreate32(NULL, RENDERTARGET_W, RENDERTARGET_H); 
+	
+	rendertarget2 = PbTextureCreate32(NULL, RENDERTARGET_W, RENDERTARGET_H); 
 	
 	// create and upload the fd-textuer
 	
 	for(cnt=0; cnt<65536; ++cnt)
 	{
-		u32 r = binary_texture_start[cnt*3+0] * 2;
-		u32 g = binary_texture_start[cnt*3+1] * 2;
-		u32 b = binary_texture_start[cnt*3+2] * 2;
-		if(r>255) r=255;
-		if(g>255) g=255;
-		if(b>255) b=255;
-		texture_test_32[cnt] = r | (g<<8) | (b<<16) | 0xFF000000;
+		u32 r = binary_texture_start[cnt*3+0]>>1;
+		u32 g = binary_texture_start[cnt*3+1]>>1;
+		u32 b = binary_texture_start[cnt*3+2]>>1;
+		texture_test_32[cnt] = r | (g<<8) | (b<<16) | (0x80<<24UL);
 	}
 	FlushCache(0);
 	texture = PbTextureCreate32(texture_test_32, 256, 256); 
@@ -324,9 +327,8 @@ void demo_init()
 	
 	init_textures();
 	init_grid();
-	for(i=0;i<128;++i)
-		z_table[i] = 127 * log((i/128.0f)*2.7182818284590452353602874713527f);
 }
+
 #define ALPHA_SRC 0
 #define ALPHA_DST 1
 #define ALPHA_ZERO 2
@@ -334,121 +336,53 @@ void demo_init()
 #define ALPHA(A,B,C,D,FIX) ( (((u64)(A))&3) | ((((u64)(B))&3)<<2) | ((((u64)(C))&3)<<4) | ((((u64)(D))&3)<<6) | ((((u64)(FIX)))<<32UL) )//(A - B)*C >> 7 + D 
 
 #define ALPHA_BLEND_NORMAL (ALPHA(ALPHA_SRC,ALPHA_DST,ALPHA_SRC,ALPHA_DST,0x00))
-#define ALPHA_BLEND_ADD    (ALPHA(ALPHA_SRC,ALPHA_ZERO,ALPHA_SRC,ALPHA_DST,0x00))
 #define ALPHA_BLEND_ADD_NOALPHA    (ALPHA(ALPHA_SRC,ALPHA_ZERO,ALPHA_FIX,ALPHA_DST,0x80))
-/*
-void blit_rendertarget(PbTexture* tex, int xoff, int yoff, int xzoom, int yzoom, int intensity)
-{		
-	  u64* p_store;
-	  u64* p_data;
-	
-	  int x1 = xzoom   + ((0 + 2048) << 4);
-	  int y1 = yzoom   + ((0 + 2048) << 4);
-	  int x2 = -xzoom  + ((SCR_W + 2048) << 4);
-	  int y2 = -yzoom  + ((SCR_H + 2048) << 4);
-	  int u1 = (0 + 2048) << 4;
-	  int v1 = (0 + 2048) << 4;
-	  int u2 = (RENDERTARGET_W - 1) << 4;
-	  int v2 = (RENDERTARGET_H - 1) << 4;
-	  
-	  x1 += xoff;
-	  y1 += yoff;
-	  x2 += xoff;
-	  y2 += yoff;
-	
-	  p_store = p_data = PbSprAlloc( 10*16 );
-	
-	  *p_data++ = GIF_TAG( 9, 1, 0, 0, 0, 1 );
-	  *p_data++ = GIF_AD;
-	
-	  *p_data++ = PbTextureGetTex0( tex );
-	  *p_data++ = GS_TEX0_1;
-	
-	  *p_data++ = 0x20; // bilinear filtering
-	  *p_data++ = GS_TEX1_1;
-	  
-	  *p_data++ = ALPHA(ALPHA_SRC,ALPHA_ZERO,ALPHA_FIX,ALPHA_DST,intensity);
-	  *p_data++ = GS_ALPHA_1;
-	
-	  *p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, TRUE, 0, 1, 0, 0) ;
-	  *p_data++ = GS_PRIM;
+#define ALPHA_BLEND_ADD    (ALPHA(ALPHA_SRC,ALPHA_ZERO,ALPHA_SRC,ALPHA_DST,0x00))
 
-	  *p_data++ = 0x80808080;
-	  *p_data++ = GS_RGBAQ;
-	
-	  *p_data++ = GS_SETREG_XYZ2( x1, y1, 0 );
-	  *p_data++ = GS_XYZ2;
-	
-	  *p_data++ = GS_SETREG_UV( u1, v1 );
-	  *p_data++ = GS_UV;
-	
-	  *p_data++ = GS_SETREG_XYZ2( x2, y2, 0 );
-	  *p_data++ = GS_XYZ2;
-	
-	  *p_data++ = GS_SETREG_UV( u2, v2 );
-	  *p_data++ = GS_UV;
-	  
-	  PbDmaWait02();
-	  PbDmaSend02Spr( p_store, 10 );
+void draw_fullscreen_texture(PbTexture *tex, int xoff, int yoff, int c)
+{
+	int x1 = (0+2048) << 4;
+	int y1 = (0+2048) << 4;
+	int x2 = (SCR_W+2048) << 4;
+	int y2 = (SCR_H+2048) << 4;	
+
+	PbGifListAdd( GS_PRIM, GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 ));	
+	PbGifListAdd( GS_TEST_1, GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 ) );	
+	PbGifListAdd( GS_PABE, 0 );	
+	PbGifListAdd( GS_ALPHA_1, ALPHA_BLEND_ADD_NOALPHA);	
+	PbGifListAdd( GS_TEX1_1, 0x20 );
+	PbGifListAdd( GS_TEX0_1, PbTextureGetTex0( tex ) );
+	PbGifListAdd( GS_RGBAQ, 0x80000000+((c<<16)+(c<<8)+c) );
+	PbGifListAdd( GS_UV, GS_SETREG_UV( xoff, yoff ) );	
+	PbGifListAdd( GS_XYZ2, GS_SETREG_XYZ2( x1, y1, 0 ) );	
+	PbGifListAdd( GS_UV, GS_SETREG_UV( ((tex->x-1) << 4)-xoff, ((tex->y-1) << 4)-yoff ) );
+	PbGifListAdd( GS_XYZ2, GS_SETREG_XYZ2( x2, y2, 0 ) );	
+	PbGifListAdd( GS_TEST_1, GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 2 ) );
 }
 
-#define BLURSIZE 4
-void funk(float t)
+
+#define BLUR_RATIO 26
+#define MAX_INTENS 28
+void blury_thingie_with_bad_function_name(float t)
 {
-	int x,y;
-	
-	float focus = 40*PbCos(t*3);
-	float zoom = 80 * PbSin(t*1.2 + 4);
-	for(y=-BLURSIZE;y<BLURSIZE;++y)
-	{
-		for(x=-BLURSIZE;x<BLURSIZE;++x)
-		{
-			blit_rendertarget(rendertarget,x*focus,y*focus,zoom,zoom*256.0f/640.0f,0x80 / (BLURSIZE*BLURSIZE));
-		}
-	}	
-		
-}*/
+	int i;
+	float blah = 12.0f + 6.0f * PbSin(t*0.2+3);
+	float blah2 = 12.0f + 6.0f * PbCos(t*-1.4+734);
+	float crapzilla = (MAX_INTENS/2) + (MAX_INTENS/2)*PbCos(t*1.5f);
+	float cx = 15 + 8 * PbSin(t*3.23 + 542);
+	float cy = 15 + 8 * PbCos(t*-2.78);
+	PbPrimSpriteNoZtest( 0, 0, SCR_W<<4, SCR_H<<4, 0, 0 );
 
-/*void blackrect()
-{		
-	u64* p_store;
-	u64* p_data;
-	
-	int x1 = ((0 + 2048) << 4);
-	int y1 = ((0 + 2048) << 4);
-	int x2 = ((SCR_W + 2048) << 4);
-	int y2 = ((SCR_H + 2048) << 4);
-	
-	p_store = p_data = PbSprAlloc( 8*16 );
-	
-	
-	*p_data++ = GIF_TAG( 7, 1, 0, 0, 0, 1 );
-	*p_data++ = GIF_AD;
-	
-	*p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 1, 0, 0, 0, 0) ;
-	*p_data++ = GS_PRIM;
-	
-	*p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 );     
-	*p_data++ = GS_TEST_1;   
-	
-	*p_data++ = ALPHA_BLEND_NORMAL;     
-	*p_data++ = GS_ALPHA_1;   	
-	
-	*p_data++ = 0x20000000;
-	*p_data++ = GS_RGBAQ;
-	
-	*p_data++ = GS_SETREG_XYZ2( x1, y1, 0 );
-	*p_data++ = GS_XYZ2;
-	
-	*p_data++ = GS_SETREG_XYZ2( x2, y2, 0 );
-	*p_data++ = GS_XYZ2;
-	
-	*p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 2 );     
-	*p_data++ = GS_TEST_1;     
-	
-	PbDmaSend02Spr( p_store, 8 );
-}*/
+	PbGifListBegin();
+	for(i=0;i<BLUR_RATIO;++i)
+		draw_fullscreen_texture(rendertarget,i*blah2+cx,i*blah2+cy,crapzilla);
+	for(i=0;i<BLUR_RATIO;++i)
+		draw_fullscreen_texture(rendertarget2,i*blah,i*blah,MAX_INTENS-crapzilla);
+	PbGifListSend();	
+   	
+}
 
+//#define TEST
 
 u32 start_demo( const demo_init_t* pInfo )
 {
@@ -459,22 +393,47 @@ u32 start_demo( const demo_init_t* pInfo )
 	while( pInfo->time_count > 0 )
 	{
 		float t= pInfo->curr_time;
+		
+		#ifdef TEST
+		GS_SET_BGCOLOR(0xff, 0x00, 0x00);
+		#endif
+		
 		// Draw to render target    
-	    PbTextureSetRenderTarget(rendertarget);
+	    
+	    PbTextureSetRenderTarget(rendertarget);	    
 	    PbPrimSpriteNoZtest( 0, 0, RENDERTARGET_W<<4, RENDERTARGET_H<<4, 0, 0x00 );
 	    calc_coords(t, pInfo->curr_time / max_time);
 	    draw_grid(texture,RENDERTARGET_W,RENDERTARGET_H);
+	    
+	    #ifdef TEST
+	    GS_SET_BGCOLOR(0x00, 0xff, 0x00);
+	    #endif
 
-	    // Blit the render target to the frame buffer
-	    PbScreenSetCurrentActive();
-	    PbPrimSpriteNoZtest( 0, 0, SCR_W<<4, SCR_H<<4, 0, 0x000000 );
+	    // Distort into next rendertarget 
+	    
+	    PbTextureSetRenderTarget(rendertarget2);	    
+	    PbPrimSpriteNoZtest( 0, 0, RENDERTARGET_W<<4, RENDERTARGET_H<<4, 0, 0x000000 );
 	    calc_coords2(t, pInfo->curr_time / max_time);
-	    draw_grid(rendertarget,SCR_W,SCR_H);
-
+	    draw_grid(rendertarget,RENDERTARGET_W, RENDERTARGET_H);
+	    
+	    #ifdef TEST
+	    GS_SET_BGCOLOR(0x00, 0x00, 0xff);
+	    #endif
+	    
+	    // Now combine	    
+	    PbScreenSetCurrentActive();
+   		blury_thingie_with_bad_function_name(t);
+   		
+   		#ifdef TEST
+   		GS_SET_BGCOLOR(0x00, 0x00, 0x00);
+   		#endif
+   		
 		PbScreenSyncFlip();
 	}
-	
-//	LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
+
+#ifdef TEST	
+	LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
+#endif
   
   	return pInfo->screen_mode;
 }
