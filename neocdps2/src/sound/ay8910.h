@@ -1,7 +1,7 @@
 #ifndef AY8910_H
 #define AY8910_H
 
-#include "../defines.h"
+#include "defines.h"
 
 #define MAX_8910 5
 #define ALL_8910_CHANNELS -1

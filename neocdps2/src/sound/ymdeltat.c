@@ -21,10 +21,9 @@
 
 #ifndef YM_INLINE_BLOCK
 
-// #include "neo_snd.h"
 #include "fm.h"
 #include "ymdeltat.h"
-//#include "../state.h"
+
 
 uint8 *ym_deltat_memory;	/* memory pointer */
 

@@ -19,7 +19,7 @@
 #include "timer.h"
 #include "sound.h"
 
-#include "../neocd.h"
+#include "neocd.h"
 
 #if BUILD_YM2610
 

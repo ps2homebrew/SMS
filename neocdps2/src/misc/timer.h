@@ -1,6 +1,5 @@
 /*
- *  misc.c
- *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  timer.c
  *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,32 +17,33 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef	MISC_C
-#define MISC_C
+#ifndef __TIMER_H
+#define __TIMER_H
 
-#include <tamtypes.h>
-#include <kernel.h> 
-#include <stdio.h>
-#include <fileio.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <string.h> 
-#include "../defines.h" 
+/*
+	Very high-resolution timer stuff.
+	Last update: 09-29-2000
+
+	Last addition is timer_getinterval, a function to measure a short
+	interval in a specified frequency. This function compensates for
+	any and all rounding errors, making it extremely precise!
+
+	Valid frequencies are 1 through 1193181.
+
+*/
 
 
-void swab( const void* src1, const void* src2, int isize)
-{
-	char*	ptr1;
-	char*	ptr2;
-	char	tmp;
-	int	ic1;
-	
-	ptr1 = (char*)src1;
-	ptr2 = (char*)src2;
-	for ( ic1=0 ; ic1<isize ; ic1+=2){
-		tmp = ptr1[ic1+0];
-		ptr2[ic1+0] = ptr1[ic1+1];
-		ptr2[ic1+1] = tmp;
-	}
-}
+// cpu frequency
+#define GETTIME_FREQ_PAL  15625
+#define GETTIME_FREQ_NTSC 15734 
+
+void timer_init(void);
+
+void timer_exit(void);
+
+unsigned timer_gettime(void);
+
+unsigned timer_getinterval(unsigned freq);
+
 #endif
+

@@ -1,14 +1,31 @@
-// 68K CPU interface
+/*
+ *  cpu68k.c - cpu 68k Interface
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include "cpu68k.h"
 
 #include "../neocd.h"
 
 #ifdef CPU68K_USE_C68K
-#include "../c68k/c68k.h"
+#include "c68k/c68k.h"
 #endif
 #ifdef CPU68K_USE_MUSASHI
-#include "../mc68000/m68k.h"
+#include "mc68000/m68k.h"
 #endif
 
 // MUSASHI DEBUG MEMORY HANDLER
@@ -30,7 +47,7 @@ unsigned int m68k_read_disassembler_32(unsigned int address)
 
 /********************************************/
 
-INLINE void M68K_Init(void)
+inline void M68K_Init(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     // MUSASHI
@@ -55,7 +72,7 @@ INLINE void M68K_Init(void)
 #endif
 }
 
-INLINE void M68K_Reset(void)
+inline void M68K_Reset(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_pulse_reset();
@@ -66,7 +83,7 @@ INLINE void M68K_Reset(void)
 #endif
 }
 
-INLINE void M68K_Exec(s32 cycles)
+inline void M68K_Exec(s32 cycles)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_execute(cycles);
@@ -77,7 +94,7 @@ INLINE void M68K_Exec(s32 cycles)
 #endif
 }
 
-INLINE void M68K_SetIRQ(u32 level)
+inline void M68K_SetIRQ(u32 level)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_set_irq(level);
@@ -88,7 +105,7 @@ INLINE void M68K_SetIRQ(u32 level)
 #endif
 }
 
-INLINE u32 M68K_GetOdo(void)
+inline u32 M68K_GetOdo(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_cycles_run();
@@ -99,7 +116,7 @@ INLINE u32 M68K_GetOdo(void)
 #endif
 }
 
-INLINE void M68K_EndExec(void)
+inline void M68K_EndExec(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_end_timeslice();
@@ -111,7 +128,7 @@ INLINE void M68K_EndExec(void)
 }
 
 
-INLINE void M68K_SetFetch(u32 low_adr, u32 high_adr, u32 fetch_adr)
+inline void M68K_SetFetch(u32 low_adr, u32 high_adr, u32 fetch_adr)
 {
     // MUSASHI
     
@@ -123,7 +140,7 @@ INLINE void M68K_SetFetch(u32 low_adr, u32 high_adr, u32 fetch_adr)
 }
 
 
-INLINE u32 M68K_GetDReg(u32 num)
+inline u32 M68K_GetDReg(u32 num)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_get_reg(NULL, M68K_REG_D0 + num);
@@ -134,7 +151,7 @@ INLINE u32 M68K_GetDReg(u32 num)
 #endif
 }
 
-INLINE u32 M68K_GetAReg(u32 num)
+inline u32 M68K_GetAReg(u32 num)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_get_reg(NULL, M68K_REG_A0 + num);
@@ -145,12 +162,12 @@ INLINE u32 M68K_GetAReg(u32 num)
 #endif
 }
 
-INLINE u32 M68K_GetSP(void)
+inline u32 M68K_GetSP(void)
 {
     return M68K_GetAReg(7);
 }
 
-INLINE u32 M68K_GetPC(void)
+inline u32 M68K_GetPC(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_get_reg(NULL, M68K_REG_PC);
@@ -161,7 +178,7 @@ INLINE u32 M68K_GetPC(void)
 #endif
 }
 
-INLINE u32 M68K_GetSR(void)
+inline u32 M68K_GetSR(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_get_reg(NULL, M68K_REG_SR);
@@ -172,7 +189,7 @@ INLINE u32 M68K_GetSR(void)
 #endif
 }
 
-INLINE u32 M68K_GetMSP(void)
+inline u32 M68K_GetMSP(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_get_reg(NULL, M68K_REG_ISP);
@@ -183,7 +200,7 @@ INLINE u32 M68K_GetMSP(void)
 #endif
 }
 
-INLINE u32 M68K_GetUSP(void)
+inline u32 M68K_GetUSP(void)
 {
 #ifdef CPU68K_USE_MUSASHI
     return m68k_get_reg(NULL, M68K_REG_USP);
@@ -194,7 +211,7 @@ INLINE u32 M68K_GetUSP(void)
 #endif
 }
 
-INLINE void M68K_SetDReg(u32 num, u32 val)
+inline void M68K_SetDReg(u32 num, u32 val)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_set_reg(M68K_REG_D0 + num, val);
@@ -205,7 +222,7 @@ INLINE void M68K_SetDReg(u32 num, u32 val)
 #endif
 }
 
-INLINE void M68K_SetAReg(u32 num, u32 val)
+inline void M68K_SetAReg(u32 num, u32 val)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_set_reg(M68K_REG_A0 + num, val);
@@ -216,7 +233,7 @@ INLINE void M68K_SetAReg(u32 num, u32 val)
 #endif
 }
 
-INLINE void M68K_SetSP(u32 val)
+inline void M68K_SetSP(u32 val)
 {
     M68K_SetAReg(7, val);
 }
@@ -232,7 +249,7 @@ void M68K_SetPC(u32 val)
 #endif
 }
 
-INLINE void M68K_SetSR(u32 val)
+inline void M68K_SetSR(u32 val)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_set_reg(M68K_REG_SR, val);
@@ -243,7 +260,7 @@ INLINE void M68K_SetSR(u32 val)
 #endif
 }
 
-INLINE void M68K_SetMSP(u32 val)
+inline void M68K_SetMSP(u32 val)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_set_reg(M68K_REG_ISP, val);
@@ -254,7 +271,7 @@ INLINE void M68K_SetMSP(u32 val)
 #endif
 }
 
-INLINE void M68K_SetUSP(u32 val)
+inline void M68K_SetUSP(u32 val)
 {
 #ifdef CPU68K_USE_MUSASHI
     m68k_set_reg(M68K_REG_USP, val);

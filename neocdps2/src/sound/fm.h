@@ -5,7 +5,6 @@
 #ifndef _H_FM_FM_
 #define _H_FM_FM_
 
-//#include "../defines.h"
 #include "ymdeltat.h"
 /* --- select emulation chips --- */
 

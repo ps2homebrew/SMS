@@ -10,10 +10,11 @@
 
 ***************************************************************************/
 
+
 #include <string.h>
 #include <stdio.h>
+#include "neocd.h"
 #include "ay8910.h"
-#include "../neocd.h"
 
 #define MAX_OUTPUT 0x7fff
 

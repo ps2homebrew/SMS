@@ -67,17 +67,17 @@
 /************************************************************************/
 
 #include <stdio.h>
-//#include <stdlib.h>
+
 #include <string.h>
 #include <stdarg.h>
 #include <malloc.h>
 #include <math.h>
-#include "../sound/sound.h"
-#include "../defines.h"
+#include "neocd.h"
+#include "sound.h"
 #include "ay8910.h"
 #include "fm.h"
 #include "2610intf.h"
-//#include "../state.h"
+
 
 #ifndef PI
 #define PI 3.14159265358979323846

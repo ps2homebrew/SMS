@@ -1,18 +1,28 @@
-/********************************************
-*   NeoCD Memory Mapping (C version)        *
-*********************************************
-* Fosters(2001,2003)                        *
-********************************************/
+/*
+ *  memory.h - Memory Definition
+ *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include <stdio.h>
 #include <string.h>
 
-#include "../neocd.h"
-#ifdef USE_MAMEZ80
-#include "../mz80/z80.h"
-#else
-#include "../z80/mz80.h"
-#endif
+#include "neocd.h"
+#include "../video/video.h"
 #include "../misc/misc.h"
 #include "../save/mc.h"
 
@@ -163,14 +173,10 @@ void m68k_write_memory_8(unsigned int offset, unsigned int data) {
                 pending_command=1;
                 if (neocdSettings.soundOn || neocdSettings.CDDAOn)
                 {
-#ifdef USE_MAMEZ80
-			cpu_z80_nmi(); 
-			cpu_z80_run(machine_def.z80_cycles_slice);
-#else
-			mz80nmi();
-			mz80exec(machine_def.z80_cycles_slice);
-#endif
-                	//my_timer();
+			_z80nmi();
+			//z80_run_cycles -= machine_def.z80_cycles_slice;
+			_z80exec(machine_def.z80_cycles_slice);
+                	my_timer();
                 }
             }
 	    break;
@@ -300,6 +306,7 @@ static int    cpu_readvidreg(int offset)
 {
     switch(offset)
     {
+
         case    0x3c0000:    return *(uint16*)&video_vidram[video_pointer<<1]; break;
         case    0x3c0002:    return *(uint16*)&video_vidram[video_pointer<<1]; break;
         case    0x3c0004:    return video_modulo; break;
@@ -307,6 +314,7 @@ static int    cpu_readvidreg(int offset)
                                (neogeo_frame_counter&7)|128); break;
         case    0x3c0008:    return *(uint16*)&video_vidram[video_pointer<<1]; break;
         case    0x3c000a:    return *(uint16*)&video_vidram[video_pointer<<1]; break;
+
 
         default:
             //logaccess("cpu_readvidreg(0x%x) PC=%x\n",offset,m68k_get_reg(NULL,M68K_REG_PC));
@@ -317,13 +325,20 @@ static int    cpu_readvidreg(int offset)
 
 
 /***************************************************************************************************/
-static void    cpu_writevidreg(int offset, int data)
+void    cpu_writevidreg(int offset, int data)
 {
+    //printf ("offset %x\n", offset);
+
+    //printf ("video_vidram : %p\n",video_vidram);
+
     switch(offset)
     {
         case    0x3c0000:    video_pointer=(uint16)data; break;
-        case    0x3c0002:    *(uint16*)&video_vidram[video_pointer<<1]=(uint16)data;
-                             video_pointer+=video_modulo; break; 
+        case    0x3c0002:    *(uint16*)&video_vidram[(video_pointer<<1)]=(uint16)data;
+        		     //*((uint16 *)video_vidram + (video_pointer<<1)) = (uint16)data; 
+        		     //((uint16*)&video_vidram)[(video_pointer<<1)] = (uint16)data;
+                             video_pointer+=video_modulo; 
+                             break; 
                              
         case    0x3c0004:    video_modulo=(int16)data; break;
 
@@ -336,6 +351,7 @@ static void    cpu_writevidreg(int offset, int data)
 
         default: break;
     }
+    //printf ("done\n");
 }
 
 /***************************************************************************************************/
@@ -399,19 +415,9 @@ static void cpu_writeswitch(int offset, int data)
 void neogeo_sound_irq(int irq)
 {
     if (irq)
-#ifdef USE_MAMEZ80
-	cpu_z80_raise_irq(0); 
-#else
- 	mz80int(0);
-#endif
+ 	_z80raise(0);
     else 
-#ifdef USE_MAMEZ80
-	cpu_z80_lower_irq(); 
-#else
- 	;//mz80ClearPendingInterrupt();
-#endif
-
-        
+	_z80lower();
 
 }
 
@@ -468,12 +474,7 @@ static int read_upload(int offset)
         case 0x00: /* 68000 */
             return neogeo_prg_memory[offset^1];
         case 0x01: /* Z80 */
-#ifdef USE_MAMEZ80
-	    return mame_z80mem[offset>>1];
-#else
             return subcpu_memspace[offset>>1];
-#endif
-
         default:
             //logaccess ("read_upload unimplemented zone %x\n",zone);
             return -1;
@@ -491,11 +492,7 @@ static void write_upload(int offset, int data)
             neogeo_prg_memory[offset^1]=(char)data;
             break;
         case 0x01: /* Z80 */
-#ifdef USE_MAMEZ80
-            mame_z80mem[offset>>1]=(char)data;
-#else
             subcpu_memspace[offset>>1]=(char)data;
-#endif
             break;
         case 0x11: /* FIX */
             neogeo_fix_memory[offset>>1]=(char)data;
@@ -547,11 +544,7 @@ static void write_upload_word(int offset, int data)
             break;
 
         case 0x13: /* Z80 */
-#ifdef USE_MAMEZ80
-            mame_z80mem[offset>>1]=(char)data;
-#else
             subcpu_memspace[offset>>1]=(char)data;
-#endif
             break;
         case 0x14: /* PCM */
             neogeo_pcm_memory[(offset>>1)+(bank<<19)]=(char)data;

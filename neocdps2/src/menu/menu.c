@@ -1,12 +1,28 @@
-/**************************************
- ******    menu / GUI	          *****
- **************************************/ 
+/*
+ *  menu.c
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
  
 
 #include <string.h>
 #include <stdio.h>
 #include <libpad.h>
-#include "../neocd.h"
+
+#include "neocd.h"
 #include "../save/mc.h"
 #include "../video/video.h"
 #include "../input/input.h"
@@ -16,6 +32,8 @@
 #include "../gs/hw.h"
 
 
+#define MAX_MENU_ITEM 9
+
 void IngameMenu()
 {
 	struct padButtonStatus pad1;
@@ -23,8 +41,10 @@ void IngameMenu()
 	int old_pad = 0;
 	int new_pad;
 	int selection = 0;
-        static int ypos[8] = {59<<4,77<<4,95<<4,113<<4,131<<4,149<<4,167<<4,185<<4};
+        static int ypos[MAX_MENU_ITEM] = {32<<4, 50<<4,68<<4,86<<4,104<<4,122<<4,140<<4,158<<4,176<<4};
         int center_x,center_y;
+        
+        int settingsChanged = 0;
 
 	if (neocdSettings.soundOn)
 	   SjPCM_Pause();
@@ -34,11 +54,7 @@ void IngameMenu()
 
 	while(1) 
 	{
-		// All this probably isnt necessary.. eh..
-	    	//gp_uploadTexture(&thegp, PCE_TEX, 640, 0, 0, 0x02, &bmp, 640, 256);
-  	    	//gp_setTex(&thegp, PCE_TEX, 640, 640, 256, 0x02, 0, 0, 0);
-      
-      		
+     		
  	   	gp_setTex(&thegp, NGCD_TEX, 512, GS_TEX_SIZE_512, GS_TEX_SIZE_256, GS_PSMCT32, NGCD_TEX, 512, GS_PSMCT32);
 		
 		
@@ -51,14 +67,12 @@ void IngameMenu()
 		   GS_SET_RGBA(0x80,0x80,0x80,0x80) 	// color
 		  );
 
-	    	//gp_gouradrect(&thegp, 0, ((vdph-dph)>>1)<<4, GS_SET_RGBA(0, 0, 0, 128), 320<<4, (vdph-((vdph-dph)>>1))<<4, GS_SET_RGBA(0, 0, 0,128 ), 11);
     	    	
     	    	// Shade neocd display
 	    	gp_frect(&thegp, 0, 0, 320<<4, machine_def.vdph<<4, 11, GS_SET_RGBA(0, 0, 0, 64));
 
-		//gp_gouradrect(&thegp,(96-16)<<4,54<<4,GS_SET_RGBA(0x00, 0x00, 0x40, 128), (320-96+16)<<4,211<<4, GS_SET_RGBA(0x40,0x40, 0x80, 128), 13);
-		gp_gouradrect(&thegp,(96-16)<<4,54<<4,GS_SET_RGBA(0x00,0x00, 0x20, 100), (320-96+16)<<4,211<<4, GS_SET_RGBA(0x00,0x00, 0x20, 100), 13);
-		gp_linerect(&thegp, (95-16)<<4, 54<<4, (320-96+16)<<4, 211<<4, 14, GS_SET_RGBA(255, 255, 255, 128));
+		gp_gouradrect(&thegp,(96-16)<<4,((ypos[0]>>4)-5)<<4,GS_SET_RGBA(0x00,0x00, 0x20, 100), (320-96+16)<<4,((ypos[MAX_MENU_ITEM-1]>>4)+23)<<4, GS_SET_RGBA(0x00,0x00, 0x20, 100), 13);
+		gp_linerect(&thegp, (95-16)<<4, ((ypos[0]>>4)-5)<<4, (320-96+16)<<4, ((ypos[MAX_MENU_ITEM-1]>>4)+23)<<4, 14, GS_SET_RGBA(255, 255, 255, 128));
 	
 		TextOutC2(0<<4,320<<4,ypos[0]," - Resume - ",15);
 		
@@ -74,26 +88,32 @@ void IngameMenu()
 		else
 		  TextOutC2(0<<4,320<<4,ypos[2],"Fullscreen : No",15);
 			
+		if (neocdSettings.frameskip==0)			
+        	  TextOutC2(0<<4,320<<4,ypos[3],"Frameskip : Off",15);
+        	else
+        	  TextOutC2(0<<4,320<<4,ypos[3],"Frameskip : On",15);
+
+		
 		if (neocdSettings.soundOn==0)			
-	        	TextOutC2(0<<4,320<<4,ypos[3],"Sound : Off",15);
+	        	TextOutC2(0<<4,320<<4,ypos[4],"Sound : Off",15);
 		else
-			TextOutC2(0<<4,320<<4,ypos[3],"Sound : On",15);
+			TextOutC2(0<<4,320<<4,ypos[4],"Sound : On",15);
 		
 	    	if (neocdSettings.CDDAOn==0)			
-			TextOutC2(0<<4,320<<4,ypos[4],"CDDA : Off",15);
+			TextOutC2(0<<4,320<<4,ypos[5],"CDDA : Off",15);
 		else
-			TextOutC2(0<<4,320<<4,ypos[4],"CDDA : On",15);
+			TextOutC2(0<<4,320<<4,ypos[5],"CDDA : On",15);
 		
 		if (neocdSettings.region==REGION_JAPAN)
-			TextOutC2(0<<4,320<<4,ypos[5],"Region : Japan",15);
+			TextOutC2(0<<4,320<<4,ypos[6],"Region : Japan",15);
 		else if (neocdSettings.region==REGION_USA)
-			TextOutC2(0<<4,320<<4,ypos[5],"Region : Usa",15);
+			TextOutC2(0<<4,320<<4,ypos[6],"Region : Usa",15);
 		else //REGION_EUROPE
-			TextOutC2(0<<4,320<<4,ypos[5],"Region : Europe",15);
+			TextOutC2(0<<4,320<<4,ypos[6],"Region : Europe",15);
 	
-		TextOutC2(0<<4,320<<4,ypos[6],"Enter Bios",15);
+		TextOutC2(0<<4,320<<4,ypos[7],"Enter Bios",15);
 		
-		TextOutC2(0<<4,320<<4,ypos[7],"Reset emulation",15);
+		TextOutC2(0<<4,320<<4,ypos[8],"Reset emulation",15);
 	
 		
 		gp_frect(&thegp, (95-16)<<4, ypos[selection], (320-95+16)<<4, ypos[selection] + (16<<4), 16, GS_SET_RGBA(123, 255, 255, 40));
@@ -107,7 +127,7 @@ void IngameMenu()
 		if(padGetState(0, 0) == PAD_STATE_STABLE) 
 		{
 			padRead(0, 0, &pad1);
-			pad1_data = 0xffff ^ ((pad1.btns[0] << 8) | pad1.btns[1]);
+			pad1_data = 0xffff ^ pad1.btns;
 
 			if((pad1.mode >> 4) == 0x07) {
 				if(pad1.ljoy_v < 64) pad1_data |= PAD_UP;
@@ -139,6 +159,7 @@ void IngameMenu()
 				neocdSettings.dispYNTSC=machine_def.dispy;
 			}
 			GS_SetDispMode(machine_def.dispx,machine_def.dispy,WIDTH,HEIGHT);
+			settingsChanged=1;
 			continue;
 		}
 
@@ -146,12 +167,12 @@ void IngameMenu()
      		{
 	     	  	if(selection>0)
            			selection--;
-          		else selection=7; 
+          		else selection=(MAX_MENU_ITEM-1); 
         	}
         
 		if((new_pad & PAD_DOWN) && (selection < 8))
 		{
-		  	if(selection<7)          
+		  	if(selection<(MAX_MENU_ITEM-1))          
             			selection++;
           		else selection=0;   
         	}
@@ -165,6 +186,7 @@ void IngameMenu()
 			{
 				neocdSettings.renderFilter ^= 1;
 				gp_setFilterMethod(neocdSettings.renderFilter);
+				settingsChanged=1;
 			}	
 		
 			if(selection == 2) // fullscreen
@@ -177,43 +199,47 @@ void IngameMenu()
 			  	{ 
 			  		machine_def.y1_offset = ((machine_def.vdph-dph)>>1) << 4 ;
 					machine_def.y2_offset = (machine_def.vdph-((machine_def.vdph-dph)>>1)) << 4;
+					neocdSettings.fullscreen = 0;
 			  	}	
 			  	else // set fullscreen
 			  	{ 
 			  		machine_def.y1_offset = 0;
 			  		machine_def.y2_offset = machine_def.vdph << 4 ;
+			  		neocdSettings.fullscreen = 1;
 			  	}
+			  	settingsChanged=1;
 			
 			}	
 			
-			if(selection == 3)  // sound on/off
+			if(selection == 3)  // frameskip
+			{
+				neocdSettings.frameskip ^= 1;
+				settingsChanged=1;
+			}
+				
+			if(selection == 4)  // sound on/off
 			{
 				neocdSettings.soundOn ^= 1;
-				//if (neocdSettings.soundOn)
-				//  neogeo_reset();
+				settingsChanged=1;
 			}
 			
-			if(selection == 4) ; //neocdSettings.CDDAOn ^= 1; not activated
+			if(selection == 5) ; //neocdSettings.CDDAOn ^= 1; not activated
 			
-			if(selection == 5) // region
+			if(selection == 6) // region
 			{
 				neocdSettings.region++;
 				if (neocdSettings.region>2) neocdSettings.region=0;
-				
-				// Write System Region
-				//m68k_write_memory_8(0x10FD83,neocdSettings.region);
-				
-				//neogeo_hreset();
+				settingsChanged=1;
 			}
 
 
-			if(selection == 6) // enter Bios
+			if(selection == 7) // enter Bios
 			{
 	          		enterBIOS();
              			break;
 			}
 			
-			if(selection == 7) // Soft reset
+			if(selection == 8) // Soft reset
 			{
 	          		neogeo_reset();
              			break;
@@ -225,10 +251,15 @@ void IngameMenu()
 	while(1) {
 		if(padGetState(0, 0) == PAD_STATE_STABLE) {
 			padRead(0, 0, &pad1); // port, slot, buttons
-			pad1_data = 0xffff ^ ((pad1.btns[0] << 8) | pad1.btns[1]);
+			pad1_data = 0xffff ^ pad1.btns;
 		}
 		if(!(pad1_data & PAD_CROSS)) break;
 	}
+	
+	// save settings to MC
+	if (settingsChanged)
+	  mc_saveSettings();
+	  
 	
 	// Clear the screen (with ZBuffer Disabled)
 	gp_disablezbuf(&thegp);

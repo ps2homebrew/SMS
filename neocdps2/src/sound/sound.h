@@ -1,5 +1,6 @@
 /*  gngeo a neogeo emulator
  *  Copyright (C) 2001 Peponas Mathieu
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
  * 
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -15,43 +16,15 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
- /*YOU USE THIS PROGRAM AT YOUR OWN RISK, I CANNOT BE HELD RESPONSIBLE FOR ANY LOSS OR DAMAGE CAUSED. 
 
-THIS PROGRAM REQUIRES THE ORIGINAL SNK CD ROMS. THESE CD ROMS ARE OWNED BY AND COPYRIGHTED BY SNK. I CANNOT BE HELD RESPONSIBLE FOR ANY REACH OF THE COPYRIGHT. 
 
-PLEASE DO NOT ASK ME TO SUPPLY YOU CD ROMS, OR BIOS IMAGE: I CANNOT HELP YOU. 
-PLEASE DO NOT SEND ME ANY CD-ROM. 
-DO NOT SEND BINARY ATTACHMENTS WITHOUT ASKING FIRST. 
-
-NEOCD IS FREE, SOURCE CODE IS FREE. SELLING IS NOT ALLOWED. 
-YOU CANNOT PROVIDE NEOCD AND NEOGEO GAME SOFTWARE ON THE SAME PHYSICAL MEDIUM. 
-
-YOU CAN REUSE SOURCE CODE AND TECHNICAL KNOWLEDGE AS LONG AS IT IS NOT FOR COMMERCIAL PURPOSES.
-LPGL */
 
 #ifndef SOUND_H
 #define SOUND_H
 
-//#include "../neocd.h"
 
-#define NB_SEGMENT 20
+#define SAMPLE_RATE    12000
 
-#define SAMPLE_RATE    12000 //24000 
-
-/* Sound emulation structure */
-/*
-typedef struct
-{
-    int enabled;
-    int bufsize;
-    signed short *buffer[2];
-    signed short *fm_buffer;     
-    signed short *psg_buffer[2]; 
-    int log;
-    void (*callback)(int data);
-} t_snd; 
-*/
 
 int init_audio(void);
 void play_audio(void);

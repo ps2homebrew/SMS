@@ -1,33 +1,51 @@
 /*
- *	Emulation for the NEC PD4990A.
+ *  pd4990a.c - Emulation for the NEC PD4990A.
+ *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *----------------------------------------------------------------------------
  *
  *	The PD4990A is a serial I/O Calendar & Clock IC used in the
  *		NEO GEO and probably a couple of other machines.
-
-
-  Completed by ElSemi.
-
-  I haven't found any schematics for this device
-  so I had to make some assumptions about how it works.
-
-  The three input bits seem to be used for a serial protocol
-
-	bit 0 - data
-	bit 1 - clock
-	bit 2 - command end (?)
-
-  the commands I've found so far are:
-
-  0x0 - ?? sent after 2
-  0x1 - Reset the (probable) shift register used for output
-  0x2 - Store the contents of the shift reg to the current date
-  0x3 - Load Shift register with current date
-
-  0x7 - Switch test bit every frame
-  0x8 - Switch test bit every half-second
-
-
-
+ *
+ * Completed by ElSemi.
+ *
+ * I haven't found any schematics for this device
+ * so I had to make some assumptions about how it works.
+ *
+ * The three input bits seem to be used for a serial protocol
+ *
+ *	bit 0 - data
+ *	bit 1 - clock
+ *	bit 2 - command end (?)
+ *
+ * the commands I've found so far are:
+ *
+ * 0x0 - ?? sent after 2
+ * 0x1 - Reset the (probable) shift register used for output
+ * 0x2 - Store the contents of the shift reg to the current date
+ * 0x3 - Load Shift register with current date
+ *
+ * 0x7 - Switch test bit every frame
+ * 0x8 - Switch test bit every half-second
+ *
+ *
+ *
  */
 
 #include <time.h>

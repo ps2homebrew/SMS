@@ -1,6 +1,5 @@
 /*
- *  misc.c
- *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  timer.c
  *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,33 +16,40 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-#ifndef	MISC_C
-#define MISC_C
-
+ 
+#include <kernel.h>
 #include <tamtypes.h>
-#include <kernel.h> 
-#include <stdio.h>
-#include <fileio.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <string.h> 
-#include "../defines.h" 
+#include "timer.h"
 
+#define T0_COUNT ((u32 *)(0x10000000))
+#define T0_MODE ((u32 *)(0x10000010))
+#define T_MODE_CLKS_M 3
+#define T_MODE_CUE_M 128
 
-void swab( const void* src1, const void* src2, int isize)
-{
-	char*	ptr1;
-	char*	ptr2;
-	char	tmp;
-	int	ic1;
-	
-	ptr1 = (char*)src1;
-	ptr2 = (char*)src2;
-	for ( ic1=0 ; ic1<isize ; ic1+=2){
-		tmp = ptr1[ic1+0];
-		ptr2[ic1+0] = ptr1[ic1+1];
-		ptr2[ic1+1] = tmp;
-	}
+// to be set
+int unsigned vsync_freq = GETTIME_FREQ_PAL; 
+
+static unsigned lastinterval;
+
+unsigned timer_gettime(void) {
+  return (*T0_COUNT) & 0xFFFF;
 }
-#endif
+
+void timer_init(void) {
+  *T0_MODE = T_MODE_CLKS_M | T_MODE_CUE_M;
+  *T0_COUNT = 0;
+  lastinterval = timer_gettime();
+}
+
+void timer_exit(void) { }
+
+unsigned timer_getinterval(unsigned freq) {
+  unsigned tickspassed,ebx,blocksize;
+  ebx=(timer_gettime()-lastinterval) & 0xFFFF;
+  blocksize=vsync_freq/freq;
+  ebx+=vsync_freq%freq;
+  tickspassed=ebx/blocksize;
+  ebx-=ebx%blocksize;
+  lastinterval+=ebx;
+  return tickspassed;
+}

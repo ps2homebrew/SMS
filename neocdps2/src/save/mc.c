@@ -1,12 +1,27 @@
-/**************************************
- ******    MC.C  -  Memory Card   *****
- **************************************/ 
+/*
+ *  mc.c - MC management
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
  
 #include <libmc.h> 
 #include <string.h>
 #include <stdio.h>
 #include <fileio.h>
-#include "../neocd.h"
+#include "neocd.h"
 #include "mc.h"
 
 extern 		u8 ngcdIcn[];		
@@ -19,7 +34,7 @@ int ret;
 /* Check if save file is present on MC
    and create it if not
 */
-void initSave()
+void mc_initSave()
 {
    int fd;//, iconSize;
    mcIcon iconSys;
@@ -116,6 +131,7 @@ void initSave()
    {
     // read save file  
     fioRead(fd, neogeo_memorycard, 8192);
+    mcSync(MC_WAIT, NULL, &ret);
     fioClose(fd);
     printf("save file found\n");
     neocdSettings.SaveOn=1;
@@ -125,7 +141,7 @@ void initSave()
 }
 
 // write save on MC
-void writeSave()
+void mc_writeSave()
 {
    int fd;
 
@@ -139,4 +155,59 @@ void writeSave()
         fioClose(fd);
    }
    
+}
+
+// read neocd settings from MC
+void mc_readSettings()
+{
+   
+   int fd;
+
+   if (neocdSettings.SaveOn)
+   {
+   	// try to open save file
+   	fd = fioOpen(MC_CONF_FILE,O_RDONLY); 
+   	if(fd<0) // file does not exist, create it
+   	{
+   	     // create conf file
+     	     fd = fioOpen(MC_CONF_FILE,O_WRONLY | O_CREAT);
+     	     fioWrite(fd, &neocdSettings, sizeof(struct_neocdSettings));
+     	     mcSync(MC_WAIT, NULL, &ret);
+   	}
+   	else // else just read it ;)
+   	{
+   	     fioRead(fd, &neocdSettings, sizeof(struct_neocdSettings));
+   	     mcSync(MC_WAIT, NULL, &ret);
+   	     
+   	     // check corresponding settings
+   	     if (neocdSettings.fullscreen == 1)
+   	     {
+   	     	// should not be done here...
+   	     	machine_def.y1_offset = 0;
+	     	machine_def.y2_offset = machine_def.vdph << 4 ;
+	     }
+	     gp_setFilterMethod(neocdSettings.renderFilter);
+
+   	}
+   	fioClose(fd);
+   }
+}
+
+// write neocd settings to MC
+void mc_saveSettings()
+{
+   int fd;
+
+   if (neocdSettings.SaveOn)
+   {
+   	// try to open save file
+   	fd = fioOpen(MC_CONF_FILE,O_WRONLY); 
+   	if(fd<0) // file does not exist, return
+   	{
+   		return;
+   	}
+   	fioWrite(fd, &neocdSettings, sizeof(struct_neocdSettings));
+   	mcSync(MC_WAIT, NULL, &ret);
+   	fioClose(fd);
+   }
 }
