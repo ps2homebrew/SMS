@@ -15,10 +15,6 @@
 
 struct FtpServer;
 
-#ifndef _P
-#define _P(n) (n)
-#endif
-
 typedef enum
 {
 	DATAMODE_IDLE,			// no data flow
@@ -51,7 +47,6 @@ typedef enum
 	DATAACTION_STOR,
 	DATAACTION_APPE,
 } DataAction;
-#define m_eCOnnState m_pServer->m_iPort
 
 #define FCOMMAND(a,b,c,d) (((a)<<24)|((b)<<16)|((c)<<8)|(d))
 
@@ -108,7 +103,6 @@ enum
 	SITECMD_SYNC = FCOMMAND('s','y','n','c'),
 	SITECMD_HELP = FCOMMAND('h','e','l','p'),
 };
-extern char f[];    
 
 typedef struct FtpClientContainer
 {
@@ -150,7 +144,6 @@ void FtpClient_Destroy( FtpClient* pClient );
 void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString );
 void FtpClient_OnConnect( FtpClient* pClient );
 void FtpClient_OnCommand( FtpClient* pClient, const char* pString );
-unsigned int FtpClient_ClearBuffer( FtpClient* pClient, char* buffer, unsigned int buffer_size );
 
 void FtpClient_OnCmdQuit( FtpClient* pClient );
 void FtpClient_OnCmdUser( FtpClient* pClient, const char* pUser );
@@ -178,7 +171,6 @@ void FtpClient_OnCmdFeat( FtpClient* pClient );
 void FtpClient_OnSiteMount( FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
 void FtpClient_OnSiteUmount( FtpClient* pClient, const char* pMountPoint );
 void FtpClient_OnSiteSync( FtpClient* pClient, const char* pDeviceName );
-void FtpClient_SetBootValue( FtpClient* pClient, unsigned int val );
 void FtpClient_OnDataConnect( FtpClient* pClient,  int* ip, int port );
 void FtpClient_OnDataConnected( FtpClient* pClient );
 void FtpClient_OnDataRead( FtpClient* pClient );
@@ -187,6 +179,5 @@ void FtpClient_OnDataComplete( FtpClient* pClient, int iReturnCode, const char* 
 void FtpClient_OnDataFailed( FtpClient* pClient, const char* pMessage  );
 void FtpClient_OnDataCleanup( FtpClient* pClient );
 void FtpClient_HandleDataConnect( FtpClient* pClient );
-
 
 #endif

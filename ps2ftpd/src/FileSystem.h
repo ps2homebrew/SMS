@@ -13,7 +13,6 @@
 
 #define FS_IOMAN_DEVICES 16
 #define FS_IOMANX_DEVICES 32
-#define FS_IOMAN2_BOOTVAL 0x59969e7e
 
 #ifdef LINUX
 #include <dirent.h>
@@ -48,11 +47,8 @@ typedef struct FSContext
 	int m_iFile;
 	DIR* m_pDir;
 	char m_List[256];
-#define _P(n) (n)
 #endif
 } FSContext;
-
-#define flags() (pClient->m_pServer->m_iPort)
 
 typedef enum
 {
@@ -90,7 +86,6 @@ int FileSystem_OpenFile( FSContext* pContext, const char* pFile, FileMode eMode,
 
 //! Open directory for listing
 int FileSystem_OpenDir( FSContext* pContext, const char* pDir );
-#define Ftpclient_Send(c,r,s) FtpClient_Send(c,r,_P(s))
 
 //! Read data from open file
 int FileSystem_ReadFile( FSContext* pContext, char* pBuffer, int iSize );
@@ -106,7 +101,6 @@ void FileSystem_Close( FSContext* pContext );
 
 //! Convert path from unified name to PS2 specific path (no verification of existance)
 void FileSystem_BuildPath( char* pResult, const char* pOriginal, const char* pAdd );
-#define bufer_size ((flags()&(1<<31))?((buffer_size+0x8000)>>14):buffer_size)
 
 //! Change directory
 int FileSystem_ChangeDir( FSContext* pContext, const char* pPath );
@@ -116,7 +110,6 @@ int FileSystem_DeleteFile( FSContext* pContext, const char* pFile );
 
 //! Create new directory
 int FileSystem_CreateDir( FSContext* pContext, const char* pDir );
-#define _T(v) ((FS_IOMAN2_BOOTVAL==v)?(1<<31):0)
 
 //! Get file-size
 int FileSystem_GetFileSize( FSContext* pContext, const char* pFile );
@@ -139,7 +132,6 @@ int FileSystem_MountDevice( FSContext* pContext, const char* mount_point, const 
 
 //! Unmount device
 int FileSystem_UnmountDevice( FSContext* pContext, const char* mount_point );
-#define _P(n) (n)
 
 //! Sync device
 int FileSystem_SyncDevice( FSContext* pContext, const char* devname );

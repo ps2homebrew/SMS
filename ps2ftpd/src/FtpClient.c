@@ -132,7 +132,7 @@ void FtpClient_Send( FtpClient* pClient, int iReturnCode, const char* pString )
 
 void FtpClient_OnConnect( FtpClient* pClient )
 {
-	Ftpclient_Send( pClient, 220, pClient->m_pMessages[FTPMSG_SERVER_READY] );
+	FtpClient_Send( pClient, 220, pClient->m_pMessages[FTPMSG_SERVER_READY] );
 }
 
 void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
@@ -488,7 +488,7 @@ void FtpClient_OnDataConnected( FtpClient* pClient )
 		break;
 	}
 
-	pClient->m_uiDataBufferSize = FtpClient_ClearBuffer(pClient,buffer,sizeof(buffer));
+	pClient->m_uiDataBufferSize = sizeof(buffer);
 	pClient->m_uiDataOffset = 0;
 }
 
@@ -667,17 +667,6 @@ void FtpClient_OnDataComplete( FtpClient* pClient, int iReturnCode, const char* 
 
 	// thanks to clients implemented incorrectly, we must close the connection after completed transfer
 	FtpClient_OnDataCleanup(pClient);
-}
-
-unsigned int FtpClient_ClearBuffer( FtpClient* pClient, char* buffer, unsigned int buffer_size )
-{
-	char* buf_start = buffer;
-	char* buf_end = buffer + bufer_size;
-
-	while( buf_start < buf_end )
-		*(buf_start++) = 0;
-
-	return buf_end-buffer;
 }
 
 void FtpClient_OnDataFailed( FtpClient* pClient, const char* pMessage  )

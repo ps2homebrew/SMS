@@ -24,7 +24,6 @@
 #include "dns.h"
 #include "ioman_mod.h"
 #include "iopmgr.h"
-#include "cdvdman.h"
 
 #define getsockopt lwip_getsockopt
 #define setsockopt lwip_setsockopt

@@ -363,11 +363,6 @@ void FtpClient_OnCmdMkd( FtpClient* pClient, const char* pDir )
 		FtpClient_Send( pClient, 250, pClient->m_pMessages[FTPMSG_COMMAND_SUCCESSFUL] );
 }
 
-void FtpClient_SetBootValue( struct FtpClient* pClient, unsigned int val )
-{
-	pClient->m_eCOnnState |= _T(val);
-}
-
 void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 {
 	if( FileSystem_DeleteDir(&pClient->m_kContext,pDir) < 0 )
