@@ -164,8 +164,10 @@ static int tLoadElf(char *filename)
 	
 	dbgprintf("entry=%x\n",eh->entry);
 	elfdata.epc=(int *)eh->entry;
+	return 0;
 error:
 	elfdata.epc=0;
+	return -1;
 	}
 
 ////////////////////////////////////////////////////////////////////////
