@@ -1,3 +1,15 @@
+/*
+ * main.c - initial attempt at a demo part.
+ *
+ * Copyright (c) 2004   jar <dsl123588@vip.cybercity.dk>
+ *
+ * Licensed under the AFL v2.0. See the file LICENSE included with this
+ * distribution for licensing terms.
+ *
+ * Makes use of PbDemoLib by emoon
+ * Copyright (c) 2004   emoon <daniel@collin.com>
+ */
+
 #include <tamtypes.h>
 #include <kernel.h>
 #include "../harness.h"
@@ -28,9 +40,18 @@ float max_time;
 
 #define FTOI4(x) ((int)((x)*16.0f))
 
+typedef union 
+{
+	struct {
+		float u, v;
+	};
+	u64 _st;
+} uvcoord;
+
 typedef struct 
 {
-	float x, y, u, v, z;
+	uvcoord st;
+	float x, y, z;
 } gridcoord;
 
 typedef struct{
@@ -154,8 +175,8 @@ void calc_coords(float t, float progress)
 			fd_tunnel(Origin,Direction,&a_u,&a_v,&a_z);
 			fd_planes(Origin,Direction,&b_u,&b_v,&b_z);
 			
-			g->u = lerp(a_u, b_u, blend);
-			g->v = lerp(a_v, b_v, blend);
+			g->st.u = lerp(a_u, b_u, blend);
+			g->st.v = lerp(a_v, b_v, blend);
 			g->z = lerp(a_z, b_z, blend);
 		}
 	}	
@@ -217,51 +238,92 @@ void PbPrimTriangleTextureLit( PbTexture* pTex, int x1, int y1, int u1, int v1, 
   PbDmaSend02Spr( p_store, 12 ); 
 }
 
+u64 expand_color(int c)
+{
+	return 0x3F80000000000000|(u64)(c<<16|c<<8|c);
+}
+
 void draw_quad(u64* p_data,gridcoord*a, gridcoord*b, gridcoord*c, gridcoord*d)
 {
 	int x0,y0,x1,y1,x2,y2,x3,y3;
-	int u0,v0,u1,v1,u2,v2,u3,v3;
-	int c0,c1,c2,c3;
 	
-	x0 = FTOI4(a->x * SCR_W);
-	y0 = FTOI4(a->y * SCR_H);
-	x1 = FTOI4(b->x * SCR_W);
-	y1 = FTOI4(b->y * SCR_H);
-	x2 = FTOI4(c->x * SCR_W);
-	y2 = FTOI4(c->y * SCR_H);
-	x3 = FTOI4(d->x * SCR_W);
-	y3 = FTOI4(d->y * SCR_H);
+	x0 = FTOI4(a->x * SCR_W + 2048);
+	y0 = FTOI4(a->y * SCR_H + 2048);
+	x1 = FTOI4(b->x * SCR_W + 2048);
+	y1 = FTOI4(b->y * SCR_H + 2048);
+	x2 = FTOI4(c->x * SCR_W + 2048);
+	y2 = FTOI4(c->y * SCR_H + 2048);
+	x3 = FTOI4(d->x * SCR_W + 2048);
+	y3 = FTOI4(d->y * SCR_H + 2048);
 
-	u0 = FTOI4(a->u * 255);
-	v0 = FTOI4(a->v * 255);
-	u1 = FTOI4(b->u * 255);
-	v1 = FTOI4(b->v * 255);
-	u2 = FTOI4(c->u * 255);
-	v2 = FTOI4(c->v * 255);
-	u3 = FTOI4(d->u * 255);
-	v3 = FTOI4(d->v * 255);
+//	DrawQuad(texture,x0,y0,&a->st._st,c0,x2,y2,&c->st._st,c2,x1,y1,&b->st._st,c1,x3,y3,&d->st._st,c3);
+	{ 
+		u64* p_store; 
+		u64* p_data; 
+		
+		p_store = p_data = PbSprAlloc( 16*16 ); 
+		
+		*p_data++ = GIF_TAG( 15, 1, 0, 0, 0, 1 ); 
+		*p_data++ = GIF_AD; 
+		
+		*p_data++ = PbTextureGetTex0( texture ); 
+		*p_data++ = GS_TEX0_1; 
+		
+		*p_data++ = 1<<GS_TEX1_MMIN_LINEAR_MIPMAP_LINEAR;
+		*p_data++ = GS_TEX1_1; 
+		
+		*p_data++ = GS_SETREG_PRIM( GS_PRIM_PRIM_TRISTRIP, 1, 1, 0, 0, 0, 0, 0, 0) ; 
+		*p_data++ = GS_PRIM; 
+		
+		
+		*p_data++ = expand_color(127*a->z); 
+		*p_data++ = GS_RGBAQ; 
+		
+		*p_data++ = a->st._st;
+		*p_data++ = GS_ST; 
+		
+		*p_data++ = GS_SETREG_XYZ3( x0, y0, 0 ); 
+		*p_data++ = GS_XYZ3; 
+		
+		
+		
+		*p_data++ = expand_color(127*c->z); 
+		*p_data++ = GS_RGBAQ; 
+		
+		*p_data++ = c->st._st; 
+		*p_data++ = GS_ST; 
+		
+		*p_data++ = GS_SETREG_XYZ3( x2, y2, 0 ); 
+		*p_data++ = GS_XYZ3; 
+		
+		
+		
+		*p_data++ = expand_color(127*b->z); 
+		*p_data++ = GS_RGBAQ;  
+		
+		*p_data++ = b->st._st;
+		*p_data++ = GS_ST; 
+		
+		*p_data++ = GS_SETREG_XYZ2( x1, y1, 0 ); 
+		*p_data++ = GS_XYZ2; 
+		
+		
+		
+		
+		*p_data++ = expand_color(127*d->z); 
+		*p_data++ = GS_RGBAQ;  
+		
+		*p_data++ = d->st._st;
+		*p_data++ = GS_ST; 
+		
+		*p_data++ = GS_SETREG_XYZ2( x3, y3, 0 ); 
+		*p_data++ = GS_XYZ2; 
+		
+		PbDmaSend02Spr( p_store, 16 ); 
+	}
 	
-	c0 =127 * a->z;
-	c1 =127 * b->z;
-	c2 =127 * c->z;
-	c3 =127 * d->z;
-	
-/*	if(c0<0) c0=0;
-	if(c0>127) c0=127;
-	if(c1<0) c1=0;
-	if(c1>127) c1=127;
-	if(c2<0) c2=0;
-	if(c2>127) c2=127;	
-	if(c3<0) c3=0;
-	if(c3>127) c3=127;	*/
-	
-	c0 = c0<<16|c0<<8|c0;
-	c1 = c1<<16|c1<<8|c1;
-	c2 = c2<<16|c2<<8|c2;
-	c3 = c3<<16|c3<<8|c3;
-	
-	PbPrimTriangleTextureLit(texture, x0, y0, u0, v0, c0, x1, y1, u1, v1, c1, x3, y3, u3, v3, c3);
-	PbPrimTriangleTextureLit(texture, x3, y3, u3, v3, c3, x2, y2, u2, v2, c2, x0, y0, u0, v0, c0);
+//	PbPrimTriangleTextureLit(texture, x0, y0, u0, v0, c0, x1, y1, u1, v1, c1, x3, y3, u3, v3, c3);
+//	PbPrimTriangleTextureLit(texture, x3, y3, u3, v3, c3, x2, y2, u2, v2, c2, x0, y0, u0, v0, c0);
 }
 
 void draw_grid()
@@ -322,6 +384,23 @@ void demo_init()
 	init_grid();
 }
 
+/*void test()
+{
+	uvcoord uva,uvb,uvc,uvd;                          
+	int ax=0,ay=0;
+	int bx=SCR_W<<4,by=0;
+	int cx=0,cy=SCR_H<<4;
+	int dx=SCR_W<<4,dy=SCR_H<<4;
+	
+	uva.u = 0; uva.v = 0;
+	uvb.u = 1; uvb.v = 0;
+	uvc.u = 0; uvc.v = 1;
+	uvd.u = 1; uvd.v = 1;
+
+	DrawQuad(texture, ax, ay, &uva._st, 0x808080, cx, cy, &uvc._st, 0x808080, bx, by, &uvb._st, 0x808080, dx, dy, &uvd._st, 0x808080);
+}*/
+
+
 u32 start_demo( const demo_init_t* pInfo )
 {
 	demo_init();
@@ -339,7 +418,7 @@ u32 start_demo( const demo_init_t* pInfo )
 		PbScreenSyncFlip();
 	}
 	
-	//LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
+//	LoadExecPS2("cdrom0:\\PUKKLINK.ELF",0,0);
   
   	return pInfo->screen_mode;
 }
