@@ -1,6 +1,22 @@
-/**************************************
-****    CDROM.C  -  File reading   ****
-**************************************/
+/*
+ *  cdrom.h
+ *  Copyright (C) 2001-2003 Foster (Original Code)
+ *  Copyright (C) 2004-2005 Olivier "Evilo" Biot (PS2 Port)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 //-- Include files -----------------------------------------------------------
 #include <stdio.h>
@@ -13,41 +29,8 @@
 #include <kernel.h>
 #include "cdrom.h"
 #include "cdvd_rpc.h"
-#include "../sound/sjpcm.h"
-#ifdef USE_MAMEZ80
-#include "../mz80/mz80interf.h"
-#else
-#include "../z80/z80intrf.h"
-#endif
-#include "../neocd.h"
+#include "neocd.h"
 
-
-#ifdef LOWERCASEFILES
- #define CHANGECASE  tolower
- #define IPL_TXT  "ipl.txt"
- #define PRG      "prg"
- #define FIX      "fix"
- #define SPR      "spr"
- #define OBJ      "obj"
- #define Z80      "z80"
- #define PAT      "pat"
- #define PCM      "pcm"
- #define JUE      "jue"
- #define TITLE_X_SYS "title_x.sys"
-
-#else
- #define CHANGECASE  toupper
- #define IPL_TXT  "IPL.TXT"
- #define PRG      "PRG"
- #define FIX      "FIX"
- #define SPR      "SPR"
- #define OBJ      "OBJ"
- #define Z80      "Z80"
- #define PAT      "PAT"
- #define PCM      "PCM"
- #define JUE      "JUE"
- #define TITLE_X_SYS "TITLE_X.SYS"
-#endif
 
 /*-- Definitions -----------------------------------------------------------*/
 
@@ -99,7 +82,7 @@ int spr_length;
 int        img_display = 1;
 
 //----------------------------------------------------------------------------
-static void CB_DelayTh(int id, uint16 time, void *sema_id)
+static void CallbackDelayTh(int id, uint16 time, void *sema_id)
 {
 	iSignalSema((int)sema_id);
 	ExitHandler();
@@ -114,7 +97,7 @@ void delayThread(uint16 hsync)
 	sparam.option = 0;
 	
 	sema_id = CreateSema(&sparam);
-	SetAlarm(hsync,CB_DelayTh,(void *)sema_id);
+	SetAlarm(hsync,CallbackDelayTh,(void *)sema_id);
 	WaitSema(sema_id);
 
 	DeleteSema(sema_id);
@@ -129,9 +112,10 @@ int cdrom_init1(void)
     
     // try to read the IPL.TXT file from host
     strcpy (bootpath,path_prefix);
-    if (boot_mode == BOOT_CD) 
+    /*if (boot_mode == BOOT_CD) 
 	 strcat (bootpath,"CD\\IPL.TXT;1");
-    else strcat (bootpath,"CD\\IPL.TXT");
+    else */
+    	strcat (bootpath,"CD\\IPL.TXT");
     
     fd = fioOpen(bootpath, O_RDONLY);
     if (fd>0)
@@ -227,9 +211,9 @@ int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-    
+    */
 
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -267,9 +251,9 @@ int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-
+*/
 
 
     printf("LOADING Z80 FILE\n");
@@ -278,13 +262,8 @@ int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
         printf("Could not open %s", Path);
         return 0;
     }
-        
-    #ifdef USE_MAMEZ80
-    fioRead(fd, &mame_z80mem[Offset], Z80_MEMSIZE);
-    #else
     fioRead(fd, &subcpu_memspace[Offset], Z80_MEMSIZE);
-    #endif
-
+    
     fioClose(fd);
     return 1;
 }
@@ -307,8 +286,9 @@ int    cdrom_load_fix_file(char *FileName, unsigned int Offset)
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
+    */
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -350,9 +330,9 @@ int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-    
+    */
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
         printf("Could not open %s", Path);
@@ -390,9 +370,9 @@ int    cdrom_load_obj_file(char *FileName, unsigned int Offset)
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-    
+    */
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
         printf("Could not open %s", Path);
@@ -428,9 +408,9 @@ int    cdrom_load_pcm_file(char *FileName, unsigned int Offset)
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-
+	*/
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
         printf("Could not open %s", Path);
@@ -461,9 +441,9 @@ int    cdrom_load_pat_file(char *FileName, unsigned int Offset, unsigned int Ban
     strcat(Path, FileName);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-    
+    */
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
         printf("Could not open %s", Path);
@@ -532,9 +512,9 @@ int    cdrom_process_ipl(void)
     strcat(Path, IPL_TXT);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-
+	*/
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) 
     {
@@ -1156,11 +1136,7 @@ void neogeo_upload(void)
     case    3:    // Z80
 
         Source = neogeo_prg_memory + m68k_read_memory_32(0x10FEF8);
-        #ifdef USE_MAMEZ80
-    	Dest = mame_z80mem + (m68k_read_memory_32(0x10FEF4)>>1);
-    	#else
     	Dest = subcpu_memspace + (m68k_read_memory_32(0x10FEF4)>>1);
-    	#endif
         Taille = m68k_read_memory_32(0x10FEFC);
         
         swab( Source, Dest, Taille);        
@@ -1232,9 +1208,9 @@ void cdrom_load_title(void)
     strcat(Path, file);
     
     // if games loaded from CD and from "cd" directory
-    if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
+    /*if ((game_boot_mode == BOOT_HOST)  && (boot_mode = BOOT_CD))
     	strcat(Path, ";1");
-    
+    */
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0)
     {
@@ -1273,17 +1249,11 @@ void cdrom_load_title(void)
 
 }
 
-#ifdef USE_MAMEZ80
-#define PATCH_Z80(a, b) { \
-    			    mame_z80mem[(a)] = (b)&0xFF; \
-                            mame_z80mem[(a+1)] = ((b)>>8)&0xFF; \
-                        }
-#else
 #define PATCH_Z80(a, b) { \
 	                    subcpu_memspace[(a)] = (b)&0xFF; \
                             subcpu_memspace[(a+1)] = ((b)>>8)&0xFF; \
                         }
-#endif
+
 void cdrom_apply_patch(short *source, int offset, int bank)
 {
     int master_offset;
