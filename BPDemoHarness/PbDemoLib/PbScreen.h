@@ -39,6 +39,7 @@ void PbScreenDisplayAt( u32 Pos, int Width );
 void PbScreenVsync();
 void PbScreenFlip();
 void PbScreenSetActive( int Buffer );
+int  PbScreenGetActive();
 
 #endif // _PBSCREEN_H_
 

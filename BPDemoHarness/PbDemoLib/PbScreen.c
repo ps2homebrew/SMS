@@ -94,7 +94,7 @@ void PbScreenSetup( int Width, int Height, int PSM )
   *p_data++ = GS_SETREG_SCISSOR_1( 0, Width-1, 0, Height-1 ); 
   *p_data++ = GS_SCISSOR_1,  
 
-  *p_data++ = GS_SETREG_ZBUF_1( g_Zbuffer / 2048, 0, 0 );   
+  *p_data++ = GS_SETREG_ZBUF_1( g_Zbuffer / 8192, 0, 0 );   
   *p_data++ = GS_ZBUF_1,     
 
   *p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 );     
@@ -114,7 +114,7 @@ void PbScreenSetup( int Width, int Height, int PSM )
   *p_data++ = GS_SETREG_SCISSOR_1( 0, Width-1, 0, Height-1 ); 
   *p_data++ = GS_SCISSOR_2,  
 
-  *p_data++ = GS_SETREG_ZBUF_1( g_Zbuffer / 2048, 0, 0 );   
+  *p_data++ = GS_SETREG_ZBUF_1( g_Zbuffer / 8192, 0, 0 );   
   *p_data++ = GS_ZBUF_2,     
 
   *p_data++ = GS_SETREG_TEST( 1, 7, 0xFF, 0, 0, 0, 1, 1 );     
@@ -136,7 +136,7 @@ void PbScreenSyncFlip()
 
   // set visible buffer
 
-  GS_SET_DISPFB2( g_ScreenBuffer[g_ActiveBuffer & 1] / 2048, 
+  GS_SET_DISPFB2( g_ScreenBuffer[g_ActiveBuffer & 1] / 8192, 
                   g_Width / 64, g_Psm, 0, 0 );
 
   g_ActiveBuffer ^= 1;
@@ -165,7 +165,7 @@ void PbScreenSetActive( int Buffer )
   *p_data++ = GS_SETREG_SCISSOR_1( 0, g_Width-1, 0, g_Height - 1 ); 
   *p_data++ = GS_SCISSOR_1;
 
-  *p_data++ = GS_SETREG_FRAME_1( g_ScreenBuffer[Buffer & 1] / 2048, 
+  *p_data++ = GS_SETREG_FRAME_1( g_ScreenBuffer[Buffer & 1] / 8192, 
                                  g_Width / 64, g_Psm, 0 );  
   *p_data++ = GS_FRAME_1; 
 
@@ -174,7 +174,7 @@ void PbScreenSetActive( int Buffer )
   *p_data++ = GS_SETREG_SCISSOR_1( 0, g_Width-1, 0, g_Height - 1 ); 
   *p_data++ = GS_SCISSOR_2;
 
-  *p_data++ = GS_SETREG_FRAME_1( g_ScreenBuffer[Buffer & 1] / 2048, 
+  *p_data++ = GS_SETREG_FRAME_1( g_ScreenBuffer[Buffer & 1] / 8192, 
                                  g_Width / 64, g_Psm, 0 );  
   *p_data++ = GS_FRAME_2; 
   
@@ -237,5 +237,14 @@ int PbScreenGetOffsetX()
 int PbScreenGetOffsetY()
 {
   return g_OffsetY;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbScreenGetOffsetY()
+///////////////////////////////////////////////////////////////////////////////
+
+int PbScreenGetActive()
+{
+  return g_ActiveBuffer;
 }
 
