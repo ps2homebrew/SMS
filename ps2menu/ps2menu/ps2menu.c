@@ -1,5 +1,5 @@
 /*
-	PS2Menu v2.4b
+	PS2Menu v2.5b
 	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
@@ -34,6 +34,14 @@
 					- 	is held down for a handful of cycles
 					- added recursive delete for folder on pfs0: or mc0:
 					- added 'basic' nPort npo extraction (still testing)
+					- added ps2ip, ps2smap, ps2netfs loads IPCONFIG.DAT
+					-	from mc0:/SYS-CONF
+					- changed START to open function menu, rename and advanced
+					-	copy functions only, so far
+					- added rename function for file/folder on pfs0:
+					-	mc0: ommitted until I can make mcRename work!
+					- added recursive copy for folder on pfs0:, host: or mc0:.
+					-	recursive copy from cdfs: still needs to be implemented
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
 	and libhdd v1.2, ps2drv, ps2link v1.2, ps2 Independence Day
@@ -188,6 +196,7 @@ extern void *_end;
 #define MAX_ENTRY	2048			// maximum number of files/folders to list in menu
 #define TRUE	1
 #define FALSE	0
+#define IPCONF_MAX_LEN  (3*16)
 
 int paletteindex = 0;			// pointer to next unused palette cell in table
 char sStatus[MAX_PATH];			// program status string
@@ -232,6 +241,83 @@ int topfil=0, elfload=0, activeHDD, activeMC, activeHOST;
 int screenx,screeny;
 char mcport = 0;
 
+char if_conf[IPCONF_MAX_LEN];
+int if_conf_len;
+
+char ip[16] __attribute__((aligned(16))) = "192.168.0.10";
+char netmask[16] __attribute__((aligned(16))) = "255.255.255.0";
+char gw[16] __attribute__((aligned(16))) = "192.168.0.1";
+
+////////////////////////////////////////////////////////////////////////
+// Parse network configuration from IPCONFIG.DAT
+// Note: parsing really should be made more robust...
+// PS2Link (C) 2003 Tord Lindstrom (pukko@home.se)
+//         (C) 2003 adresd (adresd_ps2dev@yahoo.com)
+static void
+getIpConfig(void)
+{
+    int fd;
+    int i;
+    int t;
+    int len;
+    char c;
+    char buf[IPCONF_MAX_LEN];
+
+    fd = fioOpen("mc0:/SYS-CONF/IPCONFIG.DAT", O_RDONLY);
+
+    if (fd < 0) 
+    {
+        scr_printf("Could not find IPCONFIG.DAT, using defaults\n"
+                   "Net config: %s  %s  %s\n", ip, netmask, gw);
+        // Set defaults
+        memset(if_conf, 0x00, IPCONF_MAX_LEN);
+        i = 0;
+        strncpy(&if_conf[i], ip, 15);
+        i += strlen(ip) + 1;
+        
+        strncpy(&if_conf[i], netmask, 15);
+        i += strlen(netmask) + 1;
+        
+        strncpy(&if_conf[i], gw, 15);
+        i += strlen(gw) + 1;
+        
+        if_conf_len = i;
+        return;
+    }
+
+    memset(if_conf, 0x00, IPCONF_MAX_LEN);
+    memset(buf, 0x00, IPCONF_MAX_LEN);
+
+    len = fioRead(fd, buf, IPCONF_MAX_LEN - 1); // Let the last byte be '\0'
+    fioClose(fd);
+
+    if (len < 0) {
+        dbgprintf("Error reading ipconfig.dat\n");
+        return;
+    }
+
+    i = 0;
+    // Clear out spaces (and potential ending CR/LF)
+    while ((c = buf[i]) != '\0') {
+        if ((c == ' ') || (c == '\r') || (c == '\n'))
+            buf[i] = '\0';
+        i++;
+    }
+
+    scr_printf("Net config: ");
+    for (t = 0, i = 0; t < 3; t++) {
+        strncpy(&if_conf[i], &buf[i], 15);
+        scr_printf("%s  ", &if_conf[i]);
+        i += strlen(&if_conf[i]) + 1;
+    }
+    scr_printf("\n");
+
+    if_conf_len = i;
+}
+
+////////////////////////////////////////////////////////////////////////
+// Extracts an nPort npo file to mc0:/
+//
 int npoExtract(char *filename)
 {
 	npoHeader *npofile;
@@ -959,6 +1045,121 @@ void ReadHostDir(void)
 
 ////////////////////////////////////////////////////////////////////////
 // Attempt to copy specified file to active HDD partition/folder
+int copytodest(char *sourcefile)
+{
+	int ret,xiosource,xiodest;
+	int boot_fd,boot_fd2; 
+	size_t boot_size;
+	char *boot_buffer, *ptr, *argv[2];
+	char empty='\0';
+	static char iuntar[512];
+	char savedestination[MAX_PATH];
+
+	sprintf(iuntar,"Copying %s to %s",sourcefile,destination);
+	jprintf(iuntar);
+	xiosource=FALSE;
+	xiodest=FALSE;
+	strcpy(savedestination,destination);
+	ptr = strrchr(sourcefile, '/');
+	if (ptr == NULL)
+	{
+		ptr = strrchr(sourcefile, '\\');
+		if (ptr == NULL)
+		{
+			ptr = strrchr(sourcefile, ':');
+			}
+		}
+	ptr++;
+
+	strcat(destination,ptr);
+	if(!strncmp(destination,"pfs0:",5)) xiodest=TRUE;
+	if(!strncmp(sourcefile,"pfs0:",5)) xiosource=TRUE;
+	if(xiosource) boot_fd = fileXioOpen(sourcefile, O_RDONLY, fileMode);
+	else boot_fd = fioOpen(sourcefile, O_RDONLY);
+	if(boot_fd < 0)
+	{
+		sprintf(sStatus,"Open %s Failed",sourcefile);
+		strcpy(destination,savedestination);
+		return boot_fd;
+		}
+	else
+	{
+		if(xiosource) boot_size = fileXioLseek(boot_fd,0,SEEK_END);
+		else boot_size = fioLseek(boot_fd,0,SEEK_END);
+		dbgprintf("Try to copy %i bytes of %s to %s\n", boot_size, sourcefile, destination);
+		if(xiosource) fileXioLseek(boot_fd,0,SEEK_SET);
+		else fioLseek(boot_fd,0,SEEK_SET);
+		boot_buffer = malloc(boot_size);
+		if ((boot_buffer)==NULL)
+		{
+			if(elfhost!=2)
+			{
+				dbgprintf("Malloc failed. %i\n", boot_buffer);
+				boot_buffer = malloc(1048576);
+				if (xiodest) boot_fd2 = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
+				if(boot_fd2 < 0)
+				{
+					sprintf(sStatus,"Open %s Failed",destination);
+					}
+				else
+				{
+					while(boot_size>=1048576)
+					{
+						boot_size=boot_size-1048576;
+						if (xiosource) fileXioRead(boot_fd, boot_buffer, 1048576);
+						else fioRead(boot_fd, boot_buffer, 1048576);
+						sprintf(iuntar,"Bytes remaining %i", boot_size);
+						jprintf(iuntar);
+						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,1048576);
+						else fioWrite(boot_fd2,boot_buffer,1048576);
+						}
+					if(boot_size>0)
+					{
+						if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
+						else fioRead(boot_fd, boot_buffer, boot_size);
+						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,boot_size);
+						else fioWrite(boot_fd2,boot_buffer,boot_size);
+						}
+					if(xiodest)	fileXioClose(boot_fd2);
+					else fioClose(boot_fd2);
+					sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
+					}
+				free(boot_buffer);
+				}
+			else sprintf(sStatus,"File too big to be copied from host, try it as .tgz");
+			if(xiosource) fileXioClose(boot_fd);
+			else fioClose(boot_fd);
+			strcpy(destination,savedestination);
+			return -1; // a file too big for memory cannot be copied
+			}
+		if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
+		else fioRead(boot_fd, boot_buffer, boot_size);
+		if(xiosource) fileXioClose(boot_fd);
+		else fioClose(boot_fd);
+		free(boot_buffer);
+		}
+	if (xiodest) boot_fd = fileXioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT, fileMode);
+	else boot_fd = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
+	ret = boot_fd;
+	if(boot_fd < 0)
+	{
+		sprintf(sStatus,"Open %s Failed",destination);
+		}
+	else
+	{
+		if (xiodest) fileXioWrite(boot_fd,boot_buffer,boot_size);
+		else fioWrite(boot_fd,boot_buffer,boot_size);
+		if(xiodest)	fileXioClose(boot_fd);
+		else fioClose(boot_fd);
+		sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
+		}
+	strcpy(destination,savedestination);
+	return ret;
+	}
+
+////////////////////////////////////////////////////////////////////////
+// Attempt to copy specified file to active HDD partition/folder
 int tomcopy(char *sourcefile)
 {
 	int ret,xiosource,xiodest;
@@ -969,6 +1170,8 @@ int tomcopy(char *sourcefile)
 	static char iuntar[512];
 	char savedestination[MAX_PATH];
 
+	sprintf(iuntar,"Copying %s to %s",sourcefile,destination);
+	jprintf(iuntar);
 	xiosource=FALSE;
 	xiodest=FALSE;
 	strcpy(savedestination,destination);
@@ -1167,6 +1370,64 @@ void RecursiveDelete(char *folder)
 					}
 				}
 			}
+		}
+	}
+
+////////////////////////////////////////////////////////////////////////
+// Delete all contents of a folder on pfs0: or mc0:
+void RecursiveCopy(char *folder)
+{
+	int rv,ret,fd=0;
+	iox_dirent_t hddbuf;
+	fio_dirent_t hostbuf;
+	char path[MAX_PATH];
+	char *ptr;
+	
+	strcpy(path,folder);
+	if(elfhost==1)
+	{
+		fd = fileXioDopen(path);
+		while((rv=fileXioDread(fd, &hddbuf)))
+		{
+			strcpy(path,folder);
+			strcat(path,"/");
+			strcat(path,(char *)&hddbuf.name);
+			strcat(destination,"/");
+			if(hddbuf.stat.mode & FIO_S_IFREG) copytodest(path);
+			else if(hddbuf.stat.mode & FIO_S_IFDIR && strncmp((char *)&hddbuf.name,".",1))
+			{
+				strcat(destination,(char *)&hddbuf.name);
+				if(strncmp(destination,"pfs0:",5)) fioMkdir(destination);
+				else fileXioMkdir(destination, fileMode);
+				RecursiveCopy(path);
+				}
+			ptr = strrchr(destination,'/');
+			if (ptr != NULL) *ptr = '\0';
+			}
+		fileXioDclose(fd);
+		}
+	if(elfhost==2 || elfhost==3)
+	{
+		strcat(path,"/");
+		fd = fioDopen(path);
+		while((rv=fioDread(fd, &hostbuf)))
+		{
+			strcpy(path,folder);
+			strcat(path,"/");
+			strcat(path,(char *)&hostbuf.name);
+			strcat(destination,"/");
+			if(hostbuf.stat.mode & FIO_SO_IFREG) copytodest(path);
+			else if(hostbuf.stat.mode & FIO_SO_IFDIR && strncmp((char *)&hostbuf.name,".",1))
+			{
+				strcat(destination,(char *)&hostbuf.name);
+				if(strncmp(destination,"pfs0:",5)) fioMkdir(destination);
+				else fileXioMkdir(destination, fileMode);
+				RecursiveCopy(path);
+				}
+			ptr = strrchr(destination,'/');
+			if (ptr != NULL) *ptr = '\0';
+			}
+		fioDclose(fd);
 		}
 	}
 
@@ -1888,7 +2149,7 @@ char *SelectELF(void)
 	u32 new_pad = 0;
 	int changed=1,minpath;
 	char botcap,botcap2;
-	char tmppath[MAX_PATH],newpath[MAX_PATH];
+	char tmppath[MAX_PATH], newpath[MAX_PATH] __attribute__((aligned(64)));
 
 	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
 		maxrows=24;
@@ -2151,7 +2412,7 @@ char *SelectELF(void)
 				showhelp(new_pad);
 				changed=1;
 				}
-			else if(new_pad & PAD_START)
+			else if(new_pad & PAD_START && strncmp(HDDfiles[highlighted],".",1))
 			{
 				ret=selectfunc(new_pad);
 				if(ret==1)
@@ -2167,11 +2428,13 @@ char *SelectELF(void)
 							ret=fileXioRename(fullpath, tmppath);
 							fileXioUmount("pfs0:");
 							}
-						/*if(elfhost==2)
-						{
-							}*/
 						if(elfhost==3)
 						{
+							for(i=0;i<MAX_PATH;i++)
+							{
+								tmppath[i]='\0';
+								newpath[i]='\0';
+								}
 							strcpy(tmppath,MCPath);
 							i=strlen(tmppath);
 							tmppath[i-1]='\0';
@@ -2179,8 +2442,8 @@ char *SelectELF(void)
 							strcat(tmppath,HDDfiles[highlighted]);
 							strcat(newpath,foldername);
 							printf("%s -> %s\n",tmppath,newpath);
-//							mcRename(mcport, 0, tmppath,newpath);
-//							mcSync(0, NULL, &ret);
+							mcRename(mcport, 0, tmppath,newpath);
+							mcSync(0, NULL, &ret);
 							}
 						sprintf(sStatus,"Renamed %s to %s %i",fullpath,foldername,ret);
 						}
@@ -2190,6 +2453,22 @@ char *SelectELF(void)
 					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
 						printf("Recursively copy %s to %s\n",fullpath,destination);
+						strcpy(tmppath,destination);
+						strcat(destination,HDDfiles[highlighted]);
+						if(elfhost==1 || !(strncmp(destination,"pfs0:",5)))
+						{
+							fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+							if(strncmp(destination,"pfs0:",5)) fioMkdir(destination);
+							else fileXioMkdir(destination, fileMode);
+							RecursiveCopy(fullpath);
+							fileXioUmount("pfs0:"); 
+							}
+						else
+						{
+							fioMkdir(destination);
+							RecursiveCopy(fullpath);
+							}
+						strcpy(destination,tmppath);
 						}
 					else
 					{
@@ -2431,7 +2710,7 @@ int main(int argc, char *argv[])
 		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.4b\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.5b\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
@@ -2690,7 +2969,6 @@ void LoadModules()
 	int ret;
 	static char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
 	static char pfsarg[] = "-m" "\0" "4" "\0" "-o" "\0" "10" "\0" "-n" "\0" "40" /*"\0" "-debug"*/;
-	static char iparg[] = "192.168.1.107" "\0" "255.255.255.0" "\0" "192.168.1.1";
 
 	if(elfload>1)
 	{
@@ -2700,6 +2978,8 @@ void LoadModules()
 		SifLoadModule("rom0:MCMAN", 0, NULL);
 		scr_printf("Loading MCSERV\n");
 		SifLoadModule("rom0:MCSERV", 0, NULL);
+		scr_printf("Read IPCONFIG.DAT\n");
+		getIpConfig();
 #ifdef ROM_PADMAN
 		scr_printf("Loading PADMAN\n");
 		ret = SifLoadModule("rom0:PADMAN", 0, NULL);
@@ -2724,7 +3004,7 @@ void LoadModules()
 		scr_printf("Loading ps2ip.irx %i bytes\n", size_ps2ip_irx);
 		SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &ret);
 		scr_printf("Loading ps2smap.irx %i bytes\n", size_ps2smap_irx);
-		SifExecModuleBuffer(&ps2smap_irx, size_ps2smap_irx, sizeof(iparg), iparg, &ret);
+		SifExecModuleBuffer(&ps2smap_irx, size_ps2smap_irx, if_conf_len, &if_conf[0], &ret);
 		scr_printf("Loading ps2atad.irx %i bytes\n", size_ps2atad_irx);
 		SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &ret);
 		scr_printf("Loading ps2hdd.irx %i bytes\n", size_ps2hdd_irx);
