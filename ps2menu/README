@@ -4,7 +4,7 @@ ps2menu
 				Thomas Hawcroft 2003/04
 
 
-Version 2.1
+Version 2.23
 
 PS2MENU is a Hard Drive project, born from mcbootloader and PS2 Independence MC loader,
 meant at start to offer hdd booting similar to that of dms3, on a no-mod or other ps2.
@@ -23,6 +23,8 @@ Square		: Create folder - prompts for name
 Tiangle		: Select copy destination folder or copy highlighted file to destination
 L1			: Switch active partition on HDD
 R1			: Switch active device, HDD, host:(via ps2link), memory card and CD
+L2			: Access configuration screen, for display options.
+R2			: Informs if highlighted file is a valid PS2 executable (ELF), filesize.
 SELECT		: Display help
 
 
@@ -32,10 +34,14 @@ C:\ps2\random.elf
 C:\ps2\random.irx
 
 "dir *.elf /b /s >elflist.txt" will create this. The program will look for this file in
-the folder ps2menu.elf was executed from.
+the folder ps2menu.elf was executed from.*
+
+*Versions of PS2LINK 1.22+ support fioDopen which allows us to display directory from host:
+removing the need for elflist.txt. PS2MENU will use this extended mode if it is supported.
 
 Will boot from memory card (without copy from host support) If loading as the exploit,
-PS2MENU.ELF should be renamed to BOOT.ELF.
+PS2MENU.ELF should be renamed to BOOT.ELF. Will also boot from CDR (with mod-chip) when
+in suitable PS2 format (beyond the scope of this document).
 
 You can receive/read sources at http://cvs.ps2dev.org
 Version History
