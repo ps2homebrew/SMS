@@ -374,6 +374,19 @@ void FtpClient_OnCmdRmd( FtpClient* pClient, const char* pDir )
 		FtpClient_Send( pClient, 250, "Command successful." );
 }
 
+void FtpClient_OnCmdSize( FtpClient* pClient, const char* pFile )
+{
+	int size = FileSystem_GetFileSize( &(pClient->m_kContext), pFile );
+
+	if( size < 0 )
+		FtpClient_Send( pClient, 550, "Could not get file size." );
+	else
+	{
+		itoa( buffer, size );
+		FtpClient_Send( pClient, 213, buffer );
+	}
+}
+
 void FtpClient_OnCmdSite( FtpClient* pClient, const char* pCmd )
 {
 	char* c;

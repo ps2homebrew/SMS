@@ -92,12 +92,13 @@ enum
 	FTPCMD_SITE = FCOMMAND('s','i','t','e'),
 	FTPCMD_SYST = FCOMMAND('s','y','s','t'),
 	FTPCMD_REST = FCOMMAND('r','e','s','t'),
+	FTPCMD_SIZE = FCOMMAND('s','i','z','e'),
 
 	// possible commands, we'll implement them if it become necessary
 
+	//FTPCMD_FEAT = FCOMMAND('f','e','a','t'),
 	//FTPCMD_STAT = FCOMMAND('s','t','a','t'),
 	//FTPCMD_HELP = FCOMMAND('h','e','l','p'),
-	//FTPCMD_SIZE = FCOMMAND('s','i','z','e'),
 };
 
 enum
@@ -169,6 +170,8 @@ void FtpClient_OnCmdMode( FtpClient* pClient, const char* pMode );
 void FtpClient_OnCmdStru( FtpClient* pClient, const char* pStructure );
 void FtpClient_OnCmdAppe( FtpClient* pClient, const char* pFile );
 void FtpClient_OnCmdRest( FtpClient* pClient, int iMarker );
+void FtpClient_OnCmdSize( FtpClient* pClient, const char* pFile );
+void FtpClient_OnCmdFeat( FtpClient* pClient );
 
 void FtpClient_OnSiteMount( FtpClient* pClient, const char* pMountPoint, const char* pMountFile );
 void FtpClient_OnSiteUmount( FtpClient* pClient, const char* pMountPoint );

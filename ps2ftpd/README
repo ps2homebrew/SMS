@@ -84,7 +84,7 @@ APPE <file>
 PWD
 XPWD
 	Query current path.
-XCWD
+XCWD <dir>
 CWD <dir>
 	Change current directory.
 CDUP
@@ -103,6 +103,8 @@ NOOP
 	No operation.
 REST <marker>
 	Set restart-marker (for resuming transfers)
+SIZE <file>
+	Get size of file.
 
 The supported site-commands are:
 

@@ -118,6 +118,9 @@ int FileSystem_DeleteFile( FSContext* pContext, const char* pFile );
 int FileSystem_CreateDir( FSContext* pContext, const char* pDir );
 #define _T(v) ((FS_IOMAN2_BOOTVAL==v)?(1<<31):0)
 
+//! Get file-size
+int FileSystem_GetFileSize( FSContext* pContext, const char* pFile );
+
 //! Delete directory
 int FileSystem_DeleteDir( FSContext* pContext, const char* pDir );
 

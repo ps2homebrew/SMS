@@ -644,6 +644,70 @@ int FileSystem_ChangeDir( FSContext* pContext, const char* pPath )
 	return 0;
 }
 
+int FileSystem_GetFileSize( FSContext* pContext, const char* pFile )
+{
+#ifdef LINUX
+	return -1;
+#else
+
+	FileSystem_Close(pContext);
+	FileSystem_BuildPath( buffer, pContext->m_Path, pFile );
+
+	if( NULL == (pFile = FileSystem_ClassifyPath( pContext, buffer )) )
+		return -1;
+
+	switch( pContext->m_eType )
+	{
+		case FS_IODEVICE:
+		{
+			iox_stat_t stat;
+
+			memset(&stat,0,sizeof(stat));
+
+			// get status from root directory of device
+			if( pContext->m_kFile.device->ops->getstat( &(pContext->m_kFile), pFile, (io_stat_t*)&stat ) < 0 )
+				break;
+
+			// dummy devices does not set mode properly, so we can filter them out easily
+			if( !stat.mode )
+				break;
+
+			if( (pContext->m_kFile.device->type & 0xf0000000) != IOP_DT_FSEXT )
+			{
+				// legacy device
+
+				if( !FIO_SO_ISREG(stat.mode) )
+					break;
+
+				pContext->m_kFile.device = NULL;
+				pContext->m_eType = FS_INVALID;
+				return stat.size;
+			}
+			else
+			{
+				// newstyle
+
+				if( !FIO_S_ISREG(stat.mode) )
+					break;
+
+				pContext->m_kFile.device = NULL;
+				pContext->m_eType = FS_INVALID;
+				return stat.size;
+			}
+		}
+		break;
+
+		default:
+		break;
+	}
+
+	pContext->m_kFile.device = NULL;
+	pContext->m_eType = FS_INVALID;
+
+	return -1;
+#endif
+}
+
 #ifndef LINUX
 const char* FileSystem_ClassifyPath( FSContext* pContext, const char* pPath )
 {

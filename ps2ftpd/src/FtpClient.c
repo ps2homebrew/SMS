@@ -423,6 +423,17 @@ void FtpClient_OnCommand( FtpClient* pClient, const char* pString )
 			}
 			break;
 
+			case FTPCMD_SIZE:
+			{
+				char* file = strtok(NULL,"");
+
+				if(file)
+					FtpClient_OnCmdSize(pClient,file);
+				else
+					FtpClient_Send( pClient, 500, "Requires parameters." );
+			}
+			break;
+
 			case FTPCMD_REST:
 			{
 				char* marker = strtok(NULL,"");
