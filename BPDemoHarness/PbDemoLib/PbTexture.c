@@ -271,6 +271,7 @@ void PbTextureUpload4( PbTexture* pTexture )
 
 u64 PbTextureGetTex0( PbTexture* pTexture )
 {
+
   int lx = PbLog( pTexture->x );
   int ly = PbLog( pTexture->y );
 
@@ -458,4 +459,24 @@ void PbTextureSetRenderTarget( PbTexture* pTexture )
 	
 	PbDmaSend02Spr(p_store, 3);
 	PbDmaWait02();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// void PbSetLinearFiltering
+///////////////////////////////////////////////////////////////////////////////
+
+void PbSetLinearFiltering()
+{
+  u64* p_store;
+  u64* p_data;
+
+  p_store = p_data = PbSprAlloc( 2*16 );
+
+  *p_data++ = GIF_TAG( 1, 1, 0, 0, 0, 1 );
+  *p_data++ = GIF_AD;
+
+  *p_data++ = 0x0000000000000060;
+  *p_data++ = GS_TEX1_1;		
+
+  PbDmaSend02Spr( p_store, 2 );
 }
