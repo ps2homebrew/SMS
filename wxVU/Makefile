@@ -8,13 +8,13 @@ CFLAGS += -Wmissing-noreturn
 CFLAGS += -Wchar-subscripts -Wformat-security
 
 LIBS = `wx-config --libs` -lc_r
-CPP = c++
+CPP = g++
 RM = rm -f
 DVP = dvp-elf-as
 OBJCOPY = ee-objcopy
 OBJECTS = main.o lower.o parser.o upper.o util.o vu.o \
 		gif.o prefdlg.o prefs.o dump.o linkproto_stub.o \
-		vif.o timer.o sif.o dma.o vuBreakDialog.o breakpoint.o
+		vif.o timer.o sif.o dma.o vuBreakDialog.o breakpoint.o debug.o
 
 FILES = Makefile Makefile.WIN32 TODO src/datatypes.h src/defsext.h src/dma.cpp src/dma.h \
 	src/dump.cpp src/dump.h src/errors.h src/gif.cpp src/gif.h src/instructions.txt src/linkproto_stub.cpp \
