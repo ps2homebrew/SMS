@@ -2,10 +2,8 @@
 #ifndef _OPCODES_
 #define _OPCODES_
 
-// #define NUM_OPCODES 4069-13-228-2008
-
 #define NUM_LOWER 362
-#define NUM_UPPER 1462
+#define NUM_UPPER 1461
 
 //used params
 #define PARAM_NOTHING 7  //-

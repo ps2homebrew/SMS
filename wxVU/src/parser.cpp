@@ -16,6 +16,7 @@
 #include "MicroCode.h"
 #include "VuInstruction.h"
 #include "opcodes.h"
+#include "Log.h"
 
 using namespace std;
 
@@ -863,7 +864,8 @@ Parser::LoadCode(char *file) {
     char Line[250];
     string line;
     int j = 0;
-    m_pVuCore->Reset();
+    int32 i = 0;
+    m_pVuCore->ResetCode();
     ifstream fin(file, ios::binary);
     struct stat st;
     char *data;
@@ -912,8 +914,11 @@ Parser::LoadCode(char *file) {
             continue;
         }
         if(!ProcessLine(Line)) {
+            Log* log = Log::Instance();
+            log->Error(wxString::Format("bad opcode(%s) on line %d\n", Line, index));
             return 0;
         }
+        i++;
     }
     fin.close();
     free(data);
@@ -950,18 +955,17 @@ Parser::LoadBinaryCode(ifstream *fin, char *data) {
 
     index = 0;
 
-    while(!fin->eof() ) {
+    while(fin->peek() != EOF) {
         fin->read((char *)&lcode, sizeof(uint32));
         fin->read((char *)&ucode, sizeof(uint32));
-        // if last 8 bytes are 0 its surely the end
-        if ( ucode == 0 ) {
-            break;
-        }
-        if ( lcode == 0 ) {
-            break;
-        }
         uidx = get_upper(ucode);
         lidx = get_lower(lcode);
+        if ( uidx == -1 || lidx == -1 ) {
+            Log* log = Log::Instance();
+            log->Warning(wxString::Format("bad opcode on line %d\n", index));
+            index++;
+            continue;
+        }
         memset(lparam, 0, 50);
         memset(uparam, 0, 50);
         get_params(uidx, ucode, uparam, uopcodes, index);
@@ -1255,15 +1259,6 @@ Parser::get_lower(uint32 code) {
             return i;
         }
     }
-    // insert nop coz it could still be valid data afterwards
-    if (code == 0x0) {
-        hold = 0x8000033C;
-        for(i = 0; i < NUM_LOWER; i++) {
-            if ( hold == lopcodes[i].opcode) {
-                return i;
-            }
-        }
-    }
     return -1;
 }
 
@@ -1301,16 +1296,7 @@ Parser::get_upper(uint32 code) {
             return i;
         }
     }
-    // insert nop coz it could still be valid data afterwards
-    if (code == 0x0) {
-        hold = 0x000002FF;
-        for(i = 0; i < NUM_UPPER; i++) {
-            if ( hold == uopcodes[i].opcode) {
-                return i;
-            }
-        }
-    }
-    return -2;
+    return -1;
 }
 
 // insert the upper and lower instruction at a given index
