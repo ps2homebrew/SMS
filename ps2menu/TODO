@@ -10,6 +10,5 @@ PS2MENU is a Hard Drive project ment at start to offer hdd booting that dms3 had
 Todo:
 - 
 - Boot all programs posible 100% (going to be a while)
-- Manage partions and folders
 - Run without PS2Link and boot off Memory Card
 - Dump files to hard drive without host:

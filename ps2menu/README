@@ -10,8 +10,11 @@ PS2MENU is a Hard Drive project ment at start to offer hdd booting that dms3 had
 _________________________________________________________________________________________________________
 
 Left and Right : Changes from host: to pfs0: and back
-x              : On host: you can copy files over on pfs0: runs the elf
+x              : On host: you can copy files over on pfs0: runs the elf or opens folder
 Up and Down    : Guess
+Circle         : Delete file or empty folder (no confirm)
+Square         : Create folder
+L1             : Switch partion/volume
 
 
 

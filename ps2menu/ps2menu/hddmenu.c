@@ -5,6 +5,13 @@
 					- added host file copy list - through elflist.txt
 					- 	dos command "dir *.elf /b /s >elflist.txt"
 					- added scrolling filelist and screen text clipping
+					- added partition/volume switching via PAD L1 button
+					- added create folder on pfs0: via PAD SQUARE button
+					- added on screen keyboard function
+					- added pfs0: directory changing via PAD CROSS button
+					- added delete file or empty folder via PAD CIRCLE button
+					-		still requires a user confirmation option
+					- added drawline functions to tart-up display
 
 	based on mcbootmenu.c
 	and libhdd v1
@@ -91,24 +98,30 @@ extern void *_end;
 unsigned char *Img;					// pntr to blit buffer
 int g_nWhichBuffer = 0;
 int show_logo = 0;
-char sStatus[128];
-iox_dirent_t dirbuf;
+char sStatus[256];
+char foldername[26]="\0";
+
+iox_dirent_t dirbuf __attribute__((aligned(64)));
 char HDDfiles[128][256];
 unsigned int HDDstats[128];
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char HDDpath[256];
+t_hddFilesystem parties[10] __attribute__((aligned(64)));
 
 void drawChar(char c, int x, int y, unsigned int colour);
 void printXY(char *s, int x, int y, unsigned int colour);
+void drawHorizontal(int x, int y, int length, unsigned int colour);
+void drawVertical(int x, int y, int length, unsigned int colour);
 int do_select_menu(void);
 int showDir(char *dir);
 int dowereformat();
 void ReadHDDFiles();
 void LoadModules();
 void LoadAndRunMCElf(char *filename);
+void MenuKeyboard(char *s);
 
 #define ARRAY_ENTRIES	64
-int num_hdd_files,elfhost=1;
+int num_hdd_files,elfhost=1,party=0,nparty;
 unsigned char romver[16];
 int topfil=0;
 
@@ -144,6 +157,32 @@ void drawChar(char c, int x, int y, unsigned int colour)
 			pp++;
 			}
 		pp += (g_nScreen_X - 8);
+		}
+	}
+
+void drawHorizontal(int x, int y, int length, unsigned int colour)
+{
+	unsigned char *pp;
+	unsigned int i;
+
+	pp = pScreen + x + (g_nScreen_X * y);
+	for(i=0; i<length; i++)
+	{
+		*pp = colour;
+		pp++;
+		}
+	}
+
+void drawVertical(int x, int y, int length, unsigned int colour)
+{
+	unsigned char *pp;
+	unsigned int i;
+
+	pp = pScreen + x + (g_nScreen_X * y);
+	for(i=0; i<length; i++)
+	{
+		*pp = colour;
+		pp += (g_nScreen_X);
 		}
 	}
 
@@ -187,45 +226,51 @@ int dowereformat()
 	if (hddFormat() < 0)
 	{
 		printf("ERROR: could not format HDD!\n");
+		return -1;
 		}
 	else
 	{
 		printf("HDD is connected and formatted.\n");
 		}
 #endif
-	ret = hddMakeFilesystem(4096, "APPS", FS_GROUP_APPLICATION);
+	ret = hddMakeFilesystem(4096, "HDDMENU", FS_GROUP_COMMON);
 	if (ret < 0)
 	{
 		printf("ERROR: failed to create APPS filesystem: %d\n", ret);
+		return -1;
 		}
 	else
 	{
 		printf("Created APPS filesystem with size: %dMB.\n",ret);
 		}
 
-	ret = fileXioMount("pfs0:", "hdd0:APPS", FIO_MT_RDWR);
-	return ret;
+//	ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+	return 1;
 	}
 
 void ReadHDDFiles()
 {
 	int rv,fd;
+	char filesname[256];
 
-	rv = fileXioMount("pfs0:", "hdd0:APPS", FIO_MT_RDONLY);
+	rv = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
+	printf("Mounted %s\n", parties[party].filename);
 	if(rv < 0)
 	{
 		printf("ERROR: failed to mount filesystem: %d\n", rv);
-		rv = dowereformat();
+//		rv = dowereformat();
 		}
 	if(rv == 0)
 	{
-		fd = fileXioDopen("pfs0:/");
+		printf("%s\n",HDDpath);
+		fd = fileXioDopen(HDDpath);
 		num_hdd_files=0;
 		while((rv=fileXioDread(fd, &dirbuf)))
 		{
-			sprintf (HDDfiles[num_hdd_files],"%s",dirbuf.name);
+			strcpy(filesname, &dirbuf.name);
+			sprintf (HDDfiles[num_hdd_files],"%s",filesname);
 			HDDstats[num_hdd_files]=dirbuf.stat.mode;
-			if ((HDDstats[num_hdd_files] && FIO_S_IFDIR) || (HDDstats[num_hdd_files] && FIO_S_IFREG)) num_hdd_files++;
+			if ((HDDstats[num_hdd_files] & FIO_S_IFDIR) || (HDDstats[num_hdd_files] & FIO_S_IFREG)) num_hdd_files++;
 			}
 		}
 	fileXioDclose(fd);
@@ -241,15 +286,15 @@ void PrintHDDFiles(int highlighted)
 	texcol=1;
 	for(i=0; i<num_hdd_files && i < 20; i++)
 	{
-		if (FIO_S_IFDIR&&(HDDstats[i+topfil]))
+		if ((HDDstats[i+topfil])&FIO_S_IFDIR)
 		{
 			for(nchars=0;nchars<38;nchars++)
 			{
 				textfit[nchars]=HDDfiles[i+topfil][nchars];
 				}
-			sprintf(s, "%s, (dir)",textfit);
+			sprintf(s, "%s (dir)",textfit);
 			}
-		if (FIO_S_IFREG&&(HDDstats[i]))
+		if ((HDDstats[i+topfil])&FIO_S_IFREG)
 		{
 			for(nchars=0;nchars<42;nchars++)
 			{
@@ -349,7 +394,7 @@ char *strrchr(const char *sp, int i)
 int tomcopy(char *sourcefile)
 {
 	int ret;
-	int boot_fd,boot_fd2;
+	int boot_fd; //,boot_fd2;
 	size_t boot_size;
 	char *boot_buffer, *ptr;
 	char destination[256];
@@ -366,8 +411,9 @@ int tomcopy(char *sourcefile)
 	ptr++;
 
 	strcpy(destination,"pfs0:");
+	strcpy(destination,HDDpath);
 	strcat(destination,ptr);
-	fileXioMount("pfs0:", "hdd0:APPS", FIO_MT_RDWR);	
+	fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);	
 	boot_fd = fioOpen(sourcefile, O_RDONLY);
 	if(boot_fd <= 0)
 	{
@@ -428,21 +474,143 @@ int tomcopy(char *sourcefile)
 
 void ReDraw(int highlighted)
 {
-	int i;
 
 	clrEmuScreen(0);
 	printXY("Adam & Tom's HDD Boot/Copy Menu", 4, 4, 1);
+	printXY("Working volume:", 4, 16, 1);
+	printXY(parties[party].filename, 132, 16, 2);
 	if(elfhost==1) printXY("Select an ELF to run:", 4, 24, 1);
 	if(elfhost==2) printXY("Select an ELF to copy:", 4, 24, 1);
-	printXY("+-------------------------------------------+", 4, 32, 1);
-	for(i=40; i<200; i+=8)
-	{
-		printXY("|                                           |", 4, i, 1);
-		}
-	printXY("+-------------------------------------------+", 4, 200, 1);
+	drawHorizontal(8, 36, 348, 1);
+	drawHorizontal(11, 38, 343, 1);
+	drawVertical(8, 36, 168, 1);
+	drawVertical(11, 38, 164, 1);
+	drawVertical(356, 36, 168, 1);
+	drawVertical(353, 38, 164, 1);
+	drawHorizontal(8, 204, 348, 1);
+	drawHorizontal(11, 202, 343, 1);
 	PrintHDDFiles(highlighted);
+	if(elfhost==1) printXY(HDDpath, 4, 208, 2);
 	printXY(sStatus, 4, STATUS_Y, 2);
 	PutImage();
+	}
+
+void MenuKeyboard(char *s)
+{
+	int i,ret,keyrow=0,keycol=0,nameptr=0;
+	int enterkey = 0;
+	struct padButtonStatus buttons;
+	u32 paddata;
+	u32 old_pad = 0;
+	u32 new_pad;
+	char keysrow1[130]="0 1 2 3 4 5 6 7 8 9 ( ) .\0A B C D E F G H I J K L M\0N O P Q R S T U V W X Y Z\0a b c d e f g h i j k l m\0n o p q r s t u v w x y z\0";
+	char funcrow[19]="SPACE   DEL   ENTER";
+
+	enterkey=0;
+	nameptr=0;
+	while(!enterkey)
+	{
+		for(i=63;i<128;i++)
+		{
+			drawHorizontal(82, i, 202, 0);
+			}
+		printXY(s, 83, 63, 2);
+		printXY(&keysrow1[0], 83, 80, 1);
+		printXY(&keysrow1[26], 83, 88, 1);
+		printXY(&keysrow1[52], 83, 96, 1);
+		printXY(&keysrow1[78], 83, 104, 1);
+		printXY(&keysrow1[104], 83, 112, 1);
+		printXY(funcrow, 107, 120, 1);
+		drawHorizontal(82,71,202,2);
+		drawHorizontal(82,79,202,2);
+		drawHorizontal(82,128,202,2);
+		drawVertical(82,71,128-71,2);
+		drawVertical(82+202,71,128-71,2);
+		if (keyrow<5)
+		{
+			drawChar(keysrow1[(keyrow*26)+(keycol*2)],83+(keycol*16), 80+(keyrow*8), 2);
+			}
+		else
+		{
+			if(keycol==0) printXY("SPACE", 107, 120, 2);
+			if(keycol==1) printXY("DEL", 170, 120, 2);
+			if(keycol==2) printXY("ENTER", 218, 120, 2);
+			}
+		printXY(&foldername, 83, 71, 1);
+		PutImage();
+		ret = padRead(0, 0, &buttons); // port, slot, buttons
+            
+		if (ret != 0)
+		{
+			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+			new_pad = paddata & ~old_pad;
+			old_pad = paddata;
+
+// Directions
+			if(new_pad & PAD_LEFT)
+			{
+				keycol--;
+				if(keyrow<5)
+				{
+					if (keycol<0) keycol=12;
+					}
+				else if (keycol<0) keycol=2;
+				}
+            	if(new_pad & PAD_DOWN)
+			{
+				keyrow++;
+				if(keyrow>=5)
+				{
+					keyrow=5;
+					keycol=0;
+					}
+				}
+			if(new_pad & PAD_RIGHT)
+			{
+				keycol++;
+				if(keyrow<5)
+				{
+					if (keycol>12) keycol=0;
+					}
+				else if (keycol>2) keycol=0;
+				}
+			if(new_pad & PAD_UP)
+			{
+				keyrow--;
+				if(keyrow<0) keyrow=0;
+				}
+			if(new_pad & PAD_CROSS)
+			{
+				if(keyrow<5)
+				{
+					if(nameptr<25)
+					{
+						foldername[nameptr]=keysrow1[(keyrow*26)+(keycol*2)];
+						nameptr++;
+						foldername[nameptr]='\0';
+						}
+					}
+				else
+				{
+					if(keycol==0 && nameptr<25)
+					{
+						foldername[nameptr]=' ';
+						nameptr++;
+						foldername[nameptr]='\0';
+						}
+					if(keycol==1 && nameptr>0)
+					{
+						nameptr--;
+						foldername[nameptr]='\0';
+						}
+					if(keycol==2)
+					{
+						enterkey=1;
+						}
+					}
+				}
+			}
+		}
 	}
 
 void jprintf(char *s)
@@ -455,7 +623,7 @@ void jprintf(char *s)
 
 char *SelectELF(void)
 {
-	int ret;
+	int ret, i;
 	int selected = 0;
 	int highlighted = 0;
 	struct padButtonStatus buttons;
@@ -463,7 +631,9 @@ char *SelectELF(void)
 	u32 old_pad = 0;
 	u32 new_pad;
 	int changed=1;
+	char botcap,botcap2;
 
+	strcpy(HDDpath,"pfs0:/\0");
 	while(!selected)
 	{
 		ret = padRead(0, 0, &buttons); // port, slot, buttons
@@ -512,12 +682,113 @@ char *SelectELF(void)
 					}
 				else if(0 < highlighted) highlighted--;
 				}
-			if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
+// Buttons
+			if(new_pad & PAD_L1)
+			{
+				party++;
+				if(party>nparty) party=0;
+				highlighted=0;
+				topfil=0;
+				changed=1;
+				elfhost=1;
+				strcpy(HDDpath,"pfs0:/\0");
+				}
+			if((new_pad & PAD_CIRCLE) && elfhost==1)
+			{
+				if(HDDstats[highlighted]&FIO_S_IFDIR)
+				{
+					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+					strcpy(sStatus,HDDpath);
+					strcat(sStatus,HDDfiles[highlighted]);
+					printf("Remove %s\n",sStatus);
+					fileXioRmdir(sStatus);
+					fileXioUmount("pfs0:");
+					changed=1;
+					highlighted=0;
+					topfil=0;
+					}
+				else
+				{
+					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+					strcpy(sStatus,HDDpath);
+					strcat(sStatus,HDDfiles[highlighted]);
+					fileXioRemove(sStatus);
+					fileXioUmount("pfs0:");
+					changed=1;
+					highlighted=0;
+					topfil=0;
+					}
+				}
+			if((new_pad & PAD_SQUARE) && elfhost==1)
+			{
+				MenuKeyboard("Create folder, enter name");
+				if(strlen(foldername)>0)
+				{
+					fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
+					fileXioChdir(HDDpath);
+					strcat(HDDpath,foldername);
+					printf("%s\n", HDDpath);
+					fileXioMkdir(HDDpath, fileMode);
+					fileXioUmount("pfs0:");
+					strcat(HDDpath, "/\0");
+					changed=1;
+					highlighted=0;
+					topfil=0;
+					}
+				}
+			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
 			{
 				if(elfhost==1)
 				{
-					sprintf(sStatus, "-  %s -", HDDfiles[highlighted]);
-					selected = 1;
+					if(HDDstats[highlighted]&FIO_S_IFDIR)
+					{
+						botcap=HDDfiles[highlighted][0];
+						botcap2=HDDfiles[highlighted][1];
+						if((botcap=='.')&(botcap2=='.'))
+						{
+							i=0;
+							while(botcap!='\0')
+							{
+								botcap=HDDpath[i];
+								i++;
+								}
+							i--;
+							i--;
+							while((i>6)&(botcap!='/'))
+							{
+								i--;
+								botcap=HDDpath[i];
+								if(botcap=='/')
+								{
+									HDDpath[i+1]='\0';
+									}
+								if(i==6) HDDpath[i]='\0';
+								}
+							changed=1;
+							highlighted=0;
+							topfil=0;
+							}
+						else
+						{
+							if(botcap=='.')
+							{
+								printf("Trying to change to '.'\n");
+								}
+							else
+							{
+								strcat(HDDpath, HDDfiles[highlighted]);
+								strcat(HDDpath, "/\0");
+								changed=1;
+								highlighted=0;
+								topfil=0;
+								}
+							}
+						}
+					else
+					{
+						sprintf(sStatus, "-  %s -", HDDfiles[highlighted]);
+						selected = 1;
+						}
 					}
 				else
 				{
@@ -614,6 +885,7 @@ int main(int argc, char *argv[])
 	char *pc;
 	char s[256];
 
+
 // Initialise
 	SifInitRpc(0);
 	LoadModules();
@@ -662,11 +934,14 @@ int main(int argc, char *argv[])
 	if(hddCheckFormatted() < 0)
 	{
 		printf("Error: HDD is not properly formatted!\n");
+		if(dowereformat()<0)
+		{
+			while(1);
+			}
 		}
 	printf("HDD is connected and formatted.\n");
-//	ReadHDDFiles();
-//	ReadHostDir();
-// get the pad going
+	i=hddGetFilesystemList(parties, 10);
+	nparty=i-1;
 	strcpy(s,argv[0]);
 	i=0;
 	while(s[i]!='\0')
@@ -675,6 +950,7 @@ int main(int argc, char *argv[])
 		i++;
 		}
 		ReDraw(0);
+// get the pad going
 	padInit(0);
 	if((ret = padPortOpen(0, 0, padBuf)) == 0)
 	{
@@ -708,12 +984,13 @@ int main(int argc, char *argv[])
 	pc = SelectELF();
 
 // build correct path to ELF
+	padPortClose(0,0);
 	if(elfhost==2)
 	{
 		strcpy(s, "host:");
 		for(i=0;i<(elfsubdir-1);i++) strcat(s,"..\\");
 		}
-	if(elfhost==1) strcpy(s, "pfs0:/");
+	if(elfhost==1) strcpy(s, HDDpath);
 	strcat(s, pc);
 #ifdef DEBUG
 	printf("Path: %s\n", s);
@@ -811,7 +1088,7 @@ void LoadAndRunMCElf(char *filename)
 
 	if(elfhost==1)
 	{
-		ret = fileXioMount("pfs0:", "hdd0:APPS", FIO_MT_RDONLY);
+		ret = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
 		if ((fd = fileXioOpen(filename, O_RDONLY, fileMode)) < 0)
 		{
 			*GS_BGCOLOR =	0xFF0000;		// RED
@@ -891,3 +1168,9 @@ error:
 	while (1) ;
 
 	}
+// Shutdown cleanly
+// SifResetIOP();
+// SifInitRpc(0);
+// SifExitRpc();
+// do a padPortClose before any of above 
+// and de-register any dmac or interrupt handlers you have registered
