@@ -22,5 +22,5 @@ SIF::unpack_SB_SMFLG(void) {
     return v;
 }
 
-SIF::SIF() : SubSystem(SIF::nREGISTERS) {
+SIF::SIF() : SubSystem(SIFnREGISTERS) {
 }

@@ -118,10 +118,10 @@ static const string tDIR[2] = {
     "GS to EE"
 };
 
-GIF::GIF() : SubSystem(GIF::nREGISTERS) {
+GIF::GIF() : SubSystem(GIFnREGISTERS) {
 }
 
-GIF::GIF(uint32 *data, uint32 size) : SubSystem(GIF::nREGISTERS) {
+GIF::GIF(uint32 *data, uint32 size) : SubSystem(GIFnREGISTERS) {
     uint32 i;
     for(i = 0; i < size/16; i++) {
         gifData[i].x = data[i*4+0];
@@ -135,7 +135,7 @@ GIF::GIF(uint32 *data, uint32 size) : SubSystem(GIF::nREGISTERS) {
     counter = 0;
     curNreg = 0;
     curNreg = 0;
-    REGISTERS = new uint32[nREGISTERS];
+    REGISTERS = new uint32[GIFnREGISTERS];
 }
 
 bool

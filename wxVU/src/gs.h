@@ -16,11 +16,12 @@ class GS : public SubSystem {
 public:
     GS();
     ~GS();
-    static const int    nREGISTERS = 2;
+    static const int    nREGISTERS;
     vector<string>      getRegisterText(const int reg);
 private:
     vector<string>      unpack_SIGLBLID(const int reg);
     vector<string>      unpack_CSR(const int reg);
 
 };
+const int GS::nREGISTERS = 2;
 #endif

@@ -20,7 +20,7 @@ class GIF : public SubSystem {
 public:
     GIF();
     GIF(uint32 *, uint32);
-    static const int nREGISTERS = 8;
+    static int const nREGISTERS;
     string          getReadableTag();
     uint32          getNloop();
     uint32          getNreg();
@@ -71,4 +71,5 @@ private:
     uint32          curNreg;
     uint32          curNloop;
 };
+int const GIFnREGISTERS = 8;
 #endif

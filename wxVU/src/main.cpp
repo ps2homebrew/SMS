@@ -222,7 +222,7 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
 
     root = miscRegTree->AddRoot("Registers");
     id = miscRegTree->AppendItem(root, "DMA");
-    for( i = 0; i < DMA::nREGISTERS; i++ ) {
+    for( i = 0; i < DMAnREGISTERS; i++ ) {
         dmaItemIds[i] = miscRegTree->AppendItem(id, tDMA_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "Intc");
@@ -230,7 +230,7 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
         intcItemIds[i] = miscRegTree->AppendItem(id, tINTC_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "Timer");
-    for( i = 0; i < TIMER::nREGISTERS; i++ ) {
+    for( i = 0; i < TIMERnREGISTERS; i++ ) {
         timerItemIds[i] = miscRegTree->AppendItem(id, tTIMER_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "GS");
@@ -238,7 +238,7 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
         gsItemIds[i] = miscRegTree->AppendItem(id, tGS_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "SIF");
-    for( i = 0; i < SIF::nREGISTERS; i++ ) {
+    for( i = 0; i < SIFnREGISTERS; i++ ) {
         dmaItemIds[i] = miscRegTree->AppendItem(id, tSIF_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "FIFO");
@@ -246,7 +246,7 @@ VUFrame::buildMiscRegistersTable(wxNotebook *nbook) {
         fifoItemIds[i] = miscRegTree->AppendItem(id, tFIFO_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "GIF");
-    for( i = 0; i < GIF::nREGISTERS; i++ ) {
+    for( i = 0; i < GIFnREGISTERS; i++ ) {
         gifItemIds[i] = miscRegTree->AppendItem(id, tGIF_REGISTERS[i]);
     }
     id = miscRegTree->AppendItem(root, "VIF0");

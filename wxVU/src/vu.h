@@ -125,7 +125,7 @@ public:
 
 class VU {
 public:
-    static const int nREGISTERS = 2;
+    static const int nREGISTERS;
 	VFReg           RegFloat[32];       //32 float registers
 	VIReg           RegInt[16];         //16 integer registers
 	VFReg           ACC, I, Q, P, R;    //special registers

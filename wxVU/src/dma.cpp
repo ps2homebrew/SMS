@@ -240,7 +240,7 @@ static const string tCHCR_SPR[2] = {
 // static const string *SADR_ADDR = "Transfer data size (in qwords) = ";
 
 DMA::DMA() {
-    REGISTERS = new uint32[nREGISTERS];
+    REGISTERS = new uint32[DMAnREGISTERS];
 }
 
 DMA::~DMA() {

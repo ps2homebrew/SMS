@@ -16,10 +16,11 @@ class FIFO : public SubSystem {
 public:
     FIFO();
 	~FIFO();
-    static const int    nREGISTERS = 2;
+    static const int    nREGISTERS;
     vector<string>      getRegisterText(const int reg);
 private:
     vector<string>      unpack_VIF1_FIFO(const int reg);
     vector<string>      unpack_IPU_out_FIFO(const int reg);
 };
+const int FIFO::nREGISTERS = 2;
 #endif

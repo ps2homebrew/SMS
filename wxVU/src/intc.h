@@ -16,10 +16,11 @@ class INTC : public SubSystem {
 public:
     INTC();
     ~INTC();
-    static const int    nREGISTERS = 2;
+    static const int    nREGISTERS;
     vector<string>      getRegisterText(const int reg);
 private:
     vector<string>      unpack_I_STAT(const int reg);
     vector<string>      unpack_I_MASK(const int reg);
 };
+const int INTC::nREGISTERS = 2;
 #endif

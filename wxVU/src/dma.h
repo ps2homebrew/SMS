@@ -39,7 +39,7 @@ class DMA {
 public:
     DMA();
     ~DMA();
-    static const int nREGISTERS = 52;
+    static int const nREGISTERS;
     vector<string>  getRegisterText(const int reg);
     uint64          readRegister(const int reg);
     uint32          writeRegister(const int reg, uint32 value);
@@ -64,4 +64,5 @@ private:
 
     uint32          *REGISTERS;
 };
+const int DMAnREGISTERS = 52;
 #endif

@@ -23,7 +23,7 @@ class TIMER : public SubSystem {
 public:
     TIMER();
     ~TIMER();
-    static const int    nREGISTERS = 14;
+    static const int    nREGISTERS;
     vector<string>  getRegisterText(const int reg);
 private:
     enum ENUM_REGISTERS {
@@ -37,4 +37,5 @@ private:
     vector<string>  unpack_Tn_COMP(const int reg);
     vector<string>  unpack_Tn_HOLD(const int reg);
 };
+const int TIMERnREGISTERS = 14;
 #endif

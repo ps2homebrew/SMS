@@ -47,7 +47,7 @@ static const string tMODE_OVFF[2] = {
     "Writing 1 clears the equal flag"
 };
 
-TIMER::TIMER() : SubSystem(TIMER::nREGISTERS) {
+TIMER::TIMER() : SubSystem(TIMERnREGISTERS) {
 }
 
 TIMER::~TIMER() {

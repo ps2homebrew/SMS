@@ -27,10 +27,11 @@ class VIF0 : public VIF {
 public:
     VIF0();
     ~VIF0();
-    static const int    nREGISTERS = 18;
+    static const int    nREGISTERS;
     vector<string>      getRegisterText(const int reg);
 private:
     vector<string>      unpack_VIF0_STAT(const int reg);
     vector<string>      unpack_VIF0_FBRST(const int reg);
 };
+const int VIF0::nREGISTERS = 18;
 #endif

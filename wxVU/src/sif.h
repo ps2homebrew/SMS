@@ -18,9 +18,10 @@ class SIF : public SubSystem {
 public:
     SIF();
     vector<string>  getRegisterText(const int reg);
-    static const int    nREGISTERS = 1;
+    static const int    nREGISTERS;
 
 private:
     vector<string>  unpack_SB_SMFLG(void);
 };
+const int SIFnREGISTERS = 1;
 #endif

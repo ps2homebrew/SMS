@@ -16,7 +16,7 @@ class IPU : public SubSystem {
 public:
     IPU();
     ~IPU();
-    static const int    nREGISTERS = 4;
+    static const int    nREGISTERS;
     vector<string>      getRegisterText(const int reg);
 private:
     vector<string>      unpack_IPU_CMD(const int reg);
@@ -24,4 +24,5 @@ private:
     vector<string>      unpack_IPU_CTRL(const int reg);
     vector<string>      unpack_IPU_BP(const int reg);
 };
+const int IPU::nREGISTERS = 4;
 #endif

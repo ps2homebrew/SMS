@@ -26,7 +26,7 @@ class VIF1 : public VIF {
 public:
     VIF1();
     ~VIF1();
-    static const int    nREGISTERS = 22;
+    static const int    nREGISTERS;
     vector<string>      getRegisterText(const int reg);
 private:
     vector<string>      unpack_VIF1_STAT(const int reg);
@@ -35,4 +35,5 @@ private:
     vector<string>      unpack_VIF1_BASE(const int reg);
     vector<string>      unpack_VIF1_OFST(const int reg);
 };
+const int VIF1::nREGISTERS = 22;
 #endif
