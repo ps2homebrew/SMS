@@ -2,10 +2,7 @@ EE_INCS := $(EE_INCS) -I$(LIBHDD)/ee/include -I$(LIBHDD)/common/include \
 	   -I$(PS2DRV)/common/include -I$(PS2DRV)/ee/libfileXio \
 	   -I$(PS2LIB)/ee/include -I$(PS2LIB)/common/include -I.
 
-D_EE -mips3 -mcpu=r5900 -ffreestanding -fno-builtin \
-		-fshort-double -mlong64 -mhard-float -mno-abicalls -O2 -EL -Wall
-
-EE_CFLAGS  :=	-mips3 -mcpu=r5900 -ffreestanding -fno-builtin -G0 \
+EE_CFLAGS  := -mips3 -mcpu=r5900 -ffreestanding -fno-builtin -G0 \
 		-fshort-double -mlong64 -mhard-float -mno-abicalls -O2 -EL -Wall \
 		-c $(EE_INCS) $(EE_CFLAGS)
 EE_ASFLAGS := -EL -G0 $(EE_ASFLAGS)

@@ -1,5 +1,5 @@
 /*
-	PS2Menu v2.0
+	PS2Menu v2.3b
 	Adam Metcalf 2003/4
 	Thomas Hawcroft 2003/4	- changes to make stable code
 					- added host file copy list - through elflist.txt
@@ -24,6 +24,12 @@
 					- added sbv-patches (c) MrBrown - fix for SifLoadModuleBuffer
 					- reintroduced memory card
 					- added cdfs (c) Hiryu / Sjeep
+					- added R2 device list, and restrict access to inactive devices
+					- updated host: device to use fioDread if available
+					- replaced hw.s and hardware.c with libito for graphics
+					- added configuration screen and configuration file on mc0:
+					- 	now possible to customize graphics to you own liking
+					-	resolution / centering / menu color scheme
 
 	based on mcbootmenu.c - James Higgs 2003 (based on mc_example.c (libmc API sample))
 	and libhdd v1.0, ps2drv, ps2link v1.2, ps2 Independence Day
@@ -35,13 +41,12 @@
 #include "loadfile.h"
 #include "fileio.h"
 #include "iopcontrol.h"
-#include "hw.h"
-#include "hardware.h"
 #include "font5200.c"
 #include "fontset.c"
 #include "stdarg.h"
 #include "string.h"
 #include "malloc.h"
+#include "ito.h"
 #include "libpad.h"
 #include "libmc.h"
 #include "iopheap.h"
@@ -108,6 +113,22 @@ typedef struct
 	u32	align;
 	} elf_pheader_t;
 
+typedef struct
+{
+	unsigned int WIDTH;
+	unsigned int HEIGHT;
+	unsigned int OFFSETX;
+	unsigned int OFFSETY;
+	unsigned int DITHER;
+	unsigned int INTERLAC;
+	unsigned int FMODE;
+	unsigned int PALORNTSC;
+	uint64 BGCOL1;
+	uint64 FGCOL1;
+	uint64 FGCOL2;
+	uint64 FGCOL3;
+	} ps2menuset;
+
 extern u8 *iomanx_irx;			// (c)2003 Marcus R. Brown <mrbrown@0xd6.org> IOP module
 extern int size_iomanx_irx;		// from PS2DRV to handle 'standard' PS2 device IO
 extern u8 *filexio_irx;			// (c)2003 adresd <adresd_ps2dev@yahoo.com> et al IOP module
@@ -139,38 +160,40 @@ extern void *_end;
 //#define TYPE_XMC
 #define ROM_PADMAN
 
-#define WIDTH	512
-#define HEIGHT	512
-#define FRAMERATE	4
-#define STATUS_Y	416
+//#define WIDTH	512
+//#define HEIGHT	512
+//#define WIDTH	640
+//#define HEIGHT	480
+//#define FRAMERATE	4
+#define STATUS_Y	206
 #define MAX_PARTITIONS	10
 #define MAX_PATH	1025
 #define MAX_ENTRY	2048
 #define TRUE	1
 #define FALSE	0
 
-unsigned char *Img;					// pntr to blit buffer
-int g_nWhichBuffer = 0;
-int show_logo = 0;
 int paletteindex = 0;
 char sStatus[MAX_PATH];
 char foldername[128]="\0";
 
-iox_dirent_t dirbuf __attribute__((aligned(16)));
 char HDDfiles[MAX_ENTRY][MAX_PATH] __attribute__((aligned(64)));
 unsigned int HDDstats[MAX_ENTRY] __attribute__((aligned(64)));
 int fileMode =  FIO_S_IRUSR | FIO_S_IWUSR | FIO_S_IXUSR | FIO_S_IRGRP | FIO_S_IWGRP | FIO_S_IXGRP | FIO_S_IROTH | FIO_S_IWOTH | FIO_S_IXOTH;
 char fullpath[MAX_PATH] __attribute__((aligned(64)));
 char HDDpath[MAX_PATH] __attribute__((aligned(64)));
+char HOSTpath[MAX_PATH] __attribute__((aligned(64)));
 char MCPath[MAX_PATH] __attribute__((aligned(64)));
 char CDpath[MAX_PATH] __attribute__((aligned(64)));
 char destination[MAX_PATH] __attribute__((aligned(64)));
 t_hddFilesystem parties[MAX_PARTITIONS] __attribute__((aligned(64)));
+uint64 mypalette[65536];
+ps2menuset* settings;
+itoGsEnv screen_env;
 
-void drawChar(char c, int x, int y, unsigned int colour);
-void printXY(char *s, int x, int y, unsigned int colour);
-void drawHorizontal(int x, int y, int length, unsigned int colour);
-void drawVertical(int x, int y, int length, unsigned int colour);
+void drawChar(char c, int x, int y, uint64 colour);
+void printXY(char *s, int x, int y, uint64 colour);
+void drawHorizontal(int x, int y, int length, uint64 colour);
+void drawVertical(int x, int y, int length, uint64 colour);
 int do_select_menu(void);
 int showDir(char *dir);
 int dowereformat();
@@ -185,7 +208,8 @@ static int mc_Type, mc_Free, mc_Format;
 int num_mc_files,num_cd_files;
 int num_hdd_files,elfhost=1,party=0,nparty;
 unsigned char romver[16];
-int topfil=0, elfload=0, activeHDD, activeMC;
+int topfil=0, elfload=0, activeHDD, activeMC, activeHOST;
+int screenx,screeny;
 char mcport = 0;
 
 ////////////////////////////////////////////////////////////////////////
@@ -198,7 +222,7 @@ int checkELFheader(char *filename)
 	u8 *boot_elf = (u8 *)0x1800000;
 	elf_header_t *eh = (elf_header_t *)boot_elf;
 
-	int fd, size, ret;
+	int fd, size=0, ret;
 	char fullpath[MAX_PATH];
 
 	strcpy(fullpath,filename);
@@ -209,14 +233,14 @@ int checkELFheader(char *filename)
 //		strcat(fullpath,filename);
 		if ((fd = fileXioOpen(fullpath, O_RDONLY, fileMode)) < 0)
 		{
-			sprintf(sStatus,"Failed in fileXioOpen %s\n",fullpath);
+			sprintf(sStatus,"Failed in fileXioOpen %s",fullpath);
 			fileXioUmount("pfs0:");
 			goto error;
 			}
 		size = fileXioLseek(fd, 0, SEEK_END);
 		if (!size)
 		{
-			sprintf(sStatus,"Failed in fileXioLseek\n");
+			sprintf(sStatus,"Failed in fileXioLseek %s",fullpath);
 			fileXioClose(fd);
 			fileXioUmount("pfs0:");
 			goto error;
@@ -226,17 +250,17 @@ int checkELFheader(char *filename)
 		fileXioClose(fd);
 		fileXioUmount("pfs0:");
 		}
-	if(elfhost==3 || elfhost==4)
+	if((elfhost==2 && activeHOST==2) || elfhost==3 || elfhost==4)
 	{
 		if ((fd = fioOpen(fullpath, O_RDONLY)) < 0)
 		{
-			sprintf(sStatus,"Failed in fioOpen %s\n",fullpath);
+			sprintf(sStatus,"Failed in fioOpen %s",fullpath);
 			goto error;
 			}
 		size = fioLseek(fd, 0, SEEK_END);
 		if (!size)
 		{
-			sprintf(sStatus,"Failed in fioLseek\n");
+			sprintf(sStatus,"Failed in fioLseek %s", fullpath);
 			fioClose(fd);
 			goto error;
 			}
@@ -247,9 +271,10 @@ int checkELFheader(char *filename)
 
 	if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != 2)
 	{
-		sprintf(sStatus,"Not a recognised ELF.\n");
+		sprintf(sStatus,"Not a recognised ELF. %s [%i]",fullpath,size);
 		goto error;
 		}
+	sprintf(sStatus,"Valid ELF. %s [%i]",fullpath,size);
 //	dbgprintf("e_type = %x\n",eh->type);
 //	dbgprintf("e_machine = %x\n",eh->machine);
 	return 1;
@@ -259,48 +284,38 @@ error:
 
 ////////////////////////////////////////////////////////////////////////
 // Fills screen with a colour
-void clrEmuScreen(unsigned char colour)
+void clrEmuScreen(uint64 colour)
 {
-	unsigned char *pp;
-	unsigned int numbytes;
-
-	pp = pScreen;
-	numbytes = g_nScreen_X * g_nScreen_Y;
-	while(numbytes--) *pp++ = colour;
+	itoSprite(colour, 0, 0, settings->WIDTH, settings->HEIGHT, 0);
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // draw a char using the system font (8x8)
-void drawChar(char c, int x, int y, unsigned int colour)
+void drawChar(char c, int x, int y, uint64 colour)
 {
 	unsigned int i, j;
 	unsigned char cc;
-	unsigned char *pp;
 	unsigned char *pc;
 
 // set character pointer
 	pc = &font5200[(c-32)*8];
 
 // set screen pointer
-	pp = pScreen + x + (g_nScreen_X * y);
 	for(i=0; i<8; i++) {
 		cc = *pc++;
 		for(j=0; j<8; j++) {
-			if(cc & 0x80) *pp = colour;
+			if(cc & 0x80) itoPoint(colour, x+j, y+i, 0);//*pp = colour;
 			cc = cc << 1;
-			pp++;
 			}
-		pp += (g_nScreen_X - 8);
 		}
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // draw a char using selected font (16x16)
-void drawBIGChar(char c, int x, int y, unsigned int font, unsigned int colour)
+void drawBIGChar(char c, int x, int y, unsigned int font, uint64 colour)
 {
 	unsigned int i, j;
 	u16 cc;
-	unsigned char *pp;
 	u16 *pc;
 
 	if(font>1) font=1;
@@ -308,57 +323,48 @@ void drawBIGChar(char c, int x, int y, unsigned int font, unsigned int colour)
 	pc = &fontset[((c-32)*16)+(font*2048)];
 
 // set screen pointer
-	pp = pScreen + x + (g_nScreen_X * y);
 	for(i=0; i<16; i++) {
 		cc = *pc++;
 		for(j=0; j<16; j++) {
-			if(cc & 0x8000) *pp = colour;
+			if(cc & 0x8000) itoPoint(colour, x+j, y+i, 0);//*pp = colour;
 			cc = cc << 1;
-			pp++;
 			}
-		pp += (g_nScreen_X - 16);
 		}
 	}
 
 
 ////////////////////////////////////////////////////////////////////////
 // draw a horizontal line
-void drawHorizontal(int x, int y, int length, unsigned int colour)
+void drawHorizontal(int x, int y, int length, uint64 colour)
 {
-	unsigned char *pp;
 	unsigned int i;
 
-	pp = pScreen + x + (g_nScreen_X * y);
 	for(i=0; i<length; i++)
 	{
-		*pp = colour;
-		pp++;
+		itoPoint(colour, x+i, y, 0);//*pp = colour;
 		}
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // draw a vertical line
-void drawVertical(int x, int y, int length, unsigned int colour)
+void drawVertical(int x, int y, int length, uint64 colour)
 {
-	unsigned char *pp;
 	unsigned int i;
 
-	pp = pScreen + x + (g_nScreen_X * y);
 	for(i=0; i<length; i++)
 	{
-		*pp = colour;
-		pp += (g_nScreen_X);
+		itoPoint(colour, x, y+i, 0);//*pp = colour;
 		}
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // draw a string of characters (8x8) forces 'CR-LF' at screen limit
-void printXY(char *s, int x, int y, unsigned int colour)
+void printXY(char *s, int x, int y, uint64 colour)
 {
 	while(*s) {
 		drawChar(*s++, x, y, colour);
 		x += 8;
-		if(x>=502)
+		if(x>=(settings->WIDTH-8))
 		{
 			x=0;
 			y=y+8;
@@ -369,12 +375,12 @@ void printXY(char *s, int x, int y, unsigned int colour)
 ////////////////////////////////////////////////////////////////////////
 // draw a string of characters (16x16) trimmed to (16x12)
 // forces 'CR-LF' at screen limit
-void printBIGXY(char *s, int x, int y, unsigned int font, unsigned int colour)
+void printBIGXY(char *s, int x, int y, unsigned int font, uint64 colour)
 {
 	while(*s) {
 		drawBIGChar(*s++, x, y, font, colour);
 		x += 12;
-		if(x>=502)
+		if(x>=(settings->WIDTH-12))
 		{
 			x=0;
 			y=y+16;
@@ -386,13 +392,9 @@ void printBIGXY(char *s, int x, int y, unsigned int font, unsigned int colour)
 // copies screen buffer to display
 void PutImage(void)
 {
-	while (TestVRstart() < FRAMERATE);		// wait for FRD number of vblanks
-	UpdateScreen();					// uploads+and renders new screen.
-								// (palette is also updated every frame for effects)
-	while (TestVRstart() < FRAMERATE);		// wait for FRD number of vblanks
-	ClearVRcount();
-	g_nWhichBuffer ^= 1;
-	SetupScreen( g_nWhichBuffer );		// FLIP!!!
+	itoGsFinish();
+	itoVSync();
+	itoSwitchFrameBuffers();
 	}
 
 ////////////////////////////////////////////////////////////////////////
@@ -420,9 +422,9 @@ void drawPCX(u8 *pcxfile, int pcxlength, int xpos, int ypos)
 	} pcxHead;
 
 	pcxHead *pcxHeader;
-	unsigned char *pp;
 	unsigned char *colors;
-	int color,num;
+	uint64 colour;
+	int color,num,xadd;
 	int xsize,ysize,row,col,imagelength;
 
 	pcxHeader=pcxfile;
@@ -433,26 +435,28 @@ void drawPCX(u8 *pcxfile, int pcxlength, int xpos, int ypos)
 	color=0;
 	for(row=0;row<ysize;row++)
 	{
-		pp = pScreen + xpos + (g_nScreen_X * (ypos+row));
+		xadd=0;
 		for(col=0;col<xsize;col++)
 		{
 			if(colors[color] >= 192)
 			{
 				num=colors[color] - 192;
 				color++;
+				colour=colors[color];
 				col--;
 				for(num=num;num>0;num--)
 				{
-					*pp=(colors[color]+pcxHeader->reserved);
-					pp++;
+					itoPoint(mypalette[colour+pcxHeader->reserved], xpos+xadd, ypos+row, 0);//*pp=(colors[color]+pcxHeader->reserved);
+					xadd++;
 					col++;
 				}
 				color++;
 			}
 			else
 			{
-				*pp=(colors[color]+pcxHeader->reserved);
-				pp++;
+				colour=colors[color];
+				itoPoint(mypalette[colour+pcxHeader->reserved], xpos+xadd, ypos+row, 0);//*pp=(colors[color]+pcxHeader->reserved);
+				xadd++;
 				color++;
 			}
 		}
@@ -502,7 +506,7 @@ void readPCXheader(u8 *pcxfile, int pcxlength)
 				if(((colors[color] + colors[color+1]) + colors[color+2])==0) color=(256*3);
 				else
 				{
-					SetPaletteEntry(((colors[color+2]<<16)+(colors[color+1]<<8))+(colors[color]), num);
+					mypalette[num]=((colors[color+2]<<16)+(colors[color+1]<<8))+(colors[color]);
 				}
 				num++;
 			}
@@ -597,13 +601,14 @@ void ReadMCDir()
 void ReadHDDFiles()
 {
 	int rv,fd=0;
+	iox_dirent_t dirbuf;
 	char filesname[MAX_PATH];
 
 //	fileXioUmount("pfs0:");
 	rv = fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDONLY);
 	if(rv < 0)
 	{
-		sprintf(sStatus,"ERROR: failed to mount filesystem: %s %d\n", parties[party].filename, rv);
+		sprintf(sStatus,"ERROR: failed to mount filesystem: %s %d", parties[party].filename, rv);
 		}
 	if(rv == 0)
 	{
@@ -621,6 +626,40 @@ void ReadHDDFiles()
 	fileXioDclose(fd);
 	fileXioUmount("pfs0:");
 }
+
+////////////////////////////////////////////////////////////////////////
+// reads current host:path contents to our directory contents
+// array
+int ReadHOSTFiles()
+{
+	int rv,fd=0,i;
+	fio_dirent_t dirbuf;
+	char filesname[MAX_PATH];
+	char READpath[MAX_PATH];
+
+	strcpy(READpath,HOSTpath);
+	i=strlen(READpath)-1;
+	if(READpath[i]=='/')
+	{
+		READpath[i]='\\';
+		}
+//	strcat(READpath,".");
+	printf(READpath);
+	if((fd = fioDopen(READpath)) < 0) return fd;
+	num_hdd_files=0;
+	while((rv=fioDread(fd, (void *)&dirbuf)))
+	{
+		strcpy(filesname, (char *)&dirbuf.name);
+		sprintf (HDDfiles[num_hdd_files],"%s",filesname);
+		if(dirbuf.stat.mode & FIO_SO_IFDIR) HDDstats[num_hdd_files]=FIO_S_IFDIR;
+		else if(dirbuf.stat.mode & FIO_SO_IFREG) HDDstats[num_hdd_files]=FIO_S_IFREG;
+		printf("ret=%i stat.mode=%i %s %i\n",rv,dirbuf.stat.mode,HDDfiles[num_hdd_files],HDDstats[num_hdd_files]);
+//		HDDstats[num_hdd_files]=dirbuf.stat.mode;
+		if ((HDDstats[num_hdd_files] & FIO_S_IFDIR) || (HDDstats[num_hdd_files] & FIO_S_IFREG)) num_hdd_files++;
+		if (num_hdd_files>MAX_ENTRY) break;
+		}
+	fioDclose(fd);
+	}
 
 ////////////////////////////////////////////////////////////////////////
 // C standard strrchr func.. returns pointer to the last occurance of a
@@ -656,12 +695,21 @@ void PrintHDDFiles(int highlighted)
 {
 	int i,texcol,maxrows,maxchars;
 	char s[MAX_PATH];
-	char textfit[(WIDTH/12)-2];
+	char textfit[80];
 	char *ptr;
 
 	texcol=1;
-	maxrows=20;
-	maxchars=(WIDTH/12)-3;
+//	maxrows=20;
+	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
+	{
+		maxchars=(settings->WIDTH/12)-5;
+		maxrows=26;
+		}
+	else
+	{
+		maxchars=(settings->WIDTH/8)-8;
+		maxrows=15;
+		}
 	textfit[maxchars+1]='\0';
 	for(i=0; i<num_hdd_files && i < maxrows; i++)
 	{
@@ -701,7 +749,10 @@ void PrintHDDFiles(int highlighted)
 				}
 			}
 		if(highlighted == i+topfil) texcol=2;
-		printBIGXY(s, 16, i*16 + 40, 0, texcol);
+		if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
+			printBIGXY(s, 24, i*14 + 58, 0, mypalette[texcol]);
+		else
+			printXY(s, 24, i*8 + 58, mypalette[texcol]);
 		texcol=1;
 		}
 	}
@@ -720,7 +771,7 @@ void ReadHostDir(void)
 	fd=fioOpen("host:elflist.txt", O_RDONLY);
 	if(fd<=0)
 	{
-		sprintf(sStatus,"elflist.txt not found on host.\n");
+		sprintf(sStatus,"elflist.txt not found on host.");
 		}
 	else
 	{
@@ -782,7 +833,6 @@ int tomcopy(char *sourcefile)
 	static char iuntar[512];
 	char savedestination[MAX_PATH];
 
-	sprintf(sStatus,"Copy file %s\n to %s\n",sourcefile,destination);
 	xiosource=FALSE;
 	xiodest=FALSE;
 	strcpy(savedestination,destination);
@@ -825,9 +875,9 @@ int tomcopy(char *sourcefile)
 	if(xiodest || xiosource) fileXioMount("pfs0:", parties[party].filename, FIO_MT_RDWR);
 	if(xiosource) boot_fd = fileXioOpen(sourcefile, O_RDONLY, fileMode);
 	else boot_fd = fioOpen(sourcefile, O_RDONLY);
-	if(boot_fd <= 0)
+	if(boot_fd < 0)
 	{
-		sprintf(sStatus,"Open %s Failed\n",sourcefile);
+		sprintf(sStatus,"Open %s Failed",sourcefile);
 		strcpy(destination,savedestination);
 		return boot_fd;
 		}
@@ -849,7 +899,7 @@ int tomcopy(char *sourcefile)
 				else boot_fd2 = fioOpen(destination, O_WRONLY | O_TRUNC | O_CREAT);
 				if(boot_fd2 < 0)
 				{
-					sprintf(sStatus,"Open %s Failed\n",destination);
+					sprintf(sStatus,"Open %s Failed",destination);
 					}
 				else
 				{
@@ -858,7 +908,7 @@ int tomcopy(char *sourcefile)
 						boot_size=boot_size-1048576;
 						if (xiosource) fileXioRead(boot_fd, boot_buffer, 1048576);
 						else fioRead(boot_fd, boot_buffer, 1048576);
-						sprintf(iuntar,"Bytes remaining %i\n", boot_size);
+						sprintf(iuntar,"Bytes remaining %i", boot_size);
 						jprintf(iuntar);
 						if (xiodest) fileXioWrite(boot_fd2,boot_buffer,1048576);
 						else fioWrite(boot_fd2,boot_buffer,1048576);
@@ -878,6 +928,7 @@ int tomcopy(char *sourcefile)
 			if(xiosource) fileXioClose(boot_fd);
 			else fioClose(boot_fd);
 			strcpy(destination,savedestination);
+			sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
 			return -1; // a file too big for memory cannot be copied
 			}
 		if (xiosource) fileXioRead(boot_fd, boot_buffer, boot_size);
@@ -891,7 +942,7 @@ int tomcopy(char *sourcefile)
 	ret = boot_fd;
 	if(boot_fd < 0)
 	{
-		sprintf(sStatus,"Open %s Failed\n",destination);
+		sprintf(sStatus,"Open %s Failed",destination);
 		}
 	else
 	{
@@ -899,6 +950,7 @@ int tomcopy(char *sourcefile)
 		else fioWrite(boot_fd,boot_buffer,boot_size);
 		if(xiodest)	fileXioClose(boot_fd);
 		else fioClose(boot_fd);
+		sprintf(sStatus,"Copied file %s to %s",sourcefile,destination);
 		}
 	if(xiodest || xiosource) fileXioUmount("pfs0:"); 
 	strcpy(destination,savedestination);
@@ -909,35 +961,38 @@ int tomcopy(char *sourcefile)
 // Main screen drawing function
 void ReDraw(int highlighted)
 {
-	int numc;
+	int numc,screenend;
 	char txt[2];
 
 	txt[1]='\0';
 	numc=1;
-	clrEmuScreen(0);
-	drawPCX(&ps2menu_pcx,size_ps2menu_pcx, 264, 0);
-	printXY("Adam & Tom's HDD Boot/Copy Menu", 4, 0, 1);
-	printXY("Working volume:", 4, 16, 1);
-	printXY(parties[party].filename, 128, 16, 2);
-	if(elfhost==1) printXY("Contents of hdd0:", 4, 24, 1);
-	if(elfhost==2) printXY("Contents of host:", 4, 24, 1);
-	if(elfhost==3) printXY("Contents of mc0:", 4, 24, 1);
-	if(elfhost==4) printXY("Contents of cdfs:", 4, 24, 1);
-	drawHorizontal(8, 35, 496, 1);
-	drawHorizontal(12, 38, 488, 1);
-	drawVertical(8, 36, 333, 1);
-	drawVertical(12, 38, 328, 1);
-	drawVertical(502, 36, 333, 1);
-	drawVertical(498, 38, 328, 1);
-	drawHorizontal(8, 369, 496, 1);
-	drawHorizontal(11, 366, 489, 1);
+	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
+		screenend=464;
+	else
+		screenend=216;
+	clrEmuScreen(mypalette[0]);
+	drawPCX(&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
+	printBIGXY("Adam & Tom's HDD Menu", 8, 8, 0, mypalette[1]);
+	printXY("Working volume:", 8, 30, mypalette[1]);
+	printXY(parties[party].filename, 136, 30, mypalette[2]);
+	printXY("Copy from ", 8, 38, mypalette[2]);
+	itoLine(mypalette[1], 16, 58, 0, mypalette[1], settings->WIDTH-32, 58, 0);
+	itoLine(mypalette[1], 16, screenend-39, 0, mypalette[1], settings->WIDTH-32, screenend-39, 0);
+	itoLine(mypalette[1], 16, 58, 0, mypalette[1], 16, screenend-39, 0);
+	itoLine(mypalette[1], settings->WIDTH-32, 58, 0, mypalette[1], settings->WIDTH-32, screenend-39, 0);
 	PrintHDDFiles(highlighted);
 	if(elfhost==1)
 	{
 		strcpy(fullpath, HDDpath);
 		strcat(fullpath, HDDfiles[highlighted]);
 		}
-	if(elfhost==2) strcpy(fullpath, HDDfiles[highlighted]);
+	else if(elfhost==2 && activeHOST==1) strcpy(fullpath, HDDfiles[highlighted]);
+	else if(elfhost==2 && activeHOST==2)
+	{
+//		strcpy(fullpath, "host:");
+		strcpy(fullpath, HOSTpath);
+		strcat(fullpath, HDDfiles[highlighted]);
+		}
 	if(elfhost==3)
 	{
 		strcpy(fullpath, "mc0:");
@@ -952,51 +1007,356 @@ void ReDraw(int highlighted)
 		strcat(fullpath, "/");
 		strcat(fullpath, HDDfiles[highlighted]);
 		}
-	printXY("Copy from ", 4, 374, 2);
-	printXY(fullpath, 84, 374, 2);
-	printXY("to folder ", 4, 382, 2);
-	printXY(destination, 84, 382, 2);
-	printBIGXY("Press SELECT for help screen", 4, 390, 0, 1);
-	printXY(sStatus, 4, STATUS_Y, 2);
+	printXY(fullpath, 88, 38, mypalette[2]);
+	printXY("Copy to ", 8, screenend-36, mypalette[2]);
+	printXY(destination, 71, screenend-36, mypalette[2]);
+	printXY(sStatus, 8, screenend-28, mypalette[2]);
+	printBIGXY("Press SELECT for help screen", 8, screenend-14, 0, mypalette[1]);
 	PutImage();
+	}
+
+void selecthost(u32 old_pad)
+{
+	int enterkey = 0, keyrow=0, ret, i, savehost;
+	struct padButtonStatus buttons;
+	u32 paddata;
+//	u32 old_pad = 0;
+	u32 new_pad;
+//	Select device
+	enterkey=0;
+	savehost = elfhost;
+	while(!enterkey)
+	{
+		for (i=40;i<=88;i++)
+		{
+			drawHorizontal(376, i, 112, mypalette[0]);
+			}
+		drawHorizontal(376, 40, 112, mypalette[1]);
+		drawVertical(376, 40, 48, mypalette[1]);
+		drawHorizontal(376, 88, 112, mypalette[1]);
+		drawVertical(488, 40, 48, mypalette[1]);
+		printXY("Select device",380,44,mypalette[1]);
+		if(elfhost==1) printXY("pfs0:",380,52,mypalette[2]);
+		else
+		{
+			if(activeHDD==TRUE) printXY("pfs0:",380,52,mypalette[1]);
+			else printXY("pfs0:",380,52,mypalette[3]);
+			}
+		if(elfhost==2) printXY("host:",380,60,mypalette[2]);
+		else
+		{
+			if(activeHOST==FALSE) printXY("host:",380,60,mypalette[3]);
+			else printXY("host:",380,60,mypalette[1]);
+			}
+		if(elfhost==3) printXY("mc0:",380,68,mypalette[2]);
+		else
+		{
+			if(activeMC==TRUE) printXY("mc0:",380,68,mypalette[1]);
+			else printXY("mc0:",380,68,mypalette[3]);
+			}
+		if(elfhost==4) printXY("cdfs:",380,76,mypalette[2]);
+		else printXY("cdfs:",380,76,mypalette[1]);
+		PutImage();
+		ret = padRead(0, 0, &buttons); // port, slot, buttons
+            
+		if (ret != 0)
+		{
+			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+			new_pad = paddata & ~old_pad;
+			old_pad = paddata;
+
+// Directions
+			if(new_pad & PAD_UP)
+			{
+				elfhost--;
+				if (elfhost==3 && activeMC==FALSE) elfhost--;
+				if (elfhost==2 && activeHOST==FALSE) elfhost--;
+				if (elfhost==1 && activeHDD==FALSE) elfhost=4;
+				if (elfhost<1) elfhost=4;
+				}
+			if(new_pad & PAD_DOWN)
+			{
+				elfhost++;
+				if (elfhost>4) elfhost=1;
+				if (elfhost==1 && activeHDD==FALSE) elfhost++;
+				if (elfhost==2 && activeHOST==FALSE) elfhost++;
+				if (elfhost==3 && activeMC==FALSE) elfhost++;
+				}
+			if(new_pad & PAD_CROSS)
+			{
+				enterkey=1;
+				}
+			if(new_pad & PAD_TRIANGLE)
+			{
+				elfhost=savehost;
+				enterkey=1;
+				}
+			}
+		}
+//	return keycol;
+	}
+
+void setupmenu(u32 old_pad)
+{
+	int exitsetup, i, ret, middle;
+	u8 red,green,blue,alpha,changecol,changecol2;
+	struct padButtonStatus buttons;
+	u32 paddata;
+//	u32 old_pad = 0;
+	u32 new_pad;
+	char menutext[80];
+	uint64 colour;
+	char *palptr;
+
+	exitsetup=0;
+	changecol=0;
+	changecol2=0;
+	itoSetBgColor(settings->FGCOL1);
+	while(!exitsetup)
+	{
+		middle = settings->WIDTH/2;
+		clrEmuScreen(mypalette[0]);
+		if(changecol) colour=mypalette[3];
+		else colour=mypalette[1];
+		drawPCX(&ps2menu_pcx,size_ps2menu_pcx, settings->WIDTH-236, 8);
+		sprintf(menutext, "(L1,L2) SCREEN SIZE %ix%i",settings->WIDTH, settings->HEIGHT);
+		printXY(menutext, 8, 8, colour);
+		sprintf(menutext, "(DPAD) XYOFFSET %ix%i",settings->OFFSETX, settings->OFFSETY);
+		printXY(menutext, 8, 16, colour);
+		if(settings->FMODE==ITO_FRAME) printXY("(R1) Frame MODE", 8, 24, colour);
+		else printXY("(R1) Field MODE", 8, 24, colour);
+		if(settings->INTERLAC) printXY("(R2) INTERLACE On", 8, 32, colour);
+		else printXY("(R2) INTERLACE Off", 8, 32, colour);
+		if(settings->DITHER) printXY("(CROSS) DITHER On", 8, 40, colour);
+		else printXY("(CROSS) DITHER Off", 8, 40, colour);
+		if(settings->PALORNTSC==1) printXY("(SQUARE) NTSC Output", 8, 48, colour);
+		else if(settings->PALORNTSC==2) printXY("(SQUARE) PAL Output", 8, 48, colour);
+		else printXY("(SQUARE) AUTO Output", 8, 48, colour);
+		printXY("(TRIANGLE) returns to PS2MENU,", 8, 62, colour);
+		printXY("and saves changes to mc0:", 8, 70, colour);
+		printXY("(CIRCLE) to switch to color change mode:", 8, 84, colour);
+		printXY("(LEFT/RIGHT) selects RGB component to modify", 8, 92, colour);
+		printXY("(UP/DOWN) increases/decreases component value.", 8, 100, colour);
+		palptr=&mypalette[0];
+		red=*palptr++;
+		green=*palptr++;
+		blue=*palptr++;
+		sprintf(menutext, "BGcolor1: %03i:%03i:%03i", red, green, blue);
+		printBIGXY(menutext, middle, 28, 0, mypalette[1]);
+		palptr=&mypalette[1];
+		red=*palptr++;
+		green=*palptr++;
+		blue=*palptr++;
+		sprintf(menutext, "FGcolor1: %03i:%03i:%03i", red, green, blue);
+		printBIGXY(menutext, middle, 42, 0, mypalette[1]);
+		palptr=&mypalette[2];
+		red=*palptr++;
+		green=*palptr++;
+		blue=*palptr++;
+		sprintf(menutext, "FGcolor2: %03i:%03i:%03i", red, green, blue);
+		printBIGXY(menutext, middle, 56, 0, mypalette[2]);
+		palptr=&mypalette[3];
+		red=*palptr++;
+		green=*palptr++;
+		blue=*palptr++;
+		sprintf(menutext, "FGcolor3: %03i:%03i:%03i", red, green, blue);
+		printBIGXY(menutext, middle, 70, 0, mypalette[3]);
+		if(changecol)
+		{
+			printBIGXY("-->", middle-(3*12), 14+(changecol*14), 0, mypalette[1]);
+			printBIGXY("^", middle+(((changecol2*4)+11)*12), 84, 0, mypalette[1]);
+			}
+		PutImage();
+		ret = padRead(0, 0, &buttons); // port, slot, buttons
+            
+		if (ret != 0)
+		{
+			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
+			new_pad = paddata & ~old_pad;
+			old_pad = paddata;
+			if(new_pad & PAD_LEFT)
+			{
+				if (changecol)
+				{
+					if(changecol2>0) changecol2--;
+					}
+				else
+				{
+					if (settings->OFFSETX>0)
+					{
+						settings->OFFSETX--;
+						itoSetScreenPos(settings->OFFSETX,settings->OFFSETY);
+						screen_env.screen.x=settings->OFFSETX;
+						}
+					}
+				}
+			if(new_pad & PAD_RIGHT)
+			{
+				if (changecol)
+				{
+					if(changecol2<2) changecol2++;
+					}
+				else
+				{
+					if (settings->OFFSETX<256)
+					{
+						settings->OFFSETX++;
+						itoSetScreenPos(settings->OFFSETX,settings->OFFSETY);
+						screen_env.screen.x=settings->OFFSETX;
+						}
+					}
+				}
+			if(new_pad & PAD_UP)
+			{
+				if (changecol)
+				{
+					palptr=&mypalette[changecol-1];
+					for(i=0;i<=changecol2;i++) alpha=*palptr++;
+					palptr--;
+					if(alpha<255) alpha++;
+					*palptr=alpha;
+					}
+				else
+				{
+					if (settings->OFFSETY>0)
+					{
+						settings->OFFSETY--;
+						itoSetScreenPos(settings->OFFSETX,settings->OFFSETY);
+						screen_env.screen.y=settings->OFFSETY;
+						}
+					}
+				}
+			if(new_pad & PAD_DOWN)
+			{
+				if (changecol)
+				{
+					palptr=&mypalette[changecol-1];
+					for(i=0;i<=changecol2;i++) alpha=*palptr++;
+					palptr--;
+					if(alpha>0) alpha--;
+					*palptr=alpha;
+					}
+				else
+				{
+					if (settings->OFFSETY<256)
+					{
+						settings->OFFSETY++;
+						itoSetScreenPos(settings->OFFSETX,settings->OFFSETY);
+						screen_env.screen.y=settings->OFFSETY;
+						}
+					}
+				}
+			if(new_pad & PAD_SQUARE)
+			{
+				if (settings->PALORNTSC==2) settings->PALORNTSC=0;
+				else settings->PALORNTSC++;
+				if (settings->PALORNTSC==0) screen_env.vmode=ITO_VMODE_AUTO;
+				else if (settings->PALORNTSC==1) screen_env.vmode=ITO_VMODE_NTSC;
+				else if (settings->PALORNTSC==2) screen_env.vmode=ITO_VMODE_PAL;
+				itoGsReset();
+				itoGsEnvSubmit(&screen_env);
+				}
+			if(new_pad & PAD_CROSS)
+			{
+				if (settings->DITHER) settings->DITHER=FALSE;
+				else settings->DITHER=TRUE;
+				screen_env.dither=settings->DITHER;
+				itoGsReset();
+				itoGsEnvSubmit(&screen_env);
+				}
+			if(new_pad & PAD_R1)
+			{
+				if (settings->FMODE==ITO_FIELD) settings->FMODE=ITO_FRAME;
+				else settings->FMODE=ITO_FIELD;
+				screen_env.ffmode=settings->FMODE;
+				itoGsReset();
+				itoGsEnvSubmit(&screen_env);
+				}
+			if(new_pad & PAD_R2)
+			{
+				if (settings->INTERLAC) settings->INTERLAC=FALSE;
+				else settings->INTERLAC=TRUE;
+				screen_env.interlace=settings->INTERLAC;
+				itoGsReset();
+				itoGsEnvSubmit(&screen_env);
+				}
+			if(new_pad & PAD_L1)
+			{
+				if (settings->WIDTH==512) settings->WIDTH=640;
+				else settings->WIDTH=512;
+				screen_env.screen.width=settings->WIDTH;
+				itoInit();
+				itoGsEnvSubmit(&screen_env);
+				}
+			if(new_pad & PAD_L2)
+			{
+				if (settings->HEIGHT==224) settings->HEIGHT=480;
+				else settings->HEIGHT=224;
+				screen_env.screen.height=settings->HEIGHT;
+				itoInit();
+				itoGsEnvSubmit(&screen_env);
+				}
+			if(new_pad & PAD_TRIANGLE)
+			{
+				exitsetup=1;
+				}
+			if(new_pad & PAD_CIRCLE)
+			{
+				changecol++;
+				if(changecol>4) changecol=0;
+				}
+			}
+		}
+	if(activeMC==TRUE)
+	{
+		settings->BGCOL1=mypalette[0];
+		settings->FGCOL1=mypalette[1];
+		settings->FGCOL2=mypalette[2];
+		settings->FGCOL3=mypalette[3];
+		ret=fioOpen("mc0:/SYS-CONF/PS2MENU.CNF",O_CREAT | O_WRONLY | O_TRUNC);
+		printf("write %i bytes from %x to fd:%i\n",sizeof(ps2menuset),settings,ret);
+		fioWrite(ret,settings,sizeof(ps2menuset));
+		fioClose(ret);
+		}
+	itoSetBgColor(settings->BGCOL1);
 	}
 
 ////////////////////////////////////////////////////////////////////////
 // Display a window with a list of Joypad buttons and their function
-void showhelp()
+void showhelp(u32 old_pad)
 {
-	int triangle = 0, i, ret;
+	int triangle, i, ret;
 	struct padButtonStatus buttons;
 	u32 paddata;
-	u32 old_pad = 0;
+//	u32 old_pad = 0;
 	u32 new_pad;
 
 	triangle=0;
-	for(i=96;i<=264;i++)
+	for(i=40;i<=208;i++)
 	{
-		drawHorizontal(58, i, 408, 0);
+		drawHorizontal(58, i, 408, mypalette[0]);
 		}
-	drawHorizontal(58,96,408,2);
-	drawHorizontal(58,264,408,2);
-	drawVertical(58,96,168,2);
-	drawVertical(466,96,168,2);
-	printXY("Functions of the Joypad in PS2MENU", 66, 104, 1);
-	printXY("D-PAD:", 66, 120, 1);
-	printXY("UP:       move highlight one step up in list.", 66, 128, 1);
-	printXY("DOWN:     move highlight one step down in list.", 66, 136, 1);
-	printXY("LEFT:     move highlight ten steps up in list.", 66, 144, 1);
-	printXY("RIGHT:    move highlight ten steps down in list.", 66, 152, 1);
-	printXY("BUTTONS:", 66, 168, 1);
-	printXY("SQUARE:   Create folder in current path.", 66, 176, 1);
-	printXY("CIRCLE:   Delete file or remove folder.", 66, 184, 1);
-	printXY("TRIANGLE: Set copy to folder / copy a file.", 66, 192, 1);
-	printXY("CROSS:    PS2 PARTITION view, execute highlighted", 66, 200, 1);
-	printXY("|         file or chdir to highlighted folder.", 66, 208, 1);
-	printXY("|         HOST:ELFLIST.TXT view, copy highlighted", 66, 216, 1);
-	printXY("|         file to active PS2 folder, or extract", 66, 224, 1);
-	printXY("|________ .tgz file to active PS2 partition.", 66, 232, 1);
-	printXY("L1:       Toggle active partition on the PS2 HDD.", 66, 240, 1);
-	printXY("R1:       Toggle pfs0:-host:-mc0:-cdfs: view.", 66, 248, 1);
+	drawHorizontal(58,40,408,mypalette[2]);
+	drawHorizontal(58,208,408,mypalette[2]);
+	drawVertical(58,40,168,mypalette[2]);
+	drawVertical(466,40,168,mypalette[2]);
+	printXY("Functions of the Joypad in PS2MENU", 66, 48, mypalette[1]);
+	printXY("D-PAD:", 66, 64, mypalette[1]);
+	printXY("UP:       move highlight one step up in list.", 66, 72, mypalette[1]);
+	printXY("DOWN:     move highlight one step down in list.", 66, 80, mypalette[1]);
+	printXY("LEFT:     move highlight ten steps up in list.", 66, 88, mypalette[1]);
+	printXY("RIGHT:    move highlight ten steps down in list.", 66, 96, mypalette[1]);
+	printXY("BUTTONS:", 66, 112, mypalette[1]);
+	printXY("SQUARE:   Create folder in current path.", 66, 120, mypalette[1]);
+	printXY("CIRCLE:   Delete file or remove an empty folder.", 66, 128, mypalette[1]);
+	printXY("TRIANGLE: Set copy to folder / copy a file.", 66, 136, mypalette[1]);
+	printXY("CROSS:    Execute highlighted file or change to", 66, 144, mypalette[1]);
+	printXY("          highlighted folder.", 66, 152, mypalette[1]);
+	printXY("L1:       Toggle active partition on the PS2 HDD.", 66, 160, mypalette[1]);
+	printXY("R1:       Select from active device list.", 66, 168, mypalette[1]);
+	printXY("L2:       PS2MENU configuration screen.", 66, 176, mypalette[1]);
+	printXY("R2:       Test validity of highlighted file.", 66, 184, mypalette[1]);
+	printXY("Press SELECT to return to PS2MENU main screen.", 66, 192, mypalette[1]);
 	PutImage();
 	while(!triangle)
 	{
@@ -1007,7 +1367,7 @@ void showhelp()
 			paddata = 0xffff ^ ((buttons.btns[0] << 8) | buttons.btns[1]);
 			new_pad = paddata & ~old_pad;
 			old_pad = paddata;
-			if(new_pad & PAD_TRIANGLE) triangle=1;
+			if(new_pad & PAD_SELECT) triangle=1;
 			}
 		}
 	} 
@@ -1027,21 +1387,21 @@ int ConfirmYN(char *s)
 	{
 		for (i=79;i<112;i++)
 		{
-			drawHorizontal(138, i, 73, 0);
+			drawHorizontal(138, i, 73, mypalette[0]);
 			}
-		drawHorizontal(138, 87, 73, 1);
-		drawVertical(138, 87, 25, 1);
-		drawHorizontal(138, 112, 73, 1);
-		drawVertical(211, 87, 25, 1);
-		printXY(s, 146, 79, 2);
-		printXY("YES  NO", 146, 95, 1);
+		drawHorizontal(138, 87, 73, mypalette[1]);
+		drawVertical(138, 87, 25, mypalette[1]);
+		drawHorizontal(138, 112, 73, mypalette[1]);
+		drawVertical(211, 87, 25, mypalette[1]);
+		printXY(s, 146, 79, mypalette[2]);
+		printXY("YES  NO", 146, 95, mypalette[1]);
 		if(keycol==0)
 		{
-			printXY("NO", 186, 95, 2);
+			printXY("NO", 186, 95, mypalette[2]);
 			}
 		else
 		{
-			printXY("YES", 146, 95, 2);
+			printXY("YES", 146, 95, mypalette[2]);
 			}
 		PutImage();
 		ret = padRead(0, 0, &buttons); // port, slot, buttons
@@ -1099,31 +1459,31 @@ void MenuKeyboard(char *s)
 	{
 		for(i=63;i<128;i++)
 		{
-			drawHorizontal(82, i, 202, 0);
+			drawHorizontal(82, i, 202, mypalette[0]);
 			}
-		printXY(s, 83, 63, 2);
-		printXY(&keysrow1[0], 83, 80, 1);
-		printXY(&keysrow1[26], 83, 88, 1);
-		printXY(&keysrow1[52], 83, 96, 1);
-		printXY(&keysrow1[78], 83, 104, 1);
-		printXY(&keysrow1[104], 83, 112, 1);
-		printXY(funcrow, 107, 120, 1);
-		drawHorizontal(82,71,202,2);
-		drawHorizontal(82,79,202,2);
-		drawHorizontal(82,128,202,2);
-		drawVertical(82,71,128-71,2);
-		drawVertical(82+202,71,128-71,2);
+		printXY(s, 83, 63, mypalette[2]);
+		printXY(&keysrow1[0], 83, 80, mypalette[1]);
+		printXY(&keysrow1[26], 83, 88, mypalette[1]);
+		printXY(&keysrow1[52], 83, 96, mypalette[1]);
+		printXY(&keysrow1[78], 83, 104, mypalette[1]);
+		printXY(&keysrow1[104], 83, 112, mypalette[1]);
+		printXY(funcrow, 107, 120, mypalette[1]);
+		drawHorizontal(82,71,202,mypalette[2]);
+		drawHorizontal(82,79,202,mypalette[2]);
+		drawHorizontal(82,128,202,mypalette[2]);
+		drawVertical(82,71,128-71,mypalette[2]);
+		drawVertical(82+202,71,128-71,mypalette[2]);
 		if (keyrow<5)
 		{
-			drawChar(keysrow1[(keyrow*26)+(keycol*2)],83+(keycol*16), 80+(keyrow*8), 2);
+			drawChar(keysrow1[(keyrow*26)+(keycol*2)],83+(keycol*16), 80+(keyrow*8), mypalette[2]);
 			}
 		else
 		{
-			if(keycol==0) printXY("SPACE", 107, 120, 2);
-			if(keycol==1) printXY("DEL", 170, 120, 2);
-			if(keycol==2) printXY("ENTER", 218, 120, 2);
+			if(keycol==0) printXY("SPACE", 107, 120, mypalette[2]);
+			if(keycol==1) printXY("DEL", 170, 120, mypalette[2]);
+			if(keycol==2) printXY("ENTER", 218, 120, mypalette[2]);
 			}
-		printXY((char *)&foldername, 83, 71, 1);
+		printXY((char *)&foldername, 83, 71, mypalette[1]);
 		PutImage();
 		ret = padRead(0, 0, &buttons); // port, slot, buttons
             
@@ -1212,8 +1572,8 @@ void jprintf(char *s)
 	int i;
 
 //	dbgprintf("%s\n", s);
-	for(i=STATUS_Y;i<STATUS_Y+8;i++) drawHorizontal(0,i,WIDTH,0);
-	printXY(s, 4, STATUS_Y, 2);
+	for(i=STATUS_Y;i<STATUS_Y+8;i++) drawHorizontal(0,i,settings->WIDTH,mypalette[0]);
+	printXY(s, 4, STATUS_Y, mypalette[2]);
 	PutImage();
 	}
 
@@ -1222,7 +1582,7 @@ void jprintf(char *s)
 // is selected from the list of HDDfiles
 char *SelectELF(void)
 {
-	int ret, i;
+	int ret, i, maxrows;
 	int selected = 0;
 	int highlighted = 0;
 	struct padButtonStatus buttons;
@@ -1233,6 +1593,10 @@ char *SelectELF(void)
 	char botcap,botcap2;
 	char tmppath[MAX_PATH];
 
+	if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
+		maxrows=24;
+	else
+		maxrows=13;
 	strcpy(HDDpath,"pfs0:/\0");
 	while(!selected)
 	{
@@ -1257,9 +1621,9 @@ char *SelectELF(void)
 					else if(0 < highlighted) highlighted--;
 					}
 				}
-            	if(new_pad & PAD_DOWN)
+            	else if(new_pad & PAD_DOWN)
 			{
-				if((highlighted-topfil > 18) & (highlighted < num_hdd_files-1))
+				if((highlighted-topfil > maxrows) & (highlighted < num_hdd_files-1))
 				{
 					topfil++;
 					highlighted++;
@@ -1269,11 +1633,11 @@ char *SelectELF(void)
 					if(highlighted < num_hdd_files-1) highlighted++;
 					}
 				}
-			if(new_pad & PAD_RIGHT)
+			else if(new_pad & PAD_RIGHT)
 			{
 				for(i=0;i<10;i++)
 				{
-					if((highlighted-topfil > 18) & (highlighted < num_hdd_files-1))
+					if((highlighted-topfil > maxrows) & (highlighted < num_hdd_files-1))
 					{
 						topfil++;
 						highlighted++;
@@ -1284,7 +1648,7 @@ char *SelectELF(void)
 						}
 					}
 				}
-			if(new_pad & PAD_UP)
+			else if(new_pad & PAD_UP)
 			{
 				if((topfil==highlighted) && (0 < highlighted))
 				{
@@ -1294,7 +1658,7 @@ char *SelectELF(void)
 				else if(0 < highlighted) highlighted--;
 				}
 // Buttons
-			if(new_pad & PAD_L1 && activeHDD)
+			else if(new_pad & PAD_L1 && activeHDD)
 			{
 				party++;
 				if(party>nparty) party=0;
@@ -1304,24 +1668,35 @@ char *SelectELF(void)
 				elfhost=1;
 				strcpy(HDDpath,"pfs0:/\0");
 				}
-			if(new_pad & PAD_R1)
+			else if(new_pad & PAD_L2)
 			{
-				elfhost++;
+				setupmenu(new_pad);
+				if(settings->INTERLAC && settings->FMODE==ITO_FIELD && settings->HEIGHT==480)
+					maxrows=24;
+				else
+					maxrows=13;
+				changed=1;
+				}
+			else if(new_pad & PAD_R1)
+			{
+/*				elfhost++;
 				if (elfhost>4) elfhost=1;
 				if (elfhost==1 && activeHDD==FALSE) elfhost++;
-				if (elfhost==3 && activeMC==FALSE) elfhost++;
+				else if (elfhost==2 && activeHOST==FALSE) elfhost++;
+				else if (elfhost==3 && activeMC==FALSE) elfhost++;*/
+				selecthost(new_pad);
 				highlighted=0;
 				topfil=0;
 				changed=1;
 				}
-			if(new_pad & PAD_R2)
+			else if(new_pad & PAD_R2)
 			{
 				if (HDDstats[highlighted]&FIO_S_IFREG)
 				{
 					checkELFheader(fullpath);
 					}
 				}
-			if((new_pad & PAD_TRIANGLE))
+			else if((new_pad & PAD_TRIANGLE))
 			{
 				if (HDDstats[highlighted]&FIO_S_IFREG)
 				{
@@ -1342,7 +1717,7 @@ char *SelectELF(void)
 					strcpy(destination,fullpath);
 					}
 				}
-			if((new_pad & PAD_CIRCLE) && (elfhost==1 || elfhost==3))
+			else if((new_pad & PAD_CIRCLE) && (elfhost==1 || elfhost==3))
 			{
 				if(ConfirmYN("Delete?"))
 				{
@@ -1356,6 +1731,10 @@ char *SelectELF(void)
 						fileXioRmdir(tmppath);
 						fileXioUmount("pfs0:");
 						}
+					/*if(elfhost==2)
+					{
+						fioRmdir(fullpath);
+						}*/
 					if(elfhost==3)
 					{
 						strcpy(tmppath,"mc0:");
@@ -1365,6 +1744,7 @@ char *SelectELF(void)
 						strcat(tmppath,HDDfiles[highlighted]);
 						fioRmdir(tmppath);
 						}
+					sprintf(sStatus,"Deleted folder %s",fullpath);
 					changed=1;
 					highlighted=0;
 					topfil=0;
@@ -1379,11 +1759,16 @@ char *SelectELF(void)
 						fileXioRemove(tmppath);
 						fileXioUmount("pfs0:");
 						}
+					/*if(elfhost==2)
+					{
+						fioRemove(fullpath);
+						}*/
 					if(elfhost==3)
 					{
 						fioRemove(fullpath);	// I'm not sure why this happens, fioRemove on mc0:
 						fioRmdir(fullpath);	// appears to create a folder with the same name
 						}				// as the deleted file!!!
+					sprintf(sStatus,"Deleted file %s",fullpath);
 					changed=1;
 					highlighted=0;
 					topfil=0;
@@ -1396,7 +1781,7 @@ char *SelectELF(void)
 				changed=1;
 				}
 				}
-			if((new_pad & PAD_SQUARE) && (elfhost==1 || elfhost==3))
+			else if((new_pad & PAD_SQUARE) && (elfhost==1 || elfhost==3))
 			{
 				MenuKeyboard("Create folder, enter name");
 				if(strlen(foldername)>0)
@@ -1415,6 +1800,14 @@ char *SelectELF(void)
 						HDDpath[i+1]='\0';
 //						strcat(HDDpath, "/\0");
 						}
+					/*if(elfhost==2)
+					{
+						strcat(HOSTpath,foldername);
+						fioMkdir(HOSTpath);
+						i=strlen(HOSTpath);
+						HOSTpath[i]='/';
+						HOSTpath[i+1]='\0';
+						}*/
 					if(elfhost==3)
 					{
 						i=strlen(MCPath);
@@ -1428,32 +1821,42 @@ char *SelectELF(void)
 						MCPath[i+1]='*';
 						MCPath[i+2]='\0';
 						}
+					sprintf(sStatus,"Created folder %s",foldername);
 					}
 				changed=1;
 				highlighted=0;
 				topfil=0;
 				}
-			if(new_pad & PAD_SELECT)
+			else if(new_pad & PAD_SELECT)
 			{
-				showhelp();
+				showhelp(new_pad);
 				changed=1;
 				}
 			else if((new_pad & PAD_START) || (new_pad & PAD_CROSS))
 			{
-				if(elfhost==1 || elfhost==3 || elfhost==4)
-				{
+//				if(elfhost==1 || elfhost==3 || elfhost==4)
+//				{
 					if(HDDstats[highlighted]&FIO_S_IFDIR)
 					{
 						botcap=HDDfiles[highlighted][0];
 						botcap2=HDDfiles[highlighted][1];
 						minpath=6;
 						if(elfhost==1) strcpy(tmppath,HDDpath);
-						else if(elfhost==4) { strcpy(tmppath,CDpath); minpath=0; }
-						else
+						else if(elfhost==2)
+						{
+							strcpy(tmppath,HOSTpath);
+							minpath=5;
+							}
+						else if(elfhost==3)
 						{
 							strcpy(tmppath,MCPath);
 							tmppath[strlen(MCPath)-1]='\0';
 							minpath=1;
+							}
+						else if(elfhost==4)
+						{
+							strcpy(tmppath,CDpath);
+							minpath=0;
 							}
 						if((botcap=='.')&(botcap2=='.'))
 						{
@@ -1494,41 +1897,34 @@ char *SelectELF(void)
 								}
 							}
 						if(elfhost==1) strcpy(HDDpath,tmppath);
-						else if(elfhost==4) strcpy(CDpath, tmppath);
-						else
+						else if(elfhost==2) strcpy(HOSTpath,tmppath);
+						else if(elfhost==3)
 						{
 							i=strlen(tmppath)+1;
 							strcpy(MCPath,tmppath);
 							MCPath[i-1]='*';
 							MCPath[i]='\0';
 							}
+						else if(elfhost==4) strcpy(CDpath, tmppath);
 						}
 					else
 					{
-//						if(elfhost==1)
-//						{
-							if(checkELFheader(fullpath)==1)
-							{
-//								sprintf(sStatus, "-  %s -", HDDfiles[highlighted]);
-								sprintf(sStatus, "-  %s -", fullpath);
-								selected = 1;
-								}
+						if(checkELFheader(fullpath)==1)
+						{
+							sprintf(sStatus, "- %s -", fullpath);
+							selected = 1;
 							}
-//						else tomcopy(fullpath);
-//						}
-					}
-//				else
-//				{
-//					tomcopy(HDDfiles[highlighted]);
+						}
 //					}
 				}
 			}
 		if (changed)
 		{
 			if (elfhost==1) ReadHDDFiles();
-			if (elfhost==2) ReadHostDir();
-			if (elfhost==3) ReadMCDir();
-			if (elfhost==4) ReadCDDir();
+			else if (elfhost==2 && activeHOST==2) ReadHOSTFiles();
+			else if (elfhost==2 && activeHOST==1) ReadHostDir();
+			else if (elfhost==3) ReadMCDir();
+			else if (elfhost==4) ReadCDDir();
 			changed=0;
 			}
 		ReDraw(highlighted);
@@ -1648,10 +2044,11 @@ void poweroffHandler(int i)
 // *************************************************************************
 int main(int argc, char *argv[])
 {
-	int i=0,ret,elfsubdir=0;
+	int i=0,ret,dret,elfsubdir=0;
 	char *pc;
 	char s[MAX_PATH];
 	char *imgcmd = "\0"; //"rom0:UDNL rom0:EELOADCNF";
+	char *sysconf = "mc0:/SYS-CONF";
 
 // Initialise
 	SifInitRpc(0);
@@ -1672,7 +2069,7 @@ int main(int argc, char *argv[])
 		}
 
 	init_scr();
-	scr_printf("Welcome to PS2MENU v2.1\nPlease wait...\n");
+	scr_printf("Welcome to PS2MENU v2.3b\nPlease wait...\n");
 	if(argc!=2)
 	{
 		hddPreparePoweroff();
@@ -1700,68 +2097,33 @@ int main(int argc, char *argv[])
 		LoadModules();
 		}
 
-// Initialise platform stuff
-// detect system, and reset GS into that mode
-	if(pal_ntsc() == 3)
-	{
-		initGraph(3);
-		}
-	else
-	{
-		initGraph(2);
-		}
-
-	g_nWhichBuffer = 0;
-	SetupScreen( g_nWhichBuffer );		// set up MY screen!!!
-
-	*GS_PMODE =		0x0066;
-
-	*GS_BGCOLOR =	0x00FF00;			// GREEN
-
-	install_VRstart_handler();
-
-	*GS_BGCOLOR =	0x5A5A5A;			// GREY
-
-//	readPCXheader(&mainlogo_pcx,size_mainlogo_pcx);
-//	drawPCX(&mainlogo_pcx,size_mainlogo_pcx, 0, 0);
-
-// set palette
-	SetPaletteEntry(0x005A5A5A, 0);
-	SetPaletteEntry(0x00000000, 1);
-	SetPaletteEntry(0x00FFFFFF, 2);
-	paletteindex=3;
-	clrEmuScreen(0);
-	PutImage();
-	readPCXheader(&ps2menu_pcx,size_ps2menu_pcx);
-// *** Required BEFORE calling ReadMCDir etc
 	GetROMVersion();
 //#ifdef DEBUG
 	dbgprintf("Rom version: %s\n", romver);
 //#endif
 
-	strcpy(sStatus, "Ready.\0");
 	if(hddCheckPresent() < 0)
 	{
-		jprintf("Error: supported HDD not connected!\n");
+		dbgprintf("Error: supported HDD not connected!\n");
 		activeHDD=FALSE;
 		goto checkmc;
 		}
 	if(hddCheckFormatted() < 0)
 	{
-		jprintf("Error: HDD is not properly formatted!\n");
-		if(dowereformat()<0)
-		{
+		dbgprintf("Error: HDD is not properly formatted!\n");
+//		if(dowereformat()<0)
+//		{
 			activeHDD=FALSE;
 			goto checkmc;
-			}
+//			}
 		}
 	i=hddGetFilesystemList(parties, MAX_PARTITIONS);
-	dbgprintf("nparties = %i\n", i);
-	if(i==1)					// just one partition, probably just __boot
-	{
-		dowereformat();
-		i=hddGetFilesystemList(parties, MAX_PARTITIONS);
-		}
+	dbgprintf("Found %i partitions\n", i);
+//	if(i==1)					// just one partition, probably just __boot
+//	{
+//		dowereformat();
+//		i=hddGetFilesystemList(parties, MAX_PARTITIONS);
+//		}
 	nparty=i-1;
 	party=-1;
 	for(i=nparty;i>=0;i--)
@@ -1793,9 +2155,112 @@ checkmc:
 		activeMC=TRUE;
 		strcpy(MCPath, "/*\0");
 		}
-	if (activeHDD==TRUE) strcpy(destination, "pfs0:\0");
-	else if(activeMC==TRUE) strcpy(destination, "mc0:\0");
-	else strcpy(destination, "host:\0");
+	if((dret = fioDopen("host:") < 0))
+	{
+		activeHOST=FALSE;
+		}
+	else
+	{
+		fioDclose(dret);
+		activeHOST=2;
+		}
+	if (activeHOST==FALSE)
+	{
+		if ((ret = fioOpen("host:elflist.txt", O_RDONLY))>=0)
+		{
+			activeHOST=1;
+			fioClose(ret);
+			}
+		}
+	if (activeHDD==TRUE) { strcpy(destination, "pfs0:\0"); elfhost=1; }
+	else if(activeMC==TRUE) { strcpy(destination, "mc0:\0"); elfhost=3; }
+	else if(activeHOST==2) { strcpy(destination, "host:\0"); elfhost=2; }
+	else elfhost=4;
+	strcpy(HOSTpath,"host:\0");
+	if (activeMC==TRUE)
+	{
+		if((dret = fioDopen(sysconf) < 0)) fioMkdir(sysconf);
+		else fioDclose(dret);
+		if ((ret=fioOpen("mc0:/SYS-CONF/PS2MENU.CNF",O_RDONLY))<0)
+		{
+			settings = (ps2menuset*)malloc(sizeof(ps2menuset));
+			settings->WIDTH = 512;
+			settings->HEIGHT = 480;
+			settings->OFFSETX = 128;
+			settings->OFFSETY = 30;
+			settings->DITHER = TRUE;
+			settings->INTERLAC = FALSE;
+			settings->FMODE = ITO_FRAME;
+			settings->PALORNTSC = 0;
+			settings->BGCOL1 = ITO_RGBA(0x5A,0x5A,0x5A,0x0);
+			settings->FGCOL1 = ITO_RGBA(0x00,0x00,0x00,0x0);
+			settings->FGCOL2 = ITO_RGBA(0xFF,0xFF,0xFF,0x0);
+			settings->FGCOL3 = ITO_RGBA(0x9C,0x9C,0x9C,0x0);
+			ret=fioOpen("mc0:/SYS-CONF/PS2MENU.CNF",O_CREAT | O_WRONLY | O_TRUNC);
+			fioWrite(ret,settings,sizeof(ps2menuset));
+			fioClose(ret);
+			}
+		else
+		{
+			settings = (ps2menuset*)malloc(sizeof(ps2menuset));
+			fioRead(ret,settings,sizeof(ps2menuset));
+			fioClose(ret);
+			}
+		}
+	else
+	{
+		settings = (ps2menuset*)malloc(sizeof(ps2menuset));
+		settings->WIDTH = 512;
+		settings->HEIGHT = 480;
+		settings->OFFSETX = 128;
+		settings->OFFSETY = 30;
+		settings->DITHER = TRUE;
+		settings->INTERLAC = FALSE;
+		settings->FMODE = ITO_FRAME;
+		settings->PALORNTSC = 0;
+		settings->BGCOL1 = ITO_RGBA(0x5A,0x5A,0x5A,0x0);
+		settings->FGCOL1 = ITO_RGBA(0x00,0x00,0x00,0x0);
+		settings->FGCOL2 = ITO_RGBA(0xFF,0xFF,0xFF,0x0);
+		settings->FGCOL3 = ITO_RGBA(0x9C,0x9C,0x9C,0x0);
+		}
+	itoInit();
+	screen_env.screen.width		= settings->WIDTH;
+	screen_env.screen.height	= settings->HEIGHT;
+	screen_env.screen.psm		= ITO_RGBA32;
+	screen_env.screen.x		= settings->OFFSETX; 
+	screen_env.screen.y		= settings->OFFSETY;
+	screen_env.framebuffer1.x	= 0;
+	screen_env.framebuffer1.y	= 0;
+	screen_env.framebuffer2.x	= 0;
+	screen_env.framebuffer2.y	= settings->HEIGHT;
+	screen_env.zbuffer.x		= 0;
+	screen_env.zbuffer.y		= settings->HEIGHT*2;
+	screen_env.zbuffer.psm		= ITO_ZBUF32;
+	screen_env.scissor_x1		= 0;
+	screen_env.scissor_y1		= 0;
+	screen_env.scissor_x2		= settings->WIDTH;
+	screen_env.scissor_y2		= settings->HEIGHT;
+	screen_env.dither			= settings->DITHER;
+	screen_env.interlace		= settings->INTERLAC;
+	screen_env.ffmode			= settings->FMODE;
+	if(settings->PALORNTSC==1) screen_env.vmode = ITO_VMODE_NTSC;
+	else if(settings->PALORNTSC==2) screen_env.vmode = ITO_VMODE_PAL;
+	else screen_env.vmode = ITO_VMODE_AUTO;
+	itoGsEnvSubmit(&screen_env);
+	itoZBufferUpdate(FALSE);
+	itoZBufferTest(FALSE, 0);
+
+	mypalette[0]=settings->BGCOL1;
+	mypalette[1]=settings->FGCOL1;
+	mypalette[2]=settings->FGCOL2;
+	mypalette[3]=settings->FGCOL3;
+	paletteindex=4;
+	itoSetBgColor(settings->BGCOL1);
+	clrEmuScreen(mypalette[0]);
+	PutImage();
+	readPCXheader(&ps2menu_pcx,size_ps2menu_pcx);
+// *** Required BEFORE calling ReadMCDir etc
+
 	ReDraw(0);
 // get the pad going
 	padInit(0);
@@ -1822,12 +2287,14 @@ checkmc:
 		}
 	CDVD_Init();
 	dbgprintf("Starting SelectELF()...\n");
+	strcpy(sStatus, "Ready.\0");
 
 // main ELF select loop
 	pc = SelectELF();
 
 // build correct path to ELF
 	padPortClose(0,0);
+	free(settings);
 
 	if(elfhost==4)
 	{
@@ -1959,7 +2426,7 @@ void LoadAndRunMCElf(char *filename)
 /* Load the ELF into RAM.  */
 	if (_lw((u32)&eh->ident) != ELF_MAGIC)
 	{
-		*GS_BGCOLOR =	0x0000FF;		// BLUE
+//		*GS_BGCOLOR =	0x0000FF;		// BLUE
 		goto error;
 		}
 
