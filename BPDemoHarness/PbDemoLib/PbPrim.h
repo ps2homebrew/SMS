@@ -35,6 +35,13 @@ typedef enum
 #define PB_CONTEXT_2 1
 
 ///////////////////////////////////////////////////////////////////////////////
+// DATA
+///////////////////////////////////////////////////////////////////////////////
+
+extern u64* PbGifPtr; 
+extern int  PbGifLength; 
+
+///////////////////////////////////////////////////////////////////////////////
 // Functions
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +60,12 @@ void PbPrimTriangleTexture( PbTexture* pTex, int x1, int y1, int u1, int v1,
                                              int x2, int y2, int u2, int v2,  
                                              int x3, int y3, int u3, int v3,  
                                              int z, int color  ); 
+
+
+#define PbGifListAdd(REG, DATA) { *PbGifPtr++ = (u64)(DATA); *PbGifPtr++ = (u64)(REG); PbGifLength++; } 
+
+void PbGifListBegin(); 
+void PbGifListSend(); 
 
 #endif // _PBPRIM_H_
 

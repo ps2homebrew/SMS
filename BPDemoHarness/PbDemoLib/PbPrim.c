@@ -260,3 +260,36 @@ void PbPrimTriangleTexture( PbTexture* pTex, int x1, int y1, int u1, int v1,
   PbDmaSend02Spr( p_store, size ); 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// GifList settings and data
+///////////////////////////////////////////////////////////////////////////////
+
+#define PB_GIFLIST_MAXENTRIES 1024 
+
+u64  PbGifList[PB_GIFLIST_MAXENTRIES*2] __attribute__((aligned(16))); 
+u64* PbGifPtr = PbGifList; 
+int  PbGifLength = 0; 
+
+/////////////////////////////////////////////////////////////////////////////// 
+// void PbGifListBegin 
+/////////////////////////////////////////////////////////////////////////////// 
+
+void PbGifListBegin() 
+{ 
+  PbGifPtr = PbGifList; 
+  PbGifLength = 0; 
+  PbGifListAdd( GIF_AD, 0 ); // tag set in  PbGifListSend 
+} 
+
+/////////////////////////////////////////////////////////////////////////////// 
+// void PbGifListSend 
+/////////////////////////////////////////////////////////////////////////////// 
+
+void PbGifListSend() 
+{ 
+  PbGifList[0] = GIF_TAG( PbGifLength-1, 1, 0, 0, 0, 1 ); 
+  FlushCache(0);
+  PbDmaWait02(); 
+  PbDmaSend02( PbGifList, PbGifLength ); 
+}
+
