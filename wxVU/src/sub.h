@@ -22,6 +22,7 @@ public:
         for (i = 0; i < nREGISTERS ; i++) {
             REGISTERS[i] = *(data++);
         }
+        return 0;
     };
     uint32  *REGISTERS;
 private:

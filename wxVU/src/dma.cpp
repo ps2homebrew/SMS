@@ -624,22 +624,3 @@ DMA::getRegisterText(const int reg) {
             break;
     }    
 }
-
-uint32
-DMA::writeRegister(const int reg, uint32 value) {
-
-    return 0;
-}
-
-uint64
-DMA::readRegister(const int reg) {
-    return 0;
-}
-
-uint32
-DMA::initRegisters(uint32 *data) {
-    int i;
-    for (i = 0; i < nREGISTERS; i++) {
-        REGISTERS[i] = *(data++);
-    }
-}
