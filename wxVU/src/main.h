@@ -232,6 +232,9 @@ private:
         wxString    binTmpFile;
         wxString    regTmpFile;
         wxString    gsTmpFile;
+        wxString    dumpMemCmd;
+        wxString    dumpRegCmd;
+        wxString    gsExecCmd;
         wxFileName  codeFile;
         wxFileName  dataFile;
 		wxFileName	memStateFile;
