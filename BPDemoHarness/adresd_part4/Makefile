@@ -1,5 +1,5 @@
-EE_BIN = adresd_part5.elf
-BIN_IMAGE = adresd_part5.bin
+EE_BIN = adresd_part4.elf
+BIN_IMAGE = adresd_part4.bin
 EE_OBJS = crt0.o main.o oddments.o odd.o Vu1Distort.o ../PbDemoLib/libpbdemo.a
 all: $(EE_BIN) $(BIN_IMAGE)
 
