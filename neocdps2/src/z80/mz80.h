@@ -377,14 +377,14 @@ extern UINT32 mz80ReadValue(UINT8 bWhat, UINT32 dwAddr);
 
 // Flag definitions
 
-#define	Z80_FLAG_CARRY					0x01
-#define	Z80_FLAG_NEGATIVE				0x02
+#define	Z80_FLAG_CARRY			0x01
+#define	Z80_FLAG_NEGATIVE		0x02
 #define	Z80_FLAG_OVERFLOW_PARITY	0x04
-#define	Z80_FLAG_UNDEFINED1			0x08
-#define	Z80_FLAG_HALF_CARRY			0x10
-#define	Z80_FLAG_UNDEFINED2			0x20
-#define	Z80_FLAG_ZERO					0x40
-#define	Z80_FLAG_SIGN					0x80
+#define	Z80_FLAG_UNDEFINED1		0x08
+#define	Z80_FLAG_HALF_CARRY		0x10
+#define	Z80_FLAG_UNDEFINED2		0x20
+#define	Z80_FLAG_ZERO			0x40
+#define	Z80_FLAG_SIGN			0x80
 
 #define	IFF1			0x01
 #define	IFF2			0x02

@@ -32,9 +32,16 @@
 #define BOOT_CD 0
 #define BOOT_MC 1
 #define BOOT_HO 2
+#define BOOT_HD 3
+#define BOOT_HOST 4
+
+#define REGION_JAPAN  0
+#define REGION_USA    1
+#define REGION_EUROPE 2
+
 
 /*-- Version, date & time to display on startup ----------------------------*/
-#define VERSION1 "NeoCD/PS2 0.0.2a\n"
+#define VERSION1 "NeoCD/PS2 0.0.3\n"
 #define VERSION2 "Compiled on: "__DATE__" "__TIME__"\n"
 
 #define AUTHOR   "PS2 version by [evilo]\n"
@@ -46,6 +53,7 @@
 //extern char	global_error[80];
 
 extern char	*neogeo_rom_memory __attribute__((aligned(64)));
+//extern char	*neogeo_0lo_memory __attribute__((aligned(64)));
 extern char	*neogeo_prg_memory __attribute__((aligned(64)));
 extern char	*neogeo_fix_memory __attribute__((aligned(64)));
 extern char	*neogeo_spr_memory __attribute__((aligned(64)));
@@ -58,6 +66,14 @@ extern char path_prefix[128] __attribute__((aligned(64)));
 extern int      neogeo_ipl_done;
 
 extern 		uint32 neocd_time;
+
+extern int 	AUDIO_PLAYING;
+
+extern char	path_prefix[128];
+extern int	boot_mode;
+extern int	game_boot_mode;
+
+extern char	neogeo_region;
 
 void loadModules(void);
 

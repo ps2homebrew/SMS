@@ -66,19 +66,15 @@ static char writting=0;
 #define CLOCK_BIT	0x2
 #define END_BIT		0x4
 
-void pd4990a_init(void) {
+void pd4990a_init(void)
+{
 
-    //time_t ltime;
-    //struct tm *today;
     CdvdClock_t *cdclock = malloc (sizeof(CdvdClock_t));
     
     printf("Init PD4990A chip\n");
     // At this point CD device is already initialized
 
-    //time(&ltime);
-    //today = localtime(&ltime);
-    
-    if (cdReadClock(cdclock)==1)
+    if ((cdReadClock(cdclock)==1) & (cdclock->status==0))
     {
     	pd4990a.seconds = cdclock->second;
     	pd4990a.minutes = cdclock->minute;
@@ -87,10 +83,12 @@ void pd4990a_init(void) {
     	pd4990a.month = cdclock->month;
     	pd4990a.year = cdclock->year;
     	pd4990a.weekday = 1; // this value is not retrieved
-    	printf("Clock set %d/%d/%d %d:%d:%d\n",pd4990a.days,pd4990a.month,pd4990a.year,pd4990a.hours,pd4990a.minutes,pd4990a.seconds);
+    	printf("PS2 Clock : %d/%d/%d %d:%d:%d\n",btoi(pd4990a.days),btoi(pd4990a.month),btoi(pd4990a.year),btoi(pd4990a.hours),btoi(pd4990a.minutes),btoi(pd4990a.seconds));
     	return;
     } 
-    printf("readClock failed\n");
+    printf("cdReadClock failed\n");
+    // free struct, not used anymore
+    free (cdclock);
    
 }
 

@@ -2,11 +2,6 @@
 ****  NEOCD.C  - Main Source File  ****
 **************************************/
 
-// DEGUG DEVELOPMENT MODE CAN BE ACTIVATED IN THE MAKEFILE
-// IN THAT CASE, NEOCD WILL LOOK UNDER "host0:./cd" for the games
-// (COPY DIRECTLY THE FILES FROM THE CD)
-
-
 //-- Include Files -----------------------------------------------------------
 
 #include <tamtypes.h>
@@ -25,41 +20,39 @@
 #include "neocd.h"
 #include "video/video.h"
 
+#define REGION REGION_USA
 
-#define REGION_JAPAN  0
-#define REGION_USA    1
-#define REGION_EUROPE 2
-
-#define REGION REGION_USA // EUROPE RULES !
-
-#define ROM_PADMAN // FOR PAD LOAD MODULE
+//PAD LOAD MODULE
+#define ROM_PADMAN
 
 //-- Global Variables --------------------------------------------------------
-char			*neogeo_rom_memory __attribute__((aligned(64))) = NULL;
-char			*neogeo_prg_memory __attribute__((aligned(64))) = NULL;
-char			*neogeo_fix_memory __attribute__((aligned(64))) = NULL;
-char			*neogeo_spr_memory __attribute__((aligned(64))) = NULL;
-char			*neogeo_pcm_memory __attribute__((aligned(64))) = NULL;
+char		*neogeo_rom_memory __attribute__((aligned(64))) = NULL;
+char		*neogeo_prg_memory __attribute__((aligned(64))) = NULL;
+char		*neogeo_fix_memory __attribute__((aligned(64))) = NULL;
+char		*neogeo_spr_memory __attribute__((aligned(64))) = NULL;
+char		*neogeo_pcm_memory __attribute__((aligned(64))) = NULL;
 
-//char			global_error[80];
-unsigned char		neogeo_memorycard[8192] __attribute__((aligned(64)));
-int			neogeo_prio_mode = 0;
-int			neogeo_ipl_done = 0;
-char			neogeo_region=REGION;
-//unsigned char		config_game_name[80];
+unsigned char	neogeo_memorycard[8192] __attribute__((aligned(64))) __attribute__ ((section (".bss")));
 
-uint32			neocd_time; /* next time marker */
+int		neogeo_prio_mode = 0;
+int		neogeo_ipl_done = 0;
+char		neogeo_region=REGION;
+unsigned char	config_game_name[80];
 
-char path_prefix[128]  __attribute__((aligned(64))) = "cdrom0:\\"; 
+//uint32	neocd_time; /* next time marker */
 
-int boot_mode = BOOT_CD; // by defaut
+char 		path_prefix[128]  __attribute__((aligned(64))) = "cdrom0:\\"; 
 
+int 		boot_mode = BOOT_CD; // by defaut
+int 		game_boot_mode = BOOT_CD; // by defaut
+
+int 		AUDIO_PLAYING = 1;
  
 //-- 68K Core related stuff --------------------------------------------------
-int				mame_debug = 0;
-int				previouspc = 0;
-int				ophw = 0;
-int				cur_mrhard = 0;
+int	mame_debug = 0;
+int	previouspc = 0;
+int	ophw = 0;
+int	cur_mrhard = 0;
 
 
 //-- Function Prototypes -----------------------------------------------------
@@ -126,6 +119,9 @@ int	main(int argc, char* argv[])
     	} else if(!strncmp(path_prefix, "host", strlen("host"))) {
 	        printf("Booting from host\n");
 	        boot_mode = BOOT_HO;
+	}  else if(!strncmp(path_prefix, "hdd", strlen("hdd"))) {
+	        printf("Booting from hdd\n");
+	        boot_mode = BOOT_HD;
     	}	
 
 
@@ -136,7 +132,9 @@ int	main(int argc, char* argv[])
   	 	
   	// init CDROM
   	cdInit(CDVD_INIT_INIT);
-  		
+  	//init fio
+	fioInit();
+  	  		
 	// Video init
 	printf("\ninitializing video.... ");
 	result = video_init();
@@ -153,10 +151,7 @@ int	main(int argc, char* argv[])
 	// display the loading screen
 	display_splashscreen();
 	
-	
-	
-	//printf("----> Starting timer : %d\n", PS2_InitTicks());
-	
+
 	// Allocate needed memory buffers	
 	printf("NEOGEO: Allocating memory :\n");
 	printf("PRG (2MB) ... ");
@@ -181,6 +176,7 @@ int	main(int argc, char* argv[])
 		printf("failed !\n");
 		return 0;
 	}
+	
 	printf("DONE!\n");
 
 	printf("FIX (128kb) ... ");
@@ -202,32 +198,15 @@ int	main(int argc, char* argv[])
 	// Initialize Memory Mapping
 	initialize_memmap();
 	
-	//init fio
+	//init fio sys
 	fioInit();
-
-	// Read memory card	
-	printf("Loading memcard...\n");
-	fioClose(fd);
-	strcpy (bootpath,path_prefix);
-	if (boot_mode == BOOT_CD) 
-	  strcat (bootpath,"ROMDISK\\MEMCARD.BIN;1");
-	else strcat (bootpath,"romdisk\\memcard.bin");
-	fd = fioOpen(bootpath, O_RDONLY);
-	if (fd<0)
-	{
-	   printf("Fatal Error: Could not load MEMCARD.BIN\n");
-	   return (0);
-	}
-	fioRead(fd, neogeo_memorycard, 8192);
-	fioClose(fd);
-	printf("DONE!\n");
 
 	// Load BIOS
 	printf("Loading BIOS...\n");
 	strcpy (bootpath,path_prefix);
 	if (boot_mode == BOOT_CD) 
 	  strcat (bootpath,"BIOS\\NEOCD.BIN;1");
-	else strcat (bootpath,"bios\\neocd.bin");
+	else strcat (bootpath,"BIOS\\NEOCD.BIN");
 	fd = fioOpen(bootpath, O_RDONLY);
 	if (fd<0)
 	{  
@@ -239,36 +218,15 @@ int	main(int argc, char* argv[])
 		
 	fixtmp=(char*)malloc(65536);
 	memcpy(fixtmp,&neogeo_rom_memory[458752],65536);
-	
 	fix_conv(fixtmp,&neogeo_rom_memory[458752],65536,rom_fix_usage);
 	//swab(neogeo_rom_memory, neogeo_rom_memory, 131072);
-	
-	printf("DONE!\n");
 	free(fixtmp);
 	fixtmp=NULL;
-
-	printf("Loading startup ram...\n");
-	// Load startup RAM
-	strcpy (bootpath,path_prefix);
-	if (boot_mode == BOOT_CD) 
-	  strcat (bootpath,"ROMDISK\\STARTUP.BIN;1");
-	else strcat (bootpath,"romdisk\\startup.bin");
-	fd = fioOpen(bootpath, O_RDONLY);
-	if (fd<0)
-	{ 
-	   printf("Fatal Error: Could not load STARTUP.BIN\n");
-	   return 0;
-	} 
-	fioRead(fd, neogeo_prg_memory + 0x10F300, 3328); 
-	fioClose(fd);
 	printf("DONE!\n");
-		
-	swab(neogeo_prg_memory + 0x10F300, neogeo_prg_memory + 0x10F300, 3328);
-
-
-	printf("patching BIOS...");
-	// Check BIOS validity
 	
+	// Check BIOS validity
+	printf("patching BIOS...");
+		
 	if (*((short*)(neogeo_rom_memory+0xA822)) != 0x4BF9)
 	{
 		printf("Fatal Error: Invalid BIOS file.\n");
@@ -285,9 +243,10 @@ int	main(int argc, char* argv[])
 	// Patch BIOS CDROM Check/
 	*((short*)(neogeo_rom_memory+0xB040)) = 0x4E71;
 	*((short*)(neogeo_rom_memory+0xB042)) = 0x4E71;
+	
 	// Patch BIOS upload command/
-	*((short*)(neogeo_rom_memory+0x546)) = 0xFAC1;
-	*((short*)(neogeo_rom_memory+0x548)) = 0x4E75;
+	//*((short*)(neogeo_rom_memory+0x546)) = 0xFAC1; //mslug
+	//*((short*)(neogeo_rom_memory+0x548)) = 0x4E75;
 
 	// Patch BIOS CDDA check/
 	*((short*)(neogeo_rom_memory+0x56A)) = 0xFAC3;
@@ -302,9 +261,28 @@ int	main(int argc, char* argv[])
 	*((short*)(neogeo_rom_memory+0xA5B6)) = 0x4AFC;
 	
 	printf("DONE!\n");
+	
+	printf("Loading startup ram...\n");
+	// Load startup RAM
+	strcpy (bootpath,path_prefix);
+	if (boot_mode == BOOT_CD) 
+	  strcat (bootpath,"ROMDISK\\STARTUP.BIN;1");
+	else strcat (bootpath,"ROMDISK\\STARTUP.BIN");
 
-	//current_time2 = PS2_GetTicks();
-	//printf("----> %d msec elapsed since beginning\n",current_time2);
+	fd = fioOpen(bootpath, O_RDONLY);
+	if (fd<0)
+	{ 
+	   printf("Fatal Error: Could not load STARTUP.BIN\n");
+	   return 0;
+	} 
+	fioRead(fd, neogeo_prg_memory + 0x10F300, 3328); 
+	fioClose(fd);
+	swab(neogeo_prg_memory + 0x10F300, neogeo_prg_memory + 0x10F300, 3328);
+	printf("DONE!\n");
+	
+	// "Reset" memory card
+	memset (neogeo_memorycard,0,8192*2);
+	
 
 	// Initialise input
 	printf("Initialize input...\n");
@@ -313,10 +291,12 @@ int	main(int argc, char* argv[])
 	// Initialize CD-ROM
 	printf("Initialize cdrom...\n");
 
-	cdrom_init1();
+	
+	game_boot_mode = cdrom_init1();
 	// display loading screen
 	display_loadingscreen();
 	
+	// Cdda init -> does nothing !
 	cdda_init();
 	
 	// Sound init
@@ -338,7 +318,6 @@ void	neogeo_init(void)
 {
  	printf("Reset M68K...\n");
 	m68k_pulse_reset();
- 
 }
 
 //----------------------------------------------------------------------------
@@ -351,8 +330,9 @@ void	neogeo_hreset(void)
 	printf("NEOGEO Hard Reset...\n");
 	
 	// read game name
-	//neogeo_read_gamename(); for what now ???
-
+	neogeo_read_gamename();
+	printf ("Game Name : %s\n",config_game_name);
+	
 	/* TO BE READDED LATER
 	// Special patch for Samurai Spirits RPG
 	if (strcmp(config_game_name, "TEST PROGRAM USA") == 0)
@@ -374,22 +354,22 @@ void	neogeo_hreset(void)
 	
 
 	// First time init
-	printf("m68K pulse reset...\n");
+	printf("m68K reset...\n");
+	
 	m68k_pulse_reset();
-	printf("m68K set reg...\n");
 	m68k_set_reg(M68K_REG_PC,0xc0a822);
 	m68k_set_reg(M68K_REG_SR,0x2700);
 	m68k_set_reg(M68K_REG_A7,0x10F300);
 	m68k_set_reg(M68K_REG_ISP,0x10F300);
 	m68k_set_reg(M68K_REG_USP,0x10F300);
-	printf("m68K set mem 1...\n");
-	m68k_write_memory_32(0x10F6EE, m68k_read_memory_32(0x68)); // $68 *must* be copied at 10F6EE
-	printf("m68K set mem 2...\n");
+	
+	m68k_write_memory_32(0x10F6EE, m68k_read_memory_32(0x68L)); // $68 *must* be copied at 10F6EE
 	if (m68k_read_memory_8(0x107)&0x7E)
 	{
 		if (m68k_read_memory_16(0x13A))
 		{
-			m68k_write_memory_32(0x10F6EA, (m68k_read_memory_16(0x13A)<<1) + 0xE00000);
+			m68k_write_memory_32(0x10F6EA, (m68k_read_memory_32(0x13A)<<1) + 0xE00000);
+			//m68k_write_memory_32(0x10F6EA, (m68k_read_memory_16(0x13A)<<1) + 0xE00000);
 		}
 		else
 		{
@@ -401,7 +381,10 @@ void	neogeo_hreset(void)
 		m68k_write_memory_32(0x10F6EA, 0xE1FDF0);
 
 	// Set System Region
-	printf("set system region...\n");
+	printf("Set system region to : ");
+	if (neogeo_region==0) printf ("JAPAN\n");
+	else if (neogeo_region==1) printf ("US\n");
+	else printf ("EUROPE\n");
 	m68k_write_memory_8(0x10FD83,neogeo_region);
 
 	cdda_current_track = 0;
@@ -409,7 +392,7 @@ void	neogeo_hreset(void)
 	
 	printf("init z80...\n");
 	z80_init();
-	printf("done...\n");
+	printf("all done...\n");
  
 }	
 
@@ -437,8 +420,6 @@ void neogeo_reset(void)
 	m68k_write_memory_8(0x10FD83,neogeo_region);
 
 	cdda_current_track = 0;
-	cdda_get_disk_info(); 
-
 
 	printf("init z80...\n");
 	z80_init();
@@ -492,8 +473,8 @@ void	neogeo_exception(void)
 //----------------------------------------------------------------------------
 void MC68000_Cause_Interrupt(int level)
 {
-
-	m68k_set_irq(level);
+	if (level >= 1 && level <= 7)
+	  m68k_set_irq(level);
 
 }
 
@@ -510,7 +491,7 @@ void	neogeo_run(void)
  
 	//uint32 now;
 
-    	int	i;
+    	uint16	i;
 
 	printf("START EMULATION...\n");
 	
@@ -518,12 +499,11 @@ void	neogeo_run(void)
 	if (!neogeo_ipl_done)
 	{
 		// Display Title
-		#ifndef DEBUG
-		 cdrom_load_title();
-		#endif
+		//cdrom_load_title();
 
 		// Process IPL.TXT
-		if (!cdrom_process_ipl()) {
+		if (!cdrom_process_ipl())
+		{
 			printf("Error: Error while processing IPL.TXT.\n");
 			return;
 		}
@@ -535,22 +515,17 @@ void	neogeo_run(void)
 
 	// get time for speed throttle
 
-    	//neocd_time=PS2_GetTicks()+REFRESHTIME;
-
-	
 	// Main loop
 	my_timer();
 	
 	// Speed Throttle
-	//PS2_StartTicks();
 	z80_cycles = Z80_VBL_CYCLES/256;
-	while(1)
+	for(;;)
 	{
 		// Execute Z80 timeslice (one VBL)
 		mz80int(0);
-		/* TO BE DONE TO BE DONE
 		// Z80 runs anyway to check perf
-		if (AUDIO_PLAYING) {*/
+		if (AUDIO_PLAYING) {
 		
 		    for (i = 0; i < 256; i++)
 		    {
@@ -560,10 +535,9 @@ void	neogeo_run(void)
 			    z80_cycles=0;
 			    my_timer();
 			}
-			z80_cycles += Z80_VBL_CYCLES/256;
+			z80_cycles += Z80_VBL_CYCLES>>8; // /256
 		    }
-		//}
-
+		}
 
 		// One-vbl timeslice
 		//printf("execute 68k\n");
@@ -586,9 +560,11 @@ void	neogeo_run(void)
 		// check for memcard writes
 		if (memcard_write > 0) {
 		   memcard_write--;
-		   if(memcard_write==0) {
+		   if(memcard_write==0)
+		   {
 		     // write memory card here
-			 // if you need to keep file up to date
+		     //printf("writing to memory card\n");
+		     // if you need to keep file up to date
 		   }
 		}
 
@@ -596,23 +572,14 @@ void	neogeo_run(void)
 		//printf("call display routine\n");
 		video_draw_screen1();
 
+		// Update keys and Joystick
+		processEvents();
+						
 		// Check if there are pending commands for CDDA
 		neogeo_cdda_check();
 		cdda_loop_check();
 
-		// Update keys and Joystick
-		processEvents();
-
-
-		// Speed Throttle
-		/*
-		now=PS2_GetTicks();
-		if (now < neocd_time)
-			PS2_Delay(neocd_time-now);
-		neocd_time+=REFRESHTIME;
-		*/
-
-	}
+	} // end loop
 
 	// Stop CDDA
 	cdda_stop();
@@ -667,7 +634,6 @@ void	neogeo_prio_switch(void)
 		else
 			neogeo_prio_mode = 0;
 	}
-
 }
 
 //----------------------------------------------------------------------------
@@ -769,7 +735,7 @@ void neogeo_do_cdda( int command, int track_number_bcd)
 
 }
 //----------------------------------------------------------------------------
-/*void neogeo_read_gamename(void)
+void neogeo_read_gamename(void)
 {
 
 	unsigned char	*Ptr;
@@ -785,7 +751,6 @@ void neogeo_do_cdda( int command, int track_number_bcd)
 	}
 
 }
-*/
 
 /*
  * loadModules()
@@ -793,6 +758,7 @@ void neogeo_do_cdda( int command, int track_number_bcd)
 void loadModules(void)
 {
     int ret;
+    char path[128];
 
     
     #ifdef ROM_PADMAN
@@ -820,4 +786,16 @@ void loadModules(void)
 	SifLoadModule("rom0:MCSERV", 0, NULL); 
     }
     SifLoadModule("rom0:CDVDMAN", 0, NULL); 
+    
+    //load cdvd irx
+    strcpy (path,path_prefix);
+    if (boot_mode == BOOT_CD)
+      strcat(path,"CDVD.IRX;1");
+    else
+      strcat(path,"CDVD.IRX");
+    ret = SifLoadModule(path, 0, NULL); 
+    if (ret < 0) {
+        printf("sifLoadModule sio failed: %d\n", ret);
+        SleepThread();
+    }    
 }

@@ -58,10 +58,10 @@
 
 #define sint8  signed   char			/* ASG: changed from char to signed char */
 #define sint16 signed   short
-#define sint32 signed   long
+#define sint32 signed   int			/*OBI: changed to int, long is int64 */
 #define uint8  unsigned char
 #define uint16 unsigned short
-#define uint32 unsigned long
+#define uint32 unsigned int			/*OBI: changed to int, long is int64 */
 
 /* signed and unsigned int must be at least 32 bits wide */
 #define sint   signed   int
@@ -69,8 +69,8 @@
 
 
 #if M68K_USE_64_BIT
-#define sint64 signed   long long
-#define uint64 unsigned long long
+#define sint64 signed   long
+#define uint64 unsigned long
 #else
 #define sint64 sint32
 #define uint64 uint32

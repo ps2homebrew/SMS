@@ -11,7 +11,7 @@
 void z80_init(void);
 
 
-extern UINT8		subcpu_memspace[65536]; //__attribute__((aligned(8)));
+extern UINT8		subcpu_memspace[65536] __attribute__((aligned(64)));
 extern int		sound_code;
 extern int		pending_command;
 extern int		result_code;
