@@ -15,6 +15,6 @@ No | Start | Sample Pos | Time | Description
 5  | 2:28  | 7104000    | 14   | short break
 6  | 2:42  | 7776000    | 33   | part
 7  | 3:15  | 9360000    | 26   | part
-8  | 3:41  | 10608000   | 26   | part
+8  | 3:41  | 10608000   | 26   | emoon part2
 9  | 4:07  | 11856000   | 26   | part
 10 | 4:33  | 13104000   | 32   | end part
