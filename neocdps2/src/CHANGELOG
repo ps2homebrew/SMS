@@ -1,4 +1,14 @@
-
+0.5   - Triple Buffering using vsync callback 
+        (thanks to drakonite for the idea)
+      - CD now stop spinning once in the "insert" screen 
+        which should help people using swap method.
+      - Fixed auto-animation speed (thx mame)
+      - Bit better sound emulation, but still not perfect
+      - Settings are now saved to MC, and restored at start-up
+      - Basic frameskip routine (off by default)
+      - Added an error message if bios is not found or invalid.
+      - source clean-up 
+      
 0.4   - Modified CD detection/swap routines, should work better now.
 	(Press (X) a second time if cd not detected the first time)
       - Added a workaround for the ps2ip bug (repeated small reads).
