@@ -2,6 +2,7 @@
 #include "PbDma.h"
 #include "PbVif.h"
 #include "PbFile.h"
+#include "PbGlobal.h"
 #include "../harness.h"
 
 extern const demo_init_t* gp_Info; // YUCK EXTERN!
@@ -106,6 +107,8 @@ int PbVu1_GetSize( u32* pStart, u32* pEnd  )
 
 	if( size&1 )
 		size++;
+
+  out( "Vu1 progsize: %d\n", size );
 
 	return size;
 }
