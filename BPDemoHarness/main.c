@@ -5,6 +5,7 @@
 #include <libpad.h>
 #include <loadfile.h>
 #include <sifrpc.h>
+#include "dernc.h"
 #include "harness.h"
 
 #include "stream_ee/streamload.h"
@@ -13,10 +14,13 @@ int sound_enabled = 0;
 #define DEF_PART "hdd:+PS2MENU"
 
 #define BIN_LOADADDR 0x1000000
-u8 *loadptr = (u8 *) BIN_LOADADDR;
+u32 *loadptr = (u32 *) BIN_LOADADDR;
 typedef u32 (*main_func)(demo_init_t *p);
 main_func call_main = (main_func) BIN_LOADADDR;
 #define MAX_DEMOS 16
+/* Bit of a hack, stops funny mallocs though */
+u32 *rnc_buffer = (u32 *) 0x800000;
+#define RNC_SIGNATURE 0x01434E52 
 
 char hdd_part[64] = DEF_PART;
 static u8 padBuf[256] __attribute__((aligned(64)));
@@ -425,10 +429,24 @@ int main(int argc, char **argv)
      {
        u32 len;
        u32 ret;
+       u32 sig;
 
        len = fioLseek(fd, 0, SEEK_END);
        fioLseek(fd, 0, SEEK_SET);     
-       fioRead(fd, loadptr, len);
+       fioRead(fd, &sig, 4);
+       if(sig == RNC_SIGNATURE)
+       {
+          printf("Load RNCed file\n");
+          rnc_buffer[0] = sig; 
+          fioRead(fd, &rnc_buffer[1], len - 4);
+          rnc_unpack(rnc_buffer, loadptr);
+       }
+       else
+       {
+         loadptr[0] = sig;
+         fioRead(fd, &loadptr[1], len - 4);
+       }
+
        fioClose(fd);
      
        if(init.screen_mode == SCRMODE_PAL)
