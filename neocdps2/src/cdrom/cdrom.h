@@ -6,9 +6,6 @@
 #ifndef	CDROM_H
 #define CDROM_H
 
-//#include <SDL.h>
-
-
 /*-- Exported Variables -----------------------------------------------------*/
 extern	int	cdrom_current_drive;
 

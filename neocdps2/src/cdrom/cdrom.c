@@ -8,7 +8,11 @@
 #include <fileio.h> 
 #include <string.h>
 #include <libcdvd.h>
+#include <sifcmd.h>
+#include <sifrpc.h>
+#include <loadfile.h>
 #include "cdrom.h"
+#include "cdvd_rpc.h"
 #include "../neocd.h"
 
 
@@ -18,6 +22,7 @@
  #define PRG      "prg"
  #define FIX      "fix"
  #define SPR      "spr"
+ #define OBJ      "obj"
  #define Z80      "z80"
  #define PAT      "pat"
  #define PCM      "pcm"
@@ -30,6 +35,7 @@
  #define PRG      "PRG"
  #define FIX      "FIX"
  #define SPR      "SPR"
+ #define OBJ      "OBJ"
  #define Z80      "Z80"
  #define PAT      "PAT"
  #define PCM      "PCM"
@@ -38,13 +44,10 @@
 #endif
 
 /*-- Definitions -----------------------------------------------------------*/
-#ifdef DEBUG
- // load from host
- char *cdpath = path_prefix; 
-#else
- // load from cdrom
-  char cdpath[128] __attribute__((aligned(64))) = "cdrom0:\\"; 
-#endif
+
+char cdpath[128] __attribute__((aligned(64))) = "cdfs:\\"; 
+
+char bootpath[128];
 
 #define BUFFER_SIZE 131072
 #define PRG_TYPE    0
@@ -53,6 +56,7 @@
 #define Z80_TYPE    3
 #define PAT_TYPE    4
 #define PCM_TYPE    5
+#define OBJ_TYPE    6 
 #define min(a, b) ((a) < (b)) ? (a) : (b)
 
 /*-- Exported Functions ----------------------------------------------------*/
@@ -61,6 +65,7 @@ int    cdrom_load_prg_file(char *, unsigned int);
 int    cdrom_load_z80_file(char *, unsigned int);
 int    cdrom_load_fix_file(char *, unsigned int);
 int    cdrom_load_spr_file(char *, unsigned int);
+int    cdrom_load_obj_file(char *, unsigned int);
 int    cdrom_load_pcm_file(char *, unsigned int);
 int    cdrom_load_pat_file(char *, unsigned int, unsigned int);
 //void   cdrom_load_files(void);
@@ -79,43 +84,59 @@ static char    Path[64] ;//__attribute__((aligned(64)));
 //-- Private Function --------------------------------------------------------
 static    int    recon_filetype(char *);
 
+int spr_length;
+
 //-- Exported Variables ------------------------------------------------------
-//int        cdrom_current_drive;
 int        img_display = 1;
 
 //----------------------------------------------------------------------------
+// return 0 if game detected on local "host", under "cd" folder
+// return 1 in other case (-> cdrom0)
 int cdrom_init1(void)
 {    
     int neocd_disc=0;
     int fd;
     
-    #ifdef DEBUG
-    	// if in debug mode, don't care about cd/dvd, and load from host
-    	printf("DEBUG MODE : Loading from host\n");
-    	//init fio
-	fioInit();
-    	return 1;
-    #endif
+    // try to read the IPL.TXT file from host
+    strcpy (bootpath,path_prefix);
+    if (boot_mode == BOOT_CD) 
+	 strcat (bootpath,"CD\\IPL.TXT;1");
+    else strcat (bootpath,"CD\\IPL.TXT");
     
+    fd = fioOpen(bootpath, O_RDONLY);
+    if (fd>0)
+    {  
+    	printf("Game Detected : Loading from host\n");
+    	fioClose(fd);
+    	return BOOT_HOST;
+    }
+    fioClose(fd);
+
+    // else
+    printf("CD-ROM detect....\n");
     
-    printf("CD-ROM detect....");
-    printf("ready \n");
+    // INIT CDFS SYSTEM
+    printf("Init CDFS\n");
+    CDVD_Init();
+    
         
     while (!neocd_disc)
     {
       // try to read the IPL.TXT file from the CD
-      
+      // flush cache
+      printf("Flush Cache\n");
+      CDVD_FlushCache();
       // wait for CD to be ready
-      while (cdDiskReady(CDVD_READY_READY)!=CDVD_READY_READY) ; 
-      printf ("disc type : %x\n",cdGetDiscType());
-      // cmd completion 
-      cdSync(0);
-      fd = fioOpen("cdrom0:\\IPL.TXT;1", O_RDONLY);
+      while (CDVD_DiskReady(CdBlock)!=CdComplete) ; 
+
+      fd = fioOpen("cdfs:\\IPL.TXT", O_RDONLY);
       if (fd<0)
       {
-	 printf("No NeogeoCD Discs available\n");
-	 display_insertscreen();
+      	 fioClose(fd);
+	 printf("No Neogeo CD detected\n");
+	 display_insertscreen(); // insert CD
 	 waitforX();
+	 display_loadingscreen(); // disc Access
       }
       else (neocd_disc=1);
     }
@@ -123,7 +144,7 @@ int cdrom_init1(void)
     printf("NeogeoCD Discs detected!\n");
     fioClose(fd);
   
-    return 1;
+    return BOOT_CD;
 }
 
 //----------------------------------------------------------------------------
@@ -131,7 +152,6 @@ void    cdrom_shutdown(void)
 {
     /* free loading picture surface ??? */
 }
-
 //----------------------------------------------------------------------------
 int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
 {
@@ -139,14 +159,19 @@ int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
     char    	*Ptr;
     int         Readed;
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+
     strcat(Path, FileName);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+//    	strcat(Path, ";1");
+    
 
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -156,13 +181,13 @@ int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
     
     Ptr = neogeo_prg_memory + Offset;
     
-    Readed = fioRead(fd, cdrom_buffer, BUFFER_SIZE);
-    while( Readed>0 )
+    do
     {
+    	Readed = fioRead(fd, cdrom_buffer, BUFFER_SIZE);
         swab(cdrom_buffer, Ptr, Readed);
         Ptr += Readed;
-        Readed = fioRead(fd, cdrom_buffer, BUFFER_SIZE);
     }
+    while( Readed == BUFFER_SIZE );
        
     fioClose(fd);
     return 1;
@@ -173,14 +198,18 @@ int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
     strcat(Path, FileName);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
 
 
     printf("LOADING Z80 FILE\n");
@@ -203,14 +232,18 @@ int    cdrom_load_fix_file(char *FileName, unsigned int Offset)
     char    	*Ptr, *Src;
     int        	Readed;
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
     strcat(Path, FileName);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -241,14 +274,18 @@ int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
     char    	*Ptr;
     int        	Readed;
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
     strcat(Path, FileName);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -266,9 +303,53 @@ int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
         Ptr += Readed;
     } while( Readed == BUFFER_SIZE );
     fioClose(fd);
+    
+    /*
+    if (((Offset) / 128) > no_of_tiles)
+    {
+    	no_of_tiles = (Offset) / 128 ; //(length / 128)
+    } 
+    */   
     return 1;
 }
+//----------------------------------------------------------------------------
+int    cdrom_load_obj_file(char *FileName, unsigned int Offset)
+{
+    int 	fd;
+    char    	*Ptr;
+    int        	Readed;
 
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
+    strcat(Path, FileName);
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
+    
+    fd = fioOpen(Path, O_RDONLY);
+    if (fd<0) {
+        printf("Could not open %s", Path);
+        return 0;
+    }
+    
+    Ptr = neogeo_spr_memory + Offset;
+    
+    do {
+        memset(cdrom_buffer, 0, BUFFER_SIZE);
+        Readed = fioRead(fd, cdrom_buffer, BUFFER_SIZE);
+        spr_conv(cdrom_buffer, Ptr, Readed, video_spr_usage + (Offset>>7)); // TO BE FIXED
+        Offset += Readed;
+        Ptr += Readed;
+    } while( Readed == BUFFER_SIZE );
+    fioClose(fd);
+    return 1;
+}
 //----------------------------------------------------------------------------
 int    cdrom_load_pcm_file(char *FileName, unsigned int Offset)
 {
@@ -276,14 +357,18 @@ int    cdrom_load_pcm_file(char *FileName, unsigned int Offset)
 
     char        *Ptr;
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+          
     strcat(Path, FileName);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
 
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -304,14 +389,18 @@ int    cdrom_load_pat_file(char *FileName, unsigned int Offset, unsigned int Ban
     int 	fd;
     int        	Readed;
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
     strcat(Path, FileName);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0) {
@@ -369,19 +458,21 @@ int    cdrom_process_ipl(void)
 
     printf("opening IPL.TXT...\n");
 
-    strcpy(Path, cdpath);
-    #ifdef DEBUG
-          strcat(Path, "cd\\");
-    #endif
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
     strcat(Path, IPL_TXT);
-    #ifndef DEBUG
-      strcat(Path, ";1");
-    #endif
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
 
     fd = fioOpen(Path, O_RDONLY);
     
-    
-        
     
     if (fd<0) {
         printf("Could not open IPL.TXT!\n");
@@ -393,6 +484,8 @@ int    cdrom_process_ipl(void)
 	Off=0;
         i=0;
         j=0;
+        
+        processEvents();
         
         while((Line[i] != ',')&&(Line[i]!=0))
             FileName[j++] = CHANGECASE(Line[i++]);
@@ -442,6 +535,12 @@ int    cdrom_process_ipl(void)
                     return 0;
                 }
                 break;
+            case OBJ_TYPE: // TEST
+                if (!cdrom_load_obj_file(FileName, (Bnk*0x100000) + Off)) {
+                    fioClose(fd);
+                    return 0;
+                }
+                break;
             case Z80_TYPE:
                 if (!cdrom_load_z80_file(FileName, (Off>>1))) {
                     fioClose(fd);
@@ -482,6 +581,9 @@ int    recon_filetype(char *ext)
     if (strcmp(ext, SPR)==0)
         return SPR_TYPE;
         
+    if (strcmp(ext, OBJ)==0) // TEST
+        return OBJ_TYPE;
+        
     if (strcmp(ext, Z80)==0)
         return Z80_TYPE;
         
@@ -508,15 +610,13 @@ unsigned int motorola_peek(unsigned char *address)
 	return (a|b|c|d);
 }
 
-
-
 //----------------------------------------------------------------------------
 void    cdrom_load_files(void)
 {
 
     char    Entry[32], FileName[13];
     char    *Ptr, *Ext;
-    int        i, j, Bnk, Off, Type, Reliquat;
+    int     i, j, Bnk, Off, Type, Reliquat;
     
     //sound_mute();
 
@@ -605,6 +705,9 @@ void    cdrom_load_files(void)
         case SPR_TYPE:
             cdrom_load_spr_file(FileName, (Bnk*0x100000) + Off);
             break;
+        case OBJ_TYPE:
+            cdrom_load_obj_file(FileName, (Bnk*0x100000) + Off);
+            break;
         case Z80_TYPE:
             cdrom_load_z80_file(FileName, Off>>1);
             break;
@@ -627,92 +730,212 @@ void    cdrom_load_files(void)
 
 
 //----------------------------------------------------------------------------
-void    fix_conv(unsigned char *Src, unsigned char *Ptr, int Taille,
-    unsigned char *usage_ptr)
+void	fix_conv(unsigned char *Src, unsigned char *Ptr, int Taille,
+	unsigned char *usage_ptr)
 {
-    int        i;
-    unsigned char    usage;
-    
-    for(i=Taille;i>0;i-=32) {
-        usage = 0;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src++;
-        *Ptr++ = *(Src+16);
-        usage |= *(Src+16);
-        *Ptr++ = *(Src+24);
-        usage |= *(Src+24);
-        *Ptr++ = *(Src);
-        usage |= *(Src);
-        *Ptr++ = *(Src+8);
-        usage |= *(Src+8);
-        Src+=25;
-        *usage_ptr++ = usage;
-    }
+	int		i;
+	unsigned char	usage;
+	
+	for(i=Taille;i>0;i-=32) {
+		usage = 0;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src++;
+		*Ptr++ = *(Src+16);
+		usage |= *(Src+16);
+		*Ptr++ = *(Src+24);
+		usage |= *(Src+24);
+		*Ptr++ = *(Src);
+		usage |= *(Src);
+		*Ptr++ = *(Src+8);
+		usage |= *(Src+8);
+		Src+=25;
+		*usage_ptr++ = usage;
+	}	
+}
+
+//----------------------------------------------------------------------------
+void spr_conv(unsigned char *Src1, unsigned char *Ptr, int Taille,
+	unsigned char *usage_ptr)
+{
+	unsigned char	*Src2;
+	unsigned char	reference[128];
+	register int	i;
+
+	memset(reference, 0, 128);
+	Src2 = Src1 + 64;
+
+	for(i=Taille;i>0;i-=128) {
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		extract8(Src2, Ptr);
+		Src2 += 4;
+		Ptr  += 4;
+		extract8(Src1, Ptr);
+		Src1 += 4;
+		Ptr  += 4;
+		
+		Src1 += 64;
+		Src2 += 64;
+		
+		if (memcmp(reference, Ptr-128, 128)==0)
+			*usage_ptr++ = 0;
+		else
+			*usage_ptr++ = 1;
+	}
 }
 
 
 //----------------------------------------------------------------------------
+
 #define COPY_BIT(a, b) { \
     a <<= 1; \
     a |= (b & 0x01); \
@@ -720,7 +943,7 @@ void    fix_conv(unsigned char *Src, unsigned char *Ptr, int Taille,
 
 void extract8(char *src, char *dst) 
 { 
-   int i; 
+   int i;
 
    unsigned char bh = *src++;
    unsigned char bl = *src++;
@@ -748,6 +971,7 @@ void extract8(char *src, char *dst)
 
 
 //----------------------------------------------------------------------------
+/*
 void spr_conv(unsigned char *src, unsigned char *dst, int len, unsigned char *usage_ptr)
 {
     register int    i;
@@ -763,9 +987,9 @@ void spr_conv(unsigned char *src, unsigned char *dst, int len, unsigned char *us
         src+=4;
     }
 }
-
+*/
 //----------------------------------------------------------------------------
-void    neogeo_upload(void)
+void neogeo_upload(void)
 {
 
     int        		Zone;
@@ -775,7 +999,8 @@ void    neogeo_upload(void)
     unsigned char    	*Source;
     unsigned char    	*Dest;
     // FILE            *fp;
-
+ 
+    printf ("upload\n");
     Zone = m68k_read_memory_8(0x10FEDA);
 
 
@@ -918,17 +1143,26 @@ void cdrom_load_title(void)
     int             x, y;
 
     printf("loading title\n");
-    strcpy(Path, cdpath);
+    
+    if (game_boot_mode == BOOT_CD)
+    	strcpy(Path, cdpath);
+    else
+        strcpy(Path, path_prefix);
+    
+    if (game_boot_mode == BOOT_HOST)
+          strcat(Path, "CD\\");
+    
     file[6] = jue[m68k_read_memory_8(0x10FD83)&3];
     strcat(Path, file);
+    
+    //if (game_boot_mode == BOOT_CD)
+    	//strcat(Path, ";1");
     
     fd = fioOpen(Path, O_RDONLY);
     if (fd<0)
     {
     	printf ("cannot open TITLE_X.SYS\n");
-    	fioClose(fd);
-    	fioClose(fd);
-        return;
+    	return;
     }
     
     fioRead(fd, video_paletteram_pc, 0x5A0);
