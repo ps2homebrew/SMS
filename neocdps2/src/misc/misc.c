@@ -18,8 +18,6 @@
 static SifRpcClientData_t client __attribute__((aligned(64)));
 unsigned char rpcBuffer[128] __attribute__((aligned(64))); 
 
-char path_prefix[6]="host0:"; 
-
 uint32 start;
 
 void swab( const void* src1, const void* src2, int isize)

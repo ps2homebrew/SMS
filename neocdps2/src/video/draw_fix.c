@@ -89,6 +89,5 @@ void fixputs( uint16 x, uint16 y, const char * string )
 		draw_fix(toupper(string[i])+0x300,0,(x+i)<<3,y,palette, &neogeo_rom_memory[458752]);
 	}
 	
-
 	return;
 }

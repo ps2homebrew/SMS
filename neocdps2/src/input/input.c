@@ -73,34 +73,6 @@ static u32 paddata;
 static uint32 keys   =~0;
 /*--------------------------------------------------------------------------*/
 
-/*
- * loadModules()
- */
-void loadModules(void)
-{
-    int ret;
-
-    
-#ifdef ROM_PADMAN
-    ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-#else
-    ret = SifLoadModule("rom0:XSIO2MAN", 0, NULL);
-#endif
-    if (ret < 0) {
-        printf("sifLoadModule sio failed: %d\n", ret);
-        SleepThread();
-    }    
-
-#ifdef ROM_PADMAN
-    ret = SifLoadModule("rom0:PADMAN", 0, NULL);
-#else
-    ret = SifLoadModule("rom0:XPADMAN", 0, NULL);
-#endif 
-    if (ret < 0) {
-        printf("sifLoadModule pad failed: %d\n", ret);
-        SleepThread();
-    }
-}
 
 /*
  * waitPadReady()
@@ -215,7 +187,6 @@ initializePad(int port, int slot)
     else {
         printf("Did not find any actuators.\n");
     }
-
     waitPadReady(port, slot);
 
     return 1;
@@ -227,11 +198,6 @@ initializePad(int port, int slot)
 /*--------------------------------------------------------------------------*/
 void input_init(void)
 {
-
-  
-    SifInitRpc(0);
-
-    loadModules();
 
     padInit(0);
 
@@ -324,7 +290,7 @@ void processEvents(void)
         if(paddata & PAD_START)
         {
            joyDown(port, P1START);
-    	} else joyUp(port, PAD_START);
+    	} else joyUp(port, P1START);
     	
     	if(paddata & PAD_SELECT)
         {

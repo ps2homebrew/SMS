@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <malloc.h>
 
 #include "video.h"
 #include "../gs/g2.h"
@@ -54,13 +55,13 @@ int		video_dos_cx;
 int		video_dos_cy;
 int		video_mode = 0;
 
-unsigned short 	*video_line_ptr[224] ;//__attribute__((aligned(64))); ;
+unsigned short 	*video_line_ptr[224] __attribute__((aligned(64))); ;
 
-unsigned char	video_fix_usage[4096] ;//__attribute__((aligned(64))); ;
-unsigned char   rom_fix_usage[4096] ;//__attribute__((aligned(64))); ;
+unsigned char	video_fix_usage[4096] __attribute__((aligned(64))); ;
+unsigned char   rom_fix_usage[4096] __attribute__((aligned(64))); ;
 
-unsigned char	video_spr_usage[32768] ;//__attribute__((aligned(64))); ;
-unsigned char   rom_spr_usage[32768] ;//__attribute__((aligned(64))); ;
+unsigned char	video_spr_usage[32768] __attribute__((aligned(64))); ;
+unsigned char   rom_spr_usage[32768] __attribute__((aligned(64))); ;
 
 
 static int dpw = 320;
@@ -71,7 +72,7 @@ static int vdph = 256;
 static uint16 video_buffer[320*224] __attribute__((aligned(64))); 
 
 unsigned char	video_shrinky[17];// __attribute__((aligned(64))); ;
-char		full_y_skip[16]={0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+unsigned char	full_y_skip[16]={0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
 unsigned int	neogeo_frame_counter = 0;
 unsigned int	neogeo_frame_counter_speed = 4;
@@ -112,6 +113,7 @@ int	video_init(void)
 	video_precalc_lut();
 
 	video_vidram = malloc(131072);
+	//video_vidram = (char*)memalign(64, sizeof(video_vidram));
 
 	if (video_vidram==NULL) {
 		printf("VIDEO: Could not allocate vidram (128k)\n");
@@ -524,8 +526,8 @@ void	video_draw_spr(unsigned int code, unsigned int color, int flipx,
 	int		l;
 	int		mydword;
 	unsigned char	*fspr = 0;
-	char		*l_y_skip;
-	const unsigned short	*paldata;
+	unsigned char	*l_y_skip;
+	const unsigned short *paldata;
 
 
 	// Check for total transparency, no need to draw

@@ -1,57 +1,75 @@
-	     NEOCD/PS2 v0.01a
+	     NEOCD/PS2 v0.02a
 NeogeoCD emulator for the PS2 (c)Olivier (2004)
 -----------------------------------------------
 
-Quick Readme!
+Quick Readme
 -------------
 
 History:
 --------
 
-0.01a - First release !
-      	As this is an alpha release, this emulator is in 
-	the very early stages of production and a lot still 
-	need to be done. Compatiblity rate is low : 
-	some games are playable, but others have gfx glitches, 
-	no graphics at all, or just hangs up after a while.
-	(games like Bust a Move are fully playable)
-      	And there is no sound yet.
+0.0.2a - Mainly a bug fix regarding the loading/booting code :
+         Lots of people had problems while running the emulator,
+         so I made a more robust code that should allow it to run
+         even launched from your toaster now !
+         (MC and HDD not tested, but code is there)
+       - fix controller bug (was not responding after a while)
+
+0.0.1a - First release !
+      	 As this is an alpha release, this emulator is in 
+	 the very early stages of production and a lot still 
+	 need to be done. Compatiblity rate is low : 
+	 some games are playable, but others have gfx glitches, 
+	 no graphics at all, or just hangs up after a while.
+	 (games like Bust a Move are fully playable)
+      	 And there is no sound yet.
       	
 
 Introduction:
 -------------
 
-NEOCD/PS2 is a NeoGeo CD emulator that run's on the
+NEOCD/PS2 is a NeoGeo CD emulator running on the
 Sony Playstation 2. It is a port of NEOCD/SDL, the excellent
 NeoGeo CD emulator by Foster. Since there is actually no SDL
 library on the PS2, all SDL portions have been removed and replaced
-by PS2 "native" library.
+by PS2 "native" libraries (using PS2SDK). NEOCD/PS2 is freeware. 
+You may copy and distribute it as much as you like. 
 
-NEOCD/PS2 is freeware. You may copy and distribute it as much
-as you like. Please do not contact me regarding where to
-find ISO/BIOS - I can not give out that kind of information.
+Please do not contact me regarding where to find ISO/BIOS.
 
 Current Features:
 -----------------
 
-- PAL/NTSC auto-detection (but not tested on NTSC TV)
-- Loads games from the cdrom (can be on the same one than the emulator)
-- basic pad support
+- PAL/NTSC auto-detection (untested on NTSC TV)
+- MC/HDD support (untested)
+- Loads games from the cdrom (can be on the same one that the emulator)
+- basic pad support (1P only)
 
-TO DO:
-------
-a lot !
-- "General" Bug fix
-- Fix Controller support (sometime stop working after a while)
+TO DO
+-----
+NEOCD/PS2 is still in alpha stage, so there is lot to do !
+- Bugs fix, tons of ;/
 - Increase compatibility, fix rendering 
+- add second controller support (2P)
 - add sound output
-- add CDDA support (!)
-- add second controller support
-- ..... 
+- add CDDA support
 
 
 Usage
-=====
+-----
+
+- Before running the emulator be sure that the host contains the 
+  following tree :
+
+ |- neocd folder
+    |
+    |-  bios folder (see below)
+    |-  romdisk folder (must contains following files)
+        |- memcard.bin
+        |- startup.bin
+        |- patch.rpg 
+    |- neocd.elf
+
 - Ensure the neocd bios (called "neocd.bin") is under the bios directory 
   (it should not be compressed and must be 512kb in size).
 
@@ -61,14 +79,18 @@ Usage
   insert a neogeo cd into your drive, wait a few seconds and press (X) on the pad.
 
 - If all goes well NeoCD/PS2 should detect the game and run it.
+  Note that the emulator has currently some issues with detection of some games
+  (problem is still not identified, but in some cases cd cannot be read)
+  Burning the emulator together with games not working in "standalone" seems 
+  to solve the problem (size cd issue) ?
 
-At this alpha stage I would recommend to load using ilink/ps2exec or
+
+At this alpha stage I would *HIGHLY* recommend to load it using ps2client/ps2exec or
 whatever you want, in order to not burn a CD.
-Furthermore I didn't test yet to boot the emulator from a CD.
 
 
-In-game controls:
------------------
+In-game controls
+----------------
 
 PS2         -       NEOCD
 -------------------------
@@ -85,7 +107,12 @@ Select      =      Select
 Contact:
 --------
 
-NEOCD/PS2 Homepage: http://neocd.ps2-scene.org
+Official NEOCD/PS2 Homepage
+http://neocd.ps2-scene.org
+
+Official NEOCD/PS2 Forum
+http://ps2-scene.org/forums/forumdisplay.php?f=80
+
 
 Thanks go to: (in no particular order)
 -------------
@@ -96,10 +123,11 @@ Karl Stenerud       - MUSASHI Motorola M680x0 processor emulation engine
 Neil Bradley        - Multi-Z80 CPU emulator
 Tony Saveski        - PS2 GS Routines 
 Ian Micheal	    - As his port on the DC inspire me to port it on the PS2
-PS2DEV		    - All people that made this possible through toolchain, etc..
-		      and help me (drakonite, Pixel, blackdroid,...)
-
+PS2DEV		    - All people that made this possible through toolchain, etc.. 
+		      that helped me (drakonite, pixel, blackdroid,...) and 
+		      hosting the NeoCD/PS2 source code in their CVS repository.
+PS2-SCENE	    - For hosting the NeoCD/PS2 site and Forum
 Everyone Else       - Thanks for taking an interest....
 
 
-Last word, if you don't like it, don't use it, or make you own one !
+Last word, if you don't like it, don't use it, or make your own one !

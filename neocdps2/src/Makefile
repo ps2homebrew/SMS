@@ -9,12 +9,12 @@
 EE_BIN = neocd.elf
 EE_PROBJS = mc68000/mc68000.a 
 EE_OBJS = z80/z80.o z80/z80intrf.o neocd.o pd4990a.o misc/misc.o input/input.o memory/memory.o sound/sound.o sound/streams.o sound/2610intf.o sound/ay8910.o sound/fm.o  sound/timer.o sound/ymdeltat.o video/video.o video/draw_fix.o cdrom/cdrom.o cdaudio/cdaudio.o gs/gs.o gs/g2.o gs/ps2_asm.o gs/dma_asm.o gs/gs_asm.o gs/bitmap.o gs/f_arial.o 
-EE_CFLAGS += -DLSB_FIRST 
+EE_CFLAGS += -DLSB_FIRST
 #EE_CFLAGS += -DLSB_FIRST -DDEBUG
 BMP2C = bmp2c
 BMP_DIR = ./video/resources
 
-EE_LIBS += $(EE_PROBJS) -lgcc -lc -lm -lcdvd -lmc -lpad -I. -Iz80 -Imc68000 
+EE_LIBS += $(EE_PROBJS) -lgcc -lc -lm -lcdvd -lmc -lpad -I. -Iz80 -Imc68000 -lkernel 
 
 
 all: makez80_foo $(EE_BIN)

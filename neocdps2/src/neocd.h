@@ -28,7 +28,10 @@
 #include "misc/misc.h"
 #include "pd4990a.h"
 
-extern char path_prefix[32];
+
+#define BOOT_CD 0
+#define BOOT_MC 1
+#define BOOT_HO 2
 
 /*-- Version, date & time to display on startup ----------------------------*/
 #define VERSION1 "NeoCD/PS2 0.0.2a\n"
@@ -42,16 +45,20 @@ extern char path_prefix[32];
 /*-- globals ---------------------------------------------------------------*/
 //extern char	global_error[80];
 
-extern char	*neogeo_rom_memory;
-extern char	*neogeo_prg_memory;
-extern char	*neogeo_fix_memory;
-extern char	*neogeo_spr_memory;
-extern char	*neogeo_pcm_memory;
+extern char	*neogeo_rom_memory __attribute__((aligned(64)));
+extern char	*neogeo_prg_memory __attribute__((aligned(64)));
+extern char	*neogeo_fix_memory __attribute__((aligned(64)));
+extern char	*neogeo_spr_memory __attribute__((aligned(64)));
+extern char	*neogeo_pcm_memory __attribute__((aligned(64)));
 
 extern unsigned char neogeo_memorycard[8192] __attribute__((aligned(64))); ;
+
+extern char path_prefix[128] __attribute__((aligned(64)));
 
 extern int      neogeo_ipl_done;
 
 extern 		uint32 neocd_time;
+
+void loadModules(void);
 
 #endif /* NEOCD_H */

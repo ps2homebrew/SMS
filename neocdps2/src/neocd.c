@@ -14,10 +14,13 @@
 #include <fileio.h> 
 #include <stdlib.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
-#include <sifrpc.h>
 #include <sifcmd.h>
+#include <sifrpc.h>
+#include <loadfile.h>
+#include <malloc.h>
+#include <libcdvd.h>
+
 
 #include "neocd.h"
 #include "video/video.h"
@@ -28,6 +31,8 @@
 #define REGION_EUROPE 2
 
 #define REGION REGION_USA // EUROPE RULES !
+
+#define ROM_PADMAN // FOR PAD LOAD MODULE
 
 //-- Global Variables --------------------------------------------------------
 char			*neogeo_rom_memory __attribute__((aligned(64))) = NULL;
@@ -45,7 +50,11 @@ char			neogeo_region=REGION;
 
 uint32			neocd_time; /* next time marker */
 
+char path_prefix[128]  __attribute__((aligned(64))) = "cdrom0:\\"; 
 
+int boot_mode = BOOT_CD; // by defaut
+
+ 
 //-- 68K Core related stuff --------------------------------------------------
 int				mame_debug = 0;
 int				previouspc = 0;
@@ -75,19 +84,59 @@ void	neogeo_read_gamename(void);
 int	main(int argc, char* argv[])
 {
 	int fd=0; 
+	
+	char bootpath[256];
 
 	int	result;
-	//int	a, b, c,w,h,i;
-	
 	char * fixtmp;
-
+	
 	// Displays version number, date and time
 	printf(VERSION1);
 	printf(VERSION2);
 	printf(AUTHOR);
 	
-	SifInitRpc(0);
+	// detect host : strip elf from path
+	if (argc>=1)
+	{
+	    char *p;
+	    if ((p = strrchr(argv[0], '/'))!=NULL) {
+	      snprintf(path_prefix, sizeof(path_prefix), "%s", argv[0]);
+	      p = strrchr(path_prefix, '/');
+	      if (p!=NULL)
+	        p[1]='\0';
+	    } else if ((p = strrchr(argv[0], '\\'))!=NULL) {
+	      snprintf(path_prefix, sizeof(path_prefix), "%s", argv[0]);
+	      p = strrchr(path_prefix, '\\');
+	      if (p!=NULL)
+	        p[1]='\0';
+	    } else if ((p = strchr(argv[0], ':'))!=NULL) {
+	      snprintf(path_prefix, sizeof(path_prefix), "%s", argv[0]);
+	      p = strchr(path_prefix, ':');
+	      if (p!=NULL)
+	        p[1]='\0';
+	    }
+	}
 	
+  	if (!strncmp(path_prefix, "cdrom", strlen("cdrom"))) {
+        	printf("Booting from cd\n");
+        	boot_mode = BOOT_CD;
+        } else if(!strncmp(path_prefix, "mc", strlen("mc"))) {
+        	printf("Booting from mc\n");
+        	boot_mode = BOOT_MC;
+    	} else if(!strncmp(path_prefix, "host", strlen("host"))) {
+	        printf("Booting from host\n");
+	        boot_mode = BOOT_HO;
+    	}	
+
+
+	printf("rpc init\n");
+	SifInitRpc(0);
+	// load modules
+  	loadModules();  	
+  	 	
+  	// init CDROM
+  	cdInit(CDVD_INIT_INIT);
+  		
 	// Video init
 	printf("\ninitializing video.... ");
 	result = video_init();
@@ -159,10 +208,15 @@ int	main(int argc, char* argv[])
 	// Read memory card	
 	printf("Loading memcard...\n");
 	fioClose(fd);
-	fd = fioOpen("host0:./romdisk/memcard.bin", O_RDONLY);
-	if (fd<0) {
-		printf("Fatal Error: Could not load MEMCARD.BIN\n");
-		return (0);
+	strcpy (bootpath,path_prefix);
+	if (boot_mode == BOOT_CD) 
+	  strcat (bootpath,"ROMDISK\\MEMCARD.BIN;1");
+	else strcat (bootpath,"romdisk\\memcard.bin");
+	fd = fioOpen(bootpath, O_RDONLY);
+	if (fd<0)
+	{
+	   printf("Fatal Error: Could not load MEMCARD.BIN\n");
+	   return (0);
 	}
 	fioRead(fd, neogeo_memorycard, 8192);
 	fioClose(fd);
@@ -170,8 +224,13 @@ int	main(int argc, char* argv[])
 
 	// Load BIOS
 	printf("Loading BIOS...\n");
-	fd = fioOpen("host0:./bios/neocd.bin", O_RDONLY);
-	if (fd<0) {
+	strcpy (bootpath,path_prefix);
+	if (boot_mode == BOOT_CD) 
+	  strcat (bootpath,"BIOS\\NEOCD.BIN;1");
+	else strcat (bootpath,"bios\\neocd.bin");
+	fd = fioOpen(bootpath, O_RDONLY);
+	if (fd<0)
+	{  
 		printf("Fatal Error: Could not load NEOCD.BIN\n");
 		return 0;
 	}
@@ -190,10 +249,15 @@ int	main(int argc, char* argv[])
 
 	printf("Loading startup ram...\n");
 	// Load startup RAM
-	fd = fioOpen("host0:./romdisk/startup.bin", O_RDONLY);
-	if (fd<0) {
-		printf("Fatal Error: Could not load STARTUP.BIN\n");
-		return 0;
+	strcpy (bootpath,path_prefix);
+	if (boot_mode == BOOT_CD) 
+	  strcat (bootpath,"ROMDISK\\STARTUP.BIN;1");
+	else strcat (bootpath,"romdisk\\startup.bin");
+	fd = fioOpen(bootpath, O_RDONLY);
+	if (fd<0)
+	{ 
+	   printf("Fatal Error: Could not load STARTUP.BIN\n");
+	   return 0;
 	} 
 	fioRead(fd, neogeo_prg_memory + 0x10F300, 3328); 
 	fioClose(fd);
@@ -413,8 +477,9 @@ void	neogeo_shutdown(void)
 	free(neogeo_fix_memory);
 	free(neogeo_pcm_memory);
 	
+    	fioExit();
+	SleepThread();
 	return;
-
 }
 
 //----------------------------------------------------------------------------
@@ -722,3 +787,37 @@ void neogeo_do_cdda( int command, int track_number_bcd)
 }
 */
 
+/*
+ * loadModules()
+ */
+void loadModules(void)
+{
+    int ret;
+
+    
+    #ifdef ROM_PADMAN
+    ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
+    #else
+    ret = SifLoadModule("rom0:XSIO2MAN", 0, NULL);
+    #endif
+    if (ret < 0) {
+        printf("sifLoadModule sio failed: %d\n", ret);
+        SleepThread();
+    }    
+
+    #ifdef ROM_PADMAN
+    ret = SifLoadModule("rom0:PADMAN", 0, NULL);
+    #else
+    ret = SifLoadModule("rom0:XPADMAN", 0, NULL);
+    #endif 
+    if (ret < 0) {
+        printf("sifLoadModule pad failed: %d\n", ret);
+        SleepThread();
+    }
+    if (boot_mode == BOOT_MC)
+    {
+	SifLoadModule("rom0:MCMAN", 0, NULL);  	
+	SifLoadModule("rom0:MCSERV", 0, NULL); 
+    }
+    SifLoadModule("rom0:CDVDMAN", 0, NULL); 
+}

@@ -7,9 +7,7 @@
 #include <stdlib.h>
 #include <fileio.h> 
 #include <string.h>
-
 #include <libcdvd.h>
-
 #include "cdrom.h"
 #include "../neocd.h"
 
@@ -42,12 +40,10 @@
 /*-- Definitions -----------------------------------------------------------*/
 #ifdef DEBUG
  // load from host
- #define CDROM_DEV_ID "host0:./cd/"
- #define CDROM_ID_LENGTH 11
+ char *cdpath = path_prefix; 
 #else
  // load from cdrom
- #define CDROM_DEV_ID "cdrom0:\\"
- #define CDROM_ID_LENGTH 9
+  char cdpath[128] __attribute__((aligned(64))) = "cdrom0:\\"; 
 #endif
 
 #define BUFFER_SIZE 131072
@@ -102,19 +98,16 @@ int cdrom_init1(void)
     #endif
     
     
-    printf("CD-ROM....");
-    cdInit(CDVD_INIT_INIT);
-    // cmd completion 
-    cdSync(0);
+    printf("CD-ROM detect....");
     printf("ready \n");
-    
-    
+        
     while (!neocd_disc)
     {
       // try to read the IPL.TXT file from the CD
       
       // wait for CD to be ready
       while (cdDiskReady(CDVD_READY_READY)!=CDVD_READY_READY) ; 
+      printf ("disc type : %x\n",cdGetDiscType());
       // cmd completion 
       cdSync(0);
       fd = fioOpen("cdrom0:\\IPL.TXT;1", O_RDONLY);
@@ -143,12 +136,13 @@ void    cdrom_shutdown(void)
 int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char    	Path[256];
     char    	*Ptr;
     int         Readed;
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, FileName);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -178,10 +172,11 @@ int    cdrom_load_prg_file(char *FileName, unsigned int Offset)
 int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char    	Path[256];
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, FileName);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -205,12 +200,13 @@ int    cdrom_load_z80_file(char *FileName, unsigned int Offset)
 int    cdrom_load_fix_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char    	Path[256];
     char    	*Ptr, *Src;
     int        	Readed;
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, FileName);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -242,12 +238,13 @@ int    cdrom_load_fix_file(char *FileName, unsigned int Offset)
 int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char    	Path[256];
     char    	*Ptr;
     int        	Readed;
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, FileName);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -276,11 +273,13 @@ int    cdrom_load_spr_file(char *FileName, unsigned int Offset)
 int    cdrom_load_pcm_file(char *FileName, unsigned int Offset)
 {
     int 	fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char        Path[256];
+
     char        *Ptr;
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, FileName);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -303,11 +302,12 @@ int    cdrom_load_pat_file(char *FileName, unsigned int Offset, unsigned int Ban
 {
 
     int 	fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char   	Path[256];
     int        	Readed;
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, FileName);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -358,7 +358,6 @@ int    cdrom_process_ipl(void)
 {
     
     int		fd;
-    char	cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
     char	Path[128];
     char	Line[32]  __attribute__((aligned(64)));
     char	FileName[16]  __attribute__((aligned(64)));
@@ -371,6 +370,9 @@ int    cdrom_process_ipl(void)
     printf("opening IPL.TXT...\n");
 
     strcpy(Path, cdpath);
+    #ifdef DEBUG
+          strcat(Path, "cd\\");
+    #endif
     strcat(Path, IPL_TXT);
     #ifndef DEBUG
       strcat(Path, ";1");
@@ -908,8 +910,6 @@ void    neogeo_upload(void)
 void cdrom_load_title(void)
 {
     
-    char            cdpath[CDROM_ID_LENGTH] = CDROM_DEV_ID;
-    //char            Path[256];
     char            jue[4] = JUE;
     char            file[12] = TITLE_X_SYS;
     int	            fd;
