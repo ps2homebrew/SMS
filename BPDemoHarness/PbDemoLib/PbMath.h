@@ -20,6 +20,8 @@
 
 #define SIN_ITERATOR 20
 
+#define PB_RAND_MAX 0x7fff
+
 ///////////////////////////////////////////////////////////////////////////////
 // Functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,6 +30,7 @@ float PbSin( float angle );
 float PbCos( float angle );
 float PbSqrt( float value );
 int   PbLog( int Value );
+int   PbRand();
 
 #endif // _PBMATH_H_
 

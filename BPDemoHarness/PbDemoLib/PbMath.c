@@ -114,3 +114,21 @@ int PbLog( int Value )
   return r;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// int PbRand
+///////////////////////////////////////////////////////////////////////////////
+
+// taken from D.E. Knuth - The Art of Computer Programming 3rd edition p. 185-186
+
+#define MM 2147483647
+#define AA 48271
+#define QQ 44488
+#define RR 3399
+
+int PbRand()
+{
+	static int X = 0xfedeabe; // the seed
+	X=AA*(X%QQ)-RR*(X/QQ);
+	if(X<0) X+=MM;
+	return X & PB_RAND_MAX;
+}
