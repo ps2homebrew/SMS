@@ -4,7 +4,7 @@
 #include "vu.h"
 #include "errors.h"
 
-#ifndef WIN32
+#ifndef __WIN32__
 static int32 sock = -1;
 #else
 static SOCKET sock = -1;
@@ -12,7 +12,7 @@ static SOCKET sock = -1;
 
 static int32
 dumpOpen(void) {
-#ifdef WIN32
+#ifdef __WIN32__
     WORD wVersionRequested;          /* socket dll version info */ 
     WSADATA wsaData;                 /* data for socket lib initialisation */
 #endif
@@ -22,7 +22,7 @@ dumpOpen(void) {
     addr.sin_port = htons(PKO_SRV_PORT);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     memset(&(addr.sin_zero), '\0', 8);
-#ifdef WIN32
+#ifdef __WIN32__
     wVersionRequested = MAKEWORD( 1, 1 );
     if ( WSAStartup( wVersionRequested, &wsaData ) != 0 ) {
         return E_SOCKET;
@@ -36,6 +36,7 @@ dumpOpen(void) {
                 sizeof(struct sockaddr_in))) < 0) {
         return E_NO_LINK;
     }
+	// printf("opened sock = %d\n", sock);
     return 0;
 }
 
@@ -46,7 +47,7 @@ dumpIsOpen(void) {
 
 int32
 dumpClose(void) {
-#ifndef WIN32
+#ifndef __WIN32__
     return close(sock);
 #else
     WSACleanup();
@@ -97,7 +98,7 @@ dumpVU(char *cfile, char *dfile, uint32 vpu) {
         if (st.st_size == file_size) {
             break;
         }
-#ifdef WIN32
+#ifdef __WIN32__
         Sleep(1000);
 #else
         usleep(1000);
@@ -115,7 +116,7 @@ dumpVU(char *cfile, char *dfile, uint32 vpu) {
         if ( st.st_size == file_size) {
             break;
         }
-#ifdef WIN32
+#ifdef __WIN32__
         Sleep(1000);
 #else
         usleep(1000);
@@ -163,7 +164,7 @@ dumpVURegisters(char *rfile, uint32 vpu) {
         if ( st.st_size == file_size) {
             break;
         }
-#ifdef WIN32
+#ifdef __WIN32__
         Sleep(1000);
 #else
         usleep(1000);
@@ -204,7 +205,7 @@ dumpRegisters(char *rfile) {
         if ( st.st_size == file_size) {
             break;
         }
-#ifdef WIN32
+#ifdef __WIN32__
         Sleep(1000);
 #else
         usleep(1000);
@@ -222,11 +223,10 @@ dumpRegisters(char *rfile) {
 int32
 dumpDisplayList(char *file, uint32 *data, uint32 size) {
     FILE *fd;
+	int ret;
     if ( file == "" ) {
         return E_FILE_OPEN;
     }
-    printf("size = %d\n", size);
-    printf("file = %s\n", file);
 
     if ( (fd = fopen(file, "wb")) == NULL ) {
         dumpClose();
@@ -235,9 +235,13 @@ dumpDisplayList(char *file, uint32 *data, uint32 size) {
     fwrite(data, size, 1, fd);
     fclose(fd);
     if ( dumpOpen() < 0 ) {
+		dumpClose();
         return sock;
     }
-    pko_gsexec_req(sock, file, size);
+    ret = pko_gsexec_req(sock, file, size);
+#ifdef __WIN32__
+	Sleep(1000);
+#endif
     dumpClose();
 	return 0;
 }
