@@ -34,29 +34,29 @@ static int running = 0;
 static int accumulatedTicks = 0;
 
 BEGIN_EVENT_TABLE(VUFrame, wxFrame)
-	EVT_MENU(ID_FILE_LOADCODE, VUFrame::OnLoadCode)
-	EVT_MENU(ID_FILE_LOADMEM, VUFrame::OnLoadMem)
-	EVT_MENU(ID_FILE_LOADPROJECT, VUFrame::OnLoadProject)
-	EVT_MENU(ID_FILE_LOADVIF, VUFrame::OnLoadVIF)
-	EVT_MENU(ID_FILE_LOADDMA, VUFrame::OnLoadDMA)
-	EVT_MENU(ID_FILE_SAVECODE, VUFrame::OnSaveCode)
-	EVT_MENU(ID_FILE_SAVESTATE, VUFrame::OnSaveState)
-	EVT_MENU(ID_TOOL_RESET, VUFrame::OnReset)
-	EVT_MENU(ID_TOOL_RESTART, VUFrame::OnRestart)
-	EVT_MENU(ID_TOOL_STEP, VUFrame::OnStep)
-	EVT_MENU(ID_TOOL_RUN, VUFrame::OnRun)
-	EVT_MENU(ID_OPTION_SETTINGS, VUFrame::OnSettings)
-	EVT_MENU(ID_HELP, VUFrame::OnHelp)
-	EVT_MENU(ID_FILE_QUIT, VUFrame::OnQuit)
-	EVT_MENU(ID_REMOTE_VU0, VUFrame::OnVu0)
-	EVT_MENU(ID_REMOTE_VU1, VUFrame::OnVu1)
-	EVT_MENU(ID_REMOTE_VU0ALL, VUFrame::OnVu0All)
-	EVT_MENU(ID_REMOTE_VU1ALL, VUFrame::OnVu1All)
-	EVT_MENU(ID_REMOTE_REGS, VUFrame::OnGetMiscRegs)
-	EVT_MENU(ID_REMOTE_REGSVU0, VUFrame::OnRegsVu0)
-	EVT_MENU(ID_REMOTE_REGSVU1, VUFrame::OnRegsVu1)
-	EVT_MENU(ID_REMOTE_GSINIT, VUFrame::OnGsInit)
-	EVT_MENU(ID_REMOTE_CLR, VUFrame::OnGsClear)
+    EVT_MENU(ID_FILE_LOADCODE, VUFrame::OnLoadCode)
+    EVT_MENU(ID_FILE_LOADMEM, VUFrame::OnLoadMem)
+    EVT_MENU(ID_FILE_LOADPROJECT, VUFrame::OnLoadProject)
+    EVT_MENU(ID_FILE_LOADVIF, VUFrame::OnLoadVIF)
+    EVT_MENU(ID_FILE_LOADDMA, VUFrame::OnLoadDMA)
+    EVT_MENU(ID_FILE_SAVECODE, VUFrame::OnSaveCode)
+    EVT_MENU(ID_FILE_SAVESTATE, VUFrame::OnSaveState)
+    EVT_MENU(ID_TOOL_RESET, VUFrame::OnReset)
+    EVT_MENU(ID_TOOL_RESTART, VUFrame::OnRestart)
+    EVT_MENU(ID_TOOL_STEP, VUFrame::OnStep)
+    EVT_MENU(ID_TOOL_RUN, VUFrame::OnRun)
+    EVT_MENU(ID_OPTION_SETTINGS, VUFrame::OnSettings)
+    EVT_MENU(ID_HELP, VUFrame::OnHelp)
+    EVT_MENU(ID_FILE_QUIT, VUFrame::OnQuit)
+    EVT_MENU(ID_REMOTE_VU0, VUFrame::OnVu0)
+    EVT_MENU(ID_REMOTE_VU1, VUFrame::OnVu1)
+    EVT_MENU(ID_REMOTE_VU0ALL, VUFrame::OnVu0All)
+    EVT_MENU(ID_REMOTE_VU1ALL, VUFrame::OnVu1All)
+    EVT_MENU(ID_REMOTE_REGS, VUFrame::OnGetMiscRegs)
+    EVT_MENU(ID_REMOTE_REGSVU0, VUFrame::OnRegsVu0)
+    EVT_MENU(ID_REMOTE_REGSVU1, VUFrame::OnRegsVu1)
+    EVT_MENU(ID_REMOTE_GSINIT, VUFrame::OnGsInit)
+    EVT_MENU(ID_REMOTE_CLR, VUFrame::OnGsClear)
     EVT_MENU(ID_OPTION_TRACE_DMA, VUFrame::OnOptionTraceDma)
     EVT_MENU(ID_OPTION_TRACE_VIF, VUFrame::OnOptionTraceVif)
     EVT_MENU(ID_OPTION_TRACE_GIF, VUFrame::OnOptionTraceGif)
@@ -212,9 +212,9 @@ VUFrame::buildFlagsPanel(wxNotebook *book) {
     topSizer->Add(new wxStaticText(m_pFlagsDetail, -1, "Mac Flags"),
             0, wxADJUST_MINSIZE, 1);
     topSizer->Add(macflags);
-	m_pFlagsDetail->SetSizerAndFit(topSizer);
-	m_pFlagsDetail->SetAutoLayout(TRUE);
-	m_pFlagsDetail->Layout();
+    m_pFlagsDetail->SetSizerAndFit(topSizer);
+    m_pFlagsDetail->SetAutoLayout(TRUE);
+    m_pFlagsDetail->Layout();
 }
 
 //---------------------------------------------------------------------------
@@ -225,7 +225,7 @@ void
 VUFrame::OnRestart(wxCommandEvent &WXUNUSED(event)) {
     int i,j;
 
-	accumulatedTicks = 0;
+    accumulatedTicks = 0;
 
     if(Status != READY) {
         return;
@@ -278,36 +278,36 @@ VUFrame::OnStep(wxCommandEvent &WXUNUSED(event)) {
     m_pGridCode->SetCellValue(m_pVu1->PC, 2, wxString::Format("%d",
             m_pVu1->program[cur].tics));
 
-	// KLUDGE
-	if ( running == 0 ) {
-		m_pGridCode->SetCellBackgroundColour(m_previous, 3, *wxWHITE);
-		m_pGridCode->SetCellBackgroundColour(m_previous, 4, *wxWHITE);
-		m_pGridCode->SetCellValue(m_pVu1->PC, 0, wxString(">"));
-		m_pGridCode->SetCellBackgroundColour(m_pVu1->PC, 3, cCurCode);
-		m_pGridCode->SetCellBackgroundColour(m_pVu1->PC, 4, cCurCode);
+    // KLUDGE
+    if ( running == 0 ) {
+        m_pGridCode->SetCellBackgroundColour(m_previous, 3, *wxWHITE);
+        m_pGridCode->SetCellBackgroundColour(m_previous, 4, *wxWHITE);
+        m_pGridCode->SetCellValue(m_pVu1->PC, 0, wxString(">"));
+        m_pGridCode->SetCellBackgroundColour(m_pVu1->PC, 3, cCurCode);
+        m_pGridCode->SetCellBackgroundColour(m_pVu1->PC, 4, cCurCode);
         m_pGridCode->SetGridCursor(m_pVu1->PC, 4);
 
-		m_previous = m_pVu1->PC;
-		if ( m_previous < cur ) {
-			m_pGridCode->MoveCursorDown(FALSE);
-		} else if ( cur < m_previous ) {
-			m_pGridCode->MoveCursorUp(FALSE);
-		}
-	}
+        m_previous = m_pVu1->PC;
+        if ( m_previous < cur ) {
+            m_pGridCode->MoveCursorDown(FALSE);
+        } else if ( cur < m_previous ) {
+            m_pGridCode->MoveCursorUp(FALSE);
+        }
+    }
 
-	accumulatedTicks += m_pVu1->program[cur].tics;
+    accumulatedTicks += m_pVu1->program[cur].tics;
 
-	if ( running == 0 ) {
-		RegisterUpdate();
-		FlagsUpdate(); 
-	}
+    if ( running == 0 ) {
+        RegisterUpdate();
+        FlagsUpdate(); 
+    }
     InstuctionStatus();
 }
 
 void
 VUFrame::OnRun(wxCommandEvent &event) {
     uint32 i = 0;
-	running = 1;
+    running = 1;
     Breakpoint *bp = Breakpoint::Instance(); 
     while( (m_pVu1->program[m_pVu1->PC].flg!='E') &&
             (i < MAX_VUCODE_SIZE) &&
@@ -316,12 +316,12 @@ VUFrame::OnRun(wxCommandEvent &event) {
         OnStep(event);
         i++;
     }
-	m_pGridCode->SetGridCursor(LineInstruction(m_pVu1->PC), 4);
-	m_pGridCode->MoveCursorDown(FALSE);
-	RegisterUpdate();
-	FlagsUpdate(); 
-	// KLUDGE 
-	running = 0;
+    m_pGridCode->SetGridCursor(LineInstruction(m_pVu1->PC), 4);
+    m_pGridCode->MoveCursorDown(FALSE);
+    RegisterUpdate();
+    FlagsUpdate(); 
+    // KLUDGE 
+    running = 0;
 }
 
 //---------------------------------------------------------------------------
@@ -340,9 +340,9 @@ VUFrame::SetSettings() {
     autoLoadLast = conf->Read(key + _T("/") + AUTOLOADLAST, 0L);
     m_dataFile.Assign(conf->Read(key + _T("/") + LASTFILEMEM)); 
     m_codeFile.Assign(conf->Read(key + _T("/") + LASTFILECODE)); 
-	m_memStateFile.Assign(conf->Read(key + _T("/") + MEMSTATEFILE));
-	m_regStateFile.Assign(conf->Read(key + _T("/") + REGSTATEFILE));
-	m_mnemonicFile.Assign(conf->Read(key + _T("/") + MNEMONICFILE));
+    m_memStateFile.Assign(conf->Read(key + _T("/") + MEMSTATEFILE));
+    m_regStateFile.Assign(conf->Read(key + _T("/") + REGSTATEFILE));
+    m_mnemonicFile.Assign(conf->Read(key + _T("/") + MNEMONICFILE));
     codeAdressStyle = 0;
 
     key = PAGE_REMOTE;
@@ -389,24 +389,30 @@ void VUFrame::OnQuit(wxCommandEvent &WXUNUSED(event)) {
     wxMessageDialog *ask = new wxMessageDialog(this, "Are you sure?", "Exit",
         wxOK | wxCANCEL);
     if (ask->ShowModal() == wxID_OK) {
+        wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
         if ( m_dataFile.GetFullPath()  != "" ) {
-            wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
             wxString key = PAGE_LOAD;
             conf->Write(key + _T("/") + LASTFILEMEM, m_dataFile.GetFullPath());
-            delete conf;
         }
         if (m_codeFile.GetFullPath() != "") {
-            wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
             wxString key = PAGE_LOAD;
             conf->Write(key + _T("/") + LASTFILECODE, m_codeFile.GetFullPath());
-            delete conf;
         }
         if (m_mnemonicFile.GetFullPath() != "") {
-            wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
             wxString key = PAGE_LOAD;
             conf->Write(key + _T("/") + MNEMONICFILE, m_mnemonicFile.GetFullPath());
-            delete conf;
         }
+
+        wxString key = PAGE_TRACE;
+        conf->Write(key + _T("/") + TRACEDMA,
+            m_pMenuOptions->IsChecked(ID_OPTION_TRACE_DMA));
+        conf->Write(key + _T("/") + TRACEGIF,
+               m_pMenuOptions->IsChecked(ID_OPTION_TRACE_GIF));
+        conf->Write(key + _T("/") + TRACEVIF,
+            m_pMenuOptions->IsChecked(ID_OPTION_TRACE_VIF));
+        conf->Write(key + _T("/") + TRACEVU,
+            m_pMenuOptions->IsChecked(ID_OPTION_TRACE_VU));
+        conf->Flush();
         Close(TRUE);
     }
 }
@@ -499,41 +505,40 @@ void VUFrame::OnVu1(wxCommandEvent &WXUNUSED(event)) {
         wxMessageBox("No data temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetVu(1) == 0) {
+    if ( (ret = Remote::GetVu(1)) == 0) {
         m_pParser->LoadCode((char *)m_binTmpFile.c_str());
         DrawProgram();
         LoadMemory(m_datTmpFile);
     } else {
-        wxMessageBox("Unable to fetch vpu1 content\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
 //---------------------------------------------------------------------------
 void VUFrame::OnGetMiscRegs(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_regTmpFile == "" ) {
         wxMessageBox("No register temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetMiscRegisters() == 0) {
+    if ( (ret = Remote::GetMiscRegisters()) == 0) {
         // MiscRegisterPanel::UpdateMiscRegs((char *)m_regTmpFile.c_str());
     } else {
-        wxMessageBox("Unable to fetch registers from PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
 void VUFrame::OnRegsVu0(wxCommandEvent &WXUNUSED(event)) {
+    int32 ret = 0;
     if ( m_regTmpFile == "" ) {
         wxMessageBox("No register temp file set in preferences.", "", wxOK|wxICON_INFORMATION, this);
         return;
     }
-    if ( Remote::GetVuRegisters(0) == 0) {
+    if ( (ret = Remote::GetVuRegisters(0)) == 0) {
         m_pVu1->LoadRegisters(m_regTmpFile.c_str()); 
         RegisterUpdate();
     } else {
-        wxMessageBox("Unable to fetch vpu0 registers from PS2\nNo contact with ps2link client.", "",
-            wxOK|wxICON_INFORMATION, this);
+        m_pLog->Error(ret);
     }
 }
 
@@ -644,51 +649,51 @@ void VUFrame::OnSaveCode(wxCommandEvent &WXUNUSED(event)) {
 }
 
 void VUFrame::OnSaveState(wxCommandEvent &WXUNUSED(event)) {
-	FILE *fd;
-	float x,y,z,w;
-	int r;
+    FILE *fd;
+    float x,y,z,w;
+    int r;
     uint32 i;
-	// Save memory
-	if ( (fd = fopen(m_memStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
-		for(i = 0; i < MAX_VUDATA_SIZE; i++ ) {
+    // Save memory
+    if ( (fd = fopen(m_memStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
+        for(i = 0; i < MAX_VUDATA_SIZE; i++ ) {
             x = m_pVu1->ReadMemX(i);
             y = m_pVu1->ReadMemY(i);
             z = m_pVu1->ReadMemZ(i);
             w = m_pVu1->ReadMemW(i);
-			fwrite(&x, sizeof(float), 1, fd);
-			fwrite(&y, sizeof(float), 1, fd);
-			fwrite(&z, sizeof(float), 1, fd);
-			fwrite(&w, sizeof(float), 1, fd);
-		}	
-	} else {
-		TextDebugFailed(wxString("Save vu data to file: %s failed.: " +
-			m_memStateFile.GetFullPath() + "\n"));
-	}
-	// Save regs
-	if ( (fd = fopen(m_regStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
-		for(i = 0; i < 32; i++) {
-			x = m_pVu1->RegFloat[i].x();
-			y = m_pVu1->RegFloat[i].y();
-			z = m_pVu1->RegFloat[i].z();
-			w = m_pVu1->RegFloat[i].w();
-			fwrite(&x, sizeof(float), 1, fd);
-			fwrite(&y, sizeof(float), 1, fd);
-			fwrite(&z, sizeof(float), 1, fd);
-			fwrite(&w, sizeof(float), 1, fd);
-		}
-		for(i = 0; i < 16; i++) {
-			r = m_pVu1->RegInt[i].value();
-			fwrite(&r, sizeof(int), 1, fd);
-		}
-	} else {
-		TextDebugFailed(wxString("Save vu registers to file: %s failed.: " +
-			m_regStateFile.GetFullPath() + "\n"));
-	}
+            fwrite(&x, sizeof(float), 1, fd);
+            fwrite(&y, sizeof(float), 1, fd);
+            fwrite(&z, sizeof(float), 1, fd);
+            fwrite(&w, sizeof(float), 1, fd);
+        }
+    } else {
+        TextDebugFailed(wxString("Save vu data to file: %s failed.: " +
+            m_memStateFile.GetFullPath() + "\n"));
+    }
+    // Save regs
+    if ( (fd = fopen(m_regStateFile.GetFullPath().c_str(), "wb")) != NULL ) {
+        for(i = 0; i < 32; i++) {
+            x = m_pVu1->RegFloat[i].x();
+            y = m_pVu1->RegFloat[i].y();
+            z = m_pVu1->RegFloat[i].z();
+            w = m_pVu1->RegFloat[i].w();
+            fwrite(&x, sizeof(float), 1, fd);
+            fwrite(&y, sizeof(float), 1, fd);
+            fwrite(&z, sizeof(float), 1, fd);
+            fwrite(&w, sizeof(float), 1, fd);
+        }
+        for(i = 0; i < 16; i++) {
+            r = m_pVu1->RegInt[i].value();
+            fwrite(&r, sizeof(int), 1, fd);
+        }
+    } else {
+        TextDebugFailed(wxString("Save vu registers to file: %s failed.: " +
+            m_regStateFile.GetFullPath() + "\n"));
+    }
 }
 
 void
 VUFrame::OnReset(wxCommandEvent &WXUNUSED(event)) {
-	accumulatedTicks = 0;
+    accumulatedTicks = 0;
     m_pVu1->Reset();
     m_pParser->InitCodeMem();
     m_pTextDebug->Clear();
@@ -716,8 +721,8 @@ void
 VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
     char line[255];
     char *ptr;
-	wxFileDialog *dlg= new wxFileDialog(this, "Choose a project file");
-	if(dlg->ShowModal() == wxID_OK) {
+    wxFileDialog *dlg= new wxFileDialog(this, "Choose a project file");
+    if(dlg->ShowModal() == wxID_OK) {
         ifstream fin(dlg->GetPath());
         fin.getline(line, 256);
         if(strstr(line, "codefile") != 0) {
@@ -749,7 +754,7 @@ VUFrame::OnLoadProject(wxCommandEvent &WXUNUSED(event)) {
                     m_codeFile.GetFullPath() + "\n"));
         }
         LoadMemory(m_dataFile);
-	}
+    }
     delete dlg;
 }
 
@@ -764,6 +769,8 @@ VUFrame::OnLoadVIF(wxCommandEvent &WXUNUSED(event)) {
         m_pVif1->Read();
         m_pVif1->Close();
         DrawProgram();
+        RegisterUpdate();
+        FlagsUpdate(); 
     }
     delete dlg;
     return;
@@ -1246,6 +1253,17 @@ VUFrame::BuildToolbar(void) {
     m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_GIF, "Trace GIF", "GIF");
     m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_VIF, "Trace VIF", "VIF");
     m_pMenuOptions->AppendCheckItem(ID_OPTION_TRACE_VU,  "Trace VU", "VU");
+    wxString key = PAGE_TRACE;
+    wxConfig *conf = new wxConfig(wxTheApp->GetAppName());
+    m_pMenuOptions->Check(ID_OPTION_TRACE_DMA, conf->Read(
+            key + _T("/") + TRACEDMA, 0L));
+    m_pMenuOptions->Check(ID_OPTION_TRACE_GIF, conf->Read(
+            key + _T("/") + TRACEGIF, 0L));
+    m_pMenuOptions->Check(ID_OPTION_TRACE_VIF, conf->Read(
+            key + _T("/") + TRACEVIF, 0L));
+    m_pMenuOptions->Check(ID_OPTION_TRACE_VU, conf->Read(
+            key + _T("/") + TRACEVU, 0L));
+    delete conf;
     // m_pMenuOptions->Append(ID_OPTION_CLEARMEM,   "Always clear memory on reset");
     // m_pMenuOptions->Append(ID_OPTION_CLEARCODE,  "Always clear registers on reset");
     // m_pMenuOptions->Append(ID_OPTION_HIDE_PANEL3, "Hide right panel");
@@ -1286,7 +1304,7 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     BuildToolbar();
 
     // Splitters
-	wxSplitterWindow    *m_hzSplit = new wxSplitterWindow(this, -1, wxPoint(0, 0),
+    wxSplitterWindow    *m_hzSplit = new wxSplitterWindow(this, -1, wxPoint(0, 0),
         wxDefaultSize, wxSP_3D);;
     wxSplitterWindow    *vertsplit = new wxSplitterWindow(m_hzSplit, -1,
         wxPoint(0, 0), wxDefaultSize, wxSP_3D);
@@ -1341,9 +1359,9 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     m_hzSplit->SetMinimumPaneSize(100);
     m_hzSplit->SplitHorizontally(vertsplit, m_pRegisterView, 380);
 
-	static const int widths[] = {-1, 6*m_charWidth, 6*m_charWidth, 6*m_charWidth,
+    static const int widths[] = {-1, 6*m_charWidth, 6*m_charWidth, 6*m_charWidth,
         6*m_charWidth };
-	CreateStatusBar(WXSIZEOF(widths), wxST_SIZEGRIP, ID_STATUSBAR);
+    CreateStatusBar(WXSIZEOF(widths), wxST_SIZEGRIP, ID_STATUSBAR);
     m_pStatusBar = GetStatusBar();
 
     // Init vu core
@@ -1362,25 +1380,25 @@ VUFrame::VUFrame(const wxString &title, const wxPoint &pos, const wxSize
     m_pLog->SetTextCtrl(m_pTextDebug);
 
     // ok gui is up, lets load the mnemonics
-	if (m_mnemonicFile.GetFullPath() == "") {	
-		m_mnemonicFile.Assign("instructions.txt");
-	}
-	if (!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
+    if (m_mnemonicFile.GetFullPath() == "") {
+        m_mnemonicFile.Assign("instructions.txt");
+    }
+    if (!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
         m_pLog->Error("Failed to load instructions");
-		wxFileDialog* dlg = new wxFileDialog(this, "Open instructions.txt file");
-		if (dlg->ShowModal() == wxID_OK &&
-			dlg->GetFilename() != "") {
-			m_mnemonicFile.Assign(dlg->GetPath());
-			if(!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
+        wxFileDialog* dlg = new wxFileDialog(this, "Open instructions.txt file");
+        if (dlg->ShowModal() == wxID_OK &&
+            dlg->GetFilename() != "") {
+            m_mnemonicFile.Assign(dlg->GetPath());
+            if(!m_pParser->LoadInstructions((char *)m_mnemonicFile.GetFullPath().c_str())) {
                 m_pLog->Error("Failed to load instructions, Exiting");
-				Close(TRUE);
-			}
-		}
-	}
+                Close(TRUE);
+            }
+        }
+    }
 
     m_pVu1->Reset();
     m_pParser->InitCodeMem();
-	RegisterUpdate();
+    RegisterUpdate();
     if ( autoLoadLast == 0 ) {
         if ( m_dataFile.GetFullPath() != "" ) {
             Status = READY;

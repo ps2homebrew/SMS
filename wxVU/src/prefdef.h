@@ -38,3 +38,9 @@
 #define CLRCOLOR    _T("clrColor")
 #define SCISSOR_X   _T("ScissorX")
 #define SCISSOR_Y   _T("ScissorY")
+
+// TRACE
+#define TRACEGIF    _T("TraceGif")
+#define TRACEDMA    _T("TraceDma")
+#define TRACEVIF    _T("TraceVif")
+#define TRACEVU     _T("TraceVu")

@@ -18,6 +18,7 @@
 #define PAGE_REMOTE         _("Remote")
 #define PAGE_STYLE          _("Style")
 #define PAGE_GIF            _("GIF")
+#define PAGE_TRACE          _("Trace")
 
 //! global application name
 extern wxString *g_appname;
