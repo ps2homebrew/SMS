@@ -27,6 +27,8 @@ int PbFile_Write( const char* pName, void* pData, int size )
 		return -1;
 		SleepThread();
 	}
+
+  return -1;
 }
 
 
