@@ -71,11 +71,14 @@ poly_loop:
                 addy.x     vf09x, vf08x, vf08y  nop                     ; x*x + y*y  
                 addz.x     vf09x, vf08x, vf08z  nop                     ; x*x + y*y + z*z
                 nop                             sqrt q, vf09x           ; sqrt(x*x + y*y + z*z)
-                nop                             waitq                   ; vf08x = distance
-                mulq.x     vf09x, vf09x, q      nop                     ; vf08x = distance * lagrate
+                nop                             waitq
+                ;addz.x     vf08x, vf00x, vf22z  nop
+                sub        vf08,  vf08,  vf08   nop                        
+                subq.x     vf09x, vf08x, q      nop                     
                 mulw.x     vf09x, vf09x, vf22w  nop
                 mulx.x     vf19x, vf09x, vf22x  nop
-                
+                mini.x     vf19x, vf19x, vf00x  nop
+                                
                 ;//////////////////////////////////////////////////////////////////////////////////
                 ;// Calc the rotation angles from the lagrate
                 
