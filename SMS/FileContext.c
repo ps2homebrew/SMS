@@ -1346,7 +1346,7 @@ static int STIO_FillStm ( FileContext* apCtx ) {
 #endif  /* _WIN32 */
  }  /* end if */
 
- return 0;
+ return retVal;
 
 }  /* end STIO_FillStm */
 
