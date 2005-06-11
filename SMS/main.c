@@ -30,8 +30,7 @@
 static void VideoTest ( FileContext* );
 static void AudioTest ( FileContext* );
 
-#define FILENAME "Time machine.avi"
-#define FILENAME "Tom and Jerry blast off to Mar"
+#define FILENAME "movie.avi"
 
 int main ( void ) {
 #ifndef _WIN32
