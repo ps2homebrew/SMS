@@ -147,9 +147,24 @@ static int _audsrv_play_audio ( char* apData, int aLen ) {
 static void _spu_destroy ( void ) {
 
  _audsrv_set_volume ( MIN_VOLUME );
- _audsrv_quit ();
 
 }  /* end _spu_destroy */
+
+static void _spu_destroy_dummy ( void ) {
+
+ _audsrv_set_volume ( MIN_VOLUME );
+
+}  /* end _spu_destroy_dummy */
+
+static void _spu_mute ( int afMute ) {
+
+ _audsrv_set_volume ( afMute ? MIN_VOLUME : MAX_VOLUME );
+
+}  /* end _spu_mute */
+
+static void _spu_mute_dummy ( int afMute ) {
+
+}  /* end _spu_mute_dummy */
 
 static void _spu_play_pcm ( char* apBuf, int aSize ) {
 
@@ -158,25 +173,36 @@ static void _spu_play_pcm ( char* apBuf, int aSize ) {
 
 }  /* end _spu_play_pcm */
 
+static void _spu_play_pcm_dummy ( char* apBuf, int aSize ) {
+
+}  /* end _spu_play_pcm_dummy */
+
 SPUContext* SPU_InitContext ( int anChannels, int aFreq ) {
 
  audsrv_fmt_t lFmt;
 
- if (  SifLoadModule ( "rom0:LIBSD",      0, NULL ) < 0 ||
-       SifLoadModule ( "host:audsrv.irx", 0, NULL ) < 0 ||
-       !_audsrv_init ()
- ) return NULL;
+ s_SPUCtx.PlayPCM = _spu_play_pcm_dummy;
+ s_SPUCtx.Mute    = _spu_mute_dummy;
+ s_SPUCtx.Destroy = _spu_destroy_dummy;
 
- lFmt.m_Freq  =      aFreq;
- lFmt.m_BPS   =         16;
- lFmt.m_nChan = anChannels;
+ if (  SifLoadModule ( "rom0:LIBSD",      0, NULL ) >= 0 &&
+       SifLoadModule ( "host:audsrv.irx", 0, NULL ) >= 0 &&
+       _audsrv_init ()
+ ) {
 
- if (  !_audsrv_set_format ( &lFmt )  ) return NULL;
+  lFmt.m_Freq  =      aFreq;
+  lFmt.m_BPS   =         16;
+  lFmt.m_nChan = anChannels;
 
- _audsrv_set_volume ( MAX_VOLUME );
+  if (  _audsrv_set_format ( &lFmt )  ) {
 
- s_SPUCtx.Destroy = _spu_destroy;
- s_SPUCtx.PlayPCM = _spu_play_pcm;
+   s_SPUCtx.Destroy = _spu_destroy;
+   s_SPUCtx.PlayPCM = _spu_play_pcm;
+   s_SPUCtx.Mute    = _spu_mute;
+
+  }  /* end if */
+
+ }  /* end if */
 
  return &s_SPUCtx;
 

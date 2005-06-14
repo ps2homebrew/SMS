@@ -14,6 +14,7 @@
 typedef struct SPUContext {
 
  void ( *PlayPCM ) ( char*, int );
+ void ( *Mute    ) ( int        );
  void ( *Destroy ) ( void       );
 
 } SPUContext;
