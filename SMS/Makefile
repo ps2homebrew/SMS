@@ -7,7 +7,7 @@ all: $(EE_BIN)
 	ee-strip $(EE_BIN)
 
 clean:
-	del *.elf *.o *.a
+	rm *.o *.a *.elf
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
