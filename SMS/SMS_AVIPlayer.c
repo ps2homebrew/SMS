@@ -84,9 +84,9 @@ static void _video_decode_thread ( SMS_AVIContext* apCtx  ) {
 
 static void _audio_decode_thread ( SMS_AVIContext* apCtx  ) {
 
- int             lSize;
- SMS_AudioFrame* lpFrame = NULL;
- SMS_AVIPacket*  lpPacket;
+ int            lSize;
+ SMS_AudioFrame lFrame;
+ SMS_AVIPacket* lpPacket;
 
  while ( 1 ) {
 
@@ -97,21 +97,21 @@ static void _audio_decode_thread ( SMS_AVIContext* apCtx  ) {
   lpPacket = *SMS_RB_POPSLOT( s_AudioBuffer );
   SMS_RB_POPADVANCE( s_AudioBuffer );
 
-  lpFrame = NULL;
+  lFrame.m_Len = 0;
 
-  while ( lpFrame == NULL || lpFrame -> m_Len ) {
+  do {
 
    if (   (  lSize = s_pAudioCodec -> Decode (
-              &apCtx -> m_pStm[ s_AudioIdx ] -> m_Codec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
+              &apCtx -> m_pStm[ s_AudioIdx ] -> m_Codec, ( void** )&lFrame, lpPacket -> m_pData, lpPacket -> m_Size
              )
           )
    ) {
 
-    s_pSPUCtx -> PlayPCM ( lpFrame -> m_pData, lSize );
+    s_pSPUCtx -> PlayPCM ( lFrame.m_pData, lSize );
 
    } else break;
 
-  }  /* end while */
+  } while ( lFrame.m_Len > 0 );
 
   *SMS_RB_PUSHSLOT( s_PacketBuffer ) = lpPacket;
   SMS_RB_PUSHADVANCE( s_PacketBuffer );
@@ -160,12 +160,8 @@ static void _sms_avi_destroy ( void ) {
 
  }  /* end if */
 
- if ( s_pSPUCtx ) {
-
-  s_pSPUCtx -> Destroy ();
-  s_pSPUCtx = NULL;
-
- }  /* end if */
+ s_pSPUCtx -> Destroy ();
+ s_pSPUCtx = NULL;
 
  if ( s_pIPUCtx ) {
 
@@ -185,8 +181,6 @@ static void _sms_avi_play_a_v ( void ) {
  int            lSize;
  SMS_AVIPacket* lpPacket;
  uint64_t       lTime;
-
- int lnPackets = 0;
 
  s_pSPUCtx = SPU_InitContext (
   s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
@@ -210,6 +204,8 @@ static void _sms_avi_play_a_v ( void ) {
  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 2048 );
 
  lTime = SMS_Time ();
+
+ s_pSPUCtx -> Mute ( 0 );
 
  while ( 1 ) {
 
@@ -409,7 +405,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
 
    if ( s_AudioIdx != 0xFFFFFFFF && s_VideoIdx != 0xFFFFFFFF ) {
 
-    lVidPktQLen = SMS_PACKET_QUEUE_LENGTH;
+    lVidPktQLen = SMS_PACKET_QUEUE_LENGTH | 1;
 
     if ( s_Player.m_pAVICtx -> m_AudioPreload != 0.0F ) {
 
@@ -417,7 +413,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
      float          lFrameRate = ( float )lpVideoStm -> m_RealFrameRate / ( float )lpVideoStm -> m_RealFrameRateBase;
 
      lFrameRate *= s_Player.m_pAVICtx -> m_AudioPreload;
-     lAudPktQLen = (  lVidPktQLen + SMS_ROUND( lFrameRate )  );
+     lAudPktQLen = lVidPktQLen + SMS_ROUND( lFrameRate );
 
     } else lAudPktQLen = lVidPktQLen;
 
@@ -444,14 +440,14 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
     SMS_RB_INIT( s_VideoBuffer, s_VideoPackets, lVidPktQLen );
 
     lSema.init_count =
-    lSema.max_count  = lVidPktQLen;
+    lSema.max_count  = lVidPktQLen - 1;
     s_SemaPutVideo   = CreateSema ( &lSema );
 
     lThread.stack_size       = 0x20000;
     lThread.gp_reg           = &_gp;
     lThread.func             = _video_decode_thread;
     lThread.stack            = s_VideoStack;
-    lThread.initial_priority = 2;
+    lThread.initial_priority = 3;
     StartThread (  s_VideoThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
 
    }  /* end if */
@@ -463,14 +459,14 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
     SMS_RB_INIT( s_AudioBuffer, s_AudioPackets, lAudPktQLen );
 
     lSema.init_count =
-    lSema.max_count  = lAudPktQLen;
+    lSema.max_count  = lAudPktQLen - 1;
     s_SemaPutAudio   = CreateSema ( &lSema );
 
     lThread.stack_size       = 0x20000;
     lThread.gp_reg           = &_gp;
     lThread.func             = _audio_decode_thread;
     lThread.stack            = s_AudioStack;
-    lThread.initial_priority = 2;
+    lThread.initial_priority = 3;
     StartThread (  s_AudioThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
 
    }  /* end if */
@@ -489,7 +485,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
     } while (  !SMS_RB_FULL( s_PacketBuffer )  );
 
     lSema.init_count =
-    lSema.max_count  = lPktQLen;
+    lSema.max_count  = lPktQLen - 1;
     s_SemaGetPacket  = CreateSema ( &lSema );
 
    }  /* end if */
