@@ -73,7 +73,7 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
  ( rb ).m_pInp =                         \
  ( rb ).m_pOut =                         \
  ( rb ).m_pBeg = start;                  \
- ( rb ).m_pEnd = &( rb ).m_pBeg[ count + 1 ]
+ ( rb ).m_pEnd = &( rb ).m_pBeg[ count ]
 
 # define SMS_RB_SLOT( rb, slot )  (  ( slot ) == ( rb ).m_pEnd ? ( rb ).m_pBeg : ( slot )  )
 # define SMS_RB_EMPTY( rb )       (  ( rb ).m_pInp == ( rb ).m_pOut  )
@@ -254,7 +254,6 @@ typedef struct SMS_Frame {
 typedef struct SMS_AudioFrame {
 
  uint8_t* m_pData;
- uint8_t* m_pBase;
  uint8_t* m_pPos;
  int      m_Len;
 
