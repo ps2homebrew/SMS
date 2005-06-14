@@ -35,6 +35,8 @@ void SMS_MPEGContext_Init ( int aWidth, int aHeight ) {
 
  int lX, lY;
 
+ memset (  &g_MPEGCtx, 0, sizeof ( g_MPEGCtx )  );
+
  SMS_DSPContext_Init ( &g_MPEGCtx.m_DSPCtx );
 
  g_MPEGCtx.m_IdxRes         = 0;
