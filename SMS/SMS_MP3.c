@@ -1656,7 +1656,7 @@ static uint32_t s_scale_factor_mult3[ 4 ] = {
 static const float s_ci_table[ 8 ] = {
  -0.6F, -0.535F, -0.33F, -0.185F, -0.095F, -0.041F, -0.0142F, -0.0037F
 };
-static const uint8_t  s_band_size_long [ 9 ][ 22 ] = {
+static const uint8_t  s_band_size_long[ 9 ][ 22 ] = {
  {  4,  4,  4,  4,  4,  4,  6,  6,  8,  8, 10, 12, 16, 20, 24, 28, 34, 42, 50, 54,  76, 158 },  /* 44100 */
  {  4,  4,  4,  4,  4,  4,  6,  6,  6,  8, 10, 12, 16, 18, 22, 28, 34, 40, 46, 54,  54, 192 },  /* 48000 */
  {  4,  4,  4,  4,  4,  4,  6,  6,  8, 10, 12, 16, 20, 24, 30, 38, 46, 56, 68, 84, 102,  26 },  /* 32000 */
@@ -2095,6 +2095,7 @@ static uint8_t s_mpa_quad_codes[ 2 ][ 16 ] = {
  {  1,  5,  4,  5,  6,  5, 4, 4, 7, 3, 6, 0, 7, 2, 3, 1 },
  { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }
 };
+SMS_ALIGN( static uint8_t s_OutBuffer[ 1024 * 192 ], 16 );
 
 static int64_t SMS_INLINE MUL64 ( int64_t anA, int aB ) {
  int64_t retVal = anA;
@@ -2228,15 +2229,7 @@ void SMS_Codec_MP3_Open ( SMS_CodecContext* apCtx ) {
  MYCTX() -> m_InBufIdx       = 0;
  MYCTX() -> m_pInBuf         = &MYCTX() -> m_InBuf[ 0 ][ SMS_BACKSTEP_SIZE ];
  MYCTX() -> m_pInBufPtr      = MYCTX() -> m_pInBuf;
- MYCTX() -> m_Frame.m_pBase  = malloc ( 1024 * 192 + 63 );
-#ifdef _WIN32
- MYCTX() -> m_Frame.m_pData  = MYCTX() -> m_Frame.m_pBase;
-#else  /* PS2 */
- MYCTX() -> m_Frame.m_pData  = ( uint8_t* )(    (   (  ( unsigned int )MYCTX() -> m_Frame.m_pBase  ) + 63   ) & 0xFFFFFFC0    );
- MYCTX() -> m_Frame.m_pData  = ( uint8_t* )(  ( unsigned int )MYCTX() -> m_Frame.m_pData | 0x20000000  );
- MYCTX() -> m_Frame.m_pData += 4;
-#endif  /* _WIN32 */
- MYCTX() -> m_Frame.m_Len    = 0;
+ MYCTX() -> m_FrameSize      = 0;
 
 }  /* end SMS_Codec_MPEG4_Open */
 
@@ -2334,8 +2327,6 @@ static void MP3_Destroy ( SMS_CodecContext* apCtx ) {
   for ( i = 0; i < 2; ++i ) SMS_VLC_Free ( &s_huff_quad_vlc[ i ] );
 
  }  /* end if */
-
- free (  MYCTX() -> m_Frame.m_pBase  );
 
 }  /* end MP3_Destroy */
 
@@ -2475,8 +2466,8 @@ static void _seek_to_main_data ( unsigned int aBackStep ) {
   &s_MP3Ctx.m_BitCtx, lPtr, ( s_MP3Ctx.m_FrameSize + aBackStep ) * 8
  );
 
- s_MP3Ctx.m_InBufIdx   ^= 1;
- s_MP3Ctx.m_pInBuf      = &s_MP3Ctx.m_InBuf [ s_MP3Ctx.m_InBufIdx ][ SMS_BACKSTEP_SIZE ];
+ s_MP3Ctx.m_InBufIdx    ^= 1;
+ s_MP3Ctx.m_pInBuf       = &s_MP3Ctx.m_InBuf [ s_MP3Ctx.m_InBufIdx ][ SMS_BACKSTEP_SIZE ];
  s_MP3Ctx.m_OldFrameSize = s_MP3Ctx.m_FrameSize;
 
 }  /* end _seek_to_main_data */
@@ -2785,7 +2776,7 @@ static void _compute_stereo ( SMS_GranuleDef* apGran0, SMS_GranuleDef* apGran1 )
 
    if ( i != 11 ) k -= 3;
 
-   lLen = s_band_size_short[ s_MP3Ctx.m_SampleRateIdx] [ i ];
+   lLen = s_band_size_short[ s_MP3Ctx.m_SampleRateIdx ][ i ];
 
    for ( l = 2; l >= 0; --l ) {
 
@@ -3953,22 +3944,28 @@ static int32_t _mp3_decode_frame ( short* apSamples ) {
 
 int32_t MP3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apBuf, int32_t aBufSize ) {
 
- int32_t          retVal       = 0;
- SMS_AudioFrame** lpFrame      = ( SMS_AudioFrame** )apData;
- short*           lpOutSamples = ( short* )s_MP3Ctx.m_Frame.m_pData;
- uint8_t*         lpBuf;
- uint32_t         lHdr;
- int              lLen;
+ int32_t         retVal       = 0;
+ SMS_AudioFrame* lpFrame      = ( SMS_AudioFrame* )apData;
+ short*          lpOutSamples;
+ uint8_t*        lpBuf;
+ uint32_t        lHdr;
+ int             lLen;
+#ifdef _WIN32
+ lpFrame -> m_pData = s_OutBuffer;
+#else  /* PS2 */
+ lpFrame -> m_pData = &s_OutBuffer[ 4 ];
+#endif  /* _WIN32 */
+ lpOutSamples = ( short* )lpFrame -> m_pData;
 
- if ( s_MP3Ctx.m_Frame.m_Len != 0 ) {
+ if ( lpFrame -> m_Len != 0 ) {
 
-  lpBuf    = apBuf = s_MP3Ctx.m_Frame.m_pPos;
-  aBufSize = s_MP3Ctx.m_Frame.m_Len;
+  lpBuf    = apBuf = lpFrame -> m_pPos;
+  aBufSize = lpFrame -> m_Len;
 
  } else {
 
-  s_MP3Ctx.m_Frame.m_pPos = lpBuf = apBuf;
-  s_MP3Ctx.m_Frame.m_Len  = aBufSize;
+  lpFrame -> m_pPos = lpBuf = apBuf;
+  lpFrame -> m_Len  = aBufSize;
 
  }  /* end else */
 
@@ -4151,12 +4148,10 @@ nextData:
 
  }  /* end while */
 
- lLen = lpBuf - s_MP3Ctx.m_Frame.m_pPos;
+ lLen = lpBuf - lpFrame -> m_pPos;
 
- s_MP3Ctx.m_Frame.m_Len  -= lLen;
- s_MP3Ctx.m_Frame.m_pPos += lLen;
-
- *lpFrame = &s_MP3Ctx.m_Frame;
+ lpFrame -> m_Len  -= lLen;
+ lpFrame -> m_pPos += lLen;
 
  return retVal;
 

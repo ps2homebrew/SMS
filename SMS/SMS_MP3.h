@@ -80,7 +80,6 @@ typedef struct SMS_Codec_MP3Context {
  uint8_t        m_InBuf[ 2 ][ SMS_MPA_MAX_CODED_FRAME_SIZE + SMS_BACKSTEP_SIZE ];
  SMS_MPA_INT    m_SynthBuf[ 2 ][ 1024 ];
  SMS_BitContext m_BitCtx;
- SMS_AudioFrame m_Frame;
  int            m_SynthBuffOffset[ 2 ];
  uint32_t       m_FreeFmtNextHdr;
  int            m_InBufIdx;
