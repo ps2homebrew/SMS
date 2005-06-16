@@ -210,3 +210,14 @@ it will take ages to finish it :).
 - Chris "Neovanglist" Gilbert for GS and DMA code;
 - gawd for 'audsrv' (virgin version was enough :));
 - all others whose posts in the forums helped me in development;
+
+
+Update (16-JUN-2005)
+--------------------
+STIO_XXX routines are implemented. Though not fully tested, but at least I was
+able to play a file using 'host:file.avi' syntax. Loading goes slower than from
+CDDAFS but movie plays OK. This feature can be helpful for programmers (no need
+anymore to make CD :)). Well, these STIO_XXX routines call 'fioxxx' from ps2sdk,
+so, alas, no hdd support. Anyone is free to replace 'fioxxx' by 'fileXioxxx' and
+try it with hdd. To use 'STIO_XXX' just replace 'CDDA_InitFileContext' call by
+'STIO_InitFileContext' (and remove other CDDA_XXX calls).
