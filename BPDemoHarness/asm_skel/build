@@ -1,3 +1,0 @@
-#!/bin/sh
-
-asm5900 asm_skel.asm -o:asm_skel.bin
