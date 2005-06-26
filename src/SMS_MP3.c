@@ -2490,7 +2490,7 @@ static SMS_INLINE void _lsf_sf_expand ( int* aSLen, int aSF, int aN1, int aN2, i
 
  if ( aN2 ) {
 
-  aSLen[ 2 ] = aSF % aN3;
+  aSLen[ 2 ] = aSF % aN2;
   aSF       /= aN2;
 
  } else aSLen[ 2 ] = 0;
@@ -4001,7 +4001,7 @@ int32_t MP3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apBuf, int
 
    if ( lLen > 0 ) {
 
-    memcpy ( s_MP3Ctx.m_pInBufPtr, apBuf, lLen );
+    memcpy ( s_MP3Ctx.m_pInBufPtr, lpBuf, lLen );
 
     lpBuf    += lLen;
     aBufSize -= lLen;
