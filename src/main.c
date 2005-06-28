@@ -47,7 +47,7 @@ int main ( void ) {
  CDDAContext* lpCDDACtx;
 # endif  /* USE_HDD */
  FileContext* lpFileCtx = NULL;
- GSContext*   lpGSCtx   = GS_InitContext ( GSDisplayMode_PAL_I );
+ GSContext*   lpGSCtx   = GS_InitContext ( GSDisplayMode_AutoDetect );
 
  lpGSCtx -> InitScreen ();
  lpGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
@@ -92,7 +92,7 @@ int main ( void ) {
 #elif 0
   AudioTest ( lpFileCtx );
 #elif 1 && !defined( _WIN32 )
-  GSContext*     lpGSCtx  = GS_InitContext ( GSDisplayMode_PAL_I );
+  GSContext*     lpGSCtx  = GS_InitContext ( GSDisplayMode_AutoDetect );
   SMS_AVIPlayer* lpPlayer = SMS_AVIInitPlayer ( lpFileCtx, lpGSCtx );
 
   if ( lpPlayer != NULL ) {
@@ -131,7 +131,7 @@ int main ( void ) {
 
 static void VideoTest ( FileContext* apCtx ) {
 
- GSContext*      lpGSCtx  = GS_InitContext ( GSDisplayMode_PAL_I );
+ GSContext*      lpGSCtx  = GS_InitContext ( GSDisplayMode_AutoDetect );
  IPUContext*     lpIPUCtx;
  SMS_AVIContext* lpAVICtx = SMS_AVINewContext ( apCtx );
 
@@ -230,7 +230,7 @@ static void VideoTest ( FileContext* apCtx ) {
 
 static void AudioTest ( FileContext* apCtx ) {
 
- GSContext*      lpGSCtx  = GS_InitContext ( GSDisplayMode_PAL_I );
+ GSContext*      lpGSCtx  = GS_InitContext ( GSDisplayMode_AutoDetect );
  SMS_AVIContext* lpAVICtx = SMS_AVINewContext ( apCtx );
 
  if ( lpAVICtx != NULL ) {
