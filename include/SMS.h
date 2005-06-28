@@ -28,23 +28,24 @@ typedef short SMS_DCTELEM;
 extern const uint32_t g_SMS_InvTbl [ 256 ];
 extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 
-# define SMS_DATA_BUFFER_SIZE  139488
-# define SMS_AUDSRV_SIZE        20593
-# define SMS_AUDSRV_OFFSET          0
-# define SMS_IDCT_CONST_SIZE      368
-# define SMS_IDCT_CONST_OFFSET  20608
-# define SMS_IOMANX_SIZE         7605
-# define SMS_IOMANX_OFFSET      20976
-# define SMS_FILEXIO_SIZE        8089
-# define SMS_FILEXIO_OFFSET     28592
-# define SMS_PS2DEV9_SIZE        9905
-# define SMS_PS2DEV9_OFFSET     36688
-# define SMS_PS2ATAD_SIZE       11805
-# define SMS_PS2ATAD_OFFSET     46608
-# define SMS_PS2HDD_SIZE        26257
-# define SMS_PS2HDD_OFFSET      58416
-# define SMS_PS2FS_SIZE         54785
-# define SMS_PS2FS_OFFSET       84688
+# define SMS_AUDSRV_SIZE     20657
+# define SMS_IDCT_CONST_SIZE   368
+# define SMS_IOMANX_SIZE      7605
+# define SMS_FILEXIO_SIZE     8089
+# define SMS_PS2DEV9_SIZE     9905
+# define SMS_PS2ATAD_SIZE    11805
+# define SMS_PS2HDD_SIZE     26257
+# define SMS_PS2FS_SIZE      54785
+
+# define SMS_AUDSRV_OFFSET     0
+# define SMS_IDCT_CONST_OFFSET (  ( SMS_AUDSRV_OFFSET     + SMS_AUDSRV_SIZE     + 15 ) & 0xFFFFFFF0  )
+# define SMS_IOMANX_OFFSET     (  ( SMS_IDCT_CONST_OFFSET + SMS_IDCT_CONST_SIZE + 15 ) & 0xFFFFFFF0  )
+# define SMS_FILEXIO_OFFSET    (  ( SMS_IOMANX_OFFSET     + SMS_IOMANX_SIZE     + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2DEV9_OFFSET    (  ( SMS_FILEXIO_OFFSET    + SMS_FILEXIO_SIZE    + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2ATAD_OFFSET    (  ( SMS_PS2DEV9_OFFSET    + SMS_PS2DEV9_SIZE    + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2HDD_OFFSET     (  ( SMS_PS2ATAD_OFFSET    + SMS_PS2ATAD_SIZE    + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2FS_OFFSET      (  ( SMS_PS2HDD_OFFSET     + SMS_PS2HDD_SIZE     + 15 ) & 0xFFFFFFF0  )
+# define SMS_DATA_BUFFER_SIZE  (  ( SMS_PS2FS_OFFSET      + SMS_PS2FS_SIZE      + 15 ) & 0xFFFFFFF0  )
 
 extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 
