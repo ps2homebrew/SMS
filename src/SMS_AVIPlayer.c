@@ -207,6 +207,7 @@ static void _sms_avi_play_a_v ( void ) {
  );
 
  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 2048 );
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
 
  lTime = SMS_Time ();
 
