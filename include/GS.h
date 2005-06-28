@@ -37,7 +37,8 @@ typedef enum GSDisplayMode {
  GSDisplayMode_DTV_1920x1080I     = 0x51,
  GSDisplayMode_DTV_1280x720P      = 0x52,
  GSDisplayMode_DVD_NTSC           = 0x72,
- GSDisplayMode_DVD_PAL            = 0x73
+ GSDisplayMode_DVD_PAL            = 0x73,
+ GSDisplayMode_AutoDetect         = 0xFF
 
 } GSDisplayMode;
 
