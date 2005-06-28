@@ -51,6 +51,7 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 
  switch ( aMode ) {
 
+  case GSDisplayMode_AutoDetect      :
   case GSDisplayMode_NTSC            :
   case GSDisplayMode_NTSC_I          :
   case GSDisplayMode_VGA_640x480_60Hz:
@@ -162,6 +163,7 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 #  include <malloc.h>
 #  include <string.h>
 #  include <stdio.h>
+#  include <limits.h>
 
 #  define CHAR_SIZE ( 13 * 26 )
 
@@ -186,6 +188,19 @@ typedef struct Unpack {
  unsigned char* m_Ptr;
 
 } Unpack;
+
+typedef struct LineKern {
+
+ unsigned char m_Left  __attribute__(  ( packed )  );
+ unsigned char m_Right __attribute__(  ( packed )  );
+
+} LineKern;
+
+typedef struct CharKern {
+
+ LineKern m_Kern[ 26 ] __attribute__(  ( packed )  );
+
+} CharKern;
 
 static unsigned int s_CharMap[ 224 ] = {
    0/* ' '  */,   9/* '!' */,  40/* '"' */,  83/* '#'    */,  /*  32 -  35 */
@@ -246,7 +261,7 @@ static unsigned int s_CharMap[ 224 ] = {
  641/* 'ü'  */, 642/* 'ý' */, 643/* 'þ' */, 644/* 'ÿ'    */   /* 252 - 255 */
 };
 
-static unsigned int s_CharMetrics[ 224 ];
+static CharKern s_Kerns[ 224 ];
 
 static float s_Sin[ 36 ] = {
   0.000000F,  0.173648F,  0.342020F,  0.500000F,  0.642787F,  0.766044F,
@@ -315,8 +330,6 @@ static inline void _fontm_unpack ( Unpack* apUnpack, unsigned char* apDst ) {
 static inline unsigned char* _fontm_char ( FontmFile* apFile, long aChar, long anIdx ) {
 
  int            i, j;
- unsigned int   lPreGap;
- unsigned int   lPostGap;
  unsigned char  lVal;
  unsigned char* lpPtr;
  unsigned char* retVal = (
@@ -327,56 +340,49 @@ static inline unsigned char* _fontm_char ( FontmFile* apFile, long aChar, long a
   )
  ) + apFile -> m_BaseOffset + ( unsigned int )apFile;
 
- lPreGap  = 0xFFFFFFFF;
- lPostGap = 0xFFFFFFFF;
-
  for ( i = 0; i < CHAR_SIZE; ++i ) retVal[ i ] = ( retVal[ i ] << 4 ) | ( retVal[ i ] >> 4 );
 
  lpPtr = retVal;
 
  for ( i = 0; i < 26; ++i, lpPtr += 13 ) {
 
-  int lGap = 0;
+  int lKern = 0;
 
   for ( j = 0; j < 13; ++j ) {
 
    lVal = lpPtr[ j ];
 
    if (  !( lVal & 0x0F )  )
-    ++lGap;
+    ++lKern;
    else break;
 
    if (  !( lVal & 0xF0 )  )
-    ++lGap;
+    ++lKern;
    else break;
 
   }  // end for
 
-  if ( lGap < lPreGap ) lPreGap = lGap;
+  s_Kerns[ anIdx ].m_Kern[ i ].m_Left = lKern;
 
-  lGap = 0;
+  lKern = 0;
 
   for ( j = 12; j >= 0; --j ) { 
 
    lVal = lpPtr[ j ];
 
    if (  !( lVal & 0xF0 )  )
-    ++lGap;
+    ++lKern;
    else break;
 
    if (  !( lVal & 0x0F )  )
-    ++lGap;
+    ++lKern;
    else break;
 
   }  /* end for */
 
-  if ( lGap < lPostGap ) lPostGap = lGap;
+  s_Kerns[ anIdx ].m_Kern[ i ].m_Right = lKern;
 
  }  /* end for */
-
- lPostGap += 4;
-
- s_CharMetrics[ anIdx ] = ( lPreGap << 16 ) | ( 26 - lPostGap );
 
  return retVal;
 
@@ -385,7 +391,7 @@ static inline unsigned char* _fontm_char ( FontmFile* apFile, long aChar, long a
 void _fontm_set_text_color ( u32 aColor ) {
 
  u32  lCLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
- u64  lDMA [ 20 ] __attribute__(  (  aligned( 16 )  )   );
+ u64  lDMA [ 18 ] __attribute__(  (  aligned( 16 )  )   );
  u64* lpDMA = lDMA;
  s32  lRGB [  4 ];
  int  i;
@@ -433,7 +439,7 @@ void _fontm_set_text_color ( u32 aColor ) {
  *lpDMA++ = 0;
 
   *lpDMA++ = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
-  *lpDMA++ = 0;
+  *lpDMA   = 0;
 
  SyncDCache ( lCLUT, lCLUT + 16 );
 
@@ -523,33 +529,61 @@ static void _fontm_init ( void ) {
 
   }  /* end for */
 
- free   ( lpFont  );
- free   ( lpDMA   );
- fclose ( lpFile  );
+ free   ( lpFont );
+ free   ( lpDMA  );
+ fclose ( lpFile );
 
- s_CharMetrics[ 0 ] = 6;
+ for ( lX = 0; lX < 26; ++lX ) s_Kerns[ 0 ].m_Kern[ lX ].m_Left  =
+                               s_Kerns[ 0 ].m_Kern[ lX ].m_Right = 7;
 
 }  /* end _fontm_init */
 
 static unsigned int _fontm_text_width ( char* apStr, int anChars ) {
 
- unsigned int i, retVal = 0, lnChars = anChars ? anChars : strlen ( apStr );
+ int      lKern, lX[ 26 ];
+ unsigned int i, j, lnChars = anChars ? anChars : strlen ( apStr );
+
+ memset (  lX, 0, sizeof ( lX )  );
 
  for ( i = 0; i < lnChars; ++i ) {
 
-  unsigned char lChr = apStr[ i ] - ' ';
+  unsigned int lChr = ( unsigned char )apStr[ i ] - ' ';
 
-  retVal += -( s_CharMetrics[ lChr ] >> 16 ) + ( int )(  ( s_CharMetrics[ lChr ] & 0x0000FFFF )  );
+  if ( lChr == 0 ) {
 
- }  // end for
+   for ( j = 0; j < 26; ++j ) lX[ j ] += 8;
 
- return retVal;
+   continue;
+
+  }  // end if
+
+  lKern = -INT_MAX;
+
+  for ( j = 0; j < 26; ++j ) {
+
+   int lOffset = lX[ j ] - s_Kerns[ lChr ].m_Kern[ j ].m_Left;
+
+   if ( lOffset > lKern ) lKern = lOffset;
+
+  }  // end for
+
+  for ( j = 0; j < 26; ++j )
+
+   lX[ j ] = lKern + 26 -  s_Kerns[ lChr ].m_Kern[ j ].m_Right - 2;
+
+ }  /* end for */
+
+ lKern = -INT_MAX;
+
+ for ( i = 0; i < 26; ++i ) if ( lX[ i ] > lKern ) lKern = lX[ i ];
+
+ return lKern;
 
 }  /* end _fontm_text_width */
 
 void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr ) {
 
- int  i, lnChars = strlen ( apStr );
+ int  i, j, lnChars = strlen ( apStr );
  int  lIncr = s_GSCtx.m_Font.m_BkMode == GSBkMode_Opaque;
  u64  lDMA[ lnChars * 10 + 8 + ( lIncr << 3 ) ] __attribute__(  (  aligned( 16 )  )   );
  u64* lpDMA   = lDMA;
@@ -562,6 +596,11 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr ) {
  int  lXIncr = s_GSCtx.m_OffsetX << 4;
  int  lYIncr = s_GSCtx.m_OffsetY << 4;
  int  lTX, lTY;
+ int  lCurX;
+ int  lX[ 26 ] = {
+  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX,
+  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX
+ };
 
  *lpDMA++ = GIF_TAG( lDMALen - 1, 1, 0, 0, 0, 1 );
  *lpDMA++ = GIF_AD;
@@ -607,14 +646,22 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr ) {
 
  for ( i = 0; i < lnChars; ++i ) {
 
-  unsigned char lChr     = apStr[ i ] - ' ';
-  int           lPreGap  = s_CharMetrics[ lChr ] >> 16;
-  int           lPostGap = s_CharMetrics[ lChr ] & 0x0000FFFF;
+  unsigned char lChr = apStr[ i ] - ' ';
 
-  aX  -= lPreGap;
-  lX1  = ( aX << 4 ) + lXIncr;
-  lX2  = (  ( aX + 20 ) << 4  ) + lXIncr;
-  aX  += lPostGap;
+  lCurX = -INT_MAX;
+
+  for ( j = 0; j < 26; ++j ) {
+
+   int lOffset = lX[ j ] - s_Kerns[ lChr ].m_Kern[ j ].m_Left;
+
+   if ( lOffset > lCurX ) lCurX = lOffset;
+
+  }  // end for
+
+  lX1  = ( lCurX << 4 ) + lXIncr;
+  lX2  = (  ( lCurX + 26 ) << 4  ) + lXIncr;
+
+  for ( j = 0; j < 26; ++j ) lX[ j ] = lCurX + 26 - s_Kerns[ lChr ].m_Kern[ j ].m_Right - 2;
 
   lTY = 0;
 
@@ -1490,6 +1537,10 @@ static void GS_DestroyContext ( void ) {
 
 GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 
+ if ( aMode == GSDisplayMode_AutoDetect )
+
+  aMode = *( volatile char* )0x1FC7FF52 == 'E' ? GSDisplayMode_PAL_I
+                                               : GSDisplayMode_NTSC_I;
  s_GSCtx.m_DisplayMode = aMode;
 
  if ( aMode == GSDisplayMode_NTSC ) {
