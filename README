@@ -234,3 +234,8 @@ queues with already decompressed audio/video frames (I'm not sure yet if it will
 at all :)). Audio preload functionality is removed (no need of it as my idea with A/V
 sync will not depend on it). I don't know at the moment how USB devices work with ps2sdk,
 so any help will be appreciated. Project structure is also reorganized.
+
+Update (28-JUN-2005)
+--------------------
+Some MP3 bugs (typoes) fixed. New FONTM autokerning algorithm is implemented (strings look
+much nicer now). 'audsrv' updated. Region autodetection code is added to the GS code.
