@@ -11,7 +11,7 @@
 #include "IPU.h"
 #include "GS.h"
 #include "SMS.h"
-#include <stdio.h>
+#include "SMS_VideoBuffer.h"
 
 IPUContext g_IPUCtx;
 
@@ -24,18 +24,19 @@ static void IPU_Sync ( void ) {
 
 }  /* end IPU_Sync */
 
-static void IPU_Display ( struct SMS_MacroBlock* apMB, int* apLock ) {
+static void IPU_Display ( struct SMS_FrameBuffer* apMB ) {
 
  if ( g_IPUCtx.m_pGSCtx -> m_pVideo ) {
 
-  uint32_t lY, lX;
-  uint8_t* lpVideoY  = ( uint8_t* )g_IPUCtx.m_pGSCtx -> m_pVideo;
-  uint8_t* lpVideoCr = lpVideoY  + g_IPUCtx.m_Width * g_IPUCtx.m_Height;
-  uint8_t* lpVideoCb = lpVideoCr + (  ( g_IPUCtx.m_Width * g_IPUCtx.m_Height ) >> 2  );
+  uint32_t        lY, lX;
+  uint8_t*        lpVideoY  = ( uint8_t* )g_IPUCtx.m_pGSCtx -> m_pVideo;
+  uint8_t*        lpVideoCr = lpVideoY  + g_IPUCtx.m_Width * g_IPUCtx.m_Height;
+  uint8_t*        lpVideoCb = lpVideoCr + (  ( g_IPUCtx.m_Width * g_IPUCtx.m_Height ) >> 2  );
+  SMS_MacroBlock* lpData    = apMB -> m_pData;
 
   for ( lY = 0; lY < g_IPUCtx.m_MBHeight; ++lY ) {
 
-   SMS_MacroBlock* lpMB = apMB;
+   SMS_MacroBlock* lpMB = lpData;
 
    for ( lX = 0; lX < g_IPUCtx.m_MBWidth; ++lX, ++lpMB ) {
 
@@ -77,7 +78,7 @@ static void IPU_Display ( struct SMS_MacroBlock* apMB, int* apLock ) {
    lpVideoCb +=  7 * g_IPUCtx.m_UVWidth;
    lpVideoCr +=  7 * g_IPUCtx.m_UVWidth;
 
-   apMB += g_IPUCtx.m_Linesize;
+   lpData += g_IPUCtx.m_Linesize;
 
   }  /* end for */
 
@@ -154,6 +155,10 @@ static void IPU_DestroyContext ( void ) {
   DisableDmac ( DMA_CHANNEL_FROM_IPU );
   RemoveDmacHandler ( DMA_CHANNEL_FROM_IPU, g_IPUCtx.m_DMAHandlerID_IPU );
   RemoveDmacHandler ( DMA_CHANNEL_GIF,      g_IPUCtx.m_DMAHandlerID_GIF );
+#ifdef VB_SYNC
+  DisableIntc ( 2 );
+  RemoveIntcHandler ( 2, g_IPUCtx.m_VBlankHandlerID );
+#endif  /* VB_SYNC */
   DeleteSema ( g_IPUCtx.m_SyncS );
 
   free ( g_IPUCtx.m_pResult );
@@ -165,7 +170,7 @@ static void IPU_DestroyContext ( void ) {
 
 static void IPU_Sync ( void ) {
 
- WaitSema   ( g_IPUCtx.m_SyncS );
+ WaitSema ( g_IPUCtx.m_SyncS );
  SignalSema ( g_IPUCtx.m_SyncS );
 
 }  /* end IPU_Sync */
@@ -199,21 +204,37 @@ int IPU_DMAHandlerFromIPU ( int aChan ) {
 
 static void IPU_GIFHandlerDraw ( void ) {
 
- *g_IPUCtx.m_pLock = 0;
  iSignalSema ( g_IPUCtx.m_SyncS );
 
 }  /* end IPU_GIFHandlerDraw */
+#ifdef VB_SYNC
+static int IPU_VBlankHandler ( int aCause ) {
 
+ if ( g_IPUCtx.m_fDraw ) {
+
+  g_IPUCtx.m_fDraw    = 0;
+  g_IPUCtx.m_GIFlag   = 1;
+  g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
+  DMA_SendToGIF( g_IPUCtx.m_DMAGIFDraw, 7 );
+
+ }  /* end if */
+
+ return -1;
+
+}  /* end IPU_VBlankHandler */
+#endif  /* VB_SYNC */
 void IPU_GIFHandlerSend ( void ) {
 
  if ( ++g_IPUCtx.m_MB == g_IPUCtx.m_nMBSlice ) {
 
   if ( !--g_IPUCtx.m_Slice ) {
-
-   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
-   g_IPUCtx.m_GIFlag   = 1;
-   DMA_SendToGIF( g_IPUCtx.m_DMAGIFDraw, 7 );
-
+#ifdef VB_SYNC
+   g_IPUCtx.m_fDraw   = 1;
+#else
+  g_IPUCtx.m_GIFlag   = 1;
+  g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
+  DMA_SendToGIF( g_IPUCtx.m_DMAGIFDraw, 7 );
+#endif  /* VB_SYNC */
    return;
 
   }  /* end if */
@@ -255,7 +276,7 @@ int IPU_DMAHandlerToGIF ( int aChan ) {
 
 }  /* end IPU_DMAHandlerToGIF */
 
-static void IPU_Display ( struct SMS_MacroBlock* apMB, unsigned int* apLock ) {
+static void IPU_Display ( struct SMS_FrameBuffer* apMB ) {
 
  WaitSema ( g_IPUCtx.m_SyncS );
 
@@ -264,14 +285,15 @@ static void IPU_Display ( struct SMS_MacroBlock* apMB, unsigned int* apLock ) {
  g_IPUCtx.m_MB       = 0;
  g_IPUCtx.m_Slice    = g_IPUCtx.m_nMBSlices;
  g_IPUCtx.m_pCurRes  = g_IPUCtx.m_pResult;
- g_IPUCtx.m_pMB      = apMB;
+ g_IPUCtx.m_pMB      = apMB -> m_pData;
+ g_IPUCtx.m_pBuffer  = apMB;
  g_IPUCtx.m_GIFlag   = 0;
+#ifdef VB_SYNC
+ g_IPUCtx.m_fDraw    = 0;
+#endif  /* VB_SYNC */
  g_IPUCtx.GIFHandler = IPU_GIFHandlerSend;
 
- g_IPUCtx.m_pLock = apLock;
- *apLock          = 1;
-
- DMA_SendToIPU( apMB, g_IPUCtx.m_QWCToIPUSlice );
+ DMA_SendToIPU( apMB -> m_pData, g_IPUCtx.m_QWCToIPUSlice );
  IPU_CMD_CSC( g_IPUCtx.m_nMBSlice, 0, 0 );
  DMA_RecvFromIPU( g_IPUCtx.m_pResult, g_IPUCtx.m_QWCFromIPUSlice );
 
@@ -289,6 +311,7 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
   g_IPUCtx.m_nMBSlices       = aHeight >> 4;
   g_IPUCtx.m_QWCToIPUSlice   = g_IPUCtx.m_nMBSlice * 24;
   g_IPUCtx.m_QWCFromIPUSlice = g_IPUCtx.m_nMBSlice * 64;
+  g_IPUCtx.m_pBuffer         = NULL;
 
   g_IPUCtx.m_pResult = ( unsigned char* )malloc ( 1024 * g_IPUCtx.m_nMBSlice );
 
@@ -312,8 +335,8 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    g_IPUCtx.Sync    = IPU_Sync;
    g_IPUCtx.SetTEX  = IPU_SetTEX;
 
-   lSema.max_count   = 1;
    lSema.init_count  = 1;
+   lSema.max_count   = 1;
    g_IPUCtx.m_SyncS = CreateSema ( &lSema );
    g_IPUCtx.SetTEX ();
 
@@ -411,7 +434,10 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 
    g_IPUCtx.m_DMAHandlerID_IPU = AddDmacHandler ( DMA_CHANNEL_FROM_IPU, IPU_DMAHandlerFromIPU, 0 );
    g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler ( DMA_CHANNEL_GIF,      IPU_DMAHandlerToGIF,   0 );
-
+#ifdef VB_SYNC
+   g_IPUCtx.m_VBlankHandlerID  = AddIntcHandler ( 2,                    IPU_VBlankHandler,     0 );
+   EnableIntc ( 2 );
+#endif  /* VB_SYNC */
    IPU_RESET();
    IPU_CMD_SETTH( 0, 0 );
    IPU_WAIT();
