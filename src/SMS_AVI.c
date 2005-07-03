@@ -20,6 +20,10 @@
 #include <limits.h>
 #include <stdio.h>
 
+#ifdef _WIN32
+# include <errno.h>
+#endif  /* _WIN32 */
+
 static void _SMS_AVIDestroyPacket ( SMS_AVIPacket* apPkt ) {
 
  if ( apPkt != 0 ) {
@@ -146,6 +150,7 @@ static int _SMS_AVIRead_idx1 ( SMS_AVIContext* apCtx, int aSize ) {
    lpIndex = &lpIndices[ lpStm -> m_nIdx++ ];
    lpIndex -> m_Flags  = lFlags;
    lpIndex -> m_Pos    = lPos;
+   lpIndex -> m_Len    = lLen;
    lpIndex -> m_CumLen = lpStm -> m_CumLen;
 
    lpStm -> m_CumLen += lLen;
@@ -458,13 +463,9 @@ int SMS_AVIReadHeader ( SMS_AVIContext* apCtx ) {
 
      lCount = File_GetUInt ( apCtx -> m_pFileCtx );  /* dwStreams */
 
-     for ( i = 0; i < lCount; ++i ) {
+     for ( i = 0; i < lCount; ++i )
 
-      lpStm = _SMS_AVINewStream ( apCtx, i );
-
-      if ( !lpStm ) goto error;
-
-     }  /* end for */
+      if (  !_SMS_AVINewStream ( apCtx, i )  ) goto error;
 
      apCtx -> m_pFileCtx -> Seek ( apCtx -> m_pFileCtx, apCtx -> m_pFileCtx -> m_CurPos + lSize - 28 );
 
@@ -757,6 +758,9 @@ int SMS_AVIReadPacket ( SMS_AVIPacket* apPkt ) {
   ) {
         
    _SMS_AVINewPacket ( apPkt, lSize );
+
+   if ( apPkt -> m_pData == NULL ) return -ENOMEM;
+
    lpBuf -> Read ( lpBuf, apPkt -> m_pData, lSize );
 
    if ( lSize & 1 ) {

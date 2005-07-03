@@ -21,8 +21,9 @@
 #define CD_SERVER_SCMD 0x80000593
 #define CD_SERVER_NCMD 0x80000595
 
-#define CDVD_INIT_INIT 0x00
-#define CDVD_INIT_EXIT 0x05
+#define CDVD_INIT_INIT    0x00
+#define CDVD_INIT_NOCHECK 0x01
+#define CDVD_INIT_EXIT    0x05
 
 #define CD_CMD_CDDAREAD    0x02
 #define CD_CMD_GETDISCTYPE 0x03
@@ -31,7 +32,8 @@
 #define CD_CMD_STOP        0x07
 #define CD_CMD_PAUSE       0x08
 
-static volatile int       s_SyncFlag;
+static int                s_Sema;
+static int                s_SyncFlag;
 static int                s_Size;
 static void*              s_pBuf;
 static SifRpcClientData_t s_ClientInit         __attribute__ (   (  aligned( 64 )  )   );
@@ -45,6 +47,8 @@ static unsigned char      s_TOCBuf  [ 2064 ]   __attribute__ (   (  aligned( 64 
 static unsigned int       s_ReadData[    6 ]   __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_ReadResp[   64 ]   __attribute__ (   (  aligned( 64 )  )   );
 
+int g_CDDASpeed;
+
 int CDDA_Init ( void ) {
 
  int retVal = 1;
@@ -56,7 +60,14 @@ int CDDA_Init ( void ) {
          (  retVal = SIF_BindRPC ( &s_ClientSCmd, CD_SERVER_SCMD )  )
   )  {
 
-   s_InitMode = CDVD_INIT_INIT;
+   ee_sema_t lSema;
+
+   lSema.init_count = 0;
+   lSema.max_count  = 1;
+   s_Sema = CreateSema ( &lSema );
+
+   s_InitMode  = CDVD_INIT_NOCHECK;
+   g_CDDASpeed = 4;
    SifWriteBackDCache ( &s_InitMode, 4 );
 
    retVal = SifCallRpc ( &s_ClientInit, 0, 0, &s_InitMode, 4, 0, 0, 0, 0 ) >= 0;
@@ -77,6 +88,8 @@ void CDDA_Exit ( void ) {
   SifCallRpc ( &s_ClientInit, 0, 0, &s_InitMode, 4, 0, 0, 0, 0 );
 
   s_ClientInit.server = 0;
+
+  DeleteSema ( s_Sema );
 
  }  /* end if */
 
@@ -151,9 +164,19 @@ int CDDA_IsAudioDisk ( void ) {
 
 int CDDA_Synchronize ( void ) {
 
- SifWriteBackDCache ( s_pBuf, s_Size );
+ if ( s_pBuf ) {
 
- while ( s_SyncFlag );
+  SifWriteBackDCache ( s_pBuf, s_Size );
+  s_pBuf = NULL;
+
+ }  /*  end if */
+
+ if ( s_SyncFlag ) {
+
+  WaitSema ( s_Sema );
+  s_SyncFlag = 0;
+
+ }  /* end if */
 
  return 1;
 
@@ -161,7 +184,7 @@ int CDDA_Synchronize ( void ) {
 
 static void _cd_callback ( void* apParam ) {
 
- s_SyncFlag = 0;
+ iSignalSema ( s_Sema );
 
 }  /* end _cd_callback */
 
@@ -207,9 +230,6 @@ int CDDA_Stop ( void ) {
  return retVal;
 
 }  /* end CDDA_Stop */
-/* This is a compromise between speed and noise issued by DVD drive */
-/* Using higher speeds results annoyning ticks in my SCPH-30004R    */
-#define READ_SPEED 3
 
 int CDDA_RawRead ( int aStartSec, int aCount, unsigned char* apBuf ) {
 
@@ -218,7 +238,7 @@ int CDDA_RawRead ( int aStartSec, int aCount, unsigned char* apBuf ) {
  s_ReadData[ 0 ] = aStartSec;
  s_ReadData[ 1 ] = aCount;
  s_ReadData[ 2 ] = ( unsigned int  )apBuf;
- s_ReadData[ 3 ] = 50 | ( READ_SPEED << 8 );
+ s_ReadData[ 3 ] = 50 | ( g_CDDASpeed << 8 );
  s_ReadData[ 4 ] = ( unsigned int )s_ReadResp;
 
  SifWriteBackDCache ( s_ReadResp, 144 );

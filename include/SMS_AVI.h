@@ -29,6 +29,7 @@ typedef struct SMS_AVIdxEntry {
 
  uint32_t m_Flags;
  uint32_t m_Pos;
+ uint32_t m_Len;
  uint32_t m_CumLen;
 
 } SMS_AVIdxEntry;

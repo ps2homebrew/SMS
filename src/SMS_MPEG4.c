@@ -15,6 +15,7 @@
 #include "SMS_VLC.h"
 #include "SMS_H263.h"
 #include "SMS_FourCC.h"
+#include "SMS_VideoBuffer.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -3220,9 +3221,9 @@ static int32_t _decode_slice ( void ) {
 
 static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apBuf, int32_t aBufSize ) {
 
- SMS_Frame**     lpFrame  = ( SMS_Frame** )apData;
- SMS_BitContext* lpBitCtx = &g_MPEGCtx.m_BitCtx;
- int32_t         retVal;
+ SMS_FrameBuffer** lpFrame  = ( SMS_FrameBuffer** )apData;
+ SMS_BitContext*   lpBitCtx = &g_MPEGCtx.m_BitCtx;
+ int32_t           retVal;
 
  g_MPEGCtx.m_pParentCtx = apCtx;
 
@@ -3234,7 +3235,7 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* a
 
  g_MPEGCtx.m_BSBufSize = 0;
 
- if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pData )
+ if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pBuf )
 
   g_MPEGCtx.m_pCurPic = &g_MPEGCtx.m_pPic[ SMS_MPEGContext_FindUnusedPic () ];
 
@@ -3361,14 +3362,18 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* a
 
  SMS_MPEG_FrameEnd ();
 
- if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_LowDelay )
+ if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_LowDelay ) {
 
-  *lpFrame = &g_MPEGCtx.m_CurPic;
+  *lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
 
- else *lpFrame = &g_MPEGCtx.m_LastPic;
+ } else {
+
+  *lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
+
+ }  /* end else */
 
  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
 
- return ( g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay );
+ return g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay;
 
 }  /* end MPEG4_Decode */

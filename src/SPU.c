@@ -152,6 +152,15 @@ static void _spu_play_pcm ( char* apBuf ) {
 
 }  /* end _spu_play_pcm */
 
+static void _spu_play_pcm_init ( char* apBuf ) {
+
+ _spu_mute ( 0 );
+ _spu_play_pcm ( apBuf );
+
+ s_SPUCtx.PlayPCM = _spu_play_pcm;
+
+}  /* end _spu_play_pcm_init */
+
 static void _spu_play_pcm_dummy ( char* apBuf ) {
 
 }  /* end _spu_play_pcm_dummy */
@@ -173,7 +182,7 @@ SPUContext* SPU_InitContext ( int anChannels, int aFreq ) {
   if (  _audsrv_set_format ( &lFmt )  ) {
 
    s_SPUCtx.Destroy = _spu_destroy;
-   s_SPUCtx.PlayPCM = _spu_play_pcm;
+   s_SPUCtx.PlayPCM = _spu_play_pcm_init;
    s_SPUCtx.Mute    = _spu_mute;
 
   }  /* end if */

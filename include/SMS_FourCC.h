@@ -22,6 +22,7 @@
 # define SMS_FourCC_XviD 0x44697658
 # define SMS_FourCC_XVID 0x44495658
 # define SMS_FourCC_XVIX 0x58495658
+# define SMS_FourCC_MP3  0x00000055
 
 # define SMS_MKTAG( a, b, c, d ) (   ( a ) | (  ( b ) << 8  ) | (  ( c ) << 16  ) | (  ( d ) << 24  )   )
 

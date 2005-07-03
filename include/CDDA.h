@@ -51,6 +51,8 @@ typedef struct CDDA_TOC {
 
 } CDDA_TOC;
 
+extern int g_CDDASpeed;
+
 int  CDDA_Init        ( void                     );
 void CDDA_Exit        ( void                     );
 int  CDDA_ReadTOC     ( CDDA_TOC*                );

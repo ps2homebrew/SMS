@@ -124,9 +124,10 @@ int SMS_Initialize ( void ) {
   '-', 'n', '\x00', '4', '0', '\x00'
  };
 
- int lModRes;
  int retVal = 0;
 #ifndef _WIN32
+ int lModRes;
+
  DMA_Init ( D_CTRL_RELE_ON, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC, D_CTRL_STD_OFF, D_CTRL_RCYC_8 );
  DMA_ChannelInit ( DMA_CHANNEL_GIF      );
  DMA_ChannelInit ( DMA_CHANNEL_TO_IPU   );
@@ -136,7 +137,7 @@ int SMS_Initialize ( void ) {
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
 
- ChangeThreadPriority (  GetThreadId (), 1  );
+ ChangeThreadPriority (  GetThreadId (), 64  );
 
  SifInitRpc ( 0 );
 

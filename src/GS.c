@@ -1524,7 +1524,7 @@ static void GS_SwapBuffers ( int afSync ) {
   s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
   s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0
  );
- *lpDMA++ = GS_FRAME_2;
+ *lpDMA = GS_FRAME_2;
 
  DMA_Send ( DMA_CHANNEL_GIF, lDMA, 5 );
  DMA_Wait ( DMA_CHANNEL_GIF );

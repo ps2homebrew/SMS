@@ -841,7 +841,7 @@ int CDDA_GetPicture ( CDDAContext* apCtx, int anIndex, void* apData ) {
 
   if (  lpCtx -> Read ( lpCtx, ( unsigned char* )&lnImages, 2 ) == 2 &&
         lnImages > ( unsigned short )anIndex                         &&
-        lpCtx -> Seek ( lpCtx, 16 + 64 + 512 + 9216 + 4096 * anIndex ) != -1
+        lpCtx -> Seek ( lpCtx, 16 + 64 + 512 + 9216 + 2 + 4096 * anIndex ) != -1
   ) retVal = lpCtx -> Read ( lpCtx, apData, 4096 );
 
  }  /* end if */
@@ -1592,7 +1592,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
 
   }  /* end if */
 
-  fileXioClose ( lFD );
+  if ( lFD >= 0 ) fileXioClose ( lFD );
 
  }  /* end if */
 #endif  /* _WIN32 */

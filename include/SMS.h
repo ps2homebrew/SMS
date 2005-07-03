@@ -90,11 +90,11 @@ extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
   type* m_pOut;                    \
  } rb
 
-# define SMS_RB_INIT( rb, start, count ) \
- ( rb ).m_pInp =                         \
- ( rb ).m_pOut =                         \
- ( rb ).m_pBeg = start;                  \
- ( rb ).m_pEnd = &( rb ).m_pBeg[ count + 1 ]
+# define SMS_RB_INIT( rb, start, count )  \
+ ( rb ).m_pInp  =                         \
+ ( rb ).m_pOut  =                         \
+ ( rb ).m_pBeg  = start;                  \
+ ( rb ).m_pEnd  = &( rb ).m_pBeg[ count ]
 
 # define SMS_RB_SLOT( rb, slot )  (  ( slot ) == ( rb ).m_pEnd ? ( rb ).m_pBeg : ( slot )  )
 # define SMS_RB_EMPTY( rb )       (  ( rb ).m_pInp == ( rb ).m_pOut  )
@@ -250,27 +250,26 @@ typedef struct SMS_MacroBlock {
 
 } SMS_MacroBlock;
 
+struct SMS_FrameBuffer;
+
 typedef struct SMS_Frame {
 
- int16_t      ( *m_pMotionValBase[ 2 ] )[ 2 ];
- int16_t      ( *m_pMotionVal    [ 2 ] )[ 2 ];
- int64_t         m_PTS;
- int8_t*         m_pRefIdx[ 2 ];
- int             m_Width;
- int             m_Height;
- int             m_Type;
- int             m_KeyFrame;
- int             m_Ref;
- int             m_CodedPicNr;
- int             m_Age;
- int             m_Locked;
- int             m_Linesize;
- SMS_MacroBlock* m_pData;
- SMS_MacroBlock* m_pBase;
- uint32_t*       m_pMBType;
- uint8_t*        m_pMBSkipTbl;
- int8_t*         m_pQScaleTbl;
- uint8_t         m_MotionSubsampleLog2;
+ int16_t                 ( *m_pMotionValBase[ 2 ] )[ 2 ];
+ int16_t                 ( *m_pMotionVal    [ 2 ] )[ 2 ];
+ int64_t                 m_PTS;
+ int8_t*                 m_pRefIdx[ 2 ];
+ int                     m_Width;
+ int                     m_Height;
+ int                     m_Type;
+ int                     m_KeyFrame;
+ int                     m_Ref;
+ int                     m_CodedPicNr;
+ int                     m_Linesize;
+ struct SMS_FrameBuffer* m_pBuf;
+ uint32_t*               m_pMBType;
+ uint8_t*                m_pMBSkipTbl;
+ int8_t*                 m_pQScaleTbl;
+ uint8_t                 m_MotionSubsampleLog2;
 
 } SMS_Frame;
 

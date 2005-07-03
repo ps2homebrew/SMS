@@ -13,6 +13,7 @@
 
 struct GSContext;
 struct SMS_MacroBlock;
+struct SMS_FrameBuffer;
 
 # ifdef _WIN32
 
@@ -28,7 +29,7 @@ typedef struct IPUContext {
  struct GSContext* m_pGSCtx;
 
  void ( *Destroy ) ( void );
- void ( *Display ) ( struct SMS_MacroBlock*, int* );
+ void ( *Display ) ( struct SMS_FrameBuffer* );
  void ( *Sync    ) ( void );
 
 } IPUContext;
@@ -68,35 +69,39 @@ typedef struct IPUContext {
 
 typedef struct IPUContext {
 
- unsigned long int      m_DMAGIFDraw[ 14 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAGIFTX  [  6 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned int           m_DestX;
- unsigned int           m_DestY;
- unsigned int           m_Slice;
- unsigned int           m_MB;
- unsigned int           m_nMBSlice;
- unsigned int           m_nMBSlices;
- unsigned int           m_MBStride;
- unsigned int           m_QWCToIPUSlice;
- unsigned int           m_QWCFromIPUSlice;
- unsigned int           m_DMAHandlerID_IPU;
- unsigned int           m_DMAHandlerID_GIF;
- unsigned int           m_VRAM;
- unsigned int           m_TBW;
- unsigned int           m_TW;
- unsigned int           m_TH;
- unsigned int           m_SyncS;
- unsigned int           m_GIFlag;
- unsigned int*          m_pLock;
- unsigned char*         m_pResult;
- unsigned char*         m_pCurRes;
- struct SMS_MacroBlock* m_pMB;
+ unsigned long int       m_DMAGIFDraw[ 14 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int       m_DMAGIFTX  [  6 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned int            m_DestX;
+ unsigned int            m_DestY;
+ unsigned int            m_Slice;
+ unsigned int            m_MB;
+ unsigned int            m_nMBSlice;
+ unsigned int            m_nMBSlices;
+ unsigned int            m_MBStride;
+ unsigned int            m_QWCToIPUSlice;
+ unsigned int            m_QWCFromIPUSlice;
+ unsigned int            m_DMAHandlerID_IPU;
+ unsigned int            m_DMAHandlerID_GIF;
+# ifdef VB_SYNC
+ unsigned int            m_VBlankHandlerID;
+ unsigned int            m_fDraw;
+# endif  /* VB_SYNC */
+ unsigned int            m_VRAM;
+ unsigned int            m_TBW;
+ unsigned int            m_TW;
+ unsigned int            m_TH;
+ unsigned int            m_SyncS;
+ unsigned int            m_GIFlag;
+ struct SMS_FrameBuffer* m_pBuffer;
+ unsigned char*          m_pResult;
+ unsigned char*          m_pCurRes;
+ struct SMS_MacroBlock*  m_pMB;
  
- void ( *Sync       ) ( void                                  );
- void ( *Display    ) ( struct SMS_MacroBlock*, unsigned int* );
- void ( *Destroy    ) ( void                                  );
- void ( *SetTEX     ) ( void                                  );
- void ( *GIFHandler ) ( void                                  );
+ void ( *Sync       ) ( void                    );
+ void ( *Display    ) ( struct SMS_FrameBuffer* );
+ void ( *Destroy    ) ( void                    );
+ void ( *SetTEX     ) ( void                    );
+ void ( *GIFHandler ) ( void                    );
 
 } IPUContext;
 #endif  /* _WIN32 */

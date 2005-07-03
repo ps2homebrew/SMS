@@ -16,6 +16,7 @@
 #include "SMS_Bitio.h"
 #include "SMS_MPEG.h"
 #include "SMS_AudioBuffer.h"
+#include "SMS_VideoBuffer.h"
 #include <stdio.h>
 
 #ifndef _WIN32
@@ -36,18 +37,19 @@ static void AudioTest ( FileContext* );
 # ifdef USE_HDD
 #  define FILENAME "pfs0:MyMovie.avi"
 # else
-#  define FILENAME "MyMovie.avi"
+# define FILENAME "MyMovie.avi"
 # endif  /* USE_HDD */
 
 int main ( void ) {
+
+ FileContext* lpFileCtx = NULL;
 
  SMS_Initialize ();
 #ifndef _WIN32
 # ifndef USE_HDD
  CDDAContext* lpCDDACtx;
 # endif  /* USE_HDD */
- FileContext* lpFileCtx = NULL;
- GSContext*   lpGSCtx   = GS_InitContext ( GSDisplayMode_AutoDetect );
+ GSContext*   lpGSCtx = GS_InitContext ( GSDisplayMode_AutoDetect );
 
  lpGSCtx -> InitScreen ();
  lpGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
@@ -77,7 +79,7 @@ int main ( void ) {
  }  /* end else */
 # endif  /* USE_HDD */
 #else
- FileContext* lpFileCtx = STIO_InitFileContext ( "D:\\VBR.dat" );
+ lpFileCtx = STIO_InitFileContext ( "D:\\Tom and Jerry The Movie.avi" );
 # ifdef _DEBUG
  _CrtSetDbgFlag (
   _CRTDBG_ALLOC_MEM_DF    |
@@ -92,7 +94,6 @@ int main ( void ) {
 #elif 0
   AudioTest ( lpFileCtx );
 #elif 1 && !defined( _WIN32 )
-  GSContext*     lpGSCtx  = GS_InitContext ( GSDisplayMode_AutoDetect );
   SMS_AVIPlayer* lpPlayer = SMS_AVIInitPlayer ( lpFileCtx, lpGSCtx );
 
   if ( lpPlayer != NULL ) {
@@ -122,8 +123,6 @@ int main ( void ) {
  printf ( "Done\n" );
 
  SleepThread ();
-#else
- }  /* end if */
 #endif  /* _WIN32 */
  return 0;
 
@@ -139,14 +138,15 @@ static void VideoTest ( FileContext* apCtx ) {
 
   if (  SMS_AVIProbeFile ( lpAVICtx ) && SMS_AVIReadHeader ( lpAVICtx )  ) {
 
-   int            lSize;
-   uint64_t       lTime;
-   uint32_t       i, lnFrames = 0, lVideoIdx = 0xFFFFFFFF;
-   SMS_AVIPacket* lpPacket = SMS_AVINewPacket ( lpAVICtx );
-   SMS_Frame*     lpFrame;
-   SMS_Codec*     lpCodec  = NULL;
-   uint32_t       lWidth   = 0;
-   uint32_t       lHeight  = 0;
+   int              lSize;
+   uint64_t         lTime;
+   uint32_t         i, lnFrames = 0, lVideoIdx = 0xFFFFFFFF;
+   SMS_AVIPacket*   lpPacket = SMS_AVINewPacket ( lpAVICtx );
+   SMS_FrameBuffer* lpFrame;
+   SMS_Codec*       lpCodec  = NULL;
+   uint32_t         lWidth   = 0;
+   uint32_t         lHeight  = 0;
+   float            lFrameRate;
 
    SMS_AVICalcFrameRate ( lpAVICtx );
    SMS_AVIPrintInfo     ( lpAVICtx );
@@ -158,6 +158,10 @@ static void VideoTest ( FileContext* apCtx ) {
      lWidth    = lpAVICtx -> m_pStm[ i ] -> m_Codec.m_Width;
      lHeight   = lpAVICtx -> m_pStm[ i ] -> m_Codec.m_Height;
      lVideoIdx = i;
+
+     lFrameRate = ( float )lpAVICtx -> m_pStm[ i ] -> m_RealFrameRate / ( float )lpAVICtx -> m_pStm[ i ] -> m_RealFrameRateBase;
+
+     printf ( "Frame rate: %g\n", lFrameRate );
 
      SMS_CodecOpen ( &lpAVICtx -> m_pStm[ i ] -> m_Codec );
 
@@ -182,7 +186,7 @@ static void VideoTest ( FileContext* apCtx ) {
 
      lpIPUCtx = IPU_InitContext ( lpGSCtx, lWidth, lHeight );
 #ifndef _WIN32
-     apCtx -> Stream ( apCtx, apCtx -> m_CurPos, 512 );
+     apCtx -> Stream ( apCtx, apCtx -> m_CurPos, 256 );
 #endif  /* _WIN32 */
      lTime = SMS_Time ();
 
@@ -200,7 +204,7 @@ static void VideoTest ( FileContext* apCtx ) {
       ) {
 
        lpIPUCtx -> Sync ();
-       lpIPUCtx -> Display ( lpFrame -> m_pData, &lpFrame -> m_Locked );
+       lpIPUCtx -> Display ( lpFrame );
 
        ++lnFrames;
 
@@ -211,7 +215,9 @@ static void VideoTest ( FileContext* apCtx ) {
      }  /* end while */
 
      printf (   "Frames: %u\tTime: %u\n", lnFrames, ( uint32_t )(  SMS_Time () - lTime  )   );
-
+#ifndef _WIN32
+     printf ( "SBRK: %d\n", ( int )ps2_sbrk ( 0 )  );
+#endif  /* _WIN32 */
      lpIPUCtx -> Sync    ();
      lpIPUCtx -> Destroy ();
      lpPacket -> Destroy ( lpPacket );
@@ -311,6 +317,8 @@ static void AudioTest ( FileContext* apCtx ) {
        lpBuffer -> Release ();
 
       }  /* end if */
+
+      if ( lnFrames == 4096 ) break;
 
      }  /* end while */
 #ifndef _WIN32

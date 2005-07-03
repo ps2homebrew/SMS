@@ -31,7 +31,7 @@ static int s_T1HandlerID;
 
 static int T0_Handler ( int aCause ) { 
 
- g_Timer += 1;
+ g_Timer += 2;
 
  T0_MODE |= 1024;
 
@@ -57,11 +57,11 @@ void Timer_Init ( void ) {
  lSema.max_count  = 1;
  s_WaitSema = CreateSema ( &lSema );
 
- T0_COMP  = ( u32 )(  1.0F / ( 256.0F / 147456.0F )  );
+ T0_COMP  = ( u32 )(  2.0F / ( 256.0F / 147456.0F )  );
  T0_COUNT = 0;
  T0_MODE  = 256 + 128 + 64 + 2;
 
- T1_COMP  = ( u32 )(  100.0F / ( 256.0F / 147456.0F )  );
+ T1_COMP  = ( u32 )(  64.0F / ( 256.0F / 147456.0F )  );
  T1_MODE  = 256 + 128 + 64 + 2;
 
  s_T0HandlerID = AddIntcHandler (  9, T0_Handler, 0 );
@@ -84,13 +84,13 @@ void Timer_Wait ( unsigned int aPeriod ) {
 
  unsigned long i, lnParts, lnRem;
 
- lnParts = aPeriod / 100;
- lnRem   = aPeriod % 100;
+ lnParts = aPeriod / 64;
+ lnRem   = aPeriod % 64;
 
  if ( lnParts ) {
 
   T1_COUNT = 0;
-  T1_COMP  = ( u32 )(  100.0F / ( 256.0F / 147456.0F )  );
+  T1_COMP  = ( u32 )(  64.0F / ( 256.0F / 147456.0F )  );
 
   EnableIntc  ( 10 );
    for ( i = 0; i < lnParts; ++i ) WaitSema ( s_WaitSema );

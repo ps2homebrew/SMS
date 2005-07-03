@@ -14,154 +14,443 @@
 #include "SPU.h"
 #include "FileContext.h"
 #include "SMS_AudioBuffer.h"
+#include "SMS_VideoBuffer.h"
+#include "Timer.h"
+#include "CDDA.h"
 
 #include <kernel.h>
 #include <malloc.h>
 #include <stdio.h>
 
-#define SMS_PACKET_QUEUE_LENGTH 5
+#define SMS_VPACKET_QSIZE    384
+#define SMS_APACKET_QSIZE    384
+#define SMS_VIDEO_QUEUE_SIZE  10
+#define SMS_AUDIO_QUEUE_SIZE  10
 
 static SMS_AVIPlayer s_Player;
 
-static SMS_AVIPacket** s_Packets;
-static SMS_AVIPacket** s_VideoPackets;
-static SMS_AVIPacket** s_AudioPackets;
+static SMS_AVIPacket**   s_VPacketBuffer;
+static SMS_AVIPacket**   s_APacketBuffer;
+static SMS_FrameBuffer** s_VideoBuffer;
+static uint8_t**         s_AudioBuffer;
 
-static SMS_RB_CREATE( s_PacketBuffer, SMS_AVIPacket* );
-static SMS_RB_CREATE( s_VideoBuffer,  SMS_AVIPacket* );
-static SMS_RB_CREATE( s_AudioBuffer,  SMS_AVIPacket* );
+static SMS_RB_CREATE( s_VPacketQueue, SMS_AVIPacket*   );
+static SMS_RB_CREATE( s_APacketQueue, SMS_AVIPacket*   );
+static SMS_RB_CREATE( s_VideoQueue,   SMS_FrameBuffer* );
+static SMS_RB_CREATE( s_AudioQueue,   uint8_t*         );
 
 extern void* _gp;
 
-static int           s_SemaPutVideo;
-static int           s_SemaPutAudio;
-static int           s_SemaGetPacket;
-static int           s_MainThreadID;
-static int           s_VideoThreadID;
-static int           s_AudioThreadID;
-static unsigned char s_VideoStack[ 0x20000 ] __attribute__(   (  aligned( 16 )  )   );
-static unsigned char s_AudioStack[ 0x20000 ] __attribute__(   (  aligned( 16 )  )   );
-static IPUContext*   s_pIPUCtx;
-static SPUContext*   s_pSPUCtx;
-static SMS_Codec*    s_pVideoCodec;
-static int           s_VideoIdx;
-static SMS_Codec*    s_pAudioCodec;
-static int           s_AudioIdx;
+static int              s_SemaRPutVideo;
+static int              s_SemaDPutVideo;
+static int              s_SemaRPutAudio;
+static int              s_SemaDPutAudio;
+static int              s_MainThreadID;
+static int              s_VideoRThreadID;
+static int              s_VideoDThreadID;
+static int              s_AudioRThreadID;
+static int              s_AudioDThreadID;
+static uint8_t          s_VideoRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t          s_VideoDStack[ 0x20000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t          s_AudioRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t          s_AudioDStack[ 0x20000 ] __attribute__(   (  aligned( 16 )  )   );
+static IPUContext*      s_pIPUCtx;
+static SMS_Codec*       s_pVideoCodec;
+static int              s_VideoIdx;
+static SPUContext*      s_pSPUCtx;
+static SMS_Codec*       s_pAudioCodec;
+static int              s_AudioIdx;
+static SMS_AudioBuffer* s_AudioSamples;
+static float            s_AudioTime;
+static int              s_nPackets;
 
-static void _video_decode_thread ( SMS_AVIContext* apCtx  ) {
+static void _sms_play_v ( void ) {
 
- SMS_Frame*     lpFrame;
- SMS_AVIPacket* lpPacket;
+ int              lSize;
+ SMS_FrameBuffer* lpFrame;
+ SMS_AVIPacket*   lpPacket = SMS_AVINewPacket ( s_Player.m_pAVICtx );
+
+ s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
+ s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
+
+ s_Player.m_pGSCtx -> InitScreen ();
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ s_pIPUCtx = IPU_InitContext (
+  s_Player.m_pGSCtx,
+  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
+  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
+ );
+
+ s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Video only (unsupported codec or invalid sample rate)" );
+ s_Player.m_pGSCtx -> DrawText ( 10, 86, 0, "Buffering AVI file (this can take a while)..." );
+ s_pIPUCtx -> SetTEX ();
+
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 384 );
+
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ s_Player.m_pGSCtx -> DrawText ( 10, 10, 0, "Video only (unsupported codec or invalid sample rate)" );
+ s_pIPUCtx -> SetTEX ();
 
  while ( 1 ) {
 
-  SleepThread ();
+  lSize = SMS_AVIReadPacket ( lpPacket );
 
-  if (  SMS_RB_EMPTY( s_VideoBuffer )  ) break;
+  if ( lSize < 0 ) break;
 
-  lpPacket = *SMS_RB_POPSLOT( s_VideoBuffer );
-  SMS_RB_POPADVANCE( s_VideoBuffer );
+  if ( lpPacket -> m_StmIdx != s_VideoIdx ) continue;
 
   if (  s_pVideoCodec -> Decode (
-         &apCtx -> m_pStm[ s_VideoIdx ] -> m_Codec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
+         &s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
         )
   ) {
 
-   s_pIPUCtx -> Display ( lpFrame -> m_pData, &lpFrame -> m_Locked );
+   s_pIPUCtx -> Sync ();
+   s_pIPUCtx -> Display ( lpFrame );
 
   }  /* end if */
 
-  *SMS_RB_PUSHSLOT( s_PacketBuffer ) = lpPacket;
-  SMS_RB_PUSHADVANCE( s_PacketBuffer );
-
-  SignalSema ( s_SemaGetPacket );
-  SignalSema ( s_SemaPutVideo  );
-
  }  /* end while */
 
- WakeupThread ( s_MainThreadID );
- ExitDeleteThread ();
+ lpPacket -> Destroy ( lpPacket );
 
-}  /* end _video_decode_thread */
+}  /* end _sms_play_v */
 
-static void _audio_decode_thread ( SMS_AVIContext* apCtx  ) {
+static void _sms_play_a ( void ) {
 
- static SMS_AudioBuffer s_Buffer;
+ static SMS_AudioBuffer s_DummyBuffer;
 
- int              lSize;
- SMS_AudioBuffer* lpBuffer = &s_Buffer;
- SMS_AVIPacket*   lpPacket;
+ int            lSize;
+ SMS_AVIPacket* lpPacket;
+
+ lpPacket = SMS_AVINewPacket ( s_Player.m_pAVICtx );
+
+ s_AudioSamples = &s_DummyBuffer;
+
+ s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
+ s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
+
+ s_Player.m_pGSCtx -> InitScreen ();
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only" );
+ s_Player.m_pGSCtx -> DrawText ( 10, 86, 0, "Buffering AVI file (this can take a while)..." );
+
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
+
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only" );
+
+ s_pSPUCtx = SPU_InitContext (
+  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
+  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate
+ );
+
+ if ( s_pSPUCtx )
+
+  while ( 1 ) {
+
+   lSize = SMS_AVIReadPacket ( lpPacket );
+
+   if ( lSize < 0 ) break;
+
+   if ( lpPacket -> m_StmIdx != s_AudioIdx ) continue;
+
+   s_AudioSamples -> m_Len = 0;
+
+   do {
+
+    if (  s_pAudioCodec -> Decode (
+           &s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
+          )
+    ) {
+
+     s_pSPUCtx -> PlayPCM ( s_AudioSamples -> m_pOut );
+
+     s_AudioSamples -> Release ();
+
+    } else break;
+
+   } while ( s_AudioSamples -> m_Len > 0 );
+
+  }  /* end while */
+
+  lpPacket -> Destroy ( lpPacket );
+
+}  /* end _sms_play_a */
+
+static void _sms_video_renderer ( void* apParam ) {
+
+ SMS_FrameBuffer* lpFrame;
+ float            lFrameRate = ( float )s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_RealFrameRate / ( float )s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_RealFrameRateBase;
+ float            lDiff;
+ int              lnVideoFrames = 0;
 
  while ( 1 ) {
 
   SleepThread ();
 
-  if (  SMS_RB_EMPTY( s_AudioBuffer )  ) break;
+  if (  SMS_RB_EMPTY( s_VideoQueue )  ) break;
 
-  lpPacket = *SMS_RB_POPSLOT( s_AudioBuffer );
-  SMS_RB_POPADVANCE( s_AudioBuffer );
+  lpFrame = *SMS_RB_POPSLOT( s_VideoQueue );
+  SMS_RB_POPADVANCE( s_VideoQueue );
 
-  lpBuffer -> m_Len = 0;
+  s_pIPUCtx -> Sync ();
 
-  do {
+  lDiff = ( ++lnVideoFrames * 1000 / lFrameRate ) - s_AudioTime;
 
-   if (   (  lSize = s_pAudioCodec -> Decode (
-              &apCtx -> m_pStm[ s_AudioIdx ] -> m_Codec, ( void** )&lpBuffer, lpPacket -> m_pData, lpPacket -> m_Size
-             )
-          )
-   ) {
+  if ( lDiff > 20.0F ) Timer_Wait ( lDiff / 4.0F );
 
-    s_pSPUCtx -> PlayPCM ( lpBuffer -> m_pOut );
-    lpBuffer -> Release ();
+  s_pIPUCtx -> Display ( lpFrame );
 
-   } else break;
-
-  } while ( lpBuffer -> m_Len > 0 );
-
-  *SMS_RB_PUSHSLOT( s_PacketBuffer ) = lpPacket;
-  SMS_RB_PUSHADVANCE( s_PacketBuffer );
-  SignalSema ( s_SemaGetPacket );
-  SignalSema ( s_SemaPutAudio  );
+  SignalSema ( s_SemaRPutVideo );
 
  }  /* end while */
 
  WakeupThread ( s_MainThreadID );
  ExitDeleteThread ();
 
-}  /* end _audio_decode_thread */
+}  /* end _sms_video_renderer */
 
-static void _sms_avi_destroy ( void ) {
+static void _sms_video_decoder ( void* apParam ) {
 
- if ( s_VideoPackets ) {
+ SMS_AVIPacket*   lpPacket;
+ SMS_FrameBuffer* lpFrame;
 
-  WakeupThread ( s_VideoThreadID );  
+ while ( 1 ) {
+
   SleepThread ();
-  DeleteSema ( s_SemaPutVideo );
-  free ( s_VideoPackets );
 
- }  /* end if */
+  if (  SMS_RB_EMPTY( s_VPacketQueue )  ) break;
 
- if ( s_AudioPackets ) {
+  lpPacket = *SMS_RB_POPSLOT( s_VPacketQueue );
+  SMS_RB_POPADVANCE( s_VPacketQueue );
+  --s_nPackets;
 
-  WakeupThread ( s_AudioThreadID );
+  if (  s_pVideoCodec -> Decode (
+         &s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
+        )
+  ) {
+
+   WaitSema ( s_SemaRPutVideo );
+
+   *SMS_RB_PUSHSLOT( s_VideoQueue ) = lpFrame;
+   SMS_RB_PUSHADVANCE( s_VideoQueue );
+
+   WakeupThread ( s_VideoRThreadID );
+
+  }  /* end if */
+
+  lpPacket -> Destroy ( lpPacket );
+
+  SignalSema ( s_SemaDPutVideo );
+
+ }  /* end while */
+
+ WakeupThread ( s_MainThreadID );
+ ExitDeleteThread ();
+
+}  /* end _sms_video_decoder */
+
+static void _sms_audio_renderer ( void* apParam ) {
+
+ uint8_t* lpSamples;
+ uint32_t lnChannels = s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels;
+ uint32_t lBPS       = s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_BitsPerSample;
+ uint32_t lSPS       = s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate;
+ uint32_t lPlayed    = 0;
+
+ if ( !lBPS ) lBPS = 16;
+
+ s_AudioTime = 0.0F;
+
+ while ( 1 ) {
+
   SleepThread ();
-  DeleteSema ( s_SemaPutAudio );
-  free ( s_AudioPackets );
 
- }  /* end if */
+  if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
 
- if ( s_Packets ) {
+  lpSamples = *SMS_RB_POPSLOT( s_AudioQueue );
+  SMS_RB_POPADVANCE( s_AudioQueue );
 
-  DeleteSema ( s_SemaGetPacket );
+  SignalSema ( s_SemaRPutAudio );
 
-  while (  !SMS_RB_EMPTY( s_PacketBuffer )  ) {
+  lPlayed    += *( int* )lpSamples;
+  s_AudioTime = (  lPlayed * (  1000.0F / ( lBPS * lnChannels / 8 )  )   ) / ( float )lSPS;
 
-   (  *SMS_RB_POPSLOT( s_PacketBuffer )  ) -> Destroy (  *SMS_RB_POPSLOT( s_PacketBuffer )  );
-   SMS_RB_POPADVANCE( s_PacketBuffer );
+  s_pSPUCtx -> PlayPCM ( lpSamples );
+
+  s_AudioSamples -> Release ();
+
+ }  /* end while */
+
+ s_pSPUCtx -> Mute ( 1 );
+
+ WakeupThread ( s_MainThreadID );
+ ExitDeleteThread ();
+
+}  /* end _sms_audio_renderer */
+
+static void _sms_audio_decoder ( void* apParam ) {
+
+ static SMS_AudioBuffer s_DummyBuffer;
+
+ SMS_AVIPacket* lpPacket;
+
+ s_AudioSamples = &s_DummyBuffer;
+
+ while ( 1 ) {
+
+  SleepThread ();
+
+  if (  SMS_RB_EMPTY( s_APacketQueue )  ) break;
+
+  lpPacket = *SMS_RB_POPSLOT( s_APacketQueue );
+  SMS_RB_POPADVANCE( s_APacketQueue );
+  --s_nPackets;
+
+  s_AudioSamples -> m_Len = 0;
+
+  do {
+
+   if (  s_pAudioCodec -> Decode (
+          &s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
+         )
+   ) {
+
+    WaitSema ( s_SemaRPutAudio );
+
+    *SMS_RB_PUSHSLOT( s_AudioQueue ) = s_AudioSamples -> m_pOut;
+    SMS_RB_PUSHADVANCE( s_AudioQueue );
+
+    WakeupThread ( s_AudioRThreadID );
+
+   } else break;
+
+  } while ( s_AudioSamples -> m_Len > 0 );
+
+  lpPacket -> Destroy ( lpPacket );
+
+  SignalSema ( s_SemaDPutAudio );
+
+ }  /* end while */
+
+ WakeupThread ( s_MainThreadID );
+ ExitDeleteThread ();
+
+}  /* end _sms_audio_decoder */
+
+static void _sms_play_a_v ( void ) {
+
+ int            lSize;
+ SMS_AVIPacket* lpPacket;
+
+ s_nPackets = 0;
+
+ s_pSPUCtx = SPU_InitContext (
+  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
+  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate
+ );
+
+ s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
+ s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
+
+ s_Player.m_pGSCtx -> InitScreen ();
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ s_pIPUCtx = IPU_InitContext (
+  s_Player.m_pGSCtx,
+  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
+  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
+ );
+
+ s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Buffering AVI file (this can take a while)..." );
+ s_Player.m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Opaque;
+ s_Player.m_pGSCtx -> m_Font.m_BkColor = GS_SETREG_RGBA( 0x00, 0x00, 0x80, 0x80 );
+ s_pIPUCtx -> SetTEX ();
+
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
+
+ s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ if ( s_pSPUCtx && s_pIPUCtx )
+
+  while ( 1 ) {
+
+   g_CDDASpeed = s_nPackets < 384 ? 4 : 3;
+
+   lpPacket = SMS_AVINewPacket ( s_Player.m_pAVICtx );
+nextPacket:
+   lSize = SMS_AVIReadPacket ( lpPacket );
+
+   if ( lSize < 0 ) {
+
+    lpPacket -> Destroy ( lpPacket );
+    break;
+
+   }  /* end if */
+
+   if ( lpPacket -> m_StmIdx == s_VideoIdx ) {
+
+    WaitSema ( s_SemaDPutVideo );
+
+    *SMS_RB_PUSHSLOT( s_VPacketQueue ) = lpPacket;
+    SMS_RB_PUSHADVANCE( s_VPacketQueue );
+    ++s_nPackets;
+
+    WakeupThread ( s_VideoDThreadID );
+
+   } else if ( lpPacket -> m_StmIdx == s_AudioIdx ) {
+
+    WaitSema ( s_SemaDPutAudio );
+
+    *SMS_RB_PUSHSLOT( s_APacketQueue ) = lpPacket;
+    SMS_RB_PUSHADVANCE( s_APacketQueue );
+    ++s_nPackets;
+
+    WakeupThread ( s_AudioDThreadID );
+
+   } else goto nextPacket;
 
   }  /* end while */
 
-  free ( s_Packets );
+ else if ( s_pIPUCtx )
+
+  _sms_play_v ();
+
+ else if ( s_pSPUCtx ) _sms_play_a ();
+
+}  /* end _sms_play_a_v */
+
+static void _sms_avi_destroy ( void ) {
+
+ if ( s_VideoBuffer ) {
+
+  WakeupThread ( s_VideoDThreadID );
+  SleepThread ();
+  DeleteSema ( s_SemaDPutVideo );
+  free ( s_VPacketBuffer );
+
+  WakeupThread ( s_VideoRThreadID );  
+  SleepThread ();
+  DeleteSema ( s_SemaRPutVideo );
+  free ( s_VideoBuffer );
+
+ }  /* end if */
+
+ if ( s_AudioBuffer ) {
+
+  WakeupThread ( s_AudioDThreadID );
+  SleepThread ();
+  DeleteSema ( s_SemaDPutAudio );
+  free ( s_APacketBuffer );
+
+  WakeupThread ( s_AudioRThreadID );
+  SleepThread ();
+  DeleteSema ( s_SemaRPutAudio );
+  free ( s_AudioBuffer );
 
  }  /* end if */
 
@@ -181,178 +470,12 @@ static void _sms_avi_destroy ( void ) {
 
 }  /* end _sms_avi_destroy */
 
-static void _sms_avi_play_a_v ( void ) {
-
- int            lSize;
- SMS_AVIPacket* lpPacket;
- uint64_t       lTime;
-
- s_pSPUCtx = SPU_InitContext (
-  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
-  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate
- );
-
- s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
-
- s_Player.m_pGSCtx -> InitScreen ();
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0xFF, 0x00 )  );
-
- s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Buffering AVI file (this can take a while)..." );
-
- s_pIPUCtx = IPU_InitContext (
-  s_Player.m_pGSCtx,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
- );
-
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 2048 );
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-
- lTime = SMS_Time ();
-
- s_pSPUCtx -> Mute ( 0 );
-
- while ( 1 ) {
-
-  WaitSema ( s_SemaGetPacket );
-
-  lpPacket = *SMS_RB_POPSLOT( s_PacketBuffer );
-  SMS_RB_POPADVANCE( s_PacketBuffer );
-nextPacket:
-  lSize = SMS_AVIReadPacket ( lpPacket );
-
-  if ( lSize < 0 ) {
-
-   *SMS_RB_PUSHSLOT( s_PacketBuffer ) = lpPacket;
-   SMS_RB_PUSHADVANCE( s_PacketBuffer );
-
-   break;
-
-  }  // end if
-
-  if ( lpPacket -> m_StmIdx == s_VideoIdx ) {
-
-   WaitSema ( s_SemaPutVideo );
-
-   *SMS_RB_PUSHSLOT( s_VideoBuffer ) = lpPacket;
-   SMS_RB_PUSHADVANCE( s_VideoBuffer );
-
-   WakeupThread ( s_VideoThreadID );
-
-  } else if ( lpPacket -> m_StmIdx == s_AudioIdx ) {
-
-   WaitSema ( s_SemaPutAudio );
-
-   *SMS_RB_PUSHSLOT( s_AudioBuffer ) = lpPacket;
-   SMS_RB_PUSHADVANCE( s_AudioBuffer );
-
-   WakeupThread ( s_AudioThreadID );
-
-  } else goto nextPacket;
-
- }  /* end while */
-
-}  /* end _sms_avi_play_a_v */
-
-static void _sms_avi_play_a ( void ) {
-
- int            lSize;
- SMS_AVIPacket* lpPacket;
-
- s_pSPUCtx = SPU_InitContext (
-  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
-  s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate
- );
-
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
-
- while ( 1 ) {
-
-  WaitSema ( s_SemaGetPacket );
-
-  lpPacket = *SMS_RB_POPSLOT( s_PacketBuffer );
-  SMS_RB_POPADVANCE( s_PacketBuffer );
-nextPacket:
-  lSize = SMS_AVIReadPacket ( lpPacket );
-
-  if ( lSize < 0 ) {
-
-   *SMS_RB_PUSHSLOT( s_PacketBuffer ) = lpPacket;
-   SMS_RB_PUSHADVANCE( s_PacketBuffer );
-
-   break;
-
-  } else if ( lpPacket -> m_StmIdx != s_AudioIdx ) goto nextPacket;
-
-  WaitSema ( s_SemaPutAudio );
-
-  *SMS_RB_PUSHSLOT( s_AudioBuffer ) = lpPacket;
-  SMS_RB_PUSHADVANCE( s_AudioBuffer );
-
-  WakeupThread ( s_AudioThreadID );
-
- }  /* end while */
-
-}  /* end _sms_avi_play_a */
-
-static void _sms_avi_play_v ( void ) {
-
- int            lSize;
- SMS_AVIPacket* lpPacket;
- 
- s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
-
- s_Player.m_pGSCtx -> InitScreen ();
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0xFF, 0x00 )  );
-
- s_pIPUCtx = IPU_InitContext (
-  s_Player.m_pGSCtx,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
- );
-
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
-
- while ( 1 ) {
-
-  WaitSema ( s_SemaGetPacket );
-
-  lpPacket = *SMS_RB_POPSLOT( s_PacketBuffer );
-  SMS_RB_POPADVANCE( s_PacketBuffer );
-nextPacket:
-  lSize = SMS_AVIReadPacket ( lpPacket );
-
-  if ( lSize < 0 ) {
-
-   *SMS_RB_PUSHSLOT( s_PacketBuffer ) = lpPacket;
-   SMS_RB_PUSHADVANCE( s_PacketBuffer );
-
-   break;
-
-  } else if ( lpPacket -> m_StmIdx != s_VideoIdx ) goto nextPacket;
-
-  WaitSema ( s_SemaPutVideo );
-
-  *SMS_RB_PUSHSLOT( s_VideoBuffer ) = lpPacket;
-  SMS_RB_PUSHADVANCE( s_VideoBuffer );
-
-  WakeupThread ( s_VideoThreadID );
-
- }  /* end while */
-
-}  /* end _sms_avi_play_v */
-
 SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) {
 
- int lPktQLen    = 0;
- int lVidPktQLen = 0;
- int lAudPktQLen = 0;
-
- s_Packets      =
- s_VideoPackets =
- s_AudioPackets = NULL;
+ s_VPacketBuffer = NULL;
+ s_APacketBuffer = NULL;
+ s_VideoBuffer   = NULL;
+ s_AudioBuffer   = NULL;
 
  apGSCtx -> DrawText ( 10, 102, 0, "Probing AVI file..." );
 
@@ -365,9 +488,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
         SMS_AVIReadHeader ( s_Player.m_pAVICtx )
   ) {
 
-   int         i;
-   ee_sema_t   lSema;
-   ee_thread_t lThread;
+   int i;
 
    s_VideoIdx = 0xFFFFFFFF;
    s_AudioIdx = 0xFFFFFFFF;
@@ -379,8 +500,6 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
 
     if ( s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_Type == SMS_CodecTypeVideo ) {
 
-     s_VideoIdx = i;
-
      SMS_CodecOpen ( &s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec );
 
      if ( s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
@@ -388,11 +507,11 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
       s_pVideoCodec = s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec;
       s_pVideoCodec -> Init ( &s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec );
 
+      s_VideoIdx = i;
+
      }  /* end if */
 
     } else if ( s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_Type == SMS_CodecTypeAudio ) {
-
-     s_AudioIdx = i;
 
      SMS_CodecOpen ( &s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec );
 
@@ -400,6 +519,8 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
 
       s_pAudioCodec = s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec;
       s_pAudioCodec -> Init ( &s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec );
+
+      s_AudioIdx = i;
 
      }  /* end if */
 
@@ -411,81 +532,77 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
 
    if ( s_AudioIdx != 0xFFFFFFFF && s_VideoIdx != 0xFFFFFFFF ) {
 
-    lVidPktQLen = SMS_PACKET_QUEUE_LENGTH;
-    lAudPktQLen = lVidPktQLen;
+    ee_sema_t   lSema;
+    ee_thread_t lThread;
+    ee_thread_t lCurrentThread;
 
-    s_Player.Play = _sms_avi_play_a_v;
+    ReferThreadStatus ( s_MainThreadID, &lCurrentThread );
+
+    s_Player.Play = _sms_play_a_v;
+
+    lThread.stack_size       = sizeof ( s_VideoRStack );
+    lThread.stack            = s_VideoRStack;
+    lThread.initial_priority = lCurrentThread.current_priority + 1;
+    lThread.gp_reg           = &_gp;
+    lThread.func             = _sms_video_renderer;
+    StartThread (  s_VideoRThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
+
+    lThread.stack_size       = sizeof ( s_VideoDStack );
+    lThread.stack            = s_VideoDStack;
+    lThread.initial_priority = lCurrentThread.current_priority;
+    lThread.gp_reg           = &_gp;
+    lThread.func             = _sms_video_decoder;
+    StartThread (  s_VideoDThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
+
+    lThread.stack_size       = sizeof ( s_AudioRStack );
+    lThread.stack            = s_AudioRStack;
+    lThread.initial_priority = lCurrentThread.current_priority;
+    lThread.gp_reg           = &_gp;
+    lThread.func             = _sms_audio_renderer;
+    StartThread (  s_AudioRThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
+
+    lThread.stack_size       = sizeof ( s_AudioDStack );
+    lThread.stack            = s_AudioDStack;
+    lThread.initial_priority = lCurrentThread.current_priority;
+    lThread.gp_reg           = &_gp;
+    lThread.func             = _sms_audio_decoder;
+    StartThread (  s_AudioDThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
+
+    s_VPacketBuffer = ( SMS_AVIPacket**   )calloc (  SMS_VPACKET_QSIZE,    sizeof ( SMS_AVIPacket*   )  );
+    s_APacketBuffer = ( SMS_AVIPacket**   )calloc (  SMS_APACKET_QSIZE,    sizeof ( SMS_AVIPacket*   )  );
+    s_VideoBuffer   = ( SMS_FrameBuffer** )calloc (  SMS_VIDEO_QUEUE_SIZE, sizeof ( SMS_FrameBuffer* )  );
+    s_AudioBuffer   = ( uint8_t**         )calloc (  SMS_AUDIO_QUEUE_SIZE, sizeof ( uint8_t*         )  );
+
+    SMS_RB_INIT( s_VPacketQueue, s_VPacketBuffer, SMS_VPACKET_QSIZE    );
+    SMS_RB_INIT( s_APacketQueue, s_APacketBuffer, SMS_APACKET_QSIZE    );
+    SMS_RB_INIT( s_VideoQueue,   s_VideoBuffer,   SMS_VIDEO_QUEUE_SIZE );
+    SMS_RB_INIT( s_AudioQueue,   s_AudioBuffer,   SMS_AUDIO_QUEUE_SIZE );
+
+    lSema.init_count =
+    lSema.max_count  = SMS_VPACKET_QSIZE - 1;
+    s_SemaDPutVideo = CreateSema ( &lSema );
+
+    lSema.init_count =
+    lSema.max_count  = SMS_APACKET_QSIZE - 1;
+    s_SemaDPutAudio = CreateSema ( &lSema );
+
+    lSema.init_count = 
+    lSema.max_count  = SMS_VIDEO_QUEUE_SIZE - 1;
+    s_SemaRPutVideo = CreateSema ( &lSema );
+
+    lSema.init_count =
+    lSema.max_count  = SMS_AUDIO_QUEUE_SIZE - 1;
+    s_SemaRPutAudio = CreateSema ( &lSema );
 
    } else if ( s_VideoIdx != 0xFFFFFFFF ) {
 
-    lVidPktQLen   = SMS_PACKET_QUEUE_LENGTH;
-    s_Player.Play = _sms_avi_play_v;
+    s_Player.Play = _sms_play_v;
 
    } else if ( s_AudioIdx != 0xFFFFFFFF ) {
 
-    lAudPktQLen   = SMS_PACKET_QUEUE_LENGTH;
-    s_Player.Play = _sms_avi_play_a;
+    s_Player.Play = _sms_play_a;
 
    } else s_Player.Play = NULL;
-
-   lPktQLen = lVidPktQLen + lAudPktQLen;
-
-   if ( lVidPktQLen != 0 ) {
-
-    s_VideoPackets = ( SMS_AVIPacket** )calloc (  lVidPktQLen, sizeof ( SMS_AVIPacket* )  );
-
-    SMS_RB_INIT( s_VideoBuffer, s_VideoPackets, lVidPktQLen );
-
-    lSema.init_count =
-    lSema.max_count  = lVidPktQLen;
-    s_SemaPutVideo   = CreateSema ( &lSema );
-
-    lThread.stack_size       = 0x20000;
-    lThread.gp_reg           = &_gp;
-    lThread.func             = _video_decode_thread;
-    lThread.stack            = s_VideoStack;
-    lThread.initial_priority = 2;
-    StartThread (  s_VideoThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
-
-   }  /* end if */
-
-   if ( lAudPktQLen ) {
-
-    s_AudioPackets = ( SMS_AVIPacket** )calloc (  lAudPktQLen, sizeof ( SMS_AVIPacket* )  );
-
-    SMS_RB_INIT( s_AudioBuffer, s_AudioPackets, lAudPktQLen );
-
-    lSema.init_count =
-    lSema.max_count  = lAudPktQLen;
-    s_SemaPutAudio   = CreateSema ( &lSema );
-
-    lThread.stack_size       = 0x20000;
-    lThread.gp_reg           = &_gp;
-    lThread.func             = _audio_decode_thread;
-    lThread.stack            = s_AudioStack;
-    lThread.initial_priority = 2;
-    StartThread (  s_AudioThreadID = CreateThread ( &lThread ), s_Player.m_pAVICtx  );
-
-   }  /* end if */
-
-   if ( lPktQLen ) {
-
-    s_Packets = ( SMS_AVIPacket** )calloc (  lPktQLen, sizeof ( SMS_AVIPacket* )  );
-
-    SMS_RB_INIT( s_PacketBuffer, s_Packets, lPktQLen );
-
-    do {
-
-     *SMS_RB_PUSHSLOT( s_PacketBuffer ) = SMS_AVINewPacket ( s_Player.m_pAVICtx );
-     SMS_RB_PUSHADVANCE( s_PacketBuffer );
-
-    } while (  !SMS_RB_FULL( s_PacketBuffer )  );
-
-    lSema.init_count =
-    lSema.max_count  = lPktQLen;
-    s_SemaGetPacket  = CreateSema ( &lSema );
-
-   }  /* end if */
 
   } else {
 

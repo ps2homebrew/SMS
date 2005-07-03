@@ -16,6 +16,7 @@
 #include "SMS_MPEG.h"
 #include "SMS_AVI.h"
 #include "SMS_H263.h"
+#include "SMS_VideoBuffer.h"
 
 #ifndef _WIN32
 # include "DMA.h"
@@ -150,14 +151,13 @@ int SMS_MPEGContext_FindUnusedPic ( void ) {
     
  for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
 
-  if ( g_MPEGCtx.m_pPic[ i ].m_pData  == NULL &&
-       g_MPEGCtx.m_pPic[ i ].m_Type   != 0    &&
-       g_MPEGCtx.m_pPic[ i ].m_Locked == 0
+  if ( g_MPEGCtx.m_pPic[ i ].m_pBuf  == NULL &&
+       g_MPEGCtx.m_pPic[ i ].m_Type   != 0
   ) return i;
 
  for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
 
-  if ( g_MPEGCtx.m_pPic[ i ].m_pData == NULL && g_MPEGCtx.m_pPic[ i ].m_Locked == 0 ) return i;
+  if ( g_MPEGCtx.m_pPic[ i ].m_pBuf == NULL ) return i;
 
  return -1;
 
@@ -234,10 +234,6 @@ static void _mpeg_alloc_picture ( SMS_Frame* apPic ) {
  );
 
  g_MPEGCtx.m_pPrevPicTypes[ 0 ] = g_MPEGCtx.m_PicType;
-
- if ( apPic -> m_Age < PREV_PICT_TYPES_BUFFER_SIZE &&
-      g_MPEGCtx.m_pPrevPicTypes[ apPic -> m_Age ] == SMS_FT_B_TYPE
- ) apPic -> m_Age = INT_MAX;
 
  apPic -> m_Width  = g_MPEGCtx.m_Width;
  apPic -> m_Height = g_MPEGCtx.m_Height;
@@ -1356,14 +1352,14 @@ int SMS_MPEG_FrameStart ( void ) {
  if ( g_MPEGCtx.m_PicType  != SMS_FT_B_TYPE        &&
       g_MPEGCtx.m_pLastPic != NULL                 &&
       g_MPEGCtx.m_pLastPic != g_MPEGCtx.m_pNextPic &&
-      g_MPEGCtx.m_pLastPic -> m_pData
+      g_MPEGCtx.m_pLastPic -> m_pBuf
  ) {
 
   SMS_CodecReleaseBuffer ( g_MPEGCtx.m_pParentCtx, g_MPEGCtx.m_pLastPic );
 
   for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
 
-   if (  g_MPEGCtx.m_pPic[ i ].m_pData                 &&
+   if (  g_MPEGCtx.m_pPic[ i ].m_pBuf                  &&
         &g_MPEGCtx.m_pPic[ i ] != g_MPEGCtx.m_pNextPic &&
          g_MPEGCtx.m_pPic[ i ].m_Ref
    ) SMS_CodecReleaseBuffer ( g_MPEGCtx.m_pParentCtx, &g_MPEGCtx.m_pPic[ i ] );
@@ -1372,11 +1368,11 @@ int SMS_MPEG_FrameStart ( void ) {
 alloc:
  for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
 
-  if (  g_MPEGCtx.m_pPic[ i ].m_pData &&
+  if (  g_MPEGCtx.m_pPic[ i ].m_pBuf &&
        !g_MPEGCtx.m_pPic[ i ].m_Ref
   ) SMS_CodecReleaseBuffer ( g_MPEGCtx.m_pParentCtx, &g_MPEGCtx.m_pPic[ i ] );
 
- if ( g_MPEGCtx.m_pCurPic && g_MPEGCtx.m_pCurPic -> m_pData == NULL )
+ if ( g_MPEGCtx.m_pCurPic && g_MPEGCtx.m_pCurPic -> m_pBuf == NULL )
 
   lpPic = g_MPEGCtx.m_pCurPic;
 
@@ -1407,8 +1403,8 @@ alloc:
  if ( g_MPEGCtx.m_pNextPic ) g_MPEGCtx.m_NextPic = *g_MPEGCtx.m_pNextPic;
 
  if (  g_MPEGCtx.m_PicType != SMS_FT_I_TYPE &&
-       ( g_MPEGCtx.m_pLastPic            == NULL ||
-         g_MPEGCtx.m_pLastPic -> m_pData == NULL
+       ( g_MPEGCtx.m_pLastPic           == NULL ||
+         g_MPEGCtx.m_pLastPic -> m_pBuf == NULL
        )
  ) goto alloc;
 
@@ -1421,8 +1417,8 @@ void SMS_MPEG_FrameEnd ( void ) {
  if ( g_MPEGCtx.m_CurPic.m_Ref ) {
 
   int             i, j;
-  SMS_MacroBlock* lpMBDstL = g_MPEGCtx.m_CurPic.m_pBase;
-  SMS_MacroBlock* lpMBSrcL = g_MPEGCtx.m_CurPic.m_pData;
+  SMS_MacroBlock* lpMBDstL = g_MPEGCtx.m_CurPic.m_pBuf -> m_pBase;
+  SMS_MacroBlock* lpMBSrcL = g_MPEGCtx.m_CurPic.m_pBuf -> m_pData;
   SMS_MacroBlock* lpMBDstR;
   SMS_MacroBlock* lpMBSrcR;
   u128*           lpDstY;
@@ -1493,7 +1489,7 @@ void SMS_MPEG_FrameEnd ( void ) {
   memset ( &lpMBDstL -> m_Cb[ 0 ][ 0 ], lpMBSrcL -> m_Cb[ 0 ][  7 ],  64 );
   memset ( &lpMBDstL -> m_Cr[ 0 ][ 0 ], lpMBSrcL -> m_Cr[ 0 ][  4 ],  64 );
 
-  lpMBSrcL = g_MPEGCtx.m_CurPic.m_pData;
+  lpMBSrcL = g_MPEGCtx.m_CurPic.m_pBuf -> m_pData;
   lpMBDstL = lpMBSrcL - 1;
   lpMBSrcR = lpMBSrcL + g_MPEGCtx.m_MBW - 1;
   lpMBDstR = lpMBSrcR + 1;
@@ -1606,7 +1602,7 @@ void SMS_MPEG_InitBlockIdx ( void ) {
  g_MPEGCtx.m_BlockIdx[ 4 ] = g_MPEGCtx.m_MBStride * ( g_MPEGCtx.m_MBY     + 1 )   + g_MPEGCtx.m_B8Stride * g_MPEGCtx.m_MBH * 2 + g_MPEGCtx.m_MBX - 1;
  g_MPEGCtx.m_BlockIdx[ 5 ] = g_MPEGCtx.m_MBStride * ( g_MPEGCtx.m_MBY + g_MPEGCtx.m_MBH + 2 ) + g_MPEGCtx.m_B8Stride * g_MPEGCtx.m_MBH * 2 + g_MPEGCtx.m_MBX - 1;
 
- g_MPEGCtx.m_pDest  = g_MPEGCtx.m_CurPic.m_pData + g_MPEGCtx.m_MBX - 1;
+ g_MPEGCtx.m_pDest  = g_MPEGCtx.m_CurPic.m_pBuf -> m_pData + g_MPEGCtx.m_MBX - 1;
  g_MPEGCtx.m_pDest += g_MPEGCtx.m_MBY * lLinesize;
 
 }  /* end SMS_MPEG_InitBlockIdx */
@@ -1628,7 +1624,6 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
  const int lLinesize   = 16;
  const int lUVLinesize =  8;
  const int lBlockSize  =  8;
- const int lAge        = g_MPEGCtx.m_CurPic.m_Age;
 
  int      lDCTLineSize, lDCTOffset;
  uint8_t* lpDestY;
@@ -1652,8 +1647,6 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
   g_MPEGCtx.m_MBSkiped = 0;
  
   if ( ++*lpMBSkip > 99 ) *lpMBSkip = 99;
-
-  if ( *lpMBSkip >= lAge && g_MPEGCtx.m_CurPic.m_Ref ) return;
 
  } else if ( !g_MPEGCtx.m_CurPic.m_Ref ) {
 
@@ -1686,7 +1679,7 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
 
    _MPEG_Motion (
     lpDestY, lpDestCb, lpDestCr, 0,
-    g_MPEGCtx.m_LastPic.m_pData, lOpPix, lOpQPel
+    g_MPEGCtx.m_LastPic.m_pBuf -> m_pData, lOpPix, lOpQPel
    );
 
    lOpPix  = g_MPEGCtx.m_DSPCtx.m_AvgPixTab;
@@ -1698,7 +1691,7 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
 
    _MPEG_Motion (
     lpDestY, lpDestCb, lpDestCr, 1,
-    g_MPEGCtx.m_NextPic.m_pData, lOpPix, lOpQPel
+    g_MPEGCtx.m_NextPic.m_pBuf -> m_pData, lOpPix, lOpQPel
    );
 
   if ( g_MPEGCtx.m_pParentCtx -> m_HurryUp > 1 ) return;
