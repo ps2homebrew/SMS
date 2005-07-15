@@ -8,7 +8,7 @@ ___|    |   | ___|    PS2DEV Open Source Project.
 -----------------------------------------------------------------------
 
 Introduction
- ----------------------------------------------------------------------
+-----------------------------------------------------------------------
 Simple Media System (SMS) is a result of my curiosity about Sony's Playstation2,
 MIPS, DivX and MP3. My original goal was to create a simplest DivX player able
 to play good resolution movies at good frame rate on the unmodded PS2 without
@@ -243,4 +243,52 @@ much nicer now). 'audsrv' updated. Region autodetection code is added to the GS 
 Update (03-JUL-2005)
 --------------------
 A very primitive A/V syncronization added. Video output V-Blank synchronization added.
+
+Update (15-JUL-2005)
+--------------------
+At last I've added a GUI and pause/stop functionality, so it looks more like a real program.
+Here's short manual:
+- SMS screen is divided in 3 areas: device menu at the top, file menu in the middle and
+  status line at the bottom;
+- each area is bounded by a red rectangle with round corners;
+- device menu and file menu can be activated;
+- active menu is bounded by a white rectangle;
+- device menu is navigated by "left" and "right" pad buttons;
+- "down" pad button switches from device menu to the file menu;
+- file menu is navigated by "up" and "down" pad buttons;
+- "left" or "right" pad button switches from file menu to the device menu;
+- active item in both menus is highlighted by semitransparent rectangle;
+- selection is made by pressing "cross" pad button;
+- "triangle" pad button navigates one level up (directory->parent directory->partition list)
+  in the file menu;
+- menu items with different contexts (file/directory/partition) are represented by
+  different icons;
+- CDDAFS disks are recognized automatially (just insert it and wait for a while);
+- during playback use "select" pad button to pause, "start" to resume and "triangle"
+  to stop and return to the filebrowser;
+- press "select" and "circle" pad buttons in the filebrowser to switch PS2 off;
+That's it. Note, that during that "harsh stop action" no IOP reset, program restart etc.
+is performed. So, memory and other resource leaks etc. are possible (I've tried to be
+as accurate as possible but who knows ;)). No USB mass-stoarge device support, since my
+only USB memory stick doesn't work with ps2sdk tests. Note also, that I've changed that
+magic MAGV, MAGH and other numbers in GS.c to get nice aligned picture on my TV and TV
+tuner card (SMS in NTSC mode also works there). If anyone has a problems with improperly
+aligned picture - just play around with these numbers (it would be cool to link them with
+GUI/PAD). VESA modes are not tested at all (perhaps I'll try to play with it).
+
+Another thing: as this became more or less complete application there could be a huge mess
+with distributed versions. There are two choises here: maintain only one version or change
+something to make a difference. I personally don't believe in choise 1. So, SVN will also
+contain a precompiled SMS.elf (let's call it "reference executable"). There's a function
+called 'GUIStub_DrawBackground' which is empty in SVN (in my case it draws a gradient
+background, simple animation and version number (currently 1.0 Rev.2)). Different "distributors"
+would implement their own "signature" by implementing aforementioned function
+(its parameter gives an access to the GSContext), so people will know who's
+to blame ;)). Anyone is welcome to send me code modifications, so I'll update SVN.
+There's still an optimization potential (GMC, MP3, for example) if someone thinks that
+SMS is too slow. For audio issues, please, contact 'gawd', the creator of 'audsrv'
+(32000 upsampler does not exist, for example). Better A/V sync could also be implemented
+(the existing one is rather primitive (though, it works in most cases)).
+There're a dosen of various DivX/XviD encoding parameters and their combinations etc.
+I just could not handle them alone, sorry for that.
 

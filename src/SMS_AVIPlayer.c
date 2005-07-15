@@ -10,6 +10,7 @@
 */
 #include "SMS_AVI.h"
 #include "GS.h"
+#include "GUI.h"
 #include "IPU.h"
 #include "SPU.h"
 #include "FileContext.h"
@@ -21,11 +22,15 @@
 #include <kernel.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <libpad.h>
 
 #define SMS_VPACKET_QSIZE    384
 #define SMS_APACKET_QSIZE    384
 #define SMS_VIDEO_QUEUE_SIZE  10
 #define SMS_AUDIO_QUEUE_SIZE  10
+
+#define SMS_FLAGS_STOP  0x00000001
+#define SMS_FLAGS_PAUSE 0x00000002
 
 static SMS_AVIPlayer s_Player;
 
@@ -45,6 +50,8 @@ static int              s_SemaRPutVideo;
 static int              s_SemaDPutVideo;
 static int              s_SemaRPutAudio;
 static int              s_SemaDPutAudio;
+static int              s_SemaPauseAudio;
+static int              s_SemaPauseVideo;
 static int              s_MainThreadID;
 static int              s_VideoRThreadID;
 static int              s_VideoDThreadID;
@@ -63,6 +70,7 @@ static int              s_AudioIdx;
 static SMS_AudioBuffer* s_AudioSamples;
 static float            s_AudioTime;
 static int              s_nPackets;
+static int              s_Flags;
 
 static void _sms_play_v ( void ) {
 
@@ -70,30 +78,30 @@ static void _sms_play_v ( void ) {
  SMS_FrameBuffer* lpFrame;
  SMS_AVIPacket*   lpPacket = SMS_AVINewPacket ( s_Player.m_pAVICtx );
 
- s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
+ s_Player.m_pGUICtx -> Status ( "Buffering AVI file (video only)..." );
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 384 );
 
- s_Player.m_pGSCtx -> InitScreen ();
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fDblBuf = GS_OFF;
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_OFF;
+
+ s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
 
  s_pIPUCtx = IPU_InitContext (
-  s_Player.m_pGSCtx,
+  s_Player.m_pGUICtx -> m_pGSCtx,
   s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
   s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
  );
 
- s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Video only (unsupported codec or invalid sample rate)" );
- s_Player.m_pGSCtx -> DrawText ( 10, 86, 0, "Buffering AVI file (this can take a while)..." );
- s_pIPUCtx -> SetTEX ();
-
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 384 );
-
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-
- s_Player.m_pGSCtx -> DrawText ( 10, 10, 0, "Video only (unsupported codec or invalid sample rate)" );
- s_pIPUCtx -> SetTEX ();
-
  while ( 1 ) {
+
+  int lButtons = GUI_ReadButtons ();
+
+  if ( lButtons & PAD_SELECT )
+
+   GUI_WaitButton ( PAD_START );
+
+  else if ( lButtons & PAD_TRIANGLE ) break;
 
   lSize = SMS_AVIReadPacket ( lpPacket );
 
@@ -128,20 +136,13 @@ static void _sms_play_a ( void ) {
 
  s_AudioSamples = &s_DummyBuffer;
 
- s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
-
- s_Player.m_pGSCtx -> InitScreen ();
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-
- s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only" );
- s_Player.m_pGSCtx -> DrawText ( 10, 86, 0, "Buffering AVI file (this can take a while)..." );
-
+ s_Player.m_pGUICtx -> Status ( "Buffering AVI file (audio only)..." );
  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
 
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+ s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
 
- s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only" );
+ s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only", 0 );
 
  s_pSPUCtx = SPU_InitContext (
   s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
@@ -151,6 +152,14 @@ static void _sms_play_a ( void ) {
  if ( s_pSPUCtx )
 
   while ( 1 ) {
+
+   int lButtons = GUI_ReadButtons ();
+
+   if ( lButtons & PAD_SELECT )
+
+    GUI_WaitButton ( PAD_START );
+
+   else if ( lButtons & PAD_TRIANGLE ) break;
 
    lSize = SMS_AVIReadPacket ( lpPacket );
 
@@ -194,8 +203,17 @@ static void _sms_video_renderer ( void* apParam ) {
 
   if (  SMS_RB_EMPTY( s_VideoQueue )  ) break;
 
+  if ( s_Flags & SMS_FLAGS_PAUSE ) WaitSema ( s_SemaPauseVideo );
+
   lpFrame = *SMS_RB_POPSLOT( s_VideoQueue );
   SMS_RB_POPADVANCE( s_VideoQueue );
+
+  if ( s_Flags & SMS_FLAGS_STOP ) {
+
+   SignalSema ( s_SemaRPutVideo );
+   break;
+
+  }  /* end if */
 
   s_pIPUCtx -> Sync ();
 
@@ -236,6 +254,13 @@ static void _sms_video_decoder ( void* apParam ) {
 
    WaitSema ( s_SemaRPutVideo );
 
+   if ( s_Flags & SMS_FLAGS_STOP ) {
+
+    lpPacket -> Destroy ( lpPacket );
+    break;
+
+   }  /* end if */
+
    *SMS_RB_PUSHSLOT( s_VideoQueue ) = lpFrame;
    SMS_RB_PUSHADVANCE( s_VideoQueue );
 
@@ -272,10 +297,25 @@ static void _sms_audio_renderer ( void* apParam ) {
 
   if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
 
+  if ( s_Flags & SMS_FLAGS_PAUSE ) {
+
+   s_pSPUCtx -> Mute ( 1 );
+   WaitSema ( s_SemaPauseAudio );
+   s_pSPUCtx -> Mute ( 0 );
+
+  }  /* end if */
+
   lpSamples = *SMS_RB_POPSLOT( s_AudioQueue );
   SMS_RB_POPADVANCE( s_AudioQueue );
 
   SignalSema ( s_SemaRPutAudio );
+
+  if ( s_Flags & SMS_FLAGS_STOP ) {
+
+   s_AudioSamples -> Release ();
+   break;
+
+  }  /* end if */
 
   lPlayed    += *( int* )lpSamples;
   s_AudioTime = (  lPlayed * (  1000.0F / ( lBPS * lnChannels / 8 )  )   ) / ( float )lSPS;
@@ -322,6 +362,13 @@ static void _sms_audio_decoder ( void* apParam ) {
 
     WaitSema ( s_SemaRPutAudio );
 
+    if ( s_Flags & SMS_FLAGS_STOP ) {
+
+     lpPacket -> Destroy ( lpPacket );
+     goto end;
+
+    }  /* end if */
+
     *SMS_RB_PUSHSLOT( s_AudioQueue ) = s_AudioSamples -> m_pOut;
     SMS_RB_PUSHADVANCE( s_AudioQueue );
 
@@ -336,7 +383,7 @@ static void _sms_audio_decoder ( void* apParam ) {
   SignalSema ( s_SemaDPutAudio );
 
  }  /* end while */
-
+end:
  WakeupThread ( s_MainThreadID );
  ExitDeleteThread ();
 
@@ -349,35 +396,71 @@ static void _sms_play_a_v ( void ) {
 
  s_nPackets = 0;
 
+ s_Player.m_pGUICtx -> Status ( "Buffering AVI file..." );
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
+
  s_pSPUCtx = SPU_InitContext (
   s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
   s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate
  );
 
- s_Player.m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGSCtx -> m_fZBuf   = GS_OFF;
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fDblBuf = GS_OFF;
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_OFF;
 
- s_Player.m_pGSCtx -> InitScreen ();
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+ s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+ s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
 
  s_pIPUCtx = IPU_InitContext (
-  s_Player.m_pGSCtx,
+  s_Player.m_pGUICtx -> m_pGSCtx,
   s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
   s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
  );
 
- s_Player.m_pGSCtx -> DrawText ( 10, 60, 0, "Buffering AVI file (this can take a while)..." );
- s_Player.m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Opaque;
- s_Player.m_pGSCtx -> m_Font.m_BkColor = GS_SETREG_RGBA( 0x00, 0x00, 0x80, 0x80 );
- s_pIPUCtx -> SetTEX ();
-
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
-
- s_Player.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-
  if ( s_pSPUCtx && s_pIPUCtx )
 
   while ( 1 ) {
+
+   int lButtons = GUI_ReadButtons ();
+
+   if ( lButtons & PAD_SELECT ) {
+
+    s_Flags |=  SMS_FLAGS_PAUSE;
+    GUI_WaitButton ( PAD_START );
+    s_Flags &= ~SMS_FLAGS_PAUSE;
+    SignalSema ( s_SemaPauseAudio );
+    SignalSema ( s_SemaPauseVideo );
+
+   } else if (  lButtons & PAD_TRIANGLE && *( int* )&s_AudioTime  ) {
+
+    int            i;
+    SMS_AVIPacket* lpPacket;
+
+    s_Flags |= SMS_FLAGS_STOP;
+
+    for ( i = 0; i < 4; ++i ) SleepThread ();
+
+    while (  !SMS_RB_EMPTY( s_VPacketQueue )  ) {
+
+     lpPacket = *SMS_RB_POPSLOT( s_VPacketQueue );
+     lpPacket -> Destroy ( lpPacket );
+     SMS_RB_POPADVANCE( s_VPacketQueue );
+
+    }  /* end while */
+
+    while (  !SMS_RB_EMPTY( s_APacketQueue )  ) {
+
+     lpPacket = *SMS_RB_POPSLOT( s_APacketQueue );
+     lpPacket -> Destroy ( lpPacket );
+     SMS_RB_POPADVANCE( s_APacketQueue );
+
+    }  /* end while */
+
+    break;
+
+   }  /* end if */
 
    g_CDDASpeed = s_nPackets < 384 ? 4 : 3;
 
@@ -428,29 +511,52 @@ static void _sms_avi_destroy ( void ) {
 
  if ( s_VideoBuffer ) {
 
-  WakeupThread ( s_VideoDThreadID );
-  SleepThread ();
+  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
+
+   WakeupThread ( s_VideoDThreadID );
+   SleepThread ();
+
+  }  /* end if */
+
   DeleteSema ( s_SemaDPutVideo );
   free ( s_VPacketBuffer );
 
-  WakeupThread ( s_VideoRThreadID );  
-  SleepThread ();
-  DeleteSema ( s_SemaRPutVideo );
+  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
+
+   WakeupThread ( s_VideoRThreadID );  
+   SleepThread ();
+
+  }  /* end if */
+
+  DeleteSema ( s_SemaRPutVideo  );
+  DeleteSema ( s_SemaPauseVideo );
   free ( s_VideoBuffer );
 
  }  /* end if */
 
  if ( s_AudioBuffer ) {
 
-  WakeupThread ( s_AudioDThreadID );
-  SleepThread ();
+  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
+
+   WakeupThread ( s_AudioDThreadID );
+   SleepThread ();
+
+  }  /* end if */
+
   DeleteSema ( s_SemaDPutAudio );
   free ( s_APacketBuffer );
 
-  WakeupThread ( s_AudioRThreadID );
-  SleepThread ();
+  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
+
+   WakeupThread ( s_AudioRThreadID );
+   SleepThread ();
+
+  }  /* end if */
+
   DeleteSema ( s_SemaRPutAudio );
   free ( s_AudioBuffer );
+
+  DeleteSema ( s_SemaPauseAudio );
 
  }  /* end if */
 
@@ -465,19 +571,24 @@ static void _sms_avi_destroy ( void ) {
 
  }  /* end if */
 
+ CDDA_Synchronize ();
+ CDDA_Stop        ();
+ CDDA_Synchronize ();
+
  s_Player.m_pAVICtx -> Destroy ( s_Player.m_pAVICtx );
  s_Player.m_pAVICtx = NULL;
 
 }  /* end _sms_avi_destroy */
 
-SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) {
+SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx ) {
 
  s_VPacketBuffer = NULL;
  s_APacketBuffer = NULL;
  s_VideoBuffer   = NULL;
  s_AudioBuffer   = NULL;
+ s_Flags         =    0;
 
- apGSCtx -> DrawText ( 10, 102, 0, "Probing AVI file..." );
+ apGUICtx -> Status ( "Checking file format..." );
 
  s_Player.m_pAVICtx = SMS_AVINewContext ( apFileCtx );
  s_MainThreadID     = GetThreadId ();
@@ -526,7 +637,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
 
     }  /* end if */
 
-   s_Player.m_pGSCtx   = apGSCtx;
+   s_Player.m_pGUICtx  = apGUICtx;
    s_Player.m_pFileCtx = apFileCtx;
    s_Player.Destroy    = _sms_avi_destroy;
 
@@ -594,6 +705,11 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
     lSema.max_count  = SMS_AUDIO_QUEUE_SIZE - 1;
     s_SemaRPutAudio = CreateSema ( &lSema );
 
+    lSema.init_count = 0;
+    lSema.max_count  = 1;
+    s_SemaPauseAudio = CreateSema ( &lSema );
+    s_SemaPauseVideo = CreateSema ( &lSema );
+
    } else if ( s_VideoIdx != 0xFFFFFFFF ) {
 
     s_Player.Play = _sms_play_v;
@@ -611,7 +727,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GSContext* apGSCtx ) 
 
   }  /* end else */
 
- }  /* end if */
+ } else apFileCtx -> Destroy ( apFileCtx );
 
  return s_Player.m_pAVICtx ? &s_Player : NULL;
 

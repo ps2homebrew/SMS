@@ -526,26 +526,27 @@ typedef struct GSContext {
  unsigned int      m_IconPtr;
  GSFont            m_Font;
 
- unsigned int ( *DataSize      ) ( unsigned int, unsigned int, GSPSM );
- unsigned int ( *FBAlloc       ) ( unsigned int                      );
- unsigned int ( *TBAlloc       ) ( unsigned int                      );
- void         ( *Scale         ) ( GSVertex*, int                    );
- void         ( *ScaleUV       ) ( GSTexVertex*, int                 );
- void         ( *VSync         ) ( void                              );
- void         ( *SetTest       ) ( void                              );
- void         ( *ClearScreen   ) ( unsigned long int                 );
- void         ( *SwapBuffers   ) ( int                               );
- GSRectangle* ( *InitRectangle ) ( void                              );
- GSFan*       ( *InitFan       ) ( unsigned int                      );
- GSLineStrip* ( *InitLineStrip ) ( unsigned int                      );
- GSSprite*    ( *InitSprite    ) ( unsigned long int                 );
- void         ( *InitScreen    ) ( void                              );
- void         ( *DrawIcon      ) ( int, int, GSIconSize, void*       );
- void         ( *RoundRect     ) ( int, int, int, int, int           );
- unsigned int ( *TextWidth     ) ( char*, int                        );
- void         ( *DrawText      ) ( int, int, int, unsigned char*     );
- void         ( *SetTextColor  ) ( unsigned int                      );
- void         ( *Destroy       ) ( void                              );
+ unsigned int ( *DataSize      ) ( unsigned int, unsigned int, GSPSM  );
+ unsigned int ( *FBAlloc       ) ( unsigned int                       );
+ unsigned int ( *TBAlloc       ) ( unsigned int                       );
+ void         ( *Scale         ) ( GSVertex*, int                     );
+ void         ( *ScaleUV       ) ( GSTexVertex*, int                  );
+ void         ( *VSync         ) ( void                               );
+ void         ( *SetTest       ) ( void                               );
+ void         ( *ClearScreen   ) ( unsigned long int                  );
+ void         ( *SwapBuffers   ) ( int                                );
+ GSRectangle* ( *InitRectangle ) ( void                               );
+ GSFan*       ( *InitFan       ) ( unsigned int                       );
+ GSLineStrip* ( *InitLineStrip ) ( unsigned int                       );
+ GSSprite*    ( *InitSprite    ) ( unsigned long int                  );
+ void         ( *InitScreen    ) ( void                               );
+ void         ( *DrawIcon      ) ( int, int, GSIconSize, void*        );
+ void         ( *RoundRect     ) ( int, int, int, int, int            );
+ unsigned int ( *TextWidth     ) ( char*, int                         );
+ void         ( *DrawText      ) ( int, int, int, unsigned char*, int );
+ void         ( *SetTextColor  ) ( unsigned int                       );
+ void         ( *Destroy       ) ( void                               );
+ void         ( *CopyFBuffer   ) ( int, int, int, int, int            );
 
 } GSContext;
 

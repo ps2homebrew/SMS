@@ -131,8 +131,6 @@ static void _spu_destroy ( void ) {
 
 static void _spu_destroy_dummy ( void ) {
 
- _audsrv_set_volume ( MIN_VOLUME );
-
 }  /* end _spu_destroy_dummy */
 
 static void _spu_mute ( int afMute ) {

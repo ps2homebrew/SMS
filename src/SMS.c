@@ -12,11 +12,13 @@
 #include "SMS.h"
 #include "SMS_DSP.h"
 #include "DMA.h"
+#include "GUI.h"
 
 #include <malloc.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifndef _WIN32
 # include <kernel.h>
@@ -31,8 +33,7 @@
 
 # define ALIGN( x, a ) (   (  (x) + (a) - 1  ) & ~(  (a) - 1  )   )
 
-int        g_Trace;
-static int s_SMSPD;
+int g_Trace;
 
 const uint32_t g_SMS_InvTbl[ 256 ] = {
          0U, 4294967295U, 2147483648U, 1431655766U, 1073741824U,  858993460U,  715827883U,  613566757U,
@@ -106,27 +107,68 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
 
 }  /* SMS_Realloc */
 
-int SMS_HDDPresent ( void ) {
+typedef struct LoadParams {
 
- return s_SMSPD >= 0;
+ const char* m_pName;
+ void*       m_pBuffer;
+ int         m_BufSize;
+ int         m_nArgs;
+ void*       m_pArgs;
 
-}  /* end SMS_HDDPresent */
+} LoadParams;
 
-int SMS_Initialize ( void ) {
+static char s_HDDArgs[] = {
+ '-', 'o', '\x00', '4',      '\x00',
+ '-', 'n', '\x00', '2', '0', '\x00'
+};
 
- static char s_HDDArgs[] = {
-  '-', 'o', '\x00', '4',      '\x00',
-  '-', 'n', '\x00', '2', '0', '\x00'
- };
- static char s_PFSArgs[] = {
-  '-', 'm', '\x00', '4',      '\x00',
-  '-', 'o', '\x00', '1', '0', '\x00',
-  '-', 'n', '\x00', '4', '0', '\x00'
- };
+static char s_PFSArgs[] = {
+ '-', 'm', '\x00', '4',      '\x00',
+ '-', 'o', '\x00', '1', '0', '\x00',
+ '-', 'n', '\x00', '4', '0', '\x00'
+};
 
- int retVal = 0;
+static LoadParams s_LoadParams[] = {
+
+ { "AUDSRV",   &g_DataBuffer[ SMS_AUDSRV_OFFSET   ], SMS_AUDSRV_SIZE,   0,                    NULL      },
+ { "IOMANX",   &g_DataBuffer[ SMS_IOMANX_OFFSET   ], SMS_IOMANX_SIZE,   0,                    NULL      },
+ { "FILEXIO",  &g_DataBuffer[ SMS_FILEXIO_OFFSET  ], SMS_FILEXIO_SIZE,  0,                    NULL      },
+ { "PS2DEV9",  &g_DataBuffer[ SMS_PS2DEV9_OFFSET  ], SMS_PS2DEV9_SIZE,  0,                    NULL      },
+ { "PS2ATAD",  &g_DataBuffer[ SMS_PS2ATAD_OFFSET  ], SMS_PS2ATAD_SIZE,  0,                    NULL      },
+ { "PS2HDD",   &g_DataBuffer[ SMS_PS2HDD_OFFSET   ], SMS_PS2HDD_SIZE,   sizeof ( s_HDDArgs ), s_HDDArgs },
+ { "PS2FS",    &g_DataBuffer[ SMS_PS2FS_OFFSET    ], SMS_PS2FS_SIZE,    sizeof ( s_PFSArgs ), s_PFSArgs },
+ { "POWEROFF", &g_DataBuffer[ SMS_POWEROFF_OFFSET ], SMS_POWEROFF_SIZE, 0,                    NULL      }
+
+};
+
+static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
+
+ int  lRes, lModRes;
+ char lBuff[ 128 ]; sprintf ( lBuff, "Loading %s...", s_LoadParams[ anIndex ].m_pName );
+
+ apGUICtx -> Status ( lBuff );
+
+ lRes = SifExecModuleBuffer (
+  s_LoadParams[ anIndex ].m_pBuffer, s_LoadParams[ anIndex ].m_BufSize,
+  s_LoadParams[ anIndex ].m_nArgs,   s_LoadParams[ anIndex ].m_pArgs, &lModRes
+ );
+
+ if ( lRes < 0 ) {
+
+  sprintf ( lBuff, "Error loading %s (%d:%d)", s_LoadParams[ anIndex ].m_pName, lRes, lModRes );
+  apGUICtx -> Status ( lBuff );
+  SleepThread ();
+
+ }  /* end if */
+
+ apGUICtx -> Status ( "Initializing SMS..." );
+
+}  /* end LoadModule */
+
+void SMS_Initialize ( void* apParam ) {
 #ifndef _WIN32
- int lModRes;
+ int         i;
+ GUIContext* lpGUICtx = ( GUIContext* )apParam;
 
  DMA_Init ( D_CTRL_RELE_ON, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC, D_CTRL_STD_OFF, D_CTRL_RCYC_8 );
  DMA_ChannelInit ( DMA_CHANNEL_GIF      );
@@ -139,28 +181,14 @@ int SMS_Initialize ( void ) {
 
  ChangeThreadPriority (  GetThreadId (), 64  );
 
- SifInitRpc ( 0 );
+ SifLoadModule ( "rom0:LIBSD", 0, NULL );
 
- if (  SifLoadModule ( "rom0:LIBSD", 0, NULL ) >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_AUDSRV_OFFSET  ], SMS_AUDSRV_SIZE,  0,                    NULL,      &lModRes ) >= 0 && lModRes >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_IOMANX_OFFSET  ], SMS_IOMANX_SIZE,  0,                    NULL,      &lModRes ) >= 0 && lModRes >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_FILEXIO_OFFSET ], SMS_FILEXIO_SIZE, 0,                    NULL,      &lModRes ) >= 0 && lModRes >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2DEV9_OFFSET ], SMS_PS2DEV9_SIZE, 0,                    NULL,      &lModRes ) >= 0 && lModRes >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2ATAD_OFFSET ], SMS_PS2ATAD_SIZE, 0,                    NULL,      &lModRes ) >= 0 && lModRes >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2HDD_OFFSET  ], SMS_PS2HDD_SIZE,  sizeof ( s_HDDArgs ), s_HDDArgs, &lModRes ) >= 0 && lModRes >= 0 &&
-       SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2FS_OFFSET   ], SMS_PS2FS_SIZE,   sizeof ( s_PFSArgs ), s_PFSArgs, &lModRes ) >= 0 && lModRes >= 0
- ) retVal = 1;
+ for ( i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i ) LoadModule ( lpGUICtx, i );
 
- Timer_Init ();
+ hddPreparePoweroff ();
 
  memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
-
- if (  retVal && !hddCheckPresent () && !hddCheckFormatted ()  )
-
-  s_SMSPD = fileXioMount ( "pfs0:", "hdd0:+SMS_Media", FIO_MT_RDONLY );
 #endif  /* _WIN32 */
  SMS_DSP_Init ();
-
- return retVal;
 
 }  /* end SMS_Initialize */

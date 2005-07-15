@@ -227,22 +227,22 @@ static unsigned int s_CharMap[ 224 ] = {
  271/* 't'  */, 272/* 'u' */, 273/* 'v' */, 274/* 'w'    */,  /* 116 - 119 */
  275/* 'x'  */, 276/* 'y' */, 277/* 'z' */,  47/* '{'    */,  /* 120 - 123 */
   34/* '|'  */,  48/* '}' */,  32/* '~' */,  97/* '\x7F' */,  /* 124 - 127 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 128 - 131 */
-   0/* ' '  */,  35/* '…' */,   0/* ' ' */,   0/* ' '    */,  /* 132 - 135 */
-   0/* ' '  */, 176/* '‰' */,   0/* ' ' */,   0/* ' '    */,  /* 136 - 139 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 140 - 143 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 144 - 147 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 148 - 151 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 152 - 155 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 156 - 159 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 160 - 163 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,  87/* '§'    */,  /* 164 - 167 */
- 570/* '¨'  */,   0/* ' ' */,   0/* ' ' */, 160/* '«'    */,  /* 168 - 171 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 172 - 175 */
-   0/* ' '  */,  61/* '±' */,   0/* ' ' */,   0/* ' '    */,  /* 176 - 179 */
-   0/* ' '  */,   0/* ' ' */, 182/* '¶' */,   0/* ' '    */,  /* 180 - 183 */
- 618/* '¸'  */,   0/* ' ' */,   0/* ' ' */, 161/* '»'    */,  /* 184 - 187 */
-   0/* ' '  */,   0/* ' ' */,   0/* ' ' */,   0/* ' '    */,  /* 188 - 191 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 128 - 131 */
+  95/* ' '  */,  35/* '…' */,  95/* ' ' */,  95/* ' '    */,  /* 132 - 135 */
+  95/* ' '  */, 176/* '‰' */,  95/* ' ' */,  95/* ' '    */,  /* 136 - 139 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 140 - 143 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 144 - 147 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 148 - 151 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 152 - 155 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 156 - 159 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 160 - 163 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  87/* '§'    */,  /* 164 - 167 */
+ 570/* '¨'  */,  95/* ' ' */,  95/* ' ' */, 160/* '«'    */,  /* 168 - 171 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 172 - 175 */
+  95/* ' '  */,  61/* '±' */,  95/* ' ' */,  95/* ' '    */,  /* 176 - 179 */
+  95/* ' '  */,  95/* ' ' */, 182/* '¶' */,  95/* ' '    */,  /* 180 - 183 */
+ 618/* '¸'  */,  95/* ' ' */,  95/* ' ' */, 161/* '»'    */,  /* 184 - 187 */
+  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 188 - 191 */
  564/* 'À'  */, 565/* 'Á' */, 566/* 'Â' */, 567/* 'Ã'    */,  /* 192 - 195 */
  568/* 'Ä'  */, 569/* 'Å' */, 571/* 'Æ' */, 572/* 'Ç'    */,  /* 196 - 199 */
  573/* 'È'  */, 574/* 'É' */, 575/* 'Ê' */, 576/* 'Ë'    */,  /* 200 - 203 */
@@ -393,26 +393,28 @@ void _fontm_set_text_color ( u32 aColor ) {
  u32  lCLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
  u64  lDMA [ 18 ] __attribute__(  (  aligned( 16 )  )   );
  u64* lpDMA = lDMA;
- s32  lRGB [  4 ];
  int  i;
 
- lRGB[ 0 ] = ( s32 )(  ( aColor >>  0 ) & 0x000000FF );
- lRGB[ 1 ] = ( s32 )(  ( aColor >>  8 ) & 0x000000FF );
- lRGB[ 2 ] = ( s32 )(  ( aColor >> 16 ) & 0x000000FF );
- lRGB[ 3 ] = ( s32 )(  ( aColor >> 24 ) & 0x000000FF );;
+ float lStepR = ( float )(  ( aColor >>  0 ) & 0x000000FF ) / 16.0F;
+ float lStepG = ( float )(  ( aColor >>  8 ) & 0x000000FF ) / 16.0F;
+ float lStepB = ( float )(  ( aColor >> 16 ) & 0x000000FF ) / 16.0F;
+ float lStepA = ( float )(  ( aColor >> 24 ) & 0x000000FF ) / 16.0F;
 
- for ( i = 15; i > 0; --i ) {
+ float lR = 0.0F;
+ float lG = 0.0F;
+ float lB = 0.0F;
+ float lA = 0.0F;
 
-  lCLUT[ i ] = lRGB[ 0 ] | ( lRGB[ 1 ] << 8 ) | ( lRGB[ 2 ] << 16 ) | ( lRGB [ 3 ] << 24 );
+ for ( i = 0; i < 16; ++i ) {
 
-  lRGB[ 0 ] -= 32; lRGB[ 0 ] = lRGB[ 0 ] & ~( lRGB[ 0 ] >> 7 );
-  lRGB[ 1 ] -= 32; lRGB[ 1 ] = lRGB[ 1 ] & ~( lRGB[ 1 ] >> 7 );
-  lRGB[ 2 ] -= 32; lRGB[ 2 ] = lRGB[ 2 ] & ~( lRGB[ 2 ] >> 7 );
-  lRGB[ 3 ] -= 16; lRGB[ 3 ] = lRGB[ 3 ] & ~( lRGB[ 3 ] >> 7 );
+  lCLUT[ i ] = ( u8 )lR | (  ( u8 )lG << 8  ) | (  ( u8 )lB << 16  ) | (  ( u8 )lA << 24 );
+
+  lR += lStepR;
+  lG += lStepG;
+  lB += lStepB;
+  lA += lStepA;
 
  }  /* end for */
-
- lCLUT[ 0 ] = 0x00000000;
 
  *lpDMA++ = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
  *lpDMA++ = 0;
@@ -441,7 +443,7 @@ void _fontm_set_text_color ( u32 aColor ) {
   *lpDMA++ = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
   *lpDMA   = 0;
 
- SyncDCache ( lCLUT, lCLUT + 16 );
+ SyncDCache ( lCLUT, lCLUT + 64 );
 
  DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 9 );
  DMA_Wait ( DMA_CHANNEL_GIF );
@@ -549,14 +551,6 @@ static unsigned int _fontm_text_width ( char* apStr, int anChars ) {
 
   unsigned int lChr = ( unsigned char )apStr[ i ] - ' ';
 
-  if ( lChr == 0 ) {
-
-   for ( j = 0; j < 26; ++j ) lX[ j ] += 8;
-
-   continue;
-
-  }  // end if
-
   lKern = -INT_MAX;
 
   for ( j = 0; j < 26; ++j ) {
@@ -581,9 +575,9 @@ static unsigned int _fontm_text_width ( char* apStr, int anChars ) {
 
 }  /* end _fontm_text_width */
 
-void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr ) {
+void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen ) {
 
- int  i, j, lnChars = strlen ( apStr );
+ int  i, j, lnChars = aLen ? aLen : strlen ( apStr );
  int  lIncr = s_GSCtx.m_Font.m_BkMode == GSBkMode_Opaque;
  u64  lDMA[ lnChars * 10 + 8 + ( lIncr << 3 ) ] __attribute__(  (  aligned( 16 )  )   );
  u64* lpDMA   = lDMA;
@@ -1491,6 +1485,37 @@ static void GS_ClearScreen ( unsigned long int aColor ) {
 
 }  /* end GS_ClearScreen */
 
+static void GS_CopyFBuffer ( int aDest, int aX, int anY, int aWidth, int aHeight ) {
+
+ u64  lDMA[ 12 ] __attribute__(   (  aligned ( 16 )  )   );
+ u64* lpDMA = lDMA;
+
+ *lpDMA++ = GIF_TAG( 5, 1, 0, 0, 0, 1 );
+ *lpDMA++ = GIF_AD;
+
+ *lpDMA++ = GS_SETREG_BITBLTBUF(
+   s_GSCtx.m_ScreenBufPtr[ !aDest ] / 256, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM,
+   s_GSCtx.m_ScreenBufPtr[  aDest ] / 256, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM
+  );
+ *lpDMA++ = GS_BITBLTBUF;
+
+ *lpDMA++ = GS_SETREG_TRXPOS( aX, anY, aX, anY, 0 );
+ *lpDMA++ = GS_TRXPOS;
+
+ *lpDMA++ = GS_SETREG_TRXREG( aWidth, aHeight );
+ *lpDMA++ = GS_TRXREG;
+
+ *lpDMA++ = GS_SETREG_TRXDIR( 2 );
+ *lpDMA++ = GS_TRXDIR;
+
+ *lpDMA++ = 0;
+ *lpDMA   = GS_TEXFLUSH;
+
+ DMA_Send ( DMA_CHANNEL_GIF, lDMA, 6 );
+ DMA_Wait ( DMA_CHANNEL_GIF );
+
+}  /* end GS_CopyFBuffer */
+
 static void GS_SwapBuffers ( int afSync ) {
 
  unsigned long int  lDMA[ 10 ] __attribute__(   (  aligned( 16 )  )   );
@@ -1559,15 +1584,15 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
  } else if ( aMode == GSDisplayMode_NTSC_I ) {
 
   s_GSCtx.m_fInterlace = GS_ON;
-  s_GSCtx.m_FieldMode  = GSFieldMode_Field;
+  s_GSCtx.m_FieldMode  = GSFieldMode_Frame;
   s_GSCtx.m_fDblBuf    = GS_ON;
   s_GSCtx.m_fZBuf      = GS_ON;
   s_GSCtx.m_Width      = 640;
-  s_GSCtx.m_Height     = 480;
+  s_GSCtx.m_Height     = 448;
   s_GSCtx.m_StartX     = 652;
-  s_GSCtx.m_StartY     =  30;
+  s_GSCtx.m_StartY     =  48;
   s_GSCtx.m_MagX       =   3;
-  s_GSCtx.m_MagY       =   1;
+  s_GSCtx.m_MagY       =   0;
 
  } else if ( aMode == GSDisplayMode_PAL ) {
 
@@ -1576,24 +1601,24 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
   s_GSCtx.m_fDblBuf    = GS_ON;
   s_GSCtx.m_fZBuf      = GS_ON;
   s_GSCtx.m_Width      = 640;
-  s_GSCtx.m_Height     = 576;
-  s_GSCtx.m_StartX     = 652;
-  s_GSCtx.m_StartY     =  42;
+  s_GSCtx.m_Height     = 512;
+  s_GSCtx.m_StartX     = 690;
+  s_GSCtx.m_StartY     =  36;
   s_GSCtx.m_MagX       =   3;
   s_GSCtx.m_MagY       =   0;
 
  } else if ( aMode == GSDisplayMode_PAL_I ) {
 setPal_I:
   s_GSCtx.m_fInterlace = GS_ON;
-  s_GSCtx.m_FieldMode  = GSFieldMode_Field;
+  s_GSCtx.m_FieldMode  = GSFieldMode_Frame;
   s_GSCtx.m_fDblBuf    = GS_ON;
   s_GSCtx.m_fZBuf      = GS_ON;
   s_GSCtx.m_Width      = 640;		
-  s_GSCtx.m_Height     = 576;
-  s_GSCtx.m_StartX     = 652;
-  s_GSCtx.m_StartY     =  40;
+  s_GSCtx.m_Height     = 512;
+  s_GSCtx.m_StartX     = 690;
+  s_GSCtx.m_StartY     =  64;
   s_GSCtx.m_MagX       =   3;
-  s_GSCtx.m_MagY       =   1;
+  s_GSCtx.m_MagY       =   0;
 
  } else if ( aMode == GSDisplayMode_VGA_640x480_60Hz ||
              aMode == GSDisplayMode_VGA_640x480_72Hz ||
@@ -1809,6 +1834,7 @@ setPal_I:
  s_GSCtx.DrawText      = _fontm_draw_text;
  s_GSCtx.SetTextColor  = _fontm_set_text_color;
  s_GSCtx.Destroy       = GS_DestroyContext;
+ s_GSCtx.CopyFBuffer   = GS_CopyFBuffer;
 
  return &s_GSCtx;
 

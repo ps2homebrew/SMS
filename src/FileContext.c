@@ -874,7 +874,9 @@ CDDAContext* CDDA_InitContext ( unsigned long aDrive ) {
  HANDLE lhDevice = CreateFileA (
   lDevName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL
  );
-
+#ifdef _WIN32
+ Sleep ( 2000 );
+#endif  /* _WIN32 */
  if ( lhDevice != INVALID_HANDLE_VALUE ) {
 
   CDROMToc   lTOC;
@@ -974,7 +976,12 @@ CDDAContext* CDDA_InitContext ( unsigned long aDrive ) {
 
   }  /* end if */
 
-  if ( !lfSuccess ) CDDA_Stop ();
+  if ( !lfSuccess ) {
+
+   CDDA_Stop        ();
+   CDDA_Synchronize ();
+
+  }  /* end if */
 
  }  /* end if */
 #endif  /* _WIN32 */
@@ -993,8 +1000,8 @@ void CDDA_DestroyContext ( CDDAContext* apCtx ) {
   CloseHandle (  OVERLP( apCtx ).hEvent  );
   CloseHandle (  HCDROM( apCtx )         );
 #else  /* PS2 */
-  CDDA_Stop ();
-  CDDA_Exit ();
+  CDDA_Stop        ();
+  CDDA_Synchronize ();
 #endif  /* _WIN32 */
   if ( apCtx -> m_pData != NULL ) {
 
@@ -1205,6 +1212,7 @@ static void STIO_DestroyFileContext ( FileContext* apCtx ) {
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_hFile         );
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_Ovlp.hEvent   );
 #else  /* PS2 */
+  fileXioWaitAsync ( FXIO_WAIT, NULL );
   fileXioSetBlockMode ( FXIO_WAIT );
   fileXioClose (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
 #endif  /* _WIN32 */

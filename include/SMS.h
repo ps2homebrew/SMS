@@ -30,12 +30,13 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 
 # define SMS_AUDSRV_SIZE     20657
 # define SMS_IDCT_CONST_SIZE   368
-# define SMS_IOMANX_SIZE      7605
+# define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089
 # define SMS_PS2DEV9_SIZE     9905
 # define SMS_PS2ATAD_SIZE    11805
 # define SMS_PS2HDD_SIZE     26257
 # define SMS_PS2FS_SIZE      54785
+# define SMS_POWEROFF_SIZE    2925
 
 # define SMS_AUDSRV_OFFSET     0
 # define SMS_IDCT_CONST_OFFSET (  ( SMS_AUDSRV_OFFSET     + SMS_AUDSRV_SIZE     + 15 ) & 0xFFFFFFF0  )
@@ -45,7 +46,8 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2ATAD_OFFSET    (  ( SMS_PS2DEV9_OFFSET    + SMS_PS2DEV9_SIZE    + 15 ) & 0xFFFFFFF0  )
 # define SMS_PS2HDD_OFFSET     (  ( SMS_PS2ATAD_OFFSET    + SMS_PS2ATAD_SIZE    + 15 ) & 0xFFFFFFF0  )
 # define SMS_PS2FS_OFFSET      (  ( SMS_PS2HDD_OFFSET     + SMS_PS2HDD_SIZE     + 15 ) & 0xFFFFFFF0  )
-# define SMS_DATA_BUFFER_SIZE  (  ( SMS_PS2FS_OFFSET      + SMS_PS2FS_SIZE      + 15 ) & 0xFFFFFFF0  )
+# define SMS_POWEROFF_OFFSET   (  ( SMS_PS2FS_OFFSET      + SMS_PS2FS_SIZE      + 15 ) & 0xFFFFFFF0  )
+# define SMS_DATA_BUFFER_SIZE  (  ( SMS_POWEROFF_OFFSET   + SMS_POWEROFF_SIZE   + 15 ) & 0xFFFFFFF0  )
 
 extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 
@@ -321,12 +323,10 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
-
-int      SMS_Initialize    ( void                               );
-uint32_t SMS_Linesize      ( unsigned int, unsigned int*        );
-void*    SMS_Realloc       ( void*, unsigned int*, unsigned int );
-uint32_t SMS_Align         ( unsigned int, unsigned int         );
-int      SMS_HDDPresent    ( void                               );
+void     SMS_Initialize ( void*                              );
+uint32_t SMS_Linesize   ( unsigned int, unsigned int*        );
+void*    SMS_Realloc    ( void*, unsigned int*, unsigned int );
+uint32_t SMS_Align      ( unsigned int, unsigned int         );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

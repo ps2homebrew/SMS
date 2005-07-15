@@ -23,7 +23,7 @@
 # define SMS_PKT_FLAG_KEY 0x00000001
 
 struct FileContext;
-struct GSContext;
+struct GUIContext;
 
 typedef struct SMS_AVIdxEntry {
 
@@ -93,7 +93,7 @@ typedef struct SMS_AVIPacket {
 typedef struct SMS_AVIPlayer {
 
  SMS_AVIContext*     m_pAVICtx;
- struct GSContext*   m_pGSCtx;
+ struct GUIContext*  m_pGUICtx;
  struct FileContext* m_pFileCtx;
 
  void ( *Play    ) ( void );
@@ -104,14 +104,14 @@ typedef struct SMS_AVIPlayer {
 extern "C" {
 #endif  /* __cplusplus */
 
-SMS_AVIContext* SMS_AVINewContext    ( struct FileContext*                    );
-int             SMS_AVIProbeFile     ( SMS_AVIContext*                        );
-int             SMS_AVIReadHeader    ( SMS_AVIContext*                        );
-void            SMS_AVICalcFrameRate ( SMS_AVIContext*                        );
-int             SMS_AVIReadPacket    ( SMS_AVIPacket*                         );
-SMS_AVIPacket*  SMS_AVINewPacket     ( SMS_AVIContext*                        );
-void            SMS_AVIPrintInfo     ( SMS_AVIContext*                        );
-SMS_AVIPlayer*  SMS_AVIInitPlayer    ( struct FileContext*, struct GSContext* );
+SMS_AVIContext* SMS_AVINewContext    ( struct FileContext*                     );
+int             SMS_AVIProbeFile     ( SMS_AVIContext*                         );
+int             SMS_AVIReadHeader    ( SMS_AVIContext*                         );
+void            SMS_AVICalcFrameRate ( SMS_AVIContext*                         );
+int             SMS_AVIReadPacket    ( SMS_AVIPacket*                          );
+SMS_AVIPacket*  SMS_AVINewPacket     ( SMS_AVIContext*                         );
+void            SMS_AVIPrintInfo     ( SMS_AVIContext*                         );
+SMS_AVIPlayer*  SMS_AVIInitPlayer    ( struct FileContext*, struct GUIContext* );
 # ifdef __cplusplus
 };
 # endif  /* __cplusplus */
