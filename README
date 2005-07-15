@@ -243,3 +243,4 @@ much nicer now). 'audsrv' updated. Region autodetection code is added to the GS 
 Update (03-JUL-2005)
 --------------------
 A very primitive A/V syncronization added. Video output V-Blank synchronization added.
+
