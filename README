@@ -292,3 +292,6 @@ SMS is too slow. For audio issues, please, contact 'gawd', the creator of 'audsr
 There're a dosen of various DivX/XviD encoding parameters and their combinations etc.
 I just could not handle them alone, sorry for that.
 
+Update (16-JUL-2005)
+--------------------
+Bug fixed (GUI.c - file browser scrolling issue).
