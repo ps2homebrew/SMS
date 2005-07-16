@@ -573,6 +573,7 @@ static void GUI_ClearFileMenu ( void ) {
  s_GUICtx.m_FileMenu.m_pFirst =
  s_GUICtx.m_FileMenu.m_pLast  =
  s_GUICtx.m_FileMenu.m_pCurr  = NULL;
+ s_GUICtx.m_FileMenu.m_Offset = 0;
 
  GUI_DrawFileMenu ( &s_GUICtx.m_FileMenu );
 
