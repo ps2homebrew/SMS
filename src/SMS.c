@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+#include <libpad.h>
 
 #ifndef _WIN32
 # include <kernel.h>
@@ -143,25 +144,15 @@ static LoadParams s_LoadParams[] = {
 
 static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
 
- int  lRes, lModRes;
+ int  lRes;
  char lBuff[ 128 ]; sprintf ( lBuff, "Loading %s...", s_LoadParams[ anIndex ].m_pName );
 
  apGUICtx -> Status ( lBuff );
 
- lRes = SifExecModuleBuffer (
+ SifExecModuleBuffer (
   s_LoadParams[ anIndex ].m_pBuffer, s_LoadParams[ anIndex ].m_BufSize,
-  s_LoadParams[ anIndex ].m_nArgs,   s_LoadParams[ anIndex ].m_pArgs, &lModRes
+  s_LoadParams[ anIndex ].m_nArgs,   s_LoadParams[ anIndex ].m_pArgs, &lRes
  );
-
- if ( lRes < 0 ) {
-
-  sprintf ( lBuff, "Error loading %s (%d:%d)", s_LoadParams[ anIndex ].m_pName, lRes, lModRes );
-  apGUICtx -> Status ( lBuff );
-  SleepThread ();
-
- }  /* end if */
-
- apGUICtx -> Status ( "Initializing SMS..." );
 
 }  /* end LoadModule */
 
@@ -184,6 +175,8 @@ void SMS_Initialize ( void* apParam ) {
  SifLoadModule ( "rom0:LIBSD", 0, NULL );
 
  for ( i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i ) LoadModule ( lpGUICtx, i );
+
+ lpGUICtx -> Status ( "Initializing SMS..." );
 
  hddPreparePoweroff ();
 
