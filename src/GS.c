@@ -749,18 +749,9 @@ static void GS_InitScreen ( void ) {
  GS_SET_PMODE( 0, 1, 0, 1, 0, 0x80 );
  GS_SET_DISPFB1( 0, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0, 0 );
  GS_SET_DISPFB2( 0, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0, 0 );
- GS_SET_DISPLAY1(
-  s_GSCtx.m_StartX, s_GSCtx.m_StartY,
-  s_GSCtx.m_MagX,   s_GSCtx.m_MagY,
-  ( s_GSCtx.m_Width * 4 ) - 1,
-  ( s_GSCtx.m_Height - 1 )
- );
- GS_SET_DISPLAY2(
-  s_GSCtx.m_StartX, s_GSCtx.m_StartY,
-  s_GSCtx.m_MagX,   s_GSCtx.m_MagY,
-  ( s_GSCtx.m_Width * 4 ) - 1,
-  ( s_GSCtx.m_Height - 1 )
- );
+
+ s_GSCtx.AdjustDisplay ( 0, 0 );
+
  GS_SET_BGCOLOR(
   s_GSCtx.m_BgClr.m_Red,
   s_GSCtx.m_BgClr.m_Green,
@@ -1556,6 +1547,26 @@ static void GS_SwapBuffers ( int afSync ) {
 
 }  /* end GS_SwapBuffers */
 
+static void GS_AdjustDisplay ( int aDX, int aDY ) {
+
+ s_GSCtx.m_StartX += aDX;
+ s_GSCtx.m_StartY += aDY;
+
+ GS_SET_DISPLAY1(
+  s_GSCtx.m_StartX, s_GSCtx.m_StartY,
+  s_GSCtx.m_MagX,   s_GSCtx.m_MagY,
+  ( s_GSCtx.m_Width * 4 ) - 1,
+  ( s_GSCtx.m_Height - 1 )
+ );
+ GS_SET_DISPLAY2(
+  s_GSCtx.m_StartX, s_GSCtx.m_StartY,
+  s_GSCtx.m_MagX,   s_GSCtx.m_MagY,
+  ( s_GSCtx.m_Width * 4 ) - 1,
+  ( s_GSCtx.m_Height - 1 )
+ );
+
+}  /* end GS_AdjustDisplay */
+
 static void GS_DestroyContext ( void ) {
 
 }  /* end GS_DestroyContext */
@@ -1835,6 +1846,7 @@ setPal_I:
  s_GSCtx.SetTextColor  = _fontm_set_text_color;
  s_GSCtx.Destroy       = GS_DestroyContext;
  s_GSCtx.CopyFBuffer   = GS_CopyFBuffer;
+ s_GSCtx.AdjustDisplay = GS_AdjustDisplay;
 
  return &s_GSCtx;
 

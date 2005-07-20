@@ -547,6 +547,7 @@ typedef struct GSContext {
  void         ( *SetTextColor  ) ( unsigned int                       );
  void         ( *Destroy       ) ( void                               );
  void         ( *CopyFBuffer   ) ( int, int, int, int, int            );
+ void         ( *AdjustDisplay ) ( int, int                           );
 
 } GSContext;
 

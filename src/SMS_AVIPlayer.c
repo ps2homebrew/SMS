@@ -252,14 +252,14 @@ static void _sms_video_decoder ( void* apParam ) {
         )
   ) {
 
-   WaitSema ( s_SemaRPutVideo );
-
    if ( s_Flags & SMS_FLAGS_STOP ) {
 
     lpPacket -> Destroy ( lpPacket );
     break;
 
    }  /* end if */
+
+   WaitSema ( s_SemaRPutVideo );
 
    *SMS_RB_PUSHSLOT( s_VideoQueue ) = lpFrame;
    SMS_RB_PUSHADVANCE( s_VideoQueue );
@@ -295,7 +295,12 @@ static void _sms_audio_renderer ( void* apParam ) {
 
   SleepThread ();
 
-  if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
+  if (  SMS_RB_EMPTY( s_AudioQueue )  ) {
+
+   s_pSPUCtx -> Mute ( 1 );
+   break;
+
+  }  /* end if */
 
   if ( s_Flags & SMS_FLAGS_PAUSE ) {
 
@@ -325,8 +330,6 @@ static void _sms_audio_renderer ( void* apParam ) {
   s_AudioSamples -> Release ();
 
  }  /* end while */
-
- s_pSPUCtx -> Mute ( 1 );
 
  WakeupThread ( s_MainThreadID );
  ExitDeleteThread ();
@@ -360,14 +363,14 @@ static void _sms_audio_decoder ( void* apParam ) {
          )
    ) {
 
-    WaitSema ( s_SemaRPutAudio );
-
     if ( s_Flags & SMS_FLAGS_STOP ) {
 
      lpPacket -> Destroy ( lpPacket );
      goto end;
 
     }  /* end if */
+
+    WaitSema ( s_SemaRPutAudio );
 
     *SMS_RB_PUSHSLOT( s_AudioQueue ) = s_AudioSamples -> m_pOut;
     SMS_RB_PUSHADVANCE( s_AudioQueue );
@@ -425,44 +428,48 @@ static void _sms_play_a_v ( void ) {
 
    int lButtons = GUI_ReadButtons ();
 
-   if ( lButtons & PAD_SELECT ) {
+   if ( lButtons ) {
 
-    s_Flags |=  SMS_FLAGS_PAUSE;
-    GUI_WaitButton ( PAD_START );
-    s_Flags &= ~SMS_FLAGS_PAUSE;
-    SignalSema ( s_SemaPauseAudio );
-    SignalSema ( s_SemaPauseVideo );
+    if ( lButtons & PAD_SELECT ) {
 
-   } else if (  lButtons & PAD_TRIANGLE && *( int* )&s_AudioTime  ) {
+     s_Flags |=  SMS_FLAGS_PAUSE;
+     GUI_WaitButton ( PAD_START );
+     s_Flags &= ~SMS_FLAGS_PAUSE;
+     SignalSema ( s_SemaPauseAudio );
+     SignalSema ( s_SemaPauseVideo );
 
-    int            i;
-    SMS_AVIPacket* lpPacket;
+    } else if (  lButtons & PAD_TRIANGLE && *( int* )&s_AudioTime  ) {
 
-    s_Flags |= SMS_FLAGS_STOP;
+     int            i;
+     SMS_AVIPacket* lpPacket;
 
-    for ( i = 0; i < 4; ++i ) SleepThread ();
+     s_Flags |= SMS_FLAGS_STOP;
 
-    while (  !SMS_RB_EMPTY( s_VPacketQueue )  ) {
+     for ( i = 0; i < 4; ++i ) SleepThread ();
 
-     lpPacket = *SMS_RB_POPSLOT( s_VPacketQueue );
-     lpPacket -> Destroy ( lpPacket );
-     SMS_RB_POPADVANCE( s_VPacketQueue );
+     while (  !SMS_RB_EMPTY( s_VPacketQueue )  ) {
 
-    }  /* end while */
+      lpPacket = *SMS_RB_POPSLOT( s_VPacketQueue );
+      lpPacket -> Destroy ( lpPacket );
+      SMS_RB_POPADVANCE( s_VPacketQueue );
 
-    while (  !SMS_RB_EMPTY( s_APacketQueue )  ) {
+     }  /* end while */
 
-     lpPacket = *SMS_RB_POPSLOT( s_APacketQueue );
-     lpPacket -> Destroy ( lpPacket );
-     SMS_RB_POPADVANCE( s_APacketQueue );
+     while (  !SMS_RB_EMPTY( s_APacketQueue )  ) {
 
-    }  /* end while */
+      lpPacket = *SMS_RB_POPSLOT( s_APacketQueue );
+      lpPacket -> Destroy ( lpPacket );
+      SMS_RB_POPADVANCE( s_APacketQueue );
 
-    break;
+     }  /* end while */
+
+     break;
+
+    }  /* end if */
 
    }  /* end if */
 
-   g_CDDASpeed = s_nPackets < 384 ? 4 : 3;
+   g_CDDASpeed = s_nPackets < 128 ? 4 : 3;
 
    lpPacket = SMS_AVINewPacket ( s_Player.m_pAVICtx );
 nextPacket:

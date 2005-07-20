@@ -3,6 +3,7 @@
 #include "FileContext.h"
 #include "GUI.h"
 #include "StringList.h"
+#include "Config.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -44,6 +45,12 @@ static int _fill_partition_list ( void ) {
   fileXioDclose ( lHDDFD );
 
  }  /* end if */
+
+ if ( s_BrowserCtx.m_pActivePartition[ 0 ] != '\x00' )
+
+  s_BrowserCtx.m_pGUICtx -> ActivateFileItem (
+   s_BrowserCtx.m_PartIdx, s_BrowserCtx.m_pActivePartition, s_BrowserCtx.m_pFirstPartition
+  );
 
  return retVal;
 
@@ -216,6 +223,7 @@ static void _fill_cd_list ( void ) {
  char* lpName               = s_BrowserCtx.m_pPath -> m_pHead ? s_BrowserCtx.m_pPath -> m_pHead -> m_pString : ".";
  const CDDADirectory* lpDir = CDDA_DirectoryList ( s_BrowserCtx.m_pCDDACtx );
 
+ s_BrowserCtx.m_pGUICtx -> Status ( "Reading directory..." );
  s_BrowserCtx.m_pGUICtx -> ClearFileMenu ();
 
  while ( lpDir ) {
@@ -267,10 +275,35 @@ static void _select_partition ( char* apName ) {
 
  if ( s_BrowserCtx.m_HDDPD >= 0 ) {
 
+  int lLen  = strlen ( s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pCurr  -> m_pFileName );
+  int lFLen = strlen ( s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName );
+
   s_BrowserCtx.m_pPath -> Destroy ( s_BrowserCtx.m_pPath, 0 );
   s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "pfs0:/" );
 
+  s_BrowserCtx.m_PartIdx = s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_Offset;
+
+  if ( lLen > s_BrowserCtx.m_nAlloc ) {
+
+   s_BrowserCtx.m_pActivePartition = ( char* )realloc ( s_BrowserCtx.m_pActivePartition, lLen + 1 );
+   s_BrowserCtx.m_nAlloc           = lLen;
+
+  }  /* end if */
+
+  strcpy ( s_BrowserCtx.m_pActivePartition, s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pCurr -> m_pFileName );
+
+  if ( lFLen > s_BrowserCtx.m_nFAlloc ) {
+
+   s_BrowserCtx.m_pFirstPartition = ( char* )realloc ( s_BrowserCtx.m_pFirstPartition, lFLen + 1 );
+   s_BrowserCtx.m_nFAlloc         = lLen;
+
+  }  /* end if */
+
+  strcpy ( s_BrowserCtx.m_pFirstPartition, s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName );
+
   _fill_hdd_list ();
+
+  s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
 
  } else {
 
@@ -285,6 +318,12 @@ static void _select_partition ( char* apName ) {
  }  /* end else */
 
 }  /* end _select_partition */
+
+static void _mount_partition ( char* apName ) {
+
+ if (  s_BrowserCtx.m_pGUICtx -> SelectFile ( apName )  ) _select_partition ( apName );
+
+}  /* end _mount_partition */
 
 static void _display_status ( void ) {
 
@@ -302,9 +341,12 @@ static void Browser_Destroy ( void ) {
  if ( s_BrowserCtx.m_pCDDACtx    ) CDDA_DestroyContext ( s_BrowserCtx.m_pCDDACtx );
  if ( s_BrowserCtx.m_HDDPD != -1 ) fileXioUmount ( "pfs0:" );
 
+ free ( s_BrowserCtx.m_pActivePartition );
+ free ( s_BrowserCtx.m_pFirstPartition  );
+
 }  /* end Browser_Destroy */
 
-static FileContext* Browser_Browse ( void ) {
+static FileContext* Browser_Browse ( char* apPartName ) {
 
  FileContext* retVal = NULL;
 
@@ -314,6 +356,8 @@ static FileContext* Browser_Browse ( void ) {
 
    s_BrowserCtx.m_pGUICtx -> AddDevice ( GUI_DF_HDD );
    s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
+
+   if ( apPartName && apPartName[ 0 ] ) _mount_partition ( apPartName );
 
   }  /* end if */
 
@@ -335,13 +379,18 @@ static FileContext* Browser_Browse ( void ) {
      case GUI_FF_PARTITION:
 
       _select_partition ( lpFile -> m_pFileName );
-      s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
 
      break;
 
-     case GUI_FF_DIRECTORY:
+     case GUI_FF_DIRECTORY: {
+
+      char* lpState = ( char* )malloc (  strlen ( s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName ) + 5  );
+
+      *( int* )lpState = s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_Offset;
+      strcpy ( lpState + 4, s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName );
 
       s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, lpFile -> m_pFileName );
+      s_BrowserCtx.m_pPath -> m_pTail -> m_pParam = lpState;
 
       if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD )
 
@@ -353,7 +402,7 @@ static FileContext* Browser_Browse ( void ) {
 
       s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
 
-     break;
+     } break;
 
      case GUI_FF_FILE: {
 
@@ -383,15 +432,33 @@ static FileContext* Browser_Browse ( void ) {
 
     if ( s_BrowserCtx.m_pPath -> m_pHead ) {
 
+     char  lName[ strlen ( s_BrowserCtx.m_pPath -> m_pTail -> m_pString    ) + 1 ];
+     char* lpState = ( char* )s_BrowserCtx.m_pPath -> m_pTail -> m_pParam;
+     char* lpFirst = NULL;
+     int   lIdx    = 0;
+
+     strcpy ( lName, s_BrowserCtx.m_pPath -> m_pTail -> m_pString );
+
+     if ( lpState ) {
+
+      lpFirst = ( char* )malloc (  strlen ( lpState + 4 ) + 1  );
+      strcpy ( lpFirst, lpState + 4 );
+      lIdx = *( int* )lpState;
+
+     }  /* end if */
+
+     free ( s_BrowserCtx.m_pPath -> m_pTail -> m_pParam );
+
      s_BrowserCtx.m_pPath -> PopBack ( s_BrowserCtx.m_pPath );
 
      if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD ) {
 
-      if ( s_BrowserCtx.m_pPath -> m_pHead )
+      if ( s_BrowserCtx.m_pPath -> m_pHead ) {
 
        _fill_hdd_list ();
+       s_BrowserCtx.m_pGUICtx -> ActivateFileItem ( lIdx, lName, lpFirst );
 
-      else {
+      } else {
 
        fileXioUmount ( "pfs0:" ); s_BrowserCtx.m_HDDPD = -1;
 
@@ -399,9 +466,14 @@ static FileContext* Browser_Browse ( void ) {
 
       }  /* end else */
 
-     } else if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM ) _fill_cdda_list ();
+     } else if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM ) {
 
-     s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
+      _fill_cdda_list ();
+      s_BrowserCtx.m_pGUICtx -> ActivateFileItem ( lIdx, lName, lpFirst );
+
+     }  /* end if */
+
+     if ( lpFirst ) free ( lpFirst );
 
     }  /* end if */
 
@@ -463,6 +535,24 @@ static FileContext* Browser_Browse ( void ) {
 
    } break;
 
+   case GUI_EV_SAVE_CONFIG: {
+
+    s_BrowserCtx.m_pGUICtx -> Status ( "Saving configuration..." );
+
+    g_Config.m_DX          = s_BrowserCtx.m_pGUICtx -> m_pGSCtx -> m_StartX;
+    g_Config.m_DY          = s_BrowserCtx.m_pGUICtx -> m_pGSCtx -> m_StartY;
+    g_Config.m_DisplayMode = s_BrowserCtx.m_pGUICtx -> m_pGSCtx -> m_DisplayMode;
+    strncpy ( g_Config.m_Partition, s_BrowserCtx.m_pActivePartition, 255 );
+
+    if (  !SaveConfig ()  ) {
+
+     s_BrowserCtx.m_pGUICtx -> Status ( "Error. Press X to continue..." );
+     GUI_WaitButton ( PAD_CROSS );
+
+    }  /* end if */
+
+   } break;
+
   }  /* end switch */
 
   _display_status ();
@@ -480,10 +570,17 @@ BrowserContext* BrowserContext_Init ( struct GUIContext* apGUICtx ) {
  s_BrowserCtx.m_pGUICtx  = apGUICtx;
  s_BrowserCtx.m_pCDDACtx = NULL;
  s_BrowserCtx.m_HDDPD    = -1;
+ s_BrowserCtx.m_PartIdx  =  0;
  s_BrowserCtx.m_pPath    = StringList_Init ();
  s_BrowserCtx.m_CurDev   = -1;
  s_BrowserCtx.Browse     = Browser_Browse;
  s_BrowserCtx.Destroy    = Browser_Destroy;
+
+ s_BrowserCtx.m_PartIdx          = 0;
+ s_BrowserCtx.m_pActivePartition = ( char* )calloc ( 256, 1 );
+ s_BrowserCtx.m_nAlloc           = 255;
+ s_BrowserCtx.m_pFirstPartition  = ( char* )calloc ( 256, 1 );
+ s_BrowserCtx.m_nFAlloc          = 255;
 
  return &s_BrowserCtx;
 

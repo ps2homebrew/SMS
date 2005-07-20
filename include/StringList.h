@@ -4,6 +4,7 @@
 typedef struct StringListNode {
 
  char*                  m_pString;
+ void*                  m_pParam;
  struct StringListNode* m_pNext;
  struct StringListNode* m_pPrev;
 

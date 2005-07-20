@@ -26,6 +26,7 @@
 # define GUI_EV_CDROM_MOUNT  5
 # define GUI_EV_CDROM_UMOUNT 6
 # define GUI_EV_MENU_EMPTY   7
+# define GUI_EV_SAVE_CONFIG  8
 
 # define GUI_FF_FILE      0x00000000
 # define GUI_FF_DIRECTORY 0x00000001
@@ -98,15 +99,17 @@ typedef struct GUIContext {
  GUIMenu*      m_pCurrentMenu;
  GSContext*    m_pGSCtx;
 
- int  ( *Run           ) ( void**     );
- void ( *Status        ) ( char*      );
- void ( *AddDevice     ) ( int        );
- void ( *DelDevice     ) ( int        );
- void ( *AddFile       ) ( char*, int );
- void ( *ClearFileMenu ) ( void       );
- void ( *Destroy       ) ( void       );
- void ( *ActivateMenu  ) ( int        );
- void ( *Redraw        ) ( void       );
+ int  ( *Run              ) ( void**            );
+ void ( *Status           ) ( char*             );
+ void ( *AddDevice        ) ( int               );
+ void ( *DelDevice        ) ( int               );
+ void ( *AddFile          ) ( char*, int        );
+ void ( *ClearFileMenu    ) ( void              );
+ void ( *Destroy          ) ( void              );
+ void ( *ActivateMenu     ) ( int               );
+ void ( *Redraw           ) ( void              );
+ void ( *ActivateFileItem ) ( int, char*, char* );
+ int  ( *SelectFile       ) ( char*             );
 
 } GUIContext;
 

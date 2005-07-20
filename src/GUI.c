@@ -13,6 +13,7 @@
 
 #include "Timer.h"
 #include "CDDA.h"
+#include "Config.h"
 
 #include <kernel.h>
 #include <string.h>
@@ -20,11 +21,13 @@
 #include <libpad.h>
 #include <libhdd.h>
 #include <loadfile.h>
+#include <iopcontrol.h>
 #include <stdio.h>
 
 #define STR_AVAILABLE_MEDIA "Available media: "
 
 extern void* _gp;
+extern void  SifExitRpc ( void );
 
 static GUIContext                 s_GUICtx;
 static unsigned char              s_PadBuf[   256 ] __attribute__(   (  aligned( 64 )  )   );
@@ -132,12 +135,28 @@ unsigned long int GUI_WaitEvent ( void ) {
 
  unsigned long int retVal;
 
- WaitSema ( s_PadSema );
+ while ( 1 ) {
 
- retVal  = s_Event;
- s_Event = 0LL;
+  WaitSema ( s_PadSema );
 
- if (  retVal == ( PAD_SELECT | PAD_CIRCLE )  ) hddPowerOff ();
+  retVal  = s_Event;
+  s_Event = 0LL;
+
+  if ( retVal & PAD_SELECT )
+
+   switch ( retVal ) {
+
+    case PAD_SELECT | PAD_CIRCLE  : hddPowerOff ();
+    case PAD_SELECT | PAD_R1      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  1,  0 ); continue;
+    case PAD_SELECT | PAD_R2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0,  1 ); continue;
+    case PAD_SELECT | PAD_L1      : s_GUICtx.m_pGSCtx -> AdjustDisplay ( -1,  0 ); continue;
+    case PAD_SELECT | PAD_L2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0, -1 ); continue;
+
+   }  /* end switch */
+
+  break;
+
+ }  /* end while */
 
  return retVal;
 
@@ -610,7 +629,8 @@ static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
   } else {
 
    ++s_GUICtx.m_FileMenu.m_Offset;
-   s_GUICtx.m_FileMenu.m_pFirst = s_GUICtx.m_FileMenu.m_pFirst -> m_pNext;
+
+   s_GUICtx.m_FileMenu.m_pFirst  = s_GUICtx.m_FileMenu.m_pFirst -> m_pNext;
    lpItem -> m_pNext -> m_Flags |= GUI_FF_SELECTED;
 
    GUI_DrawFileMenu ( &s_GUICtx.m_FileMenu );
@@ -753,7 +773,17 @@ static int GUI_Run ( void** apRetVal ) {
 
     break;
 
-   } else if (  ( int )lpResult == GUI_EV_MENU_QUIT  ) GUI_ActivateMenu (  ( void* )s_GUICtx.m_pCurrentMenu == ( void* )&s_GUICtx.m_DevMenu ? 1 : 0  );
+   } else if (  ( int )lpResult == GUI_EV_MENU_QUIT  )
+
+    GUI_ActivateMenu (  ( void* )s_GUICtx.m_pCurrentMenu == ( void* )&s_GUICtx.m_DevMenu ? 1 : 0  );
+
+   else if (  lEvent == ( PAD_SELECT | PAD_SQUARE )  ) {
+
+    retVal = GUI_EV_SAVE_CONFIG;
+
+    break;
+
+   }  /* end if */
 
   }  /* end else */
 
@@ -807,7 +837,101 @@ int GUI_ReadButtons ( void ) {
 
  return retVal;
 
-}  /* end GUI_CheckButton */
+}  /* end GUI_ReadButtons */
+
+static void GUI_ActivateFileItem ( int anOffset, char* apName, char* apFirst ) {
+
+ GUIFileMenuItem* lpItem  = s_GUICtx.m_FileMenu.m_pItems;
+ int              lfFound = 0;
+
+ if ( s_GUICtx.m_FileMenu.m_pCurr ) s_GUICtx.m_FileMenu.m_pCurr -> m_Flags &= ~GUI_FF_SELECTED;
+
+ while ( lpItem ) {
+
+  if (  !lfFound && !strcmp ( lpItem -> m_pFileName, apFirst )  ) {
+
+   s_GUICtx.m_FileMenu.m_pFirst = lpItem;
+   lfFound = 1;
+
+  }  /* end if */
+
+  if (  lfFound && !strcmp ( lpItem -> m_pFileName, apName )  ) {
+
+   s_GUICtx.m_FileMenu.m_Offset = anOffset;
+   s_GUICtx.m_FileMenu.m_pCurr  = lpItem;
+   lpItem -> m_Flags           |= GUI_FF_SELECTED;
+
+   break;
+
+  }  /* end if */
+
+  lpItem = lpItem -> m_pNext;
+
+ }  /* end while */
+
+ s_GUICtx.ActivateMenu ( 1 );
+
+}  /* end GUI_ActivateFileItem */
+
+static int GUI_SelectFile ( char* apFileName ) {
+
+ int              retVal = 0;
+ GUIFileMenuItem* lpItem = s_GUICtx.m_FileMenu.m_pItems;
+
+ if ( lpItem ) {
+
+  s_GUICtx.m_FileMenu.m_pCurr  = lpItem;
+  s_GUICtx.m_FileMenu.m_pFirst = lpItem;
+  s_GUICtx.m_FileMenu.m_Offset = 0;
+  s_GUICtx.m_FileMenu.m_pCurr -> m_Flags |= GUI_FF_SELECTED;
+
+  do {
+
+   int lIdx = lpItem -> m_Y - s_GUICtx.m_FileMenu.m_Offset + 1;
+
+   if (  !strcmp ( lpItem -> m_pFileName, apFileName )  ) {
+
+    retVal = 1;
+    break;
+
+   }  /* end if */
+
+   lpItem -> m_Flags &= ~GUI_FF_SELECTED;
+
+   if ( !lpItem -> m_pNext ) break;
+   
+   if ( lIdx < s_GUICtx.m_FileMenu.m_Height - 1 || lpItem -> m_pNext -> m_pNext == NULL )
+
+    lpItem -> m_pNext -> m_Flags |= GUI_FF_SELECTED;
+
+   else {
+
+    ++s_GUICtx.m_FileMenu.m_Offset;
+
+    s_GUICtx.m_FileMenu.m_pFirst  = s_GUICtx.m_FileMenu.m_pFirst -> m_pNext;
+    lpItem -> m_pNext -> m_Flags |= GUI_FF_SELECTED;
+
+   }  /* end else */
+
+   s_GUICtx.m_FileMenu.m_pCurr = lpItem = lpItem -> m_pNext;
+
+  } while ( lpItem );
+
+ }  /* end if */
+
+ if ( !retVal ) {
+
+  s_GUICtx.m_FileMenu.m_pCurr  =
+  s_GUICtx.m_FileMenu.m_pFirst = s_GUICtx.m_FileMenu.m_pItems;
+  s_GUICtx.m_FileMenu.m_Offset = 0;
+
+  if ( s_GUICtx.m_FileMenu.m_pCurr ) s_GUICtx.m_FileMenu.m_pCurr -> m_Flags |= GUI_FF_SELECTED;
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end GUI_SelectFile */
 
 GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
@@ -844,16 +968,18 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
  s_GUICtx.m_pCurrentMenu = NULL;
 
- s_GUICtx.m_pGSCtx      = apGSCtx;
- s_GUICtx.Status        = GUI_Status;
- s_GUICtx.Destroy       = GUI_Destroy;
- s_GUICtx.Run           = GUI_Run;
- s_GUICtx.AddDevice     = GUI_AddDevice;
- s_GUICtx.DelDevice     = GUI_DelDevice;
- s_GUICtx.AddFile       = GUI_AddFile;
- s_GUICtx.ClearFileMenu = GUI_ClearFileMenu;
- s_GUICtx.ActivateMenu  = GUI_ActivateMenu;
- s_GUICtx.Redraw        = GUI_Redraw;
+ s_GUICtx.m_pGSCtx         = apGSCtx;
+ s_GUICtx.Status           = GUI_Status;
+ s_GUICtx.Destroy          = GUI_Destroy;
+ s_GUICtx.Run              = GUI_Run;
+ s_GUICtx.AddDevice        = GUI_AddDevice;
+ s_GUICtx.DelDevice        = GUI_DelDevice;
+ s_GUICtx.AddFile          = GUI_AddFile;
+ s_GUICtx.ClearFileMenu    = GUI_ClearFileMenu;
+ s_GUICtx.ActivateMenu     = GUI_ActivateMenu;
+ s_GUICtx.Redraw           = GUI_Redraw;
+ s_GUICtx.ActivateFileItem = GUI_ActivateFileItem;
+ s_GUICtx.SelectFile       = GUI_SelectFile;
 
  lSema.init_count = 0;
  lSema.max_count  = 1;

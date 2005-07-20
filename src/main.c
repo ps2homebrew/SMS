@@ -6,26 +6,52 @@
 #include "Browser.h"
 #include "FileContext.h"
 #include "Timer.h"
+#include "Config.h"
 
 #include <kernel.h>
 #include <libpad.h>
 #include <sifrpc.h>
+#include <loadfile.h>
+#include <iopcontrol.h>
+#include <libmc.h>
 
 int main ( void ) {
 
+ int             lfConfig;
  FileContext*    lpFileCtx;
  GSContext*      lpGSCtx;
  GUIContext*     lpGUICtx;
  BrowserContext* lpBrowserCtx;
  SMS_AVIPlayer*  lpPlayer;
+ GSDisplayMode   lDisplayMode = GSDisplayMode_AutoDetect;
+#if RESET_IOP
+ SifIopReset ( "rom0:UDNL rom0:EELOADCNF", 0 );
 
+ while (  SifIopSync ()  );
+#endif  /* RESET_IOP */
  SifInitRpc ( 0 );
+
+ SifLoadModule ( "rom0:SIO2MAN", 0, NULL );
+ SifLoadModule ( "rom0:MCMAN",   0, NULL );
+ SifLoadModule ( "rom0:MCSERV",  0, NULL );
+
+ mcInit ( MC_TYPE_MC );
 
  CDDA_Init  ();
  Timer_Init ();
 
- lpGSCtx  = GS_InitContext  ( GSDisplayMode_AutoDetect );
- lpGUICtx = GUI_InitContext ( lpGSCtx                  );
+ if (   (  lfConfig = LoadConfig ()  )   ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
+
+ lpGSCtx = GS_InitContext  ( lDisplayMode );
+
+ if ( lfConfig ) {
+
+  lpGSCtx -> m_StartX = g_Config.m_DX;
+  lpGSCtx -> m_StartY = g_Config.m_DY;
+
+ }  /* end if */
+
+ lpGUICtx = GUI_InitContext ( lpGSCtx );
 
  lpGUICtx -> Status ( "Initializing SMS..." );
 
@@ -35,7 +61,7 @@ int main ( void ) {
 
  while ( 1 ) {
 
-  lpFileCtx = lpBrowserCtx -> Browse ();
+  lpFileCtx = lpBrowserCtx -> Browse ( lfConfig ? g_Config.m_Partition : NULL );
   lpPlayer  = SMS_AVIInitPlayer ( lpFileCtx, lpGUICtx );
 
   if ( lpPlayer == NULL ) {

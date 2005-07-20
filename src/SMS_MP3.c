@@ -1629,6 +1629,7 @@ static const int32_t s_csa_table[ 8 ][ 4 ] = {
  { 32764,   -465, 32299, -33229 },
  { 32767,   -121, 32646, -32888 }
 };
+#ifdef _WIN32
 static const float s_csa_table_float[ 8 ][ 4 ] = {
  { 0.857493F,   -0.514496F, 0.342997F,  -1.37199F },
  { 0.881742F,   -0.471732F, 0.410010F,  -1.35347F },
@@ -1639,6 +1640,7 @@ static const float s_csa_table_float[ 8 ][ 4 ] = {
  { 0.999899F,  -0.0141986F, 0.985701F,  -1.01410F },
  { 0.999993F, -0.00369997F, 0.996293F,  -1.00369F }
 };
+#endif  /* _WIN32 */
 static const int s_icos36[ 9 ] = {
  FIXR( 0.50190991877167369479 ), FIXR( 0.51763809020504152469 ), FIXR( 0.55168895948124587824 ),
  FIXR( 0.61038729438072803416 ), FIXR( 0.70710678118654752439 ), FIXR( 0.87172339781054900991 ),
@@ -2108,7 +2110,7 @@ static int64_t SMS_INLINE MUL64 ( int64_t anA, int aB ) {
 static long SMS_INLINE _lrintf ( float aVal ) {
  return ( long )(  ( aVal ) + ( aVal > 0 ? 0.5F : -0.5F )  );
 }  /* end _lrintf */
-
+#ifdef _WIN32
 static void _compute_antialias_float ( SMS_GranuleDef* apGran ) {
 
  int32_t* lPtr, *lPtr0, *lPtr1;
@@ -2161,7 +2163,7 @@ static void _compute_antialias_float ( SMS_GranuleDef* apGran ) {
  }  /* end for */
 
 }  /* end _compute_antialias_float */
-
+#endif  /* _WIN32 */
 static void _compute_antialias_integer ( SMS_GranuleDef* apGran ) {
 
  const int32_t* lpCSA;
@@ -3225,6 +3227,174 @@ static void _compute_imdct ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t
 
 }  /* end _compute_imdct */
 
+#define ADD( a, b ) apTab[ a ] += apTab[ b ]
+
+#if FRAC_BITS <= 15
+# define MACS( rt, ra, rb ) rt += ( ra ) * ( rb )
+# define MULS( ra, rb )     (  ( ra ) * ( rb )  )
+#else
+# define MULS( ra, rb ) MUL64( ra, rb )
+#endif  /* FRAC_BITS <= 15 */
+
+#define OUT_SHIFT ( WFRAC_BITS + FRAC_BITS - 15 )
+
+#define SUM8( sum, op, w, p ) {                \
+ sum op MULS(  ( w )[ 0 * 64 ], p[ 0 * 64 ] ); \
+ sum op MULS(  ( w )[ 1 * 64 ], p[ 1 * 64 ] ); \
+ sum op MULS(  ( w )[ 2 * 64 ], p[ 2 * 64 ] ); \
+ sum op MULS(  ( w )[ 3 * 64 ], p[ 3 * 64 ] ); \
+ sum op MULS(  ( w )[ 4 * 64 ], p[ 4 * 64 ] ); \
+ sum op MULS(  ( w )[ 5 * 64 ], p[ 5 * 64 ] ); \
+ sum op MULS(  ( w )[ 6 * 64 ], p[ 6 * 64 ] ); \
+ sum op MULS(  ( w )[ 7 * 64 ], p[ 7 * 64 ] ); \
+}
+
+#ifndef _WIN32
+extern void ps2_dct32       ( int32_t*, int32_t*                       );
+extern void ps2_synth_sum8a ( SMS_MPA_INT*, SMS_MPA_INT*, SMS_MPA_INT* );
+extern void ps2_synth_sum8b ( SMS_MPA_INT*, SMS_MPA_INT*, SMS_MPA_INT* );
+
+#define OUT_SAMPLEt( sum ) {                                          \
+ int lSum1 = (   lSum + ( 1 << ( OUT_SHIFT - 1 )  )   ) >> OUT_SHIFT; \
+ if ( lSum1 < -32768 )                                                \
+  lSum1 = -32768;                                                     \
+ else if ( lSum1 > 32767 )                                            \
+  lSum1 = 32767;                                                      \
+ *lpTSamples++ = lSum1;                                               \
+}
+
+static void _dct32 ( int32_t* apOut, int32_t* apTab ) {
+
+ int* lpTab = apTab;
+
+ ps2_dct32 ( apOut, apTab );
+
+ ADD(  8, 12 );
+ ADD( 12, 10 );
+ ADD( 10, 14 );
+ ADD( 14,  9 );
+ ADD(  9, 13 );
+ ADD( 13, 11 );
+ ADD( 11, 15 );
+
+ apOut[  0 ] = lpTab[  0 ];
+ apOut[ 16 ] = lpTab[  1 ];
+ apOut[  8 ] = lpTab[  2 ];
+ apOut[ 24 ] = lpTab[  3 ];
+ apOut[  4 ] = lpTab[  4 ];
+ apOut[ 20 ] = lpTab[  5 ];
+ apOut[ 12 ] = lpTab[  6 ];
+ apOut[ 28 ] = lpTab[  7 ];
+ apOut[  2 ] = lpTab[  8 ];
+ apOut[ 18 ] = lpTab[  9 ];
+ apOut[ 10 ] = lpTab[ 10 ];
+ apOut[ 26 ] = lpTab[ 11 ];
+ apOut[  6 ] = lpTab[ 12 ];
+ apOut[ 22 ] = lpTab[ 13 ];
+ apOut[ 14 ] = lpTab[ 14 ];
+ apOut[ 30 ] = lpTab[ 15 ];
+
+ ADD( 24, 28 );
+ ADD( 28, 26 );
+ ADD( 26, 30 );
+ ADD( 30, 25 );
+ ADD( 25, 29 );
+ ADD( 29, 27 );
+ ADD( 27, 31 );
+
+ apOut[  1 ] = lpTab[ 16 ] + lpTab[ 24 ];
+ apOut[ 17 ] = lpTab[ 17 ] + lpTab[ 25 ];
+ apOut[  9 ] = lpTab[ 18 ] + lpTab[ 26 ];
+ apOut[ 25 ] = lpTab[ 19 ] + lpTab[ 27 ];
+ apOut[  5 ] = lpTab[ 20 ] + lpTab[ 28 ];
+ apOut[ 21 ] = lpTab[ 21 ] + lpTab[ 29 ];
+ apOut[ 13 ] = lpTab[ 22 ] + lpTab[ 30 ];
+ apOut[ 29 ] = lpTab[ 23 ] + lpTab[ 31 ];
+ apOut[  3 ] = lpTab[ 24 ] + lpTab[ 20 ];
+ apOut[ 19 ] = lpTab[ 25 ] + lpTab[ 21 ];
+ apOut[ 11 ] = lpTab[ 26 ] + lpTab[ 22 ];
+ apOut[ 27 ] = lpTab[ 27 ] + lpTab[ 23 ];
+ apOut[  7 ] = lpTab[ 28 ] + lpTab[ 18 ];
+ apOut[ 23 ] = lpTab[ 29 ] + lpTab[ 19 ];
+ apOut[ 15 ] = lpTab[ 30 ] + lpTab[ 17 ];
+ apOut[ 31 ] = lpTab[ 31 ];
+
+}  /* end _dct32 */
+
+static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSBSamples[ SMS_SBLIMIT ] ) {
+
+ SMS_ALIGN( int32_t     lTmp        [ 32 ], 16 );
+ SMS_ALIGN( SMS_MPA_INT lSamplesTmp [ 32 ], 16 );
+ SMS_ALIGN( SMS_MPA_INT lSamplesTmp2[ 32 ], 16 );
+
+ register SMS_MPA_INT* lpBuf, *lPtr;
+ register SMS_MPA_INT* lpW;
+
+ SMS_MPA_INT* lpTSamples = lSamplesTmp;
+ int          j, lOffset, lV;
+#if FRAC_BITS <= 15
+ int     lSum;
+#else
+ int64_t lSum;
+#endif  /* FRAC_BITS */
+ memset (  lSamplesTmp,  0, 32 * sizeof ( SMS_MPA_INT )  );
+ memset (  lSamplesTmp2, 0, 32 * sizeof ( SMS_MPA_INT )  );
+
+ _dct32 ( lTmp, aSBSamples );
+
+ lOffset = s_MP3Ctx.m_SynthBuffOffset[ aCh ];
+ lpBuf   = s_MP3Ctx.m_SynthBuf[ aCh ] + lOffset;
+
+ for ( j = 0; j < 32; ++j ) {
+
+  lV = lTmp[ j ];
+#if FRAC_BITS <= 15
+  if ( lV > 32767 )
+
+   lV = 32767;
+
+  else if ( lV < -32768 ) lV = -32768;
+#endif  /* FRAC_BITS */
+  lpBuf[ j ] = lV;
+
+ }  /* end for */
+
+ memcpy (  lpBuf + 512, lpBuf, 32 * sizeof ( SMS_MPA_INT )  );
+
+ ps2_synth_sum8a ( s_Window, lpBuf, lSamplesTmp );
+
+ lpW  = s_Window;
+ lpW += 16;
+
+ lPtr = lpBuf + 32;
+ lSum = 0;
+
+ SUM8( lSum, -=, lpW + 32, lPtr );
+ lpTSamples = lSamplesTmp + 16;
+ OUT_SAMPLEt( lSum );
+ ++lpW;
+
+ ps2_synth_sum8b ( s_Window, lpBuf, lSamplesTmp2 );
+
+ for ( j = 0; j < 17; ++j ) {
+
+  *apSamples = lSamplesTmp[ j ];
+  apSamples += anIncr;
+
+ }  /* end for */
+
+ for ( j = 0; j < 15; ++j ) {
+
+  *apSamples = lSamplesTmp2[ j ];
+  apSamples += anIncr;
+
+ }  /* end for */
+
+ lOffset = ( lOffset - 32 ) & 511;
+ s_MP3Ctx.m_SynthBuffOffset[ aCh ] = lOffset;
+
+}  /* end _synth_filter */
+#else
 #define COS0_0  FIXR(  0.50060299823519630134 )
 #define COS0_1  FIXR(  0.50547095989754365998 )
 #define COS0_2  FIXR(  0.51544730992262454697 )
@@ -3284,8 +3454,6 @@ static void SMS_INLINE BF ( uint32_t* apTab, int anA, int aB, int aC ) {
  apTab[ c ] += apTab[ b ];   \
  apTab[ b ] += apTab[ d ];   \
 }
-
-#define ADD( a, b ) apTab[ a ] += apTab[ b ]
 
 static void _dct32 ( int32_t* apOut, int32_t* apTab ) {
 
@@ -3428,9 +3596,6 @@ static void _dct32 ( int32_t* apOut, int32_t* apTab ) {
  apOut[ 31 ] = apTab[ 31 ];
 
 }  /* end _dct32 */
-
-#define OUT_SHIFT ( WFRAC_BITS + FRAC_BITS - 15 )
-
 #if FRAC_BITS <= 15
 static SMS_INLINE int _round_sample ( int aSum ) {
  int lSum = (   aSum + (  1 << ( OUT_SHIFT - 1 )  )   ) >> OUT_SHIFT;
@@ -3439,8 +3604,6 @@ static SMS_INLINE int _round_sample ( int aSum ) {
  else if ( lSum > 32767 ) lSum = 32767;
  return lSum;
 }  /* end _round_sample */
-# define MACS( rt, ra, rb ) rt += ( ra ) * ( rb )
-# define MULS( ra, rb )     (  ( ra ) * ( rb )  )
 #else
 static SMS_INLINE int _round_sample ( int64_t aSum ) {
  int lSum = ( int )(    (   aSum + (  SMS_INT64( 1 ) << ( OUT_SHIFT - 1 )  )   ) >> OUT_SHIFT    );
@@ -3449,25 +3612,13 @@ static SMS_INLINE int _round_sample ( int64_t aSum ) {
  else if ( lSum > 32767 ) lSum = 32767;
  return lSum;
 }  /* end _round_sample */
-# define MULS( ra, rb ) MUL64( ra, rb )
 #endif  /* FRAC_BITS <= 15 */
-
-#define SUM8( sum, op, w, p ) {                \
- sum op MULS(  ( w )[ 0 * 64 ], p[ 0 * 64 ] ); \
- sum op MULS(  ( w )[ 1 * 64 ], p[ 1 * 64 ] ); \
- sum op MULS(  ( w )[ 2 * 64 ], p[ 2 * 64 ] ); \
- sum op MULS(  ( w )[ 3 * 64 ], p[ 3 * 64 ] ); \
- sum op MULS(  ( w )[ 4 * 64 ], p[ 4 * 64 ] ); \
- sum op MULS(  ( w )[ 5 * 64 ], p[ 5 * 64 ] ); \
- sum op MULS(  ( w )[ 6 * 64 ], p[ 6 * 64 ] ); \
- sum op MULS(  ( w )[ 7 * 64 ], p[ 7 * 64 ] ); \
-}
 
 #define SUM8P2( sum1, op1, sum2, op2, w1, w2, p ) { \
  int lTmp;                                          \
  lTmp = p[0 * 64];                                  \
- sum1 op1 MULS(  ( w1 )[ 0 * 64 ], lTmp );          \
- sum2 op2 MULS(  ( w2 )[ 0 * 64 ], lTmp );          \
+ sum1 op1 MULS(  ( w1 )[ 0 * 64 ], lTmp  );         \
+ sum2 op2 MULS(  ( w2 )[ 0 * 64 ], lTmp  );         \
  lTmp = p[ 1 * 64 ];                                \
  sum1 op1 MULS(  ( w1 )[ 1 * 64 ], lTmp  );         \
  sum2 op2 MULS(  ( w2 )[ 1 * 64 ], lTmp  );         \
@@ -3490,7 +3641,6 @@ static SMS_INLINE int _round_sample ( int64_t aSum ) {
  sum1 op1 MULS(  ( w1 )[ 7 * 64 ], lTmp  );         \
  sum2 op2 MULS(  ( w2 )[ 7 * 64 ], lTmp  );         \
 }
-
 
 static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSBSamples[ SMS_SBLIMIT ] ) {
 
@@ -3571,7 +3721,7 @@ static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSB
  s_MP3Ctx.m_SynthBuffOffset[ aCh ] = lOffset;
 
 }  /* end _synth_filter */
-
+#endif  /* _WIN32 */
 static int32_t _mp3_decode_frame ( void ) {
 
  static int16_t s_Exps[ 576 ];

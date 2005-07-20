@@ -273,17 +273,17 @@ as accurate as possible but who knows ;)). No USB mass-stoarge device support, s
 only USB memory stick doesn't work with ps2sdk tests. Note also, that I've changed that
 magic MAGV, MAGH and other numbers in GS.c to get nice aligned picture on my TV and TV
 tuner card (SMS in NTSC mode also works there). If anyone has a problems with improperly
-aligned picture - just play around with these numbers (it would be cool to link them with
-GUI/PAD). VESA modes are not tested at all (perhaps I'll try to play with it).
+aligned picture - just play around with these numbers. VESA modes are not tested at all
+(perhaps I'll try to play with it).
 
-Another thing: as this became more or less complete application there could be a huge mess
+Another thing: as this become more or less complete version there could be a huge mess
 with distributed versions. There are two choises here: maintain only one version or change
 something to make a difference. I personally don't believe in choise 1. So, SVN will also
 contain a precompiled SMS.elf (let's call it "reference executable"). There's a function
 called 'GUIStub_DrawBackground' which is empty in SVN (in my case it draws a gradient
-background, simple animation and version number (currently 1.0 Rev.2)). Different "distributors"
+background, animation and version number (currently 1.0 Rev.2)). Different "distributors"
 would implement their own "signature" by implementing aforementioned function
-(its parameter gives an access to the GSContext), so people will know who's
+(its parameter gives an access to the GSContext etc.), so people will know who's
 to blame ;)). Anyone is welcome to send me code modifications, so I'll update SVN.
 There's still an optimization potential (GMC, MP3, for example) if someone thinks that
 SMS is too slow. For audio issues, please, contact 'gawd', the creator of 'audsrv'
@@ -292,6 +292,22 @@ SMS is too slow. For audio issues, please, contact 'gawd', the creator of 'audsr
 There're a dosen of various DivX/XviD encoding parameters and their combinations etc.
 I just could not handle them alone, sorry for that.
 
-Update (16-JUL-2005)
+Update (20-JUL-2005)
 --------------------
-Bug fixed (GUI.c - file browser scrolling issue).
+Fiexed bugs:
+- movie stop action does not work always;
+- movie freezes after some time when launched via LaunchElf;
+- motion compenstation does not perform properly for some motion types;
+
+New features:
+- saved file browser state when selecting partition/directory;
+- screen adjustments actions added:
+    select-R1 - move right (in VCK units);
+    select-L1 - move left (in VCK units);
+    select-R2 - move down (in raster units);
+    select-L1 - move up (in raster units);
+- save configuration (select-SQUARE) action added ("mc0:/SMS" directory)
+  (currntly screen settings and HDD mounted partition name);
+- MP3 optimization added (assembly source from BroadQ) - audio decoding
+  performance increased by ~30%;
+- new version number - 1.1 ;);

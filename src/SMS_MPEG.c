@@ -1052,11 +1052,11 @@ static SMS_INLINE void _qpel_motion (
  lUVSrcX %= 8;
  lUVSrcY %= 8;
 
- if ( lUVSrcX < 0 ) lUVSrcX = 8 + lUVSrcX;
- if ( lUVSrcY < 0 ) lUVSrcY = 8 + lUVSrcY;
-
  lUVSrcXOrg = g_MPEGCtx.m_MBX * 8 + lUVSrcX;
  lUVSrcYOrg = g_MPEGCtx.m_MBY * 8 + lUVSrcY;
+
+ if ( lUVSrcX < 0 ) lUVSrcX = 8 + lUVSrcX;
+ if ( lUVSrcY < 0 ) lUVSrcY = 8 + lUVSrcY;
 
  lpCb = g_MPEGCtx.m_pMCCbBuf + lUVSrcY * 16 + lUVSrcX;
  lpCr = g_MPEGCtx.m_pMCCrBuf + lUVSrcY * 16 + lUVSrcX;
@@ -1273,14 +1273,6 @@ static SMS_INLINE void _MPEG_Motion (
 
      lSrcX = ( lMotionX >> 2 ) + ( i  & 1 ) * 8;
      lSrcY = ( lMotionY >> 2 ) + ( i >> 1 ) * 8;
-                    
-     lSrcX = SMS_clip ( lSrcX, -16, 16 );
-
-     if ( lSrcX == 16 ) lDXY &= ~3;
-
-     lSrcY = SMS_clip ( lSrcY, -16, 16 );
-
-     if ( lSrcY == 16 ) lDXY &= ~12;
                     
      _mpeg_fill_mc_buffer_start ( apRefPic, lSrcX, lSrcY );
 
