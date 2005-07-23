@@ -759,7 +759,7 @@ int SMS_AVIReadPacket ( SMS_AVIPacket* apPkt ) {
         
    _SMS_AVINewPacket ( apPkt, lSize );
 
-   if ( apPkt -> m_pData == NULL ) return -ENOMEM;
+   if ( apPkt -> m_pData == NULL ) return 0;
 
    lpBuf -> Read ( lpBuf, apPkt -> m_pData, lSize );
 

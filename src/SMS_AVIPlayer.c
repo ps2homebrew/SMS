@@ -72,6 +72,22 @@ static float            s_AudioTime;
 static int              s_nPackets;
 static int              s_Flags;
 
+static void _draw_text ( char* apStr ) {
+
+ int lWidth = s_Player.m_pGUICtx -> m_pGSCtx -> TextWidth ( apStr, 0 );
+ int lX     = ( s_Player.m_pGUICtx -> m_pGSCtx -> m_Width  - lWidth ) / 2;
+ int lY     = ( s_Player.m_pGUICtx -> m_pGSCtx -> m_Height -     26 ) / 2;
+
+ s_pIPUCtx -> Sync ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF )  );
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkColor = GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0xFF );
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Opaque;
+ s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( lX, lY, 0, apStr, 0 );
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Transparent;
+ s_pIPUCtx -> SetTEX ();
+
+}  /* end _draw_text */
+
 static void _sms_play_v ( void ) {
 
  int              lSize;
@@ -105,7 +121,11 @@ static void _sms_play_v ( void ) {
 
   lSize = SMS_AVIReadPacket ( lpPacket );
 
-  if ( lSize < 0 ) break;
+  if ( lSize < 0 )
+
+   break;
+
+  else if ( lSize == 0 ) continue;
 
   if ( lpPacket -> m_StmIdx != s_VideoIdx ) continue;
 
@@ -203,7 +223,12 @@ static void _sms_video_renderer ( void* apParam ) {
 
   if (  SMS_RB_EMPTY( s_VideoQueue )  ) break;
 
-  if ( s_Flags & SMS_FLAGS_PAUSE ) WaitSema ( s_SemaPauseVideo );
+  if ( s_Flags & SMS_FLAGS_PAUSE ) {
+
+   _draw_text ( "  Pause  " );
+   WaitSema ( s_SemaPauseVideo );
+
+  }  /* end if */
 
   lpFrame = *SMS_RB_POPSLOT( s_VideoQueue );
   SMS_RB_POPADVANCE( s_VideoQueue );
@@ -445,6 +470,11 @@ static void _sms_play_a_v ( void ) {
 
      s_Flags |= SMS_FLAGS_STOP;
 
+     WakeupThread ( s_VideoRThreadID );
+     WakeupThread ( s_AudioRThreadID );
+     WakeupThread ( s_VideoDThreadID );
+     WakeupThread ( s_AudioDThreadID );
+
      for ( i = 0; i < 4; ++i ) SleepThread ();
 
      while (  !SMS_RB_EMPTY( s_VPacketQueue )  ) {
@@ -463,6 +493,8 @@ static void _sms_play_a_v ( void ) {
 
      }  /* end while */
 
+     _draw_text ( "  Stopping  " );
+
      break;
 
     }  /* end if */
@@ -480,7 +512,7 @@ nextPacket:
     lpPacket -> Destroy ( lpPacket );
     break;
 
-   }  /* end if */
+   } else if ( lSize == 0 ) continue;
 
    if ( lpPacket -> m_StmIdx == s_VideoIdx ) {
 

@@ -302,12 +302,33 @@ Fiexed bugs:
 New features:
 - saved file browser state when selecting partition/directory;
 - screen adjustments actions added:
-    select-R1 - move right (in VCK units);
-    select-L1 - move left (in VCK units);
-    select-R2 - move down (in raster units);
-    select-L1 - move up (in raster units);
+    select-R1 - move right;
+    select-L1 - move left;
+    select-R2 - move down;
+    select-L1 - move up;
 - save configuration (select-SQUARE) action added ("mc0:/SMS" directory)
   (currntly screen settings and HDD mounted partition name);
 - MP3 optimization added (assembly source from BroadQ) - audio decoding
   performance increased by ~30%;
 - new version number - 1.1 ;);
+
+Update (23-JUL-2005)
+-------------------
+- added "exit to the ps2 browser" action (select-TRIANGLE);
+- tried to fix difficult-to-catch (thread stuff) "movie stop action does not work always";
+- USB support added (thanks and regards to 'weltall'):
+  USBD.IRX is not included (licensing issues). SMS looks for it in:
+  - host:USBD.IRX
+  - mc0:/BOOT/USBD.IRX
+  - mc0:/PS2OSCFG/USBD.IRX
+  - mc0:/SYS-CONF/USBD.IRX
+  - mc0:/PS2MP3/USBD.IRX
+  - mc0:/BOOT/PS2MP3/USBD.IRX
+  - mc0:/SMS/USBD.IRX
+  *** in aforementioned order ***;
+  I'm using legal USBD.IRX from Playstation 2's Linux kit.
+
+Note: there's modified usb_mass.irx integrated into SMS. I've made it in
+order to get my USB flash drive (Apacer Handy Steno HT202 128MB USB2.0)
+working. Hot swapping apparently works also in my case. Any remarks are
+welcome. NO WARRANTY THAT USB FUNCTIONALITY WILL BEHAVE PROPERLY WITH OTHER DEVICES.

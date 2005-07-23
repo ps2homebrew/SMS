@@ -5,6 +5,7 @@
 #----------------------------------------------------------
 # Based on ffmpeg project (no copyright notes in the original source code)
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005 USB support by weltall
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -35,6 +36,7 @@
 # define ALIGN( x, a ) (   (  (x) + (a) - 1  ) & ~(  (a) - 1  )   )
 
 int g_Trace;
+int g_fUSB;
 
 const uint32_t g_SMS_InvTbl[ 256 ] = {
          0U, 4294967295U, 2147483648U, 1431655766U, 1073741824U,  858993460U,  715827883U,  613566757U,
@@ -139,7 +141,6 @@ static LoadParams s_LoadParams[] = {
  { "PS2HDD",   &g_DataBuffer[ SMS_PS2HDD_OFFSET   ], SMS_PS2HDD_SIZE,   sizeof ( s_HDDArgs ), s_HDDArgs },
  { "PS2FS",    &g_DataBuffer[ SMS_PS2FS_OFFSET    ], SMS_PS2FS_SIZE,    sizeof ( s_PFSArgs ), s_PFSArgs },
  { "POWEROFF", &g_DataBuffer[ SMS_POWEROFF_OFFSET ], SMS_POWEROFF_SIZE, 0,                    NULL      }
-
 };
 
 static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
@@ -174,7 +175,7 @@ void SMS_Initialize ( void* apParam ) {
 
  SifLoadModule ( "rom0:LIBSD", 0, NULL );
 
- for ( i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i ) LoadModule ( lpGUICtx, i );
+ for (  i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i  ) LoadModule ( lpGUICtx, i );
 
  lpGUICtx -> Status ( "Initializing SMS..." );
 

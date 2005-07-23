@@ -1,3 +1,14 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005 USB support by weltall
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #include "Browser.h"
 #include "CDDA.h"
 #include "FileContext.h"
@@ -260,6 +271,77 @@ static void _fill_cd_list ( void ) {
 
 }  /* end _fill_cd_list */
 
+static int _fill_mass_list ( void ) {
+ 
+ int          retVal = 0;
+ fio_dirent_t lEntry; 
+ char*        lpPath = _make_path ();
+ int          lFD    = fioDopen ( lpPath );
+
+ free ( lpPath );
+ 
+ s_BrowserCtx.m_pGUICtx -> Status ( "Reading directory..." );
+ s_BrowserCtx.m_pGUICtx -> ClearFileMenu ();
+
+ if ( lFD >= 0 ) {
+
+  StringList*     lpDirList  = StringList_Init ();
+  StringList*     lpFileList = StringList_Init ();
+  StringListNode* lpNode;
+
+  while (  fioDread ( lFD, &lEntry ) == 1  )   {
+
+   StringList* lpList;
+
+   if ( lEntry.stat.mode & FIO_SO_IFDIR ) {
+
+    if (  !strcmp ( lEntry.name, "."  ) ||
+          !strcmp ( lEntry.name, ".." )
+    ) continue;
+
+    lpList = lpDirList;
+
+   } else if ( lEntry.stat.mode & FIO_SO_IFREG )
+
+    lpList = lpFileList;
+
+   else continue;
+
+   lpList -> PushBack ( lpList, lEntry.name );
+
+  }  /* end while */
+
+  lpNode = lpDirList -> m_pHead;
+
+  while ( lpNode ) {
+
+   s_BrowserCtx.m_pGUICtx -> AddFile ( lpNode -> m_pString, GUI_FF_DIRECTORY );
+   lpNode = lpNode -> m_pNext;
+
+  }  /* end while */
+
+  lpNode = lpFileList -> m_pHead;
+
+  while ( lpNode ) {
+
+   s_BrowserCtx.m_pGUICtx -> AddFile ( lpNode -> m_pString, GUI_FF_FILE );
+   lpNode = lpNode -> m_pNext;
+
+  }  /* end while */
+
+  lpDirList  -> Destroy ( lpDirList,  1 );
+  lpFileList -> Destroy ( lpFileList, 1 );
+
+  fioDclose ( lFD );
+
+  retVal = 1;
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end _fill_mass_list */
+
 static void _select_partition ( char* apName ) {
 
  char lName[ strlen ( apName ) + 6 ]; 
@@ -346,6 +428,42 @@ static void Browser_Destroy ( void ) {
 
 }  /* end Browser_Destroy */
 
+static void _handle_unmount ( void ) {
+
+ int lRes = 0;
+
+ s_BrowserCtx.m_pPath -> Destroy ( s_BrowserCtx.m_pPath, 0 );
+ s_BrowserCtx.m_pGUICtx -> ClearFileMenu ();
+
+ if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr )
+
+  switch ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags ) {
+
+   case GUI_DF_HDD:
+
+    lRes = _fill_partition_list ();
+
+   break;
+
+   case GUI_DF_USBM:
+
+    s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "mass:/" );
+    lRes = _fill_mass_list ();
+
+   break;
+
+   case GUI_DF_CDROM:
+
+    lRes = _fill_cdda_list ();
+
+   break;
+
+  }  /* end switch */
+
+ s_BrowserCtx.m_pGUICtx -> ActivateMenu ( lRes );
+
+}  /* end _handle_unmount */
+
 static FileContext* Browser_Browse ( char* apPartName ) {
 
  FileContext* retVal = NULL;
@@ -400,6 +518,10 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
        _fill_cd_list ();
 
+      else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM )
+
+       _fill_mass_list ();
+
       s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
 
      } break;
@@ -416,7 +538,9 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
       strcat ( lFullPath, lpFile -> m_pFileName );
 
-      if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD )
+      if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD ||
+           s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM
+      )
 
        retVal = STIO_InitFileContext ( lFullPath );
 
@@ -471,6 +595,11 @@ static FileContext* Browser_Browse ( char* apPartName ) {
       _fill_cdda_list ();
       s_BrowserCtx.m_pGUICtx -> ActivateFileItem ( lIdx, lName, lpFirst );
 
+     } else if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM ) {
+
+      _fill_mass_list ();
+      s_BrowserCtx.m_pGUICtx -> ActivateFileItem ( lIdx, lName, lpFirst );
+
      }  /* end if */
 
      if ( lpFirst ) free ( lpFirst );
@@ -489,9 +618,18 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
      s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_partition_list () ? 1 : 0  );
 
-    } else if ( lpDevice -> m_Flags == GUI_DF_CDROM && s_BrowserCtx.m_pCDDACtx )
+    } else if ( lpDevice -> m_Flags == GUI_DF_CDROM && s_BrowserCtx.m_pCDDACtx ) {
 
      s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_cdda_list () ? 1 : 0  );
+
+    } else if ( lpDevice -> m_Flags == GUI_DF_USBM ) {
+
+     s_BrowserCtx.m_pPath -> Destroy ( s_BrowserCtx.m_pPath, 0 );
+     s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "mass:/" );
+
+     s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_mass_list () ? 1 : 0  );
+
+    }  // end if
 
    } break;
 
@@ -504,7 +642,12 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
      s_BrowserCtx.m_pGUICtx -> AddDevice ( GUI_DF_CDROM );
 
-     if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM ) s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_cdda_list () ? 1 : 0  );
+     if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM ) {
+
+      s_BrowserCtx.m_pPath -> Destroy  ( s_BrowserCtx.m_pPath, 0 );
+      s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_cdda_list () ? 1 : 0  );
+
+     }  /* end if */
 
      CDDA_Stop        ();
      CDDA_Synchronize ();
@@ -527,11 +670,10 @@ static FileContext* Browser_Browse ( char* apPartName ) {
      CDDA_DestroyContext ( s_BrowserCtx.m_pCDDACtx );
      s_BrowserCtx.m_pCDDACtx = NULL;
      s_BrowserCtx.m_pGUICtx -> DelDevice ( GUI_DF_CDROM );
-     s_BrowserCtx.m_pGUICtx -> ClearFileMenu ();
 
     } else s_BrowserCtx.m_pGUICtx -> DelDevice ( GUI_DF_CDDA );
 
-    if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr ) s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_partition_list () ? 1 : 0  );
+    _handle_unmount ();
 
    } break;
 
@@ -550,6 +692,27 @@ static FileContext* Browser_Browse ( char* apPartName ) {
      GUI_WaitButton ( PAD_CROSS );
 
     }  /* end if */
+
+   } break;
+
+   case GUI_EV_USBM_MOUNT: {
+
+    s_BrowserCtx.m_pGUICtx -> AddDevice ( GUI_DF_USBM );
+
+    if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM ) {
+
+     s_BrowserCtx.m_pPath -> Destroy  ( s_BrowserCtx.m_pPath, 0 );
+     s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "mass:/" );
+     s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_mass_list () ? 1 : 0  );
+
+    }  /* end if */
+
+   } break;
+
+   case GUI_EV_USBM_UMOUNT: {
+
+    s_BrowserCtx.m_pGUICtx -> DelDevice ( GUI_DF_USBM );
+    _handle_unmount ();
 
    } break;
 

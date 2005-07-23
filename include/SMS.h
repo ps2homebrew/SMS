@@ -13,6 +13,7 @@
 # define __SMS_H
 
 extern int g_Trace;
+extern int g_fUSB;
 
 typedef signed   char  int8_t;
 typedef unsigned char uint8_t;
@@ -37,6 +38,7 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2HDD_SIZE     26257
 # define SMS_PS2FS_SIZE      54785
 # define SMS_POWEROFF_SIZE    2925
+# define SMS_USB_MASS_SIZE   33317
 
 # define SMS_AUDSRV_OFFSET     0
 # define SMS_IDCT_CONST_OFFSET (  ( SMS_AUDSRV_OFFSET     + SMS_AUDSRV_SIZE     + 15 ) & 0xFFFFFFF0  )
@@ -47,7 +49,8 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2HDD_OFFSET     (  ( SMS_PS2ATAD_OFFSET    + SMS_PS2ATAD_SIZE    + 15 ) & 0xFFFFFFF0  )
 # define SMS_PS2FS_OFFSET      (  ( SMS_PS2HDD_OFFSET     + SMS_PS2HDD_SIZE     + 15 ) & 0xFFFFFFF0  )
 # define SMS_POWEROFF_OFFSET   (  ( SMS_PS2FS_OFFSET      + SMS_PS2FS_SIZE      + 15 ) & 0xFFFFFFF0  )
-# define SMS_DATA_BUFFER_SIZE  (  ( SMS_POWEROFF_OFFSET   + SMS_POWEROFF_SIZE   + 15 ) & 0xFFFFFFF0  )
+# define SMS_USB_MASS_OFFSET   (  ( SMS_POWEROFF_OFFSET   + SMS_POWEROFF_SIZE   + 15 ) & 0xFFFFFFF0  )
+# define SMS_DATA_BUFFER_SIZE  (  ( SMS_USB_MASS_OFFSET   + SMS_USB_MASS_SIZE   + 15 ) & 0xFFFFFFF0  )
 
 extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 

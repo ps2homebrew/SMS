@@ -4,6 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005 USB support by weltall
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -11,9 +12,12 @@
 #include "GUI.h"
 #include "GUI_Data.h"
 
+#include "SMS.h"
+
 #include "Timer.h"
 #include "CDDA.h"
 #include "Config.h"
+#include "ExecIOP.h"
 
 #include <kernel.h>
 #include <string.h>
@@ -22,12 +26,25 @@
 #include <libhdd.h>
 #include <loadfile.h>
 #include <iopcontrol.h>
+#include <sifcmd.h>
 #include <stdio.h>
 
 #define STR_AVAILABLE_MEDIA "Available media: "
+#define USB_FLAG_CONNECT    0x00000001
+#define USB_FLAG_DISCONNECT 0x00000002
+
+static const char* s_USBDPath[] = {
+ "host:USBD.IRX",
+ "mc0:/BOOT/USBD.IRX",
+ "mc0:/PS2OSCFG/USBD.IRX",
+ "mc0:/SYS-CONF/USBD.IRX",
+ "mc0:/PS2MP3/USBD.IRX",
+ "mc0:/BOOT/PS2MP3/USBD.IRX",
+ "mc0:/SMS/USBD.IRX"
+};
 
 extern void* _gp;
-extern void  SifExitRpc ( void );
+extern int   g_fUSB;
 
 static GUIContext                 s_GUICtx;
 static unsigned char              s_PadBuf[   256 ] __attribute__(   (  aligned( 64 )  )   );
@@ -36,7 +53,8 @@ static int                        s_GUIThreadID;
 static int                        s_MainThreadID;
 static int                        s_Stop;
 static int                        s_CDROM;
-static int                        s_NoCDCheck;
+static int                        s_USBFlags;
+static int                        s_NoDevCheck;
 static int                        s_PadSema;
 static volatile unsigned long int s_Event;
 static unsigned int               s_PrevBtn;
@@ -151,6 +169,7 @@ unsigned long int GUI_WaitEvent ( void ) {
     case PAD_SELECT | PAD_R2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0,  1 ); continue;
     case PAD_SELECT | PAD_L1      : s_GUICtx.m_pGSCtx -> AdjustDisplay ( -1,  0 ); continue;
     case PAD_SELECT | PAD_L2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0, -1 ); continue;
+    case PAD_SELECT | PAD_TRIANGLE: ExecIOP ( 0, NULL ); Exit ( 0 );
 
    }  /* end switch */
 
@@ -256,7 +275,29 @@ static int _gui_thread ( void* apParam ) {
 
   if ( s_Stop ) break;
 
-  if ( !s_NoCDCheck ) {
+  if ( !s_NoDevCheck ) {
+
+   if ( g_fUSB ) {
+
+    if ( s_USBFlags & USB_FLAG_CONNECT ) {
+
+     s_Event    |= GUI_EF_USBM_MOUNT;
+     s_USBFlags &= ~USB_FLAG_CONNECT;
+     SignalSema ( s_PadSema );
+
+     continue;
+
+    } else if ( s_USBFlags & USB_FLAG_DISCONNECT ) {
+
+     s_Event    |= GUI_EF_USBM_UMOUNT;
+     s_USBFlags &= ~USB_FLAG_DISCONNECT;
+     SignalSema ( s_PadSema );
+
+     continue;
+
+    }  /* end if */
+
+   }  /* end if */
 
    if (  s_CDROM && !CDDA_IsAudioDisk ()  ) {
 
@@ -354,6 +395,10 @@ static void GUI_AddDevice ( int aDev ) {
   lpItem -> m_pImage = g_ImgCDDA;
   s_CDROM = 1;
 
+ } else if ( aDev == GUI_DF_USBM ) {
+
+  lpItem -> m_pImage = g_ImgUSB;
+
  }  /* end if */
 
  if ( !s_GUICtx.m_DevMenu.m_pItems ) {
@@ -364,8 +409,12 @@ static void GUI_AddDevice ( int aDev ) {
 
  } else {
 
-  s_GUICtx.m_DevMenu.m_pItems -> m_pNext = lpItem;
-  lpItem -> m_pPrev = s_GUICtx.m_DevMenu.m_pItems;
+  GUIDeviceMenuItem* lpItems = s_GUICtx.m_DevMenu.m_pItems;
+
+  while ( lpItems -> m_pNext ) lpItems = lpItems -> m_pNext;
+
+  lpItems -> m_pNext = lpItem;
+  lpItem  -> m_pPrev = lpItems;
 
  }  /* end else */
 
@@ -745,6 +794,16 @@ static int GUI_Run ( void** apRetVal ) {
    retVal = GUI_EV_CDROM_UMOUNT;
    break;
 
+  } else if ( lEvent & GUI_EF_USBM_MOUNT ) {
+
+   retVal = GUI_EV_USBM_MOUNT;
+   break;
+
+  } else if ( lEvent & GUI_EF_USBM_UMOUNT ) {
+
+   retVal = GUI_EV_USBM_UMOUNT;
+   break;
+
   } else if ( s_GUICtx.m_pCurrentMenu ) {
 
    void* lpResult = s_GUICtx.m_pCurrentMenu -> Navigate ( lEvent );
@@ -811,7 +870,7 @@ static void GUI_Redraw ( void ) {
 
 void GUI_WaitButton ( int aButton ) {
 
- s_NoCDCheck = 1;
+ s_NoDevCheck = 1;
 
  Timer_RegisterHandler ( TimerHandler );
 
@@ -825,7 +884,7 @@ void GUI_WaitButton ( int aButton ) {
 
  Timer_RegisterHandler ( NULL );
 
- s_NoCDCheck = 0;
+ s_NoDevCheck = 0;
 
 }  /* end GUI_WaitButton */
 
@@ -933,8 +992,23 @@ static int GUI_SelectFile ( char* apFileName ) {
 
 }  /* end GUI_SelectFile */
 
+static void _usb_connect ( void* apPkt, void* apArg ) {
+
+ s_USBFlags |= USB_FLAG_CONNECT;
+ iWakeupThread ( s_GUIThreadID );
+
+}  /* end _usb_connect */
+
+static void _usb_disconnect ( void* apPkt, void* apArg ) {
+
+ s_USBFlags |= USB_FLAG_DISCONNECT;
+ iWakeupThread ( s_GUIThreadID );
+
+}  /* end _usb_disconnect */
+
 GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
+ int         i;
  ee_sema_t   lSema;
  ee_thread_t lThread;
 
@@ -942,6 +1016,7 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  s_Stop         = 0;
  s_Event        = 0;
  s_CDROM        = 0;
+ s_USBFlags     = 0;
  s_PrevBtn      = 0;
  s_Init         = 0;
 
@@ -1007,6 +1082,64 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  _wait_pad_ready ();
 
  padSetMainMode ( 0, 0, PAD_MMODE_DIGITAL, PAD_MMODE_LOCK );
+
+ g_fUSB = 0;
+
+ GUI_Status ( "Locating USBD.IRX..." );
+
+ for (  i = 0; i < sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] ); ++i  ) {
+
+  int lFD = fioOpen ( s_USBDPath[ i ], O_RDONLY );
+
+  if ( lFD >= 0 ) {
+
+   long lSize = fioLseek ( lFD, 0, SEEK_END );
+
+   if ( lSize > 0 ) {
+
+    void* lpBuf = malloc ( lSize );
+
+    if ( lpBuf ) {
+
+     fioLseek ( lFD, 0, SEEK_SET );
+
+     if (  fioRead ( lFD, lpBuf, lSize ) == lSize  ) {
+
+      int lRes;
+
+      SifExecModuleBuffer ( lpBuf, lSize, 0, NULL, &lRes );
+
+      if ( lRes >= 0 ) {
+
+       g_fUSB = 1;
+       break;
+
+      }  /* end if */
+
+     }  /* end if */
+
+     free ( lpBuf );
+
+    }  /* end if */
+
+   }  /* end if */
+
+   fioClose ( lFD );
+
+  }  /* end if */
+
+ }  /* end for */
+
+ if ( g_fUSB ) {
+
+  DI();
+   SifAddCmdHandler ( 0x0012, _usb_connect,    0 );
+   SifAddCmdHandler ( 0x0013, _usb_disconnect, 0 );
+  EI();
+
+  SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
+
+ }  /* end if */
 
  DoTimer = TimerProc;
  s_Init  = 1;
