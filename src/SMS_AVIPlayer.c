@@ -78,46 +78,71 @@ static void _draw_text ( char* apStr ) {
  int lX     = ( s_Player.m_pGUICtx -> m_pGSCtx -> m_Width  - lWidth ) / 2;
  int lY     = ( s_Player.m_pGUICtx -> m_pGSCtx -> m_Height -     26 ) / 2;
 
- s_pIPUCtx -> Sync ();
+ if ( s_pIPUCtx ) s_pIPUCtx -> Sync ();
+
  s_Player.m_pGUICtx -> m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF )  );
  s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkColor = GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0xFF );
  s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Opaque;
  s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( lX, lY, 0, apStr, 0 );
  s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Transparent;
- s_pIPUCtx -> SetTEX ();
+
+ if ( s_pIPUCtx ) s_pIPUCtx -> SetTEX ();
 
 }  /* end _draw_text */
+
+static void _prepare_ipu_context ( int afVideo ) {
+
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fDblBuf = GS_OFF;
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_OFF;
+
+ s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+ s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
+ s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+
+ if ( afVideo )
+
+  s_pIPUCtx = IPU_InitContext (
+   s_Player.m_pGUICtx -> m_pGSCtx,
+   s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
+   s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
+  );
+
+}  /* end _prepare_ipu_context */
 
 static void _sms_play_v ( void ) {
 
  int              lSize;
  SMS_FrameBuffer* lpFrame;
  SMS_AVIPacket*   lpPacket = SMS_AVINewPacket ( s_Player.m_pAVICtx );
+ float            lFrameRate = ( float )s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_RealFrameRate / ( float )s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_RealFrameRateBase;
+ float            lDiff;
+ float            lNextFrame = g_Timer;
+ float            lFrameTime = 1000.0F / lFrameRate;
 
  s_Player.m_pGUICtx -> Status ( "Buffering AVI file (video only)..." );
  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 384 );
 
- s_Player.m_pGUICtx -> m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_OFF;
-
- s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
- s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-
- s_pIPUCtx = IPU_InitContext (
-  s_Player.m_pGUICtx -> m_pGSCtx,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
- );
+ _prepare_ipu_context ( 1 );
 
  while ( 1 ) {
 
   int lButtons = GUI_ReadButtons ();
 
-  if ( lButtons & PAD_SELECT )
+  if ( lButtons & PAD_SELECT ) {
 
+   lNextFrame = g_Timer;
+   _draw_text ( "  Pause  " );
    GUI_WaitButton ( PAD_START );
 
-  else if ( lButtons & PAD_TRIANGLE ) break;
+  } else if ( lButtons & PAD_TRIANGLE ) {
+
+   s_pIPUCtx -> Sync ();
+   _draw_text ( "  Stopping  " );
+   break;
+
+  }  /* end if */
 
   lSize = SMS_AVIReadPacket ( lpPacket );
 
@@ -135,9 +160,16 @@ static void _sms_play_v ( void ) {
   ) {
 
    s_pIPUCtx -> Sync ();
+
+   lDiff = lNextFrame - g_Timer;
+
+   if ( lDiff > 0.0F ) Timer_Wait ( lDiff );
+
    s_pIPUCtx -> Display ( lpFrame );
 
   }  /* end if */
+
+  lNextFrame = g_Timer + lFrameTime;
 
  }  /* end while */
 
@@ -159,8 +191,7 @@ static void _sms_play_a ( void ) {
  s_Player.m_pGUICtx -> Status ( "Buffering AVI file (audio only)..." );
  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
 
- s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
- s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+ _prepare_ipu_context ( 0 );
 
  s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only", 0 );
 
@@ -175,11 +206,21 @@ static void _sms_play_a ( void ) {
 
    int lButtons = GUI_ReadButtons ();
 
-   if ( lButtons & PAD_SELECT )
+   if ( lButtons & PAD_SELECT ) {
 
+    _draw_text ( "  Pause  " );
+    s_pSPUCtx -> Mute ( 1 );
     GUI_WaitButton ( PAD_START );
+    s_pSPUCtx -> Mute ( 0 );
+    s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+    s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( 10, 60, 0, "Audio only", 0 );
 
-   else if ( lButtons & PAD_TRIANGLE ) break;
+   } else if ( lButtons & PAD_TRIANGLE ) {
+
+    _draw_text ( "  Stopping  " );
+    break;
+
+   }  /* end if */
 
    lSize = SMS_AVIReadPacket ( lpPacket );
 
@@ -213,9 +254,7 @@ static void _sms_play_a ( void ) {
 static void _sms_video_renderer ( void* apParam ) {
 
  SMS_FrameBuffer* lpFrame;
- float            lFrameRate = ( float )s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_RealFrameRate / ( float )s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_RealFrameRateBase;
  float            lDiff;
- int              lnVideoFrames = 0;
 
  while ( 1 ) {
 
@@ -242,7 +281,7 @@ static void _sms_video_renderer ( void* apParam ) {
 
   s_pIPUCtx -> Sync ();
 
-  lDiff = ( ++lnVideoFrames * 1000 / lFrameRate ) - s_AudioTime;
+  lDiff = lpFrame -> m_PTS - s_AudioTime;
 
   if ( lDiff > 20.0F ) Timer_Wait ( lDiff / 4.0F );
 
@@ -285,6 +324,8 @@ static void _sms_video_decoder ( void* apParam ) {
    }  /* end if */
 
    WaitSema ( s_SemaRPutVideo );
+
+   lpFrame -> m_PTS = lpPacket -> m_PTS;
 
    *SMS_RB_PUSHSLOT( s_VideoQueue ) = lpFrame;
    SMS_RB_PUSHADVANCE( s_VideoQueue );
@@ -432,20 +473,7 @@ static void _sms_play_a_v ( void ) {
   s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_SampleRate
  );
 
- s_Player.m_pGUICtx -> m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_OFF;
-
- s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
- s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
- s_Player.m_pGUICtx -> m_pGSCtx -> InitScreen ();
- s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
- s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-
- s_pIPUCtx = IPU_InitContext (
-  s_Player.m_pGUICtx -> m_pGSCtx,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Width,
-  s_Player.m_pAVICtx -> m_pStm[ s_VideoIdx ] -> m_Codec.m_Height
- );
+ _prepare_ipu_context ( 1 );
 
  if ( s_pSPUCtx && s_pIPUCtx )
 
@@ -599,8 +627,12 @@ static void _sms_avi_destroy ( void ) {
 
  }  /* end if */
 
- s_pSPUCtx -> Destroy ();
- s_pSPUCtx = NULL;
+ if ( s_pSPUCtx ) {
+
+  s_pSPUCtx -> Destroy ();
+  s_pSPUCtx = NULL;
+
+ }  /* end if */
 
  if ( s_pIPUCtx ) {
 

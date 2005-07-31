@@ -370,6 +370,60 @@ static void _SMS_AVIEstimateTimings ( SMS_AVIContext* apCtx ) {
 
 }  /* end _SMS_AVIEstimateTimings */
 
+static void _SMS_AVICalcPktFields ( SMS_AVIStream* apStm, SMS_AVIPacket* apPkt ) {
+
+ int lNum, lDen;
+
+ if ( apStm -> m_Codec.m_Type == SMS_CodecTypeVideo ) {
+
+  lNum = apStm -> m_Codec.m_FrameRateBase;
+  lDen = apStm -> m_Codec.m_FrameRate;
+
+  if ( lDen && lNum ) {
+
+   apPkt -> m_Duration = ( int )_SMS_AVIRescale (
+    1, lNum * ( int64_t )apStm -> m_TimeBase.m_Den, lDen * ( int64_t )apStm -> m_TimeBase.m_Num
+   );
+
+   if ( apPkt -> m_PTS == SMS_NOPTS_VALUE ) {
+
+    if ( apPkt -> m_DTS == SMS_NOPTS_VALUE ) {
+
+     apPkt -> m_PTS = apStm -> m_CurDTS;
+     apPkt -> m_DTS = apStm -> m_CurDTS;
+
+    } else {
+
+     apStm -> m_CurDTS = apPkt -> m_DTS;
+     apPkt -> m_PTS    = apPkt -> m_DTS;
+
+    }  /* end else */
+
+   } else {
+
+    apStm -> m_CurDTS = apPkt -> m_PTS;
+    apPkt -> m_DTS    = apPkt -> m_PTS;
+
+   }  /* end else */
+
+   apStm -> m_CurDTS += apPkt -> m_Duration;
+
+   if ( apPkt -> m_PTS != SMS_NOPTS_VALUE )
+
+    apPkt -> m_PTS = _SMS_AVIRescale ( apPkt -> m_PTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den );
+
+   if ( apPkt -> m_DTS != SMS_NOPTS_VALUE )
+
+    apPkt -> m_DTS = _SMS_AVIRescale ( apPkt -> m_DTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den );
+
+   apPkt -> m_Duration = ( int )_SMS_AVIRescale ( apPkt -> m_Duration, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den );
+
+  }  /* end if */
+
+ }  /* end if */
+
+}  /* end _SMS_AVICalcPktFields */
+
 SMS_AVIPacket* SMS_AVINewPacket ( SMS_AVIContext* apCtx ) {
 
  SMS_AVIPacket* retVal = calloc (  1, sizeof ( SMS_AVIPacket )  );
@@ -789,6 +843,8 @@ int SMS_AVIReadPacket ( SMS_AVIPacket* apPkt ) {
     lpStm -> m_FrameOffset += apPkt -> m_Size;
 
    else ++lpStm -> m_FrameOffset;
+
+   _SMS_AVICalcPktFields ( lpStm, apPkt );
 
    return lSize;
 

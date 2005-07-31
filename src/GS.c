@@ -535,8 +535,15 @@ static void _fontm_init ( void ) {
  free   ( lpDMA  );
  fclose ( lpFile );
 
- for ( lX = 0; lX < 26; ++lX ) s_Kerns[ 0 ].m_Kern[ lX ].m_Left  =
-                               s_Kerns[ 0 ].m_Kern[ lX ].m_Right = 7;
+ for ( lX = 0; lX < 26; ++lX ) {
+
+  s_Kerns[ 0 ].m_Kern[ lX ].m_Left  =
+  s_Kerns[ 0 ].m_Kern[ lX ].m_Right = 7;
+
+  s_Kerns[ 7 ].m_Kern[ lX ].m_Left  = 5;
+  s_Kerns[ 7 ].m_Kern[ lX ].m_Right = 8;
+
+ }  /* end for */
 
 }  /* end _fontm_init */
 

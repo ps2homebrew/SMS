@@ -157,7 +157,9 @@ static void IPU_DestroyContext ( void ) {
   RemoveDmacHandler ( DMA_CHANNEL_GIF,      g_IPUCtx.m_DMAHandlerID_GIF );
 #ifdef VB_SYNC
   DisableIntc ( 2 );
-  RemoveIntcHandler ( 2, g_IPUCtx.m_VBlankHandlerID );
+  DisableIntc ( 3 );
+  RemoveIntcHandler ( 2, g_IPUCtx.m_VBlankStartHandlerID );
+  RemoveIntcHandler ( 3, g_IPUCtx.m_VBlankEndHandlerID   );
 #endif  /* VB_SYNC */
   DeleteSema ( g_IPUCtx.m_SyncS );
 
@@ -208,7 +210,7 @@ static void IPU_GIFHandlerDraw ( void ) {
 
 }  /* end IPU_GIFHandlerDraw */
 #ifdef VB_SYNC
-static int IPU_VBlankHandler ( int aCause ) {
+static int IPU_VBlankStartHandler ( int aCause ) {
 
  if ( g_IPUCtx.m_fDraw ) {
 
@@ -217,11 +219,19 @@ static int IPU_VBlankHandler ( int aCause ) {
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
   DMA_SendToGIF( g_IPUCtx.m_DMAGIFDraw, 7 );
 
- }  /* end if */
+ } else g_IPUCtx.m_fBlank = 1;
 
  return -1;
 
-}  /* end IPU_VBlankHandler */
+}  /* end IPU_VBlankStartHandler */
+
+static int IPU_VBlankEndHandler ( int aCause ) {
+
+ g_IPUCtx.m_fBlank = 0;
+
+ return -1;
+
+}  /* end IPU_VBlankEndHandler */
 #endif  /* VB_SYNC */
 void IPU_GIFHandlerSend ( void ) {
 
@@ -229,11 +239,17 @@ void IPU_GIFHandlerSend ( void ) {
 
   if ( !--g_IPUCtx.m_Slice ) {
 #ifdef VB_SYNC
-   g_IPUCtx.m_fDraw   = 1;
-#else
+   if ( !g_IPUCtx.m_fBlank )
+
+    g_IPUCtx.m_fDraw = 1;
+
+   else {
+#endif  /* VB_SYNC */
   g_IPUCtx.m_GIFlag   = 1;
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
   DMA_SendToGIF( g_IPUCtx.m_DMAGIFDraw, 7 );
+#ifdef VB_SYNC
+   }  /* end else */
 #endif  /* VB_SYNC */
    return;
 
@@ -435,8 +451,10 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    g_IPUCtx.m_DMAHandlerID_IPU = AddDmacHandler ( DMA_CHANNEL_FROM_IPU, IPU_DMAHandlerFromIPU, 0 );
    g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler ( DMA_CHANNEL_GIF,      IPU_DMAHandlerToGIF,   0 );
 #ifdef VB_SYNC
-   g_IPUCtx.m_VBlankHandlerID  = AddIntcHandler ( 2,                    IPU_VBlankHandler,     0 );
+   g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( 2, IPU_VBlankStartHandler, 0 );
+   g_IPUCtx.m_VBlankEndHandlerID   = AddIntcHandler ( 3, IPU_VBlankEndHandler,   0 );
    EnableIntc ( 2 );
+   EnableIntc ( 3 );
 #endif  /* VB_SYNC */
    IPU_RESET();
    IPU_CMD_SETTH( 0, 0 );

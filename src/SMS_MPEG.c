@@ -397,8 +397,6 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
  if ( lpMB != g_MPEGCtx.m_pCache ) {
 
   DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer, lpMB, 48 );
-  DMA_WaitToSPR();
-  DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer + 2, lpMB + g_MPEGCtx.m_CurPic.m_Linesize, 48 );
 
   lpMCY  = ( u128* )g_MPEGCtx.m_pMCYBuf;
   lpMCCb = ( u64*  )g_MPEGCtx.m_pMCCbBuf;
@@ -406,6 +404,9 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
 
   g_MPEGCtx.m_pCache      = lpMB;
   g_MPEGCtx.m_fDirtyCache = 1;
+
+  DMA_WaitToSPR();
+  DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer + 2, lpMB + g_MPEGCtx.m_CurPic.m_Linesize, 48 );
 
   for ( i = 0; i < 2; ++i ) {
 
