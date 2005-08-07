@@ -338,3 +338,11 @@ Update (31-JUL-2005)
 - another algorithm of A/V syncronization implemented;
 - some bugs hopefully fixed :);
 - video output V-Blank synchronization scheme changed;
+
+Update (07-AUG-2005)
+--------------------
+- an attempt to fix a bug due to XviD's packed bitstream;
+- translational global motion compensation routine is rewritten
+  using EE's MMI. I'm not sure if it will be really noticeable
+  but tests show that new routine is >4x faster than the original
+  C code;

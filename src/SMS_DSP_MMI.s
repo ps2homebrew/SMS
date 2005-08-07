@@ -15,7 +15,7 @@
 # GNU Lesser General Public License as published by the Free Software Foundation;
 # either version 2 of the License, or (at your option) any later version.
 #
-# Pixel routines by Eugene Plotnikov
+# Pixel ang GMC1 routines by Eugene Plotnikov
 # These are licensed under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 
@@ -26,6 +26,71 @@
 .set volatile
 .set noreorder
 .set nomacro
+
+.ent	GMC1
+.global GMC1
+
+GMC1:
+    .set noreorder
+    .set volatile
+    mtsah       $zero, 1
+    subu        $t3, $zero, $t0
+    pcpyh       $t0, $t0
+    pcpyh       $t3, $t3
+    subu        $t4, $zero, $t1
+    pcpyh       $t1, $t1
+    pcpyh       $t4, $t4
+    pinteh      $t0, $t0, $t3
+    pextlw      $t1, $t1, $t4
+    lui         $t4, 16
+    ori         $t4, 16
+    addu        $t5, $t4, $zero
+    pextlh      $t4, $zero, $t4
+    paddh       $t1, $t5, $t1
+    paddh       $t0, $t4, $t0
+    pmulth      $t0, $t0, $t1
+    pmfhl.lh    $t0
+    pcpyld      $t3, $t0, $t0
+    pcpyh       $t0, $t3
+    qfsrv       $t3, $t3
+    pcpyh       $t1, $t3
+    qfsrv       $t3, $t3
+    pcpyh       $v0, $t3
+    qfsrv       $t3, $t3
+    pcpyh       $t3, $t3
+    addu        $v1, $zero, $a3
+    pcpyh       $t2, $t2
+    pcpyld      $t2, $t2, $t2
+1:
+    pmthi       $t2
+    ldr         $t4, 0($a1)
+    ldr         $t5, 1($a1)
+    ldl         $t4, 7($a1)
+    pmtlo       $t2
+    ldl         $t5, 8($a1)
+    pextlb      $t4, $zero, $t4
+    pmaddh      $zero, $t0, $t4
+    pextlb      $t5, $zero, $t5
+    addu        $a1, $a1, $a2
+    ldr         $t6, 0($a1)
+    ldr         $t7, 1($a1)
+    pmaddh      $zero, $t1, $t5
+    ldl         $t6, 7($a1)
+    ldl         $t7, 8($a1)
+    pextlb      $t6, $zero, $t6
+    pmaddh      $zero, $t6, $v0
+    pextlb      $t7, $zero, $t7
+    pmaddh      $zero, $t7, $t3
+    pmfhl.lh    $t4
+    psrah       $t4, $t4, 8
+    ppacb       $t4, $zero, $t4
+    sd          $t4, 0($a0)
+    addiu       $v1, $v1, -1
+    bgtzl       $v1, 1b
+    addu        $a0, $a0, $a3
+    jr          $ra
+    nop
+.end	GMC1
 
 .globl	IDCT_Put
 .ent	IDCT_Put

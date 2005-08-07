@@ -523,7 +523,7 @@ static void GMC ( const SMS_DSPGMCData* apData ) {
  }  /* end for */
 
 }  /* end GMC */
-
+#ifdef _WIN32
 static void GMC1 ( uint8_t* apDst, uint8_t* apSrc, int aStride, int aH, int aX16, int aY16, int aRounder ) {
 
  const short lA = ( 16 - aX16 ) * ( 16 - aY16 );
@@ -559,7 +559,9 @@ static void GMC1 ( uint8_t* apDst, uint8_t* apSrc, int aStride, int aH, int aX16
  } while ( --aH );
 
 }  // end GMC1
-
+#else  /* PS2 */
+extern void GMC1 ( uint8_t*, uint8_t*, int, int, int, int, int );
+#endif  /* _WIN32 */
 static SMS_INLINE uint32_t _rnd_avg32 ( uint32_t a, uint32_t b ) {
  return ( a | b ) - (   (  ( a ^ b ) & ~BYTE_VEC32( 0x01 )  ) >> 1   );
 }  // end _rnd_avg32

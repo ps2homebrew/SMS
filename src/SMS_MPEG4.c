@@ -1081,8 +1081,12 @@ scanBuild:
 
    while (  isdigit ( *lpBuf )  ) lBuf[ i++ ] = *lpBuf++;
 
-   lBuf[ i ] = '\x00'; lBuild = atoi ( lBuf );
-   lLast     = *lpBuf;
+   if ( i ) {
+
+    lBuf[ i ] = '\x00'; lBuild = atoi ( lBuf );
+    lLast     = *lpBuf;
+
+   }  // end if
 
   } else if ( *lpBuf == 'b' ) {
 
@@ -1091,7 +1095,7 @@ scanBuild:
 
   }  /* end if */
 
-  if ( lVer != 0 && lBuild != 0 ) {
+  if ( lVer != 0 && lBuild >= 0 ) {
 
    g_MPEGCtx.m_DivXVer   = lVer;
    g_MPEGCtx.m_DivXBuild = lBuild;
