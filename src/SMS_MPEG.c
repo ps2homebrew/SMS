@@ -235,6 +235,10 @@ static void _mpeg_alloc_picture ( SMS_Frame* apPic ) {
 
  g_MPEGCtx.m_pPrevPicTypes[ 0 ] = g_MPEGCtx.m_PicType;
 
+ if ( apPic -> m_Age < PREV_PICT_TYPES_BUFFER_SIZE &&
+      g_MPEGCtx.m_pPrevPicTypes[ apPic -> m_Age ] == SMS_FT_B_TYPE
+ ) apPic -> m_Age = INT_MAX;
+
  apPic -> m_Width  = g_MPEGCtx.m_Width;
  apPic -> m_Height = g_MPEGCtx.m_Height;
 
@@ -1617,6 +1621,7 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
  const int lLinesize   = 16;
  const int lUVLinesize =  8;
  const int lBlockSize  =  8;
+ const int lAge        = g_MPEGCtx.m_CurPic.m_Age;
 
  int      lDCTLineSize, lDCTOffset;
  uint8_t* lpDestY;
@@ -1640,6 +1645,24 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
   g_MPEGCtx.m_MBSkiped = 0;
  
   if ( ++*lpMBSkip > 99 ) *lpMBSkip = 99;
+
+  if ( *lpMBSkip >= lAge && g_MPEGCtx.m_CurPic.m_Ref ) {
+
+   int             lMBX = g_MPEGCtx.m_MBX;
+   int             lMBY = g_MPEGCtx.m_MBY;
+   SMS_MacroBlock* lpMB;
+
+   lpMB  = g_MPEGCtx.m_LastPic.m_pBuf -> m_pData + lMBX;
+   lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+#ifdef _WIN32
+   g_MPEGCtx.m_pMacroBlock[ g_MPEGCtx.m_IdxRes ] = lpMB;
+#else  /* PS2 */
+   DMA_RecvSPR(  ( uint8_t* )g_MPEGCtx.m_pMacroBlock[ g_MPEGCtx.m_IdxRes ], lpMB, 24 );
+   DMA_WaitToSPR();
+#endif  /* _WIN32 */
+   goto end;
+
+  }  /* end if */
 
  } else if ( !g_MPEGCtx.m_CurPic.m_Ref ) {
 
@@ -1722,7 +1745,7 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
   _put_dct ( aBlock[ 5 ], 5, lpDestCr, lUVLinesize, g_MPEGCtx.m_ChromaQScale );
 
  }  /* end else */
-
+end:
  MPEG_CopyBlock ();
 
 }  /* end SMS_MPEG_DecodeMB */

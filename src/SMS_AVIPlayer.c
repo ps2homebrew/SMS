@@ -64,6 +64,7 @@ static uint8_t          s_AudioDStack[ 0x20000 ] __attribute__(   (  aligned( 16
 static IPUContext*      s_pIPUCtx;
 static SMS_Codec*       s_pVideoCodec;
 static int              s_VideoIdx;
+static SMS_FrameBuffer* s_pFrame;
 static SPUContext*      s_pSPUCtx;
 static SMS_Codec*       s_pAudioCodec;
 static int              s_AudioIdx;
@@ -253,8 +254,7 @@ static void _sms_play_a ( void ) {
 
 static void _sms_video_renderer ( void* apParam ) {
 
- SMS_FrameBuffer* lpFrame;
- float            lDiff;
+ float lDiff;
 
  while ( 1 ) {
 
@@ -269,7 +269,7 @@ static void _sms_video_renderer ( void* apParam ) {
 
   }  /* end if */
 
-  lpFrame = *SMS_RB_POPSLOT( s_VideoQueue );
+  s_pFrame = *SMS_RB_POPSLOT( s_VideoQueue );
   SMS_RB_POPADVANCE( s_VideoQueue );
 
   if ( s_Flags & SMS_FLAGS_STOP ) {
@@ -281,11 +281,11 @@ static void _sms_video_renderer ( void* apParam ) {
 
   s_pIPUCtx -> Sync ();
 
-  lDiff = lpFrame -> m_PTS - s_AudioTime;
+  lDiff = s_pFrame -> m_PTS - s_AudioTime;
 
   if ( lDiff > 20.0F ) Timer_Wait ( lDiff / 4.0F );
 
-  s_pIPUCtx -> Display ( lpFrame );
+  s_pIPUCtx -> Display ( s_pFrame );
 
   SignalSema ( s_SemaRPutVideo );
 
@@ -485,8 +485,28 @@ static void _sms_play_a_v ( void ) {
 
     if ( lButtons & PAD_SELECT ) {
 
-     s_Flags |=  SMS_FLAGS_PAUSE;
-     GUI_WaitButton ( PAD_START );
+     unsigned long int lBtn;
+     unsigned long int lTime = g_Timer;
+
+     s_Flags |= SMS_FLAGS_PAUSE;
+
+     while ( 1 ) {
+
+      lBtn = GUI_WaitButton ( PAD_START | PAD_SELECT );
+
+      if ( lBtn == PAD_START ) break;
+
+      if ( g_Timer - lTime < 200 ) continue;
+
+      if ( lBtn == PAD_SELECT ) {
+
+       s_pIPUCtx -> Sync ();
+       s_pIPUCtx -> Display ( s_pFrame );
+
+      }  /* end if */
+
+     }  /* end while */
+
      s_Flags &= ~SMS_FLAGS_PAUSE;
      SignalSema ( s_SemaPauseAudio );
      SignalSema ( s_SemaPauseVideo );
@@ -642,9 +662,13 @@ static void _sms_avi_destroy ( void ) {
 
  }  /* end if */
 
- CDDA_Synchronize ();
- CDDA_Stop        ();
- CDDA_Synchronize ();
+ if (  CDDA_IsAudioDisk ()  ) {
+
+  CDDA_Synchronize ();
+  CDDA_Stop        ();
+  CDDA_Synchronize ();
+
+ }  /* end if */
 
  s_Player.m_pAVICtx -> Destroy ( s_Player.m_pAVICtx );
  s_Player.m_pAVICtx = NULL;

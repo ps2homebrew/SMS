@@ -23,7 +23,7 @@ int main ( void ) {
  GUIContext*     lpGUICtx;
  BrowserContext* lpBrowserCtx;
  SMS_AVIPlayer*  lpPlayer;
- GSDisplayMode   lDisplayMode = GSDisplayMode_AutoDetect;
+ GSDisplayMode   lDisplayMode;
 #if RESET_IOP
  SifIopReset ( "rom0:UDNL rom0:EELOADCNF", 0 );
 
@@ -31,16 +31,17 @@ int main ( void ) {
 #endif  /* RESET_IOP */
  SifInitRpc ( 0 );
 
- SifLoadModule ( "rom0:SIO2MAN", 0, NULL );
+ CDDA_Init  ();
+ Timer_Init ();
+
+ lDisplayMode = GUI_InitPad ();
+
  SifLoadModule ( "rom0:MCMAN",   0, NULL );
  SifLoadModule ( "rom0:MCSERV",  0, NULL );
 
  mcInit ( MC_TYPE_MC );
 
- CDDA_Init  ();
- Timer_Init ();
-
- if (   (  lfConfig = LoadConfig ()  )   ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
+ if (   (  lfConfig = LoadConfig ()  ) && lDisplayMode == GSDisplayMode_AutoDetect  ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
 
  lpGSCtx = GS_InitContext  ( lDisplayMode );
 

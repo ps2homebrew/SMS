@@ -29,7 +29,7 @@ typedef short SMS_DCTELEM;
 extern const uint32_t g_SMS_InvTbl [ 256 ];
 extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 
-# define SMS_AUDSRV_SIZE     20657
+# define SMS_AUDSRV_SIZE     22185
 # define SMS_IDCT_CONST_SIZE   368
 # define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089
@@ -147,6 +147,10 @@ static __inline uint32_t SMS_unaligned32 ( const void* apData ) {
  return *( const uint32_t* )apData;
 }  /* end SMS_unaligned32 */
 
+static __inline uint64_t SMS_unaligned64 ( const void* apData ) {
+ return *( const uint64_t* )apData;
+}  /* end SMS_unaligned64 */
+
 static SMS_INLINE uint64_t SMS_Time ( void ) {
  struct _timeb lTime; _ftime ( &lTime );
  return ( uint64_t )lTime.time * 1000i64 + ( uint64_t )lTime.millitm;
@@ -160,6 +164,10 @@ typedef unsigned int     uint128_t __attribute__(   (  mode( TI )  )   );
 typedef struct SMS_Unaligned32 {
  uint32_t m_Val __attribute__(  ( packed )  );
 } SMS_Unaligned32;
+
+typedef struct SMS_Unaligned64 {
+ uint64_t m_Val __attribute__(  ( packed )  );
+} SMS_Unaligned64;
 
 #  define SMS_INT64( c )    c##LL
 #  define SMS_INLINE        inline
@@ -222,6 +230,10 @@ static inline uint32_t SMS_unaligned32 ( const void* apData ) {
  return (  ( const SMS_Unaligned32* )apData  ) -> m_Val;
 }  /* end SMS_unaligned32 */
 
+static inline uint64_t SMS_unaligned64 ( const void* apData ) {
+ return (  ( const SMS_Unaligned64* )apData  ) -> m_Val;
+}  /* end SMS_unaligned64 */
+
 static SMS_INLINE uint64_t SMS_Time ( void ) {
  volatile extern uint64_t g_Timer;
  return g_Timer;
@@ -270,6 +282,7 @@ typedef struct SMS_Frame {
  int                     m_Ref;
  int                     m_CodedPicNr;
  int                     m_Linesize;
+ int                     m_Age;
  struct SMS_FrameBuffer* m_pBuf;
  uint32_t*               m_pMBType;
  uint8_t*                m_pMBSkipTbl;

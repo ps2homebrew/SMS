@@ -27,6 +27,7 @@
 #define AUDSRV_CMD_SET_FORMAT 0x0003
 #define AUDSRV_CMD_PLAY_AUDIO 0x0004
 #define AUDSRV_CMD_WAIT_AUDIO 0x0005
+#define AUDSRV_CMD_STOP_AUDIO 0x0006
 #define AUDSRV_CMD_SET_VOLUME 0x0007
 
 static SPUContext         s_SPUCtx;
@@ -92,6 +93,19 @@ static int _audsrv_set_volume ( int aVol ) {
 
 }  /* end _audsrv_set_volume */
 
+static int _audsrv_stop_audio ( void ) {
+
+ int retVal = 0;
+
+ if (  SifCallRpc (
+        &s_ClientData, AUDSRV_CMD_STOP_AUDIO, 0, NULL, 0, s_Buffer, 4, 0, 0
+       ) >= 0 && s_Buffer[ 0 ] == 0
+ ) retVal = 1;
+
+ return retVal;
+
+}  /* end _audsrv_stop_audio */ 
+
 static int _audsrv_wait_audio ( int aCount ) {
 
  int retVal = 0;
@@ -125,7 +139,7 @@ static int _audsrv_play_audio ( char* apData ) {
 
 static void _spu_destroy ( void ) {
 
- _audsrv_set_volume ( MIN_VOLUME );
+ _audsrv_stop_audio ();
 
 }  /* end _spu_destroy */
 

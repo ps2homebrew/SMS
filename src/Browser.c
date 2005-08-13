@@ -40,9 +40,10 @@ static int _fill_partition_list ( void ) {
 
   while (  fileXioDread ( lHDDFD, &lEntry )  ) {
 
-   if (   !(  ( lEntry.stat.attr  & ATTR_SUB_PARTITION             ) ||
-              ( lEntry.stat.mode == FS_TYPE_EMPTY                  ) ||
-              ( lEntry.name[ 0 ] == '_' && lEntry.name[ 1 ] == '_' )
+   if (   !(  ( lEntry.stat.attr  & ATTR_SUB_PARTITION ) ||
+              ( lEntry.stat.mode == FS_TYPE_EMPTY      ) ||
+              !strncmp ( lEntry.name, "PP.HDL.", 7 )     ||
+              !strcmp  ( lEntry.name, "__mbr"      )
            )
    ) {
 

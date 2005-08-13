@@ -346,3 +346,17 @@ Update (07-AUG-2005)
   using EE's MMI. I'm not sure if it will be really noticeable
   but tests show that new routine is >4x faster than the original
   C code;
+
+Update (13-AUG-2005)
+--------------------
+- got rid of the spontaneous noise (audsrv's problem);
+- "player hangs on movie stop" bug fixed (thanks to 'Mr. Worm~~' for being
+  patient with testing);
+- got rid of "Paused" message by holding "select" button for > 200ms;
+- performance slightly improved for some cases (avoiding calculations
+  of skipped macroblocks);
+- added video mode selection at program's startup
+  (select-R1 for NTSC, select-R2 for PAL). Timeout is 1 second, then
+  (if no aforementioned pad button combinations were pressed)
+  program continues with default video mode (from saved configuration or
+  autodetected one);

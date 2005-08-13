@@ -251,22 +251,6 @@ doReset:
 
 }  /* end TimerProcRepeat */
 
-static void _wait_pad_ready ( void ) {
-
- int lState = padGetState ( 0, 0 );
-
- while (  lState != PAD_STATE_STABLE && lState != PAD_STATE_FINDCTP1  ) {
-
-  GUI_Status ( "Waiting for game controller in port 0 slot 0..." );
-
-  Timer_Wait ( 128 );
-
-  lState = padGetState ( 0, 0 );
-
- }  /* end while */
-
-}  /* end _wait_pad_ready */
-
 static int _gui_thread ( void* apParam ) {
 
  while ( 1 ) {
@@ -868,7 +852,9 @@ static void GUI_Redraw ( void ) {
 
 }  /* end GUI_Redraw */
 
-void GUI_WaitButton ( int aButton ) {
+unsigned long int GUI_WaitButton ( int aButton ) {
+
+ unsigned long int lEvent;
 
  s_NoDevCheck = 1;
 
@@ -876,7 +862,7 @@ void GUI_WaitButton ( int aButton ) {
 
  while ( 1 ) {
 
-  unsigned long int lEvent = GUI_WaitEvent ();
+  lEvent = GUI_WaitEvent ();
 
   if ( lEvent & aButton ) break;
 
@@ -885,6 +871,8 @@ void GUI_WaitButton ( int aButton ) {
  Timer_RegisterHandler ( NULL );
 
  s_NoDevCheck = 0;
+
+ return lEvent;
 
 }  /* end GUI_WaitButton */
 
@@ -1006,6 +994,54 @@ static void _usb_disconnect ( void* apPkt, void* apArg ) {
 
 }  /* end _usb_disconnect */
 
+GSDisplayMode GUI_InitPad ( void ) {
+
+ int           i      = 0, lBtn;
+ uint64_t      lTime;
+ GSDisplayMode retVal = GSDisplayMode_AutoDetect;
+
+ SifLoadModule ( "rom0:SIO2MAN", 0, NULL );
+ SifLoadModule ( "rom0:PADMAN",  0, NULL );
+
+ padInit ( 0 );
+ padPortOpen ( 0, 0, s_PadBuf );
+
+ lBtn = padGetState ( 0, 0 );
+
+ while (  lBtn != PAD_STATE_STABLE && lBtn != PAD_STATE_FINDCTP1 ) {
+
+  lBtn = padGetState ( 0, 0 );
+
+  if ( ++i == 0x7FFFFFFF ) break;
+
+ }  /* end while */
+
+ padSetMainMode ( 0, 0, PAD_MMODE_DIGITAL, PAD_MMODE_LOCK );
+
+ lTime = g_Timer;
+
+ while ( 1 ) {
+
+  lBtn = GUI_ReadButtons ();
+
+  if (  lBtn == ( PAD_SELECT | PAD_R1 )  ) {
+
+   retVal = GSDisplayMode_NTSC_I;
+   break;
+
+  } else if (  lBtn == ( PAD_SELECT | PAD_R2 )  ) {
+
+   retVal = GSDisplayMode_PAL_I;
+   break;
+
+  } else if ( g_Timer - lTime > 1000 ) break;
+
+ }  /* end while */
+
+ return retVal;
+
+}  /* end GUI_InitPad */
+
 GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
  int         i;
@@ -1022,9 +1058,6 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
  apGSCtx -> m_fDblBuf = GS_ON;
  apGSCtx -> InitScreen ();
-
- SifLoadModule ( "rom0:SIO2MAN", 0, NULL );
- SifLoadModule ( "rom0:PADMAN",  0, NULL );
 
  s_GUICtx.m_DevMenu.m_StartX = 6 + apGSCtx -> TextWidth ( STR_AVAILABLE_MEDIA, 0 );
  s_GUICtx.m_DevMenu.m_StartY = 4;
@@ -1068,20 +1101,6 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  StartThread (  s_GUIThreadID = CreateThread ( &lThread ), NULL  );
 
  GUI_Redraw ();
- GUI_Status ( "Initializing pad..." );
-
- padInit ( 0 );
-
- if (  !padPortOpen ( 0, 0, s_PadBuf )  ) {
-
-  GUI_Status ( "Could not initialize pad, program terminated." );
-  SleepThread ();
-
- }  /* end if */
-
- _wait_pad_ready ();
-
- padSetMainMode ( 0, 0, PAD_MMODE_DIGITAL, PAD_MMODE_LOCK );
 
  g_fUSB = 0;
 

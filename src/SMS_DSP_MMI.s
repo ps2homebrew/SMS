@@ -62,16 +62,16 @@ GMC1:
     pcpyh       $t2, $t2
     pcpyld      $t2, $t2, $t2
 1:
-    pmthi       $t2
     ldr         $t4, 0($a1)
+    pmthi       $t2
     ldr         $t5, 1($a1)
-    ldl         $t4, 7($a1)
     pmtlo       $t2
+    ldl         $t4, 7($a1)
     ldl         $t5, 8($a1)
     pextlb      $t4, $zero, $t4
     pmaddh      $zero, $t0, $t4
-    pextlb      $t5, $zero, $t5
     addu        $a1, $a1, $a2
+    pextlb      $t5, $zero, $t5
     ldr         $t6, 0($a1)
     ldr         $t7, 1($a1)
     pmaddh      $zero, $t1, $t5
@@ -81,11 +81,11 @@ GMC1:
     pmaddh      $zero, $t6, $v0
     pextlb      $t7, $zero, $t7
     pmaddh      $zero, $t7, $t3
+    addiu       $v1, $v1, -1
     pmfhl.lh    $t4
     psrah       $t4, $t4, 8
     ppacb       $t4, $zero, $t4
     sd          $t4, 0($a0)
-    addiu       $v1, $v1, -1
     bgtzl       $v1, 1b
     addu        $a0, $a0, $a3
     jr          $ra
