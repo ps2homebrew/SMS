@@ -724,7 +724,9 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx 
      if ( s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
 
       s_pAudioCodec = s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec;
-      s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_Channels = 2;
+
+      if ( s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_ID == SMS_CodecID_AC3 ) s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_Channels = 2;
+
       s_pAudioCodec -> Init ( &s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec );
 
       s_AudioIdx = i;
