@@ -1655,7 +1655,7 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
    lpMB  = g_MPEGCtx.m_LastPic.m_pBuf -> m_pData + lMBX;
    lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
 #ifdef _WIN32
-   g_MPEGCtx.m_pMacroBlock[ g_MPEGCtx.m_IdxRes ] = lpMB;
+   *g_MPEGCtx.m_pMacroBlock[ g_MPEGCtx.m_IdxRes ] = *lpMB;
 #else  /* PS2 */
    DMA_RecvSPR(  ( uint8_t* )g_MPEGCtx.m_pMacroBlock[ g_MPEGCtx.m_IdxRes ], lpMB, 24 );
    DMA_WaitToSPR();

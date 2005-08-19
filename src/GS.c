@@ -1514,6 +1514,46 @@ static void GS_CopyFBuffer ( int aDest, int aX, int anY, int aWidth, int aHeight
 
 }  /* end GS_CopyFBuffer */
 
+static void GS_SwapBuffers ( int afSync ) {
+
+ unsigned long int  lDMA[ 10 ] __attribute__(   (  aligned( 16 )  )   );
+ unsigned long int* lpDMA = lDMA;
+
+ if ( afSync ) s_GSCtx.VSync ();
+
+ GS_SET_DISPFB2(
+  s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
+  s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0, 0
+ );
+ s_GSCtx.m_ActiveBuf ^= 1;
+ s_GSCtx.m_PrimCtx   ^= 1;
+
+ *lpDMA++ = GIF_TAG( 4, 1, 0, 0, 0, 1 );
+ *lpDMA++ = GIF_AD;
+
+ *lpDMA++ = GS_SETREG_SCISSOR_1( 0, s_GSCtx.m_Width - 1, 0, s_GSCtx.m_Height - 1 );
+ *lpDMA++ = GS_SCISSOR_1;
+
+ *lpDMA++ = GS_SETREG_FRAME_1(
+  s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
+  s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0
+ );
+ *lpDMA++ = GS_FRAME_1;
+
+ *lpDMA++ = GS_SETREG_SCISSOR_1( 0, s_GSCtx.m_Width - 1, 0, s_GSCtx.m_Height - 1 );
+ *lpDMA++ = GS_SCISSOR_2;
+
+ *lpDMA++ = GS_SETREG_FRAME_1(
+  s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
+  s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0
+ );
+ *lpDMA = GS_FRAME_2;
+
+ DMA_Send ( DMA_CHANNEL_GIF, lDMA, 5 );
+ DMA_Wait ( DMA_CHANNEL_GIF );
+
+}  /* end GS_SwapBuffers */
+
 static void GS_AdjustDisplay ( int aDX, int aDY ) {
 
  s_GSCtx.m_StartX += aDX;
@@ -1807,6 +1847,7 @@ setPal_I:
  s_GSCtx.VSync         = GS_VSync;
  s_GSCtx.SetTest       = GS_SetTest;
  s_GSCtx.ClearScreen   = GS_ClearScreen;
+ s_GSCtx.SwapBuffers   = GS_SwapBuffers;
  s_GSCtx.TextWidth     = _fontm_text_width;
  s_GSCtx.DrawText      = _fontm_draw_text;
  s_GSCtx.SetTextColor  = _fontm_set_text_color;

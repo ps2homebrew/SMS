@@ -852,8 +852,6 @@ DSP_PutNoRndPixels8:
 
 DSP_PutPixels8XY2:
     addiu   $at, $zero, 8
-.end DSP_PutPixels8XY2
-
 _PutPixels8XY2:
     pceqh   $t3, $zero, $zero
     ldr     $t0, 0($a1)
@@ -899,6 +897,7 @@ _PutPixels8XY2:
     addu    $a0, $a0, $at
     jr      $ra
     nop
+.end DSP_PutPixels8XY2
 
 .ent    DSP_PutPixels16
 .global DSP_PutPixels16
@@ -987,11 +986,11 @@ DSP_PutPixels16XY2:
     addiu   $at, $zero, 16
     addiu   $t4, $a0, 8
     addiu   $t5, $a1, 8
-    bal     _PutPixels8XY2
+    jal     _PutPixels8XY2
     addu    $t6, $a3, $zero
     addu    $a0, $t4, $zero
     addu    $a1, $t5, $zero
     addu    $ra, $t7, $zero
-    b       _PutPixels8XY2
+    j       _PutPixels8XY2
     addu    $a3, $t6, $zero
 .end DSP_PutPixels16XY2

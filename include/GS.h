@@ -534,6 +534,7 @@ typedef struct GSContext {
  void         ( *VSync         ) ( void                               );
  void         ( *SetTest       ) ( void                               );
  void         ( *ClearScreen   ) ( unsigned long int                  );
+ void         ( *SwapBuffers   ) ( int                                );
  GSRectangle* ( *InitRectangle ) ( void                               );
  GSFan*       ( *InitFan       ) ( unsigned int                       );
  GSLineStrip* ( *InitLineStrip ) ( unsigned int                       );
