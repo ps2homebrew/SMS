@@ -360,3 +360,13 @@ Update (13-AUG-2005)
   (if no aforementioned pad button combinations were pressed)
   program continues with default video mode (from saved configuration or
   autodetected one);
+
+Update (19-AUG-2005)
+--------------------
+- AC3 audio decoder added. Absolutely unoptimized yet (just an original
+  C code) but at least appears to be working (thanks to 'Mr. Worm~~' for
+  his test video clips);
+- Filebrowser's font color changed to yellow (an idea of 'Mr. Worm~~' again);
+- 'DSP_PutPixels8XY2' and 'DSP_PutPixels16XY2' routines are rewritten in
+  assembly using MMI;
+- Some other changes that could be interesting only for programmers;

@@ -225,6 +225,7 @@ BOOL _find_signature ( CDDAContext* apCtx ) {
 }  /* end _find_signature */
 #else  /* PS2 */
 # include <kernel.h>
+# include <fileio.h>
 # include <fileXio_rpc.h>
 # include <fcntl.h>
 # include "CDDA.h"
@@ -233,6 +234,61 @@ BOOL _find_signature ( CDDAContext* apCtx ) {
 # define UNCACHED_SEG( p ) ( unsigned char* )( p )
 
 # define btoi( b ) (  ( b ) / 16 * 10 + ( b ) % 16  )
+
+static int _do_open ( const char* apFileName ) {
+
+ return fioOpen ( apFileName, O_RDONLY );
+
+}  /* end _do_open */
+
+static int _do_xopen ( const char* apFileName ) {
+
+ return fileXioOpen ( apFileName, O_RDONLY, 0666 );
+
+}  /* end _do_xopen */
+
+static int _do_seek ( int aFD, int anOffset, int aWhence ) {
+
+ return fioLseek ( aFD, anOffset, aWhence );
+
+}  /* end _do_seek */
+
+static int _do_xseek ( int aFD, int anOffset, int aWhence ) {
+
+ return fileXioLseek ( aFD, anOffset, aWhence );
+
+}  /* end _do_xseek */
+
+static int  ( *IO_Close        ) ( int             ) = fileXioClose;
+static void ( *IO_SetBlockMode ) ( int             ) = fileXioSetBlockMode;
+static int  ( *IO_LSeek        ) ( int, int, int   ) = _do_xseek;
+static int  ( *IO_Read         ) ( int, void*, int ) = (  int (*) ( int, void*, int )  )fileXioRead;
+static int  ( *IO_Wait         ) ( int, int*       ) = fileXioWaitAsync;
+static int  ( *IO_Open         ) ( const char*     ) = _do_xopen;
+
+void STIO_SetIOMode ( STIOMode aMode ) {
+
+ if ( aMode == STIOMode_Extended ) {
+
+  IO_Close        = fileXioClose;
+  IO_SetBlockMode = fileXioSetBlockMode;
+  IO_LSeek        = _do_xseek;
+  IO_Read         = (  int (*) ( int, void*, int )  )fileXioRead;
+  IO_Wait         = fileXioWaitAsync;
+  IO_Open         = _do_xopen;
+
+ } else if ( aMode == STIOMode_Ordinary ) {
+
+  IO_Close        = fioClose;
+  IO_SetBlockMode = fioSetBlockMode;
+  IO_LSeek        = _do_seek;
+  IO_Read         = fioRead;
+  IO_Wait         = fioSync;
+  IO_Open         = _do_open;
+
+ }  /* end if */
+
+}  /* end STIO_SetIOMode */
 
 static int _start_sector ( CDDA_TOC* apTOC, int aTrack ) {
 
@@ -1212,9 +1268,8 @@ static void STIO_DestroyFileContext ( FileContext* apCtx ) {
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_hFile         );
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_Ovlp.hEvent   );
 #else  /* PS2 */
-  fileXioWaitAsync ( FXIO_WAIT, NULL );
-  fileXioSetBlockMode ( FXIO_WAIT );
-  fileXioClose (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
+  IO_Close (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
+  IO_SetBlockMode ( 0 );
 #endif  /* _WIN32 */
   free ( apCtx -> m_pData      );
   free ( apCtx -> m_pBase[ 0 ] );
@@ -1283,7 +1338,7 @@ static int STIO_Seek ( FileContext* apCtx, unsigned int aPos ) {
   apCtx -> m_pEnd   = apCtx -> m_pBuff[ apCtx -> m_CurBuf ];
   apCtx -> m_CurPos = apCtx -> m_Pos = aPos;
 #ifndef _WIN32
-  aPos = fileXioLseek ( lpPriv -> m_FD, aPos, 0 );
+  aPos = IO_LSeek ( lpPriv -> m_FD, aPos, 0 );
 #endif  /* _WIN32 */
  }  /* end else */
 
@@ -1313,7 +1368,7 @@ static int STIO_Fill ( FileContext* apCtx ) {
             )
  ) lLen = lnRead;
 #else  /* PS2 */
- lLen = fileXioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ apCtx -> m_CurBuf ], apCtx -> m_BufSize );
+ lLen = IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ apCtx -> m_CurBuf ], apCtx -> m_BufSize );
 
  if ( lLen < 0 ) lLen = 0;
 #endif  /* _WIN32 */
@@ -1339,7 +1394,7 @@ static int STIO_FillStm ( FileContext* apCtx ) {
         )
   ) {
 #else  /* PS2 */
-  if (  fileXioWaitAsync ( FXIO_WAIT, &lnRead ) == FXIO_COMPLETE  ) {
+  if (  IO_Wait ( 0, &lnRead )  ) {
 #endif  /* _WIN32 */
    lOldBuf            = apCtx -> m_CurBuf;
    apCtx -> m_CurBuf  = !apCtx -> m_CurBuf;
@@ -1356,7 +1411,7 @@ static int STIO_FillStm ( FileContext* apCtx ) {
      &lnRead, &lpPriv -> m_Ovlp
     );
 #else
-    fileXioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ lOldBuf ], apCtx -> m_BufSize );
+    IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ lOldBuf ], apCtx -> m_BufSize );
 #endif  /* _WIN32 */
    }  /* end if */
 
@@ -1381,7 +1436,7 @@ static int STIO_SeekStm ( FileContext* apCtx, unsigned int aPos ) {
         )
  ) return -1;
 #else  /* PS2 */
- if (  aPos > apCtx -> m_Size || fileXioWaitAsync ( FXIO_WAIT, NULL ) < 0  ) return -1;
+ if (  aPos > apCtx -> m_Size || IO_Wait ( 0, NULL ) < 0  ) return -1;
 #endif  /* _WIN32 */
  apCtx -> Stream ( apCtx, aPos, apCtx -> m_BufSize / 2352 );
 
@@ -1402,8 +1457,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
    lpPriv -> m_hFile, &lpPriv -> m_Ovlp, &lnRead, TRUE
   );
 #else  /* PS2 */
-  fileXioWaitAsync ( FXIO_WAIT, &lnRead );
-  fileXioSetBlockMode ( FXIO_WAIT );
+  IO_Wait ( 0, &lnRead );
+  IO_SetBlockMode ( 0 );
 #endif  /* _WIN32 */
   apCtx -> m_CurBuf = 0;
   apCtx -> Seek     = STIO_Seek;
@@ -1446,8 +1501,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
              )
   ) retVal = lnRead;
 #else  /* PS2 */
-  fileXioLseek ( lpPriv -> m_FD, apCtx -> m_CurPos, 0 );
-  retVal = lnRead = fileXioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ 0 ], apCtx -> m_BufSize );
+  IO_LSeek ( lpPriv -> m_FD, apCtx -> m_CurPos, 0 );
+  retVal = lnRead = IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ 0 ], apCtx -> m_BufSize );
 #endif  /* _WIN32 */
   apCtx -> m_pPos = apCtx -> m_pBuff[ 0 ];
   apCtx -> m_pEnd = apCtx -> m_pPos + retVal;
@@ -1462,8 +1517,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
     apCtx -> m_BufSize, &lnRead, &lpPriv -> m_Ovlp
    );
 #else  /* PS2 */
-   fileXioSetBlockMode ( FXIO_NOWAIT );
-   fileXioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ 1 ], apCtx -> m_BufSize );
+   IO_SetBlockMode ( 1 );
+   IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ 1 ], apCtx -> m_BufSize );
 #endif  /* _WIN32 */
   }  /* end if */
 
@@ -1546,7 +1601,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
 
  }  /* end if */
 #else  /* PS2 */
- int lFD = fileXioOpen ( aFileName, O_RDONLY, 0666 );
+ int lFD = IO_Open ( aFileName );
 
  if ( lFD >= 0 ) {
 
@@ -1563,7 +1618,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
     retVal -> m_pBuff[ 0 ] = UNCACHED_SEG(    (   (  ( unsigned int )retVal -> m_pBase[ 0 ]  ) + 63   ) & 0xFFFFFFC0    );
     retVal -> m_pBuff[ 1 ] = NULL;
     retVal -> m_CurBuf     = 0;
-    retVal -> m_Size       = fileXioLseek ( lFD, 0, 2 );
+    retVal -> m_Size       = IO_LSeek ( lFD, 0, 2 );
     retVal -> m_BufSize    = 4096;
     retVal -> m_Pos        = 0;
     retVal -> m_CurPos     = 0;
@@ -1578,7 +1633,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
     retVal -> Seek    = STIO_Seek;
     retVal -> Stream  = STIO_Stream;
 
-    fileXioLseek ( lFD, 0, 0 );
+    IO_LSeek ( lFD, 0, 0 );
 
     lfSuccess = 1;
 
@@ -1600,7 +1655,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
 
   }  /* end if */
 
-  if ( lFD >= 0 ) fileXioClose ( lFD );
+  if ( lFD >= 0 ) IO_Close ( lFD );
 
  }  /* end if */
 #endif  /* _WIN32 */

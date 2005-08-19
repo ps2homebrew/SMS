@@ -23,7 +23,8 @@ typedef enum SMS_CodecType {
 } SMS_CodecType;
 
 typedef enum SMS_CodecID {
- SMS_CodecID_NULL, SMS_CodecID_MPEG4, SMS_CodecID_MSMPEG4V3, SMS_CodecID_MP3
+ SMS_CodecID_NULL, SMS_CodecID_MPEG4, SMS_CodecID_MSMPEG4V3,
+ SMS_CodecID_MP3,  SMS_CodecID_AC3
 } SMS_CodecID;
 
 typedef struct SMS_CodecTag {

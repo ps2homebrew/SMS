@@ -15,6 +15,7 @@
 #include "SMS_FourCC.h"
 #include "SMS_MPEG4.h"
 #include "SMS_MP3.h"
+#include "SMS_AC3.h"
 #include "SMS_VideoBuffer.h"
 
 #include <malloc.h>
@@ -61,6 +62,7 @@ static SMS_CodecTag s_CodecVideoTags[] = {
 
 static SMS_CodecTag s_CodecAudioTags[] = {
  { SMS_CodecID_MP3,  0x00000055 },
+ { SMS_CodecID_AC3,  0x00002000 },
  { SMS_CodecID_NULL, 0x00000000 }
 };
 
@@ -104,6 +106,12 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
   case SMS_CodecID_MP3:
 
    SMS_Codec_MP3_Open ( apCtx );
+
+  break;
+
+  case SMS_CodecID_AC3:
+
+   SMS_Codec_AC3_Open ( apCtx );
 
   break;
 

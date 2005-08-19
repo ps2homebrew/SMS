@@ -190,7 +190,7 @@ static void _sms_play_a ( void ) {
  s_AudioSamples = &s_DummyBuffer;
 
  s_Player.m_pGUICtx -> Status ( "Buffering AVI file (audio only)..." );
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 384 );
 
  _prepare_ipu_context ( 0 );
 
@@ -466,7 +466,7 @@ static void _sms_play_a_v ( void ) {
  s_nPackets = 0;
 
  s_Player.m_pGUICtx -> Status ( "Buffering AVI file..." );
- s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 1024 );
+ s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, 768 );
 
  s_pSPUCtx = SPU_InitContext (
   s_Player.m_pAVICtx -> m_pStm[ s_AudioIdx ] -> m_Codec.m_Channels,
@@ -724,6 +724,7 @@ SMS_AVIPlayer* SMS_AVIInitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx 
      if ( s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
 
       s_pAudioCodec = s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_pCodec;
+      s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec.m_Channels = 2;
       s_pAudioCodec -> Init ( &s_Player.m_pAVICtx -> m_pStm[ i ] -> m_Codec );
 
       s_AudioIdx = i;

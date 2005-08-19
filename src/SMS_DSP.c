@@ -732,7 +732,7 @@ static void DSP_AvgPixels8Y2 ( uint8_t* apBlock, const uint8_t* apPixels, int aB
  _avg_pixels8_l2 ( apBlock, apPixels, apPixels + aBlockStride, BLOCK_STRIDE_UV, aBlockStride, aBlockStride, aH );
 
 }  /* end DSP_AvgPixels8Y2 */
-
+#ifdef _WIN32
 static void DSP_PutPixels8XY2 ( uint8_t* apBlock, const uint8_t* apPixels, int aBlockStride, int aH ) {
 
  int i, j;
@@ -784,7 +784,9 @@ static void DSP_PutPixels8XY2 ( uint8_t* apBlock, const uint8_t* apPixels, int a
  }  /* end for */
 
 }  /* end DSP_PutPixels8XY2 */
-
+#else  /* PS2 */
+extern void DSP_PutPixels8XY2 ( uint8_t*, const uint8_t*, int, int );
+#endif  /* _WIN32 */
 static void DSP_AvgPixels8XY2 ( uint8_t* apBlock, const uint8_t* apPixels, int aBlockStride, int aH ) {
 
  int i, j;
@@ -1181,7 +1183,7 @@ static void DSP_AvgPixels16Y2 ( uint8_t* apBlock, const uint8_t* apPixels, int a
  );
 
 }  /* end DSP_AvgPixels16Y2 */
-
+#ifdef _WIN32
 static void DSP_PutPixels16XY2 ( uint8_t* apBlock, const uint8_t* apPixels, int aBlockStride, int aH ) {
 
  int i, j, k;
@@ -1243,7 +1245,9 @@ static void DSP_PutPixels16XY2 ( uint8_t* apBlock, const uint8_t* apPixels, int 
  }  /* end for */
 
 }  /* end DSP_PutPixels16XY2 */
-
+#else  /* PS2 */
+extern void DSP_PutPixels16XY2 ( uint8_t*, const uint8_t*, int, int );
+#endif  /* _WIN32 */
 static void DSP_AvgPixels16XY2 ( uint8_t* apBlock, const uint8_t* apPixels, int aBlockStride, int aH ) {
 
  int i, j, k;

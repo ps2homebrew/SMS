@@ -272,12 +272,17 @@ static void _fill_cd_list ( void ) {
 
 }  /* end _fill_cd_list */
 
-static int _fill_mass_list ( void ) {
- 
+static int _fill_dir_list ( char* apDevName ) {
+
  int          retVal = 0;
  fio_dirent_t lEntry; 
- char*        lpPath = _make_path ();
- int          lFD    = fioDopen ( lpPath );
+ char*        lpPath;
+ int          lFD;
+
+ if ( !s_BrowserCtx.m_pPath -> m_pHead ) s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, apDevName );
+
+ lpPath = _make_path ();
+ lFD    = fioDopen ( lpPath );
 
  free ( lpPath );
  
@@ -341,7 +346,7 @@ static int _fill_mass_list ( void ) {
 
  return retVal;
 
-}  /* end _fill_mass_list */
+}  /* end _fill_dir_list */
 
 static void _select_partition ( char* apName ) {
 
@@ -448,8 +453,7 @@ static void _handle_unmount ( void ) {
 
    case GUI_DF_USBM:
 
-    s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "mass:/" );
-    lRes = _fill_mass_list ();
+    lRes = _fill_dir_list ( "mass:/" );
 
    break;
 
@@ -521,7 +525,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
       else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM )
 
-       _fill_mass_list ();
+       _fill_dir_list ( "mass:/" );
 
       s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
 
@@ -598,8 +602,13 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
      } else if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM ) {
 
-      _fill_mass_list ();
-      s_BrowserCtx.m_pGUICtx -> ActivateFileItem ( lIdx, lName, lpFirst );
+      _fill_dir_list ( "mass:/" );
+
+      if ( lpFirst )
+
+       s_BrowserCtx.m_pGUICtx -> ActivateFileItem ( lIdx, lName, lpFirst );
+
+      else s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
 
      }  /* end if */
 
@@ -626,9 +635,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
     } else if ( lpDevice -> m_Flags == GUI_DF_USBM ) {
 
      s_BrowserCtx.m_pPath -> Destroy ( s_BrowserCtx.m_pPath, 0 );
-     s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "mass:/" );
-
-     s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_mass_list () ? 1 : 0  );
+     s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_dir_list ( "mass:/" ) ? 1 : 0  );
 
     }  // end if
 
@@ -703,8 +710,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
     if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM ) {
 
      s_BrowserCtx.m_pPath -> Destroy  ( s_BrowserCtx.m_pPath, 0 );
-     s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, "mass:/" );
-     s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_mass_list () ? 1 : 0  );
+     s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_dir_list ( "mass:/" ) ? 1 : 0  );
 
     }  /* end if */
 

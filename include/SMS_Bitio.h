@@ -80,6 +80,16 @@ static SMS_INLINE uint32_t SMS_GetBits ( SMS_BitContext* apCtx, uint32_t aN ) {
  return lVal;
 }  /* end SMS_GetBits */
 
+static SMS_INLINE int32_t SMS_GetSBits ( SMS_BitContext* apCtx, uint32_t aN ) {
+ int32_t lVal;
+ SMS_OPEN_READER( re, apCtx )
+  SMS_UPDATE_CACHE( re, apCtx )
+  lVal = SMS_SHOW_SBITS( re, apCtx, aN );
+  SMS_LAST_SKIP_BITS( re, apCtx, aN )
+ SMS_CLOSE_READER( re, apCtx )
+ return lVal;
+}  /* end SMS_GetSBits */
+
 static SMS_INLINE uint32_t SMS_GetBit ( SMS_BitContext* apCtx ) {
  uint32_t lIdx = apCtx -> m_Idx;
  uint8_t  lRes = apCtx -> m_pBuf[ lIdx >> 3 ];

@@ -91,6 +91,7 @@ static void GUI_Status ( char* apSts ) {
  s_GUICtx.m_pGSCtx -> CopyFBuffer (
   0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width - 10, lCH
  );
+ s_GUICtx.m_pGSCtx -> VSync ();
 
  s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
  s_GUICtx.m_pGSCtx -> m_Font.m_BkMode = GSBkMode_Transparent;
@@ -365,7 +366,7 @@ static void GUI_AddDevice ( int aDev ) {
 
  GUIDeviceMenuItem* lpItem = ( GUIDeviceMenuItem* )calloc (  1, sizeof ( GUIDeviceMenuItem )  );
 
- if ( aDev == GUI_DF_CDROM ) {
+ if ( aDev == GUI_DF_CDROM || aDev == GUI_DF_CDFS ) {
 
   lpItem -> m_pImage = g_ImgCDROM;
   s_CDROM = 1;
@@ -382,6 +383,14 @@ static void GUI_AddDevice ( int aDev ) {
  } else if ( aDev == GUI_DF_USBM ) {
 
   lpItem -> m_pImage = g_ImgUSB;
+
+ } else if ( aDev == GUI_DF_HOST ) {
+
+  lpItem -> m_pImage = g_ImgHost;
+
+ } else if ( aDev == GUI_DF_DVD ) {
+
+  lpItem -> m_pImage = g_ImgDVD;
 
  }  /* end if */
 
@@ -505,9 +514,8 @@ static void GUI_DrawDimmedFileItem ( GUIFileMenuItem* apItem, int anY ) {
  while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, --lStrLen );
 
  s_GUICtx.m_pGSCtx -> DrawIcon ( 6, anY, GSIS_32x32, lBuff );
- s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60  )  );
+ s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0x60  )  );
  s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 4, 0, apItem -> m_pFileName, lStrLen  );
- s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
 
 }  /* end GUI_DrawDimmedFileItem */
 
@@ -519,6 +527,7 @@ static void GUI_DrawFileItem ( GUIFileMenuItem* apItem, int anY ) {
  while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, --lStrLen );
 
  s_GUICtx.m_pGSCtx -> DrawIcon ( 6, anY, GSIS_32x32, s_FSIcons[ apItem -> m_Flags & 0x0000000F ] );
+ s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0xFF  )  );
  s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 4, 0, apItem -> m_pFileName, lStrLen  );
 
  if ( apItem -> m_Flags & GUI_FF_SELECTED ) {
@@ -543,7 +552,7 @@ static void GUI_DrawFileMenu ( GUIFileMenu* apMenu ) {
 
  if ( lpItem ) {
 
-  s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
+  s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0xFF  )  );
 
   if ( lpItem != apMenu -> m_pItems )
 
@@ -996,7 +1005,7 @@ static void _usb_disconnect ( void* apPkt, void* apArg ) {
 
 GSDisplayMode GUI_InitPad ( void ) {
 
- int           i      = 0, lBtn;
+ int           lBtn;
  uint64_t      lTime;
  GSDisplayMode retVal = GSDisplayMode_AutoDetect;
 
@@ -1006,13 +1015,14 @@ GSDisplayMode GUI_InitPad ( void ) {
  padInit ( 0 );
  padPortOpen ( 0, 0, s_PadBuf );
 
- lBtn = padGetState ( 0, 0 );
+ lBtn  = padGetState ( 0, 0 );
+ lTime = g_Timer;
 
  while (  lBtn != PAD_STATE_STABLE && lBtn != PAD_STATE_FINDCTP1 ) {
 
   lBtn = padGetState ( 0, 0 );
 
-  if ( ++i == 0x7FFFFFFF ) break;
+  if ( g_Timer - lTime > 2000 ) break;
 
  }  /* end while */
 

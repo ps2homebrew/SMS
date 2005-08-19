@@ -847,6 +847,59 @@ DSP_PutNoRndPixels8:
     nop
 .end DSP_PutNoRndPixels8
 
+.globl DSP_PutPixels8XY2
+.ent   DSP_PutPixels8XY2
+
+DSP_PutPixels8XY2:
+    addiu   $at, $zero, 8
+.end DSP_PutPixels8XY2
+
+_PutPixels8XY2:
+    pceqh   $t3, $zero, $zero
+    ldr     $t0, 0($a1)
+    ldl     $t0, 7($a1)
+    ldr     $t1, 1($a1)
+    ldl     $t1, 8($a1)
+    psrlh   $t3, $t3, 15
+    pextlb  $t0, $zero, $t0
+    pextlb  $t1, $zero, $t1
+    psllh   $t3, $t3, 1
+    addu    $a1, $a1, $a2
+    padduw  $t1, $t0, $t1
+1:
+    ldr     $t0, 0($a1)
+    ldl     $t0, 7($a1)
+    ldr     $t2, 1($a1)
+    ldl     $t2, 8($a1)
+    pextlb  $t0, $zero, $t0
+    padduw  $t1, $t1, $t3
+    pextlb  $t2, $zero, $t2
+    padduw  $t0, $t0, $t2
+    addu    $a1, $a1, $a2
+    padduw  $t1, $t1, $t0
+    psrlw   $t1, $t1, 2
+    ppacb   $t1, $zero, $t1
+    sd      $t1, 0($a0)
+    addu    $a0, $a0, $at
+    ldr     $t2, 0($a1)
+    ldl     $t2, 7($a1)
+    ldr     $t1, 1($a1)
+    ldl     $t1, 8($a1)
+    pextlb  $t2, $zero, $t2
+    padduw  $t0, $t0, $t3
+    pextlb  $t1, $zero, $t1
+    padduw  $t1, $t1, $t2
+    addu    $a1, $a1, $a2
+    padduw  $t0, $t0, $t1
+    psrlw   $t0, $t0, 2
+    subu    $a3, $a3, 2
+    ppacb   $t0, $zero, $t0
+    sd      $t0, 0($a0)
+    bgtzl   $a3, 1b
+    addu    $a0, $a0, $at
+    jr      $ra
+    nop
+
 .ent    DSP_PutPixels16
 .global DSP_PutPixels16
 DSP_PutPixels16:
@@ -925,3 +978,20 @@ DSP_AvgNoRndPixels16:
     jr      $ra
     nop
 .end DSP_AvgNoRndPixels16
+
+.globl DSP_PutPixels16XY2
+.ent   DSP_PutPixels16XY2
+
+DSP_PutPixels16XY2:
+    addu    $t7, $ra, $zero
+    addiu   $at, $zero, 16
+    addiu   $t4, $a0, 8
+    addiu   $t5, $a1, 8
+    bal     _PutPixels8XY2
+    addu    $t6, $a3, $zero
+    addu    $a0, $t4, $zero
+    addu    $a1, $t5, $zero
+    addu    $ra, $t7, $zero
+    b       _PutPixels8XY2
+    addu    $a3, $t6, $zero
+.end DSP_PutPixels16XY2

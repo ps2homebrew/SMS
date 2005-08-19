@@ -19,6 +19,10 @@
 #  endif  /* WIN32 */
 # endif  /* INLINE */
 
+typedef enum STIOMode {
+ STIOMode_Extended, STIOMode_Ordinary
+} STIOMode;
+
 typedef struct CDDAContext {
 
  unsigned int m_nTracks;
@@ -99,6 +103,7 @@ int                  CDDA_GetPicture      ( CDDAContext*, int, void*           )
 int                  CDDA_GetDiskPicture  ( CDDAContext*, void*                );
 
 FileContext* CDDA_InitFileContext ( CDDAContext*, const char* );
+void         STIO_SetIOMode       ( STIOMode                  );
 FileContext* STIO_InitFileContext ( const char*               );
 # ifdef __cplusplus
 }
