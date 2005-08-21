@@ -158,6 +158,7 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 }  /* end GS_InitContext */
 # else  /* PS2 */
 #  include "DMA.h"
+#  include "ROM.h"
 
 #  include <kernel.h>
 #  include <malloc.h>
@@ -453,23 +454,17 @@ void _fontm_set_text_color ( u32 aColor ) {
 static void _fontm_init ( void ) {
 
  Unpack         lUnpack;
- FILE*          lpFile;
  FontmFile*     lpFont;
  unsigned char* lpSrc;
  unsigned int   lX, lY, lSize;
- u64*           lpDMA;
  u64*           lpData;
+ unsigned char  lCharBuf[ CHAR_SIZE ] __attribute__(   (  aligned( 16 )  )   );
+ u64            lDMA    [        18 ] __attribute__(   (  aligned( 16 )  )   );
 
  s_GSCtx.m_Font.m_BkColor = 0x80000000;
  s_GSCtx.m_Font.m_BkMode  = GSBkMode_Transparent;
 
- lpFile = fopen ( "rom0:FONTM", "rb" );
-
- fseek ( lpFile, 0L, SEEK_END );
- lSize = ftell ( lpFile );
- fseek ( lpFile, 0L, SEEK_SET );
-
- fread (  lpSrc = malloc ( lSize ), 1, lSize, lpFile  );
+ lpSrc = ROM_LocateModule ( "FONTM", &lSize );
 
  lUnpack.m_Size = *( unsigned int* )lpSrc;
  lUnpack.m_Ptr  = lpSrc + 4;
@@ -483,9 +478,6 @@ static void _fontm_init ( void ) {
  s_GSCtx.m_Font.m_CLUT = s_GSCtx.m_VRAMPtr / 256;
  s_GSCtx.m_VRAMPtr += 256;
 
- lpDMA = ( u64* )lpSrc;
- lpSrc = ( unsigned char* )(   (  ( unsigned int )lpSrc + lUnpack.m_Size - 352  ) & 0xFFFFFFF0   );
-
  _fontm_set_text_color ( 0xCFFFFFFF );
 
  for ( lY = 0, lSize = 0; lY < 182; lY += 26 )
@@ -493,9 +485,9 @@ static void _fontm_init ( void ) {
   for ( lX = 0; lX < 832; lX += 26, ++lSize ) {
 
    unsigned char* lpChr = _fontm_char ( lpFont, s_CharMap[ lSize ], lSize );
-   memcpy ( lpSrc, lpChr, CHAR_SIZE );
+   memcpy ( lCharBuf, lpChr, CHAR_SIZE );
 
-   lpData = lpDMA;
+   lpData = lDMA;
 
    *lpData++ = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
    *lpData++ = 0;
@@ -518,22 +510,20 @@ static void _fontm_init ( void ) {
     *lpData++ = GIF_TAG( 22, 1, 0, 0, 2, 1 );
     *lpData++ = 0;
 
-   *lpData++ = DMA_TAG(  22, 1, DMA_REF, 0, ( u32 )lpSrc, 0  );
+   *lpData++ = DMA_TAG(  22, 1, DMA_REF, 0, ( u32 )lCharBuf, 0  );
    *lpData++ = 0;
 
    *lpData++ = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
    *lpData   = 0;
 
-   SyncDCache ( lpSrc, lpSrc + 352 );
+   SyncDCache ( lCharBuf, lCharBuf + CHAR_SIZE );
 
-   DMA_SendChain ( DMA_CHANNEL_GIF, lpDMA, 9 );
+   DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 9 );
    DMA_Wait ( DMA_CHANNEL_GIF );
 
   }  /* end for */
 
- free   ( lpFont );
- free   ( lpDMA  );
- fclose ( lpFile );
+ free ( lpFont );
 
  for ( lX = 0; lX < 26; ++lX ) {
 
