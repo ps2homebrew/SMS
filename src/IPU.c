@@ -323,8 +323,8 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 
   SMS_Linesize ( aWidth, &g_IPUCtx.m_MBStride );
 
-  g_IPUCtx.m_nMBSlice        = aWidth  >> 4;
-  g_IPUCtx.m_nMBSlices       = aHeight >> 4;
+  g_IPUCtx.m_nMBSlice        = ( aWidth  + 15 ) >> 4;
+  g_IPUCtx.m_nMBSlices       = ( aHeight + 15 ) >> 4;
   g_IPUCtx.m_QWCToIPUSlice   = g_IPUCtx.m_nMBSlice * 24;
   g_IPUCtx.m_QWCFromIPUSlice = g_IPUCtx.m_nMBSlice * 64;
   g_IPUCtx.m_pBuffer         = NULL;
@@ -341,10 +341,10 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    unsigned int lVRAM = apGSCtx -> m_VRAMPtr >> 8;
    float        lAR   = (  ( float )aWidth  ) / (  ( float )aHeight  );
 
-   g_IPUCtx.m_VRAM     = lVRAM;
-   g_IPUCtx.m_TBW      = lTBW;
-   g_IPUCtx.m_TW       = lTW;
-   g_IPUCtx.m_TH       = lTH;
+   g_IPUCtx.m_VRAM = lVRAM;
+   g_IPUCtx.m_TBW  = lTBW;
+   g_IPUCtx.m_TW   = lTW;
+   g_IPUCtx.m_TH   = lTH;
 
    g_IPUCtx.Destroy = IPU_DestroyContext;
    g_IPUCtx.Display = IPU_Display;
@@ -395,7 +395,10 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
     lRight  += lTLeft;
 
    }  /* end else */
-
+#ifdef BIMBO69
+   lTop    -= ( 12 << 4 );
+   lBottom += ( 12 << 4 );
+#endif  /* BIMBO69 */
    DMA_Wait ( DMA_CHANNEL_GIF );
 
    g_IPUCtx.m_DMAGIFDraw[ 0 ] = GIF_TAG( 6, 1, 0, 0, 0, 1 );

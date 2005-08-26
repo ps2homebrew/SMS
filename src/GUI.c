@@ -5,6 +5,7 @@
 #----------------------------------------------------------
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2005 USB support by weltall
+# (c) 2005 HOST support by Ronald Andersson (AKA: dlanor)
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -45,6 +46,7 @@ static const char* s_USBDPath[] = {
 
 extern void* _gp;
 extern int   g_fUSB;
+extern int   g_NetFailFlags;
 
 static GUIContext                 s_GUICtx;
 static unsigned char              s_PadBuf[   256 ] __attribute__(   (  aligned( 64 )  )   );
@@ -54,6 +56,9 @@ static int                        s_MainThreadID;
 static int                        s_Stop;
 static int                        s_CDROM;
 static int                        s_USBFlags;
+static int                        s_HostFlags;
+static int                        s_CDFSFlags;
+static int                        s_DiskDetect;
 static int                        s_NoDevCheck;
 static int                        s_PadSema;
 static volatile unsigned long int s_Event;
@@ -65,6 +70,10 @@ static void ( *DoTimer ) ( void );
 
 static unsigned char* const s_FSIcons[ 3 ] = {
  g_ImgFile, g_ImgFolder, g_ImgPart
+};
+
+static unsigned char* const s_MBIcons[ 3 ] = {
+ g_ImgInfo, g_ImgWarning, g_ImgError
 };
 
 extern void GUIStub_DrawBackground ( GSContext* );
@@ -254,6 +263,8 @@ doReset:
 
 static int _gui_thread ( void* apParam ) {
 
+ DiskType lDiskType;
+
  while ( 1 ) {
 
   SleepThread ();
@@ -284,22 +295,96 @@ static int _gui_thread ( void* apParam ) {
 
    }  /* end if */
 
-   if (  s_CDROM && !CDDA_IsAudioDisk ()  ) {
+   lDiskType = CDDA_DiskType ();
+
+   if ( s_CDROM && !s_CDFSFlags && lDiskType != DiskType_CDDA ) {
 
     s_Event |= GUI_EF_CDROM_UMOUNT;
     SignalSema ( s_PadSema );
 
     continue;
 
-   } else if (  !s_CDROM && CDDA_IsAudioDisk ()  ) {
+   } else if (  !s_CDROM && lDiskType == DiskType_CDDA  ) {
 
     s_Event |= GUI_EF_CDROM_MOUNT;
     SignalSema ( s_PadSema );
 
     continue;
 
-   }  /* end if */
+   } else if ( s_CDFSFlags && lDiskType != DiskType_CD && lDiskType != DiskType_DVD ) {
 
+    s_Event    |= GUI_EF_CDFS_UMOUNT;
+    s_CDFSFlags = 0;
+    SignalSema ( s_PadSema );
+
+    continue;
+
+   } else if (  !s_CDFSFlags && ( lDiskType == DiskType_CD || lDiskType == DiskType_DVD )  ) {
+
+    s_Event    |= GUI_EF_CDFS_MOUNT;
+    s_CDFSFlags = 1;
+    SignalSema ( s_PadSema );
+
+    continue;
+
+   } else if ( lDiskType == DiskType_Detect ) {
+
+    s_Event     |= GUI_EF_DISK_DETECT;
+    s_DiskDetect = 1;
+    SignalSema ( s_PadSema );
+
+    continue;
+
+   } else if ( lDiskType == DiskType_Unknown && s_DiskDetect ) {
+
+    s_Event     |= GUI_EF_DISK_NODISK;
+    s_DiskDetect = 0;
+    SignalSema ( s_PadSema );
+
+   }  /* end if */
+#ifndef NO_HOST_SUPPORT
+   if ( !g_NetFailFlags ) {
+
+    static int s_Cntr;
+
+    int lFD;
+
+    if (  !( s_Cntr++ & 0xF )  ) {
+
+     lFD = fioDopen ( "host:" );
+
+     if ( lFD >= 0 ) {
+
+      fioDclose ( lFD );
+
+      if ( !s_HostFlags ) {
+
+       s_Event    |= GUI_EF_HOST_MOUNT;
+       s_HostFlags = 1;
+       SignalSema ( s_PadSema );
+
+       continue;
+
+      }  /* end if */
+
+     } else {
+
+      if ( s_HostFlags ) {
+
+       s_Event    |= GUI_EF_HOST_UMOUNT;
+       s_HostFlags = 0;
+       SignalSema ( s_PadSema );
+
+       continue;
+
+      }  /* end if */
+
+     }  /* end else */
+
+    }  /* end if */
+
+   }  /* end if */
+#endif  /* NO_HOST_SUPPORT */
   }  /* end if */
 
   DoTimer ();
@@ -366,7 +451,7 @@ static void GUI_AddDevice ( int aDev ) {
 
  GUIDeviceMenuItem* lpItem = ( GUIDeviceMenuItem* )calloc (  1, sizeof ( GUIDeviceMenuItem )  );
 
- if ( aDev == GUI_DF_CDROM || aDev == GUI_DF_CDFS ) {
+ if ( aDev == GUI_DF_CDROM ) {
 
   lpItem -> m_pImage = g_ImgCDROM;
   s_CDROM = 1;
@@ -387,6 +472,10 @@ static void GUI_AddDevice ( int aDev ) {
  } else if ( aDev == GUI_DF_HOST ) {
 
   lpItem -> m_pImage = g_ImgHost;
+
+ } else if ( aDev == GUI_DF_CDFS ) {
+
+  lpItem -> m_pImage = g_ImgCDROM;
 
  } else if ( aDev == GUI_DF_DVD ) {
 
@@ -797,6 +886,36 @@ static int GUI_Run ( void** apRetVal ) {
    retVal = GUI_EV_USBM_UMOUNT;
    break;
 
+  } else if ( lEvent & GUI_EF_HOST_MOUNT ) {
+
+   retVal = GUI_EV_HOST_MOUNT;
+   break;
+
+  } else if ( lEvent & GUI_EF_HOST_UMOUNT ) {
+
+   retVal = GUI_EV_HOST_UMOUNT;
+   break;
+
+  } else if ( lEvent & GUI_EF_CDFS_MOUNT ) {
+
+   retVal = GUI_EV_CDFS_MOUNT;
+   break;
+
+  } else if ( lEvent & GUI_EF_CDFS_UMOUNT ) {
+
+   retVal = GUI_EV_CDFS_UMOUNT;
+   break;
+
+  } else if ( lEvent & GUI_EF_DISK_DETECT ) {
+
+   retVal = GUI_EV_DISK_DETECT;
+   break;
+
+  } else if ( lEvent & GUI_EF_DISK_NODISK ) {
+
+   retVal = GUI_EV_DISK_NODISK;
+   break;
+
   } else if ( s_GUICtx.m_pCurrentMenu ) {
 
    void* lpResult = s_GUICtx.m_pCurrentMenu -> Navigate ( lEvent );
@@ -1034,14 +1153,14 @@ GSDisplayMode GUI_InitPad ( void ) {
 
   lBtn = GUI_ReadButtons ();
 
-  if (  lBtn == ( PAD_SELECT | PAD_R1 )  ) {
+  if (   (  lBtn & ( PAD_SELECT | PAD_R1 )  ) == ( PAD_SELECT | PAD_R1 )   ) {
 
-   retVal = GSDisplayMode_NTSC_I;
+   retVal = lBtn & PAD_SQUARE ? GSDisplayMode_NTSC : GSDisplayMode_NTSC_I;
    break;
 
-  } else if (  lBtn == ( PAD_SELECT | PAD_R2 )  ) {
+  } else if (   (  lBtn & ( PAD_SELECT | PAD_R2 )  ) == ( PAD_SELECT | PAD_R2 )   ) {
 
-   retVal = GSDisplayMode_PAL_I;
+   retVal = lBtn & PAD_SQUARE ? GSDisplayMode_PAL : GSDisplayMode_PAL_I;
    break;
 
   } else if ( g_Timer - lTime > 1000 ) break;
@@ -1063,6 +1182,9 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  s_Event        = 0;
  s_CDROM        = 0;
  s_USBFlags     = 0;
+ s_HostFlags    = 0;
+ s_CDFSFlags    = 0;
+ s_DiskDetect   = 0;
  s_PrevBtn      = 0;
  s_Init         = 0;
 

@@ -6,6 +6,7 @@
 # Based on ffmpeg project (no copyright notes in the original source code)
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2005 USB support by weltall
+# (c) 2005 HOST support by Ronald Andersson (AKA: dlanor)
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -37,6 +38,7 @@
 
 int g_Trace;
 int g_fUSB;
+int g_NetFailFlags;
 
 const uint32_t g_SMS_InvTbl[ 256 ] = {
          0U, 4294967295U, 2147483648U, 1431655766U, 1073741824U,  858993460U,  715827883U,  613566757U,
@@ -130,7 +132,10 @@ static char s_PFSArgs[] = {
  '-', 'o', '\x00', '1', '0', '\x00',
  '-', 'n', '\x00', '4', '0', '\x00'
 };
-
+#ifndef NO_HOST_SUPPORT
+static char s_SMAPArgs[ 64 ];
+static int  s_SMAPArgsLen;
+#endif  /* NO_HOST_SUPPORT */
 static LoadParams s_LoadParams[] = {
 
  { "AUDSRV",   &g_DataBuffer[ SMS_AUDSRV_OFFSET   ], SMS_AUDSRV_SIZE,   0,                    NULL      },
@@ -140,9 +145,59 @@ static LoadParams s_LoadParams[] = {
  { "PS2ATAD",  &g_DataBuffer[ SMS_PS2ATAD_OFFSET  ], SMS_PS2ATAD_SIZE,  0,                    NULL      },
  { "PS2HDD",   &g_DataBuffer[ SMS_PS2HDD_OFFSET   ], SMS_PS2HDD_SIZE,   sizeof ( s_HDDArgs ), s_HDDArgs },
  { "PS2FS",    &g_DataBuffer[ SMS_PS2FS_OFFSET    ], SMS_PS2FS_SIZE,    sizeof ( s_PFSArgs ), s_PFSArgs },
- { "POWEROFF", &g_DataBuffer[ SMS_POWEROFF_OFFSET ], SMS_POWEROFF_SIZE, 0,                    NULL      }
+ { "POWEROFF", &g_DataBuffer[ SMS_POWEROFF_OFFSET ], SMS_POWEROFF_SIZE, 0,                    NULL      },
+ { "CDVD",     &g_DataBuffer[ SMS_CDVD_OFFSET     ], SMS_CDVD_SIZE,     0,                    NULL      }
 };
+#ifndef NO_HOST_SUPPORT
+static void getIpConfig ( void ) {
 
+ char buf        [ 64 ];
+ char net_ip     [ 16 ] = "192.168.0.10";
+ char net_netmask[ 16 ] = "255.255.255.0";
+ char net_gateway[ 16 ] = "192.168.0.1";
+
+ int fd;
+ int i;
+ int len;
+ char c;
+
+ fd = fioOpen ( "mc0:/SYS-CONF/IPCONFIG.DAT", O_RDONLY );
+
+ if ( fd >= 0 ) {
+
+  bzero (  buf, sizeof ( buf )  );
+  len = fioRead (  fd, buf, sizeof ( buf ) - 1  );  /* Save a byte for termination */
+  fioClose ( fd );
+
+ }  /* end if */
+
+ if	( fd > 0 && len > 0 ) {
+
+  buf[ len ] = '\0';  /* Ensure string termination, regardless of file content */
+
+  for (  i = 0; (  ( c = buf[ i ] ) != '\0'  ); ++i  )  /* Clear out spaces and any CR/LF */
+
+   if (  c == ' ' || c == '\r' || c == '\n' ) buf[ i ] = '\0';
+
+   strncpy ( net_ip, buf, 15 );
+   i = strlen ( net_ip ) + 1;
+   strncpy ( net_netmask, buf + i, 15 );
+   i += strlen ( net_netmask ) + 1;
+   strncpy ( net_gateway, buf + i, 15 );
+
+  }  /* end for */
+
+  bzero (  s_SMAPArgs, sizeof ( s_SMAPArgs )  );
+  strncpy ( s_SMAPArgs, net_ip, 15);
+  i = strlen ( net_ip ) + 1;
+  strncpy ( s_SMAPArgs + i, net_netmask, 15 );
+  i += strlen ( net_netmask ) + 1;
+  strncpy ( s_SMAPArgs + i, net_gateway, 15 );
+  i += strlen ( net_gateway ) + 1;
+  s_SMAPArgsLen = i;
+
+}  /* end getIpConfig */
+#endif  /* NO_HOST_SUPPORT */
 static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
 
  int  lRes;
@@ -176,7 +231,23 @@ void SMS_Initialize ( void* apParam ) {
  SifLoadModule ( "rom0:LIBSD", 0, NULL );
 
  for (  i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i  ) LoadModule ( lpGUICtx, i );
+#ifndef NO_HOST_SUPPORT
+ lpGUICtx -> Status ( "Initializing network interface..." );
 
+ getIpConfig ();
+
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2IP_OFFSET ], SMS_PS2IP_SIZE, 0, NULL, &i );
+
+ if ( i < 0 ) g_NetFailFlags |= 2;
+
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2SMAP_OFFSET ], SMS_PS2SMAP_SIZE, s_SMAPArgsLen, &s_SMAPArgs[ 0 ], &i );
+
+ if ( i < 0 ) g_NetFailFlags |= 4;
+
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2HOST_OFFSET ], SMS_PS2HOST_SIZE, 0, NULL, &i );
+
+ if ( i < 0 ) g_NetFailFlags |= 8;
+#endif  /* NO_HOST_SUPPORT */
  lpGUICtx -> Status ( "Initializing SMS..." );
 
  hddPreparePoweroff ();

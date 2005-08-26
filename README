@@ -370,3 +370,18 @@ Update (19-AUG-2005)
 - 'DSP_PutPixels8XY2' and 'DSP_PutPixels16XY2' routines are rewritten in
   assembly using MMI;
 - Some other changes that could be interesting only for programmers;
+
+Update (26-AUG-2005)
+--------------------
+- Ronald Andersson (AKA: dlanor) has added network (host) support
+  (thanks and regards to him):
+- ISO CD/DVD support added (thanks to 'Mr. Worm~~' for real help in testing);
+- Added MPEG2 unquantizer (fixes bad video quality issues in some cases)
+  (this thing is to be optimized with MMI, anyone can try his (her) skills
+   with MIPS/EE assembly ;) (thanks to 'koki373737' for his video clips);
+- Added an ability to choose between interlaced and non-interlaced video
+  signal at program's startup (select-R1-square - for non-interlaced NTSC
+  and select-R2-square for non-intrlaced PAL);
+- Attempt to fix "movie dimensions must be dividable by 16" issue. I've only
+  tested it with height of 396 pixels, but I hope that it will work in other
+  cases too (thanks to 'koki373737' again for his video clips);

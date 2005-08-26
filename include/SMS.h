@@ -39,6 +39,10 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2FS_SIZE      54785
 # define SMS_POWEROFF_SIZE    2925
 # define SMS_USB_MASS_SIZE   33317
+# define SMS_CDVD_SIZE       12857
+# define SMS_PS2IP_SIZE      78909
+# define SMS_PS2SMAP_SIZE    12625
+# define SMS_PS2HOST_SIZE    16562
 
 # define SMS_AUDSRV_OFFSET     0
 # define SMS_IDCT_CONST_OFFSET (  ( SMS_AUDSRV_OFFSET     + SMS_AUDSRV_SIZE     + 15 ) & 0xFFFFFFF0  )
@@ -50,7 +54,11 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2FS_OFFSET      (  ( SMS_PS2HDD_OFFSET     + SMS_PS2HDD_SIZE     + 15 ) & 0xFFFFFFF0  )
 # define SMS_POWEROFF_OFFSET   (  ( SMS_PS2FS_OFFSET      + SMS_PS2FS_SIZE      + 15 ) & 0xFFFFFFF0  )
 # define SMS_USB_MASS_OFFSET   (  ( SMS_POWEROFF_OFFSET   + SMS_POWEROFF_SIZE   + 15 ) & 0xFFFFFFF0  )
-# define SMS_DATA_BUFFER_SIZE  (  ( SMS_USB_MASS_OFFSET   + SMS_USB_MASS_SIZE   + 15 ) & 0xFFFFFFF0  )
+# define SMS_CDVD_OFFSET       (  ( SMS_USB_MASS_OFFSET   + SMS_USB_MASS_SIZE   + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2IP_OFFSET      (  ( SMS_CDVD_OFFSET       + SMS_CDVD_SIZE       + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2SMAP_OFFSET    (  ( SMS_PS2IP_OFFSET      + SMS_PS2IP_SIZE      + 15 ) & 0xFFFFFFF0  )
+# define SMS_PS2HOST_OFFSET    (  ( SMS_PS2SMAP_OFFSET    + SMS_PS2SMAP_SIZE    + 15 ) & 0xFFFFFFF0  )
+# define SMS_DATA_BUFFER_SIZE  (  ( SMS_PS2HOST_OFFSET    + SMS_PS2HOST_SIZE    + 15 ) & 0xFFFFFFF0  )
 
 extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 

@@ -1,6 +1,7 @@
 #include "SMS.h"
 #include "SMS_AVI.h"
 #include "CDDA.h"
+#include "CDVD.h"
 #include "GS.h"
 #include "GUI.h"
 #include "Browser.h"
@@ -36,8 +37,8 @@ int main ( void ) {
 
  lDisplayMode = GUI_InitPad ();
 
- SifLoadModule ( "rom0:MCMAN",   0, NULL );
- SifLoadModule ( "rom0:MCSERV",  0, NULL );
+ SifLoadModule ( "rom0:MCMAN",  0, NULL );
+ SifLoadModule ( "rom0:MCSERV", 0, NULL );
 
  mcInit ( MC_TYPE_MC );
 
@@ -58,6 +59,8 @@ int main ( void ) {
 
  SMS_Initialize ( lpGUICtx );
 
+ CDVD_Init ();
+
  lpBrowserCtx = BrowserContext_Init ( lpGUICtx );
 
  while ( 1 ) {
@@ -68,11 +71,16 @@ int main ( void ) {
   if ( lpPlayer == NULL ) {
 
    lpGUICtx -> Status ( "Unsupported file format (press X to continue)" );
+
+   if (  CDDA_DiskType () != DiskType_Unknown  ) CDVD_Stop ();
+
    GUI_WaitButton ( PAD_CROSS );
 
   } else if ( lpPlayer -> Play == NULL ) {
 
    lpPlayer -> Destroy ();
+
+   if (  CDDA_DiskType () != DiskType_Unknown  ) CDVD_Stop ();
 
    lpGUICtx -> Status ( "Unsupported codecs (press X to continue)" );
    GUI_WaitButton ( PAD_CROSS );

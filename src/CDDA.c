@@ -149,14 +149,46 @@ int CDDA_ReadTOC ( CDDA_TOC* apTOC ) {
 
 }  /* end CDDA_ReadTOC */
 
-int CDDA_IsAudioDisk ( void ) {
+DiskType CDDA_DiskType ( void ) {
 
- int retVal = 0;
+ DiskType retVal = DiskType_Unknown;
 
  if (  SifCallRpc (
         &s_ClientSCmd, CD_CMD_GETDISCTYPE, 0, 0, 0, s_SCmdRecvBuff, 4, 0, 0
        ) >= 0
- ) retVal = *( int* )UNCACHED_SEG( s_SCmdRecvBuff ) == 0xFD;
+ ) {
+
+  int lType = *( int* )UNCACHED_SEG( s_SCmdRecvBuff );
+
+  if ( lType > 0x00 && lType < 0x05 )
+
+   retVal = DiskType_Detect;
+
+  else switch ( lType ) {
+
+   case 0x10:
+   case 0x11:
+   case 0x12:
+
+    retVal = DiskType_CD;
+
+   break;
+
+   case 0x14:
+
+    retVal = DiskType_DVD;
+
+   break;
+
+   case 0xFD:
+
+    retVal = DiskType_CDDA;
+
+   break;
+
+  }  /* end switch */
+
+ }  /* end if */
 
  return retVal;
 

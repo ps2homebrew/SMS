@@ -1000,7 +1000,7 @@ CDDAContext* CDDA_InitContext ( unsigned long aDrive ) {
 
  if ( lStat ) {
 
-  if (  CDDA_IsAudioDisk () && CDDA_ReadTOC ( &lToc )  ) {
+  if (  CDDA_DiskType () == DiskType_CDDA && CDDA_ReadTOC ( &lToc )  ) {
 
    int i;
 

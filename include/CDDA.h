@@ -11,6 +11,10 @@
 #ifndef __CDDA_H
 # define __CDDA_H
 
+typedef enum {
+ DiskType_CD, DiskType_DVD, DiskType_CDDA, DiskType_Unknown, DiskType_Detect
+} DiskType;
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
@@ -53,15 +57,15 @@ typedef struct CDDA_TOC {
 
 extern int g_CDDASpeed;
 
-int  CDDA_Init        ( void                     );
-void CDDA_Exit        ( void                     );
-int  CDDA_ReadTOC     ( CDDA_TOC*                );
-int  CDDA_RawRead     ( int, int, unsigned char* );
-int  CDDA_Synchronize ( void                     );
-int  CDDA_IsAudioDisk ( void                     );
-int  CDDA_Stop        ( void                     );
-void CDDA_Standby     ( void                     );
-void CDDA_Pause       ( void                     );
+int      CDDA_Init        ( void                     );
+void     CDDA_Exit        ( void                     );
+int      CDDA_ReadTOC     ( CDDA_TOC*                );
+int      CDDA_RawRead     ( int, int, unsigned char* );
+int      CDDA_Synchronize ( void                     );
+DiskType CDDA_DiskType    ( void                     );
+int      CDDA_Stop        ( void                     );
+void     CDDA_Standby     ( void                     );
+void     CDDA_Pause       ( void                     );
 
 # ifdef __cplusplus
 }

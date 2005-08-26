@@ -16,6 +16,7 @@
 #include "SMS_MPEG.h"
 #include "SMS_AVI.h"
 #include "SMS_H263.h"
+#include "SMS_MPEG2.h"
 #include "SMS_VideoBuffer.h"
 
 #ifndef _WIN32
@@ -1404,6 +1405,18 @@ alloc:
          g_MPEGCtx.m_pLastPic -> m_pBuf == NULL
        )
  ) goto alloc;
+
+ if ( !g_MPEGCtx.m_MPEGQuant ) {
+
+  g_MPEGCtx.DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
+  g_MPEGCtx.DCT_UnquantizeIntra = SMS_H263_DCTUnquantizeIntra;
+
+ } else {
+
+  g_MPEGCtx.DCT_UnquantizeInter = SMS_MPEG2_DCTUnquantizeInter;
+  g_MPEGCtx.DCT_UnquantizeIntra = SMS_MPEG2_DCTUnquantizeIntra;
+
+ }  /* end else */
 
  return 0;
 

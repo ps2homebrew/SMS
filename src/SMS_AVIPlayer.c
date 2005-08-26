@@ -94,7 +94,7 @@ static void _draw_text ( char* apStr ) {
 static void _prepare_ipu_context ( int afVideo ) {
 
  s_Player.m_pGUICtx -> m_pGSCtx -> m_fDblBuf = GS_OFF;
- s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_OFF;
+ s_Player.m_pGUICtx -> m_pGSCtx -> m_fZBuf   = GS_ON;
 
  s_Player.m_pGUICtx -> m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
  s_Player.m_pGUICtx -> m_pGSCtx -> VSync ();
@@ -596,6 +596,8 @@ nextPacket:
 
 static void _sms_avi_destroy ( void ) {
 
+ DiskType lType;
+
  if ( s_VideoBuffer ) {
 
   if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
@@ -662,7 +664,12 @@ static void _sms_avi_destroy ( void ) {
 
  }  /* end if */
 
- if (  CDDA_IsAudioDisk ()  ) {
+ lType = CDDA_DiskType ();
+
+ if (  lType == DiskType_CD  ||
+       lType == DiskType_DVD ||
+       lType == DiskType_CDDA
+ ) {
 
   CDDA_Synchronize ();
   CDDA_Stop        ();
