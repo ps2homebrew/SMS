@@ -195,10 +195,24 @@ static void IPU_SetTEX ( void ) {
 
 int IPU_DMAHandlerFromIPU ( int aChan ) {
 
- SMS_IPU_SPR_PKT_BUF[  6 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX, g_IPUCtx.m_DestY, 0 );
- SMS_IPU_SPR_PKT_BUF[ 14 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes, 0  );
+ int32_t  i, j = 6, k = 14, lX = g_IPUCtx.m_DestX;
+ uint8_t* lpRes = g_IPUCtx.m_pCurRes;
+
+ for ( i = 0; i < 8; ++i ) {
+
+  SMS_IPU_SPR_PKT_BUF[ j ] = GS_SETREG_TRXPOS( 0, 0, lX, g_IPUCtx.m_DestY, 0 );
+  lX += 16;
+  SMS_IPU_SPR_PKT_BUF[ k ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )lpRes, 0  );
+
+  j     +=   16;
+  k     +=   16;
+  lpRes += 1024;
+
+ }  /* end for */
+
  g_IPUCtx.m_GIFlag = 1;
- DMA_SendChainToGIF_SPR( SMS_IPU_SPR_DMA_PKT_BUF, 9 );
+
+ DMA_SendChainToGIF_SPR( SMS_IPU_SPR_DMA_PKT_BUF );
 
  return 0;
 
@@ -235,7 +249,7 @@ static int IPU_VBlankEndHandler ( int aCause ) {
 #endif  /* VB_SYNC */
 void IPU_GIFHandlerSend ( void ) {
 
- if ( ++g_IPUCtx.m_MB == g_IPUCtx.m_nMBSlice ) {
+ if (  ( g_IPUCtx.m_MB += 8 ) >= g_IPUCtx.m_nMBSlice  ) {
 
   if ( !--g_IPUCtx.m_Slice ) {
 #ifdef VB_SYNC
@@ -267,13 +281,28 @@ void IPU_GIFHandlerSend ( void ) {
 
  } else {
 
-  g_IPUCtx.m_DestX   +=   16;
-  g_IPUCtx.m_pCurRes += 1024;
+  g_IPUCtx.m_DestX   +=  128;
+  g_IPUCtx.m_pCurRes += 8192;
 
-  SMS_IPU_SPR_PKT_BUF[  6 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX, g_IPUCtx.m_DestY, 0 );
-  SMS_IPU_SPR_PKT_BUF[ 14 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes, 0  );
+  SMS_IPU_SPR_PKT_BUF[   6 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX,      g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[  14 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes,        0  );
+  SMS_IPU_SPR_PKT_BUF[  22 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 16, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[  30 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes + 1024, 0  );
+  SMS_IPU_SPR_PKT_BUF[  38 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 32, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[  46 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes + 2048, 0  );
+  SMS_IPU_SPR_PKT_BUF[  54 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 48, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[  62 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes + 3072, 0  );
+  SMS_IPU_SPR_PKT_BUF[  70 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 64, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[  78 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes + 4096, 0  );
+  SMS_IPU_SPR_PKT_BUF[  86 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 80, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[  94 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes + 5120, 0  );
+  SMS_IPU_SPR_PKT_BUF[ 102 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 96, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[ 110 ] = DMA_TAG( 64, 1, DMA_REF, 0, ( u32 )g_IPUCtx.m_pCurRes + 6144, 0  );
+  SMS_IPU_SPR_PKT_BUF[ 118 ] = GS_SETREG_TRXPOS( 0, 0, g_IPUCtx.m_DestX + 112, g_IPUCtx.m_DestY, 0 );
+  SMS_IPU_SPR_PKT_BUF[ 126 ] = DMA_TAG( 64, 1, DMA_REFE, 0, ( u32 )g_IPUCtx.m_pCurRes + 7168, 0  );
+
   g_IPUCtx.m_GIFlag = 1;
-  DMA_SendChainToGIF_SPR( SMS_IPU_SPR_DMA_PKT_BUF, 9 );
+  DMA_SendChainToGIF_SPR( SMS_IPU_SPR_DMA_PKT_BUF );
 
  }  /* end else */
 
@@ -394,10 +423,19 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
     lRight <<= 4;
     lRight  += lTLeft;
 
+    lLeft  = lTLeft;
+    lRight = ( apGSCtx -> m_Width << 4 ) + lTLeft;
+
    }  /* end else */
 #ifdef BIMBO69
-   lTop    -= ( 12 << 4 );
-   lBottom += ( 12 << 4 );
+   if ( apGSCtx -> m_DisplayMode == GSDisplayMode_PAL   ||
+        apGSCtx -> m_DisplayMode == GSDisplayMode_PAL_I
+   ) {
+
+    lTop    -= ( 12 << 4 );
+    lBottom += ( 12 << 4 );
+
+   }  /* end if */
 #endif  /* BIMBO69 */
    DMA_Wait ( DMA_CHANNEL_GIF );
 
@@ -424,32 +462,34 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 
    SyncDCache ( g_IPUCtx.m_DMAGIFDraw, &g_IPUCtx.m_DMAGIFDraw[ 14 ] );
 
-   SMS_IPU_SPR_PKT_BUF[ 0 ] = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
-   SMS_IPU_SPR_PKT_BUF[ 1 ] = 0;
+   for ( lTop = 0; lTop < 8; ++lTop ) {
 
-    SMS_IPU_SPR_PKT_BUF[ 2 ] = GIF_TAG( 4, 1, 0, 0, 0, 1 );
-    SMS_IPU_SPR_PKT_BUF[ 3 ] = GIF_AD;
+    SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 0 ] = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
+    SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 1 ] = 0;
 
-     SMS_IPU_SPR_PKT_BUF[ 4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, lVRAM, lTBW, GSPSM_32 );
-     SMS_IPU_SPR_PKT_BUF[ 5 ] = GS_BITBLTBUF;
+     SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 2 ] = GIF_TAG( 4, 1, 0, 0, 0, 1 );
+     SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 3 ] = GIF_AD;
 
-     SMS_IPU_SPR_PKT_BUF[ 6 ] = GS_SETREG_TRXPOS( 0, 0, 0, 0, 0 );
-     SMS_IPU_SPR_PKT_BUF[ 7 ] = GS_TRXPOS;
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, lVRAM, lTBW, GSPSM_32 );
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 5 ] = GS_BITBLTBUF;
 
-     SMS_IPU_SPR_PKT_BUF[ 8 ] = GS_SETREG_TRXREG( 16, 16 );
-     SMS_IPU_SPR_PKT_BUF[ 9 ] = GS_TRXREG;
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 7 ] = GS_TRXPOS;
 
-     SMS_IPU_SPR_PKT_BUF[ 10 ] = GS_SETREG_TRXDIR( 0 );
-     SMS_IPU_SPR_PKT_BUF[ 11 ] = GS_TRXDIR;
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 8 ] = GS_SETREG_TRXREG( 16, 16 );
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 9 ] = GS_TRXREG;
 
-    SMS_IPU_SPR_PKT_BUF[ 12 ] = GIF_TAG( 64, 1, 0, 0, 2, 1 );
-    SMS_IPU_SPR_PKT_BUF[ 13 ] = 0;
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 10 ] = GS_SETREG_TRXDIR( 0 );
+      SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 11 ] = GS_TRXDIR;
 
-   SMS_IPU_SPR_PKT_BUF[ 14 ] = DMA_TAG( 0, 1, DMA_REF, 0, 0, 0 );
-   SMS_IPU_SPR_PKT_BUF[ 15 ] = 0;
+     SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 12 ] = GIF_TAG( 64, 1, 0, 0, 2, 1 );
+     SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 13 ] = 0;
 
-   SMS_IPU_SPR_PKT_BUF[ 16 ] = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
-   SMS_IPU_SPR_PKT_BUF[ 17 ] = 0;
+    SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 15 ] = 0;
+
+   }  /* end for */
+
+   SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 0 ] = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
+   SMS_IPU_SPR_PKT_BUF[ lTop * 16 + 1 ] = 0;
 
    g_IPUCtx.m_DMAHandlerID_IPU = AddDmacHandler ( DMA_CHANNEL_FROM_IPU, IPU_DMAHandlerFromIPU, 0 );
    g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler ( DMA_CHANNEL_GIF,      IPU_DMAHandlerToGIF,   0 );

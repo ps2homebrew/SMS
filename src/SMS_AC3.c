@@ -2509,7 +2509,7 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apB
 
    else lFlags |= AC3_ADJUST_LEVEL;
 
-   lLevel = 2 << 24;
+   lLevel = 12 << 24;
 
    if (  _ac3_frame ( s_AC3Ctx.m_InBuf, &lFlags, &lLevel, 384 )  ) {
 

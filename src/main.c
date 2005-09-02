@@ -14,6 +14,7 @@
 #include <sifrpc.h>
 #include <loadfile.h>
 #include <iopcontrol.h>
+#include <iopheap.h>
 #include <libmc.h>
 
 int main ( void ) {
@@ -26,6 +27,10 @@ int main ( void ) {
  SMS_AVIPlayer*  lpPlayer;
  GSDisplayMode   lDisplayMode;
 #if RESET_IOP
+ SifInitRpc     ( 0 ); 
+ SifExitIopHeap (); 
+ SifLoadFileExit(); 
+ SifExitRpc     (); 
  SifIopReset ( "rom0:UDNL rom0:EELOADCNF", 0 );
 
  while (  SifIopSync ()  );

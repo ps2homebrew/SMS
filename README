@@ -385,3 +385,12 @@ Update (26-AUG-2005)
 - Attempt to fix "movie dimensions must be dividable by 16" issue. I've only
   tested it with height of 396 pixels, but I hope that it will work in other
   cases too (thanks to 'koki373737' again for his video clips);
+
+Update (XX-XXX-XXXX)
+--------------------
+- 'usb_mass.irx' updated (thanks to 'hip203' for source code of 'LaunchElf');
+- AC3 sound is made louder (thanks to 'Mr. Worm~~' for playing with it);
+- slightly improved performance ("CSC - display" cycle (IPU code) is shortened
+  and some code is rewritten in assembly);
+- removed "black bars" on the left and right sides of the picture for some movies
+  with "incorrect" aspect ratios;

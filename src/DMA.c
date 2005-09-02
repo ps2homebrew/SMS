@@ -56,7 +56,7 @@ const unsigned int DMA_SADR[ 10 ] = {
 };
 
 const unsigned int DMA_QWC[ 10 ] =  {
- 0x00000000, 0x00000000, 0x1000A020, 0x1000B020,
+ 0x10008020, 0x10009020, 0x1000A020, 0x1000B020,
  0x1000B420, 0x1000C020, 0x1000C420, 0x1000C820,
  0x1000D020, 0x1000D420
 };
@@ -71,8 +71,7 @@ void DMA_Send ( int aChannel, unsigned long int* apData, int aSize ) {
 
  SyncDCache (  apData, apData + ( aSize << 2 )  );
 
- if (  DMA_QWC[ aChannel ] != 0 ) *DMA_ADDR( DMA_QWC[ aChannel ] ) = aSize;
-
+ *DMA_ADDR( DMA_QWC [ aChannel ]  ) = aSize;
  *DMA_ADDR( DMA_MADR[ aChannel ]  ) = ( unsigned int )apData;
  *DMA_ADDR( DMA_CHCR[ aChannel ]  ) = DMA_SET_CHCR(
    DMADirection_From_Mem, DMATransferMode_Normal, 0, 0, 0, 1, 0
@@ -94,8 +93,7 @@ void DMA_SendChain ( int aChannel, unsigned long int* apData, int aSize ) {
 
  SyncDCache (  apData, apData + ( aSize << 2 )  );
 
- if (  DMA_QWC[ aChannel ] != 0 ) *DMA_ADDR( DMA_QWC[ aChannel ] ) = 0;
-
+ *DMA_ADDR( DMA_QWC [ aChannel ]  ) = 0;
  *DMA_ADDR( DMA_TADR[ aChannel ]  ) = ( unsigned int )apData;
  *DMA_ADDR( DMA_CHCR[ aChannel ]  ) = DMA_SET_CHCR(
    DMADirection_From_Mem, DMATransferMode_Chain, 0, 0, 0, 1, 0
@@ -125,7 +123,8 @@ void DMA_ChannelInit ( int aChannel ) {
  if ( DMA_ASR0[ aChannel ] != 0 ) *DMA_ADDR( DMA_ASR0[ aChannel ] ) = 0x00000000;
  if ( DMA_ASR1[ aChannel ] != 0 ) *DMA_ADDR( DMA_ASR1[ aChannel ] ) = 0x00000000;
  if ( DMA_SADR[ aChannel ] != 0 ) *DMA_ADDR( DMA_SADR[ aChannel ] ) = 0x00000000;
- if ( DMA_QWC [ aChannel ] != 0 ) *DMA_ADDR( DMA_QWC [ aChannel ] ) = 0x00000000;
+
+ *DMA_ADDR( DMA_QWC [ aChannel ] ) = 0x00000000;
 
 }  /* end DMA_ChannelInit */
 
@@ -133,6 +132,6 @@ void DMA_SendSPR ( int aChannel, unsigned char* apData, int aQWC ) {
 
  *DMA_ADDR( DMA_MADR[ aChannel ] ) = DMA_SET_MADR(  ( unsigned int )apData, 1  );
  *DMA_ADDR( DMA_QWC [ aChannel ] ) = aQWC;
- *DMA_ADDR( DMA_CHCR[ aChannel ]  ) = DMA_SET_CHCR( 0, 0, 0, 0, 0, 1, 0 );
+ *DMA_ADDR( DMA_CHCR[ aChannel ] ) = DMA_SET_CHCR( 0, 0, 0, 0, 0, 1, 0 );
 
 }  /* end DMA_SendSPR */

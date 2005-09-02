@@ -167,7 +167,7 @@ typedef enum DMATransferMode {
    DMADirection_From_Mem, DMATransferMode_Chain, 0, 0, 0, 1, 0 \
   )
 
-# define DMA_SendChainToGIF_SPR( data, size )                           \
+# define DMA_SendChainToGIF_SPR( data )                                 \
  *DMA_ADDR( 0x1000A020 ) = 0;                                           \
  *DMA_ADDR( 0x1000A030 ) = (  ( unsigned int )( data )  ) | 0x80000000; \
  *DMA_ADDR( 0x1000A000 ) = DMA_SET_CHCR(                                \

@@ -1,3 +1,13 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #ifndef __StringList_H
 # define __StringList_H
 
@@ -20,6 +30,7 @@ typedef struct StringList {
  void  ( *Pop      ) ( struct StringList*              );
  void  ( *PopBack  ) ( struct StringList*              );
  void  ( *Destroy  ) ( struct StringList*, int         );
+ void  ( *Sort     ) ( struct StringList*              );
 
 } StringList;
 

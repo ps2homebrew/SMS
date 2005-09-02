@@ -410,6 +410,10 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
   g_MPEGCtx.m_pCache      = lpMB;
   g_MPEGCtx.m_fDirtyCache = 1;
 
+  __asm__ __volatile__ (
+   "mtsab   $zero, 8\n\t"
+  );
+
   DMA_WaitToSPR();
   DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer + 2, lpMB + g_MPEGCtx.m_CurPic.m_Linesize, 48 );
 
@@ -419,44 +423,91 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
    u64*  lpSrcCb = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
    u64*  lpSrcCr = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
 
-   lpMCY[  0 ] = lpSrcY[  0 ]; 
-   lpMCY[  2 ] = lpSrcY[  1 ]; 
-   lpMCY[  4 ] = lpSrcY[  2 ]; 
-   lpMCY[  6 ] = lpSrcY[  3 ]; 
-   lpMCY[  8 ] = lpSrcY[  4 ]; 
-   lpMCY[ 10 ] = lpSrcY[  5 ]; 
-   lpMCY[ 12 ] = lpSrcY[  6 ]; 
-   lpMCY[ 14 ] = lpSrcY[  7 ]; 
-   lpMCY[ 16 ] = lpSrcY[  8 ]; 
-   lpMCY[ 18 ] = lpSrcY[  9 ]; 
-   lpMCY[ 20 ] = lpSrcY[ 10 ]; 
-   lpMCY[ 22 ] = lpSrcY[ 11 ]; 
-   lpMCY[ 24 ] = lpSrcY[ 12 ]; 
-   lpMCY[ 26 ] = lpSrcY[ 13 ]; 
-   lpMCY[ 28 ] = lpSrcY[ 14 ]; 
-   lpMCY[ 30 ] = lpSrcY[ 15 ];
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,   0(%0)\n\t"
+    "lq     $v1,  16(%0)\n\t"
+    "lq     $t5,  32(%0)\n\t"
+    "lq     $t6,  48(%0)\n\t"
+    "lq     $t7,  64(%0)\n\t"
+    "lq     $t8,  80(%0)\n\t"
+    "lq     $t9,  96(%0)\n\t"
+    "lq     $at, 112(%0)\n\t"
+    "sq     $v0,   0(%1)\n\t"
+    "sq     $v1,  32(%1)\n\t"
+    "sq     $t5,  64(%1)\n\t"
+    "sq     $t6,  96(%1)\n\t"
+    "sq     $t7, 128(%1)\n\t"
+    "sq     $t8, 160(%1)\n\t"
+    "sq     $t9, 192(%1)\n\t"
+    "sq     $at, 224(%1)\n\t"
+    "lq     $v0, 128(%0)\n\t"
+    "lq     $v1, 144(%0)\n\t"
+    "lq     $t5, 160(%0)\n\t"
+    "lq     $t6, 176(%0)\n\t"
+    "lq     $t7, 192(%0)\n\t"
+    "lq     $t8, 208(%0)\n\t"
+    "lq     $t9, 224(%0)\n\t"
+    "lq     $at, 240(%0)\n\t"
+    "sq     $v0, 256(%1)\n\t"
+    "sq     $v1, 288(%1)\n\t"
+    "sq     $t5, 320(%1)\n\t"
+    "sq     $t6, 352(%1)\n\t"
+    "sq     $t7, 384(%1)\n\t"
+    "sq     $t8, 416(%1)\n\t"
+    "sq     $t9, 448(%1)\n\t"
+    "sq     $at, 480(%1)\n\t"
+    ".set at\n\t"
+    ::"r"( lpSrcY ), "r"( lpMCY ) : "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
 
    ++lpMCY;
 
-   lpMCCb[  0 ] = lpSrcCb[ 0 ];
-   lpMCCb[  2 ] = lpSrcCb[ 1 ];
-   lpMCCb[  4 ] = lpSrcCb[ 2 ];
-   lpMCCb[  6 ] = lpSrcCb[ 3 ];
-   lpMCCb[  8 ] = lpSrcCb[ 4 ];
-   lpMCCb[ 10 ] = lpSrcCb[ 5 ];
-   lpMCCb[ 12 ] = lpSrcCb[ 6 ];
-   lpMCCb[ 14 ] = lpSrcCb[ 7 ];
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "qfsrv  $t7, $v0, $v0\n\t"
+    "qfsrv  $t8, $v1, $v1\n\t"
+    "qfsrv  $t9, $t5, $t5\n\t"
+    "qfsrv  $at, $t6, $t6\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCb ), "r"( lpMCCb ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
 
    ++lpMCCb;
 
-   lpMCCr[  0 ] = lpSrcCr[ 0 ];
-   lpMCCr[  2 ] = lpSrcCr[ 1 ];
-   lpMCCr[  4 ] = lpSrcCr[ 2 ];
-   lpMCCr[  6 ] = lpSrcCr[ 3 ];
-   lpMCCr[  8 ] = lpSrcCr[ 4 ];
-   lpMCCr[ 10 ] = lpSrcCr[ 5 ];
-   lpMCCr[ 12 ] = lpSrcCr[ 6 ];
-   lpMCCr[ 14 ] = lpSrcCr[ 7 ];
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "qfsrv  $t7, $v0, $v0\n\t"
+    "qfsrv  $t8, $v1, $v1\n\t"
+    "qfsrv  $t9, $t5, $t5\n\t"
+    "qfsrv  $at, $t6, $t6\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCr ), "r"( lpMCCr ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
 
    ++lpMCCr;
 
@@ -532,6 +583,8 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_end ( void ) {
   u64*  lpMCCb = ( u64*  )( g_MPEGCtx.m_pMCCbBuf + 128 );
   u64*  lpMCCr = ( u64*  )( g_MPEGCtx.m_pMCCrBuf + 128 );
 
+  DMA_WaitToSPR();
+
   for ( i = 2; i < 4; ++i ) {
 
    u128* lpSrcY  = ( u128* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
@@ -557,25 +610,51 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_end ( void ) {
 
    ++lpMCY;
 
-   lpMCCb[  0 ] = lpSrcCb[ 0 ];
-   lpMCCb[  2 ] = lpSrcCb[ 1 ];
-   lpMCCb[  4 ] = lpSrcCb[ 2 ];
-   lpMCCb[  6 ] = lpSrcCb[ 3 ];
-   lpMCCb[  8 ] = lpSrcCb[ 4 ];
-   lpMCCb[ 10 ] = lpSrcCb[ 5 ];
-   lpMCCb[ 12 ] = lpSrcCb[ 6 ];
-   lpMCCb[ 14 ] = lpSrcCb[ 7 ];
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "qfsrv  $t7, $v0, $v0\n\t"
+    "qfsrv  $t8, $v1, $v1\n\t"
+    "qfsrv  $t9, $t5, $t5\n\t"
+    "qfsrv  $at, $t6, $t6\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCb ), "r"( lpMCCb ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
 
    ++lpMCCb;
 
-   lpMCCr[  0 ] = lpSrcCr[ 0 ];
-   lpMCCr[  2 ] = lpSrcCr[ 1 ];
-   lpMCCr[  4 ] = lpSrcCr[ 2 ];
-   lpMCCr[  6 ] = lpSrcCr[ 3 ];
-   lpMCCr[  8 ] = lpSrcCr[ 4 ];
-   lpMCCr[ 10 ] = lpSrcCr[ 5 ];
-   lpMCCr[ 12 ] = lpSrcCr[ 6 ];
-   lpMCCr[ 14 ] = lpSrcCr[ 7 ];
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "qfsrv  $t7, $v0, $v0\n\t"
+    "qfsrv  $t8, $v1, $v1\n\t"
+    "qfsrv  $t9, $t5, $t5\n\t"
+    "qfsrv  $at, $t6, $t6\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCr ), "r"( lpMCCr ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
 
    ++lpMCCr;
 

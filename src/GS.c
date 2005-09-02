@@ -1583,9 +1583,9 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
   s_GSCtx.m_fDblBuf    = GS_ON;
   s_GSCtx.m_fZBuf      = GS_ON;
   s_GSCtx.m_Width      = 640;	
-  s_GSCtx.m_Height     = 480;
-  s_GSCtx.m_StartX     = 632;
-  s_GSCtx.m_StartY     =  20;
+  s_GSCtx.m_Height     = 448;
+  s_GSCtx.m_StartX     = 652;
+  s_GSCtx.m_StartY     =  26;
   s_GSCtx.m_MagX       =   3;
   s_GSCtx.m_MagY       =   0;
 
@@ -1615,7 +1615,7 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
   s_GSCtx.m_Height     = 536;
 #endif  /* BIMBO69 */
   s_GSCtx.m_StartX     = 690;
-  s_GSCtx.m_StartY     =  36;
+  s_GSCtx.m_StartY     =  30;
   s_GSCtx.m_MagX       =   3;
   s_GSCtx.m_MagY       =   0;
 

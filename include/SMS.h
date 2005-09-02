@@ -38,7 +38,7 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2HDD_SIZE     26257
 # define SMS_PS2FS_SIZE      54785
 # define SMS_POWEROFF_SIZE    2925
-# define SMS_USB_MASS_SIZE   33317
+# define SMS_USB_MASS_SIZE   33413
 # define SMS_CDVD_SIZE       12857
 # define SMS_PS2IP_SIZE      78909
 # define SMS_PS2SMAP_SIZE    12625
@@ -192,7 +192,7 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_MPEG_SPR_DMA_MB_0    ( SMS_DSP_SPR_HALF_HV     +  256 )
 #  define SMS_MPEG_SPR_DMA_MB_1    ( SMS_MPEG_SPR_DMA_MB_0   +  384 )
 #  define SMS_IPU_SPR_DMA_PKT_BUF  ( SMS_MPEG_SPR_DMA_MB_1   +  384 )
-#  define SMS_DSP_SPR_DMA_CONST    ( SMS_IPU_SPR_DMA_PKT_BUF +  144 )
+#  define SMS_DSP_SPR_DMA_CONST    ( SMS_IPU_SPR_DMA_PKT_BUF + 1040 )
 #  define SMS_SPR_DMA_FREE         ( SMS_DSP_SPR_DMA_CONST   +  368 )
 
 #  define SMS_MPEG_SPR_MB_BUF (  ( SMS_MacroBlock* )0x70000000  )
@@ -206,7 +206,7 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_MPEG_SPR_MB_0   (  ( SMS_MacroBlock* )( SMS_DSP_SPR_HALF_HV + 256 )  )
 #  define SMS_MPEG_SPR_MB_1   (  ( SMS_MacroBlock* )( SMS_MPEG_SPR_MB_0   +   1 )  )
 #  define SMS_IPU_SPR_PKT_BUF (  ( uint64_t*       )( SMS_MPEG_SPR_MB_1   +   1 )  )
-#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )( SMS_IPU_SPR_PKT_BUF +  18 )  )
+#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )( SMS_IPU_SPR_PKT_BUF + 130 )  )
 #  define SMS_SPR_FREE        (  ( uint8_t*        )( SMS_DSP_SPR_CONST   + 184 )  )
 
 static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {

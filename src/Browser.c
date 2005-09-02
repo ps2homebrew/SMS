@@ -278,7 +278,10 @@ static void _fill_hdd_list ( void ) {
    lpList -> PushBack ( lpList, lEntry.name );
 
   }  /* end while */
-
+#ifdef BIMBO69
+  lpDirList  -> Sort ( lpDirList  );
+  lpFileList -> Sort ( lpFileList );
+#endif  /* BIMBO69 */
   lpNode = lpDirList -> m_pHead;
 
   while ( lpNode ) {
@@ -395,7 +398,10 @@ static int _fill_dir_list ( char* apDevName ) {
    lpList -> PushBack ( lpList, lEntry.name );
 
   }  /* end while */
-
+#ifdef BIMBO69
+  lpDirList  -> Sort ( lpDirList  );
+  lpFileList -> Sort ( lpFileList );
+#endif  /* BIMBO69 */
   lpNode = lpDirList -> m_pHead;
 
   while ( lpNode ) {
@@ -544,6 +550,10 @@ no_elflist:
 /* names are already extracted to lpFileList and lpDirList */
 /* it is now time to pass them on to the GUI context       */
 extraction_done:
+#ifdef BIMBO69
+  lpDirList  -> Sort ( lpDirList  );
+  lpFileList -> Sort ( lpFileList );
+#endif  /* BIMBO69 */
   lpNode = lpDirList -> m_pHead;
 
   while ( lpNode ) {

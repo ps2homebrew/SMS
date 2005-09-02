@@ -1,3 +1,14 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Sort function (c) 2001 Simon Tatham.
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #include "StringList.h"
 
 #include <malloc.h>
@@ -97,6 +108,108 @@ static void StringList_Destroy ( StringList* apList, int afDestroyList ) {
 
 }  /* end StringList_Destroy */
 
+static void StringList_Sort ( StringList* apList ) {
+
+ StringListNode* lpList = apList -> m_pHead;
+ StringListNode* p;
+ StringListNode* q;
+ StringListNode* e;
+ StringListNode* lpTail;
+
+ int i, lInSize, lnMerges, lPSize, lQSize;
+
+ if ( !lpList ) return;
+
+ lInSize = 1;
+
+ while ( 1 ) {
+
+  p        = lpList;
+  lpList   = NULL;
+  lpTail   = NULL;
+  lnMerges = 0;
+
+  while ( p ) {
+
+   ++lnMerges;
+   q = p;
+   lPSize = 0;
+
+   for ( i = 0; i < lInSize; ++i ) {
+
+    ++lPSize;
+
+    q = q -> m_pNext;
+
+    if ( !q ) break;
+
+   }  /* end for */
+
+   lQSize = lInSize;
+
+   while ( lPSize > 0 || ( lQSize > 0 && q )  ) {
+
+    if ( lPSize == 0 ) {
+
+     e = q;
+     q = q -> m_pNext;
+     --lQSize;
+		    
+    } else if ( lQSize == 0 || !q ) {
+
+     e = p;
+     p = p -> m_pNext;
+     --lPSize;
+
+    } else if (  strcmp ( p -> m_pString, q -> m_pString ) <= 0  ) {
+
+     e = p;
+     p = p -> m_pNext;
+     --lPSize;
+
+    } else {
+
+     e = q;
+     q = q -> m_pNext;
+     --lQSize;
+
+    }  /* end else */
+
+    if ( lpTail ) {
+
+     lpTail -> m_pNext = e;
+
+    } else {
+
+     lpList = e;
+
+    }  /* end else */
+
+    e -> m_pPrev = lpTail;
+    lpTail       = e;
+
+   }  /* end while */
+
+   p = q;
+
+  }  /* end while */
+
+  lpTail -> m_pNext = NULL;
+
+  if ( lnMerges <= 1 ) {
+
+   apList -> m_pHead = lpList;
+   apList -> m_pTail = lpTail;
+   break;
+
+  }  /* end if */
+
+  lInSize *= 2;
+
+ }  /* end while */
+
+}  /* end StringList_Sort */
+
 StringList* StringList_Init ( void ) {
 
  StringList* retVal = ( StringList* )calloc (  1, sizeof ( StringList )  );
@@ -106,6 +219,7 @@ StringList* StringList_Init ( void ) {
  retVal -> Pop      = StringList_Pop;
  retVal -> PopBack  = StringList_PopBack;
  retVal -> Destroy  = StringList_Destroy;
+ retVal -> Sort     = StringList_Sort;
 
  return retVal;
 
