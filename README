@@ -394,3 +394,8 @@ Update (02-SEP-2005)
   and some code is rewritten in assembly);
 - removed "black bars" on the left and right sides of the picture for some movies
   with "incorrect" aspect ratios;
+
+Update (21-SEP-2005)
+--------------------
+- DVD video disks support added (an ability to read .avi files from DVD video disks
+  on "unmodded" consoles). New CDVD.IRX (supporting UDF filesystem) allows that.

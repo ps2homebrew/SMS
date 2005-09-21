@@ -66,7 +66,8 @@ int main ( void ) {
 
  CDVD_Init ();
 
- lpBrowserCtx = BrowserContext_Init ( lpGUICtx );
+ g_DVDVSupport = CDVD_QueryDVDV ();
+ lpBrowserCtx  = BrowserContext_Init ( lpGUICtx );
 
  while ( 1 ) {
 

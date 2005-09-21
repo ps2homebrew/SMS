@@ -188,7 +188,7 @@ static void getIpConfig ( void ) {
   }  /* end for */
 
   bzero (  s_SMAPArgs, sizeof ( s_SMAPArgs )  );
-  strncpy ( s_SMAPArgs, net_ip, 15);
+  strncpy ( s_SMAPArgs, net_ip, 15 );
   i = strlen ( net_ip ) + 1;
   strncpy ( s_SMAPArgs + i, net_netmask, 15 );
   i += strlen ( net_netmask ) + 1;

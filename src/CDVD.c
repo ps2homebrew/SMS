@@ -56,9 +56,11 @@
 
 #define CDVD_STOP       0x04
 #define CDVD_FLUSHCACHE 0x07
+#define CDVD_SET_DVDV   0x09
+#define CDVD_QUERY_DVDV 0x0A
 
-static unsigned int       s_Buff[ 0x1300 ] __attribute__(   (  aligned( 64 )  )   );
-static SifRpcClientData_t s_Client         __attribute__(   (  aligned( 64 )  )   );
+static unsigned int       s_Buff[ 4 ] __attribute__(   (  aligned( 64 )  )   );
+static SifRpcClientData_t s_Client    __attribute__(   (  aligned( 64 )  )   );
 
 int CDVD_Init ( void ) {
 
@@ -72,18 +74,30 @@ int CDVD_Init ( void ) {
 
 void CDVD_Stop ( void ) {
 
- SifCallRpc (
-  &s_Client, CDVD_STOP, 0, ( void* )( &s_Buff[ 0 ] ),
-                        0, ( void* )( &s_Buff[ 0 ] ), 0, 0, 0
- );
+ SifCallRpc ( &s_Client, CDVD_STOP, 0, NULL, 0, NULL, 0, 0, 0 );
 
 }  /* end CDVD_Stop */
 
 void CDVD_FlushCache ( void ) {
 
- SifCallRpc (
-  &s_Client, CDVD_FLUSHCACHE, 0, ( void* )( &s_Buff[ 0 ] ),
-                              0, ( void* )( &s_Buff[ 0 ] ), 0, 0, 0
- );
+ SifCallRpc ( &s_Client, CDVD_FLUSHCACHE, 0, NULL, 0, NULL, 0, 0, 0 );
 
 }  /* end CDVD_FlushCache */
+
+int CDVD_SetDVDV ( int afSet ) {
+
+ s_Buff[ 0 ] = afSet;
+
+ SifCallRpc ( &s_Client, CDVD_SET_DVDV, 0, s_Buff, 4, s_Buff, 4, 0, 0 );
+
+ return s_Buff[ 0 ];
+
+}  /* end CDVD_SetDVDV */
+
+int CDVD_QueryDVDV ( void ) {
+
+ SifCallRpc ( &s_Client, CDVD_QUERY_DVDV, 0, NULL, 0, s_Buff, 4, 0, 0 );
+
+ return s_Buff[ 0 ];
+
+}  /* end CDVD_DVDV */

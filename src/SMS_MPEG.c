@@ -410,10 +410,6 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
   g_MPEGCtx.m_pCache      = lpMB;
   g_MPEGCtx.m_fDirtyCache = 1;
 
-  __asm__ __volatile__ (
-   "mtsab   $zero, 8\n\t"
-  );
-
   DMA_WaitToSPR();
   DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer + 2, lpMB + g_MPEGCtx.m_CurPic.m_Linesize, 48 );
 
@@ -469,10 +465,10 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
     "lq     $v1, 16(%0)\n\t"
     "lq     $t5, 32(%0)\n\t"
     "lq     $t6, 48(%0)\n\t"
-    "qfsrv  $t7, $v0, $v0\n\t"
-    "qfsrv  $t8, $v1, $v1\n\t"
-    "qfsrv  $t9, $t5, $t5\n\t"
-    "qfsrv  $at, $t6, $t6\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
     "sd     $v0,   0(%1)\n\t"
     "sd     $t7,  16(%1)\n\t"
     "sd     $v1,  32(%1)\n\t"
@@ -493,10 +489,10 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
     "lq     $v1, 16(%0)\n\t"
     "lq     $t5, 32(%0)\n\t"
     "lq     $t6, 48(%0)\n\t"
-    "qfsrv  $t7, $v0, $v0\n\t"
-    "qfsrv  $t8, $v1, $v1\n\t"
-    "qfsrv  $t9, $t5, $t5\n\t"
-    "qfsrv  $at, $t6, $t6\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
     "sd     $v0,   0(%1)\n\t"
     "sd     $t7,  16(%1)\n\t"
     "sd     $v1,  32(%1)\n\t"
@@ -616,10 +612,10 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_end ( void ) {
     "lq     $v1, 16(%0)\n\t"
     "lq     $t5, 32(%0)\n\t"
     "lq     $t6, 48(%0)\n\t"
-    "qfsrv  $t7, $v0, $v0\n\t"
-    "qfsrv  $t8, $v1, $v1\n\t"
-    "qfsrv  $t9, $t5, $t5\n\t"
-    "qfsrv  $at, $t6, $t6\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
     "sd     $v0,   0(%1)\n\t"
     "sd     $t7,  16(%1)\n\t"
     "sd     $v1,  32(%1)\n\t"
@@ -640,10 +636,10 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_end ( void ) {
     "lq     $v1, 16(%0)\n\t"
     "lq     $t5, 32(%0)\n\t"
     "lq     $t6, 48(%0)\n\t"
-    "qfsrv  $t7, $v0, $v0\n\t"
-    "qfsrv  $t8, $v1, $v1\n\t"
-    "qfsrv  $t9, $t5, $t5\n\t"
-    "qfsrv  $at, $t6, $t6\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
     "sd     $v0,   0(%1)\n\t"
     "sd     $t7,  16(%1)\n\t"
     "sd     $v1,  32(%1)\n\t"

@@ -59,6 +59,9 @@ extern "C" {
 int  CDVD_Init       ( void );
 void CDVD_Stop       ( void );
 void CDVD_FlushCache ( void );
+int  CDVD_SetDVDV    ( int  );
+int  CDVD_QueryDVDV  ( void );
+
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

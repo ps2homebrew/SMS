@@ -39,7 +39,7 @@ extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 # define SMS_PS2FS_SIZE      54785
 # define SMS_POWEROFF_SIZE    2925
 # define SMS_USB_MASS_SIZE   33413
-# define SMS_CDVD_SIZE       12857
+# define SMS_CDVD_SIZE       20393
 # define SMS_PS2IP_SIZE      78909
 # define SMS_PS2SMAP_SIZE    12625
 # define SMS_PS2HOST_SIZE    16562

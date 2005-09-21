@@ -17,9 +17,10 @@
 #include <kernel.h>
 #include <string.h>
 
-#define CD_SERVER_INIT 0x80000592
-#define CD_SERVER_SCMD 0x80000593
-#define CD_SERVER_NCMD 0x80000595
+#define CD_SERVER_INIT      0x80000592
+#define CD_SERVER_SCMD      0x80000593
+#define CD_SERVER_NCMD      0x80000595
+#define CD_SERVER_DISKREADY 0x8000059A
 
 #define CDVD_INIT_INIT    0x00
 #define CDVD_INIT_NOCHECK 0x01
@@ -39,6 +40,7 @@ static void*              s_pBuf;
 static SifRpcClientData_t s_ClientInit         __attribute__ (   (  aligned( 64 )  )   );
 static SifRpcClientData_t s_ClientNCmd         __attribute__ (   (  aligned( 64 )  )   );
 static SifRpcClientData_t s_ClientSCmd         __attribute__ (   (  aligned( 64 )  )   );
+static SifRpcClientData_t s_ClientDiskReady    __attribute__ (   (  aligned( 64 )  )   );
 static unsigned char      s_NCmdRecvBuff[ 48 ] __attribute__ (   (  aligned( 64 )  )   );
 static unsigned char      s_SCmdRecvBuff[ 48 ] __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_InitMode           __attribute__ (   (  aligned( 64 )  )   );
@@ -48,6 +50,7 @@ static unsigned int       s_ReadData[    6 ]   __attribute__ (   (  aligned( 64 
 static unsigned int       s_ReadResp[   64 ]   __attribute__ (   (  aligned( 64 )  )   );
 
 int g_CDDASpeed;
+int g_DVDVSupport;
 
 int CDDA_Init ( void ) {
 
@@ -55,9 +58,10 @@ int CDDA_Init ( void ) {
 
  if ( !s_ClientInit.server )
 
-  if (   (  retVal = SIF_BindRPC ( &s_ClientInit, CD_SERVER_INIT )  ) &&
-         (  retVal = SIF_BindRPC ( &s_ClientNCmd, CD_SERVER_NCMD )  ) &&
-         (  retVal = SIF_BindRPC ( &s_ClientSCmd, CD_SERVER_SCMD )  )
+  if (   (  retVal = SIF_BindRPC ( &s_ClientInit,      CD_SERVER_INIT      )  ) &&
+         (  retVal = SIF_BindRPC ( &s_ClientNCmd,      CD_SERVER_NCMD      )  ) &&
+         (  retVal = SIF_BindRPC ( &s_ClientSCmd,      CD_SERVER_SCMD      )  ) &&
+         (  retVal = SIF_BindRPC ( &s_ClientDiskReady, CD_SERVER_DISKREADY )  )
   )  {
 
    ee_sema_t lSema;
@@ -168,21 +172,13 @@ DiskType CDDA_DiskType ( void ) {
 
    case 0x10:
    case 0x11:
-   case 0x12:
+   case 0x12: retVal = DiskType_CD;   break;
+   case 0x14: retVal = DiskType_DVD;  break;
+   case 0xFD: retVal = DiskType_CDDA; break;
 
-    retVal = DiskType_CD;
+   case 0xFE:
 
-   break;
-
-   case 0x14:
-
-    retVal = DiskType_DVD;
-
-   break;
-
-   case 0xFD:
-
-    retVal = DiskType_CDDA;
+    if ( g_DVDVSupport ) retVal = DiskType_DVDV;
 
    break;
 
@@ -263,6 +259,16 @@ int CDDA_Stop ( void ) {
 
 }  /* end CDDA_Stop */
 
+void CDDA_DiskReady ( void ) {
+
+ static u32 s_DiskReady __attribute__(   (  aligned( 64 )  )   ) = 0;
+
+ SifCallRpc (
+  &s_ClientDiskReady, 0, 0, &s_DiskReady, 4, &s_DiskReady, 4, 0, 0
+ );
+
+}  /* end CDDA_DiskReady */
+
 int CDDA_RawRead ( int aStartSec, int aCount, unsigned char* apBuf ) {
 
  int retVal = 0;
@@ -279,6 +285,8 @@ int CDDA_RawRead ( int aStartSec, int aCount, unsigned char* apBuf ) {
  s_SyncFlag = 1;
  s_Size     = aCount * 2352;
  s_pBuf     = apBuf;
+
+ CDDA_DiskReady ();
 
  if (  SifCallRpc (
         &s_ClientNCmd, CD_CMD_CDDAREAD, SIF_RPC_M_NOWAIT | SIF_RPC_M_NOWBDC, s_ReadData, 24,

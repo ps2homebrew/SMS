@@ -1061,9 +1061,21 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
    case GUI_EV_CDFS_MOUNT: {
 
-    s_BrowserCtx.m_pGUICtx -> AddDevice (
-     CDDA_DiskType () == DiskType_CD ? GUI_DF_CDFS : GUI_DF_DVD
-    );
+    int lDevice;
+    int lSetDVDV  = 0;
+    int lDiskType = CDDA_DiskType ();
+
+    switch ( lDiskType ) {
+
+     case DiskType_CD  : lDevice = GUI_DF_CDFS; break;
+     case DiskType_DVDV: lSetDVDV = 1;
+     default           : lDevice = GUI_DF_DVD;  break;
+
+    }  /* end switch */
+
+    CDVD_SetDVDV ( lSetDVDV );
+
+    s_BrowserCtx.m_pGUICtx -> AddDevice ( lDevice );
 
     if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDFS ||
          s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_DVD

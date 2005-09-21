@@ -15,7 +15,7 @@ EE_OBJS  = main.o GS.o DMA.o Timer.o IPU.o SMS_Bitio.o SMS_MP3_MMI.o  FileContex
            SMS_MP3.o CDDA.o SMS.o SMS_AVI.o SMS_Codec.o SMS_Integer.o SIF.o SMS_AVIPlayer.o   \
            SPU.o SMS_AudioBuffer.o SMS_Data.o SMS_VideoBuffer.o Browser.o GUI.o GUI_Data.o    \
            StringList.o GUI_Stub.o Config.o ExecIOP.o Config_Data.o SMS_AC3.o SMS_AC3_imdct.o \
-           ROM.o CDVD.o
+           CDVD.o ROM.o
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJ_DIR)%)
 
 all: $(EE_OBJ_DIR) $(EE_BIN_DIR) $(EE_BIN)

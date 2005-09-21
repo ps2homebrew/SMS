@@ -311,7 +311,10 @@ static int _gui_thread ( void* apParam ) {
 
     continue;
 
-   } else if ( s_CDFSFlags && lDiskType != DiskType_CD && lDiskType != DiskType_DVD ) {
+   } else if ( s_CDFSFlags && lDiskType != DiskType_CD  &&
+                              lDiskType != DiskType_DVD &&
+                              lDiskType != DiskType_DVDV
+          ) {
 
     s_Event    |= GUI_EF_CDFS_UMOUNT;
     s_CDFSFlags = 0;
@@ -319,7 +322,11 @@ static int _gui_thread ( void* apParam ) {
 
     continue;
 
-   } else if (  !s_CDFSFlags && ( lDiskType == DiskType_CD || lDiskType == DiskType_DVD )  ) {
+   } else if (  !s_CDFSFlags && ( lDiskType == DiskType_CD  ||
+                                  lDiskType == DiskType_DVD ||
+                                  lDiskType == DiskType_DVDV
+                                )
+          ) {
 
     s_Event    |= GUI_EF_CDFS_MOUNT;
     s_CDFSFlags = 1;
