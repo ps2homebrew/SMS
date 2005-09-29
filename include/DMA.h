@@ -128,68 +128,85 @@ typedef enum DMATransferMode {
 # define D_CTRL_RCYC_128 4
 # define D_CTRL_RCYC_256 5
 
-# define DMA_RecvSPRi( dst, src, size, line, stride )                    \
+# define DMA_RecvSPRi( dst, src, size, line, stride ) {                  \
  *DMA_REG_SQWC           = DMA_SET_SQWC(  ( line ), ( stride )        ); \
  *DMA_ADDR( 0x1000D480 ) = DMA_SET_SADR(  ( unsigned int )( dst )     ); \
  *DMA_ADDR( 0x1000D410 ) = DMA_SET_MADR(  ( unsigned int )( src ), 0  ); \
  *DMA_ADDR( 0x1000D420 ) = ( size );                                     \
  *DMA_ADDR( 0x1000D400 ) = DMA_SET_CHCR(                                 \
    DMADirection_From_Mem, DMATransferMode_Interleave, 0, 0, 0, 1, 0      \
-  )
+  );                                                                     \
+}
 
-# define DMA_RecvSPR( dst, src, size )                                   \
+# define DMA_RecvSPR( dst, src, size ) {                                 \
  *DMA_ADDR( 0x1000D480 ) = DMA_SET_SADR(  ( unsigned int )( dst )     ); \
  *DMA_ADDR( 0x1000D410 ) = DMA_SET_MADR(  ( unsigned int )( src ), 0  ); \
  *DMA_ADDR( 0x1000D420 ) = ( size );                                     \
  *DMA_ADDR( 0x1000D400 ) = DMA_SET_CHCR(                                 \
    DMADirection_From_Mem, DMATransferMode_Normal, 0, 0, 0, 1, 0          \
-  )
+  );                                                                     \
+}
 
-# define DMA_SendSPRToMem( dst, src, size )                              \
+# define DMA_SendSPRToMem( dst, src, size ) {                            \
  *DMA_ADDR( 0x1000D080 ) = DMA_SET_SADR(  ( unsigned int )( src )     ); \
  *DMA_ADDR( 0x1000D010 ) = DMA_SET_MADR(  ( unsigned int )( dst ), 0  ); \
  *DMA_ADDR( 0x1000D020 ) = ( size );                                     \
  *DMA_ADDR( 0x1000D000 ) = DMA_SET_CHCR(                                 \
    DMADirection_To_Mem, DMATransferMode_Normal, 0, 0, 0, 1, 0            \
-  )
+  );                                                                     \
+}
 
-# define DMA_SendToGIF( data, size )                            \
+# define DMA_SendToGIF( data, size ) {                          \
  *DMA_ADDR( 0x1000A020 ) = ( size );                            \
  *DMA_ADDR( 0x1000A010 ) = ( unsigned int )( data );            \
  *DMA_ADDR( 0x1000A000 ) = DMA_SET_CHCR(                        \
    DMADirection_From_Mem, DMATransferMode_Normal, 0, 0, 0, 1, 0 \
-  )
+  );                                                            \
+}
 
-# define DMA_SendChainToGIF( data, size )                      \
+# define DMA_SendChainToGIF( data ) {                          \
  *DMA_ADDR( 0x1000A020 ) = 0;                                  \
  *DMA_ADDR( 0x1000A030 ) = ( unsigned int )( data );           \
  *DMA_ADDR( 0x1000A000 ) = DMA_SET_CHCR(                       \
    DMADirection_From_Mem, DMATransferMode_Chain, 0, 0, 0, 1, 0 \
-  )
+  );                                                           \
+}
 
-# define DMA_SendChainToGIF_SPR( data )                                 \
+# define DMA_SendChainToVIF1( data ) {                         \
+ *DMA_ADDR( 0x10009020 ) = 0;                                  \
+ *DMA_ADDR( 0x10009030 ) = ( unsigned int )( data );           \
+ *DMA_ADDR( 0x10009000 ) = DMA_SET_CHCR(                       \
+   DMADirection_From_Mem, DMATransferMode_Chain, 0, 0, 0, 1, 0 \
+  );                                                           \
+}
+
+# define DMA_SendChainToGIF_SPR( data ) {                               \
  *DMA_ADDR( 0x1000A020 ) = 0;                                           \
  *DMA_ADDR( 0x1000A030 ) = (  ( unsigned int )( data )  ) | 0x80000000; \
  *DMA_ADDR( 0x1000A000 ) = DMA_SET_CHCR(                                \
    DMADirection_From_Mem, DMATransferMode_Chain, 0, 0, 0, 1, 0          \
-  )
+  );                                                                    \
+}
 
-# define DMA_SendSPRToIPU( data, size )                              \
+# define DMA_SendSPRToIPU( data, size ) {                                 \
  *DMA_ADDR( 0x1000B410 ) = DMA_SET_MADR(  ( unsigned int )( data ), 1  ); \
  *DMA_ADDR( 0x1000B420 ) = ( size );                                      \
- *DMA_ADDR( 0x1000B400 ) = DMA_SET_CHCR( 0, 0, 0, 0, 0, 1, 0 )
+ *DMA_ADDR( 0x1000B400 ) = DMA_SET_CHCR( 0, 0, 0, 0, 0, 1, 0 );           \
+}
 
-# define DMA_SendToIPU( data, size )                                      \
+# define DMA_SendToIPU( data, size ) {                                    \
  *DMA_ADDR( 0x1000B410 ) = DMA_SET_MADR(  ( unsigned int )( data ), 0  ); \
  *DMA_ADDR( 0x1000B420 ) = ( size );                                      \
- *DMA_ADDR( 0x1000B400 ) = DMA_SET_CHCR( 0, 0, 0, 0, 0, 1, 0 )
+ *DMA_ADDR( 0x1000B400 ) = DMA_SET_CHCR( 0, 0, 0, 0, 0, 1, 0 );           \
+}
 
-# define DMA_RecvFromIPU( data, size )                        \
+# define DMA_RecvFromIPU( data, size ) {                      \
  *DMA_ADDR( 0x1000B020 ) = ( size );                          \
  *DMA_ADDR( 0x1000B010 ) = ( unsigned int )( data );          \
  *DMA_ADDR( 0x1000B000 ) = DMA_SET_CHCR(                      \
    DMADirection_To_Mem, DMATransferMode_Normal, 0, 0, 0, 1, 0 \
-  );
+  );                                                          \
+}
 
 # define DMA_WaitIPU()   while (   *DMA_ADDR( 0x1000B000 ) & 0x00000100   );
 # define DMA_WaitGIF()   while (   *DMA_ADDR( 0x1000A000 ) & 0x00000100   );

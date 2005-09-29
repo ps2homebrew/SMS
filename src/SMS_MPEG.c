@@ -370,7 +370,6 @@ static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, in
  SMS_MacroBlock* lpMB;
 
  if ( lMBY < -1 ) lMBY = -1;
- if ( lMBX < -1 ) lMBX = -1;
 
  lpMB  = apRefPic + lMBX;
  lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
@@ -1837,3 +1836,12 @@ end:
  MPEG_CopyBlock ();
 
 }  /* end SMS_MPEG_DecodeMB */
+
+void SMS_MPEG_CleanBuffers ( void ) {
+
+ g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 0 ] =
+ g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 1 ] =
+ g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 0 ] =
+ g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 1 ] = 0;
+
+}  /* end SMS_MPEG_CleanBuffers */

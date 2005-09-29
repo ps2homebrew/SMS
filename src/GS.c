@@ -159,6 +159,7 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 # else  /* PS2 */
 #  include "DMA.h"
 #  include "ROM.h"
+#  include "VIF.h"
 
 #  include <kernel.h>
 #  include <malloc.h>
@@ -392,7 +393,7 @@ static inline unsigned char* _fontm_char ( FontmFile* apFile, long aChar, long a
 void _fontm_set_text_color ( u32 aColor ) {
 
  u32  lCLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
- u64  lDMA [ 18 ] __attribute__(  (  aligned( 16 )  )   );
+ u64  lDMA [ 16 ] __attribute__(  (  aligned( 16 )  )   );
  u64* lpDMA = lDMA;
  int  i;
 
@@ -406,9 +407,23 @@ void _fontm_set_text_color ( u32 aColor ) {
  float lB = 0.0F;
  float lA = 0.0F;
 
- for ( i = 0; i < 16; ++i ) {
+ lCLUT[ 0 ] =
+ lCLUT[ 1 ] = 0;
 
-  lCLUT[ i ] = ( u8 )lR | (  ( u8 )lG << 8  ) | (  ( u8 )lB << 16  ) | (  ( u8 )lA << 24 );
+ for ( i = 2; i < 8; ++i ) {
+
+  lCLUT[ i ] = GS_SETREG_RGBA( lR, lG, lB, 0x80 );
+
+  lR += lStepR;
+  lG += lStepG;
+  lB += lStepB;
+  lA += lStepA;
+
+ }  /* end for */
+
+ for ( ; i < 16; ++i ) {
+
+  lCLUT[ i ] = GS_SETREG_RGBA( lR, lG, lB, lA );
 
   lR += lStepR;
   lG += lStepG;
@@ -438,15 +453,12 @@ void _fontm_set_text_color ( u32 aColor ) {
   *lpDMA++ = GIF_TAG( 4, 1, 0, 0, 2, 1 );
   *lpDMA++ = 0;
 
- *lpDMA++ = DMA_TAG(  4, 1, DMA_REF, 0, ( u32 )lCLUT, 0  );
- *lpDMA++ = 0;
+ *lpDMA++ = DMA_TAG(  4, 1, DMA_REFE, 0, ( u32 )lCLUT, 0  );
+ *lpDMA   = 0;
 
-  *lpDMA++ = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
-  *lpDMA   = 0;
+ SyncDCache ( lCLUT, lCLUT + 48 );
 
- SyncDCache ( lCLUT, lCLUT + 64 );
-
- DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 9 );
+ DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 8 );
  DMA_Wait ( DMA_CHANNEL_GIF );
 
 }  /* end _fontm_set_text_color */
@@ -459,7 +471,7 @@ static void _fontm_init ( void ) {
  unsigned int   lX, lY, lSize;
  u64*           lpData;
  unsigned char  lCharBuf[ CHAR_SIZE ] __attribute__(   (  aligned( 16 )  )   );
- u64            lDMA    [        18 ] __attribute__(   (  aligned( 16 )  )   );
+ u64            lDMA    [        16 ] __attribute__(   (  aligned( 16 )  )   );
 
  s_GSCtx.m_Font.m_BkColor = 0x80000000;
  s_GSCtx.m_Font.m_BkMode  = GSBkMode_Transparent;
@@ -510,15 +522,12 @@ static void _fontm_init ( void ) {
     *lpData++ = GIF_TAG( 22, 1, 0, 0, 2, 1 );
     *lpData++ = 0;
 
-   *lpData++ = DMA_TAG(  22, 1, DMA_REF, 0, ( u32 )lCharBuf, 0  );
-   *lpData++ = 0;
-
-   *lpData++ = DMA_TAG( 0, 0, DMA_END, 0, 0, 0 );
+   *lpData++ = DMA_TAG(  22, 1, DMA_REFE, 0, ( u32 )lCharBuf, 0  );
    *lpData   = 0;
 
    SyncDCache ( lCharBuf, lCharBuf + CHAR_SIZE );
 
-   DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 9 );
+   DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 8 );
    DMA_Wait ( DMA_CHANNEL_GIF );
 
   }  /* end for */
@@ -600,13 +609,13 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
              s_GSCtx.m_Font.m_Text, 14, GSPSM_4, 10, 8,
              1, 1, s_GSCtx.m_Font.m_CLUT, 0, 0, 0, 1
             );
- *lpDMA++ = GS_TEX0_1 + s_GSCtx.m_PrimCtx;
+ *lpDMA++ = GS_TEX0_1 + !s_GSCtx.m_PrimCtx;
 
  *lpDMA++ = GS_SETREG_TEX1( 0, 0, 1, 1, 0, 0, 0 );
- *lpDMA++ = GS_TEX1_1 + s_GSCtx.m_PrimCtx;
+ *lpDMA++ = GS_TEX1_1 + !s_GSCtx.m_PrimCtx;
 
  *lpDMA++ = ALPHA_BLEND_NORMAL;
- *lpDMA++ = GS_ALPHA_1 + s_GSCtx.m_PrimCtx;
+ *lpDMA++ = GS_ALPHA_1 + !s_GSCtx.m_PrimCtx;
 
  lY1 = ( aY << 3 ) + lYIncr;
  lY2 = (  ( aY + 26 ) << 3  ) + lYIncr;
@@ -620,7 +629,7 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
   *lpDMA++ = GS_SETREG_PRIM(
               GS_PRIM_PRIM_SPRITE, 0, 0, s_GSCtx.m_fFog,
               s_GSCtx.m_fAlpha,
-              s_GSCtx.m_fAntiAlias, 0, s_GSCtx.m_PrimCtx, 0
+              s_GSCtx.m_fAntiAlias, 0, !s_GSCtx.m_PrimCtx, 0
              );
   *lpDMA++ = GS_PRIM;
 
@@ -673,7 +682,7 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
 
   *lpDMA++ = GS_SETREG_PRIM(
               GS_PRIM_PRIM_SPRITE, 0, 1, 0,
-              1, 1, 1, s_GSCtx.m_PrimCtx, 0
+              1, 1, 1, !s_GSCtx.m_PrimCtx, 0
              );
   *lpDMA++ = GS_PRIM;
 
@@ -814,7 +823,7 @@ static void GS_InitScreen ( void ) {
  *lpDMA++ = GS_SETREG_COLCLAMP( 255 );
  *lpDMA++ = GS_COLCLAMP;
 
- *lpDMA++ = GS_SETREG_FRAME_2( s_GSCtx.m_ScreenBufPtr[ 1 ], s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0 );
+ *lpDMA++ = GS_SETREG_FRAME_2( s_GSCtx.m_ScreenBufPtr[ 0 ], s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0 );
  *lpDMA++ = GS_FRAME_2;
 
  *lpDMA++ = GS_SETREG_XYOFFSET_2( s_GSCtx.m_OffsetX << 4, s_GSCtx.m_OffsetY << 4 );
@@ -1259,17 +1268,17 @@ static void GS_DrawIcon ( int aX, int anY, GSIconSize aSize, void* apData ) {
                s_GSCtx.m_IconPtr, 1, GSPSM_32, 6, 6,
                1, 1, 0, 0, 0, 0, 1
               );
-   *lpDMA++ = GS_TEX0_1 + s_GSCtx.m_PrimCtx;
+   *lpDMA++ = GS_TEX0_1 + !s_GSCtx.m_PrimCtx;
 
    *lpDMA++ = GS_SETREG_TEX1( 0, 0, 1, 1, 0, 0, 0 );
-   *lpDMA++ = GS_TEX1_1 + s_GSCtx.m_PrimCtx;
+   *lpDMA++ = GS_TEX1_1 + !s_GSCtx.m_PrimCtx;
 
    *lpDMA++ = ALPHA_BLEND_NORMAL;
-   *lpDMA++ = GS_ALPHA_1 + s_GSCtx.m_PrimCtx;
+   *lpDMA++ = GS_ALPHA_1 + !s_GSCtx.m_PrimCtx;
 
    *lpDMA++ = GS_SETREG_PRIM(
                GS_PRIM_PRIM_SPRITE, 0, 1, 0,
-               1, 1, 1, s_GSCtx.m_PrimCtx, 0
+               1, 1, 1, !s_GSCtx.m_PrimCtx, 0
               );
    *lpDMA++ = GS_PRIM;
 
@@ -1478,6 +1487,8 @@ static void GS_CopyFBuffer ( int aDest, int aX, int anY, int aWidth, int aHeight
  u64  lDMA[ 12 ] __attribute__(   (  aligned ( 16 )  )   );
  u64* lpDMA = lDMA;
 
+ *GS_CSR = *GS_CSR | 2;
+
  *lpDMA++ = GIF_TAG( 5, 1, 0, 0, 0, 1 );
  *lpDMA++ = GIF_AD;
 
@@ -1497,52 +1508,14 @@ static void GS_CopyFBuffer ( int aDest, int aX, int anY, int aWidth, int aHeight
  *lpDMA++ = GS_TRXDIR;
 
  *lpDMA++ = 0;
- *lpDMA   = GS_TEXFLUSH;
+ *lpDMA   = GS_FINISH;
 
  DMA_Send ( DMA_CHANNEL_GIF, lDMA, 6 );
  DMA_Wait ( DMA_CHANNEL_GIF );
 
+ while (  !( *GS_CSR & 2 )  );
+
 }  /* end GS_CopyFBuffer */
-
-static void GS_SwapBuffers ( int afSync ) {
-
- unsigned long int  lDMA[ 10 ] __attribute__(   (  aligned( 16 )  )   );
- unsigned long int* lpDMA = lDMA;
-
- if ( afSync ) s_GSCtx.VSync ();
-
- GS_SET_DISPFB2(
-  s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
-  s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0, 0
- );
- s_GSCtx.m_ActiveBuf ^= 1;
- s_GSCtx.m_PrimCtx   ^= 1;
-
- *lpDMA++ = GIF_TAG( 4, 1, 0, 0, 0, 1 );
- *lpDMA++ = GIF_AD;
-
- *lpDMA++ = GS_SETREG_SCISSOR_1( 0, s_GSCtx.m_Width - 1, 0, s_GSCtx.m_Height - 1 );
- *lpDMA++ = GS_SCISSOR_1;
-
- *lpDMA++ = GS_SETREG_FRAME_1(
-  s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
-  s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0
- );
- *lpDMA++ = GS_FRAME_1;
-
- *lpDMA++ = GS_SETREG_SCISSOR_1( 0, s_GSCtx.m_Width - 1, 0, s_GSCtx.m_Height - 1 );
- *lpDMA++ = GS_SCISSOR_2;
-
- *lpDMA++ = GS_SETREG_FRAME_1(
-  s_GSCtx.m_ScreenBufPtr[ s_GSCtx.m_ActiveBuf & 1 ] / 8192,
-  s_GSCtx.m_Width / 64, s_GSCtx.m_PSM, 0
- );
- *lpDMA = GS_FRAME_2;
-
- DMA_Send ( DMA_CHANNEL_GIF, lDMA, 5 );
- DMA_Wait ( DMA_CHANNEL_GIF );
-
-}  /* end GS_SwapBuffers */
 
 static void GS_AdjustDisplay ( int aDX, int aDY ) {
 
@@ -1563,6 +1536,32 @@ static void GS_AdjustDisplay ( int aDX, int aDY ) {
  );
 
 }  /* end GS_AdjustDisplay */
+
+static void GS_ZTest ( int afOn ) {
+
+ static unsigned long int lDMA[ 8 ] __attribute__(   (  aligned( 16 )  )   ) = {
+  0, VIF_DIRECT( 3 ), GIF_TAG( 2, 1, 0, 0, 0, 1 ), GIF_AD
+ };
+
+ lDMA[ 4 ] = GS_SETREG_TEST_1(
+  s_GSCtx.m_Test.m_ATE,  s_GSCtx.m_Test.m_ATST, 
+  s_GSCtx.m_Test.m_AREF, s_GSCtx.m_Test.m_AFAIL, 
+  s_GSCtx.m_Test.m_DATE, s_GSCtx.m_Test.m_DATM,
+  afOn,  s_GSCtx.m_Test.m_ZTST
+ );
+ lDMA[ 5 ] = GS_TEST_1;
+
+ lDMA[ 6 ] = GS_SETREG_TEST_2(
+  s_GSCtx.m_Test.m_ATE,  s_GSCtx.m_Test.m_ATST, 
+  s_GSCtx.m_Test.m_AREF, s_GSCtx.m_Test.m_AFAIL, 
+  s_GSCtx.m_Test.m_DATE, s_GSCtx.m_Test.m_DATM,
+  afOn,  s_GSCtx.m_Test.m_ZTST
+ );
+ lDMA[ 7 ] = GS_TEST_2;
+
+ DMA_Send ( DMA_CHANNEL_VIF1, lDMA, 4 );
+
+}  /* end GS_ZTest */
 
 static void GS_DestroyContext ( void ) {
 
@@ -1845,13 +1844,13 @@ setPal_I:
  s_GSCtx.VSync         = GS_VSync;
  s_GSCtx.SetTest       = GS_SetTest;
  s_GSCtx.ClearScreen   = GS_ClearScreen;
- s_GSCtx.SwapBuffers   = GS_SwapBuffers;
  s_GSCtx.TextWidth     = _fontm_text_width;
  s_GSCtx.DrawText      = _fontm_draw_text;
  s_GSCtx.SetTextColor  = _fontm_set_text_color;
  s_GSCtx.Destroy       = GS_DestroyContext;
  s_GSCtx.CopyFBuffer   = GS_CopyFBuffer;
  s_GSCtx.AdjustDisplay = GS_AdjustDisplay;
+ s_GSCtx.ZTest         = GS_ZTest;
 
  return &s_GSCtx;
 

@@ -26,7 +26,6 @@
 # include <ctype.h>
 #endif  /* _WIN32 */
 
-#define MYCTX()   (  ( SMS_Codec_MPEG4Context* )apCtx -> m_pCodec -> m_pCtx  )
 #define BASECTX() g_MPEGCtx
 
 #define STATIC_SPRITE          1
@@ -59,38 +58,30 @@ static SMS_VLC s_mb_type_b_vlc;
 static SMS_VLC s_h263_mbtype_b_vlc;
 static SMS_VLC s_cbpc_b_vlc;
 
-const uint8_t s_IntraMCBPC_bits[  9 ] = { 1, 3, 3, 3, 4, 6, 6, 6, 9 };
-const uint8_t s_IntraMCBPC_code[  9 ] = { 1, 1, 2, 3, 1, 1, 2, 3, 1 };
-const uint8_t s_InterMCBPC_bits[ 28 ] = { 
-  1,  4,  4,  6,
-  5,  8,  8,  7,
-  3,  7,  7,  9,
-  6,  9,  9,  9,
-  3,  7,  7,  8,
-  9,  0,  0,  0,
- 11, 13, 13, 13
+const uint8_t g_IntraMCBPC_bits[  9 ] SMS_DATA_SECTION = { 1, 3, 3, 3, 4, 6, 6, 6, 9 };
+const uint8_t g_IntraMCBPC_code[  9 ] SMS_DATA_SECTION = { 1, 1, 2, 3, 1, 1, 2, 3, 1 };
+const uint8_t g_InterMCBPC_bits[ 28 ] SMS_DATA_SECTION = { 
+  1,  4,  4,  6,  5,  8,  8,  7,  3,  7,
+  7,  9,  6,  9,  9,  9,  3,  7,  7,  8,
+  9,  0,  0,  0, 11, 13, 13, 13
 };
-const uint8_t s_InterMCBPC_code[ 28 ] = { 
- 1,  3,  2,  5,
- 3,  4,  3,  3, 
- 3,  7,  6,  5,
- 4,  4,  3,  2,
- 2,  5,  4,  5,
- 1,  0,  0,  0,
- 2, 12, 14, 15
+const uint8_t g_InterMCBPC_code[ 28 ] SMS_DATA_SECTION = { 
+ 1,  3,  2,  5, 3,  4,  3,  3,  3,  7,
+ 6,  5,  4,  4, 3,  2,  2,  5,  4,  5,
+ 1,  0,  0,  0, 2, 12, 14, 15
 };
-const uint8_t s_cbpy_tab[ 16 ][ 2 ] = {
+const uint8_t g_cbpy_tab[ 16 ][ 2 ] SMS_DATA_SECTION = {
  { 3, 4 }, { 5, 5 }, { 4, 5 }, {  9, 4 }, { 3, 5 }, { 7, 4 }, { 2, 6 }, { 11, 4 },
  { 2, 5 }, { 3, 6 }, { 5, 4 }, { 10, 4 }, { 4, 4 }, { 8, 4 }, { 6, 4 }, {  3, 2 }
 };
-const uint8_t s_mvtab[ 33 ][ 2 ] = {
+const uint8_t g_mvtab[ 33 ][ 2 ] SMS_DATA_SECTION = {
  {  1,  1 }, {  1,  2 }, {  1,  3 }, {  1,  4 }, {  3,  6 }, {  5,  7 }, {  4,  7 }, {  3,  7 },
  { 11,  9 }, { 10,  9 }, {  9,  9 }, { 17, 10 }, { 16, 10 }, { 15, 10 }, { 14, 10 }, { 13, 10 },
  { 12, 10 }, { 11, 10 }, { 10, 10 }, {  9, 10 }, {  8, 10 }, {  7, 10 }, {  6, 10 }, {  5, 10 },
  {  4, 10 }, { 7,  11 }, {  6, 11 }, {  5, 11 }, {  4, 11 }, {  3, 11 }, {  2, 11 }, {  3, 12 },
  {  2, 12 }
 };
-const uint16_t s_inter_vlc[ 103 ][ 2 ] = {
+const uint16_t g_inter_vlc[ 103 ][ 2 ] SMS_DATA_SECTION = {
  { 0x02,  2 }, { 0x0F,  4 }, { 0x15,  6 }, { 0x17,  7 },
  { 0x1F,  8 }, { 0x25,  9 }, { 0x24,  9 }, { 0x21, 10 },
  { 0x20, 10 }, { 0x07, 11 }, { 0x06, 11 }, { 0x20, 11 },
@@ -118,7 +109,7 @@ const uint16_t s_inter_vlc[ 103 ][ 2 ] = {
  { 0x5A, 12 }, { 0x5B, 12 }, { 0x5C, 12 }, { 0x5D, 12 },
  { 0x5E, 12 }, { 0x5F, 12 }, { 0x03,  7 }
 };
-const int8_t s_inter_run[ 102 ] = {
+const int8_t g_inter_run[ 102 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  1,  1,  1,  1,
   1,  1,  2,  2,  2,  2,  3,  3,
@@ -133,7 +124,7 @@ const int8_t s_inter_run[ 102 ] = {
  27, 28, 29, 30, 31, 32, 33, 34,
  35, 36, 37, 38, 39, 40
 };
-const int8_t s_inter_level[ 102 ] = {
+const int8_t g_inter_level[ 102 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8,
   9, 10, 11, 12,  1,  2,  3,  4,
   5,  6,  1,  2,  3,  4,  1,  2,
@@ -149,9 +140,9 @@ const int8_t s_inter_level[ 102 ] = {
   1,  1,  1,  1,  1,  1
 };
 static SMS_RLTable s_rl_inter = {
- 102, 58, s_inter_vlc, s_inter_run, s_inter_level
+ 102, 58, g_inter_vlc, g_inter_run, g_inter_level
 };
-const uint16_t s_intra_vlc[ 103 ][ 2 ] = {
+const uint16_t g_intra_vlc[ 103 ][ 2 ] SMS_DATA_SECTION = {
  { 0x02,  2 }, { 0x06,  3 }, { 0x0F,  4 }, { 0x0D,  5 },
  { 0x0C,  5 }, { 0x15,  6 }, { 0x13,  6 }, { 0x12,  6 },
  { 0x17,  7 }, { 0x1F,  8 }, { 0x1E,  8 }, { 0x1D,  8 },
@@ -179,7 +170,7 @@ const uint16_t s_intra_vlc[ 103 ][ 2 ] = {
  { 0x26, 11 }, { 0x27, 11 }, { 0x5C, 12 }, { 0x5D, 12 },
  { 0x5E, 12 }, { 0x5F, 12 }, { 0x03,  7 }
 };
-const int8_t s_intra_run[ 102 ] = {
+const int8_t g_intra_run[ 102 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  0,  0,  0,  0,
@@ -194,7 +185,7 @@ const int8_t s_intra_run[ 102 ] = {
   7,  8,  9, 10, 11, 12, 13, 14,
  15, 16, 17, 18, 19, 20
 };
-const int8_t s_intra_level[ 102 ] = {
+const int8_t g_intra_level[ 102 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8,
   9, 10, 11, 12, 13, 14, 15, 16,
  17, 18, 19, 20, 21, 22, 23, 24,
@@ -210,9 +201,9 @@ const int8_t s_intra_level[ 102 ] = {
   1,  1,  1,  1,  1,  1
 };
 static SMS_RLTable s_rl_intra = {
- 102, 67, s_intra_vlc, s_intra_run, s_intra_level
+ 102, 67, g_intra_vlc, g_intra_run, g_intra_level
 };
-static const uint16_t s_inter_rvlc[ 170 ][ 2 ] = {
+static const uint16_t s_inter_rvlc[ 170 ][ 2 ] SMS_DATA_SECTION = {
  { 0x0006,  3 }, { 0x0001,  4 }, { 0x0004,  5 }, { 0x001C,  7 },
  { 0x003C,  8 }, { 0x003D,  8 }, { 0x007C,  9 }, { 0x00FC, 10 },
  { 0x00FD, 10 }, { 0x01FC, 11 }, { 0x01FD, 11 }, { 0x03FC, 12 },
@@ -257,7 +248,7 @@ static const uint16_t s_inter_rvlc[ 170 ][ 2 ] = {
  { 0x2002, 14 }, { 0x2003, 14 }, { 0x3EFC, 15 }, { 0x3EFD, 15 },
  { 0x3F7C, 15 }, { 0x3F7D, 15 }, { 0x0000,  4 }
 };
-static const uint8_t s_inter_rvlc_run[ 169 ] = {
+static const uint8_t s_inter_rvlc_run[ 169 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  1,  1,  1,  1,  1, 
@@ -281,7 +272,7 @@ static const uint8_t s_inter_rvlc_run[ 169 ] = {
  35, 36, 37, 38, 39, 40, 41, 42, 
  43, 44
 };
-static const uint8_t s_inter_rvlc_level[ 169 ] = {
+static const uint8_t s_inter_rvlc_level[ 169 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8, 
   9, 10, 11, 12, 13, 14, 15, 16, 
  17, 18, 19,  1,  2,  3,  4,  5, 
@@ -308,7 +299,7 @@ static const uint8_t s_inter_rvlc_level[ 169 ] = {
 static SMS_RLTable s_rvlc_rl_inter = {
  169, 103, s_inter_rvlc, s_inter_rvlc_run, s_inter_rvlc_level
 };
-static const uint16_t s_intra_rvlc[ 170 ][ 2 ] = {
+static const uint16_t s_intra_rvlc[ 170 ][ 2 ] SMS_DATA_SECTION = {
  { 0x0006,  3 }, { 0x0007,  3 }, { 0x000A,  4 }, { 0x0009,  5 },
  { 0x0014,  6 }, { 0x0015,  6 }, { 0x0034,  7 }, { 0x0074,  8 },
  { 0x0075,  8 }, { 0x00DD,  9 }, { 0x00EC,  9 }, { 0x01EC, 10 },
@@ -353,7 +344,7 @@ static const uint16_t s_intra_rvlc[ 170 ][ 2 ] = {
  { 0x2002, 14 }, { 0x2003, 14 }, { 0x3EFC, 15 }, { 0x3EFD, 15 },
  { 0x3F7C, 15 }, { 0x3F7D, 15 }, { 0x0000,  4 }
 };
-static const uint8_t s_intra_rvlc_run[ 169 ] = {
+static const uint8_t s_intra_rvlc_run[ 169 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
@@ -377,7 +368,7 @@ static const uint8_t s_intra_rvlc_run[ 169 ] = {
  35, 36, 37, 38, 39, 40, 41, 42, 
  43, 44 
 };
-static const uint8_t s_intra_rvlc_level[ 169 ] = {
+static const uint8_t s_intra_rvlc_level[ 169 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8, 
   9, 10, 11, 12, 13, 14, 15, 16, 
  17, 18, 19, 20, 21, 22, 23, 24, 
@@ -404,7 +395,7 @@ static const uint8_t s_intra_rvlc_level[ 169 ] = {
 static SMS_RLTable s_rvlc_rl_intra = {
  169, 103, s_intra_rvlc, s_intra_rvlc_run, s_intra_rvlc_level
 };
-const uint16_t s_intra_vlc_aic[ 103 ][ 2 ] = {
+const uint16_t s_intra_vlc_aic[ 103 ][ 2 ] SMS_DATA_SECTION = {
 {  0x2,  2 }, {  0x6,  3 }, {  0xe,  4 }, {  0xc,  5 }, 
 {  0xd,  5 }, { 0x10,  6 }, { 0x11,  6 }, { 0x12,  6 }, 
 { 0x16,  7 }, { 0x1b,  8 }, { 0x20,  9 }, { 0x21,  9 }, 
@@ -432,7 +423,7 @@ const uint16_t s_intra_vlc_aic[ 103 ][ 2 ] = {
 { 0x17,  9 }, {  0x4, 11 }, {  0x5, 11 }, { 0x58, 12 }, 
 { 0x59, 12 }, { 0x5a, 12 }, {  0x3,  7 }
 };
-const int8_t s_intra_run_aic[ 102 ] = {
+const int8_t s_intra_run_aic[ 102 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
@@ -447,7 +438,7 @@ const int8_t s_intra_run_aic[ 102 ] = {
  10, 11, 12, 13, 14, 15, 16, 17, 
  18, 19, 20, 21, 22, 23
 };
-const int8_t s_intra_level_aic[ 102 ] = {
+const int8_t s_intra_level_aic[ 102 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8, 
   9, 10, 11, 12, 13, 14, 15, 16, 
  17, 18, 19, 20, 21, 22, 23, 24, 
@@ -465,28 +456,28 @@ const int8_t s_intra_level_aic[ 102 ] = {
 static SMS_RLTable s_rl_intra_aic = {
  102, 58, s_intra_vlc_aic, s_intra_run_aic, s_intra_level_aic
 };
-const uint8_t s_DCtab_lum[ 13 ][ 2 ] = {
+const uint8_t g_DCtab_lum[ 13 ][ 2 ] SMS_DATA_SECTION = {
  { 3, 3 }, { 3, 2 }, { 2, 2 }, { 2, 3 }, { 1,  3 }, { 1,  4 }, { 1, 5 },
  { 1, 6 }, { 1, 7 }, { 1, 8 }, { 1, 9 }, { 1, 10 }, { 1, 11 }
 }; 
-const uint8_t s_DCtab_chrom[ 13 ][ 2 ] = {
+const uint8_t g_DCtab_chrom[ 13 ][ 2 ] SMS_DATA_SECTION = {
  { 3, 2 }, { 2, 2 }, { 1, 2 }, { 1,  3 }, { 1,  4 }, { 1,  5 }, { 1, 6 },
  { 1, 7 }, { 1, 8 }, { 1, 9 }, { 1, 10 }, { 1, 11 }, { 1, 12 }
 };
-static const uint16_t s_sprite_trajectory_tab[ 15 ][ 2 ] = {
+static const uint16_t s_sprite_trajectory_tab[ 15 ][ 2 ] SMS_DATA_SECTION = {
  { 0x000, 2 }, { 0x002,  3 }, { 0x003,  3 }, { 0x004,  3 }, { 0x05, 3 }, { 0x06, 3 },
  { 0x00E, 4 }, { 0x01E,  5 }, { 0x03E,  6 }, { 0x07E,  7 }, { 0xFE, 8 }, 
  { 0x1FE, 9 }, { 0x3FE, 10 }, { 0x7FE, 11 }, { 0xFFE, 12 }
 };
-static const uint8_t s_mb_type_b_tab[ 4 ][ 2 ] = {
+static const uint8_t s_mb_type_b_tab[ 4 ][ 2 ] SMS_DATA_SECTION = {
  { 1, 1 }, { 1, 2 }, { 1, 3 }, { 1, 4 }
 };
-static const uint8_t s_h263_mbtype_b_tab[ 15 ][ 2 ] = {
+static const uint8_t s_h263_mbtype_b_tab[ 15 ][ 2 ] SMS_DATA_SECTION = {
  { 1, 1 }, { 3, 3 }, { 1,  5 }, { 4, 4 }, { 5, 4 },
  { 6, 6 }, { 2, 4 }, { 3,  4 }, { 7, 6 }, { 4, 6 },
  { 5, 6 }, { 1, 6 }, { 1, 10 }, { 1, 7 }, { 1, 8 }
 };
-const uint8_t s_cbpc_b_tab[ 4 ][ 2 ] = {
+const uint8_t s_cbpc_b_tab[ 4 ][ 2 ] SMS_DATA_SECTION = {
  { 0, 1 }, { 2, 2 }, { 7, 3 }, { 6, 3 }
 };
 
@@ -523,22 +514,22 @@ static const uint8_t s_dc_threshold[ 8 ] = {
  99, 13, 15, 17, 19, 21, 23, 0
 };
 
-uint8_t s_y_dc_scale_table[ 32 ] = {
+static uint8_t s_y_dc_scale_table[ 32 ] = {
   0,  8,  8,  8,  8, 10, 12, 14, 16, 17, 18, 19, 20, 21, 22, 23,
  24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 36, 38, 40, 42, 44, 46
 };
 
-uint8_t s_c_dc_scale_table[ 32 ] = {
+static uint8_t s_c_dc_scale_table[ 32 ] = {
   0,  8,  8,  8,  8,  9,  9, 10, 10, 11, 11, 12, 12, 13, 13, 14,
  14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22, 23, 24, 25
 };
 
-static const uint8_t s_chroma_qscale_table[ 32 ] = {
+const uint8_t g_chroma_qscale_table[ 32 ] SMS_DATA_SECTION = {
   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
  16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
 };
 
-static const int s_mb_type_b_map[ 4 ]= {
+static const int s_mb_type_b_map[ 4 ] = {
  SMS_MB_TYPE_DIRECT2 | SMS_MB_TYPE_L0L1,
  SMS_MB_TYPE_L0L1    | SMS_MB_TYPE_16x16,
  SMS_MB_TYPE_L1      | SMS_MB_TYPE_16x16,
@@ -558,41 +549,69 @@ void SMS_Codec_MPEG4_Open ( SMS_CodecContext* apCtx ) {
  apCtx -> m_pCodec = calloc (  1, sizeof ( SMS_Codec )  );
 
  apCtx -> m_pCodec -> m_pName = "mpeg4";
- apCtx -> m_pCodec -> m_pCtx  = calloc (  1, sizeof ( SMS_Codec_MPEG4Context )  );
  apCtx -> m_pCodec -> Init    = MPEG4_Init;
  apCtx -> m_pCodec -> Decode  = MPEG4_Decode;
  apCtx -> m_pCodec -> Destroy = MPEG4_Destroy;
 
 }  /* end SMS_Codec_MPEG4_Open */
 
+void MPEG4_CommonInit ( void ) {
+
+ int i;
+ int lYSize  = BASECTX().m_B8Stride * (  2 * BASECTX().m_MBH + 1  );
+ int lCSize  = BASECTX().m_MBStride * (      BASECTX().m_MBH + 1  );
+ int lYCSize = lYSize + 2 * lCSize;
+
+ BASECTX().m_pACValBase = calloc (  1, lYCSize * sizeof ( int16_t ) * 16  );
+ BASECTX().m_pACVal[ 0 ] = BASECTX().m_pACValBase + BASECTX().m_B8Stride + 1;
+ BASECTX().m_pACVal[ 1 ] = BASECTX().m_pACValBase + lYSize + BASECTX().m_MBStride + 1;
+ BASECTX().m_pACVal[ 2 ] = BASECTX().m_pACVal[ 1 ] + lCSize;
+
+ BASECTX().m_pDCValBase  = calloc (  1, lYCSize * sizeof ( int16_t )  );
+ BASECTX().m_pDCVal[ 0 ] = BASECTX().m_pDCValBase + BASECTX().m_B8Stride + 1;
+ BASECTX().m_pDCVal[ 1 ] = BASECTX().m_pDCValBase + lYSize + BASECTX().m_MBStride + 1;
+ BASECTX().m_pDCVal[ 2 ] = BASECTX().m_pDCVal[ 1 ] + lCSize;
+
+ for ( i = 0; i < lYCSize; ++i ) BASECTX().m_pDCValBase[ i ] = 1024;
+
+ BASECTX().DCT_UnquantizeIntra = SMS_H263_DCTUnquantizeIntra;
+ BASECTX().DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
+ BASECTX().m_pChromaQScaleTbl  = g_chroma_qscale_table;
+
+}  /* end MPEG4_CommonInit */
+
+void MPEG4_CommonDestroy ( void ) {
+
+ free (  BASECTX().m_pACValBase  );
+ free (  BASECTX().m_pDCValBase  );
+
+}  /* end MPEG4_CommonDestroy */
+
 static int32_t MPEG4_Init ( SMS_CodecContext* apCtx ) {
 
  if ( !s_Init ) {
 
   int i;
-  int lYSize;
-  int lCSize;
-  int lYCSize;
 
   SMS_VLC_Init (
    &s_IntraMCBPC_vlc, INTRA_MCBPC_VLC_BITS, 9, 
-   s_IntraMCBPC_bits, 1, 1,
-   s_IntraMCBPC_code, 1, 1
+   g_IntraMCBPC_bits, 1, 1,
+   g_IntraMCBPC_code, 1, 1
   );
   SMS_VLC_Init (
    &s_InterMCBPC_vlc, INTER_MCBPC_VLC_BITS, 28, 
-   s_InterMCBPC_bits, 1, 1,
-   s_InterMCBPC_code, 1, 1
+   g_InterMCBPC_bits, 1, 1,
+   g_InterMCBPC_code, 1, 1
   );
   SMS_VLC_Init (
    &s_cbpy_vlc, CBPY_VLC_BITS, 16,
-   &s_cbpy_tab[ 0 ][ 1 ], 2, 1,
-   &s_cbpy_tab[ 0 ][ 0 ], 2, 1
+   &g_cbpy_tab[ 0 ][ 1 ], 2, 1,
+   &g_cbpy_tab[ 0 ][ 0 ], 2, 1
   );
   SMS_VLC_Init (
    &g_SMS_mv_vlc, SMS_MV_VLC_BITS, 33,
-   &s_mvtab[ 0 ][ 1 ], 2, 1,
-   &s_mvtab[ 0 ][ 0 ], 2, 1
+   &g_mvtab[ 0 ][ 1 ], 2, 1,
+   &g_mvtab[ 0 ][ 0 ], 2, 1
   );
   SMS_RL_Init ( &s_rl_inter      );
   SMS_RL_Init ( &s_rl_intra      );
@@ -608,13 +627,13 @@ static int32_t MPEG4_Init ( SMS_CodecContext* apCtx ) {
 
   SMS_VLC_Init (
    &s_dc_lum, DC_VLC_BITS, 10,
-   &s_DCtab_lum[ 0 ][ 1 ], 2, 1,
-   &s_DCtab_lum[ 0 ][ 0 ], 2, 1
+   &g_DCtab_lum[ 0 ][ 1 ], 2, 1,
+   &g_DCtab_lum[ 0 ][ 0 ], 2, 1
   );
   SMS_VLC_Init (
    &s_dc_chrom, DC_VLC_BITS, 10,
-   &s_DCtab_chrom[ 0 ][ 1 ], 2, 1,
-   &s_DCtab_chrom[ 0 ][ 0 ], 2, 1
+   &g_DCtab_chrom[ 0 ][ 1 ], 2, 1,
+   &g_DCtab_chrom[ 0 ][ 0 ], 2, 1
   );
   SMS_VLC_Init (
    &s_sprite_trajectory, SPRITE_TRAJ_VLC_BITS, 15,
@@ -639,29 +658,10 @@ static int32_t MPEG4_Init ( SMS_CodecContext* apCtx ) {
 
   SMS_MPEGContext_Init ( apCtx -> m_Width, apCtx -> m_Height );
 
-  lYSize  = BASECTX().m_B8Stride * (  2 * BASECTX().m_MBH + 1  );
-  lCSize  = BASECTX().m_MBStride * (      BASECTX().m_MBH + 1  );
-  lYCSize = lYSize + 2 * lCSize;
+  MPEG4_CommonInit ();
 
-  BASECTX().m_pACValBase = calloc (  1, lYCSize * sizeof ( int16_t ) * 16  );
-  BASECTX().m_pACVal[ 0 ] = BASECTX().m_pACValBase + BASECTX().m_B8Stride + 1;
-  BASECTX().m_pACVal[ 1 ] = BASECTX().m_pACValBase + lYSize + BASECTX().m_MBStride + 1;
-  BASECTX().m_pACVal[ 2 ] = BASECTX().m_pACVal[ 1 ] + lCSize;
-
-  MYCTX() -> m_pBitstreamBuf = calloc ( 1, BITSTREAM_BUFFER_SIZE );
-  MYCTX() -> m_pCBPTbl       = calloc ( 1, i = BASECTX().m_MBH * BASECTX().m_MBStride * sizeof ( uint8_t )  );
-  MYCTX() -> m_pPredDirTbl   = calloc ( 1, i );
-
-  BASECTX().m_pDCValBase  = calloc (  1, lYCSize * sizeof ( int16_t )  );
-  BASECTX().m_pDCVal[ 0 ] = BASECTX().m_pDCValBase + BASECTX().m_B8Stride + 1;
-  BASECTX().m_pDCVal[ 1 ] = BASECTX().m_pDCValBase + lYSize + BASECTX().m_MBStride + 1;
-  BASECTX().m_pDCVal[ 2 ] = BASECTX().m_pDCVal[ 1 ] + lCSize;
-
-  for ( i = 0; i < lYCSize; ++i ) BASECTX().m_pDCValBase[ i ] = 1024;
-
-  BASECTX().DCT_UnquantizeIntra = SMS_H263_DCTUnquantizeIntra;
-  BASECTX().DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
-  BASECTX().m_pChromaQScaleTbl  = s_chroma_qscale_table;
+  BASECTX().m_pCBPTbl     = calloc ( 1, i = BASECTX().m_MBH * BASECTX().m_MBStride * sizeof ( uint8_t )  );
+  BASECTX().m_pPredDirTbl = calloc ( 1, i );
 
  }  /* end if */
 
@@ -700,15 +700,10 @@ static void MPEG4_Destroy ( SMS_CodecContext* apCtx ) {
   SMS_VLC_Free ( &s_cbpc_b_vlc        );
 
   SMS_MPEGContext_Destroy ();
+  MPEG4_CommonDestroy     ();
 
-  free (  BASECTX().m_pACValBase );
-  free (  BASECTX().m_pDCValBase );
-
-  free (  MYCTX() -> m_pBitstreamBuf  );
-  free (  MYCTX() -> m_pCBPTbl        );
-  free (  MYCTX() -> m_pPredDirTbl    );
-
-  free ( apCtx -> m_pCodec -> m_pCtx );
+  free (  BASECTX().m_pCBPTbl     );
+  free (  BASECTX().m_pPredDirTbl );
 
  }  /* end if */
 
@@ -1086,7 +1081,7 @@ scanBuild:
     lBuf[ i ] = '\x00'; lBuild = atoi ( lBuf );
     lLast     = *lpBuf;
 
-   }  // end if
+   }  /* end if */
 
   } else if ( *lpBuf == 'b' ) {
 
@@ -1589,7 +1584,7 @@ static int _mpeg4_set_direct_mv ( int aMX, int aMY ) {
 
 }  /* end _mpeg4_set_direct_mv */
 
-void _mpeg4_pred_ac ( SMS_DCTELEM* apBlock, int aN, int aDir ) {
+void MPEG4_PredAC ( SMS_DCTELEM* apBlock, int aN, int aDir ) {
 
  int           i;
  int16_t*      lpACVal, *lpACVal1;
@@ -1631,7 +1626,7 @@ void _mpeg4_pred_ac ( SMS_DCTELEM* apBlock, int aN, int aDir ) {
  for ( i = 1; i < 8; ++i ) lpACVal1[     i ] = apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i << 3 ]  ];
  for ( i = 1; i < 8; ++i ) lpACVal1[ 8 + i ] = apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i      ]  ];
 
-}  /* end _mpeg4_pred_ac */
+}  /* end MPEG4_PredAC */
 
 static SMS_INLINE int _mpeg4_pred_dc ( int aN, int aLevel, int *apDirPtr ) {
 
@@ -2002,7 +1997,7 @@ not_coded:
 
   }  /* end if */
 
-  _mpeg4_pred_ac ( apBlock, aN, lDCPredDir );
+  MPEG4_PredAC ( apBlock, aN, lDCPredDir );
 
   if ( g_MPEGCtx.m_ACPred ) i = 63;
 
@@ -3094,7 +3089,7 @@ int _mpeg4_decode_partitions ( void ) {
 
 }  /* end _mpeg4_decode_partitions */
 
-static int32_t _decode_slice ( void ) {
+static int32_t _mpeg4_decode_slice ( void ) {
 
  g_MPEGCtx.m_LastResyncBitCtx = g_MPEGCtx.m_BitCtx;
  g_MPEGCtx.m_FirstSliceLine   = 1;
@@ -3221,7 +3216,7 @@ static int32_t _decode_slice ( void ) {
 
  return -1;
 
-}  /* end _decode_slice */
+}  /* end _mpeg4_decode_slice */
 
 static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apBuf, int32_t aBufSize ) {
 
@@ -3311,13 +3306,13 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* a
  g_MPEGCtx.m_MBX = 0; 
  g_MPEGCtx.m_MBY = 0;
 
- _decode_slice ();
+ _mpeg4_decode_slice ();
 
  while ( g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH ) {
 
   if (  _mpeg4_resync () < 0  ) break;
 
-  _decode_slice ();
+  _mpeg4_decode_slice ();
 
  }  /* end while */
 

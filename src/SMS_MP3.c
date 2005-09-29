@@ -1719,78 +1719,78 @@ static const uint8_t s_mpa_huff_data[ 32 ][ 2 ] = {
  { 14, 1 }, { 14, 2 }, { 14, 3 }, { 14, 4 }, { 14, 6 }, { 14, 8 }, { 14, 10 }, { 14, 13 },
  { 15, 4 }, { 15, 5 }, { 15, 6 }, { 15, 7 }, { 15, 8 }, { 15, 9 }, { 15, 11 }, { 15, 13 }
 };
-static const uint8_t s_mpa_huffbits_1[ 4 ] = {
+static const uint8_t s_mpa_huffbits_1[ 4 ] SMS_DATA_SECTION = {
  1, 3, 2, 3
 };
-static const uint16_t s_mpa_huffcodes_1[ 4 ] = {
+static const uint16_t s_mpa_huffcodes_1[ 4 ] SMS_DATA_SECTION = {
  0x0001, 0x0001, 0x0001, 0x0000
 };
-static const uint8_t s_mpa_huffbits_2[ 9 ] = {
+static const uint8_t s_mpa_huffbits_2[ 9 ] SMS_DATA_SECTION = {
  1, 3, 6, 3, 3, 5, 5, 5, 6
 };
-static const uint16_t s_mpa_huffcodes_2[ 9 ] = {
+static const uint16_t s_mpa_huffcodes_2[ 9 ] SMS_DATA_SECTION = {
  0x0001, 0x0002, 0x0001, 0x0003, 0x0001, 0x0001, 0x0003, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_3[ 9 ] = {
+static const uint8_t s_mpa_huffbits_3[ 9 ] SMS_DATA_SECTION = {
  2,  2,  6,  3,  2,  5,  5,  5, 6
 };
-static const uint16_t s_mpa_huffcodes_3[ 9 ] = {
+static const uint16_t s_mpa_huffcodes_3[ 9 ] SMS_DATA_SECTION = {
  0x0003, 0x0002, 0x0001, 0x0001, 0x0001, 0x0001, 0x0003, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_5[ 16 ] = {
+static const uint8_t s_mpa_huffbits_5[ 16 ] SMS_DATA_SECTION = {
  1, 3, 6, 7, 3, 3, 6, 7, 6, 6, 7, 8, 7, 6, 7, 8
 };
-static const uint16_t s_mpa_huffcodes_5[ 16 ] = {
+static const uint16_t s_mpa_huffcodes_5[ 16 ] SMS_DATA_SECTION = {
  0x0001, 0x0002, 0x0006, 0x0005, 0x0003, 0x0001, 0x0004, 0x0004,
  0x0007, 0x0005, 0x0007, 0x0001, 0x0006, 0x0001, 0x0001, 0x0000
 };
-static const uint8_t s_mpa_huffbits_6[ 16 ] = {
+static const uint8_t s_mpa_huffbits_6[ 16 ] SMS_DATA_SECTION = {
  3, 3, 5, 7, 3, 2, 4, 5, 4, 4, 5, 6, 6, 5, 6, 7
 };
-static const uint16_t s_mpa_huffcodes_6[ 16 ] = {
+static const uint16_t s_mpa_huffcodes_6[ 16 ] SMS_DATA_SECTION = {
  0x0007, 0x0003, 0x0005, 0x0001, 0x0006, 0x0002, 0x0003, 0x0002,
  0x0005, 0x0004, 0x0004, 0x0001, 0x0003, 0x0003, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_7[ 36 ] = {
+static const uint8_t s_mpa_huffbits_7[ 36 ] SMS_DATA_SECTION = {
  1, 3, 6, 8, 8,  9, 3, 4, 6,  7,  7,  8, 6, 5, 7, 8, 8, 9, 7, 7, 8, 9, 9, 9,
  7, 7, 8, 9, 9, 10, 8, 8, 9, 10, 10, 10
 };
-static const uint16_t s_mpa_huffcodes_7[ 36 ] = {
+static const uint16_t s_mpa_huffcodes_7[ 36 ] SMS_DATA_SECTION = {
  0x0001, 0x0002, 0x000a, 0x0013, 0x0010, 0x000A, 0x0003, 0x0003,
  0x0007, 0x000A, 0x0005, 0x0003, 0x000B, 0x0004, 0x000D, 0x0011,
  0x0008, 0x0004, 0x000C, 0x000B, 0x0012, 0x000F, 0x000B, 0x0002,
  0x0007, 0x0006, 0x0009, 0x000E, 0x0003, 0x0001, 0x0006, 0x0004,
  0x0005, 0x0003, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_8[ 36 ] = {
+static const uint8_t s_mpa_huffbits_8[ 36 ] SMS_DATA_SECTION = {
  2, 3, 6, 8,  8,  9, 3, 2, 4, 8,  8,  8, 6, 4, 6, 8, 8, 9, 8, 8, 8, 9, 9, 10,
  8, 7, 8, 9, 10, 10, 9, 8, 9, 9, 11, 11
 };
-static const uint16_t s_mpa_huffcodes_8[ 36 ] = {
+static const uint16_t s_mpa_huffcodes_8[ 36 ] SMS_DATA_SECTION = {
  0x0003, 0x0004, 0x0006, 0x0012, 0x000C, 0x0005, 0x0005, 0x0001,
  0x0002, 0x0010, 0x0009, 0x0003, 0x0007, 0x0003, 0x0005, 0x000E,
  0x0007, 0x0003, 0x0013, 0x0011, 0x000F, 0x000D, 0x000A, 0x0004,
  0x000D, 0x0005, 0x0008, 0x000B, 0x0005, 0x0001, 0x000C, 0x0004,
  0x0004, 0x0001, 0x0001, 0x0000
 };
-static const uint8_t s_mpa_huffbits_9[ 36 ] = {
+static const uint8_t s_mpa_huffbits_9[ 36 ] SMS_DATA_SECTION = {
  3, 3, 5, 6, 8, 9, 3, 3, 4, 5, 6, 8, 4, 4, 5, 6, 7, 8, 6, 5, 6, 7, 7, 8,
  7, 6, 7, 7, 8, 9, 8, 7, 8, 8, 9, 9
 };
-static const uint16_t s_mpa_huffcodes_9[ 36 ] = {
+static const uint16_t s_mpa_huffcodes_9[ 36 ] SMS_DATA_SECTION = {
  0x0007, 0x0005, 0x0009, 0x000E, 0x000F, 0x0007, 0x0006, 0x0004,
  0x0005, 0x0005, 0x0006, 0x0007, 0x0007, 0x0006, 0x0008, 0x0008,
  0x0008, 0x0005, 0x000F, 0x0006, 0x0009, 0x000A, 0x0005, 0x0001,
  0x000B, 0x0007, 0x0009, 0x0006, 0x0004, 0x0001, 0x000E, 0x0004,
  0x0006, 0x0002, 0x0006, 0x0000
 };
-static const uint8_t s_mpa_huffbits_10[ 64 ] = {
+static const uint8_t s_mpa_huffbits_10[ 64 ] SMS_DATA_SECTION = {
  1,  3,  6,  8,  9,  9,  9, 10, 3,  4,  6,  7,  8,  9,  8,  8,
  6,  6,  7,  8,  9, 10,  9,  9, 7,  7,  8,  9, 10, 10,  9, 10,
  8,  8,  9, 10, 10, 10, 10, 10, 9,  9, 10, 10, 11, 11, 10, 11,
  8,  8,  9, 10, 10, 10, 11, 11, 9,  8,  9, 10, 10, 11, 11, 11
 };
-static const uint16_t s_mpa_huffcodes_10[ 64 ] = {
+static const uint16_t s_mpa_huffcodes_10[ 64 ] SMS_DATA_SECTION = {
  0x0001, 0x0002, 0x000A, 0x0017, 0x0023, 0x001E, 0x000C, 0x0011,
  0x0003, 0x0003, 0x0008, 0x000C, 0x0012, 0x0015, 0x000C, 0x0007,
  0x000B, 0x0009, 0x000F, 0x0015, 0x0020, 0x0028, 0x0013, 0x0006,
@@ -1800,13 +1800,13 @@ static const uint16_t s_mpa_huffcodes_10[ 64 ] = {
  0x000E, 0x000D, 0x000A, 0x000B, 0x0010, 0x0006, 0x0005, 0x0001,
  0x0009, 0x0008, 0x0007, 0x0008, 0x0004, 0x0004, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_11[ 64 ] = {
+static const uint8_t s_mpa_huffbits_11[ 64 ] SMS_DATA_SECTION = {
  2,  3,  5,  7,  8,  9,  8,  9, 3,  3,  4,  6,  8,  8,  7,  8,
  5,  5,  6,  7,  8,  9,  8,  8, 7,  6,  7,  9,  8, 10,  8,  9,
  8,  8,  8,  9,  9, 10,  9, 10, 8,  8,  9, 10, 10, 11, 10, 11,
  8,  7,  7,  8,  9, 10, 10, 10, 8,  7,  8,  9, 10, 10, 10, 10
 };
-static const uint16_t s_mpa_huffcodes_11[ 64 ] = {
+static const uint16_t s_mpa_huffcodes_11[ 64 ] SMS_DATA_SECTION = {
  0x0003, 0x0004, 0x000A, 0x0018, 0x0022, 0x0021, 0x0015, 0x000F,
  0x0005, 0x0003, 0x0004, 0x000A, 0x0020, 0x0011, 0x000B, 0x000A,
  0x000B, 0x0007, 0x000D, 0x0012, 0x001E, 0x001F, 0x0014, 0x0005,
@@ -1816,13 +1816,13 @@ static const uint16_t s_mpa_huffcodes_11[ 64 ] = {
  0x000E, 0x000C, 0x0009, 0x000D, 0x000E, 0x0009, 0x0004, 0x0001,
  0x000B, 0x0004, 0x0006, 0x0006, 0x0006, 0x0003, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_12[ 64 ] = {
+static const uint8_t s_mpa_huffbits_12[ 64 ] SMS_DATA_SECTION = {
  4,  3,  5,  7,  8,  9,  9,  9, 3,  3,  4,  5,  7,  7,  8,  8,
  5,  4,  5,  6,  7,  8,  7,  8, 6,  5,  6,  6,  7,  8,  8,  8,
  7,  6,  7,  7,  8,  8,  8,  9, 8,  7,  8,  8,  8,  9,  8,  9,
  8,  7,  7,  8,  8,  9,  9, 10, 9,  8,  8,  9,  9,  9,  9, 10
 };
-static const uint16_t s_mpa_huffcodes_12[ 64 ] = {
+static const uint16_t s_mpa_huffcodes_12[ 64 ] SMS_DATA_SECTION = {
  0x0009, 0x0006, 0x0010, 0x0021, 0x0029, 0x0027, 0x0026, 0x001A,
  0x0007, 0x0005, 0x0006, 0x0009, 0x0017, 0x0010, 0x001A, 0x000B,
  0x0011, 0x0007, 0x000B, 0x000E, 0x0015, 0x001E, 0x000A, 0x0007,
@@ -1832,7 +1832,7 @@ static const uint16_t s_mpa_huffcodes_12[ 64 ] = {
  0x001B, 0x000C, 0x000B, 0x000F, 0x000A, 0x0007, 0x0004, 0x0001,
  0x001B, 0x000C, 0x0008, 0x000C, 0x0006, 0x0003, 0x0001, 0x0000
 };
-static const uint8_t s_mpa_huffbits_13[ 256 ] = {
+static const uint8_t s_mpa_huffbits_13[ 256 ] SMS_DATA_SECTION = {
   1,  4,  6,  7,  8,  9,  9, 10,  9, 10, 11, 11, 12, 12, 13, 13,
   3,  4,  6,  7,  8,  8,  9,  9,  9,  9, 10, 10, 11, 12, 12, 12,
   6,  6,  7,  8,  9,  9, 10, 10,  9, 10, 10, 11, 11, 12, 13, 13,
@@ -1850,7 +1850,7 @@ static const uint8_t s_mpa_huffbits_13[ 256 ] = {
  13, 12, 12, 13, 13, 13, 15, 14, 14, 17, 15, 15, 15, 17, 16, 16,
  12, 12, 13, 14, 14, 14, 15, 14, 15, 15, 16, 16, 19, 18, 19, 16
 };
-static const uint16_t s_mpa_huffcodes_13[ 256 ] = {
+static const uint16_t s_mpa_huffcodes_13[ 256 ] SMS_DATA_SECTION = {
  0x0001, 0x0005, 0x000E, 0x0015, 0x0022, 0x0033, 0x002E, 0x0047,
  0x002A, 0x0034, 0x0044, 0x0034, 0x0043, 0x002C, 0x002B, 0x0013,
  0x0003, 0x0004, 0x000C, 0x0013, 0x001F, 0x001A, 0x002C, 0x0021,
@@ -1884,7 +1884,7 @@ static const uint16_t s_mpa_huffcodes_13[ 256 ] = {
  0x0010, 0x000F, 0x0011, 0x001B, 0x0019, 0x0014, 0x001D, 0x000B,
  0x0011, 0x000C, 0x0010, 0x0008, 0x0001, 0x0001, 0x0000, 0x0001,
 };
-static const uint8_t s_mpa_huffbits_15[ 256 ] = {
+static const uint8_t s_mpa_huffbits_15[ 256 ] SMS_DATA_SECTION = {
   3,  4,  5,  7,  7,  8,  9,  9,  9, 10, 10, 11, 11, 11, 12, 13,
   4,  3,  5,  6,  7,  7,  8,  8,  8,  9,  9, 10, 10, 10, 11, 11,
   5,  5,  5,  6,  7,  7,  8,  8,  8,  9,  9, 10, 10, 11, 11, 11,
@@ -1902,7 +1902,7 @@ static const uint8_t s_mpa_huffbits_15[ 256 ] = {
  12, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 12, 13,
  12, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13
 };
-static const uint16_t s_mpa_huffcodes_15[ 256 ] = {
+static const uint16_t s_mpa_huffcodes_15[ 256 ] SMS_DATA_SECTION = {
  0x0007, 0x000C, 0x0012, 0x0035, 0x002F, 0x004C, 0x007C, 0x006C,
  0x0059, 0x007B, 0x006C, 0x0077, 0x006B, 0x0051, 0x007A, 0x003F,
  0x000D, 0x0005, 0x0010, 0x001B, 0x002E, 0x0024, 0x003D, 0x0033,
@@ -1936,7 +1936,7 @@ static const uint16_t s_mpa_huffcodes_15[ 256 ] = {
  0x0047, 0x0025, 0x0022, 0x001E, 0x001C, 0x0014, 0x0011, 0x001A,
  0x0015, 0x0010, 0x000A, 0x0006, 0x0008, 0x0006, 0x0002, 0x0000
 };
-static const uint8_t s_mpa_huffbits_16[ 256 ] = {
+static const uint8_t s_mpa_huffbits_16[ 256 ] SMS_DATA_SECTION = {
   1,  4,  6,  8,  9,  9, 10, 10, 11, 11, 11, 12, 12, 12, 13,  9,
   3,  4,  6,  7,  8,  9,  9,  9, 10, 10, 10, 11, 12, 11, 12,  8,
   6,  6,  7,  8,  9,  9, 10, 10, 11, 10, 11, 11, 11, 12, 12,  9,
@@ -1954,7 +1954,7 @@ static const uint8_t s_mpa_huffbits_16[ 256 ] = {
  13, 13, 11, 12, 14, 14, 13, 14, 14, 15, 16, 15, 17, 15, 14, 11,
   9,  8,  8,  9,  9, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11,  8
 };
-static const uint16_t s_mpa_huffcodes_16[ 256 ] = {
+static const uint16_t s_mpa_huffcodes_16[ 256 ] SMS_DATA_SECTION = {
  0x0001, 0x0005, 0x000E, 0x002C, 0x004A, 0x003F, 0x006E, 0x005D,
  0x00AC, 0x0095, 0x008A, 0x00F2, 0x00E1, 0x00C3, 0x0178, 0x0011,
  0x0003, 0x0004, 0x000C, 0x0014, 0x0023, 0x003E, 0x0035, 0x002F,
@@ -1988,7 +1988,7 @@ static const uint16_t s_mpa_huffcodes_16[ 256 ] = {
  0x000C, 0x000A, 0x0007, 0x000B, 0x000A, 0x0011, 0x000B, 0x0009,
  0x000D, 0x000C, 0x000A, 0x0007, 0x0005, 0x0003, 0x0001, 0x0003
 };
-static const uint8_t s_mpa_huffbits_24[ 256 ] = {
+static const uint8_t s_mpa_huffbits_24[ 256 ] SMS_DATA_SECTION = {
   4,  4,  6,  7,  8,  9,  9, 10, 10, 11, 11, 11, 11, 11, 12,  9,
   4,  4,  5,  6,  7,  8,  8,  9,  9,  9, 10, 10, 10, 10, 10,  8,
   6,  5,  6,  7,  7,  8,  8,  9,  9,  9,  9, 10, 10, 10, 11,  7,
@@ -2006,7 +2006,7 @@ static const uint8_t s_mpa_huffbits_24[ 256 ] = {
  12, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11,  8,
   8,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  8,  8,  8,  8,  4
 };
-static const uint16_t s_mpa_huffcodes_24[ 256 ] = {
+static const uint16_t s_mpa_huffcodes_24[ 256 ] SMS_DATA_SECTION = {
  0x000F, 0x000D, 0x002E, 0x0050, 0x0092, 0x0106, 0x00F8, 0x01B2,
  0x01AA, 0x029D, 0x028D, 0x0289, 0x026D, 0x0205, 0x0408, 0x0058,
  0x000E, 0x000C, 0x0015, 0x0026, 0x0047, 0x0082, 0x007A, 0x00D8,

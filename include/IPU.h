@@ -69,8 +69,9 @@ typedef struct IPUContext {
 
 typedef struct IPUContext {
 
- unsigned long int       m_DMAGIFDraw[ 14 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int       m_DMAGIFTX  [  6 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int       m_DMAGIFDraw[ 16 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int       m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int       m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned int            m_DestX;
  unsigned int            m_DestY;
  unsigned int            m_Slice;
@@ -94,16 +95,35 @@ typedef struct IPUContext {
  unsigned int            m_TH;
  unsigned int            m_SyncS;
  unsigned int            m_GIFlag;
+ unsigned int            m_Width;
+ unsigned int            m_Height;
+ unsigned int            m_ScrWidth;
+ unsigned int            m_ScrHeight;
+ unsigned int            m_ScrLeft;
+ unsigned int            m_ScrTop;
+ unsigned int            m_ScrRight;
+ unsigned int            m_ScrBottom;
+ unsigned int            m_ImgLeft;
+ unsigned int            m_ImgTop;
+ unsigned int            m_ImgRight;
+ unsigned int            m_ImgBottom;
+ unsigned int            m_TxtLeft;
+ unsigned int            m_TxtTop;
+ unsigned int            m_TxtRight;
+ unsigned int            m_TxtBottom;
+ unsigned int            m_VIFQueueSize;
  struct SMS_FrameBuffer* m_pBuffer;
  unsigned char*          m_pResult;
  unsigned char*          m_pCurRes;
  struct SMS_MacroBlock*  m_pMB;
  
- void ( *Sync       ) ( void                    );
- void ( *Display    ) ( struct SMS_FrameBuffer* );
- void ( *Destroy    ) ( void                    );
- void ( *SetTEX     ) ( void                    );
- void ( *GIFHandler ) ( void                    );
+ void ( *Sync        ) ( void                    );
+ void ( *Display     ) ( struct SMS_FrameBuffer* );
+ void ( *Destroy     ) ( void                    );
+ void ( *SetTEX      ) ( void                    );
+ void ( *GIFHandler  ) ( void                    );
+ void ( *Reset       ) ( void                    );
+ void ( *QueuePacket ) ( int, void*              );
 
 } IPUContext;
 #endif  /* _WIN32 */

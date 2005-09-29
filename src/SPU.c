@@ -26,13 +26,13 @@
 #define AUDSRV_CMD_QUIT       0x0001
 #define AUDSRV_CMD_SET_FORMAT 0x0003
 #define AUDSRV_CMD_PLAY_AUDIO 0x0004
-#define AUDSRV_CMD_WAIT_AUDIO 0x0005
 #define AUDSRV_CMD_STOP_AUDIO 0x0006
 #define AUDSRV_CMD_SET_VOLUME 0x0007
 
 static SPUContext         s_SPUCtx;
 static SifRpcClientData_t s_ClientData  __attribute__(   (  aligned( 64 )  )   );
-static unsigned int       s_Buffer[ 3 ] __attribute__(   (  aligned( 64 )  )   );
+static unsigned int       s_Buffer[ 4 ] __attribute__(   (  aligned( 64 )  )   );
+static int                s_Sema;
 
 typedef struct audsrv_fmt_t {
 
@@ -106,40 +106,26 @@ static int _audsrv_stop_audio ( void ) {
 
 }  /* end _audsrv_stop_audio */ 
 
-static int _audsrv_wait_audio ( int aCount ) {
+static void _audio_callback ( void* apArg ) {
 
- int retVal = 0;
+ iSignalSema (  *( int* )apArg  );
 
- s_Buffer[ 0 ] = aCount;
+}  /* end _audio_callback */
 
- if (  SifCallRpc (
-        &s_ClientData, AUDSRV_CMD_WAIT_AUDIO, 0, s_Buffer, 4, s_Buffer, 4, 0, 0
-       ) >= 0 && s_Buffer[ 0 ] == 0
- ) retVal = 1;
+static void _audsrv_play_audio ( char* apData ) {
 
- return retVal;
-
-}  /* end _audsrv_wait_audio */
-
-static int _audsrv_play_audio ( char* apData ) {
-
- int retVal = 0;
- int lLen   = *( int* )apData;
-
- if (  SifCallRpc (
-        &s_ClientData, AUDSRV_CMD_PLAY_AUDIO, SIF_RPC_M_NOWBDC, apData, lLen + 4, apData, 4, 0, 0
-       ) >= 0 && *( int* )apData == 0
- ) retVal = 1;
-
- *( int* )apData = lLen;
-
- return retVal;
+ SifCallRpc (
+  &s_ClientData, AUDSRV_CMD_PLAY_AUDIO, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, apData, *( int* )apData + 4, NULL, 0, _audio_callback, &s_Sema
+ );
+ WaitSema ( s_Sema );
 
 }  /* end _audsrv_play_audio */
 
 static void _spu_destroy ( void ) {
 
  _audsrv_stop_audio ();
+
+ if ( s_Sema >= 0 ) DeleteSema ( s_Sema );
 
 }  /* end _spu_destroy */
 
@@ -159,7 +145,6 @@ static void _spu_mute_dummy ( int afMute ) {
 
 static void _spu_play_pcm ( char* apBuf ) {
 
- _audsrv_wait_audio (  *( int* )apBuf  );
  _audsrv_play_audio ( apBuf );
 
 }  /* end _spu_play_pcm */
@@ -185,6 +170,8 @@ SPUContext* SPU_InitContext ( int anChannels, int aFreq ) {
  s_SPUCtx.Mute    = _spu_mute_dummy;
  s_SPUCtx.Destroy = _spu_destroy_dummy;
 
+ s_Sema = -1;
+
  if (  _audsrv_init ()  ) {
 
   lFmt.m_Freq  =      aFreq;
@@ -193,9 +180,15 @@ SPUContext* SPU_InitContext ( int anChannels, int aFreq ) {
 
   if (  _audsrv_set_format ( &lFmt )  ) {
 
+   ee_sema_t lSema;
+
    s_SPUCtx.Destroy = _spu_destroy;
    s_SPUCtx.PlayPCM = _spu_play_pcm_init;
    s_SPUCtx.Mute    = _spu_mute;
+
+   lSema.max_count  = 1;
+   lSema.init_count = 0;
+   s_Sema = CreateSema ( &lSema );
 
   }  /* end if */
 

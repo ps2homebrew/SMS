@@ -264,6 +264,7 @@ typedef struct GSContext {
 #  define GS_CLAMP_1    0x08
 #  define GS_CLAMP_2    0x09
 #  define GS_COLCLAMP   0x46
+#  define GS_FINISH     0x61
 #  define GS_FRAME_1    0x4C
 #  define GS_FRAME_2    0x4D
 #  define GS_PRIM       0x00
@@ -534,7 +535,6 @@ typedef struct GSContext {
  void         ( *VSync         ) ( void                               );
  void         ( *SetTest       ) ( void                               );
  void         ( *ClearScreen   ) ( unsigned long int                  );
- void         ( *SwapBuffers   ) ( int                                );
  GSRectangle* ( *InitRectangle ) ( void                               );
  GSFan*       ( *InitFan       ) ( unsigned int                       );
  GSLineStrip* ( *InitLineStrip ) ( unsigned int                       );
@@ -548,6 +548,7 @@ typedef struct GSContext {
  void         ( *Destroy       ) ( void                               );
  void         ( *CopyFBuffer   ) ( int, int, int, int, int            );
  void         ( *AdjustDisplay ) ( int, int                           );
+ void         ( *ZTest         ) ( int                                );
 
 } GSContext;
 

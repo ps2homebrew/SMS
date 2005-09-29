@@ -58,9 +58,9 @@ static int              s_VideoDThreadID;
 static int              s_AudioRThreadID;
 static int              s_AudioDThreadID;
 static uint8_t          s_VideoRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
-static uint8_t          s_VideoDStack[ 0x20000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t          s_VideoDStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
 static uint8_t          s_AudioRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
-static uint8_t          s_AudioDStack[ 0x20000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t          s_AudioDStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
 static IPUContext*      s_pIPUCtx;
 static SMS_Codec*       s_pVideoCodec;
 static int              s_VideoIdx;
@@ -81,13 +81,7 @@ static void _draw_text ( char* apStr ) {
 
  if ( s_pIPUCtx ) s_pIPUCtx -> Sync ();
 
- s_Player.m_pGUICtx -> m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF )  );
- s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkColor = GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0xFF );
- s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Opaque;
  s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( lX, lY, 0, apStr, 0 );
- s_Player.m_pGUICtx -> m_pGSCtx -> m_Font.m_BkMode  = GSBkMode_Transparent;
-
- if ( s_pIPUCtx ) s_pIPUCtx -> SetTEX ();
 
 }  /* end _draw_text */
 
@@ -134,13 +128,13 @@ static void _sms_play_v ( void ) {
   if ( lButtons & PAD_SELECT ) {
 
    lNextFrame = g_Timer;
-   _draw_text ( "  Pause  " );
+   _draw_text ( "Pause" );
    GUI_WaitButton ( PAD_START );
 
   } else if ( lButtons & PAD_TRIANGLE ) {
 
    s_pIPUCtx -> Sync ();
-   _draw_text ( "  Stopping  " );
+   _draw_text ( "Stopping" );
    break;
 
   }  /* end if */
@@ -209,7 +203,7 @@ static void _sms_play_a ( void ) {
 
    if ( lButtons & PAD_SELECT ) {
 
-    _draw_text ( "  Pause  " );
+    _draw_text ( "Pause" );
     s_pSPUCtx -> Mute ( 1 );
     GUI_WaitButton ( PAD_START );
     s_pSPUCtx -> Mute ( 0 );
@@ -218,7 +212,7 @@ static void _sms_play_a ( void ) {
 
    } else if ( lButtons & PAD_TRIANGLE ) {
 
-    _draw_text ( "  Stopping  " );
+    _draw_text ( "Stopping" );
     break;
 
    }  /* end if */
@@ -264,7 +258,7 @@ static void _sms_video_renderer ( void* apParam ) {
 
   if ( s_Flags & SMS_FLAGS_PAUSE ) {
 
-   _draw_text ( "  Pause  " );
+   _draw_text ( "Pause" );
    WaitSema ( s_SemaPauseVideo );
 
   }  /* end if */
@@ -272,16 +266,14 @@ static void _sms_video_renderer ( void* apParam ) {
   s_pFrame = *SMS_RB_POPSLOT( s_VideoQueue );
   SMS_RB_POPADVANCE( s_VideoQueue );
 
+  lDiff = s_pFrame -> m_PTS - s_AudioTime;
+
   if ( s_Flags & SMS_FLAGS_STOP ) {
 
    SignalSema ( s_SemaRPutVideo );
    break;
 
   }  /* end if */
-
-  s_pIPUCtx -> Sync ();
-
-  lDiff = s_pFrame -> m_PTS - s_AudioTime;
 
   if ( lDiff > 20.0F ) Timer_Wait ( lDiff / 4.0F );
 
@@ -541,7 +533,7 @@ static void _sms_play_a_v ( void ) {
 
      }  /* end while */
 
-     _draw_text ( "  Stopping  " );
+     _draw_text ( "Stopping" );
 
      break;
 

@@ -399,3 +399,10 @@ Update (21-SEP-2005)
 --------------------
 - DVD video disks support added (an ability to read .avi files from DVD video disks
   on "unmodded" consoles). New CDVD.IRX (supporting UDF filesystem) allows that.
+
+Update (29-SEP-2005 "Birthday edition" :))
+--------------------
+- Added support for following codecs:
+  'DIV3', 'MP43', 'MPG3', 'DIV5', 'DIV6', 'DIV4', 'AP41', 'COL1', 'COL0';
+- Slightly changed 'audsrv' (an attempt to solve spontaneous "hangings");
+- Some changes in the source code to prepare OSD support etc.;

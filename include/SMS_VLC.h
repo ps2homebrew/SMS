@@ -37,7 +37,7 @@ typedef struct SMS_RL_VLC_ELEM {
 
 } SMS_RL_VLC_ELEM;
 
-typedef struct RLTable {
+typedef struct SMS_RLTable {
 
  int               m_n;
  int               m_Last;

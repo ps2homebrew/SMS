@@ -6,6 +6,8 @@
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2005 USB support by weltall
 # (c) 2005 HOST support by Ronald Andersson (AKA: dlanor)
+# Special thanks to 'bigboss'/PS2Reality for valuable information
+# about SifAddCmdHandler function
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -100,8 +102,6 @@ static void GUI_Status ( char* apSts ) {
  s_GUICtx.m_pGSCtx -> CopyFBuffer (
   0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width - 10, lCH
  );
- s_GUICtx.m_pGSCtx -> VSync ();
-
  s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
  s_GUICtx.m_pGSCtx -> m_Font.m_BkMode = GSBkMode_Transparent;
  s_GUICtx.m_pGSCtx -> DrawText ( 6, lY, 0, apSts, lLen );
@@ -1115,19 +1115,29 @@ static int GUI_SelectFile ( char* apFileName ) {
 
 }  /* end GUI_SelectFile */
 
-static void _usb_connect ( void* apPkt, void* apArg ) {
+static void _usb_handler_connect ( SifCmdHeader_t* apHdr ) {
 
  s_USBFlags |= USB_FLAG_CONNECT;
  iWakeupThread ( s_GUIThreadID );
 
-}  /* end _usb_connect */
+}  /* end _usb_handler */
 
-static void _usb_disconnect ( void* apPkt, void* apArg ) {
+static void _usb_handler_disconnect ( SifCmdHeader_t* apHdr ) {
 
  s_USBFlags |= USB_FLAG_DISCONNECT;
  iWakeupThread ( s_GUIThreadID );
 
-}  /* end _usb_disconnect */
+}  /* end _usb_handler_disconnect */
+
+static void ( *SIFCmdHandler[ 3 ] ) ( SifCmdHeader_t* ) = {
+ NULL, _usb_handler_connect, _usb_handler_disconnect
+};
+
+static void SMS_SIFCmdHandler ( void* apPkt, void* apArg ) {
+
+ SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> unknown ] (  ( SifCmdHeader_t* )apPkt  );
+
+}  /* end _usb_connect */
 
 GSDisplayMode GUI_InitPad ( void ) {
 
@@ -1269,8 +1279,8 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
       if ( lRes >= 0 ) {
 
+       i      = sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] );
        g_fUSB = 1;
-       break;
 
       }  /* end if */
 
@@ -1291,8 +1301,7 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  if ( g_fUSB ) {
 
   DI();
-   SifAddCmdHandler ( 0x0012, _usb_connect,    0 );
-   SifAddCmdHandler ( 0x0013, _usb_disconnect, 0 );
+   SifAddCmdHandler ( 18, SMS_SIFCmdHandler, 0 );
   EI();
 
   SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );

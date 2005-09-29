@@ -165,6 +165,8 @@ typedef struct SMS_MPEGContext {
  uint8_t*          m_pMCYBuf;
  uint8_t*          m_pMCCbBuf;
  uint8_t*          m_pMCCrBuf;
+ uint8_t*          m_pCodedBlockBase;
+ uint8_t*          m_pCodedBlock;
  const uint8_t*    m_pChromaQScaleTbl;
  int               m_fDirtyCache;
  int               m_IdxRes;
@@ -256,6 +258,17 @@ typedef struct SMS_MPEGContext {
  int               m_PicStruct;
  int               m_FirstField;
  int               m_BSBufSize;
+ int               m_DCTblIdx;
+ int               m_MVTblIdx;
+ int               m_InterIntraPred;
+ int               m_RLTblIdx;
+ int               m_RLChromaTblIdx;
+ int               m_UseSkipMBCode;
+ int               m_PerMBRLTbl;
+ int               m_H263AICDir;
+ int               m_SliceHeight;
+ int               m_FlipFlopRnd;
+ int               m_BitRate;
  uint16_t          m_PPTime;
  uint16_t          m_PBTime;
  uint16_t          m_PPFieldTime;
@@ -279,6 +292,7 @@ void SMS_MPEG_FrameEnd             ( void                                      )
 void SMS_MPEG_DecodeMB             ( SMS_DCTELEM[ 12 ][ 64 ]                   );
 void SMS_MPEG_CleanIntraTblEntries ( void                                      );
 int  SMS_MPEGContext_FindUnusedPic ( void                                      );
+void SMS_MPEG_CleanBuffers         ( void                                      );
 
 # ifdef __cplusplus
 }

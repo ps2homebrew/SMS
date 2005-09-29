@@ -14,6 +14,7 @@
 #include "SMS_Codec.h"
 #include "SMS_FourCC.h"
 #include "SMS_MPEG4.h"
+#include "SMS_MSMPEG4.h"
 #include "SMS_MP3.h"
 #include "SMS_AC3.h"
 #include "SMS_VideoBuffer.h"
@@ -97,23 +98,11 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
  switch ( apCtx -> m_ID ) {
 
-  case SMS_CodecID_MPEG4:
+  case SMS_CodecID_MPEG4    : SMS_Codec_MPEG4_Open   ( apCtx ); break;
+  case SMS_CodecID_MSMPEG4V3: SMS_Codec_MSMPEG4_Open ( apCtx ); break;
 
-   SMS_Codec_MPEG4_Open ( apCtx );
-
-  break;
-
-  case SMS_CodecID_MP3:
-
-   SMS_Codec_MP3_Open ( apCtx );
-
-  break;
-
-  case SMS_CodecID_AC3:
-
-   SMS_Codec_AC3_Open ( apCtx );
-
-  break;
+  case SMS_CodecID_MP3: SMS_Codec_MP3_Open ( apCtx ); break;
+  case SMS_CodecID_AC3: SMS_Codec_AC3_Open ( apCtx ); break;
 
   default: return 0;
 

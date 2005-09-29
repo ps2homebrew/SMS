@@ -17,19 +17,15 @@
 #  include "SMS_MPEG.h"
 # endif  /* __SMS_MPEG_H */
 
-typedef struct SMS_Codec_MPEG4Context {
-
- uint8_t* m_pBitstreamBuf;
- uint8_t* m_pCBPTbl;
- uint8_t* m_pPredDirTbl;
-
-} SMS_Codec_MPEG4Context;
-
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
 void SMS_Codec_MPEG4_Open ( SMS_CodecContext* );
+
+void MPEG4_PredAC        ( SMS_DCTELEM*, int, int );
+void MPEG4_CommonInit    ( void                   );
+void MPEG4_CommonDestroy ( void                   );
 
 # ifdef __cplusplus
 }

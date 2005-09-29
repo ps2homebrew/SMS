@@ -1,6 +1,10 @@
 #ifndef __Config_H
 # define __Config_H
 
+# ifndef __SMS_H
+#  include "SMS.h"
+# endif  /* __SMS_H */
+
 typedef struct SMSConfig {
 
  int  m_Version;

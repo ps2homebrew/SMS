@@ -64,23 +64,23 @@ int SaveConfig ( void ) {
 
    if ( lFD < 0 ) {
 
-    static iconIVECTOR lBgClr[ 4 ] = {
+    static iconIVECTOR lBgClr[ 4 ] SMS_DATA_SECTION = {
      {  68,  23, 116,  0 },  /* top left     */
      { 255, 255, 255,  0 },  /* top right    */
      { 255, 255, 255,  0 },  /* bottom left  */
      {  68,  23, 116,  0 }   /* bottom right */
 	};
-    static iconFVECTOR lLightDir[ 3 ] = {
+    static iconFVECTOR lLightDir[ 3 ] SMS_DATA_SECTION = {
      {  0.5F,  0.5F,  0.5F, 0.0F },
      {  0.0F, -0.4F, -0.1F, 0.0F },
      { -0.5F, -0.5F,  0.5F, 0.0F }
 	};
-	static iconFVECTOR lLightCol[ 3 ] = {
+	static iconFVECTOR lLightCol[ 3 ] SMS_DATA_SECTION = {
      { 0.3F, 0.3F, 0.3F, 0.0F },
      { 0.4F, 0.4F, 0.4F, 0.0F },
      { 0.5F, 0.5F, 0.5F, 0.0F }
 	};
-	static iconFVECTOR lAmb = { 0.5F, 0.5F, 0.5F, 0.0F };
+	static iconFVECTOR lAmb SMS_DATA_SECTION = { 0.5F, 0.5F, 0.5F, 0.0F };
 
     mcIcon lIcon; memset ( &lIcon, 0, sizeof ( mcIcon )  );
 

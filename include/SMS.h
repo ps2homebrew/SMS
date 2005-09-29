@@ -29,7 +29,7 @@ typedef short SMS_DCTELEM;
 extern const uint32_t g_SMS_InvTbl [ 256 ];
 extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
 
-# define SMS_AUDSRV_SIZE     22185
+# define SMS_AUDSRV_SIZE     22193
 # define SMS_IDCT_CONST_SIZE   368
 # define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089
@@ -134,6 +134,7 @@ typedef struct u128 {
 #  define SMS_INT64( c )    c##i64
 #  define SMS_INLINE        __inline
 #  define SMS_ALIGN( d, a ) __declspec(  align( a )  ) d
+#  define SMS_DATA_SECTION
 
 #  pragma warning( disable: 4035 )
 static __inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
@@ -180,6 +181,7 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_INT64( c )    c##LL
 #  define SMS_INLINE        inline
 #  define SMS_ALIGN( d, a ) d __attribute__(   (  aligned( a )  )   )
+#  define SMS_DATA_SECTION __attribute__(   (  section( ".data" )  )   )
 
 #  define SMS_MPEG_SPR_DMA_MB_BUF  (  ( uint8_t* )0  )
 #  define SMS_MPEG_SPR_DMA_Y_BUF   ( SMS_MPEG_SPR_DMA_MB_BUF + 1536 )

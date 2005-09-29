@@ -157,7 +157,7 @@ static int _fill_cdda_list ( void ) {
 
 }  /* end _fill_cdda_list */
 
-static char* _make_path ( void ) {
+static char* _make_path ( char* apBuff ) {
 
  int             lLen = 0;
  char*           retVal;
@@ -170,7 +170,7 @@ static char* _make_path ( void ) {
 
  }  /* end while */
 
- retVal = malloc ( ++lLen ); retVal[ 0 ] = '\x00';
+ retVal = apBuff ? apBuff : malloc ( ++lLen ); retVal[ 0 ] = '\x00';
  lpNode = s_BrowserCtx.m_pPath -> m_pHead;
 
  if ( lpNode ) {
@@ -241,7 +241,7 @@ static char* _make_host_path ( void ) {
 static void _fill_hdd_list ( void ) {
 
  iox_dirent_t lEntry;
- char*        lpPath = _make_path ();
+ char*        lpPath = _make_path ( NULL );
  int          lFD    = fileXioDopen ( lpPath );
 
  free ( lpPath );
@@ -363,7 +363,7 @@ static int _fill_dir_list ( char* apDevName ) {
 
  if ( !s_BrowserCtx.m_pPath -> m_pHead ) s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, apDevName );
 
- lpPath = _make_path ();
+ lpPath = _make_path ( NULL );
 
  lFD = fioDopen ( lpPath );
 
@@ -667,10 +667,47 @@ static void _display_status ( void ) {
 
  } else {
 
-  s_BrowserCtx.m_pGUICtx -> Status (
-   s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems == NULL ||
-   s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems -> m_Flags == GUI_DF_CDDA ? "Waiting for SMS media disk..." : "Ready"
-  );
+  char lBuffer[ 2048 ];
+
+  if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems == NULL || s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems -> m_Flags == GUI_DF_CDDA )
+
+   strcpy ( lBuffer, "Waiting for media..." );
+
+  else {
+
+   _make_path ( lBuffer );
+
+   if (  !lBuffer[ 0 ] || !strchr ( lBuffer, ':' )  )
+
+    switch ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags ) {
+
+     case GUI_DF_CDROM:
+
+      if ( !lBuffer[ 0 ] )
+
+       strcpy ( lBuffer, "cddafs:/" );
+
+      else {
+
+       memmove (  &lBuffer[ 8 ], lBuffer, strlen ( lBuffer ) + 1  );
+       memcpy ( lBuffer, "cddafs:/", 8 );
+
+      }  /* end else */
+
+     break;
+
+     case GUI_DF_HDD:
+
+      strcpy ( lBuffer, "hdd0:/" );
+
+     break;
+
+    }  /* end switch */
+
+   s_BrowserCtx.m_pGUICtx -> Status ( lBuffer );
+
+  }  /* end else */
+
   s_Detect = 0;
 
  }  /* end else */
@@ -812,7 +849,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
      case GUI_FF_FILE: {
 
-      char* lpPath = _make_path ();
+      char* lpPath = _make_path ( NULL );
       int   lLen;
 #ifndef BIMBO69
       char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( lpFile -> m_pFileName ) + 2 ];
