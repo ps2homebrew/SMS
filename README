@@ -406,3 +406,15 @@ Update (29-SEP-2005 "Birthday edition" :))
   'DIV3', 'MP43', 'MPG3', 'DIV5', 'DIV6', 'DIV4', 'AP41', 'COL1', 'COL0';
 - Slightly changed 'audsrv' (an attempt to solve spontaneous "hangings");
 - Some changes in the source code to prepare OSD support etc.;
+
+Update (07-OCT-2005)
+--------------------
+- Changed/rewritten 'audsrv':
+    - removed CDDA stuff (not used);
+    - reduced data traffic;
+    - upsamplers rewritten in assembler;
+  Result: improved performance -> no sound crackling during network playback;
+- Volume control is implemented (up/down buttons);
+- AVI demuxer changed (OpenDML support (not tested - I don't have any .avi ot that type));
+- General demuxer code is redesigned (this can make life easier for programmers
+  who want to implement different file formats support);

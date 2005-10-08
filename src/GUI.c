@@ -26,6 +26,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <libpad.h>
+#include <libmc.h>
 #include <libhdd.h>
 #include <loadfile.h>
 #include <iopcontrol.h>
@@ -139,7 +140,7 @@ static void GUI_Destroy ( void ) {
  WakeupThread ( s_GUIThreadID );
  SleepThread ();
 
- Timer_RegisterHandler ( NULL );
+ Timer_RegisterHandler ( 0, NULL );
 
  DeleteSema ( s_PadSema );
 
@@ -867,7 +868,7 @@ static int GUI_Run ( void** apRetVal ) {
 
  int retVal;
 
- Timer_RegisterHandler ( TimerHandler );
+ Timer_RegisterHandler ( 0, TimerHandler );
 
  while ( 1 ) {
 
@@ -967,7 +968,7 @@ static int GUI_Run ( void** apRetVal ) {
 
  }  /* end while */
 
- Timer_RegisterHandler ( NULL );
+ Timer_RegisterHandler ( 0, NULL );
 
  return retVal;
 
@@ -987,23 +988,27 @@ static void GUI_Redraw ( void ) {
 
 }  /* end GUI_Redraw */
 
-unsigned long int GUI_WaitButton ( int aButton ) {
+unsigned long int GUI_WaitButton ( int aButton, int aTimeout ) {
 
  unsigned long int lEvent;
+ unsigned long int lTime;
 
  s_NoDevCheck = 1;
 
- Timer_RegisterHandler ( TimerHandler );
+ Timer_RegisterHandler ( 0, TimerHandler );
+
+ lTime = g_Timer + aTimeout;
 
  while ( 1 ) {
 
   lEvent = GUI_WaitEvent ();
 
-  if ( lEvent & aButton ) break;
+  if ( g_Timer < lTime   ) continue;
+  if ( lEvent  & aButton ) break;
 
  }  /* end while */
 
- Timer_RegisterHandler ( NULL );
+ Timer_RegisterHandler ( 0, NULL );
 
  s_NoDevCheck = 0;
 
@@ -1147,6 +1152,10 @@ GSDisplayMode GUI_InitPad ( void ) {
 
  SifLoadModule ( "rom0:SIO2MAN", 0, NULL );
  SifLoadModule ( "rom0:PADMAN",  0, NULL );
+ SifLoadModule ( "rom0:MCMAN",   0, NULL );
+ SifLoadModule ( "rom0:MCSERV",  0, NULL );
+
+ mcInit ( MC_TYPE_MC );
 
  padInit ( 0 );
  padPortOpen ( 0, 0, s_PadBuf );

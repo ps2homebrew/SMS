@@ -92,7 +92,7 @@ int SMS_Integer_log2_i ( SMS_Integer anA ) {
 
  for ( i = SMS_INTEGER_SIZE - 1; i >= 0; --i )
 
-  if ( anA.m_V[ i ] ) return SMS_log2_16_bit ( anA.m_V[ i ] ) + 16 * i;
+  if ( anA.m_V[ i ] ) return SMS_log2 ( anA.m_V[ i ] ) + 16 * i;
 
  return -1;
 

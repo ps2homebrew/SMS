@@ -27,17 +27,24 @@
 volatile unsigned long int g_Timer;
 #endif  /* NO_RTC */
 
+#define N_HANDLERS 2
+
 static int s_WaitSema;
 static int s_T0HandlerID;
 static int s_T1HandlerID;
 
-static void ( *TimerHandler ) ( void );
+static void ( *TimerHandler[ 2 ] ) ( void );
 
 static int T0_Handler ( int aCause ) { 
 #ifndef NO_RTC
  g_Timer += 2;
 
- if (  TimerHandler && !( g_Timer & 0x000000000000003F )  ) TimerHandler ();
+ if (  !( g_Timer & 0x000000000000003F )  ) {
+
+  if (  TimerHandler[ 0 ] ) TimerHandler[ 0 ] ();
+  if (  TimerHandler[ 1 ] ) TimerHandler[ 1 ] ();
+
+ }  /* end if */
 #else
  TimerHandler ();
 #endif  /* NO_RTC */
@@ -65,7 +72,8 @@ void Timer_Init ( void ) {
  lSema.max_count  = 1;
  s_WaitSema = CreateSema ( &lSema );
 
- TimerHandler = NULL;
+ TimerHandler[ 0 ] =
+ TimerHandler[ 1 ] = NULL;
 #ifndef NO_RTC
  T0_COMP  = ( u32 )(   2.0F / ( 256.0F / 147456.0F )  );
 #else
@@ -92,7 +100,8 @@ void Timer_Destroy ( void ) {
 
  DeleteSema ( s_WaitSema );
 
- TimerHandler = NULL;
+ TimerHandler[ 0 ] =
+ TimerHandler[ 1 ] = NULL;
 
 }  /* end Timer_Destroy */
 
@@ -127,18 +136,32 @@ void Timer_Wait ( unsigned int aPeriod ) {
 
 }  /* end Timer_Wait */
 
-void* Timer_RegisterHandler ( void* apHandler ) {
+void Timer_iRegisterHandler ( int anIndex, void* apHandler ) {
 
- void* retVal = TimerHandler;
+ TimerHandler[ anIndex ] = apHandler;
 
- TimerHandler = (  void ( * ) ( void )  )apHandler;
+}  /* end Timer_iRegisterHandler */
+
+void* Timer_RegisterHandler ( int anIndex, void* apHandler ) {
+
+ void* retVal;
+
+ DIntr ();
+  retVal = TimerHandler[ anIndex ];
+
+  if ( apHandler != TimerHandler[ anIndex ] ) {
+
+   TimerHandler[ anIndex ] = (  void ( * ) ( void )  )apHandler;
 #ifdef NO_RTC
- if ( apHandler != NULL )
+   if ( apHandler != NULL )
 
-  EnableIntc ( 9 );
+    EnableIntc ( 9 );
 
- else DisableIntc ( 9 );
+   else DisableIntc ( 9 );
 #endif  /* NO_RTC */
+  }  /* end if */
+ EIntr ();
+
  return retVal;
 
 }  /* end Timer_RegisterHandler */

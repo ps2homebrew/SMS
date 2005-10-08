@@ -137,6 +137,6 @@ typedef struct GUIContext {
 GSDisplayMode     GUI_InitPad     ( void       );
 GUIContext*       GUI_InitContext ( GSContext* );
 unsigned long int GUI_WaitEvent   ( void       );
-unsigned long int GUI_WaitButton  ( int        );
+unsigned long int GUI_WaitButton  ( int, int   );
 int               GUI_ReadButtons ( void       );
 #endif  /* __GUI_H */

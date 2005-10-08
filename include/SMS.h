@@ -26,10 +26,9 @@ typedef unsigned int uint32_t;
 
 typedef short SMS_DCTELEM;
 
-extern const uint32_t g_SMS_InvTbl [ 256 ];
-extern const uint8_t  g_SMS_Log2Tbl[ 256 ];
+extern const uint32_t g_SMS_InvTbl[ 256 ];
 
-# define SMS_AUDSRV_SIZE     22193
+# define SMS_AUDSRV_SIZE     10309
 # define SMS_IDCT_CONST_SIZE   368
 # define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089
@@ -95,6 +94,8 @@ extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 # define SMS_BUG_HPEL_CHROMA      0x00000800
 # define SMS_BUG_DC_CLIP          0x00001000
 
+# define SMS_PKT_FLAG_KEY 0x00000001
+
 # define SMS_RB_CREATE( rb, type ) \
  struct {                          \
   type* m_pBeg;                    \
@@ -116,6 +117,10 @@ extern uint8_t g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 # define SMS_RB_POPSLOT( rb )     (  ( rb ).m_pOut  )
 # define SMS_RB_PUSHADVANCE( rb ) (   ( rb ).m_pInp = SMS_RB_SLOT(  ( rb ), ( rb ).m_pInp + 1  )   )
 # define SMS_RB_POPADVANCE( rb )  (   ( rb ).m_pOut = SMS_RB_SLOT(  ( rb ), ( rb ).m_pOut + 1  )   )
+
+# ifndef NULL
+#  define NULL (  ( void* )0  )
+# endif  /* NULL */
 
 # ifdef _WIN32
 
@@ -152,6 +157,16 @@ static __inline int32_t SMS_ModP2 ( int32_t aVal, uint32_t aDiv ) {
 }  /* end SMS_ModP2 */
 #  pragma warning( default: 4035 )
 
+static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
+ int retVal = 31;
+ if ( !aVal ) return 0;
+ while (  !( aVal & 0x80000000 )  ) {
+  aVal <<= 1;
+  --retVal;
+ }  /* end while */
+ return retVal;
+}  /* end SMS_log2 */
+
 static __inline uint32_t SMS_unaligned32 ( const void* apData ) {
  return *( const uint32_t* )apData;
 }  /* end SMS_unaligned32 */
@@ -181,7 +196,8 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_INT64( c )    c##LL
 #  define SMS_INLINE        inline
 #  define SMS_ALIGN( d, a ) d __attribute__(   (  aligned( a )  )   )
-#  define SMS_DATA_SECTION __attribute__(   (  section( ".data" )  )   )
+#  define SMS_DATA_SECTION  __attribute__(   (  section( ".data" )  )   )
+#  define _U( p )           (    ( uint64_t* )(   (  ( uint32_t )( p )  ) | 0x20000000   )    )
 
 #  define SMS_MPEG_SPR_DMA_MB_BUF  (  ( uint8_t* )0  )
 #  define SMS_MPEG_SPR_DMA_Y_BUF   ( SMS_MPEG_SPR_DMA_MB_BUF + 1536 )
@@ -235,6 +251,18 @@ static inline int SMS_ModP2 ( int aVal, unsigned int aDiv ) {
  );
  return retVal;
 }  /* end SMS_ModP2 */
+
+static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
+ int retVal;
+ __asm__ __volatile__ (
+  "srl      $t0, %1, 1\n\t"		
+  "addiu    $t1, $zero, 31\n\t"
+  "plzcw    $t0, $t0\n\t"
+  "subu     %0, $t1, $t0\n\t"
+  : "=r"( retVal ) : "r"( aVal ) : "t0", "t1"
+ );
+ return retVal;
+}  /* end SMS_log2 */ 
 
 static inline uint32_t SMS_unaligned32 ( const void* apData ) {
  return (  ( const SMS_Unaligned32* )apData  ) -> m_Val;
@@ -309,27 +337,20 @@ typedef struct SMS_AudioFrame {
 
 } SMS_AudioFrame;
 
-static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
- int retVal = 0;
- if ( aVal & 0xFFFF0000 ) {
-  aVal >>= 16;
-  retVal += 16;
- }  /* end if */
- if ( aVal & 0xFF00 ) {
-  aVal >>= 8;
-  retVal += 8;
- }  /* end if */
- return retVal + g_SMS_Log2Tbl[ aVal ];
-}  /* end SMS_log2 */
+typedef struct SMS_AVPacket {
 
-static SMS_INLINE int SMS_log2_16_bit ( unsigned int aVal ) {
- int retVal = 0;
- if ( aVal & 0xFF00 ) {
-  aVal  >>= 8;
-  retVal += 8;
- }  /* end if */
- return retVal + g_SMS_Log2Tbl[ aVal ];
-}  /* end SMS_log2_16_bit */
+ int64_t  m_PTS;
+ int64_t  m_DTS;
+ uint8_t* m_pData;
+ uint32_t m_Size;
+ uint32_t m_AllocSize;
+ uint32_t m_StmIdx;
+ uint32_t m_Flags;
+ int32_t  m_Duration;
+ void*    m_pCtx;
+ void     ( *Destroy ) ( struct SMS_AVPacket* );
+
+} SMS_AVPacket;
 
 static SMS_INLINE int SMS_clip ( int aVal, int aMin, int aMax ) {
  if ( aVal < aMin )

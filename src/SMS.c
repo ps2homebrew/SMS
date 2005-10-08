@@ -21,7 +21,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
-#include <libpad.h>
 
 #ifndef _WIN32
 # include <kernel.h>
@@ -75,17 +74,6 @@ const uint32_t g_SMS_InvTbl[ 256 ] = {
   17318417U,   17248865U,   17179870U,   17111424U,   17043522U,   16976156U,   16909321U,   16843010
 };
 
-const uint8_t g_SMS_Log2Tbl[ 256 ] = {
- 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
- 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
- 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
- 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
- 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
- 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
- 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
- 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
-};
-
 uint32_t SMS_Align ( unsigned int aSize, unsigned int anAlign ) {
 
  return ALIGN( aSize, anAlign );
@@ -111,7 +99,13 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
  return realloc ( apData, *apSize );
 
 }  /* SMS_Realloc */
+#ifdef _WIN32
+void SMS_Initialize ( void* apParam ) {
 
+ SMS_DSP_Init ();
+
+}  /* end SMS_Initialize */
+#else  /* PS2 */
 typedef struct LoadParams {
 
  const char* m_pName;
@@ -213,7 +207,7 @@ static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
 }  /* end LoadModule */
 
 void SMS_Initialize ( void* apParam ) {
-#ifndef _WIN32
+
  int         i;
  GUIContext* lpGUICtx = ( GUIContext* )apParam;
 
@@ -253,7 +247,8 @@ void SMS_Initialize ( void* apParam ) {
  hddPreparePoweroff ();
 
  memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
-#endif  /* _WIN32 */
+
  SMS_DSP_Init ();
 
 }  /* end SMS_Initialize */
+#endif  /* _WIN32 */

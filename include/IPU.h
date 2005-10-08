@@ -71,6 +71,7 @@ typedef struct IPUContext {
 
  unsigned long int       m_DMAGIFDraw[ 16 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int       m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int       m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int       m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned int            m_DestX;
  unsigned int            m_DestY;
@@ -112,21 +113,25 @@ typedef struct IPUContext {
  unsigned int            m_TxtRight;
  unsigned int            m_TxtBottom;
  unsigned int            m_VIFQueueSize;
+ unsigned int            m_ViFQueueSize;
  struct SMS_FrameBuffer* m_pBuffer;
  unsigned char*          m_pResult;
  unsigned char*          m_pCurRes;
  struct SMS_MacroBlock*  m_pMB;
  
- void ( *Sync        ) ( void                    );
- void ( *Display     ) ( struct SMS_FrameBuffer* );
- void ( *Destroy     ) ( void                    );
- void ( *SetTEX      ) ( void                    );
- void ( *GIFHandler  ) ( void                    );
- void ( *Reset       ) ( void                    );
- void ( *QueuePacket ) ( int, void*              );
+ void ( *Sync         ) ( void                    );
+ void ( *Display      ) ( struct SMS_FrameBuffer* );
+ void ( *Destroy      ) ( void                    );
+ void ( *SetTEX       ) ( void                    );
+ void ( *GIFHandler   ) ( void                    );
+ void ( *Reset        ) ( struct GSContext*       );
+ void ( *QueuePacket  ) ( int, void*              );
+ void ( *iQueuePacket ) ( int, void*              );
 
 } IPUContext;
 #endif  /* _WIN32 */
+
+extern IPUContext g_IPUCtx;
 
 # ifdef __cplusplus
 extern "C" {

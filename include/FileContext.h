@@ -67,7 +67,7 @@ typedef struct FileContext {
  unsigned char* m_pEnd;
  void*          m_pData;
 
- int  ( *Read    ) ( struct FileContext*, unsigned char*, unsigned int );
+ int  ( *Read    ) ( struct FileContext*, void*, unsigned int          );
  int  ( *Seek    ) ( struct FileContext*, unsigned int                 );
  int  ( *Fill    ) ( struct FileContext*                               );
  int  ( *Stream  ) ( struct FileContext*, unsigned int, unsigned int   );
@@ -93,6 +93,8 @@ static INLINE unsigned int File_GetUInt ( FileContext* apCtx ) {
  retVal |= File_GetByte ( apCtx ) << 16;
  return retVal | File_GetByte ( apCtx ) << 24;
 }  /* end File_GetInt */
+
+void File_Skip ( FileContext*, unsigned int );
 
 CDDAContext*         CDDA_InitContext     ( unsigned long                      );
 void                 CDDA_DestroyContext  ( CDDAContext*                       );

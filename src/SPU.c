@@ -1,110 +1,33 @@
-/*
-#     ___  _ _      ___
-#    |    | | |    |
-# ___|    |   | ___|    PS2DEV Open Source Project.
-#----------------------------------------------------------
-# Copyright (c) 2005 by Gil Megidish
-#               2005 Adopted for SMS by Eugene Plotnikov
-# Licenced under Academic Free License version 2.0
-# Review ps2sdk README & LICENSE files for further details.
-#
-*/
 #include "SPU.h"
 #include "SIF.h"
 
 #include <kernel.h>
 #include <loadfile.h>
+#include <stdio.h>
 
-#define AUDSRV_IRX 0x870884D
-
-#define MIN( a, b ) (  ( a ) <= ( b )  ) ? ( a ) : ( b )
-
-#define MIN_VOLUME 0x0000
-#define MAX_VOLUME 0x3FFF
-
-#define AUDSRV_CMD_INIT       0x0000
-#define AUDSRV_CMD_QUIT       0x0001
-#define AUDSRV_CMD_SET_FORMAT 0x0003
-#define AUDSRV_CMD_PLAY_AUDIO 0x0004
-#define AUDSRV_CMD_STOP_AUDIO 0x0006
-#define AUDSRV_CMD_SET_VOLUME 0x0007
+#define SMS_AUDIO_RPC_ID  0x41534D53
+#define SMS_VOLUME_RPC_ID 0x56534D53
 
 static SPUContext         s_SPUCtx;
-static SifRpcClientData_t s_ClientData  __attribute__(   (  aligned( 64 )  )   );
+static SifRpcClientData_t s_ClientDataA __attribute__(   (  aligned( 64 )  )   );
+static SifRpcClientData_t s_ClientDataV __attribute__(   (  aligned( 64 )  )   );
 static unsigned int       s_Buffer[ 4 ] __attribute__(   (  aligned( 64 )  )   );
-static int                s_Sema;
+static int                s_SemaPCM;
+static int                s_SemaVol;
 
-typedef struct audsrv_fmt_t {
+static int _Init ( void ) {
 
- int m_Freq;
- int m_BPS;
- int m_nChan;
+ ee_sema_t lSema;
 
-} audsrv_fmt_t;
+ lSema.init_count = 0;
+ lSema.max_count  = 1;
+ s_SemaPCM = CreateSema ( &lSema );
+ s_SemaVol = CreateSema ( &lSema );
 
-static int _audsrv_init ( void ) {
+ return SIF_BindRPC ( &s_ClientDataA, SMS_AUDIO_RPC_ID  ) &&
+        SIF_BindRPC ( &s_ClientDataV, SMS_VOLUME_RPC_ID );
 
- int retVal = 0;
-
- if (  SIF_BindRPC ( &s_ClientData, AUDSRV_IRX )  ) {
-
-  s_Buffer[ 0 ] = 1;
-
-  if (  SifCallRpc (
-         &s_ClientData, AUDSRV_CMD_INIT, 0, NULL, 0, s_Buffer, 4, 0, 0
-        ) >= 0 && s_Buffer[ 0 ] == 0
-  ) retVal = 1;
-
- }  /* end if */
-
- return retVal;
-
-}  /* end _audsrv_init */
-
-static int _audsrv_set_format ( audsrv_fmt_t* apFmt ) {
-
- int retVal = 0;
-
- s_Buffer[ 0 ] = apFmt -> m_Freq;
- s_Buffer[ 1 ] = apFmt -> m_BPS;
- s_Buffer[ 2 ] = apFmt -> m_nChan;
-
- if (  SifCallRpc (
-        &s_ClientData, AUDSRV_CMD_SET_FORMAT, 0, s_Buffer, 12, s_Buffer, 4, 0, 0
-       ) >= 0 && s_Buffer[ 0 ] == 0
- ) retVal = 1;
-
- return retVal;
-
-}  /* end _audsrv_set_format */
-
-static int _audsrv_set_volume ( int aVol ) {
-
- int retVal = 0;
-
- s_Buffer[ 0 ] = aVol;
-
- if (  SifCallRpc (
-        &s_ClientData, AUDSRV_CMD_SET_VOLUME, 0, s_Buffer, 4, s_Buffer, 4, 0, 0
-       ) >= 0 && s_Buffer[ 0 ] == 0
- ) retVal = 1;
-
- return retVal;
-
-}  /* end _audsrv_set_volume */
-
-static int _audsrv_stop_audio ( void ) {
-
- int retVal = 0;
-
- if (  SifCallRpc (
-        &s_ClientData, AUDSRV_CMD_STOP_AUDIO, 0, NULL, 0, s_Buffer, 4, 0, 0
-       ) >= 0 && s_Buffer[ 0 ] == 0
- ) retVal = 1;
-
- return retVal;
-
-}  /* end _audsrv_stop_audio */ 
+}  /* end _Init */
 
 static void _audio_callback ( void* apArg ) {
 
@@ -112,87 +35,45 @@ static void _audio_callback ( void* apArg ) {
 
 }  /* end _audio_callback */
 
-static void _audsrv_play_audio ( char* apData ) {
+static void SPU_SetVolume ( int aVol ) {
+
+ s_Buffer[ 0 ] = aVol;
+
+ SifCallRpc ( &s_ClientDataV, 0, SIF_RPC_M_NOWAIT, s_Buffer, 4, NULL, 0, _audio_callback, &s_SemaVol );
+ WaitSema ( s_SemaVol );
+
+}  /* end SPU_SetVolume */
+
+static void SPU_PlayPCM ( void* apBuf ) {
 
  SifCallRpc (
-  &s_ClientData, AUDSRV_CMD_PLAY_AUDIO, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, apData, *( int* )apData + 4, NULL, 0, _audio_callback, &s_Sema
+  &s_ClientDataA, 2, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, apBuf, *( int* )apBuf + 4, NULL, 0, _audio_callback, &s_SemaPCM
  );
- WaitSema ( s_Sema );
+ WaitSema ( s_SemaPCM );
 
-}  /* end _audsrv_play_audio */
+}  /* end SPU_PlayPCM */
 
-static void _spu_destroy ( void ) {
+static void SPU_Destroy ( void ) {
 
- _audsrv_stop_audio ();
+ SifCallRpc ( &s_ClientDataA, 1, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, _audio_callback, &s_SemaPCM );
+ WaitSema ( s_SemaPCM );
 
- if ( s_Sema >= 0 ) DeleteSema ( s_Sema );
+}  /* end SPU_Destroy */
 
-}  /* end _spu_destroy */
+SPUContext* SPU_InitContext ( int anChannels, int aFreq, int aVolume ) {
 
-static void _spu_destroy_dummy ( void ) {
+ if (  !s_ClientDataA.server && !_Init ()  ) return NULL;
 
-}  /* end _spu_destroy_dummy */
+ s_Buffer[ 0 ] = aFreq;
+ s_Buffer[ 1 ] = 16;
+ s_Buffer[ 2 ] = anChannels;
+ s_Buffer[ 3 ] = aVolume;
 
-static void _spu_mute ( int afMute ) {
+ SifCallRpc ( &s_ClientDataA, 0, 0, s_Buffer, 16, NULL, 0, NULL, NULL );
 
- _audsrv_set_volume ( afMute ? MIN_VOLUME : MAX_VOLUME );
-
-}  /* end _spu_mute */
-
-static void _spu_mute_dummy ( int afMute ) {
-
-}  /* end _spu_mute_dummy */
-
-static void _spu_play_pcm ( char* apBuf ) {
-
- _audsrv_play_audio ( apBuf );
-
-}  /* end _spu_play_pcm */
-
-static void _spu_play_pcm_init ( char* apBuf ) {
-
- _spu_mute ( 0 );
- _spu_play_pcm ( apBuf );
-
- s_SPUCtx.PlayPCM = _spu_play_pcm;
-
-}  /* end _spu_play_pcm_init */
-
-static void _spu_play_pcm_dummy ( char* apBuf ) {
-
-}  /* end _spu_play_pcm_dummy */
-
-SPUContext* SPU_InitContext ( int anChannels, int aFreq ) {
-
- audsrv_fmt_t lFmt;
-
- s_SPUCtx.PlayPCM = _spu_play_pcm_dummy;
- s_SPUCtx.Mute    = _spu_mute_dummy;
- s_SPUCtx.Destroy = _spu_destroy_dummy;
-
- s_Sema = -1;
-
- if (  _audsrv_init ()  ) {
-
-  lFmt.m_Freq  =      aFreq;
-  lFmt.m_BPS   =         16;
-  lFmt.m_nChan = anChannels;
-
-  if (  _audsrv_set_format ( &lFmt )  ) {
-
-   ee_sema_t lSema;
-
-   s_SPUCtx.Destroy = _spu_destroy;
-   s_SPUCtx.PlayPCM = _spu_play_pcm_init;
-   s_SPUCtx.Mute    = _spu_mute;
-
-   lSema.max_count  = 1;
-   lSema.init_count = 0;
-   s_Sema = CreateSema ( &lSema );
-
-  }  /* end if */
-
- }  /* end if */
+ s_SPUCtx.PlayPCM   = SPU_PlayPCM;
+ s_SPUCtx.SetVolume = SPU_SetVolume;
+ s_SPUCtx.Destroy   = SPU_Destroy;
 
  return &s_SPUCtx;
 

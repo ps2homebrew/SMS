@@ -148,8 +148,10 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 # include <string.h>
 
 # define VIF_PIDX (  sizeof ( g_IPUCtx.m_DMAVIFDraw ) / sizeof ( g_IPUCtx.m_DMAVIFDraw[ 0 ] ) - 2  )
+# define ViF_PIDX (  sizeof ( g_IPUCtx.m_DMAViFDraw ) / sizeof ( g_IPUCtx.m_DMAViFDraw[ 0 ] ) - 2  )
 
 static unsigned long int* s_pVIFPacket;
+static unsigned long int* s_pViFPacket;
 
 static void IPU_DestroyContext ( void ) {
 
@@ -221,8 +223,6 @@ int IPU_DMAHandlerFromIPU ( int aChan ) {
 
 static void IPU_GIFHandlerDraw ( void ) {
 
- g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
-
  iSignalSema ( g_IPUCtx.m_SyncS );
 
 }  /* end IPU_GIFHandlerDraw */
@@ -231,7 +231,19 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
  if ( g_IPUCtx.m_fDraw ) {
 
-  if ( g_IPUCtx.m_VIFQueueSize != VIF_PIDX + 2 ) DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
+  if ( g_IPUCtx.m_VIFQueueSize != VIF_PIDX + 2 ) {
+
+   DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
+   g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
+
+  }  /* end if */
+
+  if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
+
+   DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAViFDraw[ g_IPUCtx.m_ViFQueueSize ] );
+   g_IPUCtx.m_ViFQueueSize = ViF_PIDX + 2;
+
+  }  /* end if */
 
   g_IPUCtx.m_fDraw    = 0;
   g_IPUCtx.m_GIFlag   = 1;
@@ -264,7 +276,19 @@ void IPU_GIFHandlerSend ( void ) {
 
    else {
 #endif  /* VB_SYNC */
-  if ( g_IPUCtx.m_VIFQueueSize != VIF_PIDX + 2 ) DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
+  if ( g_IPUCtx.m_VIFQueueSize != VIF_PIDX + 2 ) {
+
+   DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
+   g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
+
+  }  /* end if */
+
+  if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
+
+   DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAViFDraw[ g_IPUCtx.m_ViFQueueSize ] );
+   g_IPUCtx.m_ViFQueueSize = ViF_PIDX + 2;
+
+  }  /* end if */
 
   g_IPUCtx.m_GIFlag   = 1;
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
@@ -351,7 +375,7 @@ static void IPU_Display ( struct SMS_FrameBuffer* apMB ) {
 
 }  /* end IPU_Display */
 
-static void IPU_Reset ( void ) {
+static void IPU_Reset ( struct GSContext* apGSCtx ) {
 
  float lAR = (  ( float )g_IPUCtx.m_Width ) / (  ( float )g_IPUCtx.m_Height  );
 
@@ -396,7 +420,24 @@ static void IPU_Reset ( void ) {
   g_IPUCtx.m_ImgRight = ( g_IPUCtx.m_ScrWidth << 4 ) + g_IPUCtx.m_TxtLeft;
 
  }  /* end else */
+#ifdef BIMBO69
+   if ( apGSCtx -> m_DisplayMode == GSDisplayMode_PAL   ||
+        apGSCtx -> m_DisplayMode == GSDisplayMode_PAL_I
+   ) {
 
+    g_IPUCtx.m_ImgTop    -= ( 12 << 4 );
+    g_IPUCtx.m_ImgBottom += ( 12 << 4 );
+
+   } else if (  ( apGSCtx -> m_DisplayMode == GSDisplayMode_NTSC   ||
+                  apGSCtx -> m_DisplayMode == GSDisplayMode_NTSC_I
+                ) && lAR >= 1.43F
+          ) {
+
+    g_IPUCtx.m_ImgTop    += ( 12 << 4 );
+    g_IPUCtx.m_ImgBottom -= ( 12 << 4 );
+
+   }  /* end if */
+#endif  /* BIMBO69 */
  g_IPUCtx.m_DMAGIFDraw[  0 ] = GIF_TAG( 1, 0, 0, 0, 1, 8 );
  g_IPUCtx.m_DMAGIFDraw[  1 ] = GS_TEX0_1 | ( GS_PRIM << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 ) | ( GS_UV << 16 ) | ( GS_XYZ2 << 20 ) | ( GS_RGBAQ << 24 ) | ( GS_PRIM << 28 );
  g_IPUCtx.m_DMAGIFDraw[  2 ] = GS_SETREG_TEX0( g_IPUCtx.m_VRAM, g_IPUCtx.m_TBW, GSPSM_32, g_IPUCtx.m_TW, g_IPUCtx.m_TH, 0, 1, 0, 0, 0, 0, 0 );
@@ -417,12 +458,23 @@ static void IPU_Reset ( void ) {
 
 }  /* end IPU_Reset */
 
+static void IPU_iQueuePacket ( int aQWC, void* apData ) {
+
+ if ( !g_IPUCtx.m_ViFQueueSize ) return;
+
+ g_IPUCtx.m_ViFQueueSize -= 2;
+ s_pViFPacket[ g_IPUCtx.m_ViFQueueSize ] = g_IPUCtx.m_ViFQueueSize == ViF_PIDX ? DMA_TAG(  aQWC, 1, DMA_REFE, 0, ( u32 )apData, 0  ) : DMA_TAG(  aQWC, 1, DMA_REF, 0, ( u32 )apData, 0  );
+
+}  /* end IPU_iQueuePacket */
+
 static void IPU_QueuePacket ( int aQWC, void* apData ) {
 
  if ( !g_IPUCtx.m_VIFQueueSize ) return;
 
- g_IPUCtx.m_VIFQueueSize -= 2;
- s_pVIFPacket[ g_IPUCtx.m_VIFQueueSize ] = g_IPUCtx.m_VIFQueueSize == VIF_PIDX ? DMA_TAG(  aQWC, 1, DMA_REFE, 0, ( u32 )apData, 0  ) : DMA_TAG(  aQWC, 1, DMA_REF, 0, ( u32 )apData, 0  );
+ DIntr ();
+  g_IPUCtx.m_VIFQueueSize -= 2;
+  s_pVIFPacket[ g_IPUCtx.m_VIFQueueSize ] = g_IPUCtx.m_VIFQueueSize == VIF_PIDX ? DMA_TAG(  aQWC, 1, DMA_REFE, 0, ( u32 )apData, 0  ) : DMA_TAG(  aQWC, 1, DMA_REF, 0, ( u32 )apData, 0  );
+ EIntr ();
 
 }  /* end IPU_QueuePacket */
 
@@ -435,6 +487,7 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
   SMS_Linesize ( aWidth, &g_IPUCtx.m_MBStride );
 
   s_pVIFPacket = ( unsigned long int* )(  ( unsigned int  )&g_IPUCtx.m_DMAVIFDraw[ 0 ] | 0x20000000  );
+  s_pViFPacket = ( unsigned long int* )(  ( unsigned int  )&g_IPUCtx.m_DMAViFDraw[ 0 ] | 0x20000000  );
 
   g_IPUCtx.m_nMBSlice        = ( aWidth  + 15 ) >> 4;
   g_IPUCtx.m_nMBSlices       = ( aHeight + 15 ) >> 4;
@@ -463,13 +516,15 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    g_IPUCtx.m_TW           = lTW;
    g_IPUCtx.m_TH           = lTH;
    g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
+   g_IPUCtx.m_ViFQueueSize = ViF_PIDX + 2;
 
-   g_IPUCtx.Destroy     = IPU_DestroyContext;
-   g_IPUCtx.Display     = IPU_Display;
-   g_IPUCtx.Sync        = IPU_Sync;
-   g_IPUCtx.SetTEX      = IPU_SetTEX;
-   g_IPUCtx.Reset       = IPU_Reset;
-   g_IPUCtx.QueuePacket = IPU_QueuePacket;
+   g_IPUCtx.Destroy      = IPU_DestroyContext;
+   g_IPUCtx.Display      = IPU_Display;
+   g_IPUCtx.Sync         = IPU_Sync;
+   g_IPUCtx.SetTEX       = IPU_SetTEX;
+   g_IPUCtx.Reset        = IPU_Reset;
+   g_IPUCtx.QueuePacket  = IPU_QueuePacket;
+   g_IPUCtx.iQueuePacket = IPU_iQueuePacket;
 
    lSema.init_count  = 1;
    lSema.max_count   = 1;
@@ -477,7 +532,7 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    g_IPUCtx.SetTEX ();
    DMA_Wait ( DMA_CHANNEL_GIF );
 
-   IPU_Reset ();
+   IPU_Reset ( apGSCtx );
 
    for ( lTW = 0; lTW < 8; ++lTW ) {
 

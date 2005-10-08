@@ -14,7 +14,6 @@
 # Review ps2sdk README & LICENSE files for further details.
 */
 #include "SMS_MPEG.h"
-#include "SMS_AVI.h"
 #include "SMS_H263.h"
 #include "SMS_MPEG2.h"
 #include "SMS_VideoBuffer.h"

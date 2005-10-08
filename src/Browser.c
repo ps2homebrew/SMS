@@ -486,6 +486,9 @@ static int _fill_dir_list_host ( char* apDevName ) {
    if (  elflist_char == 0x0A || i == elflist_size ) {
 
     pathname [ name_pos ] = 0;
+
+    if (  pathname[ 0 ] == 0  ) continue;
+
     snprintf ( testpath, 1024, "%s%s", "host:", pathname );
 
     if (   (  tFD = fioOpen ( testpath, O_RDONLY )  ) >= 0   ) {
@@ -638,7 +641,7 @@ static void _select_partition ( char* apName ) {
 
   s_BrowserCtx.m_pGUICtx -> Status ( lMsg );
 
-  GUI_WaitButton ( PAD_CROSS );
+  GUI_WaitButton ( PAD_CROSS, 0 );
 
   s_BrowserCtx.m_HDDPD = -1;
 
@@ -1070,7 +1073,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
     if (  !SaveConfig ()  ) {
 
      s_BrowserCtx.m_pGUICtx -> Status ( "Error. Press X to continue..." );
-     GUI_WaitButton ( PAD_CROSS );
+     GUI_WaitButton ( PAD_CROSS, 0 );
 
     }  /* end if */
 

@@ -19,10 +19,11 @@ volatile unsigned long int g_Timer;
 extern "C" {
 # endif  /* __cplusplus */
 
-void  Timer_Init            ( void         );
-void  Timer_Wait            ( unsigned int );
-void  Timer_Destroy         ( void         );
-void* Timer_RegisterHandler ( void*        );
+void  Timer_Init             ( void         );
+void  Timer_Wait             ( unsigned int );
+void  Timer_Destroy          ( void         );
+void* Timer_RegisterHandler  ( int, void*   );
+void  Timer_iRegisterHandler ( int, void*   );
 
 # ifdef __cplusplus
 }

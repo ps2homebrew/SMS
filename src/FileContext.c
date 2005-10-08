@@ -444,7 +444,7 @@ static int CDDA_ReadSectors ( CDDAContext* apCtx, int aStartSector, int aCount, 
 #endif  /* _WIN32 */
 }  /* end if */
 
-static int CDDA_Read ( FileContext* apCtx, unsigned char* apBuf, unsigned int aSize ) {
+static int CDDA_Read ( FileContext* apCtx, void* apBuf, unsigned int aSize ) {
 
  unsigned int lLen, lSize = aSize;
 
@@ -466,9 +466,9 @@ static int CDDA_Read ( FileContext* apCtx, unsigned char* apBuf, unsigned int aS
 
    memcpy ( apBuf, apCtx -> m_pPos, lLen );
 
-   apBuf           += lLen;
-   apCtx -> m_pPos += lLen;
-   aSize           -= lLen;
+   (  ( char* )apBuf  ) += lLen;
+   apCtx -> m_pPos      += lLen;
+   aSize                -= lLen;
 
   }  /* end else */
 
@@ -1282,7 +1282,7 @@ static void STIO_DestroyFileContext ( FileContext* apCtx ) {
 
 }  /* end STIO_DestroyFileContext */
 
-static int STIO_Read ( FileContext* apCtx, unsigned char* apBuf, unsigned int aSize ) {
+static int STIO_Read ( FileContext* apCtx, void* apBuf, unsigned int aSize ) {
 
  unsigned int lLen, lSize = aSize;
 
@@ -1304,11 +1304,11 @@ static int STIO_Read ( FileContext* apCtx, unsigned char* apBuf, unsigned int aS
 
    memcpy ( apBuf, apCtx -> m_pPos, lLen );
 
-   apBuf             += lLen;
-   apCtx -> m_pPos   += lLen;
-   apCtx -> m_Pos    += lLen;
-   apCtx -> m_CurPos += lLen;
-   aSize             -= lLen;
+   (  ( char* )apBuf  ) += lLen;
+   apCtx -> m_pPos      += lLen;
+   apCtx -> m_Pos       += lLen;
+   apCtx -> m_CurPos    += lLen;
+   aSize                -= lLen;
 
   }  /* end else */
 
@@ -1662,3 +1662,17 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
  return retVal;
 
 }  /* end STIO_InitFileContext */
+
+void File_Skip ( FileContext* apFileCtx, unsigned int aCount ) {
+
+ static char s_lBuff[ 512 ];
+
+ unsigned int lnBlocks = aCount / 512;
+ unsigned int lnRem    = aCount % 512;
+ unsigned int i;
+
+ for ( i = 0; i < lnBlocks; ++i ) apFileCtx -> Read ( apFileCtx, s_lBuff, 512 );
+
+ if ( lnRem ) apFileCtx -> Read ( apFileCtx, s_lBuff, lnRem );
+
+}  /* end File_Skip */

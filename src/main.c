@@ -1,5 +1,5 @@
 #include "SMS.h"
-#include "SMS_AVI.h"
+#include "SMS_Player.h"
 #include "CDDA.h"
 #include "CDVD.h"
 #include "GS.h"
@@ -15,7 +15,6 @@
 #include <loadfile.h>
 #include <iopcontrol.h>
 #include <iopheap.h>
-#include <libmc.h>
 
 int main ( void ) {
 
@@ -24,7 +23,7 @@ int main ( void ) {
  GSContext*      lpGSCtx;
  GUIContext*     lpGUICtx;
  BrowserContext* lpBrowserCtx;
- SMS_AVIPlayer*  lpPlayer;
+ SMS_Player*     lpPlayer;
  GSDisplayMode   lDisplayMode;
 #if RESET_IOP
  SifInitRpc     ( 0 ); 
@@ -41,11 +40,6 @@ int main ( void ) {
  Timer_Init ();
 
  lDisplayMode = GUI_InitPad ();
-
- SifLoadModule ( "rom0:MCMAN",  0, NULL );
- SifLoadModule ( "rom0:MCSERV", 0, NULL );
-
- mcInit ( MC_TYPE_MC );
 
  if (   (  lfConfig = LoadConfig ()  ) && lDisplayMode == GSDisplayMode_AutoDetect  ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
 
@@ -72,7 +66,7 @@ int main ( void ) {
  while ( 1 ) {
 
   lpFileCtx = lpBrowserCtx -> Browse ( lfConfig ? g_Config.m_Partition : NULL );
-  lpPlayer  = SMS_AVIInitPlayer ( lpFileCtx, lpGUICtx );
+  lpPlayer  = SMS_InitPlayer ( lpFileCtx, lpGUICtx );
 
   if ( lpPlayer == NULL ) {
 
@@ -80,7 +74,7 @@ int main ( void ) {
 
    if (  CDDA_DiskType () != DiskType_Unknown  ) CDVD_Stop ();
 
-   GUI_WaitButton ( PAD_CROSS );
+   GUI_WaitButton ( PAD_CROSS, 0 );
 
   } else if ( lpPlayer -> Play == NULL ) {
 
@@ -89,7 +83,7 @@ int main ( void ) {
    if (  CDDA_DiskType () != DiskType_Unknown  ) CDVD_Stop ();
 
    lpGUICtx -> Status ( "Unsupported codecs (press X to continue)" );
-   GUI_WaitButton ( PAD_CROSS );
+   GUI_WaitButton ( PAD_CROSS, 0 );
 
   } else {
 

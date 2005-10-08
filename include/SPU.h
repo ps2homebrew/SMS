@@ -1,21 +1,11 @@
-/*
-#     ___  _ _      ___
-#    |    | | |    |
-# ___|    |   | ___|    PS2DEV Open Source Project.
-#----------------------------------------------------------
-# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
-# Licenced under Academic Free License version 2.0
-# Review ps2sdk README & LICENSE files for further details.
-#
-*/
 #ifndef __SPU_H
 # define __SPU_H
 
 typedef struct SPUContext {
 
- void ( *PlayPCM ) ( char* );
- void ( *Mute    ) ( int   );
- void ( *Destroy ) ( void  );
+ void ( *PlayPCM   ) ( void* );
+ void ( *SetVolume ) ( int   );
+ void ( *Destroy   ) ( void  );
 
 } SPUContext;
 
@@ -23,7 +13,7 @@ typedef struct SPUContext {
 extern "C" {
 # endif  /* __cplusplus */
 
-SPUContext* SPU_InitContext ( int, int );
+SPUContext* SPU_InitContext ( int, int, int );
 
 # ifdef __cplusplus
 }
