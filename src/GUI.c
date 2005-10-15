@@ -180,7 +180,7 @@ unsigned long int GUI_WaitEvent ( void ) {
     case PAD_SELECT | PAD_R2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0,  1 ); continue;
     case PAD_SELECT | PAD_L1      : s_GUICtx.m_pGSCtx -> AdjustDisplay ( -1,  0 ); continue;
     case PAD_SELECT | PAD_L2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0, -1 ); continue;
-    case PAD_SELECT | PAD_TRIANGLE: ExecIOP ( 0, NULL ); Exit ( 0 );
+    case PAD_SELECT | PAD_TRIANGLE: ExecIOP ( 1, "\xC7\x00" ); Exit ( 0 );
 
    }  /* end switch */
 

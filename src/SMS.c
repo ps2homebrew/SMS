@@ -31,6 +31,7 @@
 # include <fcntl.h>
 # include <libhdd.h>
 # include "Timer.h"
+# include "ExecIOP.h"
 #endif  /* _WIN32 */
 
 # define ALIGN( x, a ) (   (  (x) + (a) - 1  ) & ~(  (a) - 1  )   )
@@ -223,6 +224,7 @@ void SMS_Initialize ( void* apParam ) {
  ChangeThreadPriority (  GetThreadId (), 64  );
 
  SifLoadModule ( "rom0:LIBSD", 0, NULL );
+ ExecIOP       ( 1, "\xD1\x00"         );
 
  for (  i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i  ) LoadModule ( lpGUICtx, i );
 #ifndef NO_HOST_SUPPORT

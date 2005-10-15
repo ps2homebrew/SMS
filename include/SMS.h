@@ -28,7 +28,7 @@ typedef short SMS_DCTELEM;
 
 extern const uint32_t g_SMS_InvTbl[ 256 ];
 
-# define SMS_AUDSRV_SIZE     10309
+# define SMS_AUDSRV_SIZE      5237
 # define SMS_IDCT_CONST_SIZE   368
 # define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089
@@ -38,7 +38,7 @@ extern const uint32_t g_SMS_InvTbl[ 256 ];
 # define SMS_PS2FS_SIZE      54785
 # define SMS_POWEROFF_SIZE    2925
 # define SMS_USB_MASS_SIZE   33413
-# define SMS_CDVD_SIZE       20393
+# define SMS_CDVD_SIZE       20097
 # define SMS_PS2IP_SIZE      78909
 # define SMS_PS2SMAP_SIZE    12625
 # define SMS_PS2HOST_SIZE    16562

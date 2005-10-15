@@ -418,3 +418,10 @@ Update (07-OCT-2005)
 - AVI demuxer changed (OpenDML support (not tested - I don't have any .avi ot that type));
 - General demuxer code is redesigned (this can make life easier for programmers
   who want to implement different file formats support);
+
+Update (15-OCT-2005)
+--------------------
+- Fixed bug in cdvd.irx/UDF filesystem code;
+- New audio upsampling routine is implemented. It employs linear interpolation
+  algorithm and it still works at the IOP side (it uses no division instructions).
+  It sould also support other sample rates (at least 32000 does work at my site);
