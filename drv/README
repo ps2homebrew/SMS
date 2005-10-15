@@ -1,0 +1,3 @@
+This foder contains IOP drivers for SMS:
+- SMSCDVD : cd/dvd driver with support of DVD video disks;
+- SMSAudrv: audio driver with demuxers and upsamplers;
