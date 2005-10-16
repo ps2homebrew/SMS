@@ -808,28 +808,28 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx ) {
 
    lThread.stack_size       = sizeof ( s_VideoRStack );
    lThread.stack            = s_VideoRStack;
-   lThread.initial_priority = lCurrentThread.current_priority + 1;
+   lThread.initial_priority = lCurrentThread.current_priority;
    lThread.gp_reg           = &_gp;
    lThread.func             = _sms_video_renderer;
    StartThread (  s_VideoRThreadID = CreateThread ( &lThread ), s_Player.m_pCont  );
 
    lThread.stack_size       = sizeof ( s_VideoDStack );
    lThread.stack            = s_VideoDStack;
-   lThread.initial_priority = lCurrentThread.current_priority + 1;
+   lThread.initial_priority = lCurrentThread.current_priority;
    lThread.gp_reg           = &_gp;
    lThread.func             = _sms_video_decoder;
    StartThread (  s_VideoDThreadID = CreateThread ( &lThread ), s_Player.m_pCont  );
 
    lThread.stack_size       = sizeof ( s_AudioRStack );
    lThread.stack            = s_AudioRStack;
-   lThread.initial_priority = lCurrentThread.current_priority + 1;
+   lThread.initial_priority = lCurrentThread.current_priority;
    lThread.gp_reg           = &_gp;
    lThread.func             = _sms_audio_renderer;
    StartThread (  s_AudioRThreadID = CreateThread ( &lThread ), s_Player.m_pCont  );
 
    lThread.stack_size       = sizeof ( s_AudioDStack );
    lThread.stack            = s_AudioDStack;
-   lThread.initial_priority = lCurrentThread.current_priority + 1;
+   lThread.initial_priority = lCurrentThread.current_priority;
    lThread.gp_reg           = &_gp;
    lThread.func             = _sms_audio_decoder;
    StartThread (  s_AudioDThreadID = CreateThread ( &lThread ), s_Player.m_pCont  );
