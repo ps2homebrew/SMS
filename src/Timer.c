@@ -37,7 +37,7 @@ static void ( *TimerHandler[ 2 ] ) ( void );
 
 static int T0_Handler ( int aCause ) { 
 #ifndef NO_RTC
- g_Timer += 2;
+ g_Timer += 4;
 
  if (  !( g_Timer & 0x000000000000003F )  ) {
 
@@ -75,7 +75,7 @@ void Timer_Init ( void ) {
  TimerHandler[ 0 ] =
  TimerHandler[ 1 ] = NULL;
 #ifndef NO_RTC
- T0_COMP  = ( u32 )(   2.0F / ( 256.0F / 147456.0F )  );
+ T0_COMP  = ( u32 )(   4.0F / ( 256.0F / 147456.0F )  );
 #else
  T0_COMP  = ( u32 )(  64.0F / ( 256.0F / 147456.0F )  );
 #endif  /* NO_RTC */

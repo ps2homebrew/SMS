@@ -12,11 +12,13 @@
 #ifndef __ROM_H
 # define __ROM_H
 
+# define ROM_BASE 0x1FC00000
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
-void* ROM_LocateModule ( const char*, int* );
+void* ROM_LocateModule ( unsigned int, const char*, int* );
 
 # ifdef __cplusplus
 }

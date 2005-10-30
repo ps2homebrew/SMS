@@ -12,15 +12,16 @@
 #
 */
 #include "SMS.h"
-#include "SMS_DSP.h"
 #include "DMA.h"
 #include "GUI.h"
+#include "SMS_Integer.h"
 
 #include <malloc.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
 
 #ifndef _WIN32
 # include <kernel.h>
@@ -30,6 +31,7 @@
 # include <fileXio_rpc.h>
 # include <fcntl.h>
 # include <libhdd.h>
+# include <sifrpc.h>
 # include "Timer.h"
 # include "ExecIOP.h"
 #endif  /* _WIN32 */
@@ -100,6 +102,25 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
  return realloc ( apData, *apSize );
 
 }  /* SMS_Realloc */
+
+int64_t SMS_Rescale ( int64_t anA, int64_t aB, int64_t aC ) {
+
+ SMS_Integer lAi, lCi;
+    
+ if ( anA < 0 ) return -SMS_Rescale ( -anA, aB, aC );
+    
+ if ( aB <= INT_MAX && aC <= INT_MAX )
+
+  return anA <= INT_MAX ? ( anA * aB + aC / 2 ) / aC
+                        : anA / aC * aB + ( anA % aC * aB + aC / 2 ) / aC;
+    
+ lAi = SMS_Integer_mul_i (  SMS_Integer_int2i ( anA ), SMS_Integer_int2i ( aB )  );
+ lCi = SMS_Integer_int2i ( aC );
+ lAi = SMS_Integer_add_i (  lAi, SMS_Integer_shr_i ( lCi, 1 )  );
+    
+ return SMS_Integer_i2int (  SMS_Integer_div_i ( lAi, lCi )  );
+
+}  /* end SMS_Rescale */
 #ifdef _WIN32
 void SMS_Initialize ( void* apParam ) {
 
@@ -126,6 +147,16 @@ static char s_PFSArgs[] = {
  '-', 'm', '\x00', '4',      '\x00',
  '-', 'o', '\x00', '1', '0', '\x00',
  '-', 'n', '\x00', '4', '0', '\x00'
+};
+
+static const char* s_USBDPath[] = {
+ "host:USBD.IRX",
+ "mc0:/BOOT/USBD.IRX",
+ "mc0:/PS2OSCFG/USBD.IRX",
+ "mc0:/SYS-CONF/USBD.IRX",
+ "mc0:/PS2MP3/USBD.IRX",
+ "mc0:/BOOT/PS2MP3/USBD.IRX",
+ "mc0:/SMS/USBD.IRX"
 };
 #ifndef NO_HOST_SUPPORT
 static char s_SMAPArgs[ 64 ];
@@ -207,6 +238,20 @@ static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
 
 }  /* end LoadModule */
 
+static void ( *s_SMS_SIFCmdHandler[ 3 ] ) ( void* );
+
+void SMS_SetSifCmdHandler (  void ( *apFunc ) ( void* ), int aCmd  ) {
+
+ s_SMS_SIFCmdHandler[ aCmd ] = apFunc;
+
+}  /* end SMS_SetSifCmdHandler */
+
+static void SMS_SIFCmdHandler ( void* apPkt, void* apArg ) {
+
+ s_SMS_SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> unknown ] ( apPkt );
+
+}  /* end SMS_SIFCmdHandler */
+
 void SMS_Initialize ( void* apParam ) {
 
  int         i;
@@ -244,13 +289,60 @@ void SMS_Initialize ( void* apParam ) {
 
  if ( i < 0 ) g_NetFailFlags |= 8;
 #endif  /* NO_HOST_SUPPORT */
+ lpGUICtx -> Status ( "Locating USBD.IRX..." );
+
+ for (  i = 0; i < sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] ); ++i  ) {
+
+  int lFD = fioOpen ( s_USBDPath[ i ], O_RDONLY );
+
+  if ( lFD >= 0 ) {
+
+   long lSize = fioLseek ( lFD, 0, SEEK_END );
+
+   if ( lSize > 0 ) {
+
+    void* lpBuf = malloc ( lSize );
+
+    if ( lpBuf ) {
+
+     fioLseek ( lFD, 0, SEEK_SET );
+
+     if (  fioRead ( lFD, lpBuf, lSize ) == lSize  ) {
+
+      int lRes;
+
+      SifExecModuleBuffer ( lpBuf, lSize, 0, NULL, &lRes );
+
+      if ( lRes >= 0 ) {
+
+       i      = sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] );
+       g_fUSB = 1;
+
+      }  /* end if */
+
+     }  /* end if */
+
+     free ( lpBuf );
+
+    }  /* end if */
+
+   }  /* end if */
+
+   fioClose ( lFD );
+
+  }  /* end if */
+
+ }  /* end for */
+
+ if ( g_fUSB ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
+
+ DI();
+  SifAddCmdHandler ( 18, SMS_SIFCmdHandler, 0 );
+ EI();
+
  lpGUICtx -> Status ( "Initializing SMS..." );
 
  hddPreparePoweroff ();
-
- memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
-
- SMS_DSP_Init ();
 
 }  /* end SMS_Initialize */
 #endif  /* _WIN32 */

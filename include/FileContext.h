@@ -66,6 +66,7 @@ typedef struct FileContext {
  unsigned char* m_pPos;
  unsigned char* m_pEnd;
  void*          m_pData;
+ unsigned int   m_StreamSize;
 
  int  ( *Read    ) ( struct FileContext*, void*, unsigned int          );
  int  ( *Seek    ) ( struct FileContext*, unsigned int                 );

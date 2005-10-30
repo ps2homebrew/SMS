@@ -3377,6 +3377,8 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* a
 
   ( *lpFrame ) -> m_FrameType = g_MPEGCtx.m_PicType;
 
+ else *lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+
  return retVal;
 
 }  /* end MPEG4_Decode */

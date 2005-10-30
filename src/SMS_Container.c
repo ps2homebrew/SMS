@@ -69,12 +69,13 @@ static void _Destroy ( SMS_Container* apCont ) {
 
 }  /* end _Destroy */
 
-SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
+SMS_Container* SMS_GetContainer ( FileContext* apFileCtx, struct GUIContext* apGUICtx ) {
 
  int            i      = 0;
  SMS_Container* retVal = ( SMS_Container* )calloc (  1, sizeof ( SMS_Container )  );
 
  retVal -> m_pFileCtx = apFileCtx;
+ retVal -> m_pGUICtx  = apGUICtx;
 
  while ( s_CCreator[ i ] )
 
@@ -97,3 +98,10 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
  return retVal;
 
 }  /* end SMS_GetContainer */
+
+void SMSContainer_SetPTSInfo ( SMS_Stream* apStm, int aPTSNum, int aPTSDen ) {
+
+ apStm -> m_TimeBase.m_Num = aPTSNum;
+ apStm -> m_TimeBase.m_Den = aPTSDen;
+
+}  /* end SMSContainer_SetPTSInfo */

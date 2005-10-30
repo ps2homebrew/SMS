@@ -1,5 +1,6 @@
 #include "SMS.h"
 #include "SMS_Player.h"
+#include "SMS_DSP.h"
 #include "CDDA.h"
 #include "CDVD.h"
 #include "GS.h"
@@ -16,7 +17,7 @@
 #include <iopcontrol.h>
 #include <iopheap.h>
 
-int main ( void ) {
+int main ( int argc, char** argv ) {
 
  int             lfConfig;
  FileContext*    lpFileCtx;
@@ -25,6 +26,8 @@ int main ( void ) {
  BrowserContext* lpBrowserCtx;
  SMS_Player*     lpPlayer;
  GSDisplayMode   lDisplayMode;
+
+ SMS_DSP_Init ();
 #if RESET_IOP
  SifInitRpc     ( 0 ); 
  SifExitIopHeap (); 

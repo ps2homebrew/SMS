@@ -72,6 +72,7 @@ typedef struct IPUContext {
  unsigned long int       m_DMAGIFDraw[ 16 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int       m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int       m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int       m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int       m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned int            m_DestX;
  unsigned int            m_DestY;
@@ -114,6 +115,7 @@ typedef struct IPUContext {
  unsigned int            m_TxtBottom;
  unsigned int            m_VIFQueueSize;
  unsigned int            m_ViFQueueSize;
+ unsigned int            m_VIPQueueSize;
  struct SMS_FrameBuffer* m_pBuffer;
  unsigned char*          m_pResult;
  unsigned char*          m_pCurRes;
@@ -126,6 +128,7 @@ typedef struct IPUContext {
  void ( *GIFHandler   ) ( void                    );
  void ( *Reset        ) ( struct GSContext*       );
  void ( *QueuePacket  ) ( int, void*              );
+ void ( *PQueuePacket ) ( int, void*              );
  void ( *iQueuePacket ) ( int, void*              );
 
 } IPUContext;

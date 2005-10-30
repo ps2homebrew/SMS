@@ -2266,6 +2266,7 @@ static void _msmpeg4_decode_slice ( void ) {
 
 static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, void** appData, uint8_t* apBuf, int32_t aBufSize ) {
 
+ int               retVal;
  SMS_FrameBuffer** lpFrame  = ( SMS_FrameBuffer** )appData;
  SMS_BitContext*   lpBitCtx = &g_MPEGCtx.m_BitCtx;
 
@@ -2322,6 +2323,12 @@ static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, void** appData, uint8_t
 
  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
 
- return g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay;
+ if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
+
+  ( *lpFrame ) -> m_FrameType = g_MPEGCtx.m_PicType;
+
+ else *lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+
+ return retVal;
 
 }  /* end MSMPEG4_Decode */

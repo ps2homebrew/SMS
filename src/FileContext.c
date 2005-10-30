@@ -1230,6 +1230,8 @@ FileContext* CDDA_InitFileContext ( CDDAContext* apCtx, const char* apFileName )
       apCtx, apCtx -> m_StartSector[ lpDirs -> m_Idx ] + lpFile -> m_Offset,
       lpFile -> m_Size, lpFile -> m_ImgIdx
      );
+     retVal -> m_StreamSize = 432;
+
      break;
 
     }  /* end if */
@@ -1438,7 +1440,7 @@ static int STIO_SeekStm ( FileContext* apCtx, unsigned int aPos ) {
 #else  /* PS2 */
  if (  aPos > apCtx -> m_Size || IO_Wait ( 0, NULL ) < 0  ) return -1;
 #endif  /* _WIN32 */
- apCtx -> Stream ( apCtx, aPos, apCtx -> m_BufSize / 2352 );
+ apCtx -> Stream ( apCtx, aPos, apCtx -> m_BufSize / 4096 );
 
  return 1;
 
@@ -1573,6 +1575,8 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
      retVal -> Seek    = STIO_Seek;
      retVal -> Stream  = STIO_Stream;
 
+     retVal -> m_StreamSize = 384;
+
      lfSuccess = 1;
 
     }  /* end if */
@@ -1624,6 +1628,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
     retVal -> m_CurPos     = 0;
     retVal -> m_pPos       = retVal -> m_pBuff[ 0 ];
     retVal -> m_pEnd       = retVal -> m_pPos;
+    retVal -> m_StreamSize = 384;
 
     (  ( STIOFilePrivate* )retVal -> m_pData  ) -> m_FD = lFD;
 
@@ -1632,7 +1637,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
     retVal -> Read    = STIO_Read;
     retVal -> Seek    = STIO_Seek;
     retVal -> Stream  = STIO_Stream;
-
+ 
     IO_LSeek ( lFD, 0, 0 );
 
     lfSuccess = 1;

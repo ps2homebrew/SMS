@@ -9,9 +9,11 @@
 extern "C" {
 # endif  /* __cplusplus */
 
-void InitPlayerControl ( SMS_Player*      );
-int  Index2Volume      ( SMS_Player*      );
-void AdjustVolume      ( SMS_Player*, int );
+void PlayerControl_Init         ( SMS_Player*      );
+int  PlayerControl_Index2Volume ( SMS_Player*      );
+void PlayerControl_AdjustVolume ( SMS_Player*, int );
+int  PlayerControl_FastForward  ( SMS_Player*      );
+int  PlayerControl_Rewind       ( SMS_Player*      );
 
 # ifdef __cplusplus
 }

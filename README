@@ -425,3 +425,39 @@ Update (15-OCT-2005)
 - New audio upsampling routine is implemented. It employs linear interpolation
   algorithm and it still works at the IOP side (it uses no division instructions).
   It sould also support other sample rates (at least 32000 does work at my site);
+
+Update (30-OCT-2005)
+--------------------
+- Attempt to fix misterious SifRpc/fioRead problem (decreased buffer size);
+- Yet another A/V syncronization algorithm is implemented;
+- Fixed a typo bug caused really bad A/V sync in some cases;
+- Added movie "scrolling" actions:
+  - "right"    pad button - "scroll" forward;
+  - "left"     pad button - "scroll" backward;
+  - "cross"    pad button - terminate "scrolling" and continue playing;
+  - "triangle" pad button - terminate "scrolling" and return to the browser;
+  This "scrolling" begins at 3 seconds intervals looking for closest keyframe
+  which is displayed (so 3 seconds is only a hint, it can become, for example,
+  20 or more/less actual seconds depending on keyframe locations). Pressing
+  "left"/"right" while "scrolling" increases/ decreases intervals by 3 seconds
+  (for forward "scrolling" "right" button increases interval and "left" button
+  decreases it, for backward "scrolling" it's the other way around). Minimum
+  value for the "scrolling" interval is 3 sec. Maximum is 1 min and 3 sec. If
+  "scrolling" reaches begin of the movie then it begins to play from the beginning.
+  Reaching end of the movie causes exit to the browser. Reaction time to pad
+  buttons depends on the media speed etc., so sometimes it's necessary to hold
+  buttons for a while for the response. At the beginning of "scrolling" and at the
+  end of it some pause can happen (flush file buffers and termination of pending
+  I/O requests) which again depends on the device speed. It is also possible to
+  "wrap" scrolling process, for example, if while "scrolling" forward "left" button
+  was pressed at the minimum "scrolling" interval then backward "scrolling" begins
+  and vise versa. Note, that during "scrolling" image distortion can occur ("square"
+  arifacts etc., I don't have any interest to investigate reasons for it :) ).
+  Anyone is free to implement more advanced seeking functionality with time scale,
+  "mouse" pointers etc. Current implementation permits "jumps" to arbitrary movie
+  location (time based), so it can be easly reused for these "advanced" actions;
+- added support for second gamepad. Thanks to 'bix64' for research and
+  implementation;
+- added very basic support for background image (skin) in the browser. Thanks to
+  'bix64' for research and implementation. Skin file is a DivX5xx/XviD encoded
+  I-Frame. It must be "mc0:SMS/skin.sms" file and it must have 640x512 dimensions;

@@ -19,6 +19,7 @@ struct FileContext;
 struct GUIContext;
 struct IPUContext;
 struct SPUContext;
+struct SMSCodec;
 
 typedef struct SMS_Player {
 
@@ -27,7 +28,13 @@ typedef struct SMS_Player {
  struct FileContext* m_pFileCtx;
  struct IPUContext*  m_pIPUCtx;
  struct SPUContext*  m_pSPUCtx;
+ struct SMS_Codec*   m_pVideoCodec;
+ struct SMS_Codec*   m_pAudioCodec;
  int                 m_Volume;
+ unsigned int        m_VideoIdx;
+ unsigned int        m_AudioIdx;
+ float               m_VideoTime;
+ float               m_AudioTime;
 
  void ( *Play    ) ( void );
  void ( *Destroy ) ( void );

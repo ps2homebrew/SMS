@@ -24,6 +24,7 @@ typedef struct SMS_AudioBuffer {
  unsigned char* ( *Alloc   ) ( int  );
  int            ( *Release ) ( void );
  void           ( *Destroy ) ( void );
+ void           ( *Reset   ) ( void );
 
 } SMS_AudioBuffer;
 

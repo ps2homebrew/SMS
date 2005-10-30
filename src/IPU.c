@@ -149,9 +149,11 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 
 # define VIF_PIDX (  sizeof ( g_IPUCtx.m_DMAVIFDraw ) / sizeof ( g_IPUCtx.m_DMAVIFDraw[ 0 ] ) - 2  )
 # define ViF_PIDX (  sizeof ( g_IPUCtx.m_DMAViFDraw ) / sizeof ( g_IPUCtx.m_DMAViFDraw[ 0 ] ) - 2  )
+# define VIP_PIDX (  sizeof ( g_IPUCtx.m_DMAVIPDraw ) / sizeof ( g_IPUCtx.m_DMAVIPDraw[ 0 ] ) - 2  )
 
 static unsigned long int* s_pVIFPacket;
 static unsigned long int* s_pViFPacket;
+static unsigned long int* s_pVIPPacket;
 
 static void IPU_DestroyContext ( void ) {
 
@@ -223,6 +225,13 @@ int IPU_DMAHandlerFromIPU ( int aChan ) {
 
 static void IPU_GIFHandlerDraw ( void ) {
 
+ if ( g_IPUCtx.m_VIPQueueSize != VIP_PIDX + 2 ) {
+
+  DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIPDraw[ g_IPUCtx.m_VIPQueueSize ] );
+  g_IPUCtx.m_VIPQueueSize = VIP_PIDX + 2;
+
+ }  /* end if */
+
  iSignalSema ( g_IPUCtx.m_SyncS );
 
 }  /* end IPU_GIFHandlerDraw */
@@ -236,9 +245,7 @@ static int IPU_VBlankStartHandler ( int aCause ) {
    DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
    g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
 
-  }  /* end if */
-
-  if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
+  } else if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
 
    DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAViFDraw[ g_IPUCtx.m_ViFQueueSize ] );
    g_IPUCtx.m_ViFQueueSize = ViF_PIDX + 2;
@@ -281,9 +288,7 @@ void IPU_GIFHandlerSend ( void ) {
    DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
    g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
 
-  }  /* end if */
-
-  if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
+  } else if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
 
    DMA_SendChainToVIF1 ( &g_IPUCtx.m_DMAViFDraw[ g_IPUCtx.m_ViFQueueSize ] );
    g_IPUCtx.m_ViFQueueSize = ViF_PIDX + 2;
@@ -478,6 +483,17 @@ static void IPU_QueuePacket ( int aQWC, void* apData ) {
 
 }  /* end IPU_QueuePacket */
 
+static void IPU_PQueuePacket ( int aQWC, void* apData ) {
+
+ if ( !g_IPUCtx.m_VIPQueueSize ) return;
+
+ DIntr ();
+  g_IPUCtx.m_VIPQueueSize -= 2;
+  s_pVIPPacket[ g_IPUCtx.m_VIPQueueSize ] = g_IPUCtx.m_VIPQueueSize == VIP_PIDX ? DMA_TAG(  aQWC, 1, DMA_REFE, 0, ( u32 )apData, 0  ) : DMA_TAG(  aQWC, 1, DMA_REF, 0, ( u32 )apData, 0  );
+ EIntr ();
+
+}  /* end IPU_PQueuePacket */
+
 IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 
  ee_sema_t lSema;
@@ -488,6 +504,7 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 
   s_pVIFPacket = ( unsigned long int* )(  ( unsigned int  )&g_IPUCtx.m_DMAVIFDraw[ 0 ] | 0x20000000  );
   s_pViFPacket = ( unsigned long int* )(  ( unsigned int  )&g_IPUCtx.m_DMAViFDraw[ 0 ] | 0x20000000  );
+  s_pVIPPacket = ( unsigned long int* )(  ( unsigned int  )&g_IPUCtx.m_DMAVIPDraw[ 0 ] | 0x20000000  );
 
   g_IPUCtx.m_nMBSlice        = ( aWidth  + 15 ) >> 4;
   g_IPUCtx.m_nMBSlices       = ( aHeight + 15 ) >> 4;
@@ -525,6 +542,7 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    g_IPUCtx.Reset        = IPU_Reset;
    g_IPUCtx.QueuePacket  = IPU_QueuePacket;
    g_IPUCtx.iQueuePacket = IPU_iQueuePacket;
+   g_IPUCtx.PQueuePacket = IPU_PQueuePacket;
 
    lSema.init_count  = 1;
    lSema.max_count   = 1;

@@ -120,17 +120,18 @@ typedef struct GUIContext {
  GUIMenu*      m_pCurrentMenu;
  GSContext*    m_pGSCtx;
 
- int  ( *Run              ) ( void**            );
- void ( *Status           ) ( char*             );
- void ( *AddDevice        ) ( int               );
- void ( *DelDevice        ) ( int               );
- void ( *AddFile          ) ( char*, int        );
- void ( *ClearFileMenu    ) ( void              );
- void ( *Destroy          ) ( void              );
- void ( *ActivateMenu     ) ( int               );
- void ( *Redraw           ) ( void              );
- void ( *ActivateFileItem ) ( int, char*, char* );
- int  ( *SelectFile       ) ( char*             );
+ int  ( *Run              ) ( void**              );
+ void ( *Status           ) ( char*               );
+ void ( *AddDevice        ) ( int                 );
+ void ( *DelDevice        ) ( int                 );
+ void ( *AddFile          ) ( char*, int          );
+ void ( *ClearFileMenu    ) ( void                );
+ void ( *Destroy          ) ( void                );
+ void ( *ActivateMenu     ) ( int                 );
+ void ( *Redraw           ) ( void                );
+ void ( *ActivateFileItem ) ( int, char*, char*   );
+ int  ( *SelectFile       ) ( char*               );
+ void ( *Progress         ) ( char*, unsigned int );
 
 } GUIContext;
 

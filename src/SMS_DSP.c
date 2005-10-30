@@ -411,7 +411,9 @@ void SMS_DSP_Init ( void ) {
   s_CropTbl[ i + MAX_NEG_CROP + 256 ] = 255;
 
  }  /* end for */
-
+#ifndef _WIN32
+ memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
+#endif  /* _WIN32 */
 }  /* end SMS_DSP_Init */
 
 static void GMC ( const SMS_DSPGMCData* apData ) {

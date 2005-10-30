@@ -44,6 +44,13 @@ static void SPU_SetVolume ( int aVol ) {
 
 }  /* end SPU_SetVolume */
 
+static void SPU_Silence ( void ) {
+
+ SifCallRpc ( &s_ClientDataV, 1, SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, _audio_callback, &s_SemaVol );
+ WaitSema ( s_SemaVol );
+
+}  /* end Silence */
+
 static void SPU_PlayPCM ( void* apBuf ) {
 
  SifCallRpc (
@@ -69,11 +76,13 @@ SPUContext* SPU_InitContext ( int anChannels, int aFreq, int aVolume ) {
  s_Buffer[ 2 ] = anChannels;
  s_Buffer[ 3 ] = aVolume;
 
- SifCallRpc ( &s_ClientDataA, 0, 0, s_Buffer, 16, NULL, 0, NULL, NULL );
+ SifCallRpc ( &s_ClientDataA, 0, 0, s_Buffer, 16, s_Buffer, 4, NULL, NULL );
 
+ s_SPUCtx.m_BufTime = (  ( float )s_Buffer[ 0 ] * 1000.0F  ) / (  ( aFreq << 1 ) * anChannels  );
  s_SPUCtx.PlayPCM   = SPU_PlayPCM;
  s_SPUCtx.SetVolume = SPU_SetVolume;
  s_SPUCtx.Destroy   = SPU_Destroy;
+ s_SPUCtx.Silence   = SPU_Silence;
 
  return &s_SPUCtx;
 

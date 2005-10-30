@@ -6,6 +6,7 @@
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2005 USB support by weltall
 # (c) 2005 HOST support by Ronald Andersson (AKA: dlanor)
+# (c) 2005 second gamepad support by bix64
 # Special thanks to 'bigboss'/PS2Reality for valuable information
 # about SifAddCmdHandler function
 # Licenced under Academic Free License version 2.0
@@ -16,6 +17,7 @@
 #include "GUI_Data.h"
 
 #include "SMS.h"
+#include "DMA.h"
 
 #include "Timer.h"
 #include "CDDA.h"
@@ -37,22 +39,13 @@
 #define USB_FLAG_CONNECT    0x00000001
 #define USB_FLAG_DISCONNECT 0x00000002
 
-static const char* s_USBDPath[] = {
- "host:USBD.IRX",
- "mc0:/BOOT/USBD.IRX",
- "mc0:/PS2OSCFG/USBD.IRX",
- "mc0:/SYS-CONF/USBD.IRX",
- "mc0:/PS2MP3/USBD.IRX",
- "mc0:/BOOT/PS2MP3/USBD.IRX",
- "mc0:/SMS/USBD.IRX"
-};
-
 extern void* _gp;
 extern int   g_fUSB;
 extern int   g_NetFailFlags;
 
 static GUIContext                 s_GUICtx;
-static unsigned char              s_PadBuf[   256 ] __attribute__(   (  aligned( 64 )  )   );
+static unsigned char              s_PadBuf0[  256 ] __attribute__(   (  aligned( 64 )  )   );
+static unsigned char              s_PadBuf1[  256 ] __attribute__(   (  aligned( 64 )  )   );
 static unsigned char              s_Stack [ 32768 ] __attribute__(   (  aligned( 16 )  )   );
 static int                        s_GUIThreadID;
 static int                        s_MainThreadID;
@@ -87,11 +80,9 @@ static void GUI_Status ( char* apSts ) {
  int lWidth    = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, lLen );
  int lY        = s_GUICtx.m_pGSCtx -> m_Height - 30;
  int lCY       = lY;
- int lCH       = 26;
  int lScrWidth = s_GUICtx.m_pGSCtx -> m_Width - 24;
 
- lCY = lY  / 2;
- lCH = lCH / 2;
+ lCY = lY >> 1;
 
  while ( lWidth >= lScrWidth ) {
 
@@ -100,14 +91,66 @@ static void GUI_Status ( char* apSts ) {
 
  }  /* end while */
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer (
-  0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width - 10, lCH
- );
+ s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width, 14 );
  s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
  s_GUICtx.m_pGSCtx -> m_Font.m_BkMode = GSBkMode_Transparent;
  s_GUICtx.m_pGSCtx -> DrawText ( 6, lY, 0, apSts, lLen );
 
 }  /* end GUI_Status */
+
+static void GUI_Progress ( char* apSts, unsigned int aPos ) {
+
+ static u64* s_lpPrgList;
+ static int  s_lY;
+ static int  s_lCY;
+ static int  s_lLen;
+ static int  s_lScrWidth;
+
+ int lWidth;
+
+ aPos = SMS_clip ( aPos, 0, 100 );
+
+ if ( apSts ) {
+
+  int lWidth;
+
+  s_lY        = s_GUICtx.m_pGSCtx -> m_Height - 30;
+  s_lLen      = strlen ( apSts );
+  s_lCY       = s_lY / 2;
+  s_lScrWidth = s_GUICtx.m_pGSCtx -> m_Width - 28;
+  lWidth      = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, s_lLen );
+
+  while ( lWidth >= s_lScrWidth ) {
+
+   --s_lLen;
+   lWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, s_lLen );
+
+  }  /* end while */
+
+  if ( s_lpPrgList ) {
+
+   free ( s_lpPrgList );
+   s_lpPrgList = NULL;
+
+  }  /* end if */
+
+  s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
+  s_lLen = s_GUICtx.m_pGSCtx -> TextGSPacket ( 6, s_lY, 0, apSts, 0, &s_lpPrgList );
+
+ } else if ( !s_lpPrgList ) return;
+
+ s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, s_lCY, s_GUICtx.m_pGSCtx -> m_Width, 14 );
+
+ s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
+ s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
+
+ lWidth = (  ( s_GUICtx.m_pGSCtx -> m_Width - 2 ) * aPos  ) / 100;
+
+ if ( lWidth > 16 ) s_GUICtx.m_pGSCtx -> RoundRect ( 1, s_lY, lWidth, s_lY + 26, 8 );
+
+ DMA_Send ( DMA_CHANNEL_VIF1, s_lpPrgList, s_lLen );
+
+}  /* end GUI_Progress */
 
 static void GUI_DrawDesktop ( void ) {
 
@@ -198,67 +241,69 @@ static void TimerProc ( void ) {
 
  static int s_Repeat = 0;
 
- unsigned int lCurrBtn;
+ unsigned int lCurrBtn = 0;
 
- if (  padRead ( 0, 0, &s_PadData )  ) {
+ if (  padRead ( 0, 0, &s_PadData )  ) lCurrBtn = 0xFFFF ^ s_PadData.btns;
 
+ if ( !lCurrBtn ) {
+
+  padRead ( 1, 0, &s_PadData );
   lCurrBtn = 0xFFFF ^ s_PadData.btns;
 
-  if ( lCurrBtn ) {
+ }  /* end if */
 
-   if ( lCurrBtn != s_PrevBtn ) {
+ if ( lCurrBtn ) {
 
-    s_PrevBtn  = lCurrBtn;
-    s_Repeat   = 0;
-    s_Event   |= lCurrBtn;
-    SignalSema ( s_PadSema );
+  if ( lCurrBtn != s_PrevBtn ) {
 
-   } else if ( ++s_Repeat == 8 ) {
+   s_PrevBtn  = lCurrBtn;
+   s_Repeat   = 0;
+   s_Event   |= lCurrBtn;
+   SignalSema ( s_PadSema );
 
-    s_Repeat = 0;
-    DoTimer  = TimerProcRepeat;
+  } else if ( ++s_Repeat == 8 ) {
 
-   }  /* end if */
+   s_Repeat = 0;
+   DoTimer  = TimerProcRepeat;
 
-  } else {
-doReset:
-   s_PrevBtn = 0;
-   s_Repeat  = 0;
+  }  /* end if */
 
-  }  /* end else */
+ } else {
 
- } else goto doReset;
+  s_PrevBtn = 0;
+  s_Repeat  = 0;
+
+ }  /* end else */
 
 }  /* end TimerProc */
 
 static void TimerProcRepeat ( void ) {
 
- unsigned int lCurrBtn;
+ unsigned int lCurrBtn = 0;
 
- if (  padRead ( 0, 0, &s_PadData )  ) {
+ if (  padRead ( 0, 0, &s_PadData )  ) lCurrBtn = 0xFFFF ^ s_PadData.btns;
 
+ if ( !lCurrBtn ) {
+ 
+  padRead ( 1, 0, &s_PadData );
   lCurrBtn = 0xFFFF ^ s_PadData.btns;
+  
+ }  /* end if */
 
-  if ( lCurrBtn ) {
+ if ( lCurrBtn ) {
 
-   if ( lCurrBtn != s_PrevBtn ) {
+  if ( lCurrBtn != s_PrevBtn ) {
 
-    s_PrevBtn  = lCurrBtn;
-    s_Event   |= lCurrBtn;
+   s_PrevBtn  = lCurrBtn;
+   s_Event   |= lCurrBtn;
 
-    DoTimer = TimerProc;
+   DoTimer = TimerProc;
 
-   } else s_Event |= lCurrBtn;
+  } else s_Event |= lCurrBtn;
 
-   SignalSema ( s_PadSema );
+  SignalSema ( s_PadSema );
 
-  } else goto doReset;
-
- } else {
-doReset:
-  s_PrevBtn = 0;
-
- }  /* end else */
+ } else s_PrevBtn = 0;
 
 }  /* end TimerProcRepeat */
 
@@ -1022,6 +1067,13 @@ int GUI_ReadButtons ( void ) {
 
  if (  padRead ( 0, 0, &s_PadData )  ) retVal = 0xFFFF ^ s_PadData.btns;
 
+ if ( !retVal ) {
+ 
+  padRead ( 1, 0, &s_PadData );
+  retVal = 0xFFFF ^ s_PadData.btns;
+  
+ }  /* end if */
+
  return retVal;
 
 }  /* end GUI_ReadButtons */
@@ -1120,29 +1172,19 @@ static int GUI_SelectFile ( char* apFileName ) {
 
 }  /* end GUI_SelectFile */
 
-static void _usb_handler_connect ( SifCmdHeader_t* apHdr ) {
+static void _usb_handler_connect ( void* apHdr ) {
 
  s_USBFlags |= USB_FLAG_CONNECT;
  iWakeupThread ( s_GUIThreadID );
 
 }  /* end _usb_handler */
 
-static void _usb_handler_disconnect ( SifCmdHeader_t* apHdr ) {
+static void _usb_handler_disconnect ( void* apHdr ) {
 
  s_USBFlags |= USB_FLAG_DISCONNECT;
  iWakeupThread ( s_GUIThreadID );
 
 }  /* end _usb_handler_disconnect */
-
-static void ( *SIFCmdHandler[ 3 ] ) ( SifCmdHeader_t* ) = {
- NULL, _usb_handler_connect, _usb_handler_disconnect
-};
-
-static void SMS_SIFCmdHandler ( void* apPkt, void* apArg ) {
-
- SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> unknown ] (  ( SifCmdHeader_t* )apPkt  );
-
-}  /* end _usb_connect */
 
 GSDisplayMode GUI_InitPad ( void ) {
 
@@ -1158,7 +1200,8 @@ GSDisplayMode GUI_InitPad ( void ) {
  mcInit ( MC_TYPE_MC );
 
  padInit ( 0 );
- padPortOpen ( 0, 0, s_PadBuf );
+ padPortOpen ( 0, 0, s_PadBuf0 );
+ padPortOpen ( 1, 0, s_PadBuf1 );
 
  lBtn  = padGetState ( 0, 0 );
  lTime = g_Timer;
@@ -1199,7 +1242,6 @@ GSDisplayMode GUI_InitPad ( void ) {
 
 GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
- int         i;
  ee_sema_t   lSema;
  ee_thread_t lThread;
 
@@ -1246,6 +1288,7 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  s_GUICtx.Redraw           = GUI_Redraw;
  s_GUICtx.ActivateFileItem = GUI_ActivateFileItem;
  s_GUICtx.SelectFile       = GUI_SelectFile;
+ s_GUICtx.Progress         = GUI_Progress;
 
  lSema.init_count = 0;
  lSema.max_count  = 1;
@@ -1258,64 +1301,10 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  lThread.func             = _gui_thread;
  StartThread (  s_GUIThreadID = CreateThread ( &lThread ), NULL  );
 
+ SMS_SetSifCmdHandler ( _usb_handler_connect,    1 );
+ SMS_SetSifCmdHandler ( _usb_handler_disconnect, 2 );
+
  GUI_Redraw ();
-
- g_fUSB = 0;
-
- GUI_Status ( "Locating USBD.IRX..." );
-
- for (  i = 0; i < sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] ); ++i  ) {
-
-  int lFD = fioOpen ( s_USBDPath[ i ], O_RDONLY );
-
-  if ( lFD >= 0 ) {
-
-   long lSize = fioLseek ( lFD, 0, SEEK_END );
-
-   if ( lSize > 0 ) {
-
-    void* lpBuf = malloc ( lSize );
-
-    if ( lpBuf ) {
-
-     fioLseek ( lFD, 0, SEEK_SET );
-
-     if (  fioRead ( lFD, lpBuf, lSize ) == lSize  ) {
-
-      int lRes;
-
-      SifExecModuleBuffer ( lpBuf, lSize, 0, NULL, &lRes );
-
-      if ( lRes >= 0 ) {
-
-       i      = sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] );
-       g_fUSB = 1;
-
-      }  /* end if */
-
-     }  /* end if */
-
-     free ( lpBuf );
-
-    }  /* end if */
-
-   }  /* end if */
-
-   fioClose ( lFD );
-
-  }  /* end if */
-
- }  /* end for */
-
- if ( g_fUSB ) {
-
-  DI();
-   SifAddCmdHandler ( 18, SMS_SIFCmdHandler, 0 );
-  EI();
-
-  SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
-
- }  /* end if */
 
  DoTimer = TimerProc;
  s_Init  = 1;

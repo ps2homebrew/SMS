@@ -22,7 +22,7 @@ typedef struct ROMDir {
 
 } ROMDir;
 
-void* ROM_LocateModule ( const char* apName, int* apSize ) {
+void* ROM_LocateModule ( unsigned int aBase, const char* apName, int* apSize ) {
 
  static void* lpStart = 0;
 
@@ -31,7 +31,7 @@ void* ROM_LocateModule ( const char* apName, int* apSize ) {
 
  if ( !lpStart ) {
 
-  unsigned char* lpROM = ( unsigned char* )0x1FC00000;
+  unsigned char* lpROM = ( unsigned char* )aBase;
 
   for ( i = 0; i < 16384; ++i ) if (  !memcmp ( lpROM + i, "RESET", 5 )  ) break;
 

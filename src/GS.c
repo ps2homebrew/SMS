@@ -392,10 +392,9 @@ static inline unsigned char* _fontm_char ( FontmFile* apFile, long aChar, long a
 
 void _fontm_set_text_color ( u32 aColor ) {
 
- u32  lCLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
- u64  lDMA [ 16 ] __attribute__(  (  aligned( 16 )  )   );
- u64* lpDMA = lDMA;
- int  i;
+ u32 lCLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
+ u64 lDMA [ 22 ] __attribute__(  (  aligned( 16 )  )   );
+ int i;
 
  float lStepR = ( float )(  ( aColor >>  0 ) & 0x000000FF ) / 16.0F;
  float lStepG = ( float )(  ( aColor >>  8 ) & 0x000000FF ) / 16.0F;
@@ -432,34 +431,47 @@ void _fontm_set_text_color ( u32 aColor ) {
 
  }  /* end for */
 
- *lpDMA++ = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
- *lpDMA++ = 0;
+ *GS_CSR = *GS_CSR | 2;
 
-  *lpDMA++ = GIF_TAG( 4, 1, 0, 0, 0, 1 );
-  *lpDMA++ = GIF_AD;
+ lDMA[ 0 ] = DMA_TAG( 6, 1, DMA_CNT, 0, 0, 0 );
+ lDMA[ 1 ] = 0;
 
-   *lpDMA++ = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_CLUT, 1, GSPSM_32 );
-   *lpDMA++ = GS_BITBLTBUF;
+  lDMA[ 2 ] = GIF_TAG( 4, 0, 0, 0, 0, 1 );
+  lDMA[ 3 ] = GIF_AD;
 
-   *lpDMA++ = GS_SETREG_TRXPOS( 0, 0, 0, 0, 0 );
-   *lpDMA++ = GS_TRXPOS;
+   lDMA[ 4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_CLUT, 1, GSPSM_32 );
+   lDMA[ 5 ] = GS_BITBLTBUF;
 
-   *lpDMA++ = GS_SETREG_TRXREG( 8, 2 );
-   *lpDMA++ = GS_TRXREG;
+   lDMA[ 6 ] = GS_SETREG_TRXPOS( 0, 0, 0, 0, 0 );
+   lDMA[ 7 ] = GS_TRXPOS;
 
-   *lpDMA++ = GS_SETREG_TRXDIR( 0 );
-   *lpDMA++ = GS_TRXDIR;
+   lDMA[ 8 ] = GS_SETREG_TRXREG( 8, 2 );
+   lDMA[ 9 ] = GS_TRXREG;
 
-  *lpDMA++ = GIF_TAG( 4, 1, 0, 0, 2, 1 );
-  *lpDMA++ = 0;
+   lDMA[ 10 ] = GS_SETREG_TRXDIR( 0 );
+   lDMA[ 11 ] = GS_TRXDIR;
 
- *lpDMA++ = DMA_TAG(  4, 1, DMA_REFE, 0, ( u32 )lCLUT, 0  );
- *lpDMA   = 0;
+  lDMA[ 12 ] = GIF_TAG( 4, 0, 0, 0, 2, 1 );
+  lDMA[ 13 ] = 0;
+
+ lDMA[ 14 ] = DMA_TAG(  4, 1, DMA_REF, 0, ( u32 )lCLUT, 0  );
+ lDMA[ 15 ] = 0;
+
+ lDMA[ 16 ] = DMA_TAG(  2, 1, DMA_END, 0, 0, 0  );
+ lDMA[ 17 ] = 0;
+
+  lDMA[ 18 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
+  lDMA[ 19 ] = GIF_AD;
+
+  lDMA[ 20 ] = 0;
+  lDMA[ 21 ] = GS_FINISH;
 
  SyncDCache ( lCLUT, lCLUT + 48 );
 
- DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 8 );
+ DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 11 );
  DMA_Wait ( DMA_CHANNEL_GIF );
+
+ while (  !( *GS_CSR & 2 )  );
 
 }  /* end _fontm_set_text_color */
 
@@ -469,14 +481,13 @@ static void _fontm_init ( void ) {
  FontmFile*     lpFont;
  unsigned char* lpSrc;
  unsigned int   lX, lY, lSize;
- u64*           lpData;
  unsigned char  lCharBuf[ CHAR_SIZE ] __attribute__(   (  aligned( 16 )  )   );
  u64            lDMA    [        16 ] __attribute__(   (  aligned( 16 )  )   );
 
  s_GSCtx.m_Font.m_BkColor = 0x80000000;
  s_GSCtx.m_Font.m_BkMode  = GSBkMode_Transparent;
 
- lpSrc = ROM_LocateModule ( "FONTM", &lSize );
+ lpSrc = ROM_LocateModule ( ROM_BASE, "FONTM", &lSize );
 
  lUnpack.m_Size = *( unsigned int* )lpSrc;
  lUnpack.m_Ptr  = lpSrc + 4;
@@ -488,7 +499,7 @@ static void _fontm_init ( void ) {
  s_GSCtx.m_Font.m_Text = s_GSCtx.m_VRAMPtr / 256;
  s_GSCtx.m_VRAMPtr    += 108544;
  s_GSCtx.m_Font.m_CLUT = s_GSCtx.m_VRAMPtr / 256;
- s_GSCtx.m_VRAMPtr += 256;
+ s_GSCtx.m_VRAMPtr    += 256;
 
  _fontm_set_text_color ( 0xCFFFFFFF );
 
@@ -499,31 +510,29 @@ static void _fontm_init ( void ) {
    unsigned char* lpChr = _fontm_char ( lpFont, s_CharMap[ lSize ], lSize );
    memcpy ( lCharBuf, lpChr, CHAR_SIZE );
 
-   lpData = lDMA;
+   lDMA[ 0 ] = DMA_TAG( 6, 1, DMA_CNT, 0, 0, 0 );
+   lDMA[ 1 ] = 0;
 
-   *lpData++ = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
-   *lpData++ = 0;
+    lDMA[ 2 ] = GIF_TAG( 4, 1, 0, 0, 0, 1 );
+    lDMA[ 3 ] = GIF_AD;
 
-    *lpData++ = GIF_TAG( 4, 1, 0, 0, 0, 1 );
-    *lpData++ = GIF_AD;
+     lDMA[  4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_Text, 14, GSPSM_4 );
+     lDMA[  5 ] = GS_BITBLTBUF;
 
-     *lpData++ = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_Text, 14, GSPSM_4 );
-     *lpData++ = GS_BITBLTBUF;
+     lDMA[  6 ] = GS_SETREG_TRXPOS( 0, 0, lX, lY, 0 );
+     lDMA[  7 ] = GS_TRXPOS;
 
-     *lpData++ = GS_SETREG_TRXPOS( 0, 0, lX, lY, 0 );
-     *lpData++ = GS_TRXPOS;
+     lDMA[  8 ] = GS_SETREG_TRXREG( 26, 26 );
+     lDMA[  9 ] = GS_TRXREG;
 
-     *lpData++ = GS_SETREG_TRXREG( 26, 26 );
-     *lpData++ = GS_TRXREG;
+     lDMA[ 10 ] = GS_SETREG_TRXDIR( 0 );
+     lDMA[ 11 ] = GS_TRXDIR;
 
-     *lpData++ = GS_SETREG_TRXDIR( 0 );
-     *lpData++ = GS_TRXDIR;
+    lDMA[ 12 ] = GIF_TAG( 22, 1, 0, 0, 2, 1 );
+    lDMA[ 13 ] = 0;
 
-    *lpData++ = GIF_TAG( 22, 1, 0, 0, 2, 1 );
-    *lpData++ = 0;
-
-   *lpData++ = DMA_TAG(  22, 1, DMA_REFE, 0, ( u32 )lCharBuf, 0  );
-   *lpData   = 0;
+   lDMA[ 14 ] = DMA_TAG(  22, 1, DMA_REFE, 0, ( u32 )lCharBuf, 0  );
+   lDMA[ 15 ]   = 0;
 
    SyncDCache ( lCharBuf, lCharBuf + CHAR_SIZE );
 
@@ -543,6 +552,15 @@ static void _fontm_init ( void ) {
   s_Kerns[ 7 ].m_Kern[ lX ].m_Right = 8;
 
  }  /* end for */
+
+ lDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
+ lDMA[ 1 ] = GIF_AD;
+
+ lDMA[ 2 ] = ALPHA_BLEND_NORMAL;
+ lDMA[ 3 ] = GS_ALPHA_1 + !s_GSCtx.m_PrimCtx;
+
+ DMA_Send( DMA_CHANNEL_GIF, lDMA, 2 );
+ DMA_Wait ( DMA_CHANNEL_GIF );
 
 }  /* end _fontm_init */
 
@@ -585,9 +603,9 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
 
  int  i, j, lnChars = aLen ? aLen : strlen ( apStr );
  int  lIncr = s_GSCtx.m_Font.m_BkMode == GSBkMode_Opaque;
- u64  lDMA[ lnChars * 10 + 8 + ( lIncr << 3 ) ] __attribute__(  (  aligned( 16 )  )   );
- u64* lpDMA   = lDMA;
- int  lDMALen = 5 * lnChars + 4 + ( lIncr << 2 );
+ u64  lDMA[ ( lnChars << 2 ) + 12 ] __attribute__(  (  aligned( 16 )  )   );
+ u64* lpDMA   = &lDMA[ 2 ];
+ int  lDMALen = 1;
  int  lX1, lX2;
  int  lY1, lY2;
  int  lU1, lU2;
@@ -602,21 +620,6 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
   aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX
  };
 
- *lpDMA++ = GIF_TAG( lDMALen - 1, 1, 0, 0, 0, 1 );
- *lpDMA++ = GIF_AD;
-
- *lpDMA++ = GS_SETREG_TEX0(
-             s_GSCtx.m_Font.m_Text, 14, GSPSM_4, 10, 8,
-             1, 1, s_GSCtx.m_Font.m_CLUT, 0, 0, 0, 1
-            );
- *lpDMA++ = GS_TEX0_1 + !s_GSCtx.m_PrimCtx;
-
- *lpDMA++ = GS_SETREG_TEX1( 0, 0, 1, 1, 0, 0, 0 );
- *lpDMA++ = GS_TEX1_1 + !s_GSCtx.m_PrimCtx;
-
- *lpDMA++ = ALPHA_BLEND_NORMAL;
- *lpDMA++ = GS_ALPHA_1 + !s_GSCtx.m_PrimCtx;
-
  lY1 = ( aY << 3 ) + lYIncr;
  lY2 = (  ( aY + 26 ) << 3  ) + lYIncr;
  lZ  = aZ << 4;
@@ -626,23 +629,29 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
   lX1 = ( aX << 4 ) + lXIncr;
   lX2 = (   (  aX + _fontm_text_width ( apStr, lnChars )  ) << 4   ) + lXIncr;
 
-  *lpDMA++ = GS_SETREG_PRIM(
-              GS_PRIM_PRIM_SPRITE, 0, 0, s_GSCtx.m_fFog,
-              s_GSCtx.m_fAlpha,
-              s_GSCtx.m_fAntiAlias, 0, !s_GSCtx.m_PrimCtx, 0
-             );
-  *lpDMA++ = GS_PRIM;
-
+  *lpDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 4 );
+  *lpDMA++ = GS_PRIM | ( GS_RGBAQ << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 );
+  *lpDMA++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, s_GSCtx.m_fFog, s_GSCtx.m_fAlpha, s_GSCtx.m_fAntiAlias, 0, !s_GSCtx.m_PrimCtx, 0 );
   *lpDMA++ = s_GSCtx.m_Font.m_BkColor;
-  *lpDMA++ = GS_RGBAQ;
-
   *lpDMA++ = GS_SETREG_XYZ( lX1, lY1, lZ );
-  *lpDMA++ = GS_XYZ2;
-
   *lpDMA++ = GS_SETREG_XYZ( lX2, lY2, lZ );
-  *lpDMA++ = GS_XYZ2;
+
+  lDMALen += 3;
 
  }  // end if
+
+ lDMALen += 3 + ( lnChars << 1 );
+
+ lDMA[ 0 ] = 0;
+ lDMA[ 1 ] = VIF_DIRECT( lDMALen - 1 );
+
+ *lpDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ *lpDMA++ = ( GS_TEX0_1 + !s_GSCtx.m_PrimCtx ) | ( GS_PRIM << 4 );
+ *lpDMA++ = GS_SETREG_TEX0( s_GSCtx.m_Font.m_Text, 14, GSPSM_4, 10, 8, 1, 1, s_GSCtx.m_Font.m_CLUT, 0, 0, 0, 1 );
+ *lpDMA++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, !s_GSCtx.m_PrimCtx, 0 );
+
+ *lpDMA++ = GIF_TAG( lnChars, 1, 0, 0, 1, 4 );
+ *lpDMA++ = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
 
  for ( i = 0; i < lnChars; ++i ) {
 
@@ -680,30 +689,96 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
   lV1 = ( lTY << 4 ) + lXIncr;
   lV2 = (  ( lTY + 26 ) << 4  ) + lXIncr;
 
-  *lpDMA++ = GS_SETREG_PRIM(
-              GS_PRIM_PRIM_SPRITE, 0, 1, 0,
-              1, 1, 1, !s_GSCtx.m_PrimCtx, 0
-             );
-  *lpDMA++ = GS_PRIM;
-
   *lpDMA++ = GS_SETREG_UV( lU1, lV1 );
-  *lpDMA++ = GS_UV;
-
   *lpDMA++ = GS_SETREG_XYZ( lX1, lY1, lZ );
-  *lpDMA++ = GS_XYZ2;
-
   *lpDMA++ = GS_SETREG_UV( lU2, lV2 );
-  *lpDMA++ = GS_UV;
-
   *lpDMA++ = GS_SETREG_XYZ( lX2, lY2, lZ );
-  *lpDMA++ = GS_XYZ2;
 
  }  /* end for */
 
- DMA_Send ( DMA_CHANNEL_GIF, lDMA, lDMALen );
- DMA_Wait ( DMA_CHANNEL_GIF );
+ DMA_Send ( DMA_CHANNEL_VIF1, lDMA, lDMALen );
+ DMA_Wait ( DMA_CHANNEL_VIF1 );
 
 }  /* end _fontm_draw_text */
+
+int _fontm_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u64** appRetVal ) {
+
+ int  lnChars = aLen ? aLen : strlen ( apStr );
+ int  i, j, k, lLen = FONT_GSP_SIZE( lnChars );
+ u64* lpDMA = *appRetVal ? *appRetVal : (   *appRetVal = ( u64* )malloc (  lLen * sizeof ( u64 )  )   );
+ int  lX1, lX2;
+ int  lY1, lY2;
+ int  lU1, lU2;
+ int  lV1, lV2;
+ int  lXIncr = s_GSCtx.m_OffsetX << 4;
+ int  lYIncr = s_GSCtx.m_OffsetY << 4;
+ int  lTX, lTY;
+ int  lCurX;
+ int  lX[ 26 ] = {
+  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX,
+  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX
+ };
+
+ lY1 = ( aY << 3 ) + lYIncr;
+ lY2 = (  ( aY + 26 ) << 3  ) + lYIncr;
+
+ lLen >>= 1;
+
+ lpDMA[ 0 ] = 0;
+ lpDMA[ 1 ] = VIF_DIRECT( lLen - 1 );
+ lpDMA[ 2 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ lpDMA[ 3 ] = ( GS_TEX0_1 + !s_GSCtx.m_PrimCtx ) | ( GS_PRIM << 4 );
+ lpDMA[ 4 ] = GS_SETREG_TEX0( s_GSCtx.m_Font.m_Text, 14, GSPSM_4, 10, 8, 1, 1, s_GSCtx.m_Font.m_CLUT, 0, 0, 0, 1 );
+ lpDMA[ 5 ] = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, !s_GSCtx.m_PrimCtx, 0 );
+ lpDMA[ 6 ] = GIF_TAG( lnChars, 1, 0, 0, 1, 4 );
+ lpDMA[ 7 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
+
+ for ( i = 0, k = 8; i < lnChars; ++i, k += 4 ) {
+
+  unsigned char lChr = apStr[ i ] - ' ';
+
+  lCurX = -INT_MAX;
+
+  for ( j = 0; j < 26; ++j ) {
+
+   int lOffset = lX[ j ] - s_Kerns[ lChr ].m_Kern[ j ].m_Left;
+
+   if ( lOffset > lCurX ) lCurX = lOffset;
+
+  }  // end for
+
+  lX1  = ( lCurX << 4 ) + lXIncr;
+  lX2  = (  ( lCurX + 26 ) << 4  ) + lXIncr;
+
+  for ( j = 0; j < 26; ++j ) lX[ j ] = lCurX + 26 - s_Kerns[ lChr ].m_Kern[ j ].m_Right - 2;
+
+  lTY = 0;
+
+  while ( lChr > 31 ) {
+
+   lChr -= 32;
+   lTY  += 26;
+
+  }  /* end while */
+
+  lTX = lChr * 26;
+
+  lU1 = ( lTX << 4 ) + lXIncr;
+  lU2 = (  ( lTX + 26 ) << 4  ) + lXIncr;
+
+  lV1 = ( lTY << 4 ) + lXIncr;
+  lV2 = (  ( lTY + 26 ) << 4  ) + lXIncr;
+
+  lpDMA[ k + 0 ] = GS_SETREG_UV( lU1, lV1 );
+  lpDMA[ k + 1 ] = GS_SETREG_XYZ( lX1, lY1, aZ );
+  lpDMA[ k + 2 ] = GS_SETREG_UV( lU2, lV2 );
+  lpDMA[ k + 3 ] = GS_SETREG_XYZ( lX2, lY2, aZ );
+
+ }  /* end for */
+
+ return lLen;
+
+}  /* end _fontm_gs_packet */
 
 static void GS_InitScreen ( void ) {
 
@@ -1211,7 +1286,6 @@ static void GS_RoundRect ( int aXLeft, int anYTop, int aXRight, int anYBottom, i
 static void GS_DrawIcon ( int aX, int anY, GSIconSize aSize, void* apData ) {
 
  u64         lDMA[ 38 ] __attribute(   (  aligned( 16 )  )   );
- u64*        lpDMA = lDMA;
  u32         lQWC  = ( aSize * aSize * 4 ) >> 4;
  GSVertex    lPoints   [ 2 ];
  GSTexVertex lTexPoints[ 2 ];
@@ -1231,68 +1305,68 @@ static void GS_DrawIcon ( int aX, int anY, GSIconSize aSize, void* apData ) {
  s_GSCtx.Scale   ( lPoints,    2 );
  s_GSCtx.ScaleUV ( lTexPoints, 2 );
 
- *lpDMA++ = DMA_TAG( 6, 0, DMA_CNT, 0, 0, 0 );
- *lpDMA++ = 0;
+ lDMA[ 0 ] = DMA_TAG( 6, 1, DMA_CNT, 0, 0, 0 );
+ lDMA[ 1 ] = 0;
 
-  *lpDMA++ = GIF_TAG( 4, 1, 0, 0, 0, 1 );
-  *lpDMA++ = GIF_AD;
+  lDMA[ 2 ] = GIF_TAG( 4, 1, 0, 0, 0, 1 );
+  lDMA[ 3 ] = GIF_AD;
 
-   *lpDMA++ = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_IconPtr, 1, GSPSM_32 );
-   *lpDMA++ = GS_BITBLTBUF;
+   lDMA[ 4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_IconPtr, 1, GSPSM_32 );
+   lDMA[ 5 ] = GS_BITBLTBUF;
 
-   *lpDMA++ = GS_SETREG_TRXPOS( 0, 0, 0, 0, 0 );
-   *lpDMA++ = GS_TRXPOS;
+   lDMA[ 6 ] = GS_SETREG_TRXPOS( 0, 0, 0, 0, 0 );
+   lDMA[ 7 ] = GS_TRXPOS;
 
-   *lpDMA++ = GS_SETREG_TRXREG( aSize, aSize );
-   *lpDMA++ = GS_TRXREG;
+   lDMA[ 8 ] = GS_SETREG_TRXREG( aSize, aSize );
+   lDMA[ 9 ] = GS_TRXREG;
 
-   *lpDMA++ = GS_SETREG_TRXDIR( 0 );
-   *lpDMA++ = GS_TRXDIR;
+   lDMA[ 10 ] = GS_SETREG_TRXDIR( 0 );
+   lDMA[ 11 ] = GS_TRXDIR;
 
-   *lpDMA++ = GIF_TAG( lQWC, 1, 0, 0, 2, 1 );
-   *lpDMA++ = 0;
+   lDMA[ 12 ] = GIF_TAG( lQWC, 1, 0, 0, 2, 1 );
+   lDMA[ 13 ] = 0;
 
-  *lpDMA++ = DMA_TAG(  lQWC, 1, DMA_REF, 0, ( u32 )apData, 0  );
-  *lpDMA++ = 0;
+  lDMA[ 14 ] = DMA_TAG(  lQWC, 1, DMA_REF, 0, ( u32 )apData, 0  );
+  lDMA[ 15 ] = 0;
 
-  *lpDMA++ = DMA_TAG( 10, 0, DMA_END, 0, 0, 0 );
-  *lpDMA++ = 0;
+  lDMA[ 16 ] = DMA_TAG( 10, 1, DMA_END, 0, 0, 0 );
+  lDMA[ 17 ] = 0;
 
-   *lpDMA++ = GIF_TAG( 9, 1, 0, 0, 0, 1 );
-   *lpDMA++ = GIF_AD;
+   lDMA[ 18 ] = GIF_TAG( 9, 1, 0, 0, 0, 1 );
+   lDMA[ 19 ] = GIF_AD;
 
-   *lpDMA++ = 0;
-   *lpDMA++ = GS_TEXFLUSH;
+   lDMA[ 20 ] = 0;
+   lDMA[ 21 ] = GS_TEXFLUSH;
 
-   *lpDMA++ = GS_SETREG_TEX0(
-               s_GSCtx.m_IconPtr, 1, GSPSM_32, 6, 6,
-               1, 1, 0, 0, 0, 0, 1
-              );
-   *lpDMA++ = GS_TEX0_1 + !s_GSCtx.m_PrimCtx;
+   lDMA[ 22 ] = GS_SETREG_TEX0(
+                 s_GSCtx.m_IconPtr, 1, GSPSM_32, 6, 6,
+                 1, 1, 0, 0, 0, 0, 1
+                );
+   lDMA[ 23 ] = GS_TEX0_1 + s_GSCtx.m_PrimCtx;
 
-   *lpDMA++ = GS_SETREG_TEX1( 0, 0, 1, 1, 0, 0, 0 );
-   *lpDMA++ = GS_TEX1_1 + !s_GSCtx.m_PrimCtx;
+   lDMA[ 24 ] = GS_SETREG_TEX1( 0, 0, 1, 1, 0, 0, 0 );
+   lDMA[ 25 ] = GS_TEX1_1 + s_GSCtx.m_PrimCtx;
 
-   *lpDMA++ = ALPHA_BLEND_NORMAL;
-   *lpDMA++ = GS_ALPHA_1 + !s_GSCtx.m_PrimCtx;
+   lDMA[ 26 ] = ALPHA_BLEND_NORMAL;
+   lDMA[ 27 ] = GS_ALPHA_1 + s_GSCtx.m_PrimCtx;
 
-   *lpDMA++ = GS_SETREG_PRIM(
-               GS_PRIM_PRIM_SPRITE, 0, 1, 0,
-               1, 1, 1, !s_GSCtx.m_PrimCtx, 0
-              );
-   *lpDMA++ = GS_PRIM;
+   lDMA[ 28 ] = GS_SETREG_PRIM(
+                 GS_PRIM_PRIM_SPRITE, 0, 1, 0,
+                 1, 1, 1, s_GSCtx.m_PrimCtx, 0
+                );
+   lDMA[ 29 ] = GS_PRIM;
 
-   *lpDMA++ = GS_SETREG_UV( lTexPoints[ 0 ].m_U, lTexPoints[ 0 ].m_V );
-   *lpDMA++ = GS_UV;
+   lDMA[ 30 ] = GS_SETREG_UV( lTexPoints[ 0 ].m_U, lTexPoints[ 0 ].m_V );
+   lDMA[ 31 ] = GS_UV;
 
-   *lpDMA++ = GS_SETREG_XYZ( lPoints[ 0 ].m_X, lPoints[ 0 ].m_Y, lPoints[ 0 ].m_Z );
-   *lpDMA++ = GS_XYZ2;
+   lDMA[ 32 ] = GS_SETREG_XYZ( lPoints[ 0 ].m_X, lPoints[ 0 ].m_Y, lPoints[ 0 ].m_Z );
+   lDMA[ 33 ] = GS_XYZ2;
 
-   *lpDMA++ = GS_SETREG_UV( lTexPoints[ 1 ].m_U, lTexPoints[ 1 ].m_V );
-   *lpDMA++ = GS_UV;
+   lDMA[ 34 ] = GS_SETREG_UV( lTexPoints[ 1 ].m_U, lTexPoints[ 1 ].m_V );
+   lDMA[ 35 ] = GS_UV;
 
-   *lpDMA++ = GS_SETREG_XYZ( lPoints[ 1 ].m_X, lPoints[ 1 ].m_Y, lPoints[ 1 ].m_Z );
-   *lpDMA++ = GS_XYZ2;
+   lDMA[ 36 ] = GS_SETREG_XYZ( lPoints[ 1 ].m_X, lPoints[ 1 ].m_Y, lPoints[ 1 ].m_Z );
+   lDMA[ 37 ] = GS_XYZ2;
 
  DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 19 );
  DMA_Wait ( DMA_CHANNEL_GIF );
@@ -1433,22 +1507,21 @@ static void GS_VSync ( void ) {
 
 static void GS_SetTest ( void ) {
 
- unsigned long int  lDMA[ 4 ] __attribute__(   (  aligned( 16 )  )   );
- unsigned long int* lpDMA = lDMA;
+ unsigned long int lDMA[ 4 ] __attribute__(   (  aligned( 16 )  )   );
 
  s_GSCtx.m_Test.m_ZTST = s_GSCtx.m_fZBuf  ? 2 : 1;
  s_GSCtx.m_Test.m_ATE  = s_GSCtx.m_fAlpha ? 1 : 0;
 
- *lpDMA++ = GIF_TAG( 1, 1, 0, 0, 0, 1 );
- *lpDMA++ = GIF_AD;
+ lDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
+ lDMA[ 1 ] = GIF_AD;
 
- *lpDMA++ = GS_SETREG_TEST(
+ lDMA[ 2 ] = GS_SETREG_TEST(
   s_GSCtx.m_Test.m_ATE,  s_GSCtx.m_Test.m_ATST,
   s_GSCtx.m_Test.m_AREF, s_GSCtx.m_Test.m_AFAIL, 
   s_GSCtx.m_Test.m_DATE, s_GSCtx.m_Test.m_DATM, 
   s_GSCtx.m_Test.m_ZTE,  s_GSCtx.m_Test.m_ZTST
  );
- *lpDMA++ = GS_TEST_1 + s_GSCtx.m_PrimCtx;
+ lDMA[ 3 ] = GS_TEST_1 + s_GSCtx.m_PrimCtx;
 
  DMA_Send ( DMA_CHANNEL_GIF, lDMA, 2 );
  DMA_Wait ( DMA_CHANNEL_GIF );
@@ -1484,31 +1557,25 @@ static void GS_ClearScreen ( unsigned long int aColor ) {
 
 static void GS_CopyFBuffer ( int aDest, int aX, int anY, int aWidth, int aHeight ) {
 
- u64  lDMA[ 12 ] __attribute__(   (  aligned ( 16 )  )   );
- u64* lpDMA = lDMA;
+ u64 lDMA[ 12 ] __attribute__(   (  aligned ( 16 )  )   );
 
  *GS_CSR = *GS_CSR | 2;
 
- *lpDMA++ = GIF_TAG( 5, 1, 0, 0, 0, 1 );
- *lpDMA++ = GIF_AD;
-
- *lpDMA++ = GS_SETREG_BITBLTBUF(
+ lDMA[  0 ] = GIF_TAG( 5, 1, 0, 0, 0, 1 );
+ lDMA[  1 ] = GIF_AD;
+ lDMA[  2 ] = GS_SETREG_BITBLTBUF(
    s_GSCtx.m_ScreenBufPtr[ !aDest ] / 256, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM,
    s_GSCtx.m_ScreenBufPtr[  aDest ] / 256, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM
   );
- *lpDMA++ = GS_BITBLTBUF;
-
- *lpDMA++ = GS_SETREG_TRXPOS( aX, anY, aX, anY, 0 );
- *lpDMA++ = GS_TRXPOS;
-
- *lpDMA++ = GS_SETREG_TRXREG( aWidth, aHeight );
- *lpDMA++ = GS_TRXREG;
-
- *lpDMA++ = GS_SETREG_TRXDIR( 2 );
- *lpDMA++ = GS_TRXDIR;
-
- *lpDMA++ = 0;
- *lpDMA   = GS_FINISH;
+ lDMA[  3 ] = GS_BITBLTBUF;
+ lDMA[  4 ] = GS_SETREG_TRXPOS( aX, anY, aX, anY, 0 );
+ lDMA[  5 ] = GS_TRXPOS;
+ lDMA[  6 ] = GS_SETREG_TRXREG( aWidth, aHeight );
+ lDMA[  7 ] = GS_TRXREG;
+ lDMA[  8 ] = GS_SETREG_TRXDIR( 2 );
+ lDMA[  9 ] = GS_TRXDIR;
+ lDMA[ 10 ] = 0;
+ lDMA[ 11 ] = GS_FINISH;
 
  DMA_Send ( DMA_CHANNEL_GIF, lDMA, 6 );
  DMA_Wait ( DMA_CHANNEL_GIF );
@@ -1516,6 +1583,35 @@ static void GS_CopyFBuffer ( int aDest, int aX, int anY, int aWidth, int aHeight
  while (  !( *GS_CSR & 2 )  );
 
 }  /* end GS_CopyFBuffer */
+
+static void GS_CopyBuffer ( int aBuf, int aXSrc, int anYSrc, int aWidth, int aHeight, int aXDst, int anYDst ) {
+
+ u64 lDMA[ 12 ] __attribute__(   (  aligned ( 16 )  )   );
+
+ *GS_CSR = *GS_CSR | 2;
+
+ lDMA[  0 ] = GIF_TAG( 5, 1, 0, 0, 0, 1 );
+ lDMA[  1 ] = GIF_AD;
+ lDMA[  2 ] = GS_SETREG_BITBLTBUF(
+   s_GSCtx.m_ScreenBufPtr[ aBuf ] / 256, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM,
+   s_GSCtx.m_ScreenBufPtr[ aBuf ] / 256, s_GSCtx.m_Width / 64, s_GSCtx.m_PSM
+  );
+ lDMA[  3 ] = GS_BITBLTBUF;
+ lDMA[  4 ] = GS_SETREG_TRXPOS( aXSrc, anYSrc, aXDst, anYDst, 0 );
+ lDMA[  5 ] = GS_TRXPOS;
+ lDMA[  6 ] = GS_SETREG_TRXREG( aWidth, aHeight );
+ lDMA[  7 ] = GS_TRXREG;
+ lDMA[  8 ] = GS_SETREG_TRXDIR( 2 );
+ lDMA[  9 ] = GS_TRXDIR;
+ lDMA[ 10 ] = 0;
+ lDMA[ 11 ] = GS_FINISH;
+
+ DMA_Send ( DMA_CHANNEL_GIF, lDMA, 6 );
+ DMA_Wait ( DMA_CHANNEL_GIF );
+
+ while (  !( *GS_CSR & 2 )  );
+
+}  /* end GS_CopyBuffer */
 
 static void GS_AdjustDisplay ( int aDX, int aDY ) {
 
@@ -1562,6 +1658,66 @@ static void GS_ZTest ( int afOn ) {
  DMA_Send ( DMA_CHANNEL_VIF1, lDMA, 4 );
 
 }  /* end GS_ZTest */
+
+int GS_printf ( const char* apFmt, ... ) {
+
+ static char s_lBuf[ 1024 ] __attribute__(   (  section( ".data" )  )   );
+ static int  s_lY = 0;
+ static int  s_LastWidth;
+
+ va_list lArgs;
+ int     lSize;
+ int     lY = s_lY;
+
+ unsigned int lBkColor = s_GSCtx.m_Font.m_BkColor;
+ GSBkMode     lBkMode  = s_GSCtx.m_Font.m_BkMode;
+
+ va_start ( lArgs, apFmt );
+  lSize = vsnprintf ( s_lBuf, 1024, apFmt, lArgs );
+ va_end ( lArgs );
+
+ if ( s_lBuf[ lSize - 1 ] == '\n' ) {
+
+  s_lBuf[ lSize - 1 ] = '\0';
+  s_lY += 26;
+
+ }  /* end if */
+
+ s_GSCtx.m_Font.m_BkColor = 0;
+ s_GSCtx.m_Font.m_BkMode  = GSBkMode_Opaque;
+ s_GSCtx.DrawText ( 0, lY, 100, s_lBuf, lSize );
+
+ lSize = s_GSCtx.TextWidth ( s_lBuf, 0 );
+
+ if ( lSize > s_LastWidth ) s_LastWidth = lSize;
+
+ if ( s_lY > s_GSCtx.m_Height ) {
+
+  GSSprite* lpSprite = s_GSCtx.InitSprite ( 0 );
+
+  s_GSCtx.CopyBuffer (
+   0, 0, 13, s_GSCtx.m_Width, ( s_lY - 26 ) >> 1, 0, 0
+  );
+
+  lpSprite -> m_Points[ 0 ].m_X = 0;
+  lpSprite -> m_Points[ 0 ].m_Y = s_lY - 26;
+  lpSprite -> m_Points[ 0 ].m_Z = 100;
+  lpSprite -> m_Points[ 1 ].m_X = s_LastWidth;
+  lpSprite -> m_Points[ 1 ].m_Y = s_lY + 26;
+  lpSprite -> m_Points[ 1 ].m_Z = 100;
+
+  lpSprite -> Draw ();
+
+  s_lY -= 26;
+
+ }  /* end if */
+
+ s_GSCtx.m_Font.m_BkColor = lBkColor;
+ s_GSCtx.m_Font.m_BkMode  = lBkMode;
+
+ return lSize;
+
+}  /* end GS_printf */
 
 static void GS_DestroyContext ( void ) {
 
@@ -1846,11 +2002,14 @@ setPal_I:
  s_GSCtx.ClearScreen   = GS_ClearScreen;
  s_GSCtx.TextWidth     = _fontm_text_width;
  s_GSCtx.DrawText      = _fontm_draw_text;
+ s_GSCtx.TextGSPacket  = _fontm_gs_packet;
  s_GSCtx.SetTextColor  = _fontm_set_text_color;
  s_GSCtx.Destroy       = GS_DestroyContext;
  s_GSCtx.CopyFBuffer   = GS_CopyFBuffer;
  s_GSCtx.AdjustDisplay = GS_AdjustDisplay;
  s_GSCtx.ZTest         = GS_ZTest;
+ s_GSCtx.CopyBuffer    = GS_CopyBuffer;
+ s_GSCtx.printf        = GS_printf;
 
  return &s_GSCtx;
 

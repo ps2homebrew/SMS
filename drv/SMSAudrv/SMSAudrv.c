@@ -111,6 +111,13 @@ static void _PlaybackThread ( void* apParam ) {
 
 typedef void* ( *RPCHandler ) ( void*, int );
 
+static void _Silence ( void ) {
+
+ memset (  s_SPUBuf,  0, sizeof ( s_SPUBuf  )  );
+ memset (  s_RingBuf, 0, sizeof ( s_RingBuf )  );
+
+}  /* end _Silence */
+
 static void* _StartAudio ( void* apData, int aSize ) {
 
  int lFreq   = (  ( int* )apData  )[ 0 ];
@@ -120,8 +127,7 @@ static void* _StartAudio ( void* apData, int aSize ) {
 
  sceSdInit ( SD_INIT_COLD );
 
- memset (  s_SPUBuf,  0, sizeof ( s_SPUBuf  )  );
- memset (  s_RingBuf, 0, sizeof ( s_RingBuf )  );
+ _Silence   ();
 
  _SetVolume ( 0, 0       );
  _SetVolume ( 1, lVolume );
@@ -147,7 +153,9 @@ static void* _StartAudio ( void* apData, int aSize ) {
  sceSdSetTransCallback ( SD_CORE_1, SDTransCallback );
  sceSdBlockTrans (  SD_CORE_1, SD_BLOCK_LOOP, s_SPUBuf, sizeof ( s_SPUBuf )  );
 
- return NULL;
+ *( int* )apData = s_BufSize;
+
+ return apData;
 
 }  /* end _StartAudio */
 
@@ -210,7 +218,12 @@ static void* _RPCServer_SMSA ( int aCmd, void* apData, int aSize ) {
 
 static void* _RPCServer_SMSV ( int aCmd, void* apData, int aSize ) {
 
- _SetVolume (  1, *( int* )apData  );
+ switch ( aCmd ) {
+
+  case 0: _SetVolume (  1, *( int* )apData  ); break;
+  case 1: _Silence   ();                       break;
+
+ }  /* end switch */
 
  return NULL;
 
@@ -277,4 +290,3 @@ int _start ( int argc, char** argv ) {
  return MODULE_RESIDENT_END;
 
 }  /* end _start */
-

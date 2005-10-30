@@ -119,6 +119,18 @@ static void _sms_audio_buffer_destroy ( void ) {
 #endif  /* _WIN32 */
 }  /* end _sms_audio_buffer_destroy */
 
+static void _sms_audio_buffer_reset ( void ) {
+
+ s_AudioBuffer.m_pInp  =
+ s_AudioBuffer.m_pOut  =
+ s_AudioBuffer.m_pBeg  = UNCACHED_SEG( g_DataBuffer                          );
+ s_AudioBuffer.m_pEnd  = UNCACHED_SEG( &g_DataBuffer[ SMS_DATA_BUFFER_SIZE ] );
+ s_AudioBuffer.m_Len   = 0;
+ s_AudioBuffer.m_pPos  = NULL;
+ s_AudioBuffer.m_fWait = 0;
+
+}  /* end _sms_audio_buffer_reset */
+
 SMS_AudioBuffer* SMS_InitAudioBuffer ( void ) {
 #ifndef _WIN32
  ee_sema_t lSema;
@@ -131,17 +143,13 @@ SMS_AudioBuffer* SMS_InitAudioBuffer ( void ) {
  s_SemaLock = CreateSema ( &lSema );
 # endif  /* LOCK_QUEUES */
 #endif  /* _WIN32 */
- s_AudioBuffer.m_pInp  =
- s_AudioBuffer.m_pOut  =
- s_AudioBuffer.m_pBeg  = UNCACHED_SEG( g_DataBuffer                          );
- s_AudioBuffer.m_pEnd  = UNCACHED_SEG( &g_DataBuffer[ SMS_DATA_BUFFER_SIZE ] );
- s_AudioBuffer.m_Len   = 0;
- s_AudioBuffer.m_pPos  = NULL;
- s_AudioBuffer.m_fWait = 0;
 
  s_AudioBuffer.Alloc   = _sms_audio_buffer_alloc;
  s_AudioBuffer.Release = _sms_audio_buffer_release;
  s_AudioBuffer.Destroy = _sms_audio_buffer_destroy;
+ s_AudioBuffer.Reset   = _sms_audio_buffer_reset;
+
+ _sms_audio_buffer_reset ();
 
  return &s_AudioBuffer;
 

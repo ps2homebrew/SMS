@@ -13,9 +13,9 @@
 #include "SMS_ContainerAVI.h"
 #include "SMS_FourCC.h"
 #include "SMS_Integer.h"
+#include "GUI.h"
 
 #include <malloc.h>
-#include <limits.h>
 
 #define MYCONT( c ) (  ( _AVIContainer* )c -> m_pCtx  )
 #define MYSTRM( s ) (  ( _AVIStream*    )s -> m_pCtx  )
@@ -46,14 +46,13 @@ typedef struct _AVIStream {
  int32_t      m_SampleSize;
  uint32_t     m_CumLen;
  uint32_t     m_FrameOffset;
- SMS_Rational m_TimeBase;
+ uint32_t     m_NewFrameOffset;
 
 } _AVIStream;
 
 typedef struct _AVIContainer {
 
  int64_t  m_StartTime;
- int64_t  m_Duration;
  uint32_t m_BitRate;
  uint32_t m_RiffEnd;
  uint32_t m_MoviEnd;
@@ -130,37 +129,10 @@ static void _AllocPacket ( SMS_AVPacket* apPkt, int aSize ) {
 
 }  /* end _AllocPacket */
 
-static void _SetPTSInfo ( _AVIStream* apStm, int aPTSWrapBits, int aPTSNum, int aPTSDen ) {
-
- apStm -> m_PTSWrapBits    = aPTSWrapBits;
- apStm -> m_TimeBase.m_Num = aPTSNum;
- apStm -> m_TimeBase.m_Den = aPTSDen;
-
-}  /* end _AVISetPTSInfo */
-
-static int64_t _Rescale ( int64_t anA, int64_t aB, int64_t aC ) {
-
- SMS_Integer lAi, lCi;
-    
- if ( anA < 0 ) return -_Rescale ( -anA, aB, aC );
-    
- if ( aB <= INT_MAX && aC <= INT_MAX )
-
-  return anA <= INT_MAX ? ( anA * aB + aC / 2 ) / aC
-                        : anA / aC * aB + ( anA % aC * aB + aC / 2 ) / aC;
-    
- lAi = SMS_Integer_mul_i (  SMS_Integer_int2i ( anA ), SMS_Integer_int2i ( aB )  );
- lCi = SMS_Integer_int2i ( aC );
- lAi = SMS_Integer_add_i (  lAi, SMS_Integer_shr_i ( lCi, 1 )  );
-    
- return SMS_Integer_i2int (  SMS_Integer_div_i ( lAi, lCi )  );
-
-}  /* end _Rescale */
-
 static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
 
  int          i, lnIdx = aSize / 16;
- uint32_t     lIdx, lTag, lFlags, lPos, lLen;
+ uint32_t     lIdx, lTag, lFlags, lPos, lLen, lPerc;
  _AVIStream*  lpStm;
  _AVIdxEntry* lpIndices;
  _AVIdxEntry* lpIndex;
@@ -171,6 +143,10 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
   apCtx -> m_pFileCtx, apCtx -> m_pFileCtx -> m_CurPos, 64
  );
 
+ apCtx -> m_pGUICtx -> Progress ( "Loading indices...", 0 );
+
+ lPerc = lnIdx / 100 + 1;
+
  for ( i = 0; i < lnIdx; ++i ) {
 
   lTag   = File_GetUInt ( apCtx -> m_pFileCtx );
@@ -180,6 +156,14 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
 
   lIdx  = (  ( lTag        & 0xFF  ) - '0'  ) * 10;
   lIdx += (  ( lTag >> 8 ) & 0xFF  ) - '0';
+
+  if (  !( i % lPerc )  ) {
+
+   float lPos = ( float )i / ( float ) lnIdx * 100.0F;
+
+   apCtx -> m_pGUICtx -> Progress (  NULL, ( unsigned int )( lPos + 0.5F )  );
+
+  }  /* end if */
 
   if ( lIdx >= apCtx -> m_nStm ) continue;
 
@@ -224,14 +208,17 @@ static void _LoadIndex ( SMS_Container* apCont ) {
 
  while ( 1 )
 
-  if ( lpFileCtx-> m_CurPos < lpFileCtx -> m_Size ) {
+  if ( lpFileCtx -> m_CurPos < lpFileCtx -> m_Size ) {
 
    lTag  = File_GetUInt ( lpFileCtx );
    lSize = File_GetUInt ( lpFileCtx );
 
-   if (  lTag == SMS_MKTAG( 'i', 'd', 'x', '1' ) &&
-         _Load_idx1 ( apCont, lSize )
-   ) break;
+   if (  lTag == SMS_MKTAG( 'i', 'd', 'x', '1' ) && _Load_idx1 ( apCont, lSize )  ) {
+
+    apCont -> m_Flags |= SMS_CONT_FLAGS_SEEKABLE;
+    break;
+
+   }  /* end if */
 
    lSize += ( lSize & 1 );
    lpFileCtx -> Seek ( lpFileCtx, lpFileCtx -> m_CurPos + lSize );
@@ -346,7 +333,7 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
         MYSTRM( lpStm ) -> m_Rate  = lRate;
         MYSTRM( lpStm ) -> m_Scale = lScale;
 
-        _SetPTSInfo (  MYSTRM( lpStm ), 64, lScale, lRate  );
+        SMSContainer_SetPTSInfo ( lpStm, lScale, lRate );
 
         lpStm -> m_Codec.m_FrameRate     = lRate;
         lpStm -> m_Codec.m_FrameRateBase = lScale;
@@ -355,7 +342,7 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
         lnFrames = File_GetUInt ( apCtx -> m_pFileCtx );  /* dwLength */
 
         MYSTRM( lpStm ) -> m_StartTime = SMS_INT64( 0 );
-        MYSTRM( lpStm ) -> m_Duration  = _Rescale (
+        MYSTRM( lpStm ) -> m_Duration  = SMS_Rescale (
          lnFrames, ( int64_t )lpStm -> m_Codec.m_FrameRateBase *
                    ( int64_t )SMS_TIME_BASE,
          lpStm -> m_Codec.m_FrameRate
@@ -386,7 +373,7 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
         MYSTRM( lpStm ) -> m_Scale = File_GetUInt ( apCtx -> m_pFileCtx );  /* dwScale */
         MYSTRM( lpStm ) -> m_Rate  = File_GetUInt ( apCtx -> m_pFileCtx );  /* dwRate  */
 
-        _SetPTSInfo (  MYSTRM( lpStm ), 64, MYSTRM( lpStm ) -> m_Scale, MYSTRM( lpStm ) -> m_Rate );
+        SMSContainer_SetPTSInfo (  lpStm, MYSTRM( lpStm ) -> m_Scale, MYSTRM( lpStm ) -> m_Rate  );
 
                File_GetUInt ( apCtx -> m_pFileCtx );  /* dwStart  */
         lLen = File_GetUInt ( apCtx -> m_pFileCtx );  /* dwLength */
@@ -535,8 +522,8 @@ static void _CalcPktFields ( SMS_Stream* apStm, SMS_AVPacket* apPkt ) {
 
  if ( lDen && lNum )
 
-  apPkt -> m_Duration = ( int )_Rescale (
-   1, lNum * ( int64_t )MYSTRM( apStm ) -> m_TimeBase.m_Den, lDen * ( int64_t )MYSTRM( apStm ) -> m_TimeBase.m_Num
+  apPkt -> m_Duration = ( int )SMS_Rescale (
+   1, lNum * ( int64_t )apStm -> m_TimeBase.m_Den, lDen * ( int64_t )apStm -> m_TimeBase.m_Num
   );
 
  if ( apPkt -> m_PTS == SMS_NOPTS_VALUE ) {
@@ -564,13 +551,13 @@ static void _CalcPktFields ( SMS_Stream* apStm, SMS_AVPacket* apPkt ) {
 
  if ( apPkt -> m_PTS != SMS_NOPTS_VALUE )
 
-  apPkt -> m_PTS = _Rescale ( apPkt -> m_PTS, SMS_TIME_BASE * ( int64_t )MYSTRM( apStm ) -> m_TimeBase.m_Num, MYSTRM( apStm ) -> m_TimeBase.m_Den );
+  apPkt -> m_PTS = SMS_Rescale (  apPkt -> m_PTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den  );
 
  if ( apPkt -> m_DTS != SMS_NOPTS_VALUE )
 
-  apPkt -> m_DTS = _Rescale ( apPkt -> m_DTS, SMS_TIME_BASE * ( int64_t )MYSTRM( apStm ) -> m_TimeBase.m_Num, MYSTRM( apStm ) -> m_TimeBase.m_Den );
+  apPkt -> m_DTS = SMS_Rescale ( apPkt -> m_DTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den );
 
- apPkt -> m_Duration = ( int )_Rescale ( apPkt -> m_Duration, SMS_TIME_BASE * ( int64_t )MYSTRM( apStm ) -> m_TimeBase.m_Num, MYSTRM( apStm ) -> m_TimeBase.m_Den );
+ apPkt -> m_Duration = ( int )SMS_Rescale (  apPkt -> m_Duration, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den  );
 
 }  /* end _CalcPktFields */
 
@@ -638,7 +625,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 	      ( lData[ 2 ] == 'w' && lData[ 3 ] == 'b' ) || 
           ( lData[ 2 ] == 'd' && lData[ 3 ] == 'b' ) ||
           ( lData[ 2 ] == '_' && lData[ 3 ] == '_' )
-       )                                       &&
+       )                                        &&
        lCount    <  ( int32_t )lpCont -> m_nStm &&
        i + lSize <= ( int32_t )lpAVICont -> m_MoviEnd
   ) {
@@ -661,7 +648,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
    apPkt -> m_DTS = lpAVIStm -> m_FrameOffset;
 
-   if ( lpStm -> m_SampleRate ) apPkt -> m_DTS /= lpStm -> m_SampleRate;
+   if ( lpAVIStm -> m_SampleSize ) apPkt -> m_DTS /= lpAVIStm -> m_SampleSize;
 
    apPkt -> m_StmIdx = lCount;
 
@@ -671,7 +658,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
           lpAVIStm -> m_pIdx[ lpAVIStm -> m_FrameOffset ].m_Flags & AVIIF_INDEX
     ) apPkt -> m_Flags |= SMS_PKT_FLAG_KEY;
 
-   } else apPkt -> m_Flags |= SMS_PKT_FLAG_KEY; 
+   } else apPkt -> m_Flags |= SMS_PKT_FLAG_KEY;
 
    if ( lpAVIStm -> m_SampleSize )
 
@@ -733,7 +720,7 @@ static void _UpdateStmTimings ( SMS_Container* apCont ) {
 
    if (  MYSTRM( lpStm ) -> m_StartTime < lStartTime  ) lStartTime = MYSTRM( lpStm ) -> m_StartTime;
 
-   if (  MYSTRM( lpStm ) -> m_Duration != SMS_NOPTS_VALUE  ) {
+   if ( MYSTRM( lpStm ) -> m_Duration != SMS_NOPTS_VALUE ) {
 
     lTmp = MYSTRM( lpStm ) -> m_StartTime + MYSTRM( lpStm ) -> m_Duration;
 
@@ -751,11 +738,11 @@ static void _UpdateStmTimings ( SMS_Container* apCont ) {
 
   if ( lEndTime != SMS_MAXINT64 ) {
 
-   MYCONT( apCont ) -> m_Duration = lEndTime - lStartTime;
+   apCont -> m_Duration = lEndTime - lStartTime;
 
    if ( apCont -> m_pFileCtx -> m_Size > 0 )
 
-    MYCONT( apCont ) -> m_BitRate = ( uint32_t )(  ( float )apCont -> m_pFileCtx -> m_Size * 8.0F * ( float )SMS_TIME_BASE / ( float )MYCONT( apCont ) -> m_Duration  );
+    MYCONT( apCont ) -> m_BitRate = ( uint32_t )(  ( float )apCont -> m_pFileCtx -> m_Size * 8.0F * ( float )SMS_TIME_BASE / ( float )apCont -> m_Duration  );
 
   }  /* end if */
 
@@ -777,7 +764,7 @@ static void _FillAllStmTimings ( SMS_Container* apCont ) {
   if (  MYSTRM( lpStm ) -> m_StartTime == SMS_NOPTS_VALUE ) {
 
    MYSTRM( lpStm ) -> m_StartTime = MYCONT( apCont ) -> m_StartTime;
-   MYSTRM( lpStm ) -> m_Duration  = MYCONT( apCont ) -> m_Duration;
+   MYSTRM( lpStm ) -> m_Duration  = apCont -> m_Duration;
 
   }  /* end if */
 
@@ -806,8 +793,8 @@ static void _EstimateTimingsFromBitRate ( SMS_Container* apCont ) {
 
  }  /* end if */
 
- if (  MYCONT( apCont ) -> m_Duration == SMS_NOPTS_VALUE && 
-       MYCONT( apCont ) -> m_BitRate  != 0               && 
+ if (  apCont -> m_Duration == SMS_NOPTS_VALUE && 
+       MYCONT( apCont ) -> m_BitRate  != 0     && 
        apCont -> m_pFileCtx -> m_Size  > 0
  )  {
 
@@ -866,6 +853,92 @@ static void _CalcFrameRate ( SMS_Container* apCont ) {
 
 }  /* end _CalcFrameRate */
 
+static int _LocateFrame ( _AVIdxEntry* apEnt, int anEnt, int aPos ) {
+
+ int lA, lB, lM, lPos;
+
+ lA = 0;
+ lB = anEnt - 1;
+
+ while ( lA <= lB ) {
+
+  lM   = ( lA + lB ) >> 1;
+  lPos = apEnt[ lM ].m_Pos;
+
+  if ( lPos == aPos )
+
+   goto found;
+
+  else if ( lPos > aPos )
+
+   lB = lM - 1;
+
+  else lA = lM + 1;
+
+ }  /* end while */
+
+ lM = lA;
+
+ if ( lM > 0 ) --lM;
+found:
+ return lM;
+
+}  /* end _LocateFrame */
+
+static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
+
+ int         i;
+ _AVIStream* lpStm = MYSTRM( apCont -> m_pStm[ anIdx ] );
+ int         lEnd  = aDir > 0 ? lpStm -> m_nIdx : 0;
+ uint32_t    lPos;
+
+ if ( aPos >= lpStm -> m_nIdx ) return 0;
+
+ while (  aPos != lEnd && !( lpStm -> m_pIdx[ aPos ].m_Flags & AVIIF_INDEX )  ) aPos += aDir;
+
+ if ( aPos == lpStm -> m_nIdx ) return 0;
+
+ lpStm -> m_NewFrameOffset = aPos;
+ lPos                      = lpStm -> m_pIdx[ aPos ].m_Pos;
+
+ for ( i = 0; i < apCont -> m_nStm; ++i ) {
+
+  int j;
+
+  if ( i != anIdx ) {
+
+   lpStm = MYSTRM( apCont -> m_pStm[ i ] );
+
+   if ( lpStm -> m_nIdx <= 0 ) return 0;
+
+   j = _LocateFrame ( lpStm -> m_pIdx, lpStm -> m_nIdx, lPos );
+
+   if (  ( j + 1 ) < lpStm -> m_nIdx ) ++j;
+
+   if ( lpStm -> m_SampleSize == 0 )
+
+    lpStm -> m_NewFrameOffset = j;
+
+   else lpStm -> m_NewFrameOffset = lpStm ->m_pIdx[ j ].m_CumLen;
+
+  }  /* end if */
+
+ }  /* end for */
+
+ for ( i = 0; i < apCont -> m_nStm; ++i ) {
+
+  lpStm = MYSTRM( apCont -> m_pStm[ i ] );
+  lpStm -> m_FrameOffset = lpStm -> m_NewFrameOffset;
+
+ }  /* end for */
+
+ lPos += MYCONT( apCont ) -> m_MoviList;
+ apCont -> m_pFileCtx -> Seek ( apCont -> m_pFileCtx, lPos );
+
+ return 1;
+
+}  /* end _Seek */
+
 int SMS_GetContainerAVI ( SMS_Container* apCont ) {
 
  int      retVal = 0;
@@ -881,6 +954,7 @@ int SMS_GetContainerAVI ( SMS_Container* apCont ) {
 
    apCont -> m_pName    = "AVI";
    apCont -> ReadPacket = _ReadPacket;
+   apCont -> Seek       = _Seek;
 
    _CalcFrameRate ( apCont );
 

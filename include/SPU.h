@@ -3,9 +3,12 @@
 
 typedef struct SPUContext {
 
+ float m_BufTime;
+
  void ( *PlayPCM   ) ( void* );
  void ( *SetVolume ) ( int   );
  void ( *Destroy   ) ( void  );
+ void ( *Silence   ) ( void  );
 
 } SPUContext;
 
