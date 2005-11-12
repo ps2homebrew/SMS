@@ -12,10 +12,6 @@
 
 #include <kernel.h>
 #include <libpad.h>
-#include <sifrpc.h>
-#include <loadfile.h>
-#include <iopcontrol.h>
-#include <iopheap.h>
 
 int main ( int argc, char** argv ) {
 
@@ -29,24 +25,18 @@ int main ( int argc, char** argv ) {
 
  SMS_DSP_Init ();
 #if RESET_IOP
- SifInitRpc     ( 0 ); 
- SifExitIopHeap (); 
- SifLoadFileExit(); 
- SifExitRpc     (); 
- SifIopReset ( "rom0:UDNL rom0:EELOADCNF", 0 );
-
- while (  SifIopSync ()  );
+ SMS_ResetIOP ();
 #endif  /* RESET_IOP */
- SifInitRpc ( 0 );
 
  CDDA_Init  ();
  Timer_Init ();
+ CDVD_Init  ();
 
  lDisplayMode = GUI_InitPad ();
 
  if (   (  lfConfig = LoadConfig ()  ) && lDisplayMode == GSDisplayMode_AutoDetect  ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
 
- lpGSCtx = GS_InitContext  ( lDisplayMode );
+ lpGSCtx = GS_InitContext ( lDisplayMode );
 
  if ( lfConfig ) {
 
@@ -60,8 +50,6 @@ int main ( int argc, char** argv ) {
  lpGUICtx -> Status ( "Initializing SMS..." );
 
  SMS_Initialize ( lpGUICtx );
-
- CDVD_Init ();
 
  g_DVDVSupport = CDVD_QueryDVDV ();
  lpBrowserCtx  = BrowserContext_Init ( lpGUICtx );
@@ -92,7 +80,7 @@ int main ( int argc, char** argv ) {
 
    lpPlayer -> Play    ();
    lpPlayer -> Destroy ();
-   lpGUICtx -> Redraw  ();
+   lpGUICtx -> Redraw  ( 1 );
 
   }  /* end else */
 

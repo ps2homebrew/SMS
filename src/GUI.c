@@ -40,13 +40,11 @@
 #define USB_FLAG_DISCONNECT 0x00000002
 
 extern void* _gp;
-extern int   g_fUSB;
-extern int   g_NetFailFlags;
 
 static GUIContext                 s_GUICtx;
 static unsigned char              s_PadBuf0[  256 ] __attribute__(   (  aligned( 64 )  )   );
 static unsigned char              s_PadBuf1[  256 ] __attribute__(   (  aligned( 64 )  )   );
-static unsigned char              s_Stack [ 32768 ] __attribute__(   (  aligned( 16 )  )   );
+static unsigned char              s_Stack[  32768 ] __attribute__(   (  aligned( 16 )  )   );
 static int                        s_GUIThreadID;
 static int                        s_MainThreadID;
 static int                        s_Stop;
@@ -78,7 +76,7 @@ static void GUI_Status ( char* apSts ) {
 
  int lLen      = strlen ( apSts );
  int lWidth    = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, lLen );
- int lY        = s_GUICtx.m_pGSCtx -> m_Height - 30;
+ int lY        = s_GUICtx.m_pGSCtx -> m_Height - 36;
  int lCY       = lY;
  int lScrWidth = s_GUICtx.m_pGSCtx -> m_Width - 24;
 
@@ -91,10 +89,9 @@ static void GUI_Status ( char* apSts ) {
 
  }  /* end while */
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width, 14 );
- s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
+ s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width, 16 );
  s_GUICtx.m_pGSCtx -> m_Font.m_BkMode = GSBkMode_Transparent;
- s_GUICtx.m_pGSCtx -> DrawText ( 6, lY, 0, apSts, lLen );
+ s_GUICtx.m_pGSCtx -> DrawText ( 6, lY, 0, apSts, lLen, 0 );
 
 }  /* end GUI_Status */
 
@@ -114,7 +111,7 @@ static void GUI_Progress ( char* apSts, unsigned int aPos ) {
 
   int lWidth;
 
-  s_lY        = s_GUICtx.m_pGSCtx -> m_Height - 30;
+  s_lY        = s_GUICtx.m_pGSCtx -> m_Height - 36;
   s_lLen      = strlen ( apSts );
   s_lCY       = s_lY / 2;
   s_lScrWidth = s_GUICtx.m_pGSCtx -> m_Width - 28;
@@ -134,19 +131,18 @@ static void GUI_Progress ( char* apSts, unsigned int aPos ) {
 
   }  /* end if */
 
-  s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
-  s_lLen = s_GUICtx.m_pGSCtx -> TextGSPacket ( 6, s_lY, 0, apSts, 0, &s_lpPrgList );
+  s_lLen = s_GUICtx.m_pGSCtx -> TextGSPacket ( 6, s_lY, 0, apSts, 0, &s_lpPrgList, 0 );
 
  } else if ( !s_lpPrgList ) return;
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, s_lCY, s_GUICtx.m_pGSCtx -> m_Width, 14 );
+ s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, s_lCY, s_GUICtx.m_pGSCtx -> m_Width, 16 );
 
  s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
  s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
 
  lWidth = (  ( s_GUICtx.m_pGSCtx -> m_Width - 2 ) * aPos  ) / 100;
 
- if ( lWidth > 16 ) s_GUICtx.m_pGSCtx -> RoundRect ( 1, s_lY, lWidth, s_lY + 26, 8 );
+ if ( lWidth > 16 ) s_GUICtx.m_pGSCtx -> RoundRect ( 1, s_lY, lWidth, s_lY + 30, 8 );
 
  DMA_Send ( DMA_CHANNEL_VIF1, s_lpPrgList, s_lLen );
 
@@ -158,19 +154,19 @@ static void GUI_DrawDesktop ( void ) {
 
  GUIStub_DrawBackground ( s_GUICtx.m_pGSCtx );
 
- s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x00, 0, 0, 0x80 );
- s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0xFF, 0, 0, 0x00 );
+ s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0, 0, 0, 0x80 );
+ s_GUICtx.m_pGSCtx -> m_LineColor = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
  s_GUICtx.m_pGSCtx -> RoundRect (
-  0, s_GUICtx.m_pGSCtx -> m_Height - 32, s_GUICtx.m_pGSCtx -> m_Width - 1, s_GUICtx.m_pGSCtx -> m_Height - 2, 8
+  0, s_GUICtx.m_pGSCtx -> m_Height - 38, s_GUICtx.m_pGSCtx -> m_Width - 1, s_GUICtx.m_pGSCtx -> m_Height - 2, 8
  );
  s_GUICtx.m_pGSCtx -> RoundRect ( 0,  2, s_GUICtx.m_pGSCtx -> m_Width - 1, 56, 8 );
- s_GUICtx.m_pGSCtx -> RoundRect ( 0, 62, s_GUICtx.m_pGSCtx -> m_Width - 1, s_GUICtx.m_pGSCtx -> m_Height - 38, 8 );
+ s_GUICtx.m_pGSCtx -> RoundRect ( 0, 62, s_GUICtx.m_pGSCtx -> m_Width - 1, s_GUICtx.m_pGSCtx -> m_Height - 44, 8 );
 
  s_GUICtx.m_pGSCtx -> CopyFBuffer (
   1, 0, 0, s_GUICtx.m_pGSCtx -> m_Width, s_GUICtx.m_pGSCtx -> m_Height >> 1
  );
 
- s_GUICtx.m_pGSCtx -> DrawText ( 6, s_GUICtx.m_DevMenu.m_StartY + 10, 0, STR_AVAILABLE_MEDIA, 0 );
+ s_GUICtx.m_pGSCtx -> DrawText ( 6, s_GUICtx.m_DevMenu.m_StartY + 10, 0, STR_AVAILABLE_MEDIA, 0, 0 );
 
 }  /* end GUI_DrawDesktop */
 
@@ -218,12 +214,11 @@ unsigned long int GUI_WaitEvent ( void ) {
 
    switch ( retVal ) {
 
-    case PAD_SELECT | PAD_CIRCLE  : hddPowerOff ();
-    case PAD_SELECT | PAD_R1      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  1,  0 ); continue;
-    case PAD_SELECT | PAD_R2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0,  1 ); continue;
-    case PAD_SELECT | PAD_L1      : s_GUICtx.m_pGSCtx -> AdjustDisplay ( -1,  0 ); continue;
-    case PAD_SELECT | PAD_L2      : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0, -1 ); continue;
-    case PAD_SELECT | PAD_TRIANGLE: ExecIOP ( 1, "\xC7\x00" ); Exit ( 0 );
+    case PAD_SELECT | PAD_CIRCLE: hddPowerOff ();
+    case PAD_SELECT | PAD_R1    : s_GUICtx.m_pGSCtx -> AdjustDisplay (  1,  0 ); continue;
+    case PAD_SELECT | PAD_R2    : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0,  1 ); continue;
+    case PAD_SELECT | PAD_L1    : s_GUICtx.m_pGSCtx -> AdjustDisplay ( -1,  0 ); continue;
+    case PAD_SELECT | PAD_L2    : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0, -1 ); continue;
 
    }  /* end switch */
 
@@ -319,7 +314,7 @@ static int _gui_thread ( void* apParam ) {
 
   if ( !s_NoDevCheck ) {
 
-   if ( g_fUSB ) {
+   if ( g_SMSFlags & SMS_FLAG_USB ) {
 
     if ( s_USBFlags & USB_FLAG_CONNECT ) {
 
@@ -396,7 +391,7 @@ static int _gui_thread ( void* apParam ) {
 
    }  /* end if */
 #ifndef NO_HOST_SUPPORT
-   if ( !g_NetFailFlags ) {
+   if ( g_SMSFlags & SMS_FLAG_NET ) {
 
     static int s_Cntr;
 
@@ -464,9 +459,8 @@ static void GUI_DrawDeviceMenu ( GUIDeviceMenu* apMenu ) {
 
  if ( !lpItem ) {
 
-  s_GUICtx.m_pGSCtx -> SetTextColor (  GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0xFF  )  );
   s_GUICtx.m_pGSCtx -> DrawText (
-   s_GUICtx.m_DevMenu.m_StartX, s_GUICtx.m_DevMenu.m_StartY + 10, 0, "none", 0
+   s_GUICtx.m_DevMenu.m_StartX, s_GUICtx.m_DevMenu.m_StartY + 10, 0, "none", 0, 0
   );
 
   return;
@@ -656,8 +650,7 @@ static void GUI_DrawDimmedFileItem ( GUIFileMenuItem* apItem, int anY ) {
  while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, --lStrLen );
 
  s_GUICtx.m_pGSCtx -> DrawIcon ( 6, anY, GSIS_32x32, lBuff );
- s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0x60  )  );
- s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 4, 0, apItem -> m_pFileName, lStrLen  );
+ s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 2, 0, apItem -> m_pFileName, lStrLen, 2 );
 
 }  /* end GUI_DrawDimmedFileItem */
 
@@ -669,8 +662,7 @@ static void GUI_DrawFileItem ( GUIFileMenuItem* apItem, int anY ) {
  while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, --lStrLen );
 
  s_GUICtx.m_pGSCtx -> DrawIcon ( 6, anY, GSIS_32x32, s_FSIcons[ apItem -> m_Flags & 0x0000000F ] );
- s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0xFF  )  );
- s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 4, 0, apItem -> m_pFileName, lStrLen  );
+ s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 2, 0, apItem -> m_pFileName, lStrLen, 1 );
 
  if ( apItem -> m_Flags & GUI_FF_SELECTED ) {
 
@@ -693,8 +685,6 @@ static void GUI_DrawFileMenu ( GUIFileMenu* apMenu ) {
  );
 
  if ( lpItem ) {
-
-  s_GUICtx.m_pGSCtx -> SetTextColor ( GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0xFF  )  );
 
   if ( lpItem != apMenu -> m_pItems )
 
@@ -782,6 +772,57 @@ static void GUI_ClearFileMenu ( void ) {
 
 }  /* end GUI_ClearFileMenu */
 
+static void GUI_ActivateMenu ( int anIndex ) {
+
+ int          lYOrg, lHOrg;
+ int          lY,    lH;
+ unsigned int lColor = g_Palette[ g_Config.m_BrowserABCIdx - 1 ];
+
+ if ( anIndex == 0 ) {
+
+  lYOrg = 62;
+  lHOrg = s_GUICtx.m_pGSCtx -> m_Height - 44;
+
+  lY = 2;
+  lH = 56;
+
+  s_GUICtx.m_pCurrentMenu = ( GUIMenu* )&s_GUICtx.m_DevMenu;
+  GUI_DrawDeviceMenu ( &s_GUICtx.m_DevMenu );
+
+ } else {
+
+  lY = 62;
+  lH = s_GUICtx.m_pGSCtx -> m_Height - 44;
+
+  lYOrg = 2;
+  lHOrg = 56;
+
+  if ( anIndex != -1 ) {
+
+   s_GUICtx.m_pCurrentMenu = ( GUIMenu* )&s_GUICtx.m_FileMenu;
+   GUI_DrawFileMenu ( &s_GUICtx.m_FileMenu );
+
+  } else {
+
+   s_GUICtx.m_pCurrentMenu = NULL;
+   lColor                  = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
+
+  }  /* end else */
+
+ }  /* end else */
+
+ s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x00, 0, 0, 0x80 );
+ s_GUICtx.m_pGSCtx -> m_LineColor = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
+ s_GUICtx.m_pGSCtx -> RoundRect (
+  0, lYOrg, s_GUICtx.m_pGSCtx -> m_Width - 1, lHOrg, 8
+ );
+ s_GUICtx.m_pGSCtx -> m_LineColor = lColor;
+ s_GUICtx.m_pGSCtx -> RoundRect (
+  0, lY, s_GUICtx.m_pGSCtx -> m_Width - 1, lH, 8
+ );
+
+}  /* end GUI_ActivateMenu */
+
 static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
 
  int              lIdx;
@@ -818,6 +859,7 @@ static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
    lpItem -> m_pNext -> m_Flags |= GUI_FF_SELECTED;
 
    GUI_DrawFileMenu ( &s_GUICtx.m_FileMenu );
+   GUI_ActivateMenu ( 1 );
 
   }  /* end else */
 
@@ -843,6 +885,7 @@ static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
    lpItem -> m_pPrev -> m_Flags |= GUI_FF_SELECTED;
 
    GUI_DrawFileMenu ( &s_GUICtx.m_FileMenu );
+   GUI_ActivateMenu ( 1 );
 
   }  /* end else */
 
@@ -858,57 +901,6 @@ static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
 
 }  /* end GUI_NavigateFile */
 
-static void GUI_ActivateMenu ( int anIndex ) {
-
- int          lYOrg, lHOrg;
- int          lY,    lH;
- unsigned int lColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x00 );
-
- if ( anIndex == 0 ) {
-
-  lYOrg = 62;
-  lHOrg = s_GUICtx.m_pGSCtx -> m_Height - 38;
-
-  lY = 2;
-  lH = 56;
-
-  s_GUICtx.m_pCurrentMenu = ( GUIMenu* )&s_GUICtx.m_DevMenu;
-  GUI_DrawDeviceMenu ( &s_GUICtx.m_DevMenu );
-
- } else {
-
-  lY = 62;
-  lH = s_GUICtx.m_pGSCtx -> m_Height - 38;
-
-  lYOrg = 2;
-  lHOrg = 56;
-
-  if ( anIndex != -1 ) {
-
-   s_GUICtx.m_pCurrentMenu = ( GUIMenu* )&s_GUICtx.m_FileMenu;
-   GUI_DrawFileMenu ( &s_GUICtx.m_FileMenu );
-
-  } else {
-
-   s_GUICtx.m_pCurrentMenu = NULL;
-   lColor                  = GS_SETREG_RGBA( 0xFF, 0x00, 0x00, 0x00 );
-
-  }  /* end else */
-
- }  /* end else */
-
- s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x00, 0, 0, 0x80 );
- s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0xFF, 0, 0, 0x00 );
- s_GUICtx.m_pGSCtx -> RoundRect (
-  0, lYOrg, s_GUICtx.m_pGSCtx -> m_Width - 1, lHOrg, 8
- );
- s_GUICtx.m_pGSCtx -> m_LineColor = lColor;
- s_GUICtx.m_pGSCtx -> RoundRect (
-  0, lY, s_GUICtx.m_pGSCtx -> m_Width - 1, lH, 8
- );
-
-}  /* end GUI_ActivateMenu */
-
 static int GUI_Run ( void** apRetVal ) {
 
  int retVal;
@@ -919,7 +911,17 @@ static int GUI_Run ( void** apRetVal ) {
 
   unsigned long int lEvent = GUI_WaitEvent ();
 
-  if ( lEvent & GUI_EF_CDROM_MOUNT ) {
+  if ( lEvent == PAD_START ) {
+
+   retVal = GUI_EV_MENU;
+   break;
+
+  } else if (  lEvent == ( PAD_SELECT | PAD_TRIANGLE )  ) {
+
+   retVal = GUI_EV_EXIT;
+   break;
+
+  } if ( lEvent & GUI_EF_CDROM_MOUNT ) {
 
    retVal = GUI_EV_CDROM_MOUNT;
    break;
@@ -1019,13 +1021,31 @@ static int GUI_Run ( void** apRetVal ) {
 
 }  /* end GUI_Run */
 
-static void GUI_Redraw ( void ) {
+static void GUI_Redraw ( int afReset ) {
 
- s_GUICtx.m_pGSCtx -> m_fDblBuf = GS_ON;
- s_GUICtx.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
- s_GUICtx.m_pGSCtx -> VSync ();
- s_GUICtx.m_pGSCtx -> InitScreen ();
- s_GUICtx.m_pGSCtx -> VSync ();
+ unsigned int lColor  = g_Palette[ g_Config.m_BrowserTxtIdx - 1 ] & ~0xFF000000;
+ unsigned int lDColor = lColor | 0x20000000;
+
+ lColor |= 0x80000000;
+
+ if ( afReset ) {
+
+  s_GUICtx.m_pGSCtx -> m_fDblBuf = GS_ON;
+  s_GUICtx.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+  s_GUICtx.m_pGSCtx -> VSync ();
+  s_GUICtx.m_pGSCtx -> InitScreen ( g_Config.m_DisplayCharset );
+  s_GUICtx.m_pGSCtx -> VSync ();
+
+  s_GUICtx.m_pGSCtx -> SetTextColor ( 3, 0x50A06060 );
+
+ }  /* end if */
+
+ s_GUICtx.m_pGSCtx -> SetTextColor ( 1, lColor  );
+ s_GUICtx.m_pGSCtx -> SetTextColor ( 2, lDColor );
+
+ s_GUICtx.m_FileMenu.m_Width  = s_GUICtx.m_pGSCtx -> m_Width - 46;
+ s_GUICtx.m_FileMenu.m_Height = ( s_GUICtx.m_pGSCtx -> m_Height - 110 ) / 34;
+ s_GUICtx.m_DevMenu.m_StartX = 6 + s_GUICtx.m_pGSCtx -> TextWidth ( STR_AVAILABLE_MEDIA, 0 );
 
  GUI_DrawDesktop    ();
  GUI_DrawDeviceMenu ( &s_GUICtx.m_DevMenu  );
@@ -1174,14 +1194,20 @@ static int GUI_SelectFile ( char* apFileName ) {
 
 static void _usb_handler_connect ( void* apHdr ) {
 
- s_USBFlags |= USB_FLAG_CONNECT;
+ if ( s_USBFlags & USB_FLAG_DISCONNECT )
+  s_USBFlags &= ~USB_FLAG_DISCONNECT;
+ else  s_USBFlags |= USB_FLAG_CONNECT;
+
  iWakeupThread ( s_GUIThreadID );
 
-}  /* end _usb_handler */
+}  /* end _usb_handler_connect */
 
 static void _usb_handler_disconnect ( void* apHdr ) {
 
- s_USBFlags |= USB_FLAG_DISCONNECT;
+ if ( s_USBFlags & USB_FLAG_CONNECT )
+  s_USBFlags &= ~USB_FLAG_CONNECT;
+ else s_USBFlags |= USB_FLAG_DISCONNECT;
+
  iWakeupThread ( s_GUIThreadID );
 
 }  /* end _usb_handler_disconnect */
@@ -1256,10 +1282,6 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  s_PrevBtn      = 0;
  s_Init         = 0;
 
- apGSCtx -> m_fDblBuf = GS_ON;
- apGSCtx -> InitScreen ();
-
- s_GUICtx.m_DevMenu.m_StartX = 6 + apGSCtx -> TextWidth ( STR_AVAILABLE_MEDIA, 0 );
  s_GUICtx.m_DevMenu.m_StartY = 4;
  s_GUICtx.m_DevMenu.m_pItems = NULL;
  s_GUICtx.m_DevMenu.m_pCurr  = NULL;
@@ -1269,8 +1291,6 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  s_GUICtx.m_FileMenu.m_pCurr  = NULL;
  s_GUICtx.m_FileMenu.m_pFirst = NULL;
  s_GUICtx.m_FileMenu.m_pLast  = NULL;
- s_GUICtx.m_FileMenu.m_Width  = apGSCtx -> m_Width - 46;
- s_GUICtx.m_FileMenu.m_Height = ( apGSCtx -> m_Height - 104 ) / 34;
  s_GUICtx.m_FileMenu.m_Offset = 0;
  s_GUICtx.m_FileMenu.Navigate = GUI_NavigateFile;
 
@@ -1304,7 +1324,7 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
  SMS_SetSifCmdHandler ( _usb_handler_connect,    1 );
  SMS_SetSifCmdHandler ( _usb_handler_disconnect, 2 );
 
- GUI_Redraw ();
+ GUI_Redraw ( 1 );
 
  DoTimer = TimerProc;
  s_Init  = 1;

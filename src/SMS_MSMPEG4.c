@@ -1873,7 +1873,7 @@ static SMS_INLINE int _msmpeg4_decode_block (
       lRun   = SMS_SHOW_UBITS( re, lpBitCtx, 6 ); SMS_SKIP_CACHE( re, 6 );
       lLevel = SMS_SHOW_SBITS( re, lpBitCtx, 8 ); SMS_LAST_SKIP_CACHE( re, lpBitCtx, 8 );
 
-      SMS_SKIP_COUNTER( re, lpBitCtx, 1 + 6 + 8 );
+      SMS_SKIP_COUNTER( re, 1 + 6 + 8 );
 
       if ( lLevel > 0 )
 

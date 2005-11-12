@@ -34,13 +34,15 @@
 # include <sifrpc.h>
 # include "Timer.h"
 # include "ExecIOP.h"
+# include "Config.h"
+# include <iopheap.h>
+# include <iopcontrol.h>
 #endif  /* _WIN32 */
 
 # define ALIGN( x, a ) (   (  (x) + (a) - 1  ) & ~(  (a) - 1  )   )
 
 int g_Trace;
-int g_fUSB;
-int g_NetFailFlags;
+int g_SMSFlags;
 
 const uint32_t g_SMS_InvTbl[ 256 ] = {
          0U, 4294967295U, 2147483648U, 1431655766U, 1073741824U,  858993460U,  715827883U,  613566757U,
@@ -171,8 +173,7 @@ static LoadParams s_LoadParams[] = {
  { "PS2ATAD",  &g_DataBuffer[ SMS_PS2ATAD_OFFSET  ], SMS_PS2ATAD_SIZE,  0,                    NULL      },
  { "PS2HDD",   &g_DataBuffer[ SMS_PS2HDD_OFFSET   ], SMS_PS2HDD_SIZE,   sizeof ( s_HDDArgs ), s_HDDArgs },
  { "PS2FS",    &g_DataBuffer[ SMS_PS2FS_OFFSET    ], SMS_PS2FS_SIZE,    sizeof ( s_PFSArgs ), s_PFSArgs },
- { "POWEROFF", &g_DataBuffer[ SMS_POWEROFF_OFFSET ], SMS_POWEROFF_SIZE, 0,                    NULL      },
- { "CDVD",     &g_DataBuffer[ SMS_CDVD_OFFSET     ], SMS_CDVD_SIZE,     0,                    NULL      }
+ { "POWEROFF", &g_DataBuffer[ SMS_POWEROFF_OFFSET ], SMS_POWEROFF_SIZE, 0,                    NULL      }
 };
 #ifndef NO_HOST_SUPPORT
 static void getIpConfig ( void ) {
@@ -236,6 +237,8 @@ static void LoadModule ( GUIContext* apGUICtx, int anIndex ) {
   s_LoadParams[ anIndex ].m_nArgs,   s_LoadParams[ anIndex ].m_pArgs, &lRes
  );
 
+ if ( anIndex == 3 && lRes >= 0 ) g_SMSFlags |= SMS_FLAG_DEV9;
+
 }  /* end LoadModule */
 
 static void ( *s_SMS_SIFCmdHandler[ 3 ] ) ( void* );
@@ -251,6 +254,49 @@ static void SMS_SIFCmdHandler ( void* apPkt, void* apArg ) {
  s_SMS_SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> unknown ] ( apPkt );
 
 }  /* end SMS_SIFCmdHandler */
+
+void SMS_StartNetwork ( void* apParam ) {
+
+ int         i;
+ GUIContext* lpGUICtx = ( GUIContext* )apParam;
+
+ lpGUICtx -> Status ( "Initializing network interface..." );
+
+ getIpConfig ();
+
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2IP_OFFSET ], SMS_PS2IP_SIZE, 0, NULL, &i );
+
+ if ( i >= 0 ) {
+
+  SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2SMAP_OFFSET ], SMS_PS2SMAP_SIZE, s_SMAPArgsLen, &s_SMAPArgs[ 0 ], &i );
+
+  if ( i >= 0 ) {
+
+   SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2HOST_OFFSET ], SMS_PS2HOST_SIZE, 0, NULL, &i );
+
+   if ( i >= 0 ) g_SMSFlags |= SMS_FLAG_NET;
+
+  }  /* end if */
+
+ }  /* end if */
+
+}  /* end SMS_StartNetwork */
+
+void SMS_ResetIOP ( void ) {
+
+ ExecIOP ( 1, "\xC7\x00" );
+
+ SifInitRpc     ( 0 ); 
+ SifExitIopHeap (); 
+ SifLoadFileExit(); 
+ SifExitRpc     (); 
+ SifIopReset ( "rom0:UDNL rom0:EELOADCNF", 0 );
+
+ while (  SifIopSync ()  );
+
+ SifInitRpc ( 0 );
+
+}  /* end SMS_ResetIOP */
 
 void SMS_Initialize ( void* apParam ) {
 
@@ -272,23 +318,9 @@ void SMS_Initialize ( void* apParam ) {
  ExecIOP       ( 1, "\xD1\x00"         );
 
  for (  i = 0; i < sizeof ( s_LoadParams ) / sizeof ( s_LoadParams[ 0 ] ); ++i  ) LoadModule ( lpGUICtx, i );
-#ifndef NO_HOST_SUPPORT
- lpGUICtx -> Status ( "Initializing network interface..." );
 
- getIpConfig ();
+ if ( g_Config.m_NetworkFlags & SMS_NF_AUTO ) SMS_StartNetwork ( lpGUICtx );
 
- SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2IP_OFFSET ], SMS_PS2IP_SIZE, 0, NULL, &i );
-
- if ( i < 0 ) g_NetFailFlags |= 2;
-
- SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2SMAP_OFFSET ], SMS_PS2SMAP_SIZE, s_SMAPArgsLen, &s_SMAPArgs[ 0 ], &i );
-
- if ( i < 0 ) g_NetFailFlags |= 4;
-
- SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2HOST_OFFSET ], SMS_PS2HOST_SIZE, 0, NULL, &i );
-
- if ( i < 0 ) g_NetFailFlags |= 8;
-#endif  /* NO_HOST_SUPPORT */
  lpGUICtx -> Status ( "Locating USBD.IRX..." );
 
  for (  i = 0; i < sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] ); ++i  ) {
@@ -315,8 +347,8 @@ void SMS_Initialize ( void* apParam ) {
 
       if ( lRes >= 0 ) {
 
-       i      = sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] );
-       g_fUSB = 1;
+       i           = sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] );
+       g_SMSFlags |= SMS_FLAG_USB;
 
       }  /* end if */
 
@@ -334,7 +366,7 @@ void SMS_Initialize ( void* apParam ) {
 
  }  /* end for */
 
- if ( g_fUSB ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
+ if ( g_SMSFlags & SMS_FLAG_USB ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
 
  DI();
   SifAddCmdHandler ( 18, SMS_SIFCmdHandler, 0 );

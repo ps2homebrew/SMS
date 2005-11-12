@@ -305,7 +305,7 @@ New features:
     select-R1 - move right;
     select-L1 - move left;
     select-R2 - move down;
-    select-L1 - move up;
+    select-L2 - move up;
 - save configuration (select-SQUARE) action added ("mc0:/SMS" directory)
   (currntly screen settings and HDD mounted partition name);
 - MP3 optimization added (assembly source from BroadQ) - audio decoding
@@ -461,3 +461,19 @@ Update (30-OCT-2005)
 - added very basic support for background image (skin) in the browser. Thanks to
   'bix64' for research and implementation. Skin file is a DivX5xx/XviD encoded
   I-Frame. It must be "mc0:SMS/skin.sms" file and it must have 640x512 dimensions;
+
+Update (12-NOV-2005)
+--------------------
+- new font is introduced. It is internationalized and
+  there's a possibility to choose "codepages". Four "codepages" are available:
+  WinLatin1, WinLatin2, WinCyrillic and WinGreek.
+  Thanks to "Mr.Worm~~" for the cool font utility;
+- SMS menu is implemented ("start" pad button) providing configuration options etc.
+  Thanks to "bix64" for the code, "Mr.Worm~~", "rathunter" and "HypERSoniC" for ideas;
+  Note on color selection: to make life easier for me :) I've made a 16 color palette
+  (standard CGA colors), so there's a color choice from these 16 colors. It's possible
+  to customize this palette by providing "mc0:SMS/SMS.pal" file. It should be a binary
+  file of 64 bytes length. Each color takes 4 bytes (R,G,B,A);
+- Fixed small issue with "Initializing SMS..." message when there's no media
+  available (thanks to "jacky401" and "Mr. Worm~~" for note and research);
+

@@ -146,6 +146,7 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
 # include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
+# include "Config.h"
 
 # define VIF_PIDX (  sizeof ( g_IPUCtx.m_DMAVIFDraw ) / sizeof ( g_IPUCtx.m_DMAVIFDraw[ 0 ] ) - 2  )
 # define ViF_PIDX (  sizeof ( g_IPUCtx.m_DMAViFDraw ) / sizeof ( g_IPUCtx.m_DMAViFDraw[ 0 ] ) - 2  )
@@ -425,7 +426,9 @@ static void IPU_Reset ( struct GSContext* apGSCtx ) {
   g_IPUCtx.m_ImgRight = ( g_IPUCtx.m_ScrWidth << 4 ) + g_IPUCtx.m_TxtLeft;
 
  }  /* end else */
-#ifdef BIMBO69
+
+ if ( g_Config.m_ResMode == 1 ) {
+
    if ( apGSCtx -> m_DisplayMode == GSDisplayMode_PAL   ||
         apGSCtx -> m_DisplayMode == GSDisplayMode_PAL_I
    ) {
@@ -442,7 +445,9 @@ static void IPU_Reset ( struct GSContext* apGSCtx ) {
     g_IPUCtx.m_ImgBottom -= ( 12 << 4 );
 
    }  /* end if */
-#endif  /* BIMBO69 */
+
+ }  /* end if */
+
  g_IPUCtx.m_DMAGIFDraw[  0 ] = GIF_TAG( 1, 0, 0, 0, 1, 8 );
  g_IPUCtx.m_DMAGIFDraw[  1 ] = GS_TEX0_1 | ( GS_PRIM << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 ) | ( GS_UV << 16 ) | ( GS_XYZ2 << 20 ) | ( GS_RGBAQ << 24 ) | ( GS_PRIM << 28 );
  g_IPUCtx.m_DMAGIFDraw[  2 ] = GS_SETREG_TEX0( g_IPUCtx.m_VRAM, g_IPUCtx.m_TBW, GSPSM_32, g_IPUCtx.m_TW, g_IPUCtx.m_TH, 0, 1, 0, 0, 0, 0, 0 );
@@ -592,7 +597,6 @@ IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
    IPU_RESET();
    IPU_CMD_SETTH( 0, 0 );
    IPU_WAIT();
-   IPU_RESET();
 
    EnableDmac ( DMA_CHANNEL_FROM_IPU );
    EnableDmac ( DMA_CHANNEL_GIF      );

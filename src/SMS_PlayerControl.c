@@ -8,6 +8,7 @@
 #include "SPU.h"
 #include "DMA.h"
 #include "Timer.h"
+#include "Config.h"
 
 #include <libpad.h>
 #include <stdio.h>
@@ -40,7 +41,7 @@ int PlayerControl_Index2Volume ( SMS_Player* apPlayer ) {
   10450, 12030, 13560, 14940, 16383
  };
 
- return s_lScale[ apPlayer -> m_Volume = SMS_clip ( apPlayer -> m_Volume, 0, 24 ) ];
+ return s_lScale[ g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume, 0, 24 ) ];
 
 }  /* end PlayerControl_Index2Volume */
 
@@ -100,7 +101,7 @@ void PlayerControl_Init ( SMS_Player* apPlayer ) {
 
  lpPaint = _U( s_TDTotal );
 
- lpGSCtx -> TextGSPacket ( lpGSCtx -> m_Width - 144, 52, 0, lBuff, 0, &lpPaint );
+ lpGSCtx -> TextGSPacket ( lpGSCtx -> m_Width - 144, 52, 0, lBuff, 0, &lpPaint, 0 );
 
 }  /* end PlayerControl_Init */
 
@@ -124,7 +125,7 @@ void PlayerControl_DisplayTime ( SMS_Player* apPlayer, int anOp, uint64_t aTime,
 
  _FormatTime ( &lBuff[ 5 ], aTime );
 
- lpGSCtx -> TextGSPacket ( lpGSCtx -> m_Width - 336, 52, 0, lBuff, 0, &lpPacket );
+ lpGSCtx -> TextGSPacket ( lpGSCtx -> m_Width - 336, 52, 0, lBuff, 0, &lpPacket, 0 );
 
  if ( !afDraw ) {
 
@@ -148,7 +149,7 @@ void PlayerControl_DisplayTime ( SMS_Player* apPlayer, int anOp, uint64_t aTime,
 
 void PlayerControl_AdjustVolume ( SMS_Player* apPlayer, int aDelta ) {
 
- int i,    lVol    = apPlayer -> m_Volume = SMS_clip ( apPlayer -> m_Volume + aDelta, 0, 24 );
+ int i,    lVol    = g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume + aDelta, 0, 24 );
  uint64_t* lpPaint = _U( s_VCPaint );
  uint64_t  lV      = lpPaint[ 10 ];
  uint64_t  lX      = ( lV & 0xFFFF ) + ( 12 << 4 );

@@ -30,7 +30,6 @@ typedef struct SMS_Player {
  struct SPUContext*  m_pSPUCtx;
  struct SMS_Codec*   m_pVideoCodec;
  struct SMS_Codec*   m_pAudioCodec;
- int                 m_Volume;
  unsigned int        m_VideoIdx;
  unsigned int        m_AudioIdx;
  float               m_VideoTime;

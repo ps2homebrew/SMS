@@ -17,7 +17,9 @@
 #include "GUI.h"
 #include "StringList.h"
 #include "Config.h"
+#include "Menu.h"
 
+#include <kernel.h>
 #include <stdio.h>
 #include <string.h>
 #include <libhdd.h>
@@ -26,8 +28,18 @@
 #include <libpad.h>
 
 static BrowserContext s_BrowserCtx;
-static int            s_DetectingDisk;
-#ifdef BIMBO69
+static unsigned int   s_Flags;
+
+static void _check_filter_flag ( void ) {
+
+ if ( g_Config.m_BrowserFlags & SMS_BF_AVIF )
+
+  s_Flags |= SMS_BF_AVIF;
+
+ else s_Flags &= ~SMS_BF_AVIF;
+
+}  /* end _check_filter_flag */
+
 static int _filter_avi ( char* apName ) {
 
  int lLen   = strlen ( apName );
@@ -43,7 +55,7 @@ static int _filter_avi ( char* apName ) {
  return retVal;
 
 }  /* end _filter_avi */
-#endif  /* BIMBO69 */
+
 static int _fill_partition_list ( void ) {
 
  int          retVal = 0;
@@ -58,23 +70,22 @@ static int _fill_partition_list ( void ) {
  if ( lHDDFD >= 0 ) {
 
   while (  fileXioDread ( lHDDFD, &lEntry )  ) {
-#ifndef BIMBO69
+
    if (   !(  ( lEntry.stat.attr  & ATTR_SUB_PARTITION ) ||
-              ( lEntry.stat.mode == FS_TYPE_EMPTY      ) ||
-              !strncmp ( lEntry.name, "PP.HDL.", 7 )     ||
-              !strcmp  ( lEntry.name, "__mbr"      )
+              ( lEntry.stat.mode == FS_TYPE_EMPTY      )
            )
    ) {
-#else
-   if (   !(  ( lEntry.stat.attr  & ATTR_SUB_PARTITION ) ||
-              ( lEntry.stat.mode == FS_TYPE_EMPTY      ) ||
-              !strncmp ( lEntry.name, "PP.HDL.", 7 )     ||
-              !strncmp ( lEntry.name, "HDLoade", 7 )     ||
-              !strncmp ( lEntry.name, "__", 2      )     ||
-              !strcmp  ( lEntry.name, "__mbr"      )
-           )
-   ) {
-#endif  /* BIMBO69 */
+
+    if (  !( g_Config.m_BrowserFlags & SMS_BF_HDLP ) &&
+          (  !strncmp ( lEntry.name, "PP.HDL.", 7 ) ||
+             !strncmp ( lEntry.name, "HDLoade", 7 )
+          )
+    ) continue;
+
+    if (  g_Config.m_BrowserFlags & SMS_BF_SYSP &&
+          !strncmp ( lEntry.name, "__", 2 )
+    ) continue;
+
     s_BrowserCtx.m_pGUICtx -> AddFile ( lEntry.name, GUI_FF_PARTITION );
     ++retVal;
 
@@ -86,11 +97,18 @@ static int _fill_partition_list ( void ) {
 
  }  /* end if */
 
- if ( s_BrowserCtx.m_pActivePartition[ 0 ] != '\x00' )
+ if ( s_BrowserCtx.m_pActivePartition[ 0 ] != '\x00' ) {
 
-  s_BrowserCtx.m_pGUICtx -> ActivateFileItem (
-   s_BrowserCtx.m_PartIdx, s_BrowserCtx.m_pActivePartition, s_BrowserCtx.m_pFirstPartition
-  );
+  if ( s_Flags & SMS_BF_MENU ) {
+
+   s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
+   s_Flags &= ~SMS_BF_MENU;
+
+  } else s_BrowserCtx.m_pGUICtx -> ActivateFileItem (
+          s_BrowserCtx.m_PartIdx, s_BrowserCtx.m_pActivePartition, s_BrowserCtx.m_pFirstPartition
+         );
+
+ }  /* end if */
 
  return retVal;
 
@@ -120,6 +138,8 @@ static int _fill_cdda_directory ( const CDDADirectory* apDir ) {
   CDDA_DestroyFileList ( lpFiles );
 
  }  /* end if */
+
+ _check_filter_flag ();
 
  return retVal;
 
@@ -152,6 +172,8 @@ static int _fill_cdda_list ( void ) {
  }  /* end while */
 
  if ( lpRoot ) retVal += _fill_cdda_directory ( lpRoot );
+
+ _check_filter_flag ();
 
  return retVal;
 
@@ -270,18 +292,22 @@ static void _fill_hdd_list ( void ) {
    } else if ( lEntry.stat.mode & FIO_S_IFREG ) {
 
     lpList = lpFileList;
-#ifdef BIMBO69
-    if (  !_filter_avi ( lEntry.name )  ) continue;
-#endif  /* BIMBO69 */
+
+    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !_filter_avi ( lEntry.name )  ) continue;
+
    } else continue;
 
    lpList -> PushBack ( lpList, lEntry.name );
 
   }  /* end while */
-#ifdef BIMBO69
-  lpDirList  -> Sort ( lpDirList  );
-  lpFileList -> Sort ( lpFileList );
-#endif  /* BIMBO69 */
+
+  if ( g_Config.m_BrowserFlags & SMS_BF_SORT ) {
+
+   lpDirList  -> Sort ( lpDirList  );
+   lpFileList -> Sort ( lpFileList );
+
+  }  /* end if */
+
   lpNode = lpDirList -> m_pHead;
 
   while ( lpNode ) {
@@ -306,6 +332,8 @@ static void _fill_hdd_list ( void ) {
   fileXioDclose ( lFD );
 
  }  /* end if */
+
+ _check_filter_flag ();
 
 }  /* end _fill_hdd_list */
 
@@ -349,6 +377,8 @@ static void _fill_cd_list ( void ) {
  CDDA_Stop        ();
  CDDA_Synchronize ();
 
+ _check_filter_flag ();
+
 }  /* end _fill_cd_list */
 
 static int _fill_dir_list ( char* apDevName ) {
@@ -390,18 +420,22 @@ static int _fill_dir_list ( char* apDevName ) {
    } else if ( lEntry.stat.mode & FIO_SO_IFREG ) {
 
     lpList = lpFileList;
-#ifdef BIMBO69
-    if (  !_filter_avi ( lEntry.name )  ) continue;
-#endif  /* BIMBO69 */
+
+    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !_filter_avi ( lEntry.name )  ) continue;
+
    } else continue;
 
    lpList -> PushBack ( lpList, lEntry.name );
 
   }  /* end while */
-#ifdef BIMBO69
-  lpDirList  -> Sort ( lpDirList  );
-  lpFileList -> Sort ( lpFileList );
-#endif  /* BIMBO69 */
+
+  if ( g_Config.m_BrowserFlags & SMS_BF_SORT ) {
+
+   lpDirList  -> Sort ( lpDirList  );
+   lpFileList -> Sort ( lpFileList );
+
+  }  /* end if */
+
   lpNode = lpDirList -> m_pHead;
 
   while ( lpNode ) {
@@ -428,6 +462,8 @@ static int _fill_dir_list ( char* apDevName ) {
   retVal = 1;
 
  }  /* end if */
+
+ _check_filter_flag ();
 
  return retVal;
 
@@ -542,9 +578,9 @@ no_elflist:
    } else if ( lEntry.stat.mode & FIO_SO_IFREG ) {
 
     lpList = lpFileList;
-#ifdef BIMBO69
-    if (  !_filter_avi ( lEntry.name )  ) continue;
-#endif  /* BIMBO69 */
+
+    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !_filter_avi ( lEntry.name )  ) continue;
+
    } else continue;
 
    lpList -> PushBack ( lpList, lEntry.name );
@@ -553,10 +589,13 @@ no_elflist:
 /* names are already extracted to lpFileList and lpDirList */
 /* it is now time to pass them on to the GUI context       */
 extraction_done:
-#ifdef BIMBO69
-  lpDirList  -> Sort ( lpDirList  );
-  lpFileList -> Sort ( lpFileList );
-#endif  /* BIMBO69 */
+  if ( g_Config.m_BrowserFlags & SMS_BF_SORT ) {
+
+   lpDirList  -> Sort ( lpDirList  );
+   lpFileList -> Sort ( lpFileList );
+
+  }  /* end if */
+
   lpNode = lpDirList -> m_pHead;
 
   while ( lpNode ) {
@@ -585,6 +624,8 @@ extraction_done:
  }  /* end if */
 
  free ( lpPath );
+
+ _check_filter_flag ();
 
  return retVal;
 
@@ -647,6 +688,8 @@ static void _select_partition ( char* apName ) {
 
  }  /* end else */
 
+ _check_filter_flag ();
+
 }  /* end _select_partition */
 
 static void _mount_partition ( char* apName ) {
@@ -659,7 +702,7 @@ static void _display_status ( void ) {
 
  static int s_Detect = 0;
 
- if ( s_DetectingDisk ) {
+ if ( s_Flags & SMS_BF_DISK ) {
 
   if ( !s_Detect ) {
 
@@ -672,11 +715,11 @@ static void _display_status ( void ) {
 
   char lBuffer[ 2048 ];
 
-  if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems == NULL || s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems -> m_Flags == GUI_DF_CDDA )
+  if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems == NULL || s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems -> m_Flags == GUI_DF_CDDA ) {
 
-   strcpy ( lBuffer, "Waiting for media..." );
+   strcpy ( lBuffer, "Waiting for media (press \"start\" for menu)..." );
 
-  else {
+  } else {
 
    _make_path ( lBuffer );
 
@@ -707,10 +750,9 @@ static void _display_status ( void ) {
 
     }  /* end switch */
 
-   s_BrowserCtx.m_pGUICtx -> Status ( lBuffer );
-
   }  /* end else */
 
+  s_BrowserCtx.m_pGUICtx -> Status ( lBuffer );
   s_Detect = 0;
 
  }  /* end else */
@@ -793,6 +835,12 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
  _display_status ();
 
+ if ( s_BrowserCtx.m_pGUICtx -> m_pCurrentMenu )
+
+  s_BrowserCtx.m_pGUICtx -> ActivateMenu (
+   s_BrowserCtx.m_pGUICtx -> m_pCurrentMenu == ( GUIMenu* )&s_BrowserCtx.m_pGUICtx -> m_DevMenu ? 0 : 1
+  );
+
  while ( 1 ) {
 
   void* lpItem;
@@ -800,53 +848,33 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
   switch ( lEvent ) {
 
+   case GUI_EV_MENU: {
+
+    s_BrowserCtx.m_pMenuCtx -> Run ();
+    s_Flags |= SMS_BF_MENU;
+    s_BrowserCtx.m_pGUICtx -> ActivateMenu (
+     s_BrowserCtx.m_pGUICtx -> m_pCurrentMenu == ( GUIMenu* )&s_BrowserCtx.m_pGUICtx -> m_DevMenu ? 0 : 1
+    );
+
+   } break;
+
+   case GUI_EV_EXIT: {
+
+    SMS_ResetIOP ();
+    Exit ( 0 );
+
+   } break;
+
    case GUI_EV_FILE_SELECT: {
 
-    GUIFileMenuItem* lpFile = ( GUIFileMenuItem* )lpItem;
+    s_BrowserCtx.m_pActiveItem = ( GUIFileMenuItem* )lpItem;
 
-    switch ( lpFile -> m_Flags & 0x0000000F ) {
+    switch ( s_BrowserCtx.m_pActiveItem -> m_Flags & 0x0000000F ) {
 
      case GUI_FF_PARTITION:
-
-      _select_partition ( lpFile -> m_pFileName );
-
-     break;
-
      case GUI_FF_DIRECTORY: {
 
-      char* lpState = ( char* )malloc (  strlen ( s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName ) + 5  );
-
-      *( int* )lpState = s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_Offset;
-      strcpy ( lpState + 4, s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName );
-
-      s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, lpFile -> m_pFileName );
-      s_BrowserCtx.m_pPath -> m_pTail -> m_pParam = lpState;
-
-      if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD )
-
-       _fill_hdd_list ();
-
-      else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM )
-
-       _fill_cd_list ();
-
-      else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM )
-
-       _fill_dir_list ( "mass:/" );
-
-      else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HOST )
-
-       _fill_dir_list_host ( "host:" );
-
-      else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDFS ||
-                 s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_DVD
-           ) {
-
-       _fill_dir_list ( "cdfs:/" ); CDVD_Stop ();
-
-      }  /* end else */
-
-      s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
+      s_BrowserCtx.Reload ();
 
      } break;
 
@@ -854,25 +882,22 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
       char* lpPath = _make_path ( NULL );
       int   lLen;
-#ifndef BIMBO69
-      char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( lpFile -> m_pFileName ) + 2 ];
-#else
-      char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( lpFile -> m_pFileName ) + 6 ];
-#endif  /* BIMBO69 */
+      char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( s_BrowserCtx.m_pActiveItem -> m_pFileName ) + ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) ? 6 : 2 ];
+
       strcpy ( lFullPath, lpPath ); free ( lpPath );
 
       if ( lFullPath[ lLen - 1 ] != '/' ) strcat ( lFullPath, "/" );
 
-      strcat ( lFullPath, lpFile -> m_pFileName );
+      strcat ( lFullPath, s_BrowserCtx.m_pActiveItem -> m_pFileName );
 
       if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM )
 
        retVal = CDDA_InitFileContext ( s_BrowserCtx.m_pCDDACtx, lFullPath );
 
       else {
-#ifdef BIMBO69
-       strcat ( lFullPath, ".avi" );
-#endif  /* BIMBO69 */
+
+       if ( s_Flags & SMS_BF_AVIF ) strcat ( lFullPath, ".avi" );
+
        if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD )
 
         STIO_SetIOMode ( STIOMode_Extended );
@@ -887,7 +912,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
        retVal = STIO_InitFileContext ( lFullPath );
 
-      }  // end else
+      }  /* end else */
 
      } break;
 
@@ -928,7 +953,6 @@ static FileContext* Browser_Browse ( char* apPartName ) {
       } else {
 
        fileXioUmount ( "pfs0:" ); s_BrowserCtx.m_HDDPD = -1;
-
        _fill_partition_list ();
 
       }  /* end else */
@@ -1031,7 +1055,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
      }  /* end if */
 
-     s_DetectingDisk = 0;
+     s_Flags &= ~SMS_BF_DISK;
 
      CDDA_Stop        ();
      CDDA_Synchronize ();
@@ -1128,7 +1152,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
     }  /* end if */
 
-    s_DetectingDisk = 0;
+    s_Flags &= ~SMS_BF_DISK;
 
    } break;
 
@@ -1163,13 +1187,13 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
    case GUI_EV_DISK_DETECT:
 
-    s_DetectingDisk = 1;
+    s_Flags |= SMS_BF_DISK;;
 
    break;
 
    case GUI_EV_DISK_NODISK:
 
-    s_DetectingDisk = 0;
+    s_Flags &= ~SMS_BF_DISK;;
 
    break;
 
@@ -1185,6 +1209,52 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
 }  /* end Browser_Browse */
 
+static void Browser_Reload ( void ) {
+
+ if (  ( s_BrowserCtx.m_pActiveItem -> m_Flags & 0x0000000F ) == GUI_FF_PARTITION  ) {
+
+  _select_partition ( s_BrowserCtx.m_pActiveItem -> m_pFileName );
+
+ } else {
+
+  char* lpState = ( char* )malloc (  strlen ( s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName ) + 5  );
+
+  *( int* )lpState = s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_Offset;
+  strcpy ( lpState + 4, s_BrowserCtx.m_pGUICtx -> m_FileMenu.m_pFirst -> m_pFileName );
+
+  s_BrowserCtx.m_pPath -> PushBack ( s_BrowserCtx.m_pPath, s_BrowserCtx.m_pActiveItem -> m_pFileName );
+  s_BrowserCtx.m_pPath -> m_pTail -> m_pParam = lpState;
+
+  if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD )
+
+   _fill_hdd_list ();
+
+  else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM )
+
+   _fill_cd_list ();
+
+  else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_USBM )
+
+   _fill_dir_list ( "mass:/" );
+
+  else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HOST )
+
+   _fill_dir_list_host ( "host:" );
+
+  else if (  s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDFS ||
+             s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_DVD
+       ) {
+
+   _fill_dir_list ( "cdfs:/" ); CDVD_Stop ();
+
+  }  /* end else */
+
+  s_BrowserCtx.m_pGUICtx -> ActivateMenu ( 1 );
+
+ }  /* end else */
+
+}  /* end Browser_Reload */
+
 BrowserContext* BrowserContext_Init ( struct GUIContext* apGUICtx ) {
 
  s_BrowserCtx.m_pGUICtx  = apGUICtx;
@@ -1193,8 +1263,10 @@ BrowserContext* BrowserContext_Init ( struct GUIContext* apGUICtx ) {
  s_BrowserCtx.m_PartIdx  =  0;
  s_BrowserCtx.m_pPath    = StringList_Init ();
  s_BrowserCtx.m_CurDev   = -1;
+ s_BrowserCtx.m_pMenuCtx = MenuContext_Init ( &s_BrowserCtx );
  s_BrowserCtx.Browse     = Browser_Browse;
  s_BrowserCtx.Destroy    = Browser_Destroy;
+ s_BrowserCtx.Reload     = Browser_Reload;
 
  s_BrowserCtx.m_PartIdx          = 0;
  s_BrowserCtx.m_pActivePartition = ( char* )calloc ( 256, 1 );
@@ -1202,7 +1274,7 @@ BrowserContext* BrowserContext_Init ( struct GUIContext* apGUICtx ) {
  s_BrowserCtx.m_pFirstPartition  = ( char* )calloc ( 256, 1 );
  s_BrowserCtx.m_nFAlloc          = 255;
 
- s_DetectingDisk = 0;
+ s_Flags = g_Config.m_BrowserFlags & SMS_BF_AVIF;
 
  return &s_BrowserCtx;
 

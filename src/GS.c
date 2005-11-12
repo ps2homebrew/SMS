@@ -4,7 +4,9 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # Copyright 2004 - Chris "Neovanglist" Gilbert <Neovanglist@LainOS.org>
-# Copyright 2005 - FONTM management routines, some SMS specifics: Eugene Plotnikov <e-plotnikov@operamail.com>
+# Copyright 2004 - Lord_Kiron (font unpack routines - http://www.mpcclub.com/)
+# Copyright 2005 - font management routines, some SMS specifics: Eugene Plotnikov <e-plotnikov@operamail.com>
+# Copyright 2005 - font management routines: BraveDog
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -158,8 +160,8 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 }  /* end GS_InitContext */
 # else  /* PS2 */
 #  include "DMA.h"
-#  include "ROM.h"
 #  include "VIF.h"
+#  include "Config.h"
 
 #  include <kernel.h>
 #  include <malloc.h>
@@ -167,29 +169,11 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
 #  include <stdio.h>
 #  include <limits.h>
 
-#  define CHAR_SIZE ( 13 * 26 )
-
-typedef struct FontmFile {
-
- char          m_Sign[ 4 ];
- unsigned char m_Version[ 4 ];
- unsigned int  m_BitSize;
- unsigned int  m_BaseOffset;
- unsigned int  m_nEntries;
- unsigned int  m_PosEnd;
-
-} FontmFile;
-
-typedef struct Unpack {
-
- unsigned int	m_Size;
- unsigned int   m_Data;
- unsigned int   m_And;
- unsigned int   m_Diff;
- unsigned int   m_Shift;
- unsigned char* m_Ptr;
-
-} Unpack;
+static GSContext   s_GSCtx;
+static GSRectangle s_GSRect;
+static GSFan       s_GSFan;
+static GSLineStrip s_GSLineStrip;
+static GSSprite    s_GSSprite;
 
 typedef struct LineKern {
 
@@ -200,68 +184,9 @@ typedef struct LineKern {
 
 typedef struct CharKern {
 
- LineKern m_Kern[ 26 ] __attribute__(  ( packed )  );
+ LineKern m_Kern[ 32 ] __attribute__(  ( packed )  );
 
 } CharKern;
-
-static unsigned int s_CharMap[ 224 ] = {
-   0/* ' '  */,   9/* '!' */,  40/* '"' */,  83/* '#'    */,  /*  32 -  35 */
-  79/* '$'  */,  82/* '%' */,  84/* '&' */,  12/* '\''   */,  /*  36 -  39 */
-  41/* '('  */,  42/* ')' */,  85/* '*' */,  59/* '+'    */,  /*  40 -  43 */
-   3/* ','  */,  60/* '-' */,   4/* '.' */,  30/* '/'    */,  /*  44 -  47 */
- 203/* '0'  */, 204/* '1' */, 205/* '2' */, 206/* '3'    */,  /*  48 -  51 */
- 207/* '4'  */, 208/* '5' */, 209/* '6' */, 210/* '7'    */,  /*  52 -  55 */
- 211/* '8'  */, 212/* '9' */,   6/* ':' */,   7/* ';'    */,  /*  56 -  59 */
-  66/* '<'  */,  64/* '=' */,  67/* '>' */,   8/* '?'    */,  /*  60 -  63 */
-  86/* '@'  */, 220/* 'A' */, 221/* 'B' */, 222/* 'C'    */,  /*  64 -  67 */
- 223/* 'D'  */, 224/* 'E' */, 225/* 'F' */, 226/* 'G'    */,  /*  68 -  71 */
- 227/* 'H'  */, 228/* 'I' */, 229/* 'J' */, 230/* 'K'    */,  /*  72 -  75 */
- 231/* 'L'  */, 232/* 'M' */, 233/* 'N' */, 234/* 'O'    */,  /*  76 -  79 */
- 235/* 'P'  */, 236/* 'Q' */, 237/* 'R' */, 238/* 'S'    */,  /*  80 -  83 */
- 239/* 'T'  */, 240/* 'U' */, 241/* 'V' */, 242/* 'W'    */,  /*  84 -  87 */
- 243/* 'X'  */, 244/* 'Y' */, 245/* 'Z' */,  45/* '['    */,  /*  88 -  91 */
-  31/* '\\' */,  46/* ']' */,  15/* '^' */,  17/* '_'    */,  /*  92 -  95 */
-  13/* '`'  */, 252/* 'a' */, 253/* 'b' */, 254/* 'c'    */,  /*  96 -  99 */
- 255/* 'd'  */, 256/* 'e' */, 257/* 'f' */, 258/* 'g'    */,  /* 100 - 103 */
- 259/* 'h'  */, 260/* 'i' */, 261/* 'j' */, 262/* 'k'    */,  /* 104 - 107 */
- 263/* 'l'  */, 264/* 'm' */, 265/* 'n' */, 266/* 'o'    */,  /* 108 - 111 */
- 267/* 'p'  */, 268/* 'q' */, 269/* 'r' */, 270/* 's'    */,  /* 112 - 115 */
- 271/* 't'  */, 272/* 'u' */, 273/* 'v' */, 274/* 'w'    */,  /* 116 - 119 */
- 275/* 'x'  */, 276/* 'y' */, 277/* 'z' */,  47/* '{'    */,  /* 120 - 123 */
-  34/* '|'  */,  48/* '}' */,  32/* '~' */,  97/* '\x7F' */,  /* 124 - 127 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 128 - 131 */
-  95/* ' '  */,  35/* '…' */,  95/* ' ' */,  95/* ' '    */,  /* 132 - 135 */
-  95/* ' '  */, 176/* '‰' */,  95/* ' ' */,  95/* ' '    */,  /* 136 - 139 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 140 - 143 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 144 - 147 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 148 - 151 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 152 - 155 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 156 - 159 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 160 - 163 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  87/* '§'    */,  /* 164 - 167 */
- 570/* '¨'  */,  95/* ' ' */,  95/* ' ' */, 160/* '«'    */,  /* 168 - 171 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 172 - 175 */
-  95/* ' '  */,  61/* '±' */,  95/* ' ' */,  95/* ' '    */,  /* 176 - 179 */
-  95/* ' '  */,  95/* ' ' */, 182/* '¶' */,  95/* ' '    */,  /* 180 - 183 */
- 618/* '¸'  */,  95/* ' ' */,  95/* ' ' */, 161/* '»'    */,  /* 184 - 187 */
-  95/* ' '  */,  95/* ' ' */,  95/* ' ' */,  95/* ' '    */,  /* 188 - 191 */
- 564/* 'À'  */, 565/* 'Á' */, 566/* 'Â' */, 567/* 'Ã'    */,  /* 192 - 195 */
- 568/* 'Ä'  */, 569/* 'Å' */, 571/* 'Æ' */, 572/* 'Ç'    */,  /* 196 - 199 */
- 573/* 'È'  */, 574/* 'É' */, 575/* 'Ê' */, 576/* 'Ë'    */,  /* 200 - 203 */
- 577/* 'Ì'  */, 578/* 'Í' */, 579/* 'Î' */, 580/* 'Ï'    */,  /* 204 - 207 */
- 581/* 'Ð'  */, 582/* 'Ñ' */, 583/* 'Ò' */, 584/* 'Ó'    */,  /* 207 - 211 */
- 585/* 'Ô'  */, 586/* 'Õ' */, 587/* 'Ö' */, 588/* '×'    */,  /* 212 - 215 */
- 589/* 'Ø'  */, 590/* 'Ù' */, 591/* 'Ú' */, 592/* 'Û'    */,  /* 216 - 219 */
- 593/* 'Ü'  */, 594/* 'Ý' */, 595/* 'Þ' */, 596/* 'ß'    */,  /* 220 - 223 */
- 612/* 'à'  */, 613/* 'á' */, 614/* 'â' */, 615/* 'ã'    */,  /* 224 - 227 */
- 616/* 'ä'  */, 617/* 'å' */, 619/* 'æ' */, 620/* 'ç'    */,  /* 228 - 231 */
- 621/* 'è'  */, 622/* 'é' */, 623/* 'ê' */, 624/* 'ë'    */,  /* 232 - 235 */
- 625/* 'ì'  */, 626/* 'í' */, 627/* 'î' */, 628/* 'ï'    */,  /* 236 - 239 */
- 629/* 'ð'  */, 630/* 'ñ' */, 631/* 'ò' */, 632/* 'ó'    */,  /* 240 - 243 */
- 633/* 'ô'  */, 634/* 'õ' */, 635/* 'ö' */, 636/* '÷'    */,  /* 244 - 247 */
- 637/* 'ø'  */, 638/* 'ù' */, 639/* 'ú' */, 640/* 'û'    */,  /* 248 - 251 */
- 641/* 'ü'  */, 642/* 'ý' */, 643/* 'þ' */, 644/* 'ÿ'    */   /* 252 - 255 */
-};
 
 static CharKern s_Kerns[ 224 ];
 
@@ -283,153 +208,229 @@ static float s_Cos[ 36 ] = {
   0.499996F,  0.642784F,  0.766041F,  0.866023F,  0.939691F,  0.984807F
 };
 
-static GSContext   s_GSCtx;
-static GSRectangle s_GSRect;
-static GSFan       s_GSFan;
-static GSLineStrip s_GSLineStrip;
-static GSSprite    s_GSSprite;
+typedef struct FontHeader {
 
-static inline void _fontm_unpack ( Unpack* apUnpack, unsigned char* apDst ) {
+ char           m_ID [ 3 ]   __attribute__(  ( packed )  );
+ char           m_ClrType    __attribute__(  ( packed )  );
+ char           m_Unk[ 3 ]   __attribute__(  ( packed )  );
+ unsigned short m_nGlyphs    __attribute__(  ( packed )  );
+ unsigned char m_GlyphWidth  __attribute__(  ( packed )  );
+ unsigned char m_GlyphHeight __attribute__(  ( packed )  );
 
- unsigned int   i, lVal, lCount;
- unsigned char* lpPtr;
- unsigned char* lpSrc;
+} FontHeader;
 
- for ( i = 0, lpPtr = apDst;
-       lpPtr < apDst + apUnpack -> m_Size;
-       --i, apUnpack -> m_Data <<= 1
- ) {
+typedef struct _Unaligned32 {
 
-  if ( i == 0 ) {
+ unsigned int m_Val __attribute__(  ( packed )  );
 
-   i = 30;
+} _Unaligned32;
 
-   apUnpack -> m_Data  = *apUnpack -> m_Ptr++  << 8;
-   apUnpack -> m_Data  = ( apUnpack -> m_Data | *apUnpack -> m_Ptr++ ) << 8;
-   apUnpack -> m_Data  = ( apUnpack -> m_Data | *apUnpack -> m_Ptr++ ) << 8;
-   apUnpack -> m_Data  =   apUnpack -> m_Data | *apUnpack -> m_Ptr++;
-   apUnpack -> m_Shift = 0x3FFF >> ( apUnpack -> m_Data & 3 );
-   apUnpack -> m_Diff  = 14 - ( apUnpack -> m_Data & 3 );
-   apUnpack -> m_And   = apUnpack -> m_Data & 3;
+static inline unsigned int _unaligned32 ( const void* apData ) {
 
-  }  /* end if */
+ return (  ( const _Unaligned32* )apData  ) -> m_Val;
 
-  if ( apUnpack -> m_Data & 0x80000000 ) {
+}  /* end _unaligned32 */
 
-   lVal   = *apUnpack -> m_Ptr++ << 8;
-   lVal  |= *apUnpack -> m_Ptr++;
-   lpSrc  = lpPtr - ( lVal & apUnpack -> m_Shift ) - 1;
-   lCount = ( lVal >> apUnpack -> m_Diff ) + 2;
+static inline unsigned char _swap_nibble ( unsigned char c ) {
 
-   do *lpPtr++ = *lpSrc++; while ( lCount-- );
+ unsigned char l = c & 0x0F;
+ unsigned char h = c & 0xF0;
 
-  } else *lpPtr++ = *apUnpack -> m_Ptr++;
+ return ( l << 4 ) + ( h >> 4 );
 
- }  /* end for */
+}  /* end _swap_nibble */
 
-}  /* end _fontm_unpack */
+static inline void _swap_nibbles ( unsigned char* apBuff ) {
 
-static inline unsigned char* _fontm_char ( FontmFile* apFile, long aChar, long anIdx ) {
+ apBuff[ 3 ] = _swap_nibble ( apBuff[ 3 ] );
+ apBuff[ 2 ] = _swap_nibble ( apBuff[ 2 ] );
+ apBuff[ 1 ] = _swap_nibble ( apBuff[ 1 ] );
+ apBuff[ 0 ] = _swap_nibble ( apBuff[ 0 ] );
 
- int            i, j;
- unsigned char  lVal;
- unsigned char* lpPtr;
- unsigned char* retVal = (
-  ( unsigned char* )(
-   (  ( unsigned int* )(
-    (  ( unsigned char* )apFile  ) + sizeof ( FontmFile )
-   )  )[ aChar ]
-  )
- ) + apFile -> m_BaseOffset + ( unsigned int )apFile;
+}  /* end _swap_nibbles */
 
- for ( i = 0; i < CHAR_SIZE; ++i ) retVal[ i ] = ( retVal[ i ] << 4 ) | ( retVal[ i ] >> 4 );
+static inline void _swap_bytes ( unsigned char* apBuff ) {
 
- lpPtr = retVal;
+ unsigned char lVal = apBuff[ 0 ];
 
- for ( i = 0; i < 26; ++i, lpPtr += 13 ) {
+ apBuff[ 0 ] = apBuff[ 1 ];
+ apBuff[ 1 ] = lVal;
+ apBuff[ 2 ] = 0;
+ apBuff[ 3 ] = 0;
 
-  int lKern = 0;
+}  /* end _swap_bytes */
 
-  for ( j = 0; j < 13; ++j ) {
+static unsigned int _next_block ( unsigned char* apBuf, int aBufPos, unsigned int* apColor, unsigned int* apLen ) {
 
-   lVal = lpPtr[ j ];
+ unsigned int   lBytePos = aBufPos / 8;
+ unsigned int   lHiLo    = aBufPos % 8;
+ unsigned int   lData;
+ unsigned char* lpData;
+ unsigned char  lTest;
 
-   if (  !( lVal & 0x0F )  )
-    ++lKern;
-   else break;
+ lpData = apBuf + lBytePos;
+ lData  = _unaligned32 ( lpData );
 
-   if (  !( lVal & 0xF0 )  )
-    ++lKern;
-   else break;
+ if ( lHiLo > 0 ) {
 
-  }  // end for
+  _swap_nibbles (  ( unsigned char* )&lData  );
+  lData = lData >> 4;
+  _swap_nibbles (  ( unsigned char* )&lData  );
 
-  s_Kerns[ anIdx ].m_Kern[ i ].m_Left = lKern;
+ }  /* end if */
 
-  lKern = 0;
+ lTest = lData & 0xFF;
 
-  for ( j = 12; j >= 0; --j ) { 
+ _swap_bytes (  ( unsigned char* )&lData  );
 
-   lVal = lpPtr[ j ];
 
-   if (  !( lVal & 0xF0 )  )
-    ++lKern;
-   else break;
+ if (  !( lTest & 0xFC )  ) {
 
-   if (  !( lVal & 0x0F )  )
-    ++lKern;
+  *apColor = lData & 0x03;
+  *apLen   = ( lData & 0x03FC ) >> 2;
+  aBufPos += 16;
+
+ } else  if (  !( lTest & 0xF0 )  ) {
+
+  *apColor = ( lData & 0x30  ) >> 4;
+  *apLen   = ( lData & 0xFC0 ) >> 6;
+  aBufPos += 12;
+
+ } else if (  !( lTest & 0xC0 )  ) {
+
+  *apColor = lTest & 0x03;
+  *apLen   = ( lTest & 0x3C ) >> 2;
+  aBufPos += 8;
+
+ } else {
+
+  lTest  >>= 4;
+  *apColor = lTest & 0x03;
+  *apLen   = ( lTest & 0x0C ) >> 2;
+  aBufPos += 4;
+
+ }  /* end else */
+
+ *apColor -= 1;
+
+ return aBufPos;    
+
+}  /* end _next_block */
+
+static void _font_character ( FontHeader* apHdr, unsigned int aChr, void* apBuf, short* apKerns ) {
+
+ unsigned char* lpFont   = ( unsigned char* )apHdr;
+ unsigned char* lpBuff   = ( unsigned char* )apBuf;
+ unsigned int   lWidth   = ( lpFont + 11 )[ aChr ];
+ unsigned int*  lpOffs   = ( unsigned int* )( lpFont + 11 + apHdr -> m_nGlyphs + 1 );
+ unsigned char* lpOffset = ( unsigned char* )lpOffs + ( apHdr -> m_nGlyphs << 2 ) + lpOffs[ aChr ] + 4;
+ unsigned int   lBegin   = 0;
+ unsigned int   lEnd     = lWidth * apHdr -> m_GlyphHeight;
+ unsigned int   lBufPos  = 0;
+ unsigned int   lFlag    = 0;
+ unsigned int   lDIdx    = 0;
+ unsigned int   lSIdx    = 0;
+ unsigned char  lPixel   = 0;
+ unsigned int   lColor;
+ unsigned int   lLength;
+ unsigned int   i;
+          int   j;
+
+ memset ( apBuf, 0, 512 );
+
+ while ( lBegin < lEnd ) {
+
+  lBufPos = _next_block ( lpOffset, lBufPos, &lColor, &lLength );
+
+  for ( i = 0; i < lLength; ++i ) {
+
+   if ( !lFlag ) {
+
+    lFlag  = 1;
+    lPixel = lColor;
+
+   } else {
+
+    lFlag             = 0;
+    lPixel           |= ( lColor & 0x0F ) << 4;
+    lpBuff[ lDIdx++ ] = lPixel;
+
+   }  /* end else */
+
+   if ( ++lSIdx == lWidth ) {
+
+    if ( lFlag ) {
+
+     lFlag           = 0;
+     lpBuff[ lDIdx ] = lPixel;
+
+    }  /* end if */
+
+    lSIdx   =  0;
+    lpBuff += 16;
+    lDIdx   =  0;
+
+   }  /* end if */
+
+  }  /* end for */
+
+  lBegin += lLength;
+
+ }  /* end while */
+
+ lpBuff = ( unsigned char* )apBuf;
+
+ for ( i = 0; i < 32; ++i, lpBuff += 16 ) {
+
+  int   lGap  = 0;
+  short lKern = 0;
+
+  for ( j = 0; j < 16; ++j ) {
+
+   lColor = lpBuff[ j ];
+
+   if (  !( lColor & 0xF0 )  ) {
+    ++lGap;
+   } else break;
+
+   if (  !( lColor & 0x0F )  )
+    ++lGap;
    else break;
 
   }  /* end for */
 
-  s_Kerns[ anIdx ].m_Kern[ i ].m_Right = lKern;
+  lKern = lGap;
+  lGap  = 0;
+
+  for ( j = 15; j >= 0; --j ) { 
+
+   lColor = lpBuff[ j ];
+
+   if (  !( lColor & 0x0F )  )
+    ++lGap;
+   else break;
+
+   if (  !( lColor & 0xF0 )  )
+    ++lGap;
+   else break;
+
+  }  /* end for */
+
+  lKern     |= ( lGap + 2 ) << 8;
+  *apKerns++ = lKern;
 
  }  /* end for */
 
- return retVal;
+}  /* end _font_character */
 
-}  /* end _fontm_char */
-
-void _fontm_set_text_color ( u32 aColor ) {
+void _font_set_text_color ( u32 aCLUTIdx, u32 aColor ) {
 
  u32 lCLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
  u64 lDMA [ 22 ] __attribute__(  (  aligned( 16 )  )   );
- int i;
 
- float lStepR = ( float )(  ( aColor >>  0 ) & 0x000000FF ) / 16.0F;
- float lStepG = ( float )(  ( aColor >>  8 ) & 0x000000FF ) / 16.0F;
- float lStepB = ( float )(  ( aColor >> 16 ) & 0x000000FF ) / 16.0F;
- float lStepA = ( float )(  ( aColor >> 24 ) & 0x000000FF ) / 16.0F;
-
- float lR = 0.0F;
- float lG = 0.0F;
- float lB = 0.0F;
- float lA = 0.0F;
-
- lCLUT[ 0 ] =
- lCLUT[ 1 ] = 0;
-
- for ( i = 2; i < 8; ++i ) {
-
-  lCLUT[ i ] = GS_SETREG_RGBA( lR, lG, lB, 0x80 );
-
-  lR += lStepR;
-  lG += lStepG;
-  lB += lStepB;
-  lA += lStepA;
-
- }  /* end for */
-
- for ( ; i < 16; ++i ) {
-
-  lCLUT[ i ] = GS_SETREG_RGBA( lR, lG, lB, lA );
-
-  lR += lStepR;
-  lG += lStepG;
-  lB += lStepB;
-  lA += lStepA;
-
- }  /* end for */
+ lCLUT[ 0 ] = 0;
+ lCLUT[ 1 ] = GS_SETREG_RGBA( 0, 0, 0, aColor >> 24 );
+ lCLUT[ 2 ] = aColor;
 
  *GS_CSR = *GS_CSR | 2;
 
@@ -439,7 +440,7 @@ void _fontm_set_text_color ( u32 aColor ) {
   lDMA[ 2 ] = GIF_TAG( 4, 0, 0, 0, 0, 1 );
   lDMA[ 3 ] = GIF_AD;
 
-   lDMA[ 4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_CLUT, 1, GSPSM_32 );
+   lDMA[ 4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_CLUT[ aCLUTIdx ], 1, GSPSM_32 );
    lDMA[ 5 ] = GS_BITBLTBUF;
 
    lDMA[ 6 ] = GS_SETREG_TRXPOS( 0, 0, 0, 0, 0 );
@@ -473,111 +474,129 @@ void _fontm_set_text_color ( u32 aColor ) {
 
  while (  !( *GS_CSR & 2 )  );
 
-}  /* end _fontm_set_text_color */
+}  /* end _font_set_text_color */
 
-static void _fontm_init ( void ) {
+extern unsigned char g_ASCII[ 4572 ] __attribute__(   (  section( ".data" )  )   );
+extern unsigned char g_1250 [ 7736 ] __attribute__(   (  section( ".data" )  )   );
+extern unsigned char g_1251 [ 7856 ] __attribute__(   (  section( ".data" )  )   );
+extern unsigned char g_1252 [ 7732 ] __attribute__(   (  section( ".data" )  )   );
+extern unsigned char g_1253 [ 7588 ] __attribute__(   (  section( ".data" )  )   );
 
- Unpack         lUnpack;
- FontmFile*     lpFont;
- unsigned char* lpSrc;
- unsigned int   lX, lY, lSize;
- unsigned char  lCharBuf[ CHAR_SIZE ] __attribute__(   (  aligned( 16 )  )   );
- u64            lDMA    [        16 ] __attribute__(   (  aligned( 16 )  )   );
+static FontHeader* s_Fonts[ 4 ] = {
+ ( FontHeader* )g_1250,
+ ( FontHeader* )g_1251,
+ ( FontHeader* )g_1252,
+ ( FontHeader* )g_1253
+};
+
+static void _font_init ( void ) {
+
+ unsigned int   lX, lY, lIdx, lCharIdx = 0, lStrideIdx = 0;
+ unsigned char  lCharBuf[ 512 ] __attribute__(   (  aligned( 16 )  )   );
+ u64            lDMA    [  16 ] __attribute__(   (  aligned( 16 )  )   );
+ FontHeader*    lpFont = s_Fonts[ s_GSCtx.m_Font.m_CodePage ];
 
  s_GSCtx.m_Font.m_BkColor = 0x80000000;
  s_GSCtx.m_Font.m_BkMode  = GSBkMode_Transparent;
 
- lpSrc = ROM_LocateModule ( ROM_BASE, "FONTM", &lSize );
+ lDMA[  0 ] = DMA_TAG( 6, 1, DMA_CNT, 0, 0, 0 );
+ lDMA[  1 ] = 0;
+ lDMA[  2 ] = GIF_TAG( 4, 1, 0, 0, 0, 1 );
+ lDMA[  3 ] = GIF_AD;
+ lDMA[  4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_Text, 16, GSPSM_4 );
+ lDMA[  5 ] = GS_BITBLTBUF;
+ lDMA[  8 ] = GS_SETREG_TRXREG( 32, 32 );
+ lDMA[  9 ] = GS_TRXREG;
+ lDMA[ 10 ] = GS_SETREG_TRXDIR( 0 );
+ lDMA[ 11 ] = GS_TRXDIR;
+ lDMA[ 12 ] = GIF_TAG( 32, 1, 0, 0, 2, 1 );
+ lDMA[ 13 ] = 0;
+ lDMA[ 14 ] = DMA_TAG(  32, 1, DMA_REFE, 0, ( u32 )lCharBuf, 0  );
+ lDMA[ 15 ] = 0;
 
- lUnpack.m_Size = *( unsigned int* )lpSrc;
- lUnpack.m_Ptr  = lpSrc + 4;
+ lY = 0;
+ lX = 0;
 
- lpFont = malloc ( lUnpack.m_Size );
+ for ( lIdx = 0; lIdx < 96; ++lIdx, ++lCharIdx ) {
 
- _fontm_unpack (  &lUnpack, ( unsigned char* )lpFont  );
+  _font_character (  ( FontHeader* )g_ASCII, lIdx, lCharBuf, ( short* )&s_Kerns[ lCharIdx ]  );
 
- s_GSCtx.m_Font.m_Text = s_GSCtx.m_VRAMPtr / 256;
- s_GSCtx.m_VRAMPtr    += 108544;
- s_GSCtx.m_Font.m_CLUT = s_GSCtx.m_VRAMPtr / 256;
- s_GSCtx.m_VRAMPtr    += 256;
+  lDMA[ 6 ] = GS_SETREG_TRXPOS( 0, 0, lX, lY, 0 );
+  lDMA[ 7 ] = GS_TRXPOS;
 
- _fontm_set_text_color ( 0xCFFFFFFF );
+  SyncDCache ( lCharBuf, lCharBuf + 512 );
 
- for ( lY = 0, lSize = 0; lY < 182; lY += 26 )
+  DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 8 );
+  DMA_Wait ( DMA_CHANNEL_GIF );
 
-  for ( lX = 0; lX < 832; lX += 26, ++lSize ) {
+  if ( ++lStrideIdx == 31 ) {
 
-   unsigned char* lpChr = _fontm_char ( lpFont, s_CharMap[ lSize ], lSize );
-   memcpy ( lCharBuf, lpChr, CHAR_SIZE );
+   lY        += 32;
+   lX         =  0;
+   lStrideIdx =  0;
 
-   lDMA[ 0 ] = DMA_TAG( 6, 1, DMA_CNT, 0, 0, 0 );
-   lDMA[ 1 ] = 0;
-
-    lDMA[ 2 ] = GIF_TAG( 4, 1, 0, 0, 0, 1 );
-    lDMA[ 3 ] = GIF_AD;
-
-     lDMA[  4 ] = GS_SETREG_BITBLTBUF( 0, 0, 0, s_GSCtx.m_Font.m_Text, 14, GSPSM_4 );
-     lDMA[  5 ] = GS_BITBLTBUF;
-
-     lDMA[  6 ] = GS_SETREG_TRXPOS( 0, 0, lX, lY, 0 );
-     lDMA[  7 ] = GS_TRXPOS;
-
-     lDMA[  8 ] = GS_SETREG_TRXREG( 26, 26 );
-     lDMA[  9 ] = GS_TRXREG;
-
-     lDMA[ 10 ] = GS_SETREG_TRXDIR( 0 );
-     lDMA[ 11 ] = GS_TRXDIR;
-
-    lDMA[ 12 ] = GIF_TAG( 22, 1, 0, 0, 2, 1 );
-    lDMA[ 13 ] = 0;
-
-   lDMA[ 14 ] = DMA_TAG(  22, 1, DMA_REFE, 0, ( u32 )lCharBuf, 0  );
-   lDMA[ 15 ]   = 0;
-
-   SyncDCache ( lCharBuf, lCharBuf + CHAR_SIZE );
-
-   DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 8 );
-   DMA_Wait ( DMA_CHANNEL_GIF );
-
-  }  /* end for */
-
- free ( lpFont );
-
- for ( lX = 0; lX < 26; ++lX ) {
-
-  s_Kerns[ 0 ].m_Kern[ lX ].m_Left  =
-  s_Kerns[ 0 ].m_Kern[ lX ].m_Right = 7;
-
-  s_Kerns[ 7 ].m_Kern[ lX ].m_Left  = 5;
-  s_Kerns[ 7 ].m_Kern[ lX ].m_Right = 8;
+  } else lX += 32;
 
  }  /* end for */
 
- lDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
+ for ( lIdx = 0; lIdx < 128; ++lIdx, ++lCharIdx ) {
+
+  _font_character ( lpFont, lIdx, lCharBuf, ( short* )&s_Kerns[ lCharIdx ] );
+
+  lDMA[ 6 ] = GS_SETREG_TRXPOS( 0, 0, lX, lY, 0 );
+  lDMA[ 7 ] = GS_TRXPOS;
+
+  SyncDCache ( lCharBuf, lCharBuf + 512 );
+
+  DMA_SendChain ( DMA_CHANNEL_GIF, lDMA, 8 );
+  DMA_Wait ( DMA_CHANNEL_GIF );
+
+  if ( ++lStrideIdx == 31 ) {
+
+   lY        += 32;
+   lX         =  0;
+   lStrideIdx =  0;
+
+  } else lX += 32;
+
+ }  /* end for */
+
+ for ( lX = 0; lX < 32; ++lX ) {
+
+  s_Kerns[  0 ].m_Kern[ lX ].m_Left  =
+  s_Kerns[  0 ].m_Kern[ lX ].m_Right = 11;
+
+ }  /* end for */
+
+ lDMA[ 0 ] = GIF_TAG( 2, 1, 0, 0, 0, 1 );
  lDMA[ 1 ] = GIF_AD;
 
  lDMA[ 2 ] = ALPHA_BLEND_NORMAL;
  lDMA[ 3 ] = GS_ALPHA_1 + !s_GSCtx.m_PrimCtx;
 
- DMA_Send( DMA_CHANNEL_GIF, lDMA, 2 );
+ lDMA[ 4 ] = GS_SETREG_TEX1( 0, 0, 1, 1, 0, 0, 0 );
+ lDMA[ 5 ] = GS_TEX1_1 + !s_GSCtx.m_PrimCtx;
+
+ DMA_Send( DMA_CHANNEL_GIF, lDMA, 3 );
  DMA_Wait ( DMA_CHANNEL_GIF );
 
-}  /* end _fontm_init */
+}  /* end _font_init */
 
-static unsigned int _fontm_text_width ( char* apStr, int anChars ) {
+static unsigned int _font_text_width ( char* apStr, int anChars ) {
 
- int      lKern, lX[ 26 ];
+ int      lKern, lX[ 32 ];
  unsigned int i, j, lnChars = anChars ? anChars : strlen ( apStr );
+ unsigned int lChr = ( unsigned char )apStr[ 0 ] - ' ';
 
- memset (  lX, 0, sizeof ( lX )  );
+ for ( i = 0; i < 32; ++i ) lX[ i ] = s_Kerns[ lChr ].m_Kern[ i ].m_Left;
 
  for ( i = 0; i < lnChars; ++i ) {
 
-  unsigned int lChr = ( unsigned char )apStr[ i ] - ' ';
+  lChr = ( unsigned char )apStr[ i ] - ' ';
 
   lKern = -INT_MAX;
 
-  for ( j = 0; j < 26; ++j ) {
+  for ( j = 0; j < 32; ++j ) {
 
    int lOffset = lX[ j ] - s_Kerns[ lChr ].m_Kern[ j ].m_Left;
 
@@ -585,21 +604,21 @@ static unsigned int _fontm_text_width ( char* apStr, int anChars ) {
 
   }  // end for
 
-  for ( j = 0; j < 26; ++j )
+  for ( j = 0; j < 32; ++j )
 
-   lX[ j ] = lKern + 26 -  s_Kerns[ lChr ].m_Kern[ j ].m_Right - 2;
+   lX[ j ] = lKern + 32 - s_Kerns[ lChr ].m_Kern[ j ].m_Right;
 
  }  /* end for */
 
  lKern = -INT_MAX;
 
- for ( i = 0; i < 26; ++i ) if ( lX[ i ] > lKern ) lKern = lX[ i ];
+ for ( i = 0; i < 32; ++i ) if ( lX[ i ] > lKern ) lKern = lX[ i ];
 
  return lKern;
 
-}  /* end _fontm_text_width */
+}  /* end _font_text_width */
 
-void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen ) {
+void _font_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, int aColorIdx ) {
 
  int  i, j, lnChars = aLen ? aLen : strlen ( apStr );
  int  lIncr = s_GSCtx.m_Font.m_BkMode == GSBkMode_Opaque;
@@ -610,31 +629,28 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
  int  lY1, lY2;
  int  lU1, lU2;
  int  lV1, lV2;
- int  lZ;
  int  lXIncr = s_GSCtx.m_OffsetX << 4;
  int  lYIncr = s_GSCtx.m_OffsetY << 4;
  int  lTX, lTY;
  int  lCurX;
- int  lX[ 26 ] = {
-  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX,
-  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX
- };
+ int  lX[ 32 ];
+
+ for ( i = 0; i < 32; ++i ) lX[ i ] = aX;
 
  lY1 = ( aY << 3 ) + lYIncr;
- lY2 = (  ( aY + 26 ) << 3  ) + lYIncr;
- lZ  = aZ << 4;
+ lY2 = (  ( aY + 32 ) << 3  ) + lYIncr;
 
  if ( lIncr ) {
 
   lX1 = ( aX << 4 ) + lXIncr;
-  lX2 = (   (  aX + _fontm_text_width ( apStr, lnChars )  ) << 4   ) + lXIncr;
+  lX2 = (   (  aX + _font_text_width ( apStr, lnChars )  ) << 4   ) + lXIncr;
 
   *lpDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 4 );
   *lpDMA++ = GS_PRIM | ( GS_RGBAQ << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 );
   *lpDMA++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, s_GSCtx.m_fFog, s_GSCtx.m_fAlpha, s_GSCtx.m_fAntiAlias, 0, !s_GSCtx.m_PrimCtx, 0 );
   *lpDMA++ = s_GSCtx.m_Font.m_BkColor;
-  *lpDMA++ = GS_SETREG_XYZ( lX1, lY1, lZ );
-  *lpDMA++ = GS_SETREG_XYZ( lX2, lY2, lZ );
+  *lpDMA++ = GS_SETREG_XYZ( lX1, lY1, aZ );
+  *lpDMA++ = GS_SETREG_XYZ( lX2, lY2, aZ );
 
   lDMALen += 3;
 
@@ -647,7 +663,7 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
 
  *lpDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 2 );
  *lpDMA++ = ( GS_TEX0_1 + !s_GSCtx.m_PrimCtx ) | ( GS_PRIM << 4 );
- *lpDMA++ = GS_SETREG_TEX0( s_GSCtx.m_Font.m_Text, 14, GSPSM_4, 10, 8, 1, 1, s_GSCtx.m_Font.m_CLUT, 0, 0, 0, 1 );
+ *lpDMA++ = GS_SETREG_TEX0( s_GSCtx.m_Font.m_Text, 16, GSPSM_4, 10, 8, 1, 1, s_GSCtx.m_Font.m_CLUT[ aColorIdx ], 0, 0, 0, 1 );
  *lpDMA++ = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, !s_GSCtx.m_PrimCtx, 0 );
 
  *lpDMA++ = GIF_TAG( lnChars, 1, 0, 0, 1, 4 );
@@ -659,7 +675,7 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
 
   lCurX = -INT_MAX;
 
-  for ( j = 0; j < 26; ++j ) {
+  for ( j = 0; j < 32; ++j ) {
 
    int lOffset = lX[ j ] - s_Kerns[ lChr ].m_Kern[ j ].m_Left;
 
@@ -668,40 +684,40 @@ void _fontm_draw_text ( int aX, int aY, int aZ, unsigned char* apStr, int aLen )
   }  // end for
 
   lX1  = ( lCurX << 4 ) + lXIncr;
-  lX2  = (  ( lCurX + 26 ) << 4  ) + lXIncr;
+  lX2  = (  ( lCurX + 32 ) << 4  ) + lXIncr;
 
-  for ( j = 0; j < 26; ++j ) lX[ j ] = lCurX + 26 - s_Kerns[ lChr ].m_Kern[ j ].m_Right - 2;
+  for ( j = 0; j < 32; ++j ) lX[ j ] = lCurX + 32 - s_Kerns[ lChr ].m_Kern[ j ].m_Right;
 
   lTY = 0;
 
-  while ( lChr > 31 ) {
+  while ( lChr > 30 ) {
 
-   lChr -= 32;
-   lTY  += 26;
+   lChr -= 31;
+   lTY  += 32;
 
   }  /* end while */
 
-  lTX = lChr * 26;
+  lTX = lChr * 32;
 
   lU1 = ( lTX << 4 ) + lXIncr;
-  lU2 = (  ( lTX + 26 ) << 4  ) + lXIncr;
+  lU2 = (  ( lTX + 32 ) << 4  ) + lXIncr;
 
   lV1 = ( lTY << 4 ) + lXIncr;
-  lV2 = (  ( lTY + 26 ) << 4  ) + lXIncr;
+  lV2 = (  ( lTY + 32 ) << 4  ) + lXIncr;
 
   *lpDMA++ = GS_SETREG_UV( lU1, lV1 );
-  *lpDMA++ = GS_SETREG_XYZ( lX1, lY1, lZ );
+  *lpDMA++ = GS_SETREG_XYZ( lX1, lY1, aZ );
   *lpDMA++ = GS_SETREG_UV( lU2, lV2 );
-  *lpDMA++ = GS_SETREG_XYZ( lX2, lY2, lZ );
+  *lpDMA++ = GS_SETREG_XYZ( lX2, lY2, aZ );
 
  }  /* end for */
 
  DMA_Send ( DMA_CHANNEL_VIF1, lDMA, lDMALen );
  DMA_Wait ( DMA_CHANNEL_VIF1 );
 
-}  /* end _fontm_draw_text */
+}  /* end _font_draw_text */
 
-int _fontm_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u64** appRetVal ) {
+int _font_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u64** appRetVal, int aColorIdx ) {
 
  int  lnChars = aLen ? aLen : strlen ( apStr );
  int  i, j, k, lLen = FONT_GSP_SIZE( lnChars );
@@ -714,13 +730,12 @@ int _fontm_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u
  int  lYIncr = s_GSCtx.m_OffsetY << 4;
  int  lTX, lTY;
  int  lCurX;
- int  lX[ 26 ] = {
-  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX,
-  aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX, aX
- };
+ int  lX[ 32 ];
+
+ for ( i = 0; i < 32; ++i ) lX[ i ] = aX;
 
  lY1 = ( aY << 3 ) + lYIncr;
- lY2 = (  ( aY + 26 ) << 3  ) + lYIncr;
+ lY2 = (  ( aY + 32 ) << 3  ) + lYIncr;
 
  lLen >>= 1;
 
@@ -728,7 +743,7 @@ int _fontm_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u
  lpDMA[ 1 ] = VIF_DIRECT( lLen - 1 );
  lpDMA[ 2 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
  lpDMA[ 3 ] = ( GS_TEX0_1 + !s_GSCtx.m_PrimCtx ) | ( GS_PRIM << 4 );
- lpDMA[ 4 ] = GS_SETREG_TEX0( s_GSCtx.m_Font.m_Text, 14, GSPSM_4, 10, 8, 1, 1, s_GSCtx.m_Font.m_CLUT, 0, 0, 0, 1 );
+ lpDMA[ 4 ] = GS_SETREG_TEX0( s_GSCtx.m_Font.m_Text, 16, GSPSM_4, 10, 8, 1, 1, s_GSCtx.m_Font.m_CLUT[ aColorIdx ], 0, 0, 0, 1 );
  lpDMA[ 5 ] = GS_SETREG_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, !s_GSCtx.m_PrimCtx, 0 );
  lpDMA[ 6 ] = GIF_TAG( lnChars, 1, 0, 0, 1, 4 );
  lpDMA[ 7 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
@@ -739,35 +754,35 @@ int _fontm_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u
 
   lCurX = -INT_MAX;
 
-  for ( j = 0; j < 26; ++j ) {
+  for ( j = 0; j < 32; ++j ) {
 
    int lOffset = lX[ j ] - s_Kerns[ lChr ].m_Kern[ j ].m_Left;
 
    if ( lOffset > lCurX ) lCurX = lOffset;
 
-  }  // end for
+  }  /* end for */
 
   lX1  = ( lCurX << 4 ) + lXIncr;
-  lX2  = (  ( lCurX + 26 ) << 4  ) + lXIncr;
+  lX2  = (  ( lCurX + 32 ) << 4  ) + lXIncr;
 
-  for ( j = 0; j < 26; ++j ) lX[ j ] = lCurX + 26 - s_Kerns[ lChr ].m_Kern[ j ].m_Right - 2;
+  for ( j = 0; j < 32; ++j ) lX[ j ] = lCurX + 32 - s_Kerns[ lChr ].m_Kern[ j ].m_Right;
 
   lTY = 0;
 
-  while ( lChr > 31 ) {
+  while ( lChr > 30 ) {
 
-   lChr -= 32;
-   lTY  += 26;
+   lChr -= 31;
+   lTY  += 32;
 
   }  /* end while */
 
-  lTX = lChr * 26;
+  lTX = lChr * 32;
 
   lU1 = ( lTX << 4 ) + lXIncr;
-  lU2 = (  ( lTX + 26 ) << 4  ) + lXIncr;
+  lU2 = (  ( lTX + 32 ) << 4  ) + lXIncr;
 
   lV1 = ( lTY << 4 ) + lXIncr;
-  lV2 = (  ( lTY + 26 ) << 4  ) + lXIncr;
+  lV2 = (  ( lTY + 32 ) << 4  ) + lXIncr;
 
   lpDMA[ k + 0 ] = GS_SETREG_UV( lU1, lV1 );
   lpDMA[ k + 1 ] = GS_SETREG_XYZ( lX1, lY1, aZ );
@@ -778,14 +793,16 @@ int _fontm_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int aLen, u
 
  return lLen;
 
-}  /* end _fontm_gs_packet */
+}  /* end _font_gs_packet */
 
-static void GS_InitScreen ( void ) {
+static void GS_InitScreen ( GSCodePage aCodePage ) {
 
  unsigned long int  lDMA[ 30 ] __attribute__(   (  aligned( 16 )  )   );
  unsigned long int* lpDMA = lDMA;
  unsigned char      lMode;
  unsigned int       lFBH;
+
+ s_GSCtx.m_Font.m_CodePage = aCodePage;
 
  if ( s_GSCtx.m_DisplayMode == GSDisplayMode_NTSC_I ) {
 
@@ -942,7 +959,18 @@ static void GS_InitScreen ( void ) {
  s_GSCtx.m_LineColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x00 );
  s_GSCtx.m_FillColor = GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 );
 
- _fontm_init ();
+ s_GSCtx.m_Font.m_Text = s_GSCtx.m_VRAMPtr / 256;
+ s_GSCtx.m_VRAMPtr    += 129536;
+
+ for ( lFBH = 0; lFBH < 4; ++lFBH ) {
+
+  s_GSCtx.m_Font.m_CLUT[ lFBH ] = s_GSCtx.m_VRAMPtr / 256;
+  _font_set_text_color ( lFBH, 0x80FFFFFF );
+  s_GSCtx.m_VRAMPtr += 256;
+
+ }  /* end for */
+
+ _font_init ();
 
 }  /* end GS_InitScreen */
 
@@ -1679,13 +1707,13 @@ int GS_printf ( const char* apFmt, ... ) {
  if ( s_lBuf[ lSize - 1 ] == '\n' ) {
 
   s_lBuf[ lSize - 1 ] = '\0';
-  s_lY += 26;
+  s_lY += 32;
 
  }  /* end if */
 
  s_GSCtx.m_Font.m_BkColor = 0;
  s_GSCtx.m_Font.m_BkMode  = GSBkMode_Opaque;
- s_GSCtx.DrawText ( 0, lY, 100, s_lBuf, lSize );
+ s_GSCtx.DrawText ( 0, lY, 100, s_lBuf, lSize, 0 );
 
  lSize = s_GSCtx.TextWidth ( s_lBuf, 0 );
 
@@ -1696,19 +1724,19 @@ int GS_printf ( const char* apFmt, ... ) {
   GSSprite* lpSprite = s_GSCtx.InitSprite ( 0 );
 
   s_GSCtx.CopyBuffer (
-   0, 0, 13, s_GSCtx.m_Width, ( s_lY - 26 ) >> 1, 0, 0
+   0, 0, 16, s_GSCtx.m_Width, ( s_lY - 32 ) >> 1, 0, 0
   );
 
   lpSprite -> m_Points[ 0 ].m_X = 0;
-  lpSprite -> m_Points[ 0 ].m_Y = s_lY - 26;
+  lpSprite -> m_Points[ 0 ].m_Y = s_lY - 32;
   lpSprite -> m_Points[ 0 ].m_Z = 100;
   lpSprite -> m_Points[ 1 ].m_X = s_LastWidth;
-  lpSprite -> m_Points[ 1 ].m_Y = s_lY + 26;
+  lpSprite -> m_Points[ 1 ].m_Y = s_lY + 32;
   lpSprite -> m_Points[ 1 ].m_Z = 100;
 
   lpSprite -> Draw ();
 
-  s_lY -= 26;
+  s_lY -= 32;
 
  }  /* end if */
 
@@ -1718,6 +1746,14 @@ int GS_printf ( const char* apFmt, ... ) {
  return lSize;
 
 }  /* end GS_printf */
+
+static void GS_SetCodePage ( GSCodePage aCodePage ) {
+
+ s_GSCtx.m_Font.m_CodePage = aCodePage;
+
+ _font_init ();
+
+}  /* end GS_SetCodePage */
 
 static void GS_DestroyContext ( void ) {
 
@@ -1764,15 +1800,17 @@ GSContext* GS_InitContext ( GSDisplayMode aMode ) {
   s_GSCtx.m_fDblBuf    = GS_ON;
   s_GSCtx.m_fZBuf      = GS_ON;
   s_GSCtx.m_Width      = 640;
-#ifndef BIMBO69
-  s_GSCtx.m_Height     = 512;
-#else
-  s_GSCtx.m_Height     = 536;
-#endif  /* BIMBO69 */
-  s_GSCtx.m_StartX     = 690;
-  s_GSCtx.m_StartY     =  30;
-  s_GSCtx.m_MagX       =   3;
-  s_GSCtx.m_MagY       =   0;
+
+  if ( g_Config.m_ResMode == 0 )
+
+   s_GSCtx.m_Height = 512;
+
+  else s_GSCtx.m_Height = 536;
+
+  s_GSCtx.m_StartX = 690;
+  s_GSCtx.m_StartY =  30;
+  s_GSCtx.m_MagX   =   3;
+  s_GSCtx.m_MagY   =   0;
 
  } else if ( aMode == GSDisplayMode_PAL_I ) {
 setPal_I:
@@ -1781,15 +1819,17 @@ setPal_I:
   s_GSCtx.m_fDblBuf    = GS_ON;
   s_GSCtx.m_fZBuf      = GS_ON;
   s_GSCtx.m_Width      = 640;
-#ifndef BIMBO69		
-  s_GSCtx.m_Height     = 512;
-#else
-  s_GSCtx.m_Height     = 536;
-#endif  /* BIMBO69 */
-  s_GSCtx.m_StartX     = 690;
-  s_GSCtx.m_StartY     =  64;
-  s_GSCtx.m_MagX       =   3;
-  s_GSCtx.m_MagY       =   0;
+
+  if ( g_Config.m_ResMode == 0 )
+
+   s_GSCtx.m_Height = 512;
+
+  else s_GSCtx.m_Height = 536;
+
+  s_GSCtx.m_StartX = 690;
+  s_GSCtx.m_StartY =  64;
+  s_GSCtx.m_MagX   =   3;
+  s_GSCtx.m_MagY   =   0;
 
  } else if ( aMode == GSDisplayMode_VGA_640x480_60Hz ||
              aMode == GSDisplayMode_VGA_640x480_72Hz ||
@@ -2000,16 +2040,17 @@ setPal_I:
  s_GSCtx.VSync         = GS_VSync;
  s_GSCtx.SetTest       = GS_SetTest;
  s_GSCtx.ClearScreen   = GS_ClearScreen;
- s_GSCtx.TextWidth     = _fontm_text_width;
- s_GSCtx.DrawText      = _fontm_draw_text;
- s_GSCtx.TextGSPacket  = _fontm_gs_packet;
- s_GSCtx.SetTextColor  = _fontm_set_text_color;
+ s_GSCtx.TextWidth     = _font_text_width;
+ s_GSCtx.DrawText      = _font_draw_text;
+ s_GSCtx.TextGSPacket  = _font_gs_packet;
+ s_GSCtx.SetTextColor  = _font_set_text_color;
  s_GSCtx.Destroy       = GS_DestroyContext;
  s_GSCtx.CopyFBuffer   = GS_CopyFBuffer;
  s_GSCtx.AdjustDisplay = GS_AdjustDisplay;
  s_GSCtx.ZTest         = GS_ZTest;
  s_GSCtx.CopyBuffer    = GS_CopyBuffer;
  s_GSCtx.printf        = GS_printf;
+ s_GSCtx.SetCodePage   = GS_SetCodePage;
 
  return &s_GSCtx;
 

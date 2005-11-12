@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "GS.h"
 
 #include <libmc.h>
 #include <stdio.h>
@@ -7,10 +8,36 @@
 
 SMSConfig g_Config;
 
+unsigned int g_Palette[ 16 ] __attribute__(   (  section( ".data" )  )   ) = {
+ GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0x00, 0x00, 0x40, 0x00 ),
+ GS_SETREG_RGBA( 0x00, 0x40, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0x00, 0x40, 0x40, 0x00 ),
+ GS_SETREG_RGBA( 0x40, 0x00, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0x40, 0x00, 0x40, 0x00 ),
+ GS_SETREG_RGBA( 0x40, 0x40, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0x40, 0x40, 0x40, 0x00 ),
+ GS_SETREG_RGBA( 0x80, 0x80, 0x80, 0x00 ),
+ GS_SETREG_RGBA( 0x00, 0x00, 0xFF, 0x00 ),
+ GS_SETREG_RGBA( 0x00, 0xFF, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0x00, 0xFF, 0xFF, 0x00 ),
+ GS_SETREG_RGBA( 0xFF, 0x00, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0xFF, 0x00, 0xFF, 0x00 ),
+ GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0x00 ),
+ GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x00 )
+};
+
 int LoadConfig ( void ) {
 
  int retVal = 0;
  int lRes;
+
+ g_Config.m_BrowserABCIdx  = 16;
+ g_Config.m_BrowserIBCIdx  = 13;
+ g_Config.m_BrowserTxtIdx  = 15;
+ g_Config.m_PlayerVolume   = 12;
+ g_Config.m_DisplayMode    = GSDisplayMode_AutoDetect;
+ g_Config.m_DisplayCharset = GSCodePage_WinLatin1;
 
  mcGetInfo ( 0, 0, &lRes, &lRes, &lRes );
  mcSync ( 0, NULL, &lRes );
@@ -28,8 +55,29 @@ int LoadConfig ( void ) {
 
    if ( lFD >= 0 ) {
 
-    if (  fioRead (  lFD, &g_Config, sizeof ( g_Config )  ) == sizeof ( g_Config )  ) retVal = 1;
+    int lLen = fioRead ( lFD, &g_Config, 272 );
 
+    if ( lLen == 272 ) {
+
+     if ( g_Config.m_Version > 0 ) {
+
+      lLen = fioRead ( lFD, &g_Config.m_BrowserABCIdx, 32 );
+
+      if ( lLen == 32 ) retVal = 1;
+
+     } else retVal = 1;
+
+    }  /* end if */
+
+    fioClose ( lFD );
+
+   }  /* end if */
+
+   lFD = fioOpen ( "mc0:SMS/SMS.pal", O_RDONLY );
+
+   if ( lFD >= 0 ) {
+
+    fioRead (  lFD, g_Palette, sizeof ( g_Palette )  );
     fioClose ( lFD );
 
    }  /* end if */
@@ -37,6 +85,8 @@ int LoadConfig ( void ) {
   }  /* end if */
 
  }  /* end if */
+
+ g_Config.m_Version = 1;
 
  return retVal;
 

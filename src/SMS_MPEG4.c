@@ -1862,8 +1862,8 @@ static SMS_INLINE int _mpeg4_decode_block (
      lLast = SMS_SHOW_UBITS( re, lpBitCtx, 1 ); SMS_SKIP_CACHE( re, 1 );
      lRun  = SMS_SHOW_UBITS( re, lpBitCtx, 6 ); SMS_LAST_SKIP_CACHE( re, lpBitCtx, 6 );
 
-     SMS_SKIP_COUNTER( re, lpBitCtx, 8 );
-     SMS_UPDATE_CACHE( re, lpBitCtx    );
+     SMS_SKIP_COUNTER( re, 8        );
+     SMS_UPDATE_CACHE( re, lpBitCtx );
               
      if (  SMS_SHOW_UBITS( re, lpBitCtx, 1 ) == 0  ) return -1;
 
@@ -1879,7 +1879,7 @@ static SMS_INLINE int _mpeg4_decode_block (
      lLevel = ( lLevel ^ SMS_SHOW_SBITS( re, lpBitCtx, 1 )  ) - SMS_SHOW_SBITS( re, lpBitCtx, 1 );
 
      SMS_LAST_SKIP_CACHE( re, lpBitCtx, 1 );
-     SMS_SKIP_COUNTER( re, lpBi, 18 );
+     SMS_SKIP_COUNTER( re, 18 );
 
      i += lRun + 1;
 
@@ -1898,7 +1898,7 @@ static SMS_INLINE int _mpeg4_decode_block (
        lLast = SMS_SHOW_UBITS( re, lpBitCtx, 1 ); SMS_SKIP_CACHE( re, 1 );
        lRun  = SMS_SHOW_UBITS( re, lpBitCtx, 6 ); SMS_LAST_SKIP_CACHE( re, lpBitCtx, 6 );
 
-       SMS_SKIP_COUNTER( re, lpBitCtx, 9 );
+       SMS_SKIP_COUNTER( re, 9        );
        SMS_UPDATE_CACHE( re, lpBitCtx );
 
        if (  SMS_SHOW_UBITS(re, lpBitCtx, 1 ) == 0  ) return -1;
@@ -1910,7 +1910,7 @@ static SMS_INLINE int _mpeg4_decode_block (
        if (  SMS_SHOW_UBITS( re, lpBitCtx, 1 ) == 0  ) return -1;
 
        SMS_LAST_SKIP_CACHE( re, lpBitCtx, 1 );
-       SMS_SKIP_COUNTER( re, lpBitCtx, 14 );
+       SMS_SKIP_COUNTER( re, 14 );
 
        if ( lLevel > 0 )
 

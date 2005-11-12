@@ -20,6 +20,7 @@
 #include "Timer.h"
 #include "CDDA.h"
 #include "DMA.h"
+#include "Config.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -103,7 +104,7 @@ static void _draw_text ( char* apStr ) {
 
  if ( s_Player.m_pIPUCtx ) s_Player.m_pIPUCtx -> Sync ();
 
- s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( lX, lY, 0, apStr, 0 );
+ s_Player.m_pGUICtx -> m_pGSCtx -> DrawText ( lX, lY, 0, apStr, 0, 0 );
 
 }  /* end _draw_text */
 
@@ -116,7 +117,7 @@ static void _prepare_ipu_context ( void ) {
 
  lpGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
  lpGSCtx -> VSync ();
- lpGSCtx -> InitScreen ();
+ lpGSCtx -> InitScreen ( g_Config.m_DisplayCharset );
  lpGSCtx -> VSync ();
  lpGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
 
@@ -739,8 +740,6 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx ) {
  s_VideoBuffer   = NULL;
  s_AudioBuffer   = NULL;
  s_Flags         =    0;
-
- if ( !s_Player.m_Volume ) s_Player.m_Volume = 12;
 
  apGUICtx -> Status ( "Detecting file format..." );
 

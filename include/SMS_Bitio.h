@@ -31,16 +31,16 @@
                  ( name##_index >> 3 )                \
                 ) << ( name##_index & 0x07 );
 
-# define SMS_SKIP_COUNTER( name, gb, num )   name##_index += ( num );
+# define SMS_SKIP_COUNTER( name, num )       name##_index += ( num );
 # define SMS_SHOW_UBITS( name, gb, num )     SMS_NEG_USR32( name##_cache, num )
 # define SMS_SHOW_SBITS( name, gb, num )     SMS_NEG_SSR32( name##_cache, num )
-# define SMS_LAST_SKIP_BITS( name, gb, num ) SMS_SKIP_COUNTER( name, gb, num )
+# define SMS_LAST_SKIP_BITS( name, gb, num ) SMS_SKIP_COUNTER( name, num )
 # define SMS_SKIP_CACHE( name, num )         name##_cache <<= ( num );
 # define SMS_LAST_SKIP_CACHE( name, gb, num )
 
 # define SMS_SKIP_BITS( name, gb, num ) { \
  SMS_SKIP_CACHE( name, num )              \
- SMS_SKIP_COUNTER( name, gb, num )        \
+ SMS_SKIP_COUNTER( name, num )            \
 }
 
 # define SMS_GET_CACHE( name, gb ) (  ( uint32_t )name##_cache  )

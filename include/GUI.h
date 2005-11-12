@@ -44,6 +44,8 @@
 # define GUI_EV_HOST_UMOUNT 14
 # define GUI_EV_DISK_DETECT 15
 # define GUI_EV_DISK_NODISK 16
+# define GUI_EV_MENU        17
+# define GUI_EV_EXIT        18
 
 # define GUI_FF_FILE      0x00000000
 # define GUI_FF_DIRECTORY 0x00000001
@@ -128,7 +130,7 @@ typedef struct GUIContext {
  void ( *ClearFileMenu    ) ( void                );
  void ( *Destroy          ) ( void                );
  void ( *ActivateMenu     ) ( int                 );
- void ( *Redraw           ) ( void                );
+ void ( *Redraw           ) ( int                 );
  void ( *ActivateFileItem ) ( int, char*, char*   );
  int  ( *SelectFile       ) ( char*               );
  void ( *Progress         ) ( char*, unsigned int );

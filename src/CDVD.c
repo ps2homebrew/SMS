@@ -51,6 +51,9 @@
 */
 #include "CDVD.h"
 #include "SIF.h"
+#include "SMS.h"
+
+#include <loadfile.h>
 
 #define CDVD_IRX 0xB001337
 
@@ -66,7 +69,19 @@ int CDVD_Init ( void ) {
 
  int retVal = 1;
 
- if ( !s_Client.server ) retVal = SIF_BindRPC ( &s_Client, CDVD_IRX );
+ if ( !s_Client.server ) {
+
+  SifExecModuleBuffer (
+   &g_DataBuffer[ SMS_CDVD_OFFSET ], SMS_CDVD_SIZE, 0, NULL, &retVal
+  );
+
+  if ( retVal >= 0 )
+
+   retVal = SIF_BindRPC ( &s_Client, CDVD_IRX );
+
+  else retVal = 0;
+
+ }  /* end if */
 
  return retVal;
 

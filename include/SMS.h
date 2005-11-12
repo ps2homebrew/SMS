@@ -13,7 +13,11 @@
 # define __SMS_H
 
 extern int g_Trace;
-extern int g_fUSB;
+extern int g_SMSFlags;
+
+# define SMS_FLAG_DEV9 0x00000001
+# define SMS_FLAG_USB  0x00000002
+# define SMS_FLAG_NET  0x00000004
 
 typedef signed   char  int8_t;
 typedef unsigned char uint8_t;
@@ -376,6 +380,8 @@ void*    SMS_Realloc          ( void*, unsigned int*, unsigned int   );
 uint32_t SMS_Align            ( unsigned int, unsigned int           );
 void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int            );
 int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t            );
+void     SMS_StartNetwork     ( void*                                );
+void     SMS_ResetIOP         ( void                                 );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */
