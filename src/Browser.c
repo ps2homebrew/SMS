@@ -882,7 +882,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
       char* lpPath = _make_path ( NULL );
       int   lLen;
-      char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( s_BrowserCtx.m_pActiveItem -> m_pFileName ) + ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) ? 6 : 2 ];
+      char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( s_BrowserCtx.m_pActiveItem -> m_pFileName ) + (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) ? 6 : 2  ) ];
 
       strcpy ( lFullPath, lpPath ); free ( lpPath );
 
