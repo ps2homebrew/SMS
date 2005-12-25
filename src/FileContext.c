@@ -739,6 +739,7 @@ static void CDDA_DestroyFileContext ( FileContext* apCtx ) {
 
   if ( apCtx -> m_pBase[ 1 ] != NULL ) free ( apCtx -> m_pBase[ 1 ] );
 
+  free ( apCtx -> m_pPath );
   free ( apCtx );
 
  }  /* end if */
@@ -1166,9 +1167,10 @@ CDDAFile* CDDA_GetFileList ( CDDAContext* apDiskCtx, const CDDADirectory* apDirC
 
 }  /* end CDDA_GetFileList */
 
-FileContext* CDDA_InitFileContext ( CDDAContext* apCtx, const char* apFileName ) {
+FileContext* CDDA_InitFileContext ( const char* apFileName, void* apCtx ) {
 
  FileContext*         retVal  = NULL;
+ CDDAContext*         lpCtx   = ( CDDAContext* )apCtx;
  const CDDADirectory* lpDirs  = CDDA_DirectoryList ( apCtx );
  const char*          lpStart = strpbrk ( apFileName, "\\/" );
  const char*          lpEnd;
@@ -1227,10 +1229,16 @@ FileContext* CDDA_InitFileContext ( CDDAContext* apCtx, const char* apFileName )
     if (  lpFile -> m_pName && !strcmp ( lpFile -> m_pName, lpStart )  ) {
 
      retVal = CDDA_InitFileContextInternal (
-      apCtx, apCtx -> m_StartSector[ lpDirs -> m_Idx ] + lpFile -> m_Offset,
+      lpCtx, lpCtx -> m_StartSector[ lpDirs -> m_Idx ] + lpFile -> m_Offset,
       lpFile -> m_Size, lpFile -> m_ImgIdx
      );
+
+     retVal -> m_pPath      = ( char* )malloc (  strlen ( apFileName ) + 1  );
      retVal -> m_StreamSize = 432;
+     retVal -> m_pOpenParam = apCtx;
+     retVal -> Open         = CDDA_InitFileContext;
+
+     strcpy ( retVal -> m_pPath, apFileName );
 
      break;
 
@@ -1270,15 +1278,16 @@ static void STIO_DestroyFileContext ( FileContext* apCtx ) {
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_hFile         );
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_Ovlp.hEvent   );
 #else  /* PS2 */
-  IO_Close (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
   IO_SetBlockMode ( 0 );
+  IO_Close (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
 #endif  /* _WIN32 */
   free ( apCtx -> m_pData      );
   free ( apCtx -> m_pBase[ 0 ] );
 
   if ( apCtx -> m_pBase[ 1 ] != NULL ) free ( apCtx -> m_pBase[ 1 ] );
 
-  free ( apCtx );
+  free ( apCtx -> m_pPath );
+  free ( apCtx ); 
 
  }  /* end if */
 
@@ -1322,28 +1331,16 @@ static int STIO_Read ( FileContext* apCtx, void* apBuf, unsigned int aSize ) {
 
 static int STIO_Seek ( FileContext* apCtx, unsigned int aPos ) {
 
- int lOffset;
+ STIOFilePrivate* lpPriv  = ( STIOFilePrivate* )apCtx -> m_pData;
 
- if ( aPos > apCtx -> m_Size ) return -1;
-
- lOffset = aPos - (   apCtx -> m_Pos - ( apCtx -> m_pEnd - apCtx -> m_pBuff[ apCtx -> m_CurBuf ] )  );
-
- if (  lOffset >= 0 && lOffset <= ( apCtx -> m_pEnd - apCtx -> m_pBuff[ apCtx -> m_CurBuf ] )  )
-
-  apCtx -> m_pPos = apCtx -> m_pBuff[ apCtx -> m_CurBuf ] + lOffset;
-
- else {
-#ifndef _WIN32
-  STIOFilePrivate* lpPriv  = ( STIOFilePrivate* )apCtx -> m_pData;
+ apCtx -> m_pPos   =
+ apCtx -> m_pEnd   = apCtx -> m_pBuff[ apCtx -> m_CurBuf ];
+ apCtx -> m_CurPos = apCtx -> m_Pos = aPos;
+#ifdef _WIN32
+ aPos = SetFilePointer ( lpPriv -> m_hFile, aPos, NULL, FILE_BEGIN );
+#else  /* PS2 */
+ aPos = IO_LSeek ( lpPriv -> m_FD, aPos, 0 );
 #endif  /* _WIN32 */
-  apCtx -> m_pPos   =
-  apCtx -> m_pEnd   = apCtx -> m_pBuff[ apCtx -> m_CurBuf ];
-  apCtx -> m_CurPos = apCtx -> m_Pos = aPos;
-#ifndef _WIN32
-  aPos = IO_LSeek ( lpPriv -> m_FD, aPos, 0 );
-#endif  /* _WIN32 */
- }  /* end else */
-
  return aPos;
 
 }  /* end STIO_Seek */
@@ -1428,18 +1425,8 @@ static int STIO_FillStm ( FileContext* apCtx ) {
 }  /* end STIO_FillStm */
 
 static int STIO_SeekStm ( FileContext* apCtx, unsigned int aPos ) {
-#ifdef _WIN32
- DWORD            lnRead;
- STIOFilePrivate* lpPriv = ( STIOFilePrivate* )apCtx -> m_pData;
 
- if (  aPos > apCtx -> m_Size ||
-       !GetOverlappedResult (
-         lpPriv -> m_hFile, &lpPriv -> m_Ovlp, &lnRead, TRUE
-        )
- ) return -1;
-#else  /* PS2 */
- if (  aPos > apCtx -> m_Size || IO_Wait ( 0, NULL ) < 0  ) return -1;
-#endif  /* _WIN32 */
+ apCtx -> Stream ( apCtx, aPos, 0                         );
  apCtx -> Stream ( apCtx, aPos, apCtx -> m_BufSize / 4096 );
 
  return 1;
@@ -1488,7 +1475,6 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> Seek = STIO_SeekStm;
   apCtx -> Fill = STIO_FillStm;
-
 #ifdef _WIN32
   lpPriv -> m_Ovlp.Offset     = apCtx -> m_CurPos;
   lpPriv -> m_Ovlp.OffsetHigh = 0;
@@ -1530,7 +1516,7 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
 }  /* end STIO_Stream */
 
-FileContext* STIO_InitFileContext ( const char* aFileName ) {
+FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
 
  int          lfSuccess = 0;
  FileContext* retVal    = NULL;
@@ -1565,6 +1551,9 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
      retVal -> m_CurPos     = 0;
      retVal -> m_pPos       = retVal -> m_pBuff[ 0 ];
      retVal -> m_pEnd       = retVal -> m_pPos;
+     retVal -> m_pPath      = ( char* )malloc (  strlen ( aFileName ) + 1  );
+
+     strcpy ( retVal -> m_pPath, aFileName );
 
      (  ( STIOFilePrivate* )retVal -> m_pData  ) -> m_hFile       = lhFile;
      (  ( STIOFilePrivate* )retVal -> m_pData  ) -> m_Ovlp.hEvent = lhEvent;
@@ -1576,6 +1565,8 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
      retVal -> Stream  = STIO_Stream;
 
      retVal -> m_StreamSize = 384;
+     retVal -> m_pOpenParam = NULL;
+     retVal -> Open         = STIO_InitFileContext;
 
      lfSuccess = 1;
 
@@ -1629,6 +1620,9 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
     retVal -> m_pPos       = retVal -> m_pBuff[ 0 ];
     retVal -> m_pEnd       = retVal -> m_pPos;
     retVal -> m_StreamSize = 384;
+    retVal -> m_pPath      = ( char* )malloc (  strlen ( aFileName ) + 1  );
+
+    strcpy ( retVal -> m_pPath, aFileName );
 
     (  ( STIOFilePrivate* )retVal -> m_pData  ) -> m_FD = lFD;
 
@@ -1637,6 +1631,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName ) {
     retVal -> Read    = STIO_Read;
     retVal -> Seek    = STIO_Seek;
     retVal -> Stream  = STIO_Stream;
+    retVal -> Open    = STIO_InitFileContext;
  
     IO_LSeek ( lFD, 0, 0 );
 
@@ -1681,3 +1676,49 @@ void File_Skip ( FileContext* apFileCtx, unsigned int aCount ) {
  if ( lnRem ) apFileCtx -> Read ( apFileCtx, s_lBuff, lnRem );
 
 }  /* end File_Skip */
+
+void File_GetString ( FileContext* apFileCtx, char* apStr, unsigned int aMaxLen ) {
+
+ unsigned int i     = 0;
+ unsigned int lfEOL = 0;
+
+ --aMaxLen;
+
+ while ( i < aMaxLen ) {
+
+  if (  FILE_EOF( apFileCtx )  ) {
+
+   apStr[ i ] = '\x00';
+   lfEOL      = 1;
+
+   break;
+
+  }  /* end if */
+
+  apStr[ i ] = File_GetByte ( apFileCtx );
+
+  if ( apStr[ i ] == '\n' ) {
+
+   apStr[ i ] = '\x00';
+
+   if ( i-- && apStr[ i ] == '\r' ) apStr[ i ] = '\x00';
+
+   lfEOL = 1;
+
+   break;
+
+  }  /* end if */
+
+  ++i;
+
+ }  /* end while */
+
+ if ( !lfEOL ) {
+
+  while (  !FILE_EOF( apFileCtx ) && File_GetByte( apFileCtx ) != '\n' );
+
+  apStr[ aMaxLen ] = '\x00';
+
+ }  /* end if */
+
+}  /* end File_GetString */

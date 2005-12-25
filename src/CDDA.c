@@ -32,6 +32,7 @@
 #define CD_CMD_STANDBY     0x06
 #define CD_CMD_STOP        0x07
 #define CD_CMD_PAUSE       0x08
+#define CD_CMD_MMODE       0x22
 
 static int                s_Sema;
 static int                s_SyncFlag;
@@ -258,6 +259,23 @@ int CDDA_Stop ( void ) {
  return retVal;
 
 }  /* end CDDA_Stop */
+
+int CDDA_SetMediaMode ( MediaMode aMode ) {
+
+ int retVal = 0;
+
+ *( unsigned int * )s_SCmdRecvBuff = ( unsigned int )aMode;
+
+ SifWriteBackDCache ( s_SCmdRecvBuff, 4 );
+
+ if (  SifCallRpc (
+        &s_ClientSCmd, CD_CMD_MMODE, 0, s_SCmdRecvBuff, 4, s_SCmdRecvBuff, 4, 0, 0
+        ) >= 0
+ ) retVal = *( int* )UNCACHED_SEG( s_SCmdRecvBuff );
+
+ return retVal;
+
+}  /* end CDDA_SetMediaMode */
 
 void CDDA_DiskReady ( void ) {
 

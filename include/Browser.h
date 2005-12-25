@@ -10,9 +10,9 @@ struct MenuContext;
 
 typedef struct BrowserContext {
 
- struct FileContext* ( *Browse  ) ( char* );
- void                ( *Reload  ) ( void  );
- void                ( *Destroy ) ( void  );
+ struct FileContext* ( *Browse  ) ( char*, struct FileContext**, unsigned int* );
+ void                ( *Reload  ) ( void                                       );
+ void                ( *Destroy ) ( void                                       );
 
  struct GUIContext*      m_pGUICtx;
  struct StringList*      m_pPath;

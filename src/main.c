@@ -1,8 +1,19 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #include "SMS.h"
 #include "SMS_Player.h"
 #include "SMS_DSP.h"
 #include "CDDA.h"
 #include "CDVD.h"
+#include "PAD.h"
 #include "GS.h"
 #include "GUI.h"
 #include "Browser.h"
@@ -11,41 +22,41 @@
 #include "Config.h"
 
 #include <kernel.h>
-#include <libpad.h>
 
 int main ( int argc, char** argv ) {
 
  int             lfConfig;
  FileContext*    lpFileCtx;
- GSContext*      lpGSCtx;
+ FileContext*    lpSubFileCtx;
  GUIContext*     lpGUICtx;
  BrowserContext* lpBrowserCtx;
  SMS_Player*     lpPlayer;
  GSDisplayMode   lDisplayMode;
+ unsigned int    lSubFormat;
 
- SMS_DSP_Init ();
-#if RESET_IOP
+ GS_InitContext ( GSDisplayMode_AutoDetect );
+
  SMS_ResetIOP ();
-#endif  /* RESET_IOP */
-
- CDDA_Init  ();
- Timer_Init ();
- CDVD_Init  ();
+ SMS_DSP_Init ();
+ CDDA_Init    ();
+ Timer_Init   ();
+ CDVD_Init    ();
 
  lDisplayMode = GUI_InitPad ();
+ lSubFormat   = lDisplayMode != GSDisplayMode_AutoDetect;
 
- if (   (  lfConfig = LoadConfig ()  ) && lDisplayMode == GSDisplayMode_AutoDetect  ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
+ if (   (  lfConfig = LoadConfig ()  ) && !lSubFormat  ) lDisplayMode = ( GSDisplayMode )g_Config.m_DisplayMode;
 
- lpGSCtx = GS_InitContext ( lDisplayMode );
+ GS_InitContext ( lDisplayMode );
 
- if ( lfConfig ) {
+ if ( lfConfig && !lSubFormat ) {
 
-  lpGSCtx -> m_StartX = g_Config.m_DX;
-  lpGSCtx -> m_StartY = g_Config.m_DY;
+  g_GSCtx.m_StartX = g_Config.m_DX;
+  g_GSCtx.m_StartY = g_Config.m_DY;
 
  }  /* end if */
 
- lpGUICtx = GUI_InitContext ( lpGSCtx );
+ lpGUICtx = GUI_InitContext ();
 
  lpGUICtx -> Status ( "Initializing SMS..." );
 
@@ -56,24 +67,15 @@ int main ( int argc, char** argv ) {
 
  while ( 1 ) {
 
-  lpFileCtx = lpBrowserCtx -> Browse ( lfConfig ? g_Config.m_Partition : NULL );
-  lpPlayer  = SMS_InitPlayer ( lpFileCtx, lpGUICtx );
+  lpFileCtx = lpBrowserCtx -> Browse ( lfConfig ? g_Config.m_Partition : NULL, &lpSubFileCtx, &lSubFormat );
+  lpPlayer  = SMS_InitPlayer ( lpFileCtx, lpGUICtx, lpSubFileCtx, lSubFormat );
 
   if ( lpPlayer == NULL ) {
 
    lpGUICtx -> Status ( "Unsupported file format (press X to continue)" );
 
-   if (  CDDA_DiskType () != DiskType_Unknown  ) CDVD_Stop ();
+   if (  CDDA_DiskType () != DiskType_Unknown  ) CDDA_Stop ();
 
-   GUI_WaitButton ( PAD_CROSS, 0 );
-
-  } else if ( lpPlayer -> Play == NULL ) {
-
-   lpPlayer -> Destroy ();
-
-   if (  CDDA_DiskType () != DiskType_Unknown  ) CDVD_Stop ();
-
-   lpGUICtx -> Status ( "Unsupported codecs (press X to continue)" );
    GUI_WaitButton ( PAD_CROSS, 0 );
 
   } else {

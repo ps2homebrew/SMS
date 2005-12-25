@@ -10,25 +10,45 @@
 */
 #include "SMS_Container.h"
 #include "SMS_ContainerAVI.h"
+#include "SMS_ContainerMP3.h"
+#include "SMS_ContainerM3U.h"
+#include "StringList.h"
 
 #include <malloc.h>
 
 typedef int ( *ContainerCreator ) ( SMS_Container* );
 
 static ContainerCreator s_CCreator[] = {
- SMS_GetContainerAVI, NULL
+ SMS_GetContainerAVI,
+ SMS_GetContainerMP3,
+ SMS_GetContainerM3U, NULL
 };
 
 static void _DestroyPacket ( SMS_AVPacket* apPkt ) {
 
- if ( apPkt != 0 ) {
+ if ( apPkt ) {
 
-  free ( apPkt -> m_pData );
+  if ( apPkt -> m_pData ) free ( apPkt -> m_pData );
+
   free ( apPkt );
 
  }  /* end if */
 
-}  /* end _SMS_DestroyPacket */
+}  /* end _DestroyPacket */
+
+static void _AllocPacket ( SMS_AVPacket* apPkt, int aSize ) {
+
+ void* lpData = SMS_Realloc ( apPkt -> m_pData, &apPkt -> m_AllocSize, aSize + 8 );
+
+ apPkt -> m_PTS      = SMS_NOPTS_VALUE;
+ apPkt -> m_DTS      = SMS_NOPTS_VALUE;
+ apPkt -> m_StmIdx   = 0;
+ apPkt -> m_Flags    = 0;
+ apPkt -> m_Duration = 0;
+ apPkt -> m_pData    = lpData; 
+ apPkt -> m_Size     = aSize;
+
+}  /* end _AllocPacket */
 
 static SMS_AVPacket* _NewPacket ( SMS_Container* apCont ) {
 
@@ -36,18 +56,21 @@ static SMS_AVPacket* _NewPacket ( SMS_Container* apCont ) {
 
  retVal -> m_pCtx  = apCont;
  retVal -> Destroy = _DestroyPacket;
+ retVal -> Alloc   = _AllocPacket;
 
  return retVal;
 
 }  /* end _NewPacket */
 
-static void _Destroy ( SMS_Container* apCont ) {
+void SMS_DestroyContainer ( SMS_Container* apCont ) {
 
  uint32_t i;
 
  for ( i = 0; i < apCont -> m_nStm; ++i ) {
 
-  apCont -> m_pStm[ i ] -> Destroy ( apCont -> m_pStm[ i ] );
+  if ( !apCont -> m_pStm[ i ] ) continue;
+
+  if ( apCont -> m_pStm[ i ] -> Destroy ) apCont -> m_pStm[ i ] -> Destroy ( apCont -> m_pStm[ i ] );
 
   if ( apCont -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
 
@@ -58,13 +81,16 @@ static void _Destroy ( SMS_Container* apCont ) {
 
   }  /* end if */
 
+  if ( apCont -> m_pStm[ i ] -> m_pName ) free ( apCont -> m_pStm[ i ] -> m_pName );
+
   free ( apCont -> m_pStm[ i ] );
 
  }  /* end for */
 
- apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
+ if ( apCont -> m_pFileCtx  ) apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
+ if ( apCont -> m_pCtx      ) free ( apCont -> m_pCtx );
+ if ( apCont -> m_pPlayList ) apCont -> m_pPlayList -> Destroy ( apCont -> m_pPlayList, 1 );
 
- free ( apCont -> m_pCtx );
  free ( apCont );
 
 }  /* end _Destroy */
@@ -77,9 +103,13 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx, struct GUIContext* apG
  retVal -> m_pFileCtx = apFileCtx;
  retVal -> m_pGUICtx  = apGUICtx;
 
- while ( s_CCreator[ i ] )
+ while ( s_CCreator[ i ] ) {
 
   if (  s_CCreator[ i++ ] ( retVal )  ) break;
+
+  apFileCtx -> Seek ( apFileCtx, 0 );
+
+ }  /* end while */
 
  if ( retVal -> m_pName == NULL ) {
 
@@ -91,7 +121,7 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx, struct GUIContext* apG
  } else {
 
   if ( !retVal -> NewPacket ) retVal -> NewPacket = _NewPacket;
-  if ( !retVal -> Destroy   ) retVal -> Destroy   = _Destroy;
+  if ( !retVal -> Destroy   ) retVal -> Destroy   = SMS_DestroyContainer;
 
  }  /* end else */
 

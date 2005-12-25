@@ -22,7 +22,8 @@ typedef struct SMS_FrameBuffer {
  SMS_MacroBlock*         m_pBase;
  SMS_MacroBlock*         m_pData;
  int                     m_FrameType;
- float                   m_PTS;
+ int64_t                 m_PTS;
+ int64_t                 m_SPTS;
  struct SMS_VideoBuffer* m_pBuf;
 
 } SMS_FrameBuffer;

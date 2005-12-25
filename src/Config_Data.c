@@ -1,3 +1,16 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# Icon design: (c) David Vignoni (david@icon-king.com)
+#              ICON KING - www.icon-king.com
+# Licenced under GNU LESSER GENERAL PUBLIC LICENSE
+#  Version 2.1, February 1999
+#
+# Adopted for SMS in 2005 by Eugene Plotnikov <e-plotnikov@operamail.com>
+#
+*/
 unsigned char g_IconSMS[] __attribute__(   (  aligned( 16 )  )   ) = {
 	0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3f, 
 	0x24, 0x00, 0x00, 0x00, 0x0a, 0xdc, 0xeb, 0xf7, 0x00, 0xdc, 0x00, 0x04, 0x00, 0xf0, 0x00, 0x00, 

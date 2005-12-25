@@ -164,6 +164,14 @@ typedef enum DMATransferMode {
   );                                                            \
 }
 
+# define DMA_SendToVIF1( data, size ) {                         \
+ *DMA_ADDR( 0x10009020 ) = ( size );                            \
+ *DMA_ADDR( 0x10009010 ) = ( unsigned int )( data );            \
+ *DMA_ADDR( 0x10009000 ) = DMA_SET_CHCR(                        \
+   DMADirection_From_Mem, DMATransferMode_Normal, 0, 0, 0, 1, 0 \
+  );                                                            \
+}
+
 # define DMA_SendChainToGIF( data ) {                          \
  *DMA_ADDR( 0x1000A020 ) = 0;                                  \
  *DMA_ADDR( 0x1000A030 ) = ( unsigned int )( data );           \

@@ -12,8 +12,8 @@
 #ifndef __SMS_H
 # define __SMS_H
 
-extern int g_Trace;
-extern int g_SMSFlags;
+extern int  g_Trace;
+extern int  g_SMSFlags;
 
 # define SMS_FLAG_DEV9 0x00000001
 # define SMS_FLAG_USB  0x00000002
@@ -42,10 +42,10 @@ extern const uint32_t g_SMS_InvTbl[ 256 ];
 # define SMS_PS2FS_SIZE      54785
 # define SMS_POWEROFF_SIZE    2925
 # define SMS_USB_MASS_SIZE   33413
-# define SMS_CDVD_SIZE       20097
+# define SMS_CDVD_SIZE       20065
 # define SMS_PS2IP_SIZE      78909
 # define SMS_PS2SMAP_SIZE    12625
-# define SMS_PS2HOST_SIZE    16562
+# define SMS_PS2HOST_SIZE    16349
 
 # define SMS_AUDSRV_OFFSET     0
 # define SMS_IDCT_CONST_OFFSET (  ( SMS_AUDSRV_OFFSET     + SMS_AUDSRV_SIZE     + 15 ) & 0xFFFFFFF0  )
@@ -213,8 +213,7 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_DSP_SPR_DMA_HALF_HV  ( SMS_DSP_SPR_HALF        +  272 )
 #  define SMS_MPEG_SPR_DMA_MB_0    ( SMS_DSP_SPR_HALF_HV     +  256 )
 #  define SMS_MPEG_SPR_DMA_MB_1    ( SMS_MPEG_SPR_DMA_MB_0   +  384 )
-#  define SMS_IPU_SPR_DMA_PKT_BUF  ( SMS_MPEG_SPR_DMA_MB_1   +  384 )
-#  define SMS_DSP_SPR_DMA_CONST    ( SMS_IPU_SPR_DMA_PKT_BUF + 1040 )
+#  define SMS_DSP_SPR_DMA_CONST    ( SMS_MPEG_SPR_DMA_MB_1   +  384 )
 #  define SMS_SPR_DMA_FREE         ( SMS_DSP_SPR_DMA_CONST   +  368 )
 
 #  define SMS_MPEG_SPR_MB_BUF (  ( SMS_MacroBlock* )0x70000000  )
@@ -227,8 +226,7 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_DSP_SPR_HALF_HV (  ( uint8_t*        )( SMS_DSP_SPR_HALF    + 272 )  )
 #  define SMS_MPEG_SPR_MB_0   (  ( SMS_MacroBlock* )( SMS_DSP_SPR_HALF_HV + 256 )  )
 #  define SMS_MPEG_SPR_MB_1   (  ( SMS_MacroBlock* )( SMS_MPEG_SPR_MB_0   +   1 )  )
-#  define SMS_IPU_SPR_PKT_BUF (  ( uint64_t*       )( SMS_MPEG_SPR_MB_1   +   1 )  )
-#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )( SMS_IPU_SPR_PKT_BUF + 130 )  )
+#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )( SMS_MPEG_SPR_MB_1   +   1 )  )
 #  define SMS_SPR_FREE        (  ( uint8_t*        )( SMS_DSP_SPR_CONST   + 184 )  )
 
 static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
@@ -286,6 +284,7 @@ static SMS_INLINE uint64_t SMS_Time ( void ) {
 # define SMS_MININT64 SMS_INT64( 0x8000000000000000 )
 
 # define SMS_NOPTS_VALUE SMS_INT64( 0x8000000000000000 )
+# define SMS_STPTS_VALUE SMS_INT64( 0xC000000000000000 )
 # define SMS_TIME_BASE   1000
 
 typedef struct SMS_HuffTable {
@@ -352,7 +351,8 @@ typedef struct SMS_AVPacket {
  uint32_t m_Flags;
  int32_t  m_Duration;
  void*    m_pCtx;
- void     ( *Destroy ) ( struct SMS_AVPacket* );
+ void     ( *Alloc   ) ( struct SMS_AVPacket*, int );
+ void     ( *Destroy ) ( struct SMS_AVPacket*      );
 
 } SMS_AVPacket;
 
@@ -370,6 +370,8 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
  } else if ( aB > aC ) aB = aC > anA ? aC : anA;
  return aB;
 }  /* end SMS_mid_pred */
+
+extern char g_CWD[ 1024 ] SMS_DATA_SECTION;
 
 # ifdef __cplusplus
 extern "C" {

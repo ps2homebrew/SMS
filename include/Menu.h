@@ -16,11 +16,28 @@
 # define MENU_IF_TEXT     0x00000002
 # define MENU_IF_PALIDX   0x00000004
 
+# define MENU_F_TEXT 0x00000001
+# define MENU_F_VSYN 0x00000002
+
 # define MENU_EV_OPTION_SELECT 0
 # define MENU_EV_EXIT          1
 # define MENU_EV_CONSUMED      4
 
 struct BrowserContext;
+struct GSContext;
+
+typedef struct MenuItemData {
+
+ char*        m_pName;
+ void*        m_pIconLeft;
+ void*        m_pIconRight;
+ unsigned int m_Flags;
+
+ void ( *Handler ) ( int  );
+ void ( *Enter   ) ( void );
+ void ( *Leave   ) ( void );
+
+} MenuItemData;
 
 typedef struct MenuItem {
 
@@ -32,27 +49,31 @@ typedef struct MenuItem {
  struct MenuItem* m_pPrev;
  struct MenuItem* m_pNext;
 
- void ( *Handler ) ( void );
+ void ( *Handler ) ( int  );
+ void ( *Enter   ) ( void );
+ void ( *Leave   ) ( void );
 
 } MenuItem;
 
 typedef struct MenuContext {
 
- struct BrowserContext* m_pBrowserCtx;
- MenuItem*              m_pItems;
- MenuItem*              m_pFirst;
- MenuItem*              m_pLast;
- MenuItem*              m_pCurr;
- char*                  m_pName;
- int                    m_Left;
- int                    m_Top;
- int                    m_Height;
- int                    m_Width;
- int                    m_Offset;
- unsigned int*          m_pSelIdx;
- int                    m_fText;
-
- void ( *Run ) ( void );
+ MenuItem*     m_pItems;
+ MenuItem*     m_pFirst;
+ MenuItem*     m_pLast;
+ MenuItem*     m_pCurr;
+ char*         m_pName;
+ int           m_Left;
+ int           m_Top;
+ int           m_Height;
+ int           m_Width;
+ int           m_Offset;
+ unsigned int* m_pSelIdx;
+ int           m_Flags;
+ unsigned int  m_Color;
+ 
+ void ( *Run       ) ( void );
+ void ( *PrePaint  ) ( void );
+ void ( *PostPaint ) ( void );
 
 } MenuContext;
 
@@ -61,6 +82,11 @@ extern "C" {
 # endif  /* __cplusplus */
 
 MenuContext* MenuContext_Init ( struct BrowserContext* );
+
+MenuItem* Menu_Navigate (  MenuContext*, unsigned long int                                      );
+void      Menu_Fill     (  MenuContext*, char*, MenuItemData*                                   );
+void      Menu_Draw     (  MenuContext*                                                         );
+MenuItem* Menu_AddItem  (  MenuContext*, char*, void*, void*, unsigned int, void ( * ) ( int )  );
 
 # ifdef __cplusplus
 }

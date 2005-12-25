@@ -11,7 +11,6 @@
 #ifndef __IPU_H
 # define __IPU_H
 
-struct GSContext;
 struct SMS_MacroBlock;
 struct SMS_FrameBuffer;
 
@@ -19,14 +18,13 @@ struct SMS_FrameBuffer;
 
 typedef struct IPUContext {
 
- unsigned int      m_MBWidth;
- unsigned int      m_MBHeight;
- unsigned int      m_Width;
- unsigned int      m_UVWidth;
- unsigned int      m_Height;
- unsigned int      m_UVHeight;
- unsigned int      m_Linesize;
- struct GSContext* m_pGSCtx;
+ unsigned int m_MBWidth;
+ unsigned int m_MBHeight;
+ unsigned int m_Width;
+ unsigned int m_UVWidth;
+ unsigned int m_Height;
+ unsigned int m_UVHeight;
+ unsigned int m_Linesize;
 
  void ( *Destroy ) ( void );
  void ( *Display ) ( struct SMS_FrameBuffer* );
@@ -69,78 +67,79 @@ typedef struct IPUContext {
 
 typedef struct IPUContext {
 
- unsigned long int       m_DMAGIFDraw[ 16 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int       m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int       m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int       m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int       m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned int            m_DestX;
- unsigned int            m_DestY;
- unsigned int            m_Slice;
- unsigned int            m_MB;
- unsigned int            m_nMBSlice;
- unsigned int            m_nMBSlices;
- unsigned int            m_MBStride;
- unsigned int            m_QWCToIPUSlice;
- unsigned int            m_QWCFromIPUSlice;
- unsigned int            m_DMAHandlerID_IPU;
- unsigned int            m_DMAHandlerID_GIF;
+ unsigned long int      m_DMAGIFDraw[ 20 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned int           m_ImgLeft   [  4 ];
+ unsigned int           m_ImgTop    [  4 ];
+ unsigned int           m_ImgRight  [  4 ];
+ unsigned int           m_ImgBottom [  4 ];
+ unsigned int           m_TxtLeft   [  4 ];
+ unsigned int           m_TxtTop    [  4 ];
+ unsigned int           m_TxtRight  [  4 ];
+ unsigned int           m_TxtBottom [  4 ];
+ unsigned long int      m_DestY;
+ unsigned int           m_Slice;
+ unsigned int           m_MB;
+ unsigned int           m_nMBSlice;
+ unsigned int           m_nMBSlices;
+ unsigned int           m_MBStride;
+ unsigned int           m_QWCToIPUSlice;
+ unsigned int           m_QWCFromIPUSlice;
+ unsigned int           m_DMAHandlerID_IPU;
+ unsigned int           m_DMAHandlerID_GIF;
 # ifdef VB_SYNC
- unsigned int            m_VBlankStartHandlerID;
- unsigned int            m_VBlankEndHandlerID;
- unsigned int            m_fDraw;
- unsigned int            m_fBlank;
+ unsigned int           m_VBlankStartHandlerID;
+ unsigned int           m_VBlankEndHandlerID;
+ unsigned int           m_fDraw;
+ unsigned int           m_fBlank;
 # endif  /* VB_SYNC */
- unsigned int            m_VRAM;
- unsigned int            m_TBW;
- unsigned int            m_TW;
- unsigned int            m_TH;
- unsigned int            m_SyncS;
- unsigned int            m_GIFlag;
- unsigned int            m_Width;
- unsigned int            m_Height;
- unsigned int            m_ScrWidth;
- unsigned int            m_ScrHeight;
- unsigned int            m_ScrLeft;
- unsigned int            m_ScrTop;
- unsigned int            m_ScrRight;
- unsigned int            m_ScrBottom;
- unsigned int            m_ImgLeft;
- unsigned int            m_ImgTop;
- unsigned int            m_ImgRight;
- unsigned int            m_ImgBottom;
- unsigned int            m_TxtLeft;
- unsigned int            m_TxtTop;
- unsigned int            m_TxtRight;
- unsigned int            m_TxtBottom;
- unsigned int            m_VIFQueueSize;
- unsigned int            m_ViFQueueSize;
- unsigned int            m_VIPQueueSize;
- struct SMS_FrameBuffer* m_pBuffer;
- unsigned char*          m_pResult;
- unsigned char*          m_pCurRes;
- struct SMS_MacroBlock*  m_pMB;
+ unsigned int           m_VRAM;
+ unsigned int           m_TBW;
+ unsigned int           m_TW;
+ unsigned int           m_TH;
+ unsigned int           m_SyncS;
+ unsigned int           m_GIFlag;
+ unsigned int           m_Width;
+ unsigned int           m_Height;
+ unsigned int           m_ScrLeft;
+ unsigned int           m_ScrTop;
+ unsigned int           m_ScrRight;
+ unsigned int           m_ScrBottom;
+ unsigned int           m_VIFQueueSize;
+ unsigned int           m_ViFQueueSize;
+ unsigned int           m_VIPQueueSize;
+ unsigned int           m_ModeIdx;
+ unsigned char*         m_pResult;
+ unsigned long int*     m_pDMAPacket;
+ struct SMS_MacroBlock* m_pMB;
  
- void ( *Sync         ) ( void                    );
- void ( *Display      ) ( struct SMS_FrameBuffer* );
- void ( *Destroy      ) ( void                    );
- void ( *SetTEX       ) ( void                    );
- void ( *GIFHandler   ) ( void                    );
- void ( *Reset        ) ( struct GSContext*       );
- void ( *QueuePacket  ) ( int, void*              );
- void ( *PQueuePacket ) ( int, void*              );
- void ( *iQueuePacket ) ( int, void*              );
+ void ( *Sync         ) ( void         );
+ void ( *Display      ) ( void*        );
+ void ( *Destroy      ) ( void         );
+ void ( *SetTEX       ) ( void         );
+ void ( *GIFHandler   ) ( void         );
+ void ( *Reset        ) ( void         );
+ void ( *QueuePacket  ) ( int, void*   );
+ void ( *PQueuePacket ) ( int, void*   );
+ void ( *iQueuePacket ) ( int, void*   );
+ void ( *Suspend      ) ( void         );
+ void ( *Resume       ) ( void         );
+ void ( *Repaint      ) ( void         );
+ void ( *ChangeMode   ) ( unsigned int );
+ void ( *Pan          ) ( int          );
+ void ( *Flush        ) ( void         );
 
 } IPUContext;
 #endif  /* _WIN32 */
-
 extern IPUContext g_IPUCtx;
-
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
-IPUContext* IPU_InitContext ( struct GSContext*, int, int );
+IPUContext* IPU_InitContext ( int, int );
 
 # ifdef __cplusplus
 }

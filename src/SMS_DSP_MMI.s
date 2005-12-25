@@ -102,7 +102,7 @@ IDCT_Put:
     subu    $sp, $sp, 24
     sw      $s0,  0($sp)
     sw      $s1,  4($sp)
-    addiu   $t8, $t8, 0x2BC0
+    addiu   $t8, $t8, 0x27B0
     sw      $s2,  8($sp)
     sw      $s3, 12($sp)
     sw      $s4, 16($sp)
@@ -449,7 +449,7 @@ IDCT_Add:
     sw      $s0,  0($sp)
     sw      $s1,  4($sp)
     sw      $s2,  8($sp)
-    addiu   $t8, $t8, 0x2BC0
+    addiu   $t8, $t8, 0x27B0
     sw      $s3, 12($sp)
     sw      $s4, 16($sp)
     sw      $s5, 20($sp)

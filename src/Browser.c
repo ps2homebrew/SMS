@@ -15,9 +15,11 @@
 #include "CDVD.h"
 #include "FileContext.h"
 #include "GUI.h"
+#include "PAD.h"
 #include "StringList.h"
 #include "Config.h"
 #include "Menu.h"
+#include "SubtitleContext.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -25,10 +27,15 @@
 #include <libhdd.h>
 #include <fileXio_rpc.h>
 #include <fcntl.h>
-#include <libpad.h>
+
+extern void About ( GUIContext* );
 
 static BrowserContext s_BrowserCtx;
 static unsigned int   s_Flags;
+
+static const char* s_Ext[ 3 ] = {
+ ".avi", ".mp3", ".m3u"
+};
 
 static void _check_filter_flag ( void ) {
 
@@ -45,10 +52,18 @@ static int _filter_avi ( char* apName ) {
  int lLen   = strlen ( apName );
  int retVal = 0;
 
- if (  lLen > 4 && !stricmp ( apName + lLen - 4, ".avi"  )  ) {
+ if ( lLen > 4 ) {
 
-  apName[ lLen - 4 ] = '\x00';
-  retVal             = 1;
+  char* lpExt = apName + lLen - 4;
+
+  if (       !stricmp ( lpExt, ".avi"  )  )
+   retVal = GUI_FF_AVI;
+  else if (  !stricmp ( lpExt, ".mp3"  )  )
+   retVal = GUI_FF_MP3;
+  else if (  !stricmp ( lpExt, ".m3u"  )  )
+   retVal = GUI_FF_M3U;
+
+  if (  retVal && ( g_Config.m_BrowserFlags & SMS_BF_AVIF )  ) apName[ lLen - 4 ] = '\x00';
 
  }  /* end if */
 
@@ -128,7 +143,11 @@ static int _fill_cdda_directory ( const CDDADirectory* apDir ) {
 
   while ( lpFile ) {
 
-   s_BrowserCtx.m_pGUICtx -> AddFile ( lpFile -> m_pName, GUI_FF_FILE );
+   int lFlags = _filter_avi ( lpFile -> m_pName );
+
+   if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !lFlags  ) continue;
+
+   s_BrowserCtx.m_pGUICtx -> AddFile ( lpFile -> m_pName, GUI_FF_FILE | lFlags );
 
    ++retVal;
    lpFile = lpFile -> m_pNext;
@@ -280,6 +299,7 @@ static void _fill_hdd_list ( void ) {
   while (  fileXioDread ( lFD, &lEntry )  ) {
 
    StringList* lpList;
+   int         lFlags = 0;
 
    if ( lEntry.stat.mode & FIO_S_IFDIR ) {
 
@@ -292,12 +312,14 @@ static void _fill_hdd_list ( void ) {
    } else if ( lEntry.stat.mode & FIO_S_IFREG ) {
 
     lpList = lpFileList;
+    lFlags = _filter_avi ( lEntry.name );
 
-    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !_filter_avi ( lEntry.name )  ) continue;
+    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !lFlags  ) continue;
 
    } else continue;
 
    lpList -> PushBack ( lpList, lEntry.name );
+   lpList -> m_pTail -> m_pParam = ( void* )lFlags;
 
   }  /* end while */
 
@@ -321,7 +343,7 @@ static void _fill_hdd_list ( void ) {
 
   while ( lpNode ) {
 
-   s_BrowserCtx.m_pGUICtx -> AddFile ( lpNode -> m_pString, GUI_FF_FILE );
+   s_BrowserCtx.m_pGUICtx -> AddFile (  lpNode -> m_pString, GUI_FF_FILE | ( unsigned int )lpNode ->m_pParam  );
    lpNode = lpNode -> m_pNext;
 
   }  /* end while */
@@ -408,6 +430,7 @@ static int _fill_dir_list ( char* apDevName ) {
   while (  fioDread ( lFD, &lEntry ) == 1  )   {
 
    StringList* lpList;
+   int         lFlags = 0;
 
    if ( lEntry.stat.mode & FIO_SO_IFDIR ) {
 
@@ -420,12 +443,14 @@ static int _fill_dir_list ( char* apDevName ) {
    } else if ( lEntry.stat.mode & FIO_SO_IFREG ) {
 
     lpList = lpFileList;
+    lFlags = _filter_avi ( lEntry.name );
 
-    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !_filter_avi ( lEntry.name )  ) continue;
+    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !lFlags  ) continue;
 
    } else continue;
 
    lpList -> PushBack ( lpList, lEntry.name );
+   lpList -> m_pTail -> m_pParam = ( void* )lFlags;
 
   }  /* end while */
 
@@ -449,7 +474,7 @@ static int _fill_dir_list ( char* apDevName ) {
 
   while ( lpNode ) {
 
-   s_BrowserCtx.m_pGUICtx -> AddFile ( lpNode -> m_pString, GUI_FF_FILE );
+   s_BrowserCtx.m_pGUICtx -> AddFile (  lpNode -> m_pString, GUI_FF_FILE | ( unsigned int )lpNode -> m_pParam  );
    lpNode = lpNode -> m_pNext;
 
   }  /* end while */
@@ -517,6 +542,8 @@ static int _fill_dir_list_host ( char* apDevName ) {
 
   for ( i = 0; i <= elflist_size; ++i ) {
 
+   int lFlags = 0;
+
    elflist_char = elflist_text[ i ];
 
    if (  elflist_char == 0x0A || i == elflist_size ) {
@@ -530,12 +557,19 @@ static int _fill_dir_list_host ( char* apDevName ) {
     if (   (  tFD = fioOpen ( testpath, O_RDONLY )  ) >= 0   ) {
 
      fioClose ( tFD );
+
+     lFlags = _filter_avi ( pathname );
+
+     if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !lFlags  ) continue;
+
      lpFileList -> PushBack ( lpFileList, pathname );
+     lpFileList -> m_pTail -> m_pParam = ( void* )lFlags;
 
     } else if (   (  tFD = fioDopen ( testpath )  ) >= 0   ) {
 
      fioDclose ( tFD );
      lpDirList -> PushBack ( lpDirList, pathname );
+     lpDirList -> m_pTail -> m_pParam = ( void* )0;
 
     }  /* end if */
 
@@ -551,7 +585,9 @@ static int _fill_dir_list_host ( char* apDevName ) {
 /* This point is only reached if elflist.txt is NOT to be used */
 no_elflist:
 /* when not dealing with elflist.txt, extract folder content names here */
-  while (  fioDread ( lFD, &lEntry ) )   {
+  while (  fioDread ( lFD, &lEntry )  ) {
+
+   int lFlags = 0;
 
    strcpy ( lFilename, lEntry.name );
 
@@ -578,12 +614,14 @@ no_elflist:
    } else if ( lEntry.stat.mode & FIO_SO_IFREG ) {
 
     lpList = lpFileList;
+    lFlags = _filter_avi ( lEntry.name );
 
-    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !_filter_avi ( lEntry.name )  ) continue;
+    if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) && !lFlags  ) continue;
 
    } else continue;
 
    lpList -> PushBack ( lpList, lEntry.name );
+   lpList -> m_pTail -> m_pParam = ( void* )lFlags;
 
   }  /* end while */
 /* names are already extracted to lpFileList and lpDirList */
@@ -609,7 +647,7 @@ extraction_done:
 
   while ( lpNode ) {
 
-   s_BrowserCtx.m_pGUICtx -> AddFile ( lpNode -> m_pString, GUI_FF_FILE );
+   s_BrowserCtx.m_pGUICtx -> AddFile (  lpNode -> m_pString, GUI_FF_FILE | ( unsigned int )lpNode -> m_pParam  );
    lpNode = lpNode -> m_pNext;
 
   }  /* end while */
@@ -818,7 +856,43 @@ static void _handle_unmount ( void ) {
 
 }  /* end _handle_unmount */
 
-static FileContext* Browser_Browse ( char* apPartName ) {
+static void _open_subtitles ( char* apPath, FileContext** appSubFileCtx, unsigned int* apSubFormat, CDDAContext* apCDDACtx ) {
+
+ if ( g_Config.m_PlayerFlags & SMS_PF_SUBS ) {
+
+  char*          lpSubExt[ 2 ] = { ".srt",            ".sub"              };
+  SubtitleFormat lSubFmt [ 2 ] = { SubtitleFormat_SRT, SubtitleFormat_SUB };
+  int            i, lLen = strlen ( apPath );
+
+  for ( i = 0; i < 2; ++i ) {
+
+   char  lPath[ lLen + 5 ]; strcpy ( lPath, apPath );
+   char* lpPtr = strrchr ( lPath, '.' );
+
+   if ( lpPtr ) *lpPtr = '\x00';
+
+   strcat ( lPath, lpSubExt[ i ] );
+
+   if ( apCDDACtx )
+
+    *appSubFileCtx = CDDA_InitFileContext ( lPath, apCDDACtx );
+
+   else *appSubFileCtx = STIO_InitFileContext ( lPath, NULL );
+
+   if ( *appSubFileCtx ) {
+
+    *apSubFormat = lSubFmt[ i ];
+    break;
+
+   }  /* end if */
+
+  }  /* end for */
+
+ } else *appSubFileCtx = NULL;
+
+}  /* end _open_subtitles */
+
+static FileContext* Browser_Browse ( char* apPartName, FileContext** appFileCtxSub, unsigned int* apSubFormat ) {
 
  FileContext* retVal = NULL;
 
@@ -858,6 +932,12 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
    } break;
 
+   case GUI_EV_ABOUT: {
+
+    About ( s_BrowserCtx.m_pGUICtx );
+
+   } break;
+
    case GUI_EV_EXIT: {
 
     SMS_ResetIOP ();
@@ -883,20 +963,27 @@ static FileContext* Browser_Browse ( char* apPartName ) {
       char* lpPath = _make_path ( NULL );
       int   lLen;
       char  lFullPath[ (  lLen = strlen ( lpPath )  ) + strlen ( s_BrowserCtx.m_pActiveItem -> m_pFileName ) + (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) ? 6 : 2  ) ];
+      int   lIdx = s_BrowserCtx.m_pActiveItem -> m_Flags >> 4;
+
+      lIdx &= 0x0000000F;
+      lIdx -= 1;
 
       strcpy ( lFullPath, lpPath ); free ( lpPath );
 
       if ( lFullPath[ lLen - 1 ] != '/' ) strcat ( lFullPath, "/" );
 
+      strcpy ( g_CWD, lFullPath );
       strcat ( lFullPath, s_BrowserCtx.m_pActiveItem -> m_pFileName );
 
-      if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM )
+      if ( s_Flags & SMS_BF_AVIF ) strcat ( lFullPath, s_Ext[ lIdx ] );
 
-       retVal = CDDA_InitFileContext ( s_BrowserCtx.m_pCDDACtx, lFullPath );
+      if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_CDROM ) {
 
-      else {
+       retVal = CDDA_InitFileContext ( lFullPath, s_BrowserCtx.m_pCDDACtx );
 
-       if ( s_Flags & SMS_BF_AVIF ) strcat ( lFullPath, ".avi" );
+       if ( retVal && !lIdx ) _open_subtitles ( lFullPath, appFileCtxSub, apSubFormat, s_BrowserCtx.m_pCDDACtx );
+
+      } else {
 
        if ( s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pCurr -> m_Flags & GUI_DF_HDD )
 
@@ -910,7 +997,9 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
        }  /* end else */
 
-       retVal = STIO_InitFileContext ( lFullPath );
+       retVal = STIO_InitFileContext ( lFullPath, NULL );
+
+       if ( retVal && !lIdx ) _open_subtitles ( lFullPath, appFileCtxSub, apSubFormat, NULL );
 
       }  /* end else */
 
@@ -1030,6 +1119,8 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
     } else if ( lpDevice -> m_Flags == GUI_DF_CDFS || lpDevice -> m_Flags == GUI_DF_DVD ) {
 
+     CDVD_FlushCache ();
+
      s_BrowserCtx.m_pPath -> Destroy ( s_BrowserCtx.m_pPath, 0 );
      s_BrowserCtx.m_pGUICtx -> ActivateMenu (  _fill_dir_list ( "cdfs:/" ) ? 1 : 0  );
 
@@ -1042,6 +1133,7 @@ static FileContext* Browser_Browse ( char* apPartName ) {
    case GUI_EV_CDROM_MOUNT: {
 
     s_BrowserCtx.m_pGUICtx -> Status ( "Reading disk..." );
+    CDDA_SetMediaMode ( MediaMode_CD );
     s_BrowserCtx.m_pCDDACtx = CDDA_InitContext ( 0 );
 
     if ( s_BrowserCtx.m_pCDDACtx ) {
@@ -1089,10 +1181,15 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
     s_BrowserCtx.m_pGUICtx -> Status ( "Saving configuration..." );
 
-    g_Config.m_DX          = s_BrowserCtx.m_pGUICtx -> m_pGSCtx -> m_StartX;
-    g_Config.m_DY          = s_BrowserCtx.m_pGUICtx -> m_pGSCtx -> m_StartY;
-    g_Config.m_DisplayMode = s_BrowserCtx.m_pGUICtx -> m_pGSCtx -> m_DisplayMode;
-    strncpy ( g_Config.m_Partition, s_BrowserCtx.m_pActivePartition, 255 );
+    g_Config.m_DX          = g_GSCtx.m_StartX;
+    g_Config.m_DY          = g_GSCtx.m_StartY;
+    g_Config.m_DisplayMode = g_GSCtx.m_DisplayMode;
+
+    if ( s_BrowserCtx.m_HDDPD != -1 )
+
+     strncpy ( g_Config.m_Partition, s_BrowserCtx.m_pActivePartition, 255 );
+
+    else g_Config.m_Partition[ 0 ] = '\x00';
 
     if (  !SaveConfig ()  ) {
 
@@ -1125,19 +1222,21 @@ static FileContext* Browser_Browse ( char* apPartName ) {
 
    case GUI_EV_CDFS_MOUNT: {
 
-    int lDevice;
-    int lSetDVDV  = 0;
-    int lDiskType = CDDA_DiskType ();
+    int       lDevice;
+    int       lSetDVDV  = 0;
+    int       lDiskType = CDDA_DiskType ();
+    MediaMode lMMode;
 
     switch ( lDiskType ) {
 
-     case DiskType_CD  : lDevice = GUI_DF_CDFS; break;
+     case DiskType_CD  : lDevice = GUI_DF_CDFS; lMMode = MediaMode_CD;  break;
      case DiskType_DVDV: lSetDVDV = 1;
-     default           : lDevice = GUI_DF_DVD;  break;
+     default           : lDevice = GUI_DF_DVD;  lMMode = MediaMode_DVD; break;
 
     }  /* end switch */
 
-    CDVD_SetDVDV ( lSetDVDV );
+    CDDA_SetMediaMode ( lMMode   );
+    CDVD_SetDVDV      ( lSetDVDV );
 
     s_BrowserCtx.m_pGUICtx -> AddDevice ( lDevice );
 

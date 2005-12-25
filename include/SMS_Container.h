@@ -24,16 +24,25 @@
 # endif  /* __SMS_Codec_H */
 
 struct GUIContext;
+struct StringList;
+struct StringListNode;
 
 # define SMS_CONT_FLAGS_SEEKABLE 0x00000001
+
+# define SMS_STRM_FLAGS_AUDIO 0x00000001
+# define SMS_STRM_FLAGS_VIDEO 0x00000002
+
+# define SMS_MAX_STREAMS 8
 
 typedef struct SMS_Stream {
 
  SMS_CodecContext m_Codec;
+ SMS_Rational     m_TimeBase;
  int32_t          m_SampleRate;
  uint32_t         m_RealFrameRate;
  uint32_t         m_RealFrameRateBase;
- SMS_Rational     m_TimeBase;
+ uint32_t         m_Flags;
+ char*            m_pName;
  void*            m_pCtx;
 
  void ( *Destroy ) ( struct SMS_Stream* );
@@ -42,19 +51,21 @@ typedef struct SMS_Stream {
 
 typedef struct SMS_Container {
 
- SMS_Stream*        m_pStm[ 32 ];
- uint64_t           m_Duration;
- uint32_t           m_nStm;
- uint32_t           m_Flags;
- FileContext*       m_pFileCtx;
- char*              m_pName;
- void*              m_pCtx;
- struct GUIContext* m_pGUICtx;
+ SMS_Stream*            m_pStm[ SMS_MAX_STREAMS ];
+ int64_t                m_Duration;
+ uint32_t               m_nStm;
+ uint32_t               m_Flags;
+ FileContext*           m_pFileCtx;
+ char*                  m_pName;
+ void*                  m_pCtx;
+ struct GUIContext*     m_pGUICtx;
+ struct StringList*     m_pPlayList;
+ struct StringListNode* m_pPlayItem;
 
- SMS_AVPacket* ( *NewPacket  ) ( struct SMS_Container*                     );
- int           ( *ReadPacket ) ( SMS_AVPacket*                             );
- void          ( *Destroy    ) ( struct SMS_Container*                     );
- int           ( *Seek       ) ( struct SMS_Container*, int, int, uint32_t );
+ SMS_AVPacket* ( *NewPacket   ) ( struct SMS_Container*                     );
+ int           ( *ReadPacket  ) ( SMS_AVPacket*                             );
+ void          ( *Destroy     ) ( struct SMS_Container*                     );
+ int           ( *Seek        ) ( struct SMS_Container*, int, int, uint32_t );
 
 } SMS_Container;
 
@@ -63,6 +74,7 @@ extern "C" {
 # endif  /* __cplusplus */
 
 SMS_Container* SMS_GetContainer        ( FileContext*, struct GUIContext* );
+void           SMS_DestroyContainer    ( SMS_Container*                   );
 void           SMSContainer_SetPTSInfo ( SMS_Stream*, int, int            );
 
 # ifdef __cplusplus

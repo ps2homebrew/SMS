@@ -18,6 +18,7 @@
 
 #include "SMS.h"
 #include "DMA.h"
+#include "PAD.h"
 
 #include "Timer.h"
 #include "CDDA.h"
@@ -27,13 +28,12 @@
 #include <kernel.h>
 #include <string.h>
 #include <malloc.h>
-#include <libpad.h>
 #include <libmc.h>
-#include <libhdd.h>
 #include <loadfile.h>
 #include <iopcontrol.h>
 #include <sifcmd.h>
 #include <stdio.h>
+#include <libhdd.h>
 
 #define STR_AVAILABLE_MEDIA "Available media: "
 #define USB_FLAG_CONNECT    0x00000001
@@ -58,40 +58,40 @@ static int                        s_PadSema;
 static volatile unsigned long int s_Event;
 static unsigned int               s_PrevBtn;
 static unsigned int               s_Init;
-static struct padButtonStatus     s_PadData;
+static unsigned long int          s_PPTS;
 
 static void ( *DoTimer ) ( void );
 
-static unsigned char* const s_FSIcons[ 3 ] = {
- g_ImgFile, g_ImgFolder, g_ImgPart
+static unsigned char* const s_FSIcons[ 2 ] = {
+ g_ImgFolder, g_ImgPart
 };
 
-static unsigned char* const s_MBIcons[ 3 ] = {
- g_ImgInfo, g_ImgWarning, g_ImgError
+static unsigned char* const s_FileIcons[ 4 ] = {
+ g_ImgFile, g_ImgAVI, g_ImgMP3, g_ImgM3U
 };
 
-extern void GUIStub_DrawBackground ( GSContext* );
+extern void GUIStub_DrawBackground ( void );
 
 static void GUI_Status ( char* apSts ) {
 
  int lLen      = strlen ( apSts );
- int lWidth    = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, lLen );
- int lY        = s_GUICtx.m_pGSCtx -> m_Height - 36;
+ int lWidth    = g_GSCtx.TextWidth ( apSts, lLen );
+ int lY        = g_GSCtx.m_Height - 36;
  int lCY       = lY;
- int lScrWidth = s_GUICtx.m_pGSCtx -> m_Width - 24;
+ int lScrWidth = g_GSCtx.m_Width - 24;
 
  lCY = lY >> 1;
 
  while ( lWidth >= lScrWidth ) {
 
   --lLen;
-  lWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, lLen );
+  lWidth = g_GSCtx.TextWidth ( apSts, lLen );
 
  }  /* end while */
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, lCY, s_GUICtx.m_pGSCtx -> m_Width, 16 );
- s_GUICtx.m_pGSCtx -> m_Font.m_BkMode = GSBkMode_Transparent;
- s_GUICtx.m_pGSCtx -> DrawText ( 6, lY, 0, apSts, lLen, 0 );
+ g_GSCtx.CopyFBuffer ( 0, 1, lCY, g_GSCtx.m_Width, 16 );
+ g_GSCtx.m_Font.m_BkMode = GSBkMode_Transparent;
+ g_GSCtx.DrawText ( 6, lY, 0, apSts, lLen, 0 );
 
 }  /* end GUI_Status */
 
@@ -111,16 +111,16 @@ static void GUI_Progress ( char* apSts, unsigned int aPos ) {
 
   int lWidth;
 
-  s_lY        = s_GUICtx.m_pGSCtx -> m_Height - 36;
+  s_lY        = g_GSCtx.m_Height - 36;
   s_lLen      = strlen ( apSts );
   s_lCY       = s_lY / 2;
-  s_lScrWidth = s_GUICtx.m_pGSCtx -> m_Width - 28;
-  lWidth      = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, s_lLen );
+  s_lScrWidth = g_GSCtx.m_Width - 28;
+  lWidth      = g_GSCtx.TextWidth ( apSts, s_lLen );
 
   while ( lWidth >= s_lScrWidth ) {
 
    --s_lLen;
-   lWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apSts, s_lLen );
+   lWidth = g_GSCtx.TextWidth ( apSts, s_lLen );
 
   }  /* end while */
 
@@ -131,18 +131,18 @@ static void GUI_Progress ( char* apSts, unsigned int aPos ) {
 
   }  /* end if */
 
-  s_lLen = s_GUICtx.m_pGSCtx -> TextGSPacket ( 6, s_lY, 0, apSts, 0, &s_lpPrgList, 0 );
+  s_lLen = g_GSCtx.TextGSPacket ( 6, s_lY, 0, apSts, 0, &s_lpPrgList, 0 );
 
  } else if ( !s_lpPrgList ) return;
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer ( 0, 1, s_lCY, s_GUICtx.m_pGSCtx -> m_Width, 16 );
+ g_GSCtx.CopyFBuffer ( 0, 1, s_lCY, g_GSCtx.m_Width, 16 );
 
- s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
- s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
+ g_GSCtx.m_FillColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
+ g_GSCtx.m_LineColor = GS_SETREG_RGBA( 0x80, 0x80, 0xFF, 0x50 );
 
- lWidth = (  ( s_GUICtx.m_pGSCtx -> m_Width - 2 ) * aPos  ) / 100;
+ lWidth = (  ( g_GSCtx.m_Width - 2 ) * aPos  ) / 100;
 
- if ( lWidth > 16 ) s_GUICtx.m_pGSCtx -> RoundRect ( 1, s_lY, lWidth, s_lY + 30, 8 );
+ if ( lWidth > 16 ) g_GSCtx.RoundRect ( 1, s_lY, lWidth, s_lY + 30, 8 );
 
  DMA_Send ( DMA_CHANNEL_VIF1, s_lpPrgList, s_lLen );
 
@@ -150,23 +150,23 @@ static void GUI_Progress ( char* apSts, unsigned int aPos ) {
 
 static void GUI_DrawDesktop ( void ) {
 
- s_GUICtx.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0, 0, 0, 0 )  );
+ g_GSCtx.ClearScreen (  GS_SETREG_RGBA( 0, 0, 0, 0 )  );
 
- GUIStub_DrawBackground ( s_GUICtx.m_pGSCtx );
+ GUIStub_DrawBackground ();
 
- s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0, 0, 0, 0x80 );
- s_GUICtx.m_pGSCtx -> m_LineColor = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
- s_GUICtx.m_pGSCtx -> RoundRect (
-  0, s_GUICtx.m_pGSCtx -> m_Height - 38, s_GUICtx.m_pGSCtx -> m_Width - 1, s_GUICtx.m_pGSCtx -> m_Height - 2, 8
+ g_GSCtx.m_FillColor = GS_SETREG_RGBA( 0, 0, 0, 0x80 );
+ g_GSCtx.m_LineColor = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
+ g_GSCtx.RoundRect (
+  0, g_GSCtx.m_Height - 38, g_GSCtx.m_Width - 1, g_GSCtx.m_Height - 2, 8
  );
- s_GUICtx.m_pGSCtx -> RoundRect ( 0,  2, s_GUICtx.m_pGSCtx -> m_Width - 1, 56, 8 );
- s_GUICtx.m_pGSCtx -> RoundRect ( 0, 62, s_GUICtx.m_pGSCtx -> m_Width - 1, s_GUICtx.m_pGSCtx -> m_Height - 44, 8 );
+ g_GSCtx.RoundRect ( 0,  2, g_GSCtx.m_Width - 1, 56, 8 );
+ g_GSCtx.RoundRect ( 0, 62, g_GSCtx.m_Width - 1, g_GSCtx.m_Height - 44, 8 );
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer (
-  1, 0, 0, s_GUICtx.m_pGSCtx -> m_Width, s_GUICtx.m_pGSCtx -> m_Height >> 1
+ g_GSCtx.CopyFBuffer (
+  1, 0, 0, g_GSCtx.m_Width, g_GSCtx.m_Height >> 1
  );
 
- s_GUICtx.m_pGSCtx -> DrawText ( 6, s_GUICtx.m_DevMenu.m_StartY + 10, 0, STR_AVAILABLE_MEDIA, 0, 0 );
+ g_GSCtx.DrawText ( 6, s_GUICtx.m_DevMenu.m_StartY + 10, 0, STR_AVAILABLE_MEDIA, 0, 0 );
 
 }  /* end GUI_DrawDesktop */
 
@@ -205,6 +205,8 @@ unsigned long int GUI_WaitEvent ( void ) {
 
  while ( 1 ) {
 
+  s_PPTS = g_Timer + g_Config.m_PowerOff;
+
   WaitSema ( s_PadSema );
 
   retVal  = s_Event;
@@ -214,11 +216,11 @@ unsigned long int GUI_WaitEvent ( void ) {
 
    switch ( retVal ) {
 
+    case PAD_SELECT | PAD_R1    : g_GSCtx.AdjustDisplay (  1,  0 ); continue;
+    case PAD_SELECT | PAD_R2    : g_GSCtx.AdjustDisplay (  0,  1 ); continue;
+    case PAD_SELECT | PAD_L1    : g_GSCtx.AdjustDisplay ( -1,  0 ); continue;
+    case PAD_SELECT | PAD_L2    : g_GSCtx.AdjustDisplay (  0, -1 ); continue;
     case PAD_SELECT | PAD_CIRCLE: hddPowerOff ();
-    case PAD_SELECT | PAD_R1    : s_GUICtx.m_pGSCtx -> AdjustDisplay (  1,  0 ); continue;
-    case PAD_SELECT | PAD_R2    : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0,  1 ); continue;
-    case PAD_SELECT | PAD_L1    : s_GUICtx.m_pGSCtx -> AdjustDisplay ( -1,  0 ); continue;
-    case PAD_SELECT | PAD_L2    : s_GUICtx.m_pGSCtx -> AdjustDisplay (  0, -1 ); continue;
 
    }  /* end switch */
 
@@ -236,16 +238,9 @@ static void TimerProc ( void ) {
 
  static int s_Repeat = 0;
 
- unsigned int lCurrBtn = 0;
+ unsigned int lCurrBtn = PAD_Read ( 0, 0 );
 
- if (  padRead ( 0, 0, &s_PadData )  ) lCurrBtn = 0xFFFF ^ s_PadData.btns;
-
- if ( !lCurrBtn ) {
-
-  padRead ( 1, 0, &s_PadData );
-  lCurrBtn = 0xFFFF ^ s_PadData.btns;
-
- }  /* end if */
+ if ( !lCurrBtn ) lCurrBtn = PAD_Read ( 1, 0 );
 
  if ( lCurrBtn ) {
 
@@ -268,23 +263,18 @@ static void TimerProc ( void ) {
   s_PrevBtn = 0;
   s_Repeat  = 0;
 
+  if ( g_Config.m_PowerOff > 0 && g_Timer >= s_PPTS ) hddPowerOff ();
+
  }  /* end else */
 
 }  /* end TimerProc */
 
 static void TimerProcRepeat ( void ) {
 
- unsigned int lCurrBtn = 0;
+ unsigned int lCurrBtn = PAD_Read ( 0, 0 );
 
- if (  padRead ( 0, 0, &s_PadData )  ) lCurrBtn = 0xFFFF ^ s_PadData.btns;
-
- if ( !lCurrBtn ) {
+ if ( !lCurrBtn ) lCurrBtn = PAD_Read ( 1, 0 );
  
-  padRead ( 1, 0, &s_PadData );
-  lCurrBtn = 0xFFFF ^ s_PadData.btns;
-  
- }  /* end if */
-
  if ( lCurrBtn ) {
 
   if ( lCurrBtn != s_PrevBtn ) {
@@ -453,13 +443,13 @@ static void GUI_DrawDeviceMenu ( GUIDeviceMenu* apMenu ) {
  lX = apMenu -> m_StartX;
  lY = apMenu -> m_StartY;
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer (
-  0, lX, lY, s_GUICtx.m_pGSCtx -> m_Width - lX - 10, 24
+ g_GSCtx.CopyFBuffer (
+  0, lX, lY, g_GSCtx.m_Width - lX - 10, 24
  );
 
  if ( !lpItem ) {
 
-  s_GUICtx.m_pGSCtx -> DrawText (
+  g_GSCtx.DrawText (
    s_GUICtx.m_DevMenu.m_StartX, s_GUICtx.m_DevMenu.m_StartY + 10, 0, "none", 0, 0
   );
 
@@ -469,21 +459,21 @@ static void GUI_DrawDeviceMenu ( GUIDeviceMenu* apMenu ) {
 
  while ( lpItem ) {
 
-  s_GUICtx.m_pGSCtx -> DrawIcon ( lX + 2, lY + 2, GSIS_48x48, lpItem -> m_pImage );
+  g_GSCtx.DrawIcon ( lX + 2, lY + 2, GSIS_48x48, lpItem -> m_pImage );
 
   if ( lpItem == apMenu -> m_pCurr ) {
 
-   s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60 );
-   s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60 );
-   s_GUICtx.m_pGSCtx -> RoundRect ( lX + 4, lY + 6, lX + 50, lY + 48, 8 );
+   g_GSCtx.m_FillColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60 );
+   g_GSCtx.m_LineColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60 );
+   g_GSCtx.RoundRect ( lX + 4, lY + 6, lX + 50, lY + 48, 8 );
 
   }  /* end if */
 
   if ( lpItem == apMenu -> m_pSel ) {
 
-   s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x80 );
-   s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x00 );
-   s_GUICtx.m_pGSCtx -> RoundRect ( lX + 4, lY + 6, lX + 50, lY + 48, 8 );
+   g_GSCtx.m_FillColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x80 );
+   g_GSCtx.m_LineColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x00 );
+   g_GSCtx.RoundRect ( lX + 4, lY + 6, lX + 50, lY + 48, 8 );
 
   }  /* end if */
 
@@ -632,11 +622,11 @@ static void TimerHandler ( void ) {
 
 static void GUI_DrawDimmedFileItem ( GUIFileMenuItem* apItem, int anY ) {
 
- int           i = 3, lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, 0 );
+ int           i = 3, lTextWidth = g_GSCtx.TextWidth ( apItem -> m_pFileName, 0 );
  int           lStrLen = strlen ( apItem -> m_pFileName );
  unsigned char lBuff[ 4096 ] __attribute__(   (  aligned( 16 )  )   );
 
- memcpy ( lBuff, s_FSIcons[ apItem -> m_Flags & 0x0000000F ], 4096 );
+ memcpy ( lBuff, apItem -> m_pIcon, 4096 );
 
  while ( i < 4096 ) {
 
@@ -647,28 +637,28 @@ static void GUI_DrawDimmedFileItem ( GUIFileMenuItem* apItem, int anY ) {
 
  SyncDCache ( lBuff, &lBuff[ 4096 ] );
 
- while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, --lStrLen );
+ while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = g_GSCtx.TextWidth ( apItem -> m_pFileName, --lStrLen );
 
- s_GUICtx.m_pGSCtx -> DrawIcon ( 6, anY, GSIS_32x32, lBuff );
- s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 2, 0, apItem -> m_pFileName, lStrLen, 2 );
+ g_GSCtx.DrawIcon ( 6, anY, GSIS_32x32, lBuff );
+ g_GSCtx.DrawText ( 40, anY + 2, 0, apItem -> m_pFileName, lStrLen, 2 );
 
 }  /* end GUI_DrawDimmedFileItem */
 
 static void GUI_DrawFileItem ( GUIFileMenuItem* apItem, int anY ) {
 
- int lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, 0 );
+ int lTextWidth = g_GSCtx.TextWidth ( apItem -> m_pFileName, 0 );
  int lStrLen    = strlen ( apItem -> m_pFileName );
 
- while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = s_GUICtx.m_pGSCtx -> TextWidth ( apItem -> m_pFileName, --lStrLen );
+ while ( lTextWidth >= s_GUICtx.m_FileMenu.m_Width ) lTextWidth = g_GSCtx.TextWidth ( apItem -> m_pFileName, --lStrLen );
 
- s_GUICtx.m_pGSCtx -> DrawIcon ( 6, anY, GSIS_32x32, s_FSIcons[ apItem -> m_Flags & 0x0000000F ] );
- s_GUICtx.m_pGSCtx -> DrawText ( 40, anY + 2, 0, apItem -> m_pFileName, lStrLen, 1 );
+ g_GSCtx.DrawIcon ( 6, anY, GSIS_32x32, apItem -> m_pIcon );
+ g_GSCtx.DrawText ( 40, anY + 2, 0, apItem -> m_pFileName, lStrLen, 1 );
 
  if ( apItem -> m_Flags & GUI_FF_SELECTED ) {
 
-  s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60 );
-  s_GUICtx.m_pGSCtx -> m_LineColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0x00, 0x00 );
-  s_GUICtx.m_pGSCtx -> RoundRect ( 6, anY, s_GUICtx.m_pGSCtx -> m_Width - 6, anY + 34, 4 );
+  g_GSCtx.m_FillColor = GS_SETREG_RGBA( 0xFF, 0xFF, 0xFF, 0x60 );
+  g_GSCtx.m_LineColor = g_Palette[ g_Config.m_BrowserSCIdx - 1 ];
+  g_GSCtx.RoundRect ( 6, anY, g_GSCtx.m_Width - 6, anY + 34, 4 );
 
  }  /* end if */
 
@@ -680,8 +670,8 @@ static void GUI_DrawFileMenu ( GUIFileMenu* apMenu ) {
  int              lH     = apMenu -> m_Height - 1;
  GUIFileMenuItem* lpItem = apMenu -> m_pFirst;
 
- s_GUICtx.m_pGSCtx -> CopyFBuffer (
-  0, 4, 33, s_GUICtx.m_pGSCtx -> m_Width - 6, ( s_GUICtx.m_pGSCtx -> m_Height >> 1 ) - 53
+ g_GSCtx.CopyFBuffer (
+  0, 4, 33, g_GSCtx.m_Width - 6, ( g_GSCtx.m_Height >> 1 ) - 53
  );
 
  if ( lpItem ) {
@@ -725,6 +715,12 @@ static void GUI_AddFile ( char* apFileName, int aType ) {
  strcpy ( lpItem -> m_pFileName, apFileName );
 
  lpItem -> m_Flags = aType;
+
+ if ( aType & 0x0000000F )
+
+  lpItem -> m_pIcon = s_FSIcons[ ( aType & 0x0000000F ) - 1 ];
+
+ else lpItem -> m_pIcon = s_FileIcons[ ( aType >> 4 ) & 0x0000000F ];
 
  if ( s_GUICtx.m_FileMenu.m_pItems == NULL ) {
 
@@ -781,7 +777,7 @@ static void GUI_ActivateMenu ( int anIndex ) {
  if ( anIndex == 0 ) {
 
   lYOrg = 62;
-  lHOrg = s_GUICtx.m_pGSCtx -> m_Height - 44;
+  lHOrg = g_GSCtx.m_Height - 44;
 
   lY = 2;
   lH = 56;
@@ -792,7 +788,7 @@ static void GUI_ActivateMenu ( int anIndex ) {
  } else {
 
   lY = 62;
-  lH = s_GUICtx.m_pGSCtx -> m_Height - 44;
+  lH = g_GSCtx.m_Height - 44;
 
   lYOrg = 2;
   lHOrg = 56;
@@ -811,15 +807,11 @@ static void GUI_ActivateMenu ( int anIndex ) {
 
  }  /* end else */
 
- s_GUICtx.m_pGSCtx -> m_FillColor = GS_SETREG_RGBA( 0x00, 0, 0, 0x80 );
- s_GUICtx.m_pGSCtx -> m_LineColor = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
- s_GUICtx.m_pGSCtx -> RoundRect (
-  0, lYOrg, s_GUICtx.m_pGSCtx -> m_Width - 1, lHOrg, 8
- );
- s_GUICtx.m_pGSCtx -> m_LineColor = lColor;
- s_GUICtx.m_pGSCtx -> RoundRect (
-  0, lY, s_GUICtx.m_pGSCtx -> m_Width - 1, lH, 8
- );
+ g_GSCtx.m_FillColor = GS_SETREG_RGBA( 0x00, 0, 0, 0x80 );
+ g_GSCtx.m_LineColor = g_Palette[ g_Config.m_BrowserIBCIdx - 1 ];
+ g_GSCtx.RoundRect ( 0, lYOrg, g_GSCtx.m_Width - 1, lHOrg, 8 );
+ g_GSCtx.m_LineColor = lColor;
+ g_GSCtx.RoundRect ( 0, lY, g_GSCtx.m_Width - 1, lH, 8 );
 
 }  /* end GUI_ActivateMenu */
 
@@ -834,13 +826,13 @@ static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
 
  lIdx = lpItem -> m_Y - s_GUICtx.m_FileMenu.m_Offset;
 
- s_GUICtx.m_pGSCtx -> VSync ();
+ g_GSCtx.VSync ();
 
  if (  ( anEvent & PAD_DOWN ) && lpItem -> m_pNext  ) {
 
   lpItem -> m_Flags &= ~GUI_FF_SELECTED;
-  s_GUICtx.m_pGSCtx -> CopyFBuffer (
-   0, 1, ( 66 + lIdx * 34 ) >> 1, s_GUICtx.m_pGSCtx -> m_Width - 2, 18
+  g_GSCtx.CopyFBuffer (
+   0, 1, ( 66 + lIdx * 34 ) >> 1, g_GSCtx.m_Width - 2, 18
   );
   GUI_DrawFileItem ( lpItem, 66 + lIdx++ * 34 );
 
@@ -868,8 +860,8 @@ static GUIFileMenuItem* GUI_NavigateFile ( unsigned long int anEvent ) {
  } else if (  ( anEvent & PAD_UP ) && lpItem -> m_pPrev  ) {
 
   lpItem -> m_Flags &= ~GUI_FF_SELECTED;
-  s_GUICtx.m_pGSCtx -> CopyFBuffer (
-   0, 1, ( 66 + lIdx * 34 ) >> 1, s_GUICtx.m_pGSCtx -> m_Width - 2, 18
+  g_GSCtx.CopyFBuffer (
+   0, 1, ( 66 + lIdx * 34 ) >> 1, g_GSCtx.m_Width - 2, 18
   );
   GUI_DrawFileItem ( lpItem, 66 + lIdx-- * 34 );
 
@@ -905,6 +897,9 @@ static int GUI_Run ( void** apRetVal ) {
 
  int retVal;
 
+ s_NoDevCheck = 0;
+ s_PPTS       = g_Timer + g_Config.m_PowerOff;
+
  Timer_RegisterHandler ( 0, TimerHandler );
 
  while ( 1 ) {
@@ -914,6 +909,11 @@ static int GUI_Run ( void** apRetVal ) {
   if ( lEvent == PAD_START ) {
 
    retVal = GUI_EV_MENU;
+   break;
+
+  } else if (  lEvent == ( PAD_R1 | PAD_L1 | PAD_R2 | PAD_L2 )  ) {
+
+   retVal = GUI_EV_ABOUT;
    break;
 
   } else if (  lEvent == ( PAD_SELECT | PAD_TRIANGLE )  ) {
@@ -1015,39 +1015,52 @@ static int GUI_Run ( void** apRetVal ) {
 
  }  /* end while */
 
+ s_NoDevCheck = 1;
+
  Timer_RegisterHandler ( 0, NULL );
 
  return retVal;
 
 }  /* end GUI_Run */
 
-static void GUI_Redraw ( int afReset ) {
+static void GUI_Redraw ( int aMode ) {
 
  unsigned int lColor  = g_Palette[ g_Config.m_BrowserTxtIdx - 1 ] & ~0xFF000000;
  unsigned int lDColor = lColor | 0x20000000;
 
  lColor |= 0x80000000;
 
- if ( afReset ) {
+ if ( aMode > 0 ) {
 
-  s_GUICtx.m_pGSCtx -> m_fDblBuf = GS_ON;
-  s_GUICtx.m_pGSCtx -> ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
-  s_GUICtx.m_pGSCtx -> VSync ();
-  s_GUICtx.m_pGSCtx -> InitScreen ( g_Config.m_DisplayCharset );
-  s_GUICtx.m_pGSCtx -> VSync ();
+  g_GSCtx.m_fDblBuf = GS_ON;
+  g_GSCtx.ClearScreen (  GS_SETREG_RGBA( 0x00, 0x00, 0x00, 0x00 )  );
+  g_GSCtx.VSync ();
+  g_GSCtx.InitScreen ( g_Config.m_DisplayCharset );
+  g_GSCtx.VSync ();
 
-  s_GUICtx.m_pGSCtx -> SetTextColor ( 3, 0x50A06060 );
+  g_GSCtx.SetTextColor ( 3, 0x50A06060 );
 
  }  /* end if */
 
- s_GUICtx.m_pGSCtx -> SetTextColor ( 1, lColor  );
- s_GUICtx.m_pGSCtx -> SetTextColor ( 2, lDColor );
+ g_GSCtx.SetTextColor ( 0, g_Palette[ g_Config.m_BrowserSBCIdx - 1 ] | 0x80000000 );
+ g_GSCtx.SetTextColor ( 1, lColor  );
+ g_GSCtx.SetTextColor ( 2, lDColor );
 
- s_GUICtx.m_FileMenu.m_Width  = s_GUICtx.m_pGSCtx -> m_Width - 46;
- s_GUICtx.m_FileMenu.m_Height = ( s_GUICtx.m_pGSCtx -> m_Height - 110 ) / 34;
- s_GUICtx.m_DevMenu.m_StartX = 6 + s_GUICtx.m_pGSCtx -> TextWidth ( STR_AVAILABLE_MEDIA, 0 );
+ s_GUICtx.m_FileMenu.m_Width  = g_GSCtx.m_Width - 46;
+ s_GUICtx.m_FileMenu.m_Height = ( g_GSCtx.m_Height - 110 ) / 34;
+ s_GUICtx.m_DevMenu.m_StartX  = 6 + g_GSCtx.TextWidth ( STR_AVAILABLE_MEDIA, 0 );
 
- GUI_DrawDesktop    ();
+ if ( aMode >= 0 )
+
+  GUI_DrawDesktop ();
+
+ else {
+
+  g_GSCtx.CopyFBuffer ( 0, 1, 0, g_GSCtx.m_Width, g_GSCtx.m_Height >> 1 );
+  g_GSCtx.DrawText ( 6, s_GUICtx.m_DevMenu.m_StartY + 10, 0, STR_AVAILABLE_MEDIA, 0, 0 );
+
+ }  /* end else */
+
  GUI_DrawDeviceMenu ( &s_GUICtx.m_DevMenu  );
  GUI_DrawFileMenu   ( &s_GUICtx.m_FileMenu );
 
@@ -1083,16 +1096,9 @@ unsigned long int GUI_WaitButton ( int aButton, int aTimeout ) {
 
 int GUI_ReadButtons ( void ) {
 
- int retVal = 0;
+ int retVal = PAD_Read ( 0, 0 );
 
- if (  padRead ( 0, 0, &s_PadData )  ) retVal = 0xFFFF ^ s_PadData.btns;
-
- if ( !retVal ) {
- 
-  padRead ( 1, 0, &s_PadData );
-  retVal = 0xFFFF ^ s_PadData.btns;
-  
- }  /* end if */
+ if ( !retVal ) retVal = PAD_Read ( 1, 0 );
 
  return retVal;
 
@@ -1225,22 +1231,22 @@ GSDisplayMode GUI_InitPad ( void ) {
 
  mcInit ( MC_TYPE_MC );
 
- padInit ( 0 );
- padPortOpen ( 0, 0, s_PadBuf0 );
- padPortOpen ( 1, 0, s_PadBuf1 );
+ PAD_Init ();
+ PAD_OpenPort ( 0, 0, s_PadBuf0 );
+ PAD_OpenPort ( 1, 0, s_PadBuf1 );
 
- lBtn  = padGetState ( 0, 0 );
+ lBtn  = PAD_State ( 0, 0 );
  lTime = g_Timer;
 
  while (  lBtn != PAD_STATE_STABLE && lBtn != PAD_STATE_FINDCTP1 ) {
 
-  lBtn = padGetState ( 0, 0 );
+  lBtn = PAD_State ( 0, 0 );
 
   if ( g_Timer - lTime > 2000 ) break;
 
  }  /* end while */
 
- padSetMainMode ( 0, 0, PAD_MMODE_DIGITAL, PAD_MMODE_LOCK );
+ PAD_SetMainMode ( 0, 0, PAD_MMODE_DIGITAL, PAD_MMODE_LOCK );
 
  lTime = g_Timer;
 
@@ -1258,6 +1264,16 @@ GSDisplayMode GUI_InitPad ( void ) {
    retVal = lBtn & PAD_SQUARE ? GSDisplayMode_PAL : GSDisplayMode_PAL_I;
    break;
 
+  } else if (   (  lBtn & ( PAD_SELECT | PAD_L1 )  ) == ( PAD_SELECT | PAD_L1 )   ) {
+
+   retVal = GSDisplayMode_VGA_640x480_60Hz;
+   break;
+
+  } else if (   (  lBtn & ( PAD_SELECT | PAD_L2 )  ) == ( PAD_SELECT | PAD_L2 )   ) {
+
+   retVal = GSDisplayMode_VGA_640x480_75Hz;
+   break;
+
   } else if ( g_Timer - lTime > 1000 ) break;
 
  }  /* end while */
@@ -1266,7 +1282,7 @@ GSDisplayMode GUI_InitPad ( void ) {
 
 }  /* end GUI_InitPad */
 
-GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
+GUIContext* GUI_InitContext ( void ) {
 
  ee_sema_t   lSema;
  ee_thread_t lThread;
@@ -1296,7 +1312,6 @@ GUIContext* GUI_InitContext ( GSContext* apGSCtx ) {
 
  s_GUICtx.m_pCurrentMenu = NULL;
 
- s_GUICtx.m_pGSCtx         = apGSCtx;
  s_GUICtx.Status           = GUI_Status;
  s_GUICtx.Destroy          = GUI_Destroy;
  s_GUICtx.Run              = GUI_Run;

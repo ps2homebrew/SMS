@@ -45,11 +45,15 @@
 # define GUI_EV_DISK_DETECT 15
 # define GUI_EV_DISK_NODISK 16
 # define GUI_EV_MENU        17
-# define GUI_EV_EXIT        18
+# define GUI_EV_ABOUT       18
+# define GUI_EV_EXIT        19
 
 # define GUI_FF_FILE      0x00000000
 # define GUI_FF_DIRECTORY 0x00000001
 # define GUI_FF_PARTITION 0x00000002
+# define GUI_FF_AVI       0x00000010
+# define GUI_FF_MP3       0x00000020
+# define GUI_FF_M3U       0x00000030
 # define GUI_FF_SELECTED  0x80000000
 
 # define GUI_DF_CDROM 0x00000001
@@ -69,6 +73,7 @@ typedef struct GUIFileMenuItem {
  unsigned int            m_Flags;
  unsigned int            m_Y;
  char*                   m_pFileName;
+ void*                   m_pIcon;
  struct GUIFileMenuItem* m_pPrev;
  struct GUIFileMenuItem* m_pNext;
 
@@ -120,7 +125,6 @@ typedef struct GUIContext {
  GUIFileMenu   m_FileMenu;
  GUIDeviceMenu m_DevMenu;
  GUIMenu*      m_pCurrentMenu;
- GSContext*    m_pGSCtx;
 
  int  ( *Run              ) ( void**              );
  void ( *Status           ) ( char*               );
@@ -137,9 +141,9 @@ typedef struct GUIContext {
 
 } GUIContext;
 
-GSDisplayMode     GUI_InitPad     ( void       );
-GUIContext*       GUI_InitContext ( GSContext* );
-unsigned long int GUI_WaitEvent   ( void       );
-unsigned long int GUI_WaitButton  ( int, int   );
-int               GUI_ReadButtons ( void       );
+GSDisplayMode     GUI_InitPad     ( void     );
+GUIContext*       GUI_InitContext ( void     );
+unsigned long int GUI_WaitEvent   ( void     );
+unsigned long int GUI_WaitButton  ( int, int );
+int               GUI_ReadButtons ( void     );
 #endif  /* __GUI_H */

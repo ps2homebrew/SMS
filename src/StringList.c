@@ -30,6 +30,7 @@ static void StringList_Push ( StringList* apList, const char* apString ) {
  else apList -> m_pTail = lpNode;
 
  apList -> m_pHead = lpNode;
+ ++apList -> m_Size;
 
 }  /* end StringList_Push */
 
@@ -48,6 +49,8 @@ static void StringList_PushBack ( StringList* apList, const char* apString ) {
 
  } else apList -> m_pHead = apList -> m_pTail = lpNode;
 
+ ++apList -> m_Size;
+
 }  /* end StringList_PushBack */
 
 static void StringList_Pop ( StringList* apList ) {
@@ -61,6 +64,8 @@ static void StringList_Pop ( StringList* apList ) {
   apList -> m_pHead = lpNode;
 
   if ( !lpNode ) apList -> m_pTail = NULL;
+
+  --apList -> m_Size;
 
  }  /* end if */
 
@@ -81,6 +86,8 @@ static void StringList_PopBack ( StringList* apList ) {
    apList -> m_pHead = lpNode;
 
   else lpNode -> m_pNext = NULL;
+
+  --apList -> m_Size;
 
  }  /* end if */
 
@@ -104,7 +111,13 @@ static void StringList_Destroy ( StringList* apList, int afDestroyList ) {
 
   free ( apList );
 
- else apList -> m_pHead = apList -> m_pTail = NULL;
+ else {
+
+  apList -> m_pHead =
+  apList -> m_pTail = NULL;
+  apList -> m_Size  = 0;
+
+ }  /* end else */
 
 }  /* end StringList_Destroy */
 

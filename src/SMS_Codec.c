@@ -118,7 +118,7 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
 void SMS_CodecClose ( SMS_CodecContext* apCtx ) {
 
- if ( apCtx -> m_pIntBuf != NULL && apCtx -> m_Type == SMS_CodecTypeVideo ) {
+ if ( apCtx -> m_pIntBuf && apCtx -> m_Type == SMS_CodecTypeVideo ) {
 
   s_pVideoBuffer -> Destroy ();
   free ( apCtx -> m_pIntBuf );

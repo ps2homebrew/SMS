@@ -145,7 +145,7 @@ UPSFunc SMSAudrv_GetUPS ( int aFreq, int aBS, int anChannels, int* apBlockSize )
 
  else {
 
-  *apBlockSize = _init_ups ( aFreq, anChannels == 2 );
+  *apBlockSize = _init_ups ( aFreq, anChannels );
 
   return anChannels == 2 ? _ups_stereo : _ups_mono;
 

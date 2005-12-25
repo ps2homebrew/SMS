@@ -477,3 +477,65 @@ Update (12-NOV-2005)
 - Fixed small issue with "Initializing SMS..." message when there's no media
   available (thanks to "jacky401" and "Mr. Worm~~" for note and research);
 
+Update (24-DEC-2005 "Christmas edition" :))
+--------------------
+- subtitles support is added for .srt (SubRip) and .sub (MicroDVD) formats. Subtitle
+  files are recognized automatically by file extension (".srt" has precedence over
+  ".sub") as they are located at the same place as .avi file and have the same name.
+  Subtitles can be switched on/off via player menu. Note that this support is rather
+  strict in sense that no advanced text parsing was implemented, so subtitle file must
+  follow specifications (for .srt refer http://www.matroska.org). In case of "Subtitle
+  error" message refer displayed number as line number near the place where error
+  condition was detected. If subtitle line is too long to fit the screen it will be
+  splitted (by word) in two or more lines (space character is treated as word separator).
+  Thanks to "BraveDog" for the research/implementation, "Mr.Worm~~" for advises
+  and testing and "mastaalien" for remark about long subtitle lines;
+- player menu is introduced ("start" button during playback);
+- multi-audio support is added (if multiple sudio streams are present in the .avi file).
+  Note that all audio streams have to be encoded using same codec and same codec settings,
+  otherwise results are unpredictable :). Language can be changed via player menu;
+  Thanks to "Mr.Worm~~" for sample clip;
+- SMS menu is extended with new options ("circle" pad button can also be used for action
+  (for numeric input it reverses "scrolling" direction));
+- external font support added. Following fonts can be loaded:
+  - mc0:SMS/ascii.mtf    - contains  96 ascii    characters ( 32-127)
+  - mc0:SMS/latin2.mtf   - contains 128 latin2   characters (128-255)
+  - mc0:SMS/cyrillic.mtf - contains 128 cyrillic characters (128-255)
+  - mc0:SMS/latin1.mtf   - contains 128 latin1   characters (128-255)
+  - mc0:SMS/greek.mft    - contains 128 greek    characters (128-255)
+  New font can be created by 'MTKFontCreator' utility (google) (I've used version 0.6.2).
+  During font save select "Save Mediatek Font -> 4 color comp., variable width (NEW mode)".
+  Min height must be set to 32. During font generation Max Width and Height parameters
+  (displayed on the status line) must not exceed 32. No error checks etc. are performed
+  by SMS here, so use it very carefully and on your own risk :). Probably .ini file
+  for that utility has to be adjusted on site in order to generate reduced character sets
+  (96 and 128 characters instead of 256). By changing that .ini file it's possible to
+  create virtually any character sets (ISO-8859-7, for instance);
+- pan-scan display is implemented. By default SMS displays movie in letterbox mode
+  (widescreen movies are shown in full width). 3 pan-scan modes are available (via player
+  menu or "square" pad button during playback). In pan-scan mode it's possible to scroll
+  picture left or right using "L1"/"R1" pad buttons ("L1"+"R1" resets changes);
+- "about" screen is added ("L1"+"R1"+"R2"+"L2" pad buttons in the browser);
+- ps2host.irx driver is updated (fixed "DVD hang" issue on some consoles);
+- fixed bug (only one file can be opened) in cdvd.irx;
+- playback time OSD added ("cross" button during playback);
+- auto poweroff timer added (start counting from the moment of pad button press).
+  "auto" mode there means "poweroff when movie ends";
+- fixed bug "mounted partition saved in the configuration when there's no partition
+  mounted. Thanks to JuddMan for the remark;
+- audio/video and subtitle/video manual synchronization added. "circle" pad button
+  activates OSD for it and "L2"/"R2" adjusts time delay (from -5sec to 5sec (for
+  subtitles from -30sec to 30sec) with 250ms interval);
+- basic and primitive mp3/m3u playback support added with silly "ballsim" demo :);
+- bug fixed (sceen offset adjustment settings is saved incorrectly) - thanks to
+  'dave_t' for the fix;
+- video timeline/scrollbar added. This option is configurable and activated by "select"
+  pad button during playback (instead of pause). The use "left"/"right" pad buttons
+  to set new time offset, "start"/"cross" pad button(s) to resume playback. Thanks to
+  bix64 for the implementation;
+- enabled support of VESA video modes: 640x480@60Hz ("select+L1" pad buttons at startup)
+  and 640x480@75Hz ("select+L2" pad buttons at startup). Tested only with ViewSonic VX910
+  TFT monitor with official Sony's cable. These modes are not selectable via SMS menu to
+  avoid confusions :);
+- fixed bug upsampler routine ("ticking" noise with sample rates < 48KHz);
+- new bugs have been "implemented" ;);

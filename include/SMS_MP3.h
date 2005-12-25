@@ -55,6 +55,9 @@ typedef int16_t SMS_MPA_INT;
 typedef int32_t SMS_MPA_INT;
 #endif  /* FRAC_BITS <= 15 */
 
+extern const uint16_t g_mpa_freq_tab   [ 3 ];
+extern const uint16_t g_mpa_bitrate_tab[ 2 ][ 3 ][ 15 ];
+
 typedef struct SMS_GranuleDef {
 
  int32_t m_SBHybrid    [ 576 ];
@@ -112,6 +115,7 @@ extern "C" {
 # endif  /* __cplusplus */
 
 void SMS_Codec_MP3_Open ( SMS_CodecContext* );
+int  MP3_CheckHeader    ( uint32_t );
 
 # ifdef __cplusplus
 }

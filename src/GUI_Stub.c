@@ -8,12 +8,12 @@
 
 #include <stdio.h>
 
-void GUIStub_DrawBackground ( GSContext* apGSCtx ) {
+void GUIStub_DrawBackground ( void ) {
 
  if ( g_Config.m_BrowserFlags & SMS_BF_SKIN ) {
 
   SMS_CodecContext lpCodecCtx; 
-  IPUContext*      lpIPUCtx = IPU_InitContext ( apGSCtx, 640, 512 );
+  IPUContext*      lpIPUCtx = IPU_InitContext ( 640, 512 );
   int              retVal   = 0;
 
   lpCodecCtx.m_Width     = 640; 

@@ -1114,7 +1114,7 @@ static void DSP_PutPixels16 ( uint8_t* apBlock, const uint8_t* apPixels, int aBl
 
 }  /* end DSP_PutPixels16 */
 #else  /* PS2 */
-extern void DSP_PutPixels16      ( uint8_t*, const uint8_t*, int, int );
+extern void DSP_PutPixels16 ( uint8_t*, const uint8_t*, int, int );
 #endif  /* _WIN32 */
 #ifdef _WIN32
 static void DSP_PutNoRndPixels16 ( uint8_t* apBlock, const uint8_t* apPixels, int aLineSize, int aH ) {
@@ -1143,7 +1143,7 @@ static void DSP_AvgPixels16 ( uint8_t* apBlock, const uint8_t* apPixels, int aBl
 
 }  /* end DSP_AvgPixels16 */
 #else  /* PS2 */
-extern void DSP_AvgPixels16      ( uint8_t*, const uint8_t*, int, int );
+extern void DSP_AvgPixels16 ( uint8_t*, const uint8_t*, int, int );
 #endif  /* _WIN32 */
 #ifdef _WIN32
 static void DSP_AvgNoRndPixels16 ( uint8_t* apBlock, const uint8_t* apPixels, int aLineSize, int aH ) {

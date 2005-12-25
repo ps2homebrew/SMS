@@ -5,47 +5,55 @@
 # (c) 2005 by Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licensed under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
-.data
-s_CnvSrcRate:
-    .word   0
-
-.text
 .set noreorder
 
-.globl  _init_ups
-.ent	_init_ups
-_init_ups:
-    lui      $v0, 0x51EB
-    ori      $v0, $v0, 0x851F
-    mult     $a0, $v0
-    sra      $a0, $a0, 31
-    addu     $a3, $zero, $zero
-    addiu    $a2, $zero, 0x0780
-    addiu    $v1, $zero, 0x01FF
-    mfhi     $v0
-    sra      $v0, $v0, 3
-    subu     $v0, $v0, $a0
-    sll      $v0, $v0, 1
-    sw       $v0, s_CnvSrcRate
-    subu     $a2, $a2, $v0
-1:
-    bltz     $a2, 3f
-    addiu    $v1, $v1, -1
-2:
-    bgez     $v1, 1b
-    subu     $a2, $a2, $v0
-    addu     $a2, $a2, $v0
-    addiu    $v0, $a1, 1
-    jr       $ra
-    sllv     $v0, $a3, $v0
-3:
-    addiu    $a3, $a3, 1
-    j        2b
-    addiu    $a2, $a2, 0x0F00
-.end	_init_ups
+.globl _init_ups
+.globl _ups_stereo
+.globl _ups_mono
 
-.globl	_ups_stereo
-.ent	_ups_stereo
+.data
+
+s_CnvSrcRate:   .word   0
+
+.text
+
+.ent _init_ups
+_init_ups:
+    lui     $v0, 0x51EB
+    ori     $v0, $v0, 0x851F
+    mult    $a0, $v0
+    sra     $a0, $a0, 0x1F
+    li      $a2, 1920
+    move    $a3, $zero
+    move    $v1, $zero
+    li      $t0, 511
+    mfhi    $v0
+    sra     $v0, $v0, 0x3
+    subu    $v0, $v0, $a0
+    sll     $a0, $v0, 0x1
+    sw      $a0, s_CnvSrcRate
+    subu    $a2, $a2, $a0
+2:
+    bltz    $a2, 1f
+    nop
+3:
+    addiu   $v1, $v1, 1
+    slti    $v0, $v1, 512
+    bnez    $v0, 2b
+    subu    $a2, $a2, $a0
+    addu    $a2, $a2, $a0
+    addiu   $a3, $a3, 2
+    jr      $ra
+    sllv    $v0, $a3, $a1
+1:
+    beq     $v1, $t0, 3b
+    nop
+    addiu   $a3, $a3, 1
+    j       3b
+    addiu   $a2, $a2, 3840
+.end _init_ups
+
+.ent _ups_stereo
 _ups_stereo:
     lui      $t2, 0x8888
     lw       $t3, s_CnvSrcRate
@@ -109,10 +117,9 @@ _ups_stereo:
     addiu    $a0, $a0, 4
     j        3b
     addiu    $a3, $a3, 0x0F00
-.end	_ups_stereo
+.end _ups_stereo
 
-.globl	_ups_mono
-.ent	_ups_mono
+.ent _ups_mono
 _ups_mono:
     lui	    $t3, 0x8888
     lw	    $t2, s_CnvSrcRate

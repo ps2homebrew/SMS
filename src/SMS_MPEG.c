@@ -32,6 +32,9 @@
 
 SMS_MPEGContext g_MPEGCtx;
 
+static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock*, int, int );
+static SMS_INLINE void _mpeg_fill_mc_buffer_end   ( void                      );
+
 void SMS_MPEGContext_Init ( int aWidth, int aHeight ) {
 
  int lX, lY;
@@ -361,302 +364,6 @@ static void _mpeg_emulated_edge_mc (
  }  /* end for */
 
 }  /* end _mpeg_emulated_edge_mc */
-
-static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, int aSrcX, int aSrcY ) {
-#ifdef _WIN32
- int             lMBX   = ( g_MPEGCtx.m_MBX + ( aSrcX >> 4 )  );
- int             lMBY   = ( g_MPEGCtx.m_MBY + ( aSrcY >> 4 )  );
- SMS_MacroBlock* lpMB;
-
- if ( lMBY < -1 ) lMBY = -1;
-
- lpMB  = apRefPic + lMBX;
- lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
-
- if ( lpMB != g_MPEGCtx.m_pCache ) {
-
-  g_MPEGCtx.m_pMCBuffer[ 0 ] = lpMB[ 0 ];
-  g_MPEGCtx.m_pMCBuffer[ 1 ] = lpMB[ 1 ];
-  g_MPEGCtx.m_pMCBuffer[ 2 ] = lpMB[ g_MPEGCtx.m_CurPic.m_Linesize     ];
-  g_MPEGCtx.m_pMCBuffer[ 3 ] = lpMB[ g_MPEGCtx.m_CurPic.m_Linesize + 1 ];
-  g_MPEGCtx.m_pCache         = lpMB;
-  g_MPEGCtx.m_fDirtyCache    =    1;
-
- } else g_MPEGCtx.m_fDirtyCache = 0;
-#else  /* PS2 */
- int             i;
- u128*           lpMCY;
- u64*            lpMCCb;
- u64*            lpMCCr;
- int             lMBX   = ( g_MPEGCtx.m_MBX + ( aSrcX >> 4 )  );
- int             lMBY   = ( g_MPEGCtx.m_MBY + ( aSrcY >> 4 )  );
- SMS_MacroBlock* lpMB   = apRefPic + lMBX;
-
- if ( lMBY < -1 ) lMBY = -1;
- if ( lMBX < -1 ) lMBX = -1;
-
- lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
-
- if ( lpMB != g_MPEGCtx.m_pCache ) {
-
-  DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer, lpMB, 48 );
-
-  lpMCY  = ( u128* )g_MPEGCtx.m_pMCYBuf;
-  lpMCCb = ( u64*  )g_MPEGCtx.m_pMCCbBuf;
-  lpMCCr = ( u64*  )g_MPEGCtx.m_pMCCrBuf;
-
-  g_MPEGCtx.m_pCache      = lpMB;
-  g_MPEGCtx.m_fDirtyCache = 1;
-
-  DMA_WaitToSPR();
-  DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer + 2, lpMB + g_MPEGCtx.m_CurPic.m_Linesize, 48 );
-
-  for ( i = 0; i < 2; ++i ) {
-
-   u128* lpSrcY  = ( u128* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
-   u64*  lpSrcCb = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
-   u64*  lpSrcCr = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
-
-   __asm__ __volatile__ (
-    ".set noat\n\t"
-    "lq     $v0,   0(%0)\n\t"
-    "lq     $v1,  16(%0)\n\t"
-    "lq     $t5,  32(%0)\n\t"
-    "lq     $t6,  48(%0)\n\t"
-    "lq     $t7,  64(%0)\n\t"
-    "lq     $t8,  80(%0)\n\t"
-    "lq     $t9,  96(%0)\n\t"
-    "lq     $at, 112(%0)\n\t"
-    "sq     $v0,   0(%1)\n\t"
-    "sq     $v1,  32(%1)\n\t"
-    "sq     $t5,  64(%1)\n\t"
-    "sq     $t6,  96(%1)\n\t"
-    "sq     $t7, 128(%1)\n\t"
-    "sq     $t8, 160(%1)\n\t"
-    "sq     $t9, 192(%1)\n\t"
-    "sq     $at, 224(%1)\n\t"
-    "lq     $v0, 128(%0)\n\t"
-    "lq     $v1, 144(%0)\n\t"
-    "lq     $t5, 160(%0)\n\t"
-    "lq     $t6, 176(%0)\n\t"
-    "lq     $t7, 192(%0)\n\t"
-    "lq     $t8, 208(%0)\n\t"
-    "lq     $t9, 224(%0)\n\t"
-    "lq     $at, 240(%0)\n\t"
-    "sq     $v0, 256(%1)\n\t"
-    "sq     $v1, 288(%1)\n\t"
-    "sq     $t5, 320(%1)\n\t"
-    "sq     $t6, 352(%1)\n\t"
-    "sq     $t7, 384(%1)\n\t"
-    "sq     $t8, 416(%1)\n\t"
-    "sq     $t9, 448(%1)\n\t"
-    "sq     $at, 480(%1)\n\t"
-    ".set at\n\t"
-    ::"r"( lpSrcY ), "r"( lpMCY ) : "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
-   );
-
-   ++lpMCY;
-
-   __asm__ __volatile__ (
-    ".set noat\n\t"
-    "lq     $v0,  0(%0)\n\t"
-    "lq     $v1, 16(%0)\n\t"
-    "lq     $t5, 32(%0)\n\t"
-    "lq     $t6, 48(%0)\n\t"
-    "pcpyud $t7, $v0, $zero\n\t"
-    "pcpyud $t8, $v1, $zero\n\t"
-    "pcpyud $t9, $t5, $zero\n\t"
-    "pcpyud $at, $t6, $zero\n\t"
-    "sd     $v0,   0(%1)\n\t"
-    "sd     $t7,  16(%1)\n\t"
-    "sd     $v1,  32(%1)\n\t"
-    "sd     $t8,  48(%1)\n\t"
-    "sd     $t5,  64(%1)\n\t"
-    "sd     $t9,  80(%1)\n\t"
-    "sd     $t6,  96(%1)\n\t"
-    "sd     $at, 112(%1)\n\t"
-    ".set at\n\t"
-    :: "r"( lpSrcCb ), "r"( lpMCCb ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
-   );
-
-   ++lpMCCb;
-
-   __asm__ __volatile__ (
-    ".set noat\n\t"
-    "lq     $v0,  0(%0)\n\t"
-    "lq     $v1, 16(%0)\n\t"
-    "lq     $t5, 32(%0)\n\t"
-    "lq     $t6, 48(%0)\n\t"
-    "pcpyud $t7, $v0, $zero\n\t"
-    "pcpyud $t8, $v1, $zero\n\t"
-    "pcpyud $t9, $t5, $zero\n\t"
-    "pcpyud $at, $t6, $zero\n\t"
-    "sd     $v0,   0(%1)\n\t"
-    "sd     $t7,  16(%1)\n\t"
-    "sd     $v1,  32(%1)\n\t"
-    "sd     $t8,  48(%1)\n\t"
-    "sd     $t5,  64(%1)\n\t"
-    "sd     $t9,  80(%1)\n\t"
-    "sd     $t6,  96(%1)\n\t"
-    "sd     $at, 112(%1)\n\t"
-    ".set at\n\t"
-    :: "r"( lpSrcCr ), "r"( lpMCCr ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
-   );
-
-   ++lpMCCr;
-
-  }  /* end for */
-
- } else g_MPEGCtx.m_fDirtyCache = 0;
-#endif  /* WIN32 */
-}  /* end _mpeg_fill_mc_buffer_start */
-
-static SMS_INLINE void _mpeg_fill_mc_buffer_end ( void ) {
-
- if ( g_MPEGCtx.m_fDirtyCache ) {
-#ifdef _WIN32
-  int      i;
-  int64_t* lpMCY[ 4 ] = {
-   ( int64_t* )( g_MPEGCtx.m_pMCYBuf       ), ( int64_t* )( g_MPEGCtx.m_pMCYBuf + 16       ),
-   ( int64_t* )( g_MPEGCtx.m_pMCYBuf + 512 ), ( int64_t* )( g_MPEGCtx.m_pMCYBuf + 512 + 16 )
-  };
-  int64_t* lpMCCb[ 4 ] = {
-   ( int64_t* )( g_MPEGCtx.m_pMCCbBuf       ), ( int64_t* )( g_MPEGCtx.m_pMCCbBuf + 8       ),
-   ( int64_t* )( g_MPEGCtx.m_pMCCbBuf + 128 ), ( int64_t* )( g_MPEGCtx.m_pMCCbBuf + 128 + 8 )
-  };
-  int64_t* lpMCCr[ 4 ] = {
-   ( int64_t* )( g_MPEGCtx.m_pMCCrBuf       ), ( int64_t* )( g_MPEGCtx.m_pMCCrBuf + 8       ),
-   ( int64_t* )( g_MPEGCtx.m_pMCCrBuf + 128 ), ( int64_t* )( g_MPEGCtx.m_pMCCrBuf + 128 + 8 )
-  };
-
-  for ( i = 0; i < 4; ++i ) {
-
-   int64_t* lpSrcY  = ( int64_t* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
-   int64_t* lpSrcCb = ( int64_t* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
-   int64_t* lpSrcCr = ( int64_t* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
-
-   lpMCY[ i ][  0 ] = lpSrcY[  0 ]; lpMCY[ i ][  1 ] = lpSrcY[  1 ];
-   lpMCY[ i ][  4 ] = lpSrcY[  2 ]; lpMCY[ i ][  5 ] = lpSrcY[  3 ];
-   lpMCY[ i ][  8 ] = lpSrcY[  4 ]; lpMCY[ i ][  9 ] = lpSrcY[  5 ];
-   lpMCY[ i ][ 12 ] = lpSrcY[  6 ]; lpMCY[ i ][ 13 ] = lpSrcY[  7 ];
-   lpMCY[ i ][ 16 ] = lpSrcY[  8 ]; lpMCY[ i ][ 17 ] = lpSrcY[  9 ];
-   lpMCY[ i ][ 20 ] = lpSrcY[ 10 ]; lpMCY[ i ][ 21 ] = lpSrcY[ 11 ];
-   lpMCY[ i ][ 24 ] = lpSrcY[ 12 ]; lpMCY[ i ][ 25 ] = lpSrcY[ 13 ];
-   lpMCY[ i ][ 28 ] = lpSrcY[ 14 ]; lpMCY[ i ][ 29 ] = lpSrcY[ 15 ];
-   lpMCY[ i ][ 32 ] = lpSrcY[ 16 ]; lpMCY[ i ][ 33 ] = lpSrcY[ 17 ];
-   lpMCY[ i ][ 36 ] = lpSrcY[ 18 ]; lpMCY[ i ][ 37 ] = lpSrcY[ 19 ];
-   lpMCY[ i ][ 40 ] = lpSrcY[ 20 ]; lpMCY[ i ][ 41 ] = lpSrcY[ 21 ];
-   lpMCY[ i ][ 44 ] = lpSrcY[ 22 ]; lpMCY[ i ][ 45 ] = lpSrcY[ 23 ];
-   lpMCY[ i ][ 48 ] = lpSrcY[ 24 ]; lpMCY[ i ][ 49 ] = lpSrcY[ 25 ];
-   lpMCY[ i ][ 52 ] = lpSrcY[ 26 ]; lpMCY[ i ][ 53 ] = lpSrcY[ 27 ];
-   lpMCY[ i ][ 56 ] = lpSrcY[ 28 ]; lpMCY[ i ][ 57 ] = lpSrcY[ 29 ];
-   lpMCY[ i ][ 60 ] = lpSrcY[ 30 ]; lpMCY[ i ][ 61 ] = lpSrcY[ 31 ];
-
-   lpMCCb[ i ][  0 ] = lpSrcCb[ 0 ];
-   lpMCCb[ i ][  2 ] = lpSrcCb[ 1 ];
-   lpMCCb[ i ][  4 ] = lpSrcCb[ 2 ];
-   lpMCCb[ i ][  6 ] = lpSrcCb[ 3 ];
-   lpMCCb[ i ][  8 ] = lpSrcCb[ 4 ];
-   lpMCCb[ i ][ 10 ] = lpSrcCb[ 5 ];
-   lpMCCb[ i ][ 12 ] = lpSrcCb[ 6 ];
-   lpMCCb[ i ][ 14 ] = lpSrcCb[ 7 ];
-
-   lpMCCr[ i ][  0 ] = lpSrcCr[ 0 ];
-   lpMCCr[ i ][  2 ] = lpSrcCr[ 1 ];
-   lpMCCr[ i ][  4 ] = lpSrcCr[ 2 ];
-   lpMCCr[ i ][  6 ] = lpSrcCr[ 3 ];
-   lpMCCr[ i ][  8 ] = lpSrcCr[ 4 ];
-   lpMCCr[ i ][ 10 ] = lpSrcCr[ 5 ];
-   lpMCCr[ i ][ 12 ] = lpSrcCr[ 6 ];
-   lpMCCr[ i ][ 14 ] = lpSrcCr[ 7 ];
-
-  }  /* end for */
-#else
-  int   i;
-  u128* lpMCY  = ( u128* )( g_MPEGCtx.m_pMCYBuf  + 512 );
-  u64*  lpMCCb = ( u64*  )( g_MPEGCtx.m_pMCCbBuf + 128 );
-  u64*  lpMCCr = ( u64*  )( g_MPEGCtx.m_pMCCrBuf + 128 );
-
-  DMA_WaitToSPR();
-
-  for ( i = 2; i < 4; ++i ) {
-
-   u128* lpSrcY  = ( u128* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
-   u64*  lpSrcCb = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
-   u64*  lpSrcCr = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
-
-   lpMCY[  0 ] = lpSrcY[  0 ]; 
-   lpMCY[  2 ] = lpSrcY[  1 ]; 
-   lpMCY[  4 ] = lpSrcY[  2 ]; 
-   lpMCY[  6 ] = lpSrcY[  3 ]; 
-   lpMCY[  8 ] = lpSrcY[  4 ]; 
-   lpMCY[ 10 ] = lpSrcY[  5 ]; 
-   lpMCY[ 12 ] = lpSrcY[  6 ]; 
-   lpMCY[ 14 ] = lpSrcY[  7 ]; 
-   lpMCY[ 16 ] = lpSrcY[  8 ]; 
-   lpMCY[ 18 ] = lpSrcY[  9 ]; 
-   lpMCY[ 20 ] = lpSrcY[ 10 ]; 
-   lpMCY[ 22 ] = lpSrcY[ 11 ]; 
-   lpMCY[ 24 ] = lpSrcY[ 12 ]; 
-   lpMCY[ 26 ] = lpSrcY[ 13 ]; 
-   lpMCY[ 28 ] = lpSrcY[ 14 ]; 
-   lpMCY[ 30 ] = lpSrcY[ 15 ];
-
-   ++lpMCY;
-
-   __asm__ __volatile__ (
-    ".set noat\n\t"
-    "lq     $v0,  0(%0)\n\t"
-    "lq     $v1, 16(%0)\n\t"
-    "lq     $t5, 32(%0)\n\t"
-    "lq     $t6, 48(%0)\n\t"
-    "pcpyud $t7, $v0, $zero\n\t"
-    "pcpyud $t8, $v1, $zero\n\t"
-    "pcpyud $t9, $t5, $zero\n\t"
-    "pcpyud $at, $t6, $zero\n\t"
-    "sd     $v0,   0(%1)\n\t"
-    "sd     $t7,  16(%1)\n\t"
-    "sd     $v1,  32(%1)\n\t"
-    "sd     $t8,  48(%1)\n\t"
-    "sd     $t5,  64(%1)\n\t"
-    "sd     $t9,  80(%1)\n\t"
-    "sd     $t6,  96(%1)\n\t"
-    "sd     $at, 112(%1)\n\t"
-    ".set at\n\t"
-    :: "r"( lpSrcCb ), "r"( lpMCCb ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
-   );
-
-   ++lpMCCb;
-
-   __asm__ __volatile__ (
-    ".set noat\n\t"
-    "lq     $v0,  0(%0)\n\t"
-    "lq     $v1, 16(%0)\n\t"
-    "lq     $t5, 32(%0)\n\t"
-    "lq     $t6, 48(%0)\n\t"
-    "pcpyud $t7, $v0, $zero\n\t"
-    "pcpyud $t8, $v1, $zero\n\t"
-    "pcpyud $t9, $t5, $zero\n\t"
-    "pcpyud $at, $t6, $zero\n\t"
-    "sd     $v0,   0(%1)\n\t"
-    "sd     $t7,  16(%1)\n\t"
-    "sd     $v1,  32(%1)\n\t"
-    "sd     $t8,  48(%1)\n\t"
-    "sd     $t5,  64(%1)\n\t"
-    "sd     $t9,  80(%1)\n\t"
-    "sd     $t6,  96(%1)\n\t"
-    "sd     $at, 112(%1)\n\t"
-    ".set at\n\t"
-    :: "r"( lpSrcCr ), "r"( lpMCCr ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
-   );
-
-   ++lpMCCr;
-
-  }  /* end for */
-#endif  /* _WIN32 */
- }  /* end if */
-
-}  /* end _mpeg_fill_mc_buffer_end */
 
 static SMS_INLINE void _mpeg_fill_gmc_buffer ( SMS_MacroBlock* apRefPic, int aMBX, int aMBY, int aSrcX, int aSrcY ) {
 #ifdef _WIN32
@@ -1028,7 +735,7 @@ static SMS_INLINE void _gmc1_motion (
  if ( lSrcX < 0 ) lSrcX = 8 + lSrcX;
  if ( lSrcY < 0 ) lSrcY = 8 + lSrcY;
 
- lOffset = lSrcY * 16          + lSrcX;
+ lOffset = lSrcY * 16           + lSrcX;
  lpPtr   = g_MPEGCtx.m_pMCCbBuf + lOffset;
 
  g_MPEGCtx.m_DSPCtx.GMC1 (
@@ -1212,7 +919,7 @@ static SMS_INLINE void _mpeg_motion (
  _mpeg_fill_mc_buffer_end ();
 
  if  (   ( unsigned )lSrcXOrg > ( unsigned )(  g_MPEGCtx.m_HEdgePos - ( aMotionX & 1 ) - 16  ) ||
-         ( unsigned )lSrcYOrg > ( unsigned )(  lVEdgePos - ( aMotionY & 1 ) - aH            )
+         ( unsigned )lSrcYOrg > ( unsigned )(  lVEdgePos            - ( aMotionY & 1 ) - aH  )
  ) {
 
   _mpeg_emulated_edge_mc (
@@ -1700,6 +1407,301 @@ static SMS_INLINE void MPEG_CopyBlock ( void ) {
  g_MPEGCtx.m_IdxRes = !g_MPEGCtx.m_IdxRes;
 #endif  /* _WIN32 */
 }  /* end SMS_MPEG_CopyBlocks */
+
+static SMS_INLINE void _mpeg_fill_mc_buffer_start ( SMS_MacroBlock* apRefPic, int aSrcX, int aSrcY ) {
+#ifdef _WIN32
+ int             lMBX = ( g_MPEGCtx.m_MBX + ( aSrcX >> 4 )  );
+ int             lMBY = ( g_MPEGCtx.m_MBY + ( aSrcY >> 4 )  );
+ SMS_MacroBlock* lpMB;
+
+ if ( lMBY < -1 ) lMBY = -1;
+
+ lpMB  = apRefPic + lMBX;
+ lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+
+ if ( lpMB != g_MPEGCtx.m_pCache ) {
+
+  g_MPEGCtx.m_pMCBuffer[ 0 ] = lpMB[ 0 ];
+  g_MPEGCtx.m_pMCBuffer[ 1 ] = lpMB[ 1 ];
+  g_MPEGCtx.m_pMCBuffer[ 2 ] = lpMB[ g_MPEGCtx.m_CurPic.m_Linesize     ];
+  g_MPEGCtx.m_pMCBuffer[ 3 ] = lpMB[ g_MPEGCtx.m_CurPic.m_Linesize + 1 ];
+  g_MPEGCtx.m_pCache         = lpMB;
+  g_MPEGCtx.m_fDirtyCache    =    1;
+
+ } else g_MPEGCtx.m_fDirtyCache = 0;
+#else  /* PS2 */
+ int             i;
+ u128*           lpMCY;
+ u64*            lpMCCb;
+ u64*            lpMCCr;
+ int             lMBX = ( g_MPEGCtx.m_MBX + ( aSrcX >> 4 )  );
+ int             lMBY = ( g_MPEGCtx.m_MBY + ( aSrcY >> 4 )  );
+ SMS_MacroBlock* lpMB = apRefPic + lMBX;
+
+ if ( lMBY < -1 ) lMBY = -1;
+
+ lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+
+ if ( lpMB != g_MPEGCtx.m_pCache ) {
+
+  DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer, lpMB, 48 );
+
+  lpMCY  = ( u128* )g_MPEGCtx.m_pMCYBuf;
+  lpMCCb = ( u64*  )g_MPEGCtx.m_pMCCbBuf;
+  lpMCCr = ( u64*  )g_MPEGCtx.m_pMCCrBuf;
+
+  g_MPEGCtx.m_pCache      = lpMB;
+  g_MPEGCtx.m_fDirtyCache = 1;
+
+  DMA_WaitToSPR();
+  DMA_RecvSPR( g_MPEGCtx.m_pMCBuffer + 2, lpMB + g_MPEGCtx.m_CurPic.m_Linesize, 48 );
+
+  for ( i = 0; i < 2; ++i ) {
+
+   u128* lpSrcY  = ( u128* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
+   u64*  lpSrcCb = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
+   u64*  lpSrcCr = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
+
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,   0(%0)\n\t"
+    "lq     $v1,  16(%0)\n\t"
+    "lq     $t5,  32(%0)\n\t"
+    "lq     $t6,  48(%0)\n\t"
+    "lq     $t7,  64(%0)\n\t"
+    "lq     $t8,  80(%0)\n\t"
+    "lq     $t9,  96(%0)\n\t"
+    "lq     $at, 112(%0)\n\t"
+    "sq     $v0,   0(%1)\n\t"
+    "sq     $v1,  32(%1)\n\t"
+    "sq     $t5,  64(%1)\n\t"
+    "sq     $t6,  96(%1)\n\t"
+    "sq     $t7, 128(%1)\n\t"
+    "sq     $t8, 160(%1)\n\t"
+    "sq     $t9, 192(%1)\n\t"
+    "sq     $at, 224(%1)\n\t"
+    "lq     $v0, 128(%0)\n\t"
+    "lq     $v1, 144(%0)\n\t"
+    "lq     $t5, 160(%0)\n\t"
+    "lq     $t6, 176(%0)\n\t"
+    "lq     $t7, 192(%0)\n\t"
+    "lq     $t8, 208(%0)\n\t"
+    "lq     $t9, 224(%0)\n\t"
+    "lq     $at, 240(%0)\n\t"
+    "sq     $v0, 256(%1)\n\t"
+    "sq     $v1, 288(%1)\n\t"
+    "sq     $t5, 320(%1)\n\t"
+    "sq     $t6, 352(%1)\n\t"
+    "sq     $t7, 384(%1)\n\t"
+    "sq     $t8, 416(%1)\n\t"
+    "sq     $t9, 448(%1)\n\t"
+    "sq     $at, 480(%1)\n\t"
+    ".set at\n\t"
+    ::"r"( lpSrcY ), "r"( lpMCY ) : "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
+
+   ++lpMCY;
+
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCb ), "r"( lpMCCb ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
+
+   ++lpMCCb;
+
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCr ), "r"( lpMCCr ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
+
+   ++lpMCCr;
+
+  }  /* end for */
+
+ } else g_MPEGCtx.m_fDirtyCache = 0;
+#endif  /* WIN32 */
+}  /* end _mpeg_fill_mc_buffer_start */
+
+static SMS_INLINE void _mpeg_fill_mc_buffer_end ( void ) {
+
+ if ( g_MPEGCtx.m_fDirtyCache ) {
+#ifdef _WIN32
+  int      i;
+  int64_t* lpMCY[ 4 ] = {
+   ( int64_t* )( g_MPEGCtx.m_pMCYBuf       ), ( int64_t* )( g_MPEGCtx.m_pMCYBuf + 16       ),
+   ( int64_t* )( g_MPEGCtx.m_pMCYBuf + 512 ), ( int64_t* )( g_MPEGCtx.m_pMCYBuf + 512 + 16 )
+  };
+  int64_t* lpMCCb[ 4 ] = {
+   ( int64_t* )( g_MPEGCtx.m_pMCCbBuf       ), ( int64_t* )( g_MPEGCtx.m_pMCCbBuf + 8       ),
+   ( int64_t* )( g_MPEGCtx.m_pMCCbBuf + 128 ), ( int64_t* )( g_MPEGCtx.m_pMCCbBuf + 128 + 8 )
+  };
+  int64_t* lpMCCr[ 4 ] = {
+   ( int64_t* )( g_MPEGCtx.m_pMCCrBuf       ), ( int64_t* )( g_MPEGCtx.m_pMCCrBuf + 8       ),
+   ( int64_t* )( g_MPEGCtx.m_pMCCrBuf + 128 ), ( int64_t* )( g_MPEGCtx.m_pMCCrBuf + 128 + 8 )
+  };
+
+  for ( i = 0; i < 4; ++i ) {
+
+   int64_t* lpSrcY  = ( int64_t* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
+   int64_t* lpSrcCb = ( int64_t* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
+   int64_t* lpSrcCr = ( int64_t* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
+
+   lpMCY[ i ][  0 ] = lpSrcY[  0 ]; lpMCY[ i ][  1 ] = lpSrcY[  1 ];
+   lpMCY[ i ][  4 ] = lpSrcY[  2 ]; lpMCY[ i ][  5 ] = lpSrcY[  3 ];
+   lpMCY[ i ][  8 ] = lpSrcY[  4 ]; lpMCY[ i ][  9 ] = lpSrcY[  5 ];
+   lpMCY[ i ][ 12 ] = lpSrcY[  6 ]; lpMCY[ i ][ 13 ] = lpSrcY[  7 ];
+   lpMCY[ i ][ 16 ] = lpSrcY[  8 ]; lpMCY[ i ][ 17 ] = lpSrcY[  9 ];
+   lpMCY[ i ][ 20 ] = lpSrcY[ 10 ]; lpMCY[ i ][ 21 ] = lpSrcY[ 11 ];
+   lpMCY[ i ][ 24 ] = lpSrcY[ 12 ]; lpMCY[ i ][ 25 ] = lpSrcY[ 13 ];
+   lpMCY[ i ][ 28 ] = lpSrcY[ 14 ]; lpMCY[ i ][ 29 ] = lpSrcY[ 15 ];
+   lpMCY[ i ][ 32 ] = lpSrcY[ 16 ]; lpMCY[ i ][ 33 ] = lpSrcY[ 17 ];
+   lpMCY[ i ][ 36 ] = lpSrcY[ 18 ]; lpMCY[ i ][ 37 ] = lpSrcY[ 19 ];
+   lpMCY[ i ][ 40 ] = lpSrcY[ 20 ]; lpMCY[ i ][ 41 ] = lpSrcY[ 21 ];
+   lpMCY[ i ][ 44 ] = lpSrcY[ 22 ]; lpMCY[ i ][ 45 ] = lpSrcY[ 23 ];
+   lpMCY[ i ][ 48 ] = lpSrcY[ 24 ]; lpMCY[ i ][ 49 ] = lpSrcY[ 25 ];
+   lpMCY[ i ][ 52 ] = lpSrcY[ 26 ]; lpMCY[ i ][ 53 ] = lpSrcY[ 27 ];
+   lpMCY[ i ][ 56 ] = lpSrcY[ 28 ]; lpMCY[ i ][ 57 ] = lpSrcY[ 29 ];
+   lpMCY[ i ][ 60 ] = lpSrcY[ 30 ]; lpMCY[ i ][ 61 ] = lpSrcY[ 31 ];
+
+   lpMCCb[ i ][  0 ] = lpSrcCb[ 0 ];
+   lpMCCb[ i ][  2 ] = lpSrcCb[ 1 ];
+   lpMCCb[ i ][  4 ] = lpSrcCb[ 2 ];
+   lpMCCb[ i ][  6 ] = lpSrcCb[ 3 ];
+   lpMCCb[ i ][  8 ] = lpSrcCb[ 4 ];
+   lpMCCb[ i ][ 10 ] = lpSrcCb[ 5 ];
+   lpMCCb[ i ][ 12 ] = lpSrcCb[ 6 ];
+   lpMCCb[ i ][ 14 ] = lpSrcCb[ 7 ];
+
+   lpMCCr[ i ][  0 ] = lpSrcCr[ 0 ];
+   lpMCCr[ i ][  2 ] = lpSrcCr[ 1 ];
+   lpMCCr[ i ][  4 ] = lpSrcCr[ 2 ];
+   lpMCCr[ i ][  6 ] = lpSrcCr[ 3 ];
+   lpMCCr[ i ][  8 ] = lpSrcCr[ 4 ];
+   lpMCCr[ i ][ 10 ] = lpSrcCr[ 5 ];
+   lpMCCr[ i ][ 12 ] = lpSrcCr[ 6 ];
+   lpMCCr[ i ][ 14 ] = lpSrcCr[ 7 ];
+
+  }  /* end for */
+#else
+  int   i;
+  u128* lpMCY  = ( u128* )( g_MPEGCtx.m_pMCYBuf  + 512 );
+  u64*  lpMCCb = ( u64*  )( g_MPEGCtx.m_pMCCbBuf + 128 );
+  u64*  lpMCCr = ( u64*  )( g_MPEGCtx.m_pMCCrBuf + 128 );
+
+  DMA_WaitToSPR();
+
+  for ( i = 2; i < 4; ++i ) {
+
+   u128* lpSrcY  = ( u128* )&g_MPEGCtx.m_pMCBuffer[ i ].m_Y [ 0 ][ 0 ];
+   u64*  lpSrcCb = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cb[ 0 ][ 0 ];
+   u64*  lpSrcCr = ( u64*  )&g_MPEGCtx.m_pMCBuffer[ i ].m_Cr[ 0 ][ 0 ];
+
+   lpMCY[  0 ] = lpSrcY[  0 ]; 
+   lpMCY[  2 ] = lpSrcY[  1 ]; 
+   lpMCY[  4 ] = lpSrcY[  2 ]; 
+   lpMCY[  6 ] = lpSrcY[  3 ]; 
+   lpMCY[  8 ] = lpSrcY[  4 ]; 
+   lpMCY[ 10 ] = lpSrcY[  5 ]; 
+   lpMCY[ 12 ] = lpSrcY[  6 ]; 
+   lpMCY[ 14 ] = lpSrcY[  7 ]; 
+   lpMCY[ 16 ] = lpSrcY[  8 ]; 
+   lpMCY[ 18 ] = lpSrcY[  9 ]; 
+   lpMCY[ 20 ] = lpSrcY[ 10 ]; 
+   lpMCY[ 22 ] = lpSrcY[ 11 ]; 
+   lpMCY[ 24 ] = lpSrcY[ 12 ]; 
+   lpMCY[ 26 ] = lpSrcY[ 13 ]; 
+   lpMCY[ 28 ] = lpSrcY[ 14 ]; 
+   lpMCY[ 30 ] = lpSrcY[ 15 ];
+
+   ++lpMCY;
+
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCb ), "r"( lpMCCb ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
+
+   ++lpMCCb;
+
+   __asm__ __volatile__ (
+    ".set noat\n\t"
+    "lq     $v0,  0(%0)\n\t"
+    "lq     $v1, 16(%0)\n\t"
+    "lq     $t5, 32(%0)\n\t"
+    "lq     $t6, 48(%0)\n\t"
+    "pcpyud $t7, $v0, $zero\n\t"
+    "pcpyud $t8, $v1, $zero\n\t"
+    "pcpyud $t9, $t5, $zero\n\t"
+    "pcpyud $at, $t6, $zero\n\t"
+    "sd     $v0,   0(%1)\n\t"
+    "sd     $t7,  16(%1)\n\t"
+    "sd     $v1,  32(%1)\n\t"
+    "sd     $t8,  48(%1)\n\t"
+    "sd     $t5,  64(%1)\n\t"
+    "sd     $t9,  80(%1)\n\t"
+    "sd     $t6,  96(%1)\n\t"
+    "sd     $at, 112(%1)\n\t"
+    ".set at\n\t"
+    :: "r"( lpSrcCr ), "r"( lpMCCr ): "v0", "v1", "t5", "t6", "t7", "t8", "t9", "at", "memory"
+   );
+
+   ++lpMCCr;
+
+  }  /* end for */
+#endif  /* _WIN32 */
+ }  /* end if */
+
+}  /* end _mpeg_fill_mc_buffer_end */
 
 void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
 

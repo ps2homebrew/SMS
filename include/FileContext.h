@@ -19,6 +19,8 @@
 #  endif  /* WIN32 */
 # endif  /* INLINE */
 
+#define FILE_EOF( f ) (  ( f ) -> m_CurPos >= ( f ) -> m_Size  )
+
 typedef enum STIOMode {
  STIOMode_Extended, STIOMode_Ordinary
 } STIOMode;
@@ -67,12 +69,16 @@ typedef struct FileContext {
  unsigned char* m_pEnd;
  void*          m_pData;
  unsigned int   m_StreamSize;
+ void*          m_pOpenParam;
+ char*          m_pPath;
 
  int  ( *Read    ) ( struct FileContext*, void*, unsigned int          );
  int  ( *Seek    ) ( struct FileContext*, unsigned int                 );
  int  ( *Fill    ) ( struct FileContext*                               );
  int  ( *Stream  ) ( struct FileContext*, unsigned int, unsigned int   );
  void ( *Destroy ) ( struct FileContext*                               );
+
+ struct FileContext* ( *Open ) ( const char*, void* );
 
 } FileContext;
 # ifdef __cplusplus
@@ -95,7 +101,8 @@ static INLINE unsigned int File_GetUInt ( FileContext* apCtx ) {
  return retVal | File_GetByte ( apCtx ) << 24;
 }  /* end File_GetInt */
 
-void File_Skip ( FileContext*, unsigned int );
+void File_Skip      ( FileContext*, unsigned int        );
+void File_GetString ( FileContext*, char*, unsigned int );
 
 CDDAContext*         CDDA_InitContext     ( unsigned long                      );
 void                 CDDA_DestroyContext  ( CDDAContext*                       );
@@ -105,9 +112,9 @@ void                 CDDA_DestroyFileList ( CDDAFile*                          )
 int                  CDDA_GetPicture      ( CDDAContext*, int, void*           );
 int                  CDDA_GetDiskPicture  ( CDDAContext*, void*                );
 
-FileContext* CDDA_InitFileContext ( CDDAContext*, const char* );
-void         STIO_SetIOMode       ( STIOMode                  );
-FileContext* STIO_InitFileContext ( const char*               );
+FileContext* CDDA_InitFileContext ( const char*, void* );
+void         STIO_SetIOMode       ( STIOMode           );
+FileContext* STIO_InitFileContext ( const char*, void* );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

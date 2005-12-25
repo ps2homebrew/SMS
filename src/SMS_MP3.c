@@ -20,6 +20,8 @@
 # include <kernel.h>
 #endif  /* _WIN32 */
 
+//#define SMS_MP3_AA_FLOAT
+
 #define DEV_ORDER        13
 #define POW_FRAC_BITS    24
 #define POW_FRAC_ONE     ( 1 << POW_FRAC_BITS )
@@ -1629,7 +1631,7 @@ static const int32_t s_csa_table[ 8 ][ 4 ] = {
  { 32764,   -465, 32299, -33229 },
  { 32767,   -121, 32646, -32888 }
 };
-#ifdef _WIN32
+#ifdef SMS_MP3_AA_FLOAT
 static const float s_csa_table_float[ 8 ][ 4 ] = {
  { 0.857493F,   -0.514496F, 0.342997F,  -1.37199F },
  { 0.881742F,   -0.471732F, 0.410010F,  -1.35347F },
@@ -1640,7 +1642,7 @@ static const float s_csa_table_float[ 8 ][ 4 ] = {
  { 0.999899F,  -0.0141986F, 0.985701F,  -1.01410F },
  { 0.999993F, -0.00369997F, 0.996293F,  -1.00369F }
 };
-#endif  /* _WIN32 */
+#endif  /* SMS_MP3_AA_FLOAT */
 static const int s_icos36[ 9 ] = {
  FIXR( 0.50190991877167369479 ), FIXR( 0.51763809020504152469 ), FIXR( 0.55168895948124587824 ),
  FIXR( 0.61038729438072803416 ), FIXR( 0.70710678118654752439 ), FIXR( 0.87172339781054900991 ),
@@ -1688,8 +1690,10 @@ static const uint8_t s_slen_table[ 2 ][ 16 ] = {
  { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 },
  { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 },
 };
-static const uint16_t s_mpa_freq_tab[ 3 ] = { 44100, 48000, 32000 };
-static const uint16_t s_mpa_bitrate_tab[ 2 ][ 3 ][ 15 ] = {
+
+const uint16_t g_mpa_freq_tab[ 3 ] = { 44100, 48000, 32000 };
+
+const uint16_t g_mpa_bitrate_tab[ 2 ][ 3 ][ 15 ] = {
  {
   { 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448 },
   { 0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384 },
@@ -2110,7 +2114,7 @@ static int64_t SMS_INLINE MUL64 ( int64_t anA, int aB ) {
 static long SMS_INLINE _lrintf ( float aVal ) {
  return ( long )(  ( aVal ) + ( aVal > 0 ? 0.5F : -0.5F )  );
 }  /* end _lrintf */
-#ifdef _WIN32
+#ifdef SMS_MP3_AA_FLOAT
 static void _compute_antialias_float ( SMS_GranuleDef* apGran ) {
 
  int32_t* lPtr, *lPtr0, *lPtr1;
@@ -2163,7 +2167,7 @@ static void _compute_antialias_float ( SMS_GranuleDef* apGran ) {
  }  /* end for */
 
 }  /* end _compute_antialias_float */
-#endif  /* _WIN32 */
+#endif  /* SMS_MP3_AA_FLOAT */
 static void _compute_antialias_integer ( SMS_GranuleDef* apGran ) {
 
  const int32_t* lpCSA;
@@ -2229,8 +2233,11 @@ void SMS_Codec_MP3_Open ( SMS_CodecContext* apCtx ) {
  apCtx -> m_pCodec -> Init    = MP3_Init;
  apCtx -> m_pCodec -> Decode  = MP3_Decode;
  apCtx -> m_pCodec -> Destroy = MP3_Destroy;
-
+#ifdef SMS_MP3_AA_FLOAT
+ MYCTX() -> ComputeAntiAlias = _compute_antialias_float;
+#else
  MYCTX() -> ComputeAntiAlias = _compute_antialias_integer;
+#endif  /* SMS_MP3_AA_FLOAT */
  MYCTX() -> m_InBufIdx       = 0;
  MYCTX() -> m_pInBuf         = &MYCTX() -> m_InBuf[ 0 ][ SMS_BACKSTEP_SIZE ];
  MYCTX() -> m_pInBufPtr      = MYCTX() -> m_pInBuf;
@@ -2339,16 +2346,16 @@ static void MP3_Destroy ( SMS_CodecContext* apCtx ) {
 
 }  /* end MP3_Destroy */
 
-static int _check_header ( uint32_t aHdr ) {
+int MP3_CheckHeader ( uint32_t aHdr ) {
 
- if (      ( aHdr & 0xFFE00000  ) != 0xFFE00000 ) return -1;
- if (   (  ( aHdr >> 17 ) & 3   ) == 0          ) return -1;
- if (   (  ( aHdr >> 12 ) & 0xF ) == 0xF        ) return -1;
- if (   (  ( aHdr >> 10 ) & 3   ) == 3          ) return -1;
+ if (      ( aHdr & 0xFFE00000  ) != 0xFFE00000 ) return 0;
+ if (   (  ( aHdr >> 17 ) & 3   ) == 0          ) return 0;
+ if (   (  ( aHdr >> 12 ) & 0xF ) == 0xF        ) return 0;
+ if (   (  ( aHdr >> 10 ) & 3   ) == 3          ) return 0;
 
- return 0;
+ return 1;
 
-}  /* end _check_header */
+}  /* end MP3_CheckHeader */
 
 static int _decode_header ( uint32_t aHdr ) {
 
@@ -2374,7 +2381,7 @@ static int _decode_header ( uint32_t aHdr ) {
  s_MP3Ctx.m_Layer = 4 - (  ( aHdr >> 17 ) & 3  );
 
  lSampleRateIdx  = ( aHdr >> 10 ) & 3;
- lSampleRate     = s_mpa_freq_tab[ lSampleRateIdx ] >> ( s_MP3Ctx.m_LSF + lMPEG25 );
+ lSampleRate     = g_mpa_freq_tab[ lSampleRateIdx ] >> ( s_MP3Ctx.m_LSF + lMPEG25 );
  lSampleRateIdx += 3 * ( s_MP3Ctx.m_LSF + lMPEG25 );
 
  s_MP3Ctx.m_SampleRateIdx   = lSampleRateIdx;
@@ -2390,7 +2397,7 @@ static int _decode_header ( uint32_t aHdr ) {
 
  if ( lBitrateIdx != 0 ) {
 
-  lFrameSize = s_mpa_bitrate_tab[ s_MP3Ctx.m_LSF ][ s_MP3Ctx.m_Layer - 1 ][ lBitrateIdx ];
+  lFrameSize = g_mpa_bitrate_tab[ s_MP3Ctx.m_LSF ][ s_MP3Ctx.m_Layer - 1 ][ lBitrateIdx ];
 
   s_MP3Ctx.m_BitRate = lFrameSize * 1000;
 
@@ -4167,7 +4174,7 @@ gotHeader:
            ( s_MP3Ctx.m_pInBuf[ 2 ] <<  8 ) |
            ( s_MP3Ctx.m_pInBuf[ 3 ] <<  0 );
 
-    if (  _check_header ( lHdr ) < 0  ) {
+    if (  !MP3_CheckHeader ( lHdr )  ) {
 
      memmove ( s_MP3Ctx.m_pInBuf, s_MP3Ctx.m_pInBuf + 1, s_MP3Ctx.m_pInBufPtr - s_MP3Ctx.m_pInBuf - 1 );
      --s_MP3Ctx.m_pInBufPtr;

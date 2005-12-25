@@ -333,6 +333,21 @@ typedef struct GSContext {
 #  define ALPHA_BLEND_ADD_NOALPHA (  ALPHA( ALPHA_SRC, ALPHA_ZERO, ALPHA_FIX, ALPHA_DST, 0x80 )  )
 #  define ALPHA_BLEND_ADD         (  ALPHA( ALPHA_SRC, ALPHA_ZERO, ALPHA_SRC, ALPHA_DST, 0x00 )  )
 
+typedef struct LineKern {
+
+ unsigned char m_Left  __attribute__(  ( packed )  );
+ unsigned char m_Right __attribute__(  ( packed )  );
+
+} LineKern;
+
+typedef struct CharKern {
+
+ LineKern m_Kern[ 32 ] __attribute__(  ( packed )  );
+
+} CharKern;
+
+extern CharKern g_Kerns[ 224 ];
+
 typedef enum GSFieldMode {
 
  GSFieldMode_Field = 0x00,
@@ -563,6 +578,7 @@ typedef struct GSContext {
  void               ( *CopyBuffer    ) ( int, int, int, int, int, int, int                            );
  int                ( *printf        ) ( const char*, ...                                             );
  void               ( *SetCodePage   ) ( GSCodePage                                                   );
+ void               ( *SetFontPtr    ) ( unsigned int, unsigned char*                                 );
 
 } GSContext;
 
@@ -572,7 +588,7 @@ static int inline GS_PowerOf2 ( int aVal ) {
  return i;
 }  /* end GS_PowerOf2 */
 # endif  /* _WIN32 */
-
+extern GSContext g_GSCtx;
 # ifdef __cplusplus
 extern "C"{
 # endif  /* __cplusplus */

@@ -15,6 +15,11 @@ typedef enum {
  DiskType_CD, DiskType_DVD, DiskType_CDDA, DiskType_DVDV, DiskType_Unknown, DiskType_Detect
 } DiskType;
 
+typedef enum {
+ MediaMode_CD  = 1,
+ MediaMode_DVD = 2
+} MediaMode;
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
@@ -58,16 +63,17 @@ typedef struct CDDA_TOC {
 extern int g_CDDASpeed;
 extern int g_DVDVSupport;
 
-int      CDDA_Init        ( void                     );
-void     CDDA_Exit        ( void                     );
-int      CDDA_ReadTOC     ( CDDA_TOC*                );
-int      CDDA_RawRead     ( int, int, unsigned char* );
-int      CDDA_Synchronize ( void                     );
-DiskType CDDA_DiskType    ( void                     );
-int      CDDA_Stop        ( void                     );
-void     CDDA_Standby     ( void                     );
-void     CDDA_Pause       ( void                     );
-void     CDDA_DiskReady   ( void                     );
+int      CDDA_Init         ( void                     );
+void     CDDA_Exit         ( void                     );
+int      CDDA_ReadTOC      ( CDDA_TOC*                );
+int      CDDA_RawRead      ( int, int, unsigned char* );
+int      CDDA_Synchronize  ( void                     );
+DiskType CDDA_DiskType     ( void                     );
+int      CDDA_Stop         ( void                     );
+void     CDDA_Standby      ( void                     );
+void     CDDA_Pause        ( void                     );
+void     CDDA_DiskReady    ( void                     );
+int      CDDA_SetMediaMode ( MediaMode                );
 
 # ifdef __cplusplus
 }

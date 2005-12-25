@@ -24,6 +24,7 @@ typedef struct StringList {
 
  StringListNode* m_pHead;
  StringListNode* m_pTail;
+ unsigned int    m_Size;
 
  void  ( *Push     ) ( struct StringList*, const char* );
  void  ( *PushBack ) ( struct StringList*, const char* );

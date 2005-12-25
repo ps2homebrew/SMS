@@ -23,44 +23,19 @@
 #define T1_COMP  *(  ( volatile u32* )0x10000820  )
 #define T1_HOLD  *(  ( volatile u32* )0x10000830  )
 
-#ifndef NO_RTC
-volatile unsigned long int g_Timer;
-#endif  /* NO_RTC */
-
-#define N_HANDLERS 2
-
 static int s_WaitSema;
 static int s_T0HandlerID;
 static int s_T1HandlerID;
 
-static void ( *TimerHandler[ 2 ] ) ( void );
+extern void ( *g_TimerHandler[ 3 ] ) ( void );
 
-static int T0_Handler ( int aCause ) { 
-#ifndef NO_RTC
- g_Timer += 4;
+extern void T0_Handler ( int );
 
- if (  !( g_Timer & 0x000000000000003F )  ) {
-
-  if (  TimerHandler[ 0 ] ) TimerHandler[ 0 ] ();
-  if (  TimerHandler[ 1 ] ) TimerHandler[ 1 ] ();
-
- }  /* end if */
-#else
- TimerHandler ();
-#endif  /* NO_RTC */
- T0_MODE |= 1024;
-
- return -1;
-
-}  /* end T0_Handler */
-
-static int T1_Handler ( int aCause ) {
+static void T1_Handler ( int aCause ) {
 
  iSignalSema ( s_WaitSema );
 
  T1_MODE |= 1024;
-
- return -1;
 
 }  /* end T1_Handler */
 
@@ -72,24 +47,21 @@ void Timer_Init ( void ) {
  lSema.max_count  = 1;
  s_WaitSema = CreateSema ( &lSema );
 
- TimerHandler[ 0 ] =
- TimerHandler[ 1 ] = NULL;
-#ifndef NO_RTC
- T0_COMP  = ( u32 )(   4.0F / ( 256.0F / 147456.0F )  );
-#else
- T0_COMP  = ( u32 )(  64.0F / ( 256.0F / 147456.0F )  );
-#endif  /* NO_RTC */
+ g_TimerHandler[ 0 ] =
+ g_TimerHandler[ 1 ] = NULL;
+
+ T0_COMP  = ( u32 )(   8.0F / ( 256.0F / 147456.0F )  );
  T0_COUNT = 0;
  T0_MODE  = 256 + 128 + 64 + 2;
 
  T1_COMP  = ( u32 )(  64.0F / ( 256.0F / 147456.0F )  );
  T1_MODE  = 256 + 128 + 64 + 2;
 
- s_T0HandlerID = AddIntcHandler (  9, T0_Handler, 0 );
- s_T1HandlerID = AddIntcHandler ( 10, T1_Handler, 0 );
-#ifndef NO_RTC
+ s_T0HandlerID = AddIntcHandler (    9, (  int ( * ) ( int )  )T0_Handler, 0   );
+ s_T1HandlerID = AddIntcHandler (   10, (  int ( * ) ( int )  )T1_Handler, 0   );
+
  EnableIntc ( 9 );
-#endif  /* NO_RTC */
+
 }  /* end Timer_Init */
 
 void Timer_Destroy ( void ) {
@@ -100,8 +72,8 @@ void Timer_Destroy ( void ) {
 
  DeleteSema ( s_WaitSema );
 
- TimerHandler[ 0 ] =
- TimerHandler[ 1 ] = NULL;
+ g_TimerHandler[ 0 ] =
+ g_TimerHandler[ 1 ] = NULL;
 
 }  /* end Timer_Destroy */
 
@@ -138,7 +110,7 @@ void Timer_Wait ( unsigned int aPeriod ) {
 
 void Timer_iRegisterHandler ( int anIndex, void* apHandler ) {
 
- TimerHandler[ anIndex ] = apHandler;
+ g_TimerHandler[ anIndex ] = apHandler;
 
 }  /* end Timer_iRegisterHandler */
 
@@ -147,18 +119,12 @@ void* Timer_RegisterHandler ( int anIndex, void* apHandler ) {
  void* retVal;
 
  DIntr ();
-  retVal = TimerHandler[ anIndex ];
+  retVal = g_TimerHandler[ anIndex ];
 
-  if ( apHandler != TimerHandler[ anIndex ] ) {
+  if ( apHandler != g_TimerHandler[ anIndex ] ) {
 
-   TimerHandler[ anIndex ] = (  void ( * ) ( void )  )apHandler;
-#ifdef NO_RTC
-   if ( apHandler != NULL )
+   g_TimerHandler[ anIndex ] = (  void ( * ) ( void )  )apHandler;
 
-    EnableIntc ( 9 );
-
-   else DisableIntc ( 9 );
-#endif  /* NO_RTC */
   }  /* end if */
  EIntr ();
 

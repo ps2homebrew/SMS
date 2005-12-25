@@ -41,8 +41,9 @@
 
 # define ALIGN( x, a ) (   (  (x) + (a) - 1  ) & ~(  (a) - 1  )   )
 
-int g_Trace;
-int g_SMSFlags;
+int  g_Trace;
+int  g_SMSFlags;
+char g_CWD[ 1024 ] SMS_DATA_SECTION;
 
 const uint32_t g_SMS_InvTbl[ 256 ] = {
          0U, 4294967295U, 2147483648U, 1431655766U, 1073741824U,  858993460U,  715827883U,  613566757U,
@@ -285,7 +286,7 @@ void SMS_StartNetwork ( void* apParam ) {
 void SMS_ResetIOP ( void ) {
 
  ExecIOP ( 1, "\xC7\x00" );
-
+#if RESET_IOP
  SifInitRpc     ( 0 ); 
  SifExitIopHeap (); 
  SifLoadFileExit(); 
@@ -293,7 +294,7 @@ void SMS_ResetIOP ( void ) {
  SifIopReset ( "rom0:UDNL rom0:EELOADCNF", 0 );
 
  while (  SifIopSync ()  );
-
+#endif  /* RESET_IOP */
  SifInitRpc ( 0 );
 
 }  /* end SMS_ResetIOP */
