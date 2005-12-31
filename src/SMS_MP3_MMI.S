@@ -10,7 +10,8 @@
 */
 .set noreorder
 .set noat
-.text
+
+.data
 .align 4
 
 #define FRAC_BITS  15
@@ -46,6 +47,9 @@ COS4_n:
 .global ps2_dct32
 .global ps2_synth_sum8a
 .global ps2_synth_sum8b
+
+.text
+.align 4
 
 .ent ps2_dct32
 

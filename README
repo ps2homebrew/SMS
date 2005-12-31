@@ -539,3 +539,19 @@ Update (24-DEC-2005 "Christmas edition" :))
   avoid confusions :);
 - fixed bug upsampler routine ("ticking" noise with sample rates < 48KHz);
 - new bugs have been "implemented" ;);
+
+Update (31-JAN-2005 "New Year edition" :))
+--------------------
+- fixed "hang" bug during m3u playback (thanks to "Mr.Worm~~" for nice Spanish
+  music);
+- fixed "subtitles are out of sync after scroll operations (using scrollbar)" bug (thanks
+  to "Mr.Worm~~" for the remark);
+- fixed "hang on loading .sub format subtitles" bug (thanks to "LaptoniC" for the remark);
+- opaque subtitles support is added (thanks to "HUB107" for the note);
+- added "support" for ".SRT" and ".SUB" (capital letters) subtitles;
+- slightly changed AC3 decoder to get rid of some "effects" (thanks to "firehawk" for
+  the research);
+- removed garbage at the bottom of screen;
+- added "fullscreen display" player option (thanks to "deank" for the note);
+- fixed "movie jumps backward when resuming from pause using scrollbar" bug (thanks to
+  "Mr.Worm~~" for the remark);

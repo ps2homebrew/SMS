@@ -72,14 +72,15 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
         (   4 - (  ( lVal >> 17 ) & 3  )   )      == 3
   ) {
 
-   int         lMPEG25;
-   int         lLSF;
-   int         lSampleRate;
-   int         lnChannels;
-   int         lBitRateIdx;
-   SMS_Stream* lpStm;
-   char*       lpSlash;
-   char*       lpDot;
+   int               lMPEG25;
+   int               lLSF;
+   int               lSampleRate;
+   int               lnChannels;
+   int               lBitRateIdx;
+   SMS_Stream*       lpStm;
+   SMS_CodecContext* lpCodecCtx;
+   char*             lpSlash;
+   char*             lpDot;
 
    if (  lVal & ( 1 << 20 )  ) {
 
@@ -103,16 +104,19 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
    apCont -> m_pStm[ 0 ] = lpStm = ( SMS_Stream* )calloc (  1, sizeof ( SMS_Stream )  );
    apCont -> m_nStm              = 1;
 
-   lpStm -> m_Flags                |= SMS_STRM_FLAGS_AUDIO;
-   lpStm -> m_SampleRate            = lSampleRate;
-   lpStm -> m_Codec.m_Type          = SMS_CodecTypeAudio;
-   lpStm -> m_Codec.m_Tag           = 0x00000055;
-   lpStm -> m_Codec.m_ID            = SMS_CodecID_MP3;
-   lpStm -> m_Codec.m_Channels      = lnChannels;
-   lpStm -> m_Codec.m_SampleRate    = lSampleRate;
-   lpStm -> m_Codec.m_BitsPerSample = 16;
+   lpStm -> m_pCodec = lpCodecCtx = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
 
-   if ( lBitRateIdx ) lpStm -> m_Codec.m_BitRate = g_mpa_bitrate_tab[ lLSF ][ 2 ][ lBitRateIdx ] * 1000;
+   lpStm -> m_Flags     |= SMS_STRM_FLAGS_AUDIO;
+   lpStm -> m_SampleRate = lSampleRate;
+
+   lpCodecCtx -> m_Type          = SMS_CodecTypeAudio;
+   lpCodecCtx -> m_Tag           = 0x00000055;
+   lpCodecCtx -> m_ID            = SMS_CodecID_MP3;
+   lpCodecCtx -> m_Channels      = lnChannels;
+   lpCodecCtx -> m_SampleRate    = lSampleRate;
+   lpCodecCtx -> m_BitsPerSample = 16;
+
+   if ( lBitRateIdx ) lpCodecCtx -> m_BitRate = g_mpa_bitrate_tab[ lLSF ][ 2 ][ lBitRateIdx ] * 1000;
 
    apCont -> m_Duration = 0L;
 

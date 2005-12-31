@@ -36,14 +36,14 @@ struct StringListNode;
 
 typedef struct SMS_Stream {
 
- SMS_CodecContext m_Codec;
- SMS_Rational     m_TimeBase;
- int32_t          m_SampleRate;
- uint32_t         m_RealFrameRate;
- uint32_t         m_RealFrameRateBase;
- uint32_t         m_Flags;
- char*            m_pName;
- void*            m_pCtx;
+ SMS_Rational      m_TimeBase;
+ int32_t           m_SampleRate;
+ uint32_t          m_RealFrameRate;
+ uint32_t          m_RealFrameRateBase;
+ uint32_t          m_Flags;
+ SMS_CodecContext* m_pCodec;
+ char*             m_pName;
+ void*             m_pCtx;
 
  void ( *Destroy ) ( struct SMS_Stream* );
 

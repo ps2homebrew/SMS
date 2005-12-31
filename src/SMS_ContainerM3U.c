@@ -58,9 +58,8 @@ static SMS_Container* _open_file ( SMS_Container* apCont, StringListNode* apNode
  SMS_Container* retVal = NULL;
  FileContext*   lpFileCtx;
 
- strcpy (  lFileName, g_CWD );
- strcat (  lFileName, MYENTR( apCont -> m_pPlayItem ) -> m_pPath  );
-
+ strcpy (  lFileName, g_CWD                        );
+ strcat (  lFileName, MYENTR( apNode ) -> m_pPath  );
  lpFileCtx            = apOpen ( lFileName, apOpenParam );
  apCont -> m_pFileCtx = lpFileCtx;
 
@@ -72,7 +71,7 @@ static SMS_Container* _open_file ( SMS_Container* apCont, StringListNode* apNode
 
 static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
- int            retVal   = 0;
+ int            retVal   = -1;
  SMS_Container* lpCont   = ( SMS_Container* )apPkt -> m_pCtx;
  _M3UContainer* lpMyCont = MYCONT( lpCont );
 
@@ -82,9 +81,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
    lpCont -> m_pPlayItem = lpCont -> m_pPlayItem -> m_pNext;
 
-   if (  _SelectFile ( lpCont, lpMyCont )  )
-
-    retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apPkt );
+   if (  _SelectFile ( lpCont, lpMyCont )  ) retVal = lpCont -> ReadPacket ( apPkt );
 
   }  /* end if */
 
@@ -105,49 +102,45 @@ static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
  apPkt -> m_PTS       = SMS_STPTS_VALUE;
  lpCont -> m_Duration = MYENTR( lpCont -> m_pPlayItem ) -> m_Duration;
  lpCont -> ReadPacket = _ReadPacket;
- 
+
  return retVal;
 
 }  /* end _ReadFirstPacket */
 
 static int _SelectFile ( SMS_Container* apCont, _M3UContainer* apMyCont ) {
 
- FileContext*  ( *lpOpen ) ( const char*, void* ) = apCont -> m_pFileCtx -> Open;
- void*            lpOpenParam                     = apCont -> m_pFileCtx -> m_pOpenParam;
- SMS_CodecContext lCodec = apCont -> m_pStm[ 0 ] -> m_Codec;
- int              retVal = 0;
+ FileContext*   ( *lpOpen ) ( const char*, void* ) = apCont -> m_pFileCtx -> Open;
+ void*             lpOpenParam                     = apCont -> m_pFileCtx -> m_pOpenParam;
+ SMS_CodecContext* lpCodec = apCont -> m_pStm[ 0 ] -> m_pCodec;
+ int               retVal = 0;
 
- apCont -> m_pStm[ 0 ] -> m_Codec.m_pCodec = NULL;
+ apCont -> m_pStm[ 0 ] -> m_pCodec = NULL;
 
  apMyCont -> m_pMP3Cont -> Destroy ( apMyCont -> m_pMP3Cont );
  apMyCont -> m_pMP3Cont = _open_file ( apCont, apCont -> m_pPlayItem, lpOpen, lpOpenParam );
 
  if ( apMyCont -> m_pMP3Cont ) {
 
-  SMS_Stream* lpStm = apMyCont -> m_pMP3Cont -> m_pStm[ 0 ];
+  SMS_Stream*  lpStm     = apMyCont -> m_pMP3Cont -> m_pStm[ 0 ];
+  FileContext* lpFileCtx = apMyCont -> m_pMP3Cont -> m_pFileCtx;
 
-  apMyCont -> m_pMP3Cont -> m_pFileCtx -> Stream (
-   apMyCont -> m_pMP3Cont -> m_pFileCtx, 0, apMyCont -> m_pMP3Cont -> m_pFileCtx -> m_StreamSize
-  );
+  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize );
 
   apCont -> m_pStm[ 0 ] = lpStm;
   apCont -> m_nStm      = 1;
   apCont -> ReadPacket  = _ReadFirstPacket;
 
-  lCodec.m_Channels   = lpStm -> m_Codec.m_Channels;
-  lCodec.m_SampleRate = lpStm -> m_Codec.m_SampleRate;
-  lCodec.m_BitRate    = lpStm -> m_Codec.m_BitRate;
-
-  apCont -> m_pStm[ 0 ] -> m_Codec = lCodec;
+  lpStm -> m_pCodec -> m_pCodec = lpCodec -> m_pCodec;
 
   retVal = 1;
 
  } else {
 
   apCont -> m_pStm[ 0 ] = NULL;
-  lCodec.m_pCodec -> Destroy ( &lCodec );
-  free ( lCodec.m_pCodec );
-  SMS_CodecClose ( &lCodec );
+  lpCodec -> m_pCodec -> Destroy ( lpCodec );
+  free ( lpCodec -> m_pCodec );
+  SMS_CodecClose ( lpCodec );
+  free ( lpCodec );
 
  }  /* end else */
 
@@ -168,6 +161,7 @@ static void _Destroy ( SMS_Container* apCont ) {
  }  /* end if */
 
  _m3u_destroy_list ( apCont -> m_pPlayList );
+ apCont -> m_pPlayList = NULL;
 
  SMS_DestroyContainer ( apCont );
 
@@ -203,7 +197,6 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
    char*        lpPtr = &lBuf[ 7 ];
    char*        lpPath;
    _M3UEntry*   lpEntry;
-   unsigned int lLen;
    unsigned int lDuration;
 
    File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
@@ -228,7 +221,7 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
 
    if ( *lpPtr++ != ',' ) break;
 
-   if (   !(  lLen = strlen ( lpPtr )  )   ) break;
+   if (  !strlen ( lpPtr )  ) break;
 
    strcpy ( lTitle, lpPtr );
 

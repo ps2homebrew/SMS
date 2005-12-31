@@ -67,6 +67,7 @@ static void _sbclr_handler   ( int  );
 static void _vbclr_handler   ( int  );
 static void _aadsp_handler   ( int  );
 static void _subttl_handler  ( int  );
+static void _osubtt_handler  ( int  );
 static void _alignm_handler  ( int  );
        void _scolor_handler  ( int  );
        void _sbcolr_handler  ( int  );
@@ -129,6 +130,7 @@ static MenuItemData s_SMSMenuPlayer[] __attribute__(   (  section( ".data" )  ) 
  { "Subtitle alignment:",       NULL, NULL, MENU_IF_TEXT,   _alignm_handler },
  { "Subtitle offset:",          NULL, NULL, MENU_IF_TEXT,   _suboff_handler, _suboff_enter, _suboff_leave },
  { "Autoload subtitles:",       NULL, NULL, 0,              _subttl_handler },
+ { "Opaque subtitles:",         NULL, NULL, 0,              _osubtt_handler },
  { "Subtitle color:",           NULL, NULL, MENU_IF_PALIDX, _scolor_handler },
  { "Subtitle bold color:",      NULL, NULL, MENU_IF_PALIDX, _sbcolr_handler },
  { "Subtitle italic color:",    NULL, NULL, MENU_IF_PALIDX, _sicolr_handler },
@@ -844,15 +846,16 @@ static void _player_handler ( int aDir ) {
 
  }  /* end switch */
 
- s_SMSMenuPlayer[ 1 ].m_pIconRight = lpPtr;
- s_SMSMenuPlayer[ 2 ].m_pIconRight = s_OffsetBuffer;
- s_SMSMenuPlayer[ 3 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS ? g_IconOn : g_IconOff;
- s_SMSMenuPlayer[ 4 ].m_pIconRight = &g_Config.m_PlayerSCNIdx;
- s_SMSMenuPlayer[ 5 ].m_pIconRight = &g_Config.m_PlayerSCBIdx;
- s_SMSMenuPlayer[ 6 ].m_pIconRight = &g_Config.m_PlayerSCIIdx;
- s_SMSMenuPlayer[ 7 ].m_pIconRight = &g_Config.m_PlayerSCUIdx;
- s_SMSMenuPlayer[ 8 ].m_pIconRight = g_PowoffBuffer;
- s_SMSMenuPlayer[ 9 ].m_pIconRight = s_ScrollBuffer;
+ s_SMSMenuPlayer[  1 ].m_pIconRight = lpPtr;
+ s_SMSMenuPlayer[  2 ].m_pIconRight = s_OffsetBuffer;
+ s_SMSMenuPlayer[  3 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS ? g_IconOn : g_IconOff;
+ s_SMSMenuPlayer[  4 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_OSUB ? g_IconOn : g_IconOff;
+ s_SMSMenuPlayer[  5 ].m_pIconRight = &g_Config.m_PlayerSCNIdx;
+ s_SMSMenuPlayer[  6 ].m_pIconRight = &g_Config.m_PlayerSCBIdx;
+ s_SMSMenuPlayer[  7 ].m_pIconRight = &g_Config.m_PlayerSCIIdx;
+ s_SMSMenuPlayer[  8 ].m_pIconRight = &g_Config.m_PlayerSCUIdx;
+ s_SMSMenuPlayer[  9 ].m_pIconRight = g_PowoffBuffer;
+ s_SMSMenuPlayer[ 10 ].m_pIconRight = s_ScrollBuffer;
 
  _adjust_poweroff ( 0 );
 
@@ -868,11 +871,11 @@ static void _player_handler ( int aDir ) {
 
  }  /* end switch */
 
- s_SMSMenuPlayer[ 10 ].m_pIconRight = lpPtr;
- s_SMSMenuPlayer[ 11 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_TIME ? g_IconOn : g_IconOff;
- s_SMSMenuPlayer[ 12 ].m_pIconRight = &g_Config.m_PlayerSBCIdx;
- s_SMSMenuPlayer[ 13 ].m_pIconRight = &g_Config.m_PlayerVBCIdx;
- s_SMSMenuPlayer[ 14 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM ? g_IconOn : g_IconOff;
+ s_SMSMenuPlayer[ 11 ].m_pIconRight = lpPtr;
+ s_SMSMenuPlayer[ 12 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_TIME ? g_IconOn : g_IconOff;
+ s_SMSMenuPlayer[ 13 ].m_pIconRight = &g_Config.m_PlayerSBCIdx;
+ s_SMSMenuPlayer[ 14 ].m_pIconRight = &g_Config.m_PlayerVBCIdx;
+ s_SMSMenuPlayer[ 15 ].m_pIconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM ? g_IconOn : g_IconOff;
 
  Menu_Fill ( &s_MenuCtx, "Player settings", s_SMSMenuPlayer );
 
@@ -895,6 +898,12 @@ static void _subttl_handler ( int aDir ) {
  _switch_flag ( &g_Config.m_PlayerFlags, SMS_PF_SUBS );
 
 }  /* end _subttl_handler */
+
+static void _osubtt_handler ( int aDir ) {
+
+ _switch_flag ( &g_Config.m_PlayerFlags, SMS_PF_OSUB );
+
+}  /* end _osubtt_handler */
 
 static void _alignm_handler ( int aDir ) {
 

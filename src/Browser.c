@@ -56,11 +56,11 @@ static int _filter_avi ( char* apName ) {
 
   char* lpExt = apName + lLen - 4;
 
-  if (       !stricmp ( lpExt, ".avi"  )  )
+  if (       !strcmp ( lpExt, ".avi"  )  )
    retVal = GUI_FF_AVI;
-  else if (  !stricmp ( lpExt, ".mp3"  )  )
+  else if (  !strcmp ( lpExt, ".mp3"  )  )
    retVal = GUI_FF_MP3;
-  else if (  !stricmp ( lpExt, ".m3u"  )  )
+  else if (  !strcmp ( lpExt, ".m3u"  )  )
    retVal = GUI_FF_M3U;
 
   if (  retVal && ( g_Config.m_BrowserFlags & SMS_BF_AVIF )  ) apName[ lLen - 4 ] = '\x00';
@@ -860,11 +860,11 @@ static void _open_subtitles ( char* apPath, FileContext** appSubFileCtx, unsigne
 
  if ( g_Config.m_PlayerFlags & SMS_PF_SUBS ) {
 
-  char*          lpSubExt[ 2 ] = { ".srt",            ".sub"              };
-  SubtitleFormat lSubFmt [ 2 ] = { SubtitleFormat_SRT, SubtitleFormat_SUB };
+  char*          lpSubExt[ 4 ] = { ".srt", ".SRT", ".sub", ".SUB"                                                 };
+  SubtitleFormat lSubFmt [ 4 ] = { SubtitleFormat_SRT, SubtitleFormat_SRT, SubtitleFormat_SUB, SubtitleFormat_SUB };
   int            i, lLen = strlen ( apPath );
 
-  for ( i = 0; i < 2; ++i ) {
+  for ( i = 0; i < 4; ++i ) {
 
    char  lPath[ lLen + 5 ]; strcpy ( lPath, apPath );
    char* lpPtr = strrchr ( lPath, '.' );

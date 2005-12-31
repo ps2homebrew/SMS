@@ -72,12 +72,18 @@ void SMS_DestroyContainer ( SMS_Container* apCont ) {
 
   if ( apCont -> m_pStm[ i ] -> Destroy ) apCont -> m_pStm[ i ] -> Destroy ( apCont -> m_pStm[ i ] );
 
-  if ( apCont -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
+  if ( apCont -> m_pStm[ i ] -> m_pCodec ) {
 
-   apCont -> m_pStm[ i ] -> m_Codec.m_pCodec -> Destroy ( &apCont -> m_pStm[ i ] -> m_Codec );
-   free ( apCont -> m_pStm[ i ] -> m_Codec.m_pCodec );
+   if ( apCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec ) {
 
-   SMS_CodecClose ( &apCont -> m_pStm[ i ] -> m_Codec );
+    apCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec -> Destroy ( apCont -> m_pStm[ i ] -> m_pCodec );
+    free ( apCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec );
+
+   }  /* end if */
+
+   SMS_CodecClose ( apCont -> m_pStm[ i ] -> m_pCodec );
+
+   free ( apCont -> m_pStm[ i ] -> m_pCodec );
 
   }  /* end if */
 

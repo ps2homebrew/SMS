@@ -357,7 +357,7 @@ static void IPU_Display ( void* apFB ) {
 
 static void IPU_ChangeMode ( unsigned int anIdx ) {
 
- if ( anIdx < 4 ) {
+ if ( anIdx < 5 ) {
 
   g_IPUCtx.m_ModeIdx = anIdx;
 
@@ -500,6 +500,16 @@ static void IPU_Reset ( void ) {
  _ipu_compute_fields ( 3, g_IPUCtx.m_Width );  /* pan-scan 3 */
 
  }  /* end else */
+
+ g_IPUCtx.m_TxtLeft  [ 4 ] = g_IPUCtx.m_ScrLeft;
+ g_IPUCtx.m_TxtTop   [ 4 ] = g_IPUCtx.m_ScrLeft;
+ g_IPUCtx.m_TxtRight [ 4 ] = ( g_IPUCtx.m_Width  << 4 ) + g_IPUCtx.m_ScrLeft;
+ g_IPUCtx.m_TxtBottom[ 4 ] = ( g_IPUCtx.m_Height << 4 ) + g_IPUCtx.m_ScrLeft;
+
+ g_IPUCtx.m_ImgLeft  [ 4 ] = g_IPUCtx.m_ScrLeft;
+ g_IPUCtx.m_ImgTop   [ 4 ] = g_IPUCtx.m_ScrTop;
+ g_IPUCtx.m_ImgRight [ 4 ] = ( g_GSCtx.m_Width  << 4 ) + g_IPUCtx.m_ScrLeft;
+ g_IPUCtx.m_ImgBottom[ 4 ] = ( g_GSCtx.m_Height << 3 ) + g_IPUCtx.m_ScrTop;
 
  IPU_ChangeMode ( 0 );
 

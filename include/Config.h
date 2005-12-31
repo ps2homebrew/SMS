@@ -19,6 +19,7 @@
 # define SMS_PF_TIME 0x00000002
 # define SMS_PF_BLUR 0x00000004
 # define SMS_PF_ANIM 0x00000008
+# define SMS_PF_OSUB 0x00000010
 
 typedef enum SMScrollBarPos {
 

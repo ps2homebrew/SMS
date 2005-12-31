@@ -12,8 +12,8 @@
 #ifndef __SMS_H
 # define __SMS_H
 
-extern int  g_Trace;
-extern int  g_SMSFlags;
+extern int g_Trace;
+extern int g_SMSFlags;
 
 # define SMS_FLAG_DEV9 0x00000001
 # define SMS_FLAG_USB  0x00000002

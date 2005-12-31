@@ -786,7 +786,7 @@ static int _font_gs_packet ( int aX, int aY, int aZ, unsigned char* apStr, int a
 
 static void GS_InitScreen ( GSCodePage aCodePage ) {
 
- unsigned long int  lDMA[ 32 ] __attribute__(   (  aligned( 16 )  )   );
+ unsigned long int  lDMA[ 30 ] __attribute__(   (  aligned( 16 )  )   );
  unsigned long int* lpDMA = lDMA;
  unsigned char      lMode;
  unsigned int       lFBH;
@@ -871,9 +871,9 @@ static void GS_InitScreen ( GSCodePage aCodePage ) {
  *lpDMA++ = GS_SETREG_XYOFFSET_1( g_GSCtx.m_OffsetX << 4, g_GSCtx.m_OffsetY << 4 );
  *lpDMA++ = GS_XYOFFSET_1;
 
- *lpDMA++ = GS_SETREG_SCISSOR_1( 0, g_GSCtx.m_Width - 1, 0, g_GSCtx.m_Height - 1 );
+ *lpDMA++ = GS_SETREG_SCISSOR_1(  0, g_GSCtx.m_Width - 1, 0, ( g_GSCtx.m_Height >> 1 ) - 1  );
  *lpDMA++ = GS_SCISSOR_1;
- *lpDMA++ = GS_SETREG_SCISSOR_2( 0, g_GSCtx.m_Width - 1, 0, g_GSCtx.m_Height - 1 );
+ *lpDMA++ = GS_SETREG_SCISSOR_2(  0, g_GSCtx.m_Width - 1, 0, ( g_GSCtx.m_Height >> 1 ) - 1  );
  *lpDMA++ = GS_SCISSOR_2;
 
  if ( g_GSCtx.m_fZBuf == GS_ON ) {
@@ -911,9 +911,6 @@ static void GS_InitScreen ( GSCodePage aCodePage ) {
 
  *lpDMA++ = GS_SETREG_XYOFFSET_2( g_GSCtx.m_OffsetX << 4, g_GSCtx.m_OffsetY << 4 );
  *lpDMA++ = GS_XYOFFSET_2;
-
- *lpDMA++ = GS_SETREG_SCISSOR_2( 0, g_GSCtx.m_Width - 1, 0, g_GSCtx.m_Height - 1 );
- *lpDMA++ = GS_SCISSOR_2;
 
  if ( g_GSCtx.m_fZBuf == GS_ON ) {
 

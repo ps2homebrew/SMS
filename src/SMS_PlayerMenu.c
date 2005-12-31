@@ -21,11 +21,12 @@
 
 static SMS_Player* s_pPlayer;
 
-static char* s_ModeNames[ 4 ] = {
+static char* s_ModeNames[ 5 ] = {
  "letterbox",
  "pan-scan 1",
  "pan-scan 2",
- "pan-scan 3"
+ "pan-scan 3",
+ "fullscreen"
 };
 
 extern unsigned char g_IconOn [ 4096 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
@@ -61,7 +62,7 @@ static void _lang_handler ( int aDir ) {
 
 static void _disp_handler ( int aDir ) {
 
- if ( ++s_pPlayer -> m_PanScan == 4 ) s_pPlayer -> m_PanScan = 0;
+ if ( ++s_pPlayer -> m_PanScan == 5 ) s_pPlayer -> m_PanScan = 0;
 
  s_MenuCtx.m_pCurr -> m_pIconRight = s_ModeNames[ s_pPlayer -> m_PanScan ];
  s_pPlayer -> m_pIPUCtx -> ChangeMode ( s_pPlayer -> m_PanScan );

@@ -31,7 +31,7 @@ void                   PlayerControl_MkTime         ( int64_t, int              
 void                   PlayerControl_HandleOSD      ( int, int                           );
 unsigned int           PlayerControl_GSPLen         ( struct StringList*, unsigned int   );
 unsigned int           PlayerControl_GSPacket       ( int, struct StringList*, uint64_t* );
-int                    PlayerControl_ScrollBar      ( void                               );
+int                    PlayerControl_ScrollBar      ( void ( * ) ( int ), int, int       );
 void                   PlayerControl_UpdateDuration ( unsigned int                       );
 void                   PlayerControl_UpdateItemNr   ( void                               );
 

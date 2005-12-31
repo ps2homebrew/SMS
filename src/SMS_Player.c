@@ -29,7 +29,6 @@
 #include "SMS_PlayerBallSim.h"
 
 #include <kernel.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <limits.h>
 #include <libhdd.h>
@@ -79,20 +78,21 @@ static SMS_RB_CREATE( s_AudioQueue,   SMS_AudioPacket  );
 
 extern void* _gp;
 
-static int              s_Semas    [ 4 ];
-static int              s_ThreadIDs[ 4 ];
-static int              s_SemaPauseAudio;
-static int              s_SemaPauseVideo;
-static int              s_SemaAckPause;
-static int              s_MainThreadID;
-static uint8_t          s_VideoRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
-static uint8_t          s_VideoDStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
-static uint8_t          s_AudioRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
-static uint8_t          s_AudioDStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
-static SMS_FrameBuffer* s_pFrame;
-static SMS_AudioBuffer* s_AudioSamples;
-static int              s_nPackets;
-static int              s_Flags;
+static int               s_Semas    [ 4 ];
+static int               s_ThreadIDs[ 4 ];
+static int               s_SemaPauseAudio;
+static int               s_SemaPauseVideo;
+static int               s_SemaAckPause;
+static int               s_MainThreadID;
+static uint8_t           s_VideoRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t           s_VideoDStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t           s_AudioRStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
+static uint8_t           s_AudioDStack[ 0x10000 ] __attribute__(   (  aligned( 16 )  )   );
+static SMS_FrameBuffer*  s_pFrame;
+static SMS_AudioBuffer*  s_AudioSamples;
+static int               s_nPackets;
+static int               s_Flags;
+static SMS_CodecContext* s_pAudioCodec;
 
 static void ( *ExitThreadFunc ) ( void );
 static int  ( *FFwdFunc       ) ( void );
@@ -141,7 +141,7 @@ static void _prepare_ipu_context ( void ) {
 
  if ( s_Player.m_VideoIdx != 0xFFFFFFFF ) {
 
-  SMS_CodecContext* lpCodecCtx = &s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_Codec;
+  SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_pCodec;
 
   lWidth  = lpCodecCtx -> m_Width;
   lHeight = lpCodecCtx -> m_Height;
@@ -316,13 +316,15 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
  while ( 1 ) {
 
-  s_Player.m_pIPUCtx -> Sync ();
-
   if (  s_Flags & ( SMS_FLAGS_STOP | SMS_FLAGS_EXIT )  ) break;
+
+  s_Player.m_pIPUCtx -> Sync ();
 
   if ( s_Flags & SMS_FLAGS_PAUSE ) {
 
    _draw_text ( "Pause" );
+
+   SignalSema ( s_SemaAckPause );
    WaitSema ( s_SemaPauseVideo );
 
   }  /* end if */
@@ -360,8 +362,6 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
   Timer_Wait ( 64 );
 
  }  /* end while */
-
- s_Player.m_pIPUCtx -> Sync ();
 
  WakeupThread ( s_MainThreadID );
  ExitThreadFunc ();
@@ -434,7 +434,7 @@ static void _sms_video_decoder ( void* apParam ) {
  SMS_AVPacket*     lpPacket;
  SMS_FrameBuffer*  lpFrame;
  int64_t           lLastPPTS = 0L;
- SMS_CodecContext* lpCtx = &s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_Codec;
+ SMS_CodecContext* lpCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_pCodec;
 
  while ( 1 ) {
 
@@ -450,7 +450,7 @@ static void _sms_video_decoder ( void* apParam ) {
   --s_nPackets;
 
   if (  s_Player.m_pVideoCodec -> Decode (
-         &s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_Codec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
+         lpCtx, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
         )
   ) {
 
@@ -494,7 +494,7 @@ static void _sms_video_decoder ( void* apParam ) {
 
 static void _sms_audio_only_renderer ( void* apParam ) {
 
- SMS_CodecContext* lpCodecCtx = &s_Player.m_pCont -> m_pStm[ 0 ] -> m_Codec;
+ SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ 0 ] -> m_pCodec;
  uint32_t          lBPS       = lpCodecCtx -> m_BitsPerSample;
  float             lMult;
 
@@ -544,7 +544,7 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
    s_Player.m_AudioTime = 0;
 
-   lpCodecCtx = &s_Player.m_pCont -> m_pStm[ 0 ] -> m_Codec;
+   lpCodecCtx = s_pAudioCodec;//s_Player.m_pCont -> m_pStm[ 0 ] -> m_pCodec;
 
    if ( lpCodecCtx -> m_Channels   != s_Player.m_AudioChannels   ||
         lpCodecCtx -> m_SampleRate != s_Player.m_AudioSampleRate
@@ -621,6 +621,7 @@ static void _sms_audio_only_decoder ( void* apParam ) {
  SMS_AVPacket* lpPacket;
  int64_t       lPTS = 0;
 
+ s_pAudioCodec  = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
  s_AudioSamples = &s_DummyBuffer;
 
  while ( 1 ) {
@@ -642,12 +643,21 @@ static void _sms_audio_only_decoder ( void* apParam ) {
 
    s_AudioSamples -> m_Len = 0;
 
-   if ( lPTS != SMS_STPTS_VALUE ) lPTS = lpPacket -> m_PTS;
+   if ( lPTS != SMS_STPTS_VALUE )
+
+    lPTS = lpPacket -> m_PTS;
+
+   else if ( s_pAudioCodec != s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec ) {
+
+    free ( s_pAudioCodec );
+    s_pAudioCodec = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
+
+   }  /* end else */
 
    do {
 
     if (  s_Player.m_pAudioCodec -> Decode (
-           &s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_Codec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
+           s_pAudioCodec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
           )
     ) {
 
@@ -683,6 +693,8 @@ static void _sms_audio_only_decoder ( void* apParam ) {
 
  }  /* end while */
 end:
+ if ( s_pAudioCodec != s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec ) free ( s_pAudioCodec );
+
  WakeupThread ( s_MainThreadID );
  ExitThreadFunc ();
 
@@ -698,7 +710,7 @@ static void _sms_audio_renderer ( void* apParam ) {
 
  if ( s_Player.m_AudioIdx != 0xFFFFFFFF ) {
 
-  lBPS     = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_Codec.m_BitsPerSample;
+  lBPS     = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec -> m_BitsPerSample;
   lEndTime = s_Player.m_pCont -> m_Duration - 200LL;
 
   if ( !lBPS ) lBPS = 16;
@@ -799,7 +811,7 @@ static void _sms_audio_decoder ( void* apParam ) {
    do {
 
     if (  s_Player.m_pAudioCodec -> Decode (
-           &s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_Codec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
+           s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
           )
     ) {
 
@@ -929,7 +941,7 @@ static void _sms_play ( void ) {
  ee_sema_t     lSemaParam;
  int           lSema;
  int           lfNoVideo = s_Player.m_VideoIdx == 0xFFFFFFFF;
- uint32_t      lnDec     = 0L;
+ uint32_t      lnDec     = 1L;
  uint64_t      lNextTime = 0;
  uint64_t      lPOffTime = g_Timer + g_Config.m_PowerOff;
 
@@ -966,8 +978,6 @@ static void _sms_play ( void ) {
    }  /* end if */
 
   }  /* end if */
-
-  ++lnDec;
 
   FFwdFunc = _FFwd_AV;
   RewFunc  = _Rew_AV;
@@ -1067,9 +1077,16 @@ resume:
 
     } else {
 
-     _init_queues ( 0 );
-     
-     if (  !PlayerControl_ScrollBar ()  ) {
+     s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
+
+     for ( lBtn = 0; lBtn < lnDec; ++lBtn ) WaitSema ( s_SemaAckPause );
+
+     s_Flags &= ~( SMS_FLAGS_PAUSE | SMS_FLAGS_MENU );
+
+     if (  !PlayerControl_ScrollBar (
+             _init_queues, s_SemaPauseAudio, s_SemaPauseVideo
+            )
+     ) {
 
       s_Flags |= SMS_FLAGS_STOP;
       break;
@@ -1135,7 +1152,7 @@ resume:
 
    } else if ( lButtons == PAD_SQUARE ) {
 
-    if ( ++s_Player.m_PanScan == 4 ) s_Player.m_PanScan = 0;
+    if ( ++s_Player.m_PanScan == 5 ) s_Player.m_PanScan = 0;
 
     s_Player.m_pIPUCtx -> ChangeMode ( s_Player.m_PanScan );
 
@@ -1398,34 +1415,34 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx, FileC
 
   for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i )
 
-   if ( s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_Type == SMS_CodecTypeVideo && s_Player.m_VideoIdx == 0xFFFFFFFF ) {
+   if ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_Type == SMS_CodecTypeVideo && s_Player.m_VideoIdx == 0xFFFFFFFF ) {
 
-    SMS_CodecOpen ( &s_Player.m_pCont -> m_pStm[ i ] -> m_Codec );
+    SMS_CodecOpen ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec );
 
-    if ( s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
+    if ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec ) {
 
-     s_Player.m_pVideoCodec = s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_pCodec;
-     s_Player.m_pVideoCodec -> Init ( &s_Player.m_pCont -> m_pStm[ i ] -> m_Codec );
+     s_Player.m_pVideoCodec = s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec;
+     s_Player.m_pVideoCodec -> Init ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec );
 
      s_Player.m_VideoIdx = i;
 
     }  /* end if */
 
-   } else if ( s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_Type == SMS_CodecTypeAudio && s_Player.m_AudioIdx == 0xFFFFFFFF ) {
+   } else if ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_Type == SMS_CodecTypeAudio && s_Player.m_AudioIdx == 0xFFFFFFFF ) {
 
-    SMS_CodecOpen ( &s_Player.m_pCont -> m_pStm[ i ] -> m_Codec );
+    SMS_CodecOpen ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec );
 
-    if ( s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_pCodec ) {
+    if ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec ) {
 
-     s_Player.m_pAudioCodec = s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_pCodec;
+     s_Player.m_pAudioCodec = s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec;
 
-     if ( s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_ID == SMS_CodecID_AC3 ) s_Player.m_pCont -> m_pStm[ i ] -> m_Codec.m_Channels = 2;
+     if ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_ID == SMS_CodecID_AC3 ) s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec -> m_Channels = 2;
 
-     s_Player.m_pAudioCodec -> Init ( &s_Player.m_pCont -> m_pStm[ i ] -> m_Codec );
+     s_Player.m_pAudioCodec -> Init ( s_Player.m_pCont -> m_pStm[ i ] -> m_pCodec );
 
      s_Player.m_AudioIdx        = i;
-     s_Player.m_AudioChannels   = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_Codec.m_Channels;
-     s_Player.m_AudioSampleRate = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_Codec.m_SampleRate;
+     s_Player.m_AudioChannels   = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec -> m_Channels;
+     s_Player.m_AudioSampleRate = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec -> m_SampleRate;
 
     }  /* end if */
 

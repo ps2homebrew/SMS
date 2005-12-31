@@ -506,7 +506,7 @@ static int PlayerControl_Scroll ( int aDir ) {
   lpFrame = NULL;
 
   s_Player.m_pVideoCodec -> Decode (
-   &lpStm -> m_Codec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
+   lpStm -> m_pCodec, ( void** )&lpFrame, lpPacket -> m_pData, lpPacket -> m_Size
   );
 
   if ( lpFrame ) {
@@ -873,7 +873,7 @@ unsigned int PlayerControl_GSPacket ( int anY, struct StringList* apList, uint64
 
 void PlayerControl_Destroy ( void ) {
 
- if ( s_Player.m_OSDPackets[ 3 ] ) free ( s_Player.m_OSDPackets[ 3 ] );
+ if ( s_Player.m_OSDPackets[ 4 ] ) free ( s_Player.m_OSDPackets[ 4 ] );
 
 }  /* end PlayerControl_Destroy */
 
@@ -881,10 +881,10 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
  int       i;
  uint64_t* lpPaint = _U( s_SCPaint );
- uint64_t  lV1       = lpPaint[ 10 ];
- uint64_t  lX1       = ( lV1 & 0xFFFF );
- uint64_t  lY1       = (  ( lV1 >> 16 ) & 0xFFFF  ) + ( 7 << 3 );
- uint64_t  lDY1      = 3 << 3;
+ uint64_t  lV1     = lpPaint[ 10 ];
+ uint64_t  lX1     = ( lV1 & 0xFFFF );
+ uint64_t  lY1     = (  ( lV1 >> 16 ) & 0xFFFF  ) + ( 7 << 3 );
+ uint64_t  lDY1    = 3 << 3;
  uint64_t  lIncr;
  uint32_t  lQWC;
 
@@ -956,7 +956,7 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
 }  /* end PlayerControl_DisplayScrollBar */
 
-int PlayerControl_ScrollBar ( void ) {
+int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int aSemaV  ) {
 
  SMS_Container* lpCont      = s_Player.m_pCont;
  SMS_Stream*    lpStm       = lpCont -> m_pStm[ s_Player.m_VideoIdx ];
@@ -1079,6 +1079,9 @@ int PlayerControl_ScrollBar ( void ) {
     
    } else if ( lButtons == PAD_TRIANGLE ) {
 
+    SignalSema ( aSemaA );
+    SignalSema ( aSemaV );
+
     goto stop;
 
    }  /* end if */
@@ -1087,22 +1090,39 @@ int PlayerControl_ScrollBar ( void ) {
 
  }  /* end while */
 end:
- lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 0 );
+ SignalSema ( aSemaA );
+ SignalSema ( aSemaV );
 
- lDir = ( lTime - lPassTime );
+ if ( !lResume ) {
 
- if ( lDir >  0 ) lDir =  1;
- if ( lDir <= 0 ) lDir = -1;
+  apInitQueues ( 0 );
 
- lPos  = SMS_Rescale (  lTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
- lSize = lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, lDir, lPos );
+  if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> m_Idx = 0;
 
- lFilePos = lpFileCtx -> m_CurPos;
- lSize    = lpCont -> ReadPacket ( lpPacket );
- lpFileCtx -> Stream ( lpFileCtx, lFilePos, lpFileCtx -> m_StreamSize );
+  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 0 );
 
- s_Player.m_VideoTime = lpPacket -> m_PTS;
- s_Player.m_AudioTime = lpPacket -> m_PTS;
+  lDir = ( lTime - lPassTime );
+
+  if ( lDir >  0 ) lDir =  1;
+  if ( lDir <= 0 ) lDir = -1;
+
+  lPos  = SMS_Rescale (  lTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
+  lSize = lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, lDir, lPos );
+
+  lFilePos = lpFileCtx -> m_CurPos;
+  lSize    = lpCont -> ReadPacket ( lpPacket );
+  lpFileCtx -> Stream ( lpFileCtx, lFilePos, lpFileCtx -> m_StreamSize );
+
+  s_Player.m_VideoTime = lpPacket -> m_PTS;
+  s_Player.m_AudioTime = lpPacket -> m_PTS;
+
+ } else {
+
+  lNextTime = g_Timer + 500;
+
+  while ( g_Timer < lNextTime );
+
+ }  /* end else */
 
  lpIPUCtx -> QueuePacket ( 8, s_SCErase );
  lpPacket -> Destroy ( lpPacket );

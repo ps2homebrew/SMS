@@ -46,7 +46,7 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
  uint64_t* lpDMA;
  uint64_t* lpUDMA;
 
- lpDMA  = ( uint64_t* )malloc (  ( 12 + NBALLS * 4 ) * sizeof ( uint64_t )  );
+ lpDMA  = ( uint64_t* )malloc (  ( 10 + NBALLS * 4 ) * sizeof ( uint64_t )  );
  lpUDMA = _U( lpDMA );
 
  FlushCache ( 0 );
@@ -147,7 +147,5 @@ void SMS_PlayerBallSim_Update ( uint64_t* apDMA ) {
   );
 
  }  /* end for */
-
- __asm__ __volatile__( "sync\n\t" );
 
 }  /* end SMS_PlayerBallSim_Update */

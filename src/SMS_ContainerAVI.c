@@ -96,7 +96,8 @@ static SMS_Stream* _NewStream ( SMS_Container* apCont ) {
 
   if ( retVal ) {
 
-   retVal -> m_pCtx = ( char* )retVal + sizeof( SMS_Stream );
+   retVal -> m_pCtx   = ( char* )retVal + sizeof( SMS_Stream );
+   retVal -> m_pCodec = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
 
    MYSTRM( retVal ) -> m_Idx       = apCont -> m_nStm;
    MYSTRM( retVal ) -> m_StartTime =
@@ -287,8 +288,8 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
         lpStm = apCtx -> m_pStm[ lStmIdx ];
 
-        lpStm -> m_Codec.m_StmTag = lSubTag;
-        lpStm -> m_Flags         |= SMS_STRM_FLAGS_VIDEO;
+        lpStm -> m_pCodec -> m_StmTag = lSubTag;
+        lpStm -> m_Flags             |= SMS_STRM_FLAGS_VIDEO;
 
         File_GetUInt   ( lpFileCtx );  /* dwFlags         */
         File_GetUShort ( lpFileCtx );  /* wPriority       */
@@ -319,17 +320,17 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
         SMSContainer_SetPTSInfo ( lpStm, lScale, lRate );
 
-        lpStm -> m_Codec.m_FrameRate     = lRate;
-        lpStm -> m_Codec.m_FrameRateBase = lScale;
+        lpStm -> m_pCodec -> m_FrameRate     = lRate;
+        lpStm -> m_pCodec -> m_FrameRateBase = lScale;
 
                    File_GetUInt ( lpFileCtx );  /* dwStart  */
         lnFrames = File_GetUInt ( lpFileCtx );  /* dwLength */
 
         MYSTRM( lpStm ) -> m_StartTime = SMS_INT64( 0 );
         MYSTRM( lpStm ) -> m_Duration  = SMS_Rescale (
-         lnFrames, ( int64_t )lpStm -> m_Codec.m_FrameRateBase *
+         lnFrames, ( int64_t )lpStm -> m_pCodec -> m_FrameRateBase *
                    ( int64_t )SMS_TIME_BASE,
-         lpStm -> m_Codec.m_FrameRate
+         lpStm -> m_pCodec -> m_FrameRate
         );
         lpFileCtx -> Seek ( lpFileCtx, lpFileCtx -> m_CurPos + lSize - 36 );
 
@@ -406,12 +407,12 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
        File_GetUInt ( lpFileCtx );
 
-       lpStm -> m_Codec.m_Width  = File_GetUInt ( lpFileCtx );
-       lpStm -> m_Codec.m_Height = File_GetUInt ( lpFileCtx );
+       lpStm -> m_pCodec -> m_Width  = File_GetUInt ( lpFileCtx );
+       lpStm -> m_pCodec -> m_Height = File_GetUInt ( lpFileCtx );
 
        File_GetUShort ( lpFileCtx );
 
-       lpStm -> m_Codec.m_BitsPerSample = File_GetUShort ( lpFileCtx );
+       lpStm -> m_pCodec -> m_BitsPerSample = File_GetUShort ( lpFileCtx );
 
        lSubTag = File_GetUInt ( lpFileCtx );
 
@@ -427,9 +428,9 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
        if ( lLen & 1 ) File_GetByte ( lpFileCtx );
 
-       lpStm -> m_Codec.m_Type = SMS_CodecTypeVideo;
-       lpStm -> m_Codec.m_Tag  = lSubTag;
-       lpStm -> m_Codec.m_ID   = SMS_CodecGetID ( SMS_CodecTypeVideo, lSubTag );
+       lpStm -> m_pCodec -> m_Type = SMS_CodecTypeVideo;
+       lpStm -> m_pCodec -> m_Tag  = lSubTag;
+       lpStm -> m_pCodec -> m_ID   = SMS_CodecGetID ( SMS_CodecTypeVideo, lSubTag );
 
       break;
 
@@ -437,14 +438,14 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
        int32_t lID = File_GetUShort ( lpFileCtx );
 
-       lpStm -> m_Codec.m_Type          = SMS_CodecTypeAudio;
-       lpStm -> m_Codec.m_Tag           = lID;
-       lpStm -> m_Codec.m_Channels      = File_GetUShort ( lpFileCtx );
-       lpStm -> m_Codec.m_SampleRate    = File_GetUInt ( lpFileCtx );
-       lpStm -> m_Codec.m_BitRate       = File_GetUInt ( lpFileCtx ) * 8;
-       lpStm -> m_Codec.m_BlockAlign    = File_GetUShort ( lpFileCtx );
-       lpStm -> m_Codec.m_BitsPerSample = lSize == 14 ? 8 : File_GetUShort ( lpFileCtx );
-       lpStm -> m_Codec.m_ID            = SMS_CodecGetID ( SMS_CodecTypeAudio, lID );
+       lpStm -> m_pCodec -> m_Type          = SMS_CodecTypeAudio;
+       lpStm -> m_pCodec -> m_Tag           = lID;
+       lpStm -> m_pCodec -> m_Channels      = File_GetUShort ( lpFileCtx );
+       lpStm -> m_pCodec -> m_SampleRate    = File_GetUInt ( lpFileCtx );
+       lpStm -> m_pCodec -> m_BitRate       = File_GetUInt ( lpFileCtx ) * 8;
+       lpStm -> m_pCodec -> m_BlockAlign    = File_GetUShort ( lpFileCtx );
+       lpStm -> m_pCodec -> m_BitsPerSample = lSize == 14 ? 8 : File_GetUShort ( lpFileCtx );
+       lpStm -> m_pCodec -> m_ID            = SMS_CodecGetID ( SMS_CodecTypeAudio, lID );
 
        if ( lSize > 16 ) {
 
@@ -460,9 +461,9 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
       default:
 
-       lpStm -> m_Codec.m_Type = SMS_CodecTypeUnknown;
-       lpStm -> m_Codec.m_ID   = SMS_CodecID_NULL;
-       lpStm -> m_Codec.m_Tag  = 0;
+       lpStm -> m_pCodec -> m_Type = SMS_CodecTypeUnknown;
+       lpStm -> m_pCodec -> m_ID   = SMS_CodecID_NULL;
+       lpStm -> m_pCodec -> m_Tag  = 0;
 
        lpFileCtx -> Seek ( lpFileCtx, lpFileCtx -> m_CurPos + lSize );
 
@@ -523,18 +524,19 @@ error: retVal = 0;
 
 static void _CalcPktFields ( SMS_Stream* apStm, SMS_AVPacket* apPkt ) {
 
- int lNum, lDen;
+ int               lNum, lDen;
+ SMS_CodecContext* lpCodecCtx = apStm -> m_pCodec;
 
- if ( apStm -> m_Codec.m_Type == SMS_CodecTypeVideo ) {
+ if ( lpCodecCtx -> m_Type == SMS_CodecTypeVideo ) {
 
-  lNum = apStm -> m_Codec.m_FrameRateBase;
-  lDen = apStm -> m_Codec.m_FrameRate;
+  lNum = lpCodecCtx -> m_FrameRateBase;
+  lDen = lpCodecCtx -> m_FrameRate;
 
- } else if ( apStm -> m_Codec.m_Type == SMS_CodecTypeAudio ) {
+ } else if ( lpCodecCtx -> m_Type == SMS_CodecTypeAudio ) {
 
-  lNum = apStm -> m_Codec.m_FrameSize <= 1 ? ( apPkt -> m_Size * 8 * apStm -> m_Codec.m_SampleRate ) / apStm -> m_Codec.m_BitRate
-                                           : apStm -> m_Codec.m_FrameSize;
-  lDen = apStm -> m_Codec.m_SampleRate;
+  lNum = lpCodecCtx -> m_FrameSize <= 1 ? ( apPkt -> m_Size * 8 * lpCodecCtx -> m_SampleRate ) / lpCodecCtx -> m_BitRate
+                                        : lpCodecCtx -> m_FrameSize;
+  lDen = lpCodecCtx -> m_SampleRate;
 
  } else return;
 
@@ -670,7 +672,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
    apPkt -> m_StmIdx = lCount;
 
-   if ( lpStm -> m_Codec.m_Type == SMS_CodecTypeVideo ) {
+   if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
 
     if (  lpAVIStm -> m_FrameOffset < lpAVIStm -> m_nIdx &&
           lpAVIStm -> m_pIdx[ lpAVIStm -> m_FrameOffset ].m_Flags & AVIIF_INDEX
@@ -803,7 +805,7 @@ static void _EstimateTimingsFromBitRate ( SMS_Container* apCont ) {
   for ( i = 0; i < apCont -> m_nStm; ++i ) {
 
    lpStm     = apCont -> m_pStm[ i ];
-   lBitRate += lpStm -> m_Codec.m_BitRate;
+   lBitRate += lpStm -> m_pCodec -> m_BitRate;
 
   }  /* end for */
 
@@ -851,17 +853,19 @@ static void _EstimateTimings ( SMS_Container* apCont ) {
 
 static void _CalcFrameRate ( SMS_Container* apCont ) {
 
- uint32_t    i;
- SMS_Stream* lpStm;
+ uint32_t          i;
+ SMS_Stream*       lpStm;
+ SMS_CodecContext* lpCodecCtx;
 
  for ( i = 0; i < apCont -> m_nStm; ++i ) {
 
-  lpStm = apCont -> m_pStm[ i ];
+  lpStm      = apCont -> m_pStm[ i ];
+  lpCodecCtx = lpStm -> m_pCodec;
 
-  if ( lpStm -> m_Codec.m_Type == SMS_CodecTypeVideo ) {
+  if ( lpCodecCtx -> m_Type == SMS_CodecTypeVideo ) {
 
-   lpStm -> m_RealFrameRate     = lpStm -> m_Codec.m_FrameRate;
-   lpStm -> m_RealFrameRateBase = lpStm -> m_Codec.m_FrameRateBase;
+   lpStm -> m_RealFrameRate     = lpCodecCtx -> m_FrameRate;
+   lpStm -> m_RealFrameRateBase = lpCodecCtx -> m_FrameRateBase;
 
   }  /* end if */
 
