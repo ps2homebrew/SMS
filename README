@@ -540,7 +540,7 @@ Update (24-DEC-2005 "Christmas edition" :))
 - fixed bug upsampler routine ("ticking" noise with sample rates < 48KHz);
 - new bugs have been "implemented" ;);
 
-Update (31-JAN-2005 "New Year edition" :))
+Update (31-DEC-2005 "New Year edition" :))
 --------------------
 - fixed "hang" bug during m3u playback (thanks to "Mr.Worm~~" for nice Spanish
   music);
@@ -556,7 +556,7 @@ Update (31-JAN-2005 "New Year edition" :))
 - fixed "movie jumps backward when resuming from pause using scrollbar" bug (thanks to
   "Mr.Worm~~" for the remark);
 
-Update (XX-XXX-XXXX)
+Update (01-JAN-2006)
 --------------------
 - fixed "first letter is missing" for "sub" subtitles format bug (thanks to
   "LaptoniC" and "deank" for remarks);
