@@ -153,7 +153,7 @@ next:
 static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
  char     lLine[ SUB_MAXLEN ];
- int64_t  lMSPerFrame = ( int64_t )( 1000.0F / aFPS + 0.5F );
+ float    lMSPerFrame = 1000.0F / aFPS;
  int      retVal      = 0;
  SubNode* lpNode;
 
@@ -189,7 +189,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
   }  /* end  if */
 
-  for ( i = 0; i < 2; ++i ) lTime[ i ] = lFrame[ i ] * lMSPerFrame;
+  for ( i = 0; i < 2; ++i ) lTime[ i ] = ( int64_t )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
 
   lpNode = ( SubNode* )malloc (  sizeof ( SubNode )  );
   lpNode -> m_pList = StringList_Init ();
