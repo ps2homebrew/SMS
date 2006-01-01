@@ -888,13 +888,15 @@ static void _open_subtitles ( char* apPath, FileContext** appSubFileCtx, unsigne
 
   }  /* end for */
 
- } else *appSubFileCtx = NULL;
+ }  /* end if */
 
 }  /* end _open_subtitles */
 
 static FileContext* Browser_Browse ( char* apPartName, FileContext** appFileCtxSub, unsigned int* apSubFormat ) {
 
  FileContext* retVal = NULL;
+
+ *appFileCtxSub = NULL;
 
  if ( s_BrowserCtx.m_HDDPD == -1 && s_BrowserCtx.m_pGUICtx -> m_DevMenu.m_pItems == NULL )
 

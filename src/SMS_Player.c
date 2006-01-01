@@ -1154,6 +1154,9 @@ resume:
 
     if ( ++s_Player.m_PanScan == 5 ) s_Player.m_PanScan = 0;
 
+    g_Config.m_PlayerFlags &= 0x0FFFFFFF;
+    g_Config.m_PlayerFlags |= ( s_Player.m_PanScan << 28 );
+
     s_Player.m_pIPUCtx -> ChangeMode ( s_Player.m_PanScan );
 
    } else if ( lButtons == PAD_L1 ) {
@@ -1510,7 +1513,7 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx, FileC
   s_Player.m_pMenuCtx  = PlayerMenu_Init ( &s_Player );
   s_Player.m_Flags    |= SMS_PF_SUBS;
   s_Player.m_OSD       = 0;
-  s_Player.m_PanScan   = 0;
+  s_Player.m_PanScan   = g_Config.m_PlayerFlags >> 28;
   s_Player.m_AVDelta   = 0;
   s_Player.m_SVDelta   = 0;
   s_Player.SetColors   = _set_colors;
@@ -1518,8 +1521,6 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, GUIContext* apGUICtx, FileC
   s_Player.m_pPlayItem = NULL;
 
  } else {
-
-  apFileCtx -> Destroy ( apFileCtx );
 
   if ( apSubFileCtx ) apSubFileCtx -> Destroy ( apSubFileCtx );
 

@@ -64,6 +64,9 @@ static void _disp_handler ( int aDir ) {
 
  if ( ++s_pPlayer -> m_PanScan == 5 ) s_pPlayer -> m_PanScan = 0;
 
+ g_Config.m_PlayerFlags &= 0x0FFFFFFF;
+ g_Config.m_PlayerFlags |= ( s_pPlayer -> m_PanScan << 28 );
+
  s_MenuCtx.m_pCurr -> m_pIconRight = s_ModeNames[ s_pPlayer -> m_PanScan ];
  s_pPlayer -> m_pIPUCtx -> ChangeMode ( s_pPlayer -> m_PanScan );
 

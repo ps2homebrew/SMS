@@ -511,7 +511,7 @@ static void IPU_Reset ( void ) {
  g_IPUCtx.m_ImgRight [ 4 ] = ( g_GSCtx.m_Width  << 4 ) + g_IPUCtx.m_ScrLeft;
  g_IPUCtx.m_ImgBottom[ 4 ] = ( g_GSCtx.m_Height << 3 ) + g_IPUCtx.m_ScrTop;
 
- IPU_ChangeMode ( 0 );
+ IPU_ChangeMode ( g_Config.m_PlayerFlags >> 28 );
 
 }  /* end IPU_Reset */
 

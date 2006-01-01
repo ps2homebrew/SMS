@@ -212,9 +212,13 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
   while ( lpPtr ) {
 // skip tag (I didn't find any clear specs about them)
-   if ( *lpPtr == '{' ) while ( *lpPtr != '}' ) ++lpPtr;
+   if ( *lpPtr == '{' ) {
 
-   ++lpPtr;
+    while ( *lpPtr != '}' ) ++lpPtr;
+
+    ++lpPtr;
+
+   }  /* end if */
 
    _add_line ( lpNode -> m_pList, lpPtr, 0 );
 
