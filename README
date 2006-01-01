@@ -555,3 +555,12 @@ Update (31-JAN-2005 "New Year edition" :))
 - added "fullscreen display" player option (thanks to "deank" for the note);
 - fixed "movie jumps backward when resuming from pause using scrollbar" bug (thanks to
   "Mr.Worm~~" for the remark);
+
+Update (XX-XXX-XXXX)
+--------------------
+- fixed "first letter is missing" for "sub" subtitles format bug (thanks to
+  "LaptoniC" and "deank" for remarks);
+- fixed "SMS crashes when an unsupported file is selected" (thanks tp "deank"
+  for the remark);
+- added "save display mode (letterbox/pan-scan)" feature; (thanks tp "deank"
+  for the remark);
