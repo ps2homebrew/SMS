@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- $Revision: 1.26 $ -->
+
+<sect1 id="installation-configuration">
+  <title>
+    <phrase lang="en">
+      Configuration
+    </phrase>
+	</title>
+
+	<tip>
+	  <para lang="en">
+	    Normally there is no need to change any configuration files to
+	    get SMS running.  If you are just using using SMS in standalone mode,
+      you can skip this section.  You only need to change the configuration
+      if you want to use SMS in network mode (i.e. play files over a LAN).
+    </para>
+  </tip>
+
+  <sect2 id="installation-configuration-ipconfig">
+    <title>
+      <phrase lang="en">
+        Network Configuration
+      </phrase>
+    </title>
+
+    <para lang="en">
+      If you have an official <trademark>Sony</trademark> Network adaptor,
+      and you intend to use SMS to play media files stored on a network,
+      you will need to assign an IP address and subnet to the PS2.  Chances are 
+      you'll want this in a semi permanent set-up, so this section helps you
+      pick settings that will be compatible with your home network.
+    </para>
+
+    <para lang="en">
+      IP configuration data for SMS is stored in
+  		<filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>. (not
+  		<filename>CONFIG.DAT</filename>).  Note that the two files are seperate. SMS
+      will not look for settings in
+  		<filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
+    </para>
+
+    <para lang="en">
+      To set the IP address for your PS2, you will need to create a file
+      named
+      <filename>IPCONFIG.DAT</filename> (e.g. using notepad) and it should 
+      have just one line of text:
+    </para>
+    <screen>
+      &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
+    </screen>
+
+    <para lang="en">
+      If you created a <filename>CONFIG.DAT</filename> file in the
+      <xref linkend="installation"/> section, you can use the same file, but
+      remember rename it to <filename>IPCONFIG.DAT</filename>.  Once you have
+      created this file, you must copy it to your PS2, into the location
+      <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>.  You can do this
+      using the FTP technique described in the
+      <link linkend="installation-detail-copyftp">installation</link>
+      section.
+    </para>
+    
+    <para lang="en">
+      You'll need to choose an IP address for your PS2 that is different from
+      the IP address of any other node on your network, but on the same subnet
+      as your PC.  You will have to turn DHCP off on your PC, and use a manual
+      (or static) IP configuration.
+    </para>
+
+  	<informaltable frame='none'>
+  	<tgroup cols='2'>
+  	<tbody>
+  	<row>
+  	  <entry morerows="2">PS2 Settings</entry>
+  	  <entry>
+  		  <para lang="en">PS2 IP Address:</para>
+  		</entry>
+  		<entry>192.168.a.x</entry>
+  	</row>
+  	<row>
+  	  <entry>
+  		  <para lang="en">PS2 Subnet Mask:</para>
+  		</entry>
+  		<entry>255.255.255.0</entry>
+  	</row>
+  	<row>
+  	  <entry>
+  		  <para lang="en">PS2 Default Gateway:</para>
+  		</entry>
+  		<entry>192.168.a.z</entry>
+  	</row>
+  	<row>
+  	  <entry morerows="2">PC Settings</entry>
+  	  <entry>
+  		  <para lang="en">PC IP Address:</para>
+  		</entry>
+  		<entry>192.168.a.y</entry>
+  	</row>
+  	<row>
+  	  <entry>
+  		  <para lang="en">PC Subnet Mask:</para>
+  		</entry>
+  		<entry>255.255.255.0</entry>
+  	</row>
+  	<row>
+  	  <entry>
+  		  <para lang="en">PC Default Gateway:</para>
+  		</entry>
+  		<entry>192.168.a.z</entry>
+  	</row>
+  	</tbody>
+  	</tgroup>
+  	</informaltable>
+  	
+
+
+    <sect3>
+      <title>
+        <phrase lang="en">Example configuration 1</phrase>
+      </title>
+      <para lang="en">
+        This configuration is for a PS2 and PC connected directly
+        with a crossover cable, or for both connected to a network 
+        switch.  There is no internet gateway device to connect to, so the
+        gateway is set to the IP address of the PC.
+      </para>
+
+    	<informaltable frame='none'>
+    	<tgroup cols='2'>
+    	<tbody>
+    	<row>
+    	  <entry morerows="3">PS2 Settings</entry>
+    	  <entry>
+    		  <para lang="en">PS2 IP Address:</para>
+    		</entry>
+    		<entry>192.168.0.2</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">PS2 Subnet Mask:</para>
+    		</entry>
+    		<entry>255.255.255.0</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">PS2 Default Gateway:</para>
+    		</entry>
+    		<entry>192.168.0.1</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
+    		</entry>
+    		<entry>
+    		<mediaobject>
+    		  <imageobject>
+    		    <imagedata fileref="../images/installation-ipconfig.dat1.png"
+            format="PNG"/>
+    		  </imageobject>
+    		  <textobject>
+    		    <phrase>Sample ipconfig.dat file screenshot.</phrase>
+    		  </textobject>
+    		</mediaobject>
+    		</entry>
+    	</row>
+    	<row>
+    	  <entry morerows="2">PC Settings</entry>
+    	  <entry>
+    		  <para lang="en">PC IP Address:</para>
+    		</entry>
+    		<entry>192.168.0.1</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">PC Subnet Mask:</para>
+    		</entry>
+    		<entry>255.255.255.0</entry>
+    	</row>
+    	<row>
+  	  <entry>
+  		  <para lang="en">PC Default Gateway:</para>
+  		</entry>
+  		<entry>192.168.0.1</entry>
+  	</row>
+  	</tbody>
+  	</tgroup>
+  	</informaltable>
+    </sect3>
+
+    <sect3>
+      <title>
+        <phrase lang="en">Example configuration 2</phrase>
+      </title>
+      <para lang="en">
+        Here is the configuration I use at home.  Both PS2 and PC are on the
+        same 192.168.2._ subnet, and my internet access point / router is
+        at 192.168.2.1.
+      </para>
+
+    	<informaltable frame='none'>
+    	<tgroup cols='2'>
+    	<tbody>
+    	<row>
+    	  <entry morerows="3">PS2 Settings</entry>
+    	  <entry>
+    		  <para lang="en">PS2 IP Address:</para>
+    		</entry>
+    		<entry>192.168.2.22</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">PS2 Subnet Mask:</para>
+    		</entry>
+    		<entry>255.255.255.0</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">PS2 Default Gateway:</para>
+    		</entry>
+    		<entry>192.168.2.1</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
+    		</entry>
+    		<entry>
+    		<mediaobject>
+    		  <imageobject>
+    		    <imagedata fileref="../images/installation-ipconfig.dat2.png"
+            format="PNG"/>
+    		  </imageobject>
+    		  <textobject>
+    		    <phrase>Sample ipconfig.dat file screenshot.</phrase>
+    		  </textobject>
+    		</mediaobject>
+    		</entry>
+    	</row>
+    	<row>
+    	  <entry morerows="2">PC Settings</entry>
+    	  <entry>
+    		  <para lang="en">PC IP Address:</para>
+    		</entry>
+    		<entry>192.168.2.23</entry>
+    	</row>
+    	<row>
+    	  <entry>
+    		  <para lang="en">PC Subnet Mask:</para>
+    		</entry>
+    		<entry>255.255.255.0</entry>
+    	</row>
+    	<row>
+  	  <entry>
+  		  <para lang="en">PC Default Gateway:</para>
+  		</entry>
+  		<entry>192.168.2.1</entry>
+  	</row>
+  	</tbody>
+  	</tgroup>
+  	</informaltable>
+
+
+    <warning>
+      <para lang="en">
+        If you are connected to the internet via the same network that
+        you are using to connect to your PS2
+        <emphasis role="bold">be very careful</emphasis> when you change
+        your PC's IP settings.  You must make sure that your PC is set to be
+        on the same subnet as your access point/router (i.e. the first three
+        numbers of the PC IP address are the same as the access
+        point/router), and that the PC Default Gateway remains the same
+        (this will normally be the IP address of your access point.
+        Failure to do this may break your internet connection.  If you
+        are not sure what you are doing, please make a note of your starting
+        settings by typing <userinput>ipconfig /all</userinput> at the
+        command prompt.
+      </para>
+    </warning>
+
+    </sect3>
+
+
+  </sect2>
+
+  <sect2 id="installation-configration-generalconfig">
+    <title>
+      <phrase lang="en">
+        General Configuration
+      </phrase>
+    </title>
+
+    <para lang="en">
+  	  SMS general configuration information is stored in
+  		<filename>mc0:/SMS/SMS.cfg</filename>. This file is written by the
+  		application when you save the configuration data, and is not designed to
+  		be edited by hand.
+      <emphasis role="bold">You do not need to create this file</emphasis>.
+      SMS will create the file when you save the configuration from within
+      SMS (see configuration menu in 
+      <link linkend="usage-controls-navigation">usage</link> section).
+    </para>
+
+    <note>
+      <para lang="en">
+        If you are having problems with the configuration settings, it is
+        suggested that you delete your <filename>mc0:/SMS/SMS.cfg</filename>
+        file, and let SMS create a new one for you next time it runs.
+      </para>
+    </note>
+
+  </sect2>
+
+</sect1>

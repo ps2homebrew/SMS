@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.26 $ -->
+
+
+
+
+
+<para>Simple Media System (<application>SMS</application>) is a result the 
+original author's (Eugene Plotnikov's) curiosity about Sony's Playstation2,
+MIPS, DivX and MP3.
+His original goal was to create a simple DivX player able to play good resolution
+movies at good frame rate on an unmodded PS2 without any extra equipment such as HDD and network
+adapter.
+</para>
+<para>
+Why create a complete "system"? Just because having only a player program is not enough. Since
+the PS2 conventionally ignores "illegal" disks, he took the idea of Drakonite with his UMCDR and developed
+his own "UMCDR". (called CDDAFS). It just stores data on a CD audio disk format, which can be read on
+(hopefully) any PS2.
+</para>
+<para>
+This is the first component of SMS. The second component is a PC program that makes cue/bin files in order
+to burn such a disk. And, finally, comes a player program itself. This system is not complete yet, but it can
+play DivX movies with sound at good frame rate already. Player's base is a famous ffmpeg project. EEUG
+took just some parts of it (DivX 5XX and MP3) and made some modifications specific to PS2 hardware. It
+has been tested it with many DivX/XviD movies with different screen resolutions and encoding methods and
+it seems to be working.
+</para>
+<para>
+Since the initial concept, the SMS project has now grown to include support for network files, USB drives,
+hard disc drives. It now also allows subtitles to be displayed, and contains a fully functional MP3 player.
+All the software is now available in the subversion (SVN) repository at ps2dev.org. It has been made
+available in the hope that it will be interesting for PS2 enthusiasts who use it as a base for their own
+development.</para>
+<para>
+This document provides comprehensive installation and usage instructions.  
+Currently it is written/maintained in DocBook XML format, and processed for
+output in a variety of formats including single HTML and HTML pages grouped 
+into sections.  Later it will (hopefully) be distributed in PDF format as 
+well.
+</para>

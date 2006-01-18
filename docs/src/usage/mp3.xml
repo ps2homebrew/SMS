@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-mp3">
+  <title>
+    <phrase lang="en">
+      MP3 Audio Playback
+    </phrase>
+  </title>
+
+  <para lang="en">
+    SMS (v1.5 onwards) contains an MP3 player with M3U playlist support.
+    All files can be accessed in exactly the same ways as video files
+    (via
+    <xref linkend="usage-network"/>,
+    <xref linkend="usage-cddafs"/>,
+    <xref linkend="usage-hdd"/> or 
+    <xref linkend="usage-usb"/>).
+  </para>
+
+  <sect2>
+    <title>
+      <phrase lang="en">Playing single MP3 files</phrase>
+    </title>
+
+    <para lang="en">
+      Playing a single MP3 is done just as though you are playing an AVI
+      video file. Locate the file using the browser, then press
+      <emphasis role="bold">X</emphasis> to start the playback.
+    </para>
+
+    <figure>
+      <title>
+        <phrase lang="en">Screenshot showing selection of MP3 file in file
+        browser.</phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-mp3browsing.png"
+          format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>SMS MP3 browsing.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <figure>
+      <title>
+        <phrase lang="en">Screenshot showing MP3 playback.</phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-mp3playing.png"
+          format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>SMS MP3 playback.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+  </sect2>
+
+  <sect2>
+    <title>
+      <phrase lang="en">Playing Multiple MP3 files in a Playlist</phrase>
+    </title>
+
+    <para lang="en">
+      Multiple MP3 files can be played using an <filename>.m3u</filename>
+      playlist. You may need to modify the <filename>.m3u</filename> file 
+      to make sure it only contains 
+      <emphasis role="bold">relative paths</emphasis> and not 
+      <emphasis role="bold">absolute paths</emphasis>.
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para lang="en">
+          <emphasis role="bold">On your PC</emphasis>, Using windows media
+          player/winamp etc create an m3u playlist. (In WMP this is
+          File->Save Playlist As), navigate to the folder where the mp3
+          files are stored, select <filename>.m3u</filename> format and
+          type a filename.
+        </para>
+      </listitem>
+
+      <listitem>
+        <para lang="en">
+          Open the m3u file in a text editor (e.g. 
+          <application>Notepad</application> and delete the path names. 
+          (i.e. Convert '<filename>c:\my music\myfile.mp3</filename>' to 
+          '<filename>myfile.mp3</filename>'). If you saved the m3u file in
+          the right place, windows media player should have removed these for
+          you, if not, manually remove them yourself, and save the file.
+        </para>
+      </listitem>
+
+      <listitem>
+        <para lang="en">
+          The path names are allowed to include a directory relative to
+          where the m3u file is (e.g. .m3u file can point to files in a
+          subdirectory), but it must not contain your full system path
+          (this is because SMS won't know what to do when it sees
+          <filename>C:\...</filename>!).
+        </para>
+      </listitem>
+
+      <listitem>
+        <para lang="en">
+          On your PS2, start up SMS, and navigate to the
+          <filename>.m3u</filename> file you created. Press
+          <emphasis role="bold">X</emphasis> to start playback.  Use
+          <emphasis role="bold">LEFT</emphasis> and
+          <emphasis role="bold">RIGHT</emphasis> to skip forwards or
+          backwards. (you can only skip once a file is playing).
+        </para>
+      </listitem>
+
+    </itemizedlist>
+
+    <figure>
+      <title>
+        <phrase lang="en">Screenshot showing M3U file loading.</phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-mp3playlist01.png"
+          format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>M3U file loading</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <figure>
+      <title>
+        <phrase lang="en">Screenshot showing M3U playlist playing.</phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-mp3playlist02.png"
+          format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>M3U file playing</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <warning>
+      <para lang="en">
+        M3U support is still in development; some users have experienced
+        unexpected crashes. Keeping mp3 filenames as short as possible will
+        help reduce this until the problems are permanently fixed.  If you
+        are experiencing problems, try shortenning your filenames.
+      </para>
+    </warning>
+
+    <note>
+      <para lang="en">
+        It is not possible to edit a playlist on the PS2, playlists can only
+        be edited on a PC then transfered to the PS2.
+      </para>
+    </note>
+    
+  </sect2>
+</sect1>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+  <para lang="en">
+    So, now that you've got SMS installed on your PS2
+		(see <xref linkend="installation"/>), how do you get it play movies?  This
+		chapter explains all you need to know.
+	</para>
+
+	<para lang="en">
+	  To run SMS you first need to run your exploit or start up your PS2 with
+		the modchip installed.  Then use the appropriate technique to start the
+		SMS program. If you're using the
+		<xref linkend="faq-independence"/>
+		insert your (legitimate) PS1 trigger disc, and press reset. This will boot 
+    your chosen launcher application, where you can select which actual ELF 
+    you want to run.
+  </para>
+
+  <para lang="en">
+    Next, if you're using LaunchELF as your boot application, you can run SMS
+		by navigating to SMS.ELF and pressing O. You may want to assign a shortcut
+		button to it so it is easier to load next time.
+  </para>
+
+  <tip>
+    <para lang="en">
+      If you use SMS regularly, you may want to assign it as the 'default'
+      option in LauchELF, so that it starts automatically, after a short 
+      delay.
+    </para>
+  </tip>
+
+  <para lang="en">
+    Once you've got SMS running, you should see the nice SMS graphical
+		interface on your TV set. From this point onwards, all the instructions
+		are the same, whichever Exploit/Modchip you are using.
+  </para>
+
+	<figure>
+	  <title>
+		   <phrase lang="en">
+			   Screenshot of SMS main GUI. (files you see are a directory listing
+				 of the current CD in the drive – the independence trigger disc in this
+				 case).
+			</phrase>
+	  </title>
+		<mediaobject>
+		  <imageobject>
+		    <imagedata fileref="../images/usage-sms-maingui.png" format="PNG"/>
+		  </imageobject>
+		  <textobject>
+		    <phrase lang="en">SMS Main GUI</phrase>
+		  </textobject>
+		</mediaobject>
+	</figure>
+
+  <para lang="en">
+    This is the screen where you will access most features from. The files
+		can be navigated using up/down/left right on controller 1 or 2, and you 
+		can play them by pressing <emphasis role="bold">X</emphasis>.
+		A special configuration menu is accessed by
+		pressing <emphasis role="bold">start</emphasis>.
+  </para>

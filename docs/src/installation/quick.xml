@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- $Revision: 1.26 $ -->
+
+<sect1 id="sms-installation-quick">
+	<title>
+    <phrase lang="en">Installation Instructions For The Impatient:</phrase>
+	</title>
+  <para lang="en">
+	  If you know what you are doing, you can perform the following steps to
+		install SMS on your PS2.
+	</para>
+
+ 	<itemizedlist mark='number'>
+
+	  <listitem>
+	    <para lang="en">
+			  Download the latest zipped <filename>SMS.ELF</filename> binary from
+				<ulink url="http://home.casema.nl/eugene_plotnikov/"/>
+	    </para>
+	  </listitem>
+
+	  <listitem>
+	    <para lang="en">
+			  Unzip the <filename>SMS.ELF</filename> file to a local folder on your 
+        computer.
+	    </para>
+	  </listitem>
+
+	  <listitem>
+	    <para lang="en">
+			  Copy the file to your PS2's memory card (via ExecFTP or FileBrowser +
+				USB, ....).
+	    </para>
+	  </listitem>
+
+	  <listitem>
+	    <para lang="en">
+			  Restart your PS2 and run the <filename>SMS.ELF</filename> file from 
+        your memory card.
+	    </para>
+	  </listitem>
+	</itemizedlist>
+	<para lang="en">
+		 <emphasis>
+		   If the above doesn't make any sense, please read the
+       <link linkend="sms-installation-detail">next section</link>.
+		 </emphasis>
+	</para>
+
+</sect1>

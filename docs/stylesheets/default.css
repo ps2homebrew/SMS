@@ -1,0 +1,172 @@
+body {
+	color: black;
+	background: white;
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-bottom: 40px;
+	font-family: Arial, Helvetica, sans-serif;
+/*
+ * It's a Bad Idea(tm) to use fixed font sizes.
+ * Uncomment it if you _really_ want
+ */
+	font-size: 14px;
+}
+
+h1, h2 {
+  margin-top: 3em;
+}
+h3, h4, h5, h6 {
+  margin-top: 2em;
+}
+
+div.table table, div.informaltable table {
+	background: #333366;
+	border-collapse: separate;
+	border: solid 1px #333366;
+	border-spacing: 1px;
+}
+
+div.table th, div.informaltable th {
+	color: white;
+	background: #4545de;
+	border: 0px;
+	padding: 2px;
+}
+
+div.table td, div.informaltable td {
+	background: #fbfbff;
+	border: 0px;
+	padding: 2px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+
+pre.screen {
+	padding: 4px;
+	background: #e0e0e0;
+}
+
+pre.programlisting {
+	padding: 4px;
+	background: #e0e8f0;
+}
+
+div.caption {
+  font-style: italic;
+  /*background-color: #ffffcc;*/
+} 
+
+/*
+span.application {
+}
+*/
+
+span.keycap {
+	background: #ddd;
+	border: solid 1px #aaa;
+	white-space: nowrap;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+span.guimenu, span.guisubmenu, span.guimenuitem {
+	background: #dddddd;
+}
+
+tt.filename {
+	color: maroon;
+	white-space: nowrap;
+}
+
+tt.option {
+	color: #066;
+	white-space: nowrap;
+}
+
+div.example {
+	padding-left: 0.5em;
+	border-left: solid 2px black;
+}
+
+div.important .title,
+div.caution .title,
+div.warning .title,
+div.tip .title,
+div.note .title {
+/*	color: #c00;*/
+  margin-top: 1em;
+}
+
+div.warning,
+div.tip,
+div.note,
+div.important {
+	border-color: #aaa;
+  border: 1px solid;
+  padding-left: 2em;
+	padding-right: 2em;
+  margin-bottom: 3em;
+  margin-top: 2em;
+}
+
+div.warning {
+  background: #fba3a5;
+}
+div.important {
+  background: #c3d8ff;
+}
+div.tip {
+  background: #c7f3c0;
+}
+div.note {
+  background: #ffffcc;
+}
+
+div.table,
+div.figure,
+div.informalfigure
+{
+  font-style: italic;
+  font-weight: normal;
+	text-align: center;
+	padding-top: 1em;
+	padding-left: 5em;
+	padding-right: 5em;
+	/*
+  border-color: #aaa;
+  border         : 1px solid;
+  background: #f4f4ff;*/
+  margin-top: 0.5em;
+}
+
+div.figure .title,
+div.table .title {
+  margin-top: 0.5em;
+  margin-bottom: 2em;
+}
+
+  /**************************************** /
+ / mozilla vendor specific css extensions  /
+/ ****************************************/
+
+
+/*div.figure,
+div.informalfigure,
+div.table,
+div.informaltable,
+div.informalexample,*/
+div.example,
+.important,
+.tip,
+.warning,
+.caution,
+.note {
+  -moz-border-radius: 0.5em;
+}
+
+/*
+div.important, div.warning, div.caution {
+	padding-left: 0.5em;
+	border-left: solid 2px maroon;
+}
+*/

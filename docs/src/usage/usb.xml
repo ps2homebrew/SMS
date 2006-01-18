@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-usb" xreflabel="USB">
+  <title>
+    <phrase lang="en">
+      Playing video files from a USB mass storage drive connected to the PS2
+    </phrase>
+  </title>
+
+  <para lang="en">
+    You can play audio and video files from a USB stick connected to the
+    front of your PS2.
+  </para>
+
+  <para lang="en">
+    SMS is capable of reading files from a USB drive, but due to liscencing
+    issues, the USB driver <filename>USBD.IRX</filename> is not included with 
+    the SMS distribution.  SMS looks for it in the following folders:
+  </para>
+
+  <itemizedlist>
+    <listitem>
+      <para><filename>host:USBD.IRX</filename></para>
+    </listitem>
+    <listitem>
+      <para><filename>mc0:/BOOT/USBD.IRX</filename></para>
+    </listitem>
+    <listitem>
+      <para><filename>mc0:/PS2OSCFG/USBD.IRX</filename></para>
+    </listitem>
+    <listitem>
+      <para><filename>mc0:/SYS-CONF/USBD.IRX</filename></para>
+    </listitem>
+    <listitem>
+      <para><filename>mc0:/PS2MP3/USBD.IRX</filename></para>
+    </listitem>
+    <listitem>
+      <para><filename>mc0:/BOOT/PS2MP3/USBD.IRX</filename></para>
+    </listitem>
+    <listitem>
+      <para><filename>mc0:/SMS/USBD.IRX</filename></para>
+    </listitem>
+  </itemizedlist>
+
+  <para lang="en">
+    A suitable version of <filename>USBD.IRX</filename> can be found within 
+    the distribution of <application>naplink</application>: 
+    naplink-ps2-v1.0.1a. This can be found at
+    <ulink url="http://naplink.napalm-x.com/"/>.
+  </para>
+  
+  <para lang="en">
+    Download the above zip file, and open it up – inside you will find a 
+    file called <filename>npm-usbd.irx</filename>. Copy this file to a local
+    folder on your computer, then <emphasis role="bold">rename</emphasis>
+    it to <filename>USBD.IRX</filename> (must be in capitals). 
+    Then use an FTP program or other method to copy the file to one of the 
+    above locations. Next time SMS starts up, it will have USB support 
+    enabled. You won't see any difference until you plug in a compatible 
+    USB drive. Then you will see a new icon as shown below.
+    Press <emphasis role="bold">RIGHT</emphasis> to select this icon and
+    browse the USB drive.
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">SMS with USB support activated.</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-usbbrowsing.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS with USB support activated.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    As usual, press <emphasis role="bold">X</emphasis> to play the selected 
+    video file.
+  </para>
+
+</sect1>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-network" xreflabel="Network">
+  <title>
+    <phrase lang="en">Playing Files Over A Local Area Network</phrase>
+  </title>
+
+  <para lang="en">
+    First of all, you'll need to have a working network. That means you'll 
+    need a network switch with a patch cable to your PS2 and a patch cable 
+    to your PC, Alternatively you can use a single crossover cable directly
+    linking your PS2 to your PC. If you can't successfully ping your PS2 
+    while you're running SMS, then you'll need to get that working first. 
+    Once your network is working you can use either RadHostClient, or
+    PS2Client-gui running on your PC to share your media directories. 
+    RadHostClient is a little easier to use than ps2client-gui, and can 
+    involve less running back and forth between the PC and PS2.
+  </para>
+
+  <sect2>
+    <title>
+      <phrase lang="en">Playing Network Video Files Using RadHostClient</phrase>
+    </title>
+
+    <para lang="en">
+      Download and install RadHostClient from
+      <ulink url="http://ps2dev.org/ps2/Tools/Misc_tools/Rad_Host_Client_1.4"/>.
+      Run the application on your PC, and type in the IP address of your PS2
+      in the text box at the top.  Drag folders into the list at the bottom.
+      They will automatically be made available to the PS2.
+    </para>
+
+    <figure>
+      <title>
+        <phrase lang="en">
+          RadHostClient in operation.
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/network-radhostclient.png" format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>RadHostClient in operation.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <para lang="en">
+      If you have not done so already, start SMS on your PS2, then
+      <emphasis role="bold">On the PS2</emphasis> press
+      <emphasis role="bold">START</emphasis> to bring up the SMS config
+      menu, then select
+      <emphasis role="bold">Nework settings...</emphasis>, then select
+      <emphasis role="bold">start network interface now</emphasis>
+      and press <emphasis role="bold">X</emphasis>.
+    </para>
+    <para lang="en">
+      Within 10 seconds you should see a new device icon at the top of the
+      SMS screen:
+    </para>
+
+    <figure>
+      <title>
+        <phrase lang="en">
+          Screenshot of SMS with network support activated, (note additional 
+          icon at top of screen).
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-networkactivated.png" 
+            format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>Screenshot of SMS with network support activated.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <para lang="en">
+      Now press <emphasis role="bold">RIGHT</emphasis> to select the network 
+      icon, and browse into the folders on your PC. When you press
+      <emphasis role="bold">X</emphasis>, the PS2 will begin playback, and
+      will stream the file from your PC across the network.
+    </para>
+
+
+    <figure>
+      <title>
+        <phrase lang="en">
+          Browsing networked folder shared from remote PC.
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-networkbrowsing.png"
+            format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>Screenshot of SMS browsing networked folder shared from 
+          remote PC.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+    
+    <warning>
+      <para lang="en">
+        Do not close RadHostClient while your PS2 is browsing files shared 
+        via the client. This will cause both RadHostClient and the PS2 to 
+        crash.
+      </para>
+      <para lang="en">
+        If the PS2 crashes or restarts, you may need to restart RadHostClient.
+      </para>
+    </warning>
+  </sect2>
+  
+  <sect2>
+    <title>
+      <phrase lang="en">Playing Network Video Files Using PS2Client-gui</phrase>
+    </title>
+    <para lang="en">
+      <emphasis role="bold">On the PC</emphasis> download and install 
+      ps2client-gui. Run the GUI, and select the directories of where your 
+      videofiles are. If you have a base directory that contains all your 
+      files, enter that directory. It doesn't matter if your files are in 
+      subdirectories within this one, as you will be able to navigate them 
+      in SMS. Once you click OK, it will make this available to your PS2.
+    </para>
+    <para lang="en">
+      If you have not done so already, start SMS on your PS2, then
+      <emphasis role="bold">On the PS2</emphasis> press
+      <emphasis role="bold">START</emphasis> to bring up the SMS config
+      menu, then select
+      <emphasis role="bold">Nework settings...</emphasis>, then select
+      <emphasis role="bold">start network interface now</emphasis>
+      and press <emphasis role="bold">X</emphasis>.
+    </para>
+
+    <para lang="en">
+      You should see a new device icon appear at the top of the screen. 
+      If you don't see one after 20 secs, try stopping and restarting the 
+      ps2client-gui program on your PC.  Once the icon appears (can take 
+      around 15seconds), press <emphasis role="bold">RIGHT</emphasis> to 
+      select it, then <emphasis role="bold">X</emphasis>. You should now be 
+      able to navigate all folders beneath the one you shared.
+    </para>
+
+  </sect2>
+</sect1>

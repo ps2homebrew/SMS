@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- $Revision: 1.26 $ -->
+
+<sect1 id="usage-controls">
+  <title>
+    <phrase lang="en">Controls</phrase>
+    <phrase lang="el">#Controls#</phrase>
+    <phrase lang="es">#Controls#</phrase>
+    <phrase lang="pt">#Controls#</phrase>
+  </title>
+  <sect2>
+    <title>
+      <phrase lang="en">During Startup</phrase>
+    </title>
+    <informaltable frame='none'>
+      <tgroup cols='2'>
+        <thead>
+          <row>
+            <entry>
+              <para lang="en">Button</para>
+            </entry>
+            <entry>
+              <para lang="en">Action</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+        <row>
+          <entry>
+            <para lang="en">Select + R1</para>
+          </entry>
+          <entry>
+            <para>NTSC</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">Select + R2</para>
+          </entry>
+          <entry>
+            <para>PAL</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">Select + R1 + SQUARE</para>
+          </entry>
+          <entry>
+            <para lang="en">Non-interlaced NTSC</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">Select + R2 + SQUARE</para>
+          </entry>
+          <entry>
+            <para lang="en">Non-Interlaced PAL</para>
+          </entry>
+        </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect2>
+
+  <sect2 id="usage-controls-navigation">
+    <title>
+      <phrase lang="en">During Navigation</phrase>
+    </title>
+    <informaltable frame='none'>
+      <tgroup cols='2'>
+        <thead>
+          <row>
+            <entry>
+              <para lang="en">Button</para>
+            </entry>
+            <entry>
+              <para lang="en">Action</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+        <row>
+          <entry>
+            <para lang="en">UP/DOWN</para>
+          </entry>
+          <entry>
+            <para lang="en">Navigate Files</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">LEFT/RIGHT</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              Select between file menu and device menu (e.g. CD
+              Network, USB etc)
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">START</para>
+          </entry>
+          <entry>
+            <para lang="en">Accesses special configuration menu</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT</para>
+          </entry>
+          <entry>
+            <para>-</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>X</para>
+          </entry>
+          <entry>
+            <para lang="en">Navigate into selected directory</para>
+            <para lang="en">OR</para>
+            <para lang="en">Start playback of selected file</para>
+            <para lang="en">OR</para>
+            <para lang="en">Increase numerical value</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>O</para>
+          </entry>
+          <entry>
+            <para lang="en">Decrease numerical value</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>TRIANGLE</para>
+          </entry>
+          <entry>
+            <para lang="en">Up one directory level</para>
+            <para lang="en">OR</para>
+            <para lang="en">Quit current menu</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>SQUARE</para>
+          </entry>
+          <entry>
+            <para>-</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + TRIANGLE</para>
+          </entry>
+          <entry>
+            <para lang="en">Exit to boot browser (Quit SMS)</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + O</para>
+          </entry>
+          <entry>
+            <para lang="en">Power off PS2</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">L1 + L2 + L3 + L4</para>
+          </entry>
+          <entry>
+            <para lang="en">Displays 'about' screen / credits</para>
+          </entry>
+        </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect2>
+
+  <sect2 id="usage-controls-playback">
+    <title>
+      <phrase lang="en">During Playback</phrase>
+    </title>
+    <informaltable frame='none'>
+      <tgroup cols='2'>
+        <thead>
+          <row>
+            <entry>
+              <para lang="en">Button</para>
+            </entry>
+            <entry>
+              <para lang="en">Action</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+        <row>
+          <entry>
+            <para lang="en">UP/DOWN</para>
+          </entry>
+          <entry>
+            <para lang="en">Volume up/down</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">LEFT/RIGHT</para>
+          </entry>
+          <entry>
+            <para lang="en">Scroll forwards/backwards</para>
+            <para lang="en">OR</para>
+            <para lang="en">
+              (after pressing select) Navigate progress bar to required point in 
+              film
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">START</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              Activate <xref linkend="usage-controls-playermenu"/>
+            </para>
+            <para lang="en">OR</para>
+            <para lang="en">Resume playback after pause</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT</para>
+          </entry>
+          <entry>
+            <para lang="en">Pause playback and show progress bar
+            (press again to hide text)</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>X</para>
+          </entry>
+          <entry>
+            <para lang="en">Terminate scrolling and continue playback</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>O</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              Toggles display of audio/video synchronisation offset (V/A)
+              [and if available the subtitle/video synchronisation offset
+              (S/V)]
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>TRIANGLE</para>
+          </entry>
+          <entry>
+            <para lang="en">Stop playback</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para>SQUARE</para>
+          </entry>
+          <entry>
+            <para>Cycle between the five different letterbox/pan-scan modes</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">L2 / R2</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              (see O) Adjust audio/video synchronisation offset. (+/-250ms)
+            </para>
+            <para lang="en">OR</para>
+            <para lang="en">
+              Adjust subtitle/video synchronisation offset. (+/-250ms)
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">L1 / R1</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              Pan left or right in pan-scan mode
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">L1 + R1</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              Reset pan-scan to centre
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + L1</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position left</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + R1</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position right</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + L2</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position up</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + R2</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position down</para>
+          </entry>
+        </row>
+
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect2>
+  
+  <sect2 id="usage-controls-playermenu" xreflabel="Player Menu">
+    <title>
+      <phrase lang="en">Player Menu</phrase>
+    </title>
+    <para lang="en">
+      The player menu (SMS v1.5 and above), allows you to change settings 
+      mid-way through playback. Press START during playback to access the 
+      player menu.
+    </para>
+
+    <figure>
+      <title>
+         <phrase lang="en">
+           Screenshot showing Player Menu.
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-playermenu.png" format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>SMS player menu</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <informaltable frame='none'>
+      <tgroup cols='2'>
+        <thead>
+          <row>
+            <entry>
+              <para lang="en">Menu Item</para>
+            </entry>
+            <entry>
+              <para lang="en">Description</para>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+        <row>
+          <entry>
+            <para lang="en">Lanugage:</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              <emphasis role="bold">X</emphasis> to change the audio 
+              language (for avi files with multiple audio streams)
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">Display:</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              <emphasis role="bold">X</emphasis> to cycle between 5 display
+              modes: letterbox, pan-scan 1, pan-scan 2, pan-scan 3, 
+              fullscreen.
+            </para>
+            <para>
+              Letterbox display mode shows the full width of the original 
+              video with black bands at top and bottom of screen. Pan-scan
+              zooms in on the video, using more vertical lines of the 
+              screen, showing a larger image in the centre. The downside is 
+              that the left and right edges of the picture are cropped. 
+              Higher pan-scan modes zoom in more (and crop more).
+              Fullscreen mode stretches the image to fit the TV screen - 
+              this is useful when playing a widescreen movie file on
+              a widescreen TV.
+            </para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">Auto power-off: (sleep timer)</para>
+          </entry>
+          <entry>
+            <para lang="en">
+              Automatically powers off PS2 after the time specified. Time
+              starts counting from last button press.
+            </para>
+            <para lang="en">
+              <emphasis role="bold">X</emphasis> to increase
+            </para>
+            <para lang="en">
+              <emphasis role="bold">O</emphasis> to decrease
+            </para>
+            <para lang="en">
+              <emphasis role="bold">auto</emphasis> = power off when movie 
+              ends.
+            </para>
+          </entry>
+        </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect2>
+  
+  <sect2 id="usage-controls-scrollbar">
+    <title>
+      <phrase lang="en">Scrollbar</phrase>
+    </title>
+    <para lang="en">
+      New in version 1.5 is a scroll bar, accessible during playback by
+      pressing <emphasis role="bold">SELECT</emphasis>. When activated, the
+      scroll bar shows the current position in the video. This can be
+      adjusted by pressing <emphasis role="bold">LEFT/RIGHT</emphasis>, then
+      playback can be resumed from that point by pressing
+      <emphasis role="bold">X</emphasis> or
+      <emphasis role="bold">START</emphasis>.
+    </para>
+
+    <figure>
+      <title>
+         <phrase lang="en">
+           Screenshot showing Scrollbar feature.
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-sms-scrollbar.png" format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>SMS Screenshot showing Scrollbar feature.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+  <para lang="en">
+    Yeah, that's all well and good, but how do I play my DivX movies?
+  </para>
+  <para lang="en">
+    There are several ways of playing video files:
+  </para>
+  <itemizedlist mark='bullet'>
+    <listitem>
+      <para lang="en">
+        <link linkend="usage-network">Streaming over a network</link>
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        <link linkend="usage-cddafs">From a CD</link>
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        <link linkend="usage-dvdr">From a DVD-R</link>
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        <link linkend="usage-hdd">From a PS2 internal hard disc drive</link>
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        <link linkend="usage-usb">From a USB drive attached to the 
+        PS2</link> (also called USB mass storage device).
+      </para>
+    </listitem>
+  </itemizedlist>
+  </sect2>
+</sect1>

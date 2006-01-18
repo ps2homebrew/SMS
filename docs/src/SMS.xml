@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "/usr/share/sgml/docbook/xml-dtd-4.1.2-1.0-26/docbookx.dtd"
+[
+<!ENTITY introduction.xml	SYSTEM "introduction.xml">
+<!ENTITY installation-requirements.xml SYSTEM "installation/requirements.xml">
+<!ENTITY installation-quick.xml	SYSTEM "installation/quick.xml">
+<!ENTITY installation-detail.xml	SYSTEM "installation/detail.xml">
+<!ENTITY installation-configuration.xml	SYSTEM "installation/configuration.xml">
+<!ENTITY usage.xml	SYSTEM "usage.xml">
+<!ENTITY usage-controls.xml	SYSTEM "usage/controls.xml">
+<!ENTITY usage-network.xml	SYSTEM "usage/network.xml">
+<!ENTITY usage-cddafs.xml	SYSTEM "usage/cddafs.xml">
+<!ENTITY usage-dvdr.xml	SYSTEM "usage/dvdr.xml">
+<!ENTITY usage-hdd.xml	SYSTEM "usage/hdd.xml">
+<!ENTITY usage-usb.xml	SYSTEM "usage/usb.xml">
+<!ENTITY usage-mp3.xml	SYSTEM "usage/mp3.xml">
+<!ENTITY usage-subtitles.xml	SYSTEM "usage/subtitles.xml">
+<!ENTITY appendices-faq.xml	SYSTEM "appendices/faq.xml">
+<!ENTITY appendices-bitsandpieces.xml	SYSTEM "appendices/bitsandpieces.xml">
+<!ENTITY appendices-fdl.xml	SYSTEM "appendices/fdl.xml">
+
+<!ENTITY faq.xml	SYSTEM "faq.xml">
+]>
+<book id="sms-main">
+	<bookinfo id="toc">
+		<title lang="en">
+		  <application>SMS</application> - Playstation 2 Simple Media System
+		</title>
+
+	  <subtitle lang='en'>User Manual</subtitle>
+	  <subtitle lang='cs'>Uživatelská příručka</subtitle>
+	  <subtitle lang='de'>Benutzerhandbuch</subtitle>
+	  <subtitle lang='el'>#User Manual#</subtitle>
+	  <subtitle lang='es'>#User Manual#</subtitle>
+	  <subtitle lang="fr">Guide Utilisateur</subtitle>
+	  <subtitle lang='it'>Manuale utente</subtitle>
+	  <subtitle lang="nl">Gebruikershandleiding</subtitle>
+	  <subtitle lang='pt'>#User Manual#</subtitle>
+	  <subtitle lang='sv'>Användarmanual</subtitle>
+	  <subtitle lang='zh_CN'>用户手册</subtitle>
+
+		<subtitle><ulink url="http://www.adam.com.au/kellyjones/sms/index.htm"></ulink></subtitle>
+
+
+
+	<date>December 28, 2005</date>
+	<copyright>
+	  <year>2005</year>
+	  <year>2006</year>
+	  <holder>The SMS Documentation Team, Contributiors: Dave T, Juddman</holder>
+	</copyright>
+
+	<legalnotice lang="en;de">
+	  <title>License</title>
+	  <para>
+		This program is distributed in the hope that it will be useful, but
+	  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+	  or FITNESS FOR A PARTICULAR PURPOSE.
+		</para>
+	  <para>
+	  
+	  
+
+		The code created specifically for this project is released under the
+		Academic Free License
+		<ulink url="http://www.opensource.org/licenses/academic.php">
+		<citetitle>http://www.opensource.org/licenses/academic.php</citetitle>
+		</ulink>.  For parts of the project derrived from the ffmpeg project, the
+		code is released under the GNU Lesser General Public License as published
+		by the Free Software Foundation; either version 2 of the License, or (at
+		your option) any later version.
+		</para>
+
+		<para>
+		Permission is granted to copy, distribute and/or modify this document under
+		the terms of the GNU Free Documentation License, Version 1.2 or any later
+		version published by the Free Software Foundation; with no Invariant
+		Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the
+		license is included in the section enphrased GNU Free Documentation License.
+		</para>
+	</legalnotice>
+
+<!--
+
+  <authorgroup>
+    <author>
+      <firstname>Dave</firstname>
+      <surname>T</surname>
+    </author>
+    <author>
+      <surname>JuddMan</surname>
+    </author>
+  </authorgroup>
+
+<revhistory>
+
+<revision>
+  <revnumber>0.007</revnumber>
+  <date>2005-01-14</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>Added more comprehensive subtitles section.
+  Added more detail to Configuration section.
+  Corrected some errors.
+  Updated colour scheme to match SMS a bit more.</revremark>
+</revision>
+
+<revision>
+  <revnumber>0.006</revnumber>
+  <date>2005-01-08</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>First online HTML version</revremark>
+</revision>
+
+<revision>
+  <revnumber>0.005</revnumber>
+  <date>2005-12-28</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>Corrected error in player menu description.
+  Added scrollbar info</revremark>
+</revision>
+
+<revision>
+  <revnumber>0.004</revnumber>
+  <date>2005-12-28</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>Updated IP configuration to include default config.
+  Added page numbers.
+  Added info for mp3/m3u support.
+  Added info for subtitle support.
+  Added info for new buttons introduced in SMS v1.5.
+  Updated introduction.
+  </revremark>
+</revision>
+
+<revision>
+  <revnumber>0.003</revnumber>
+  <date>2005-12-17</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>Added details of how to bur CDDAFS.</revremark>
+</revision>
+
+<revision>
+  <revnumber>0.002</revnumber>
+  <date>2005-12-07</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>Corrected info about latest available SMS download.</revremark>
+</revision>
+
+<revision>
+  <revnumber>0.001</revnumber>
+  <date>2005-12-06</date>
+  <authorinitials>DT</authorinitials>
+  <revremark>First version.</revremark>
+</revision>
+
+
+</revhistory>
+-->
+  </bookinfo>
+
+  <chapter id="introduction">
+    <title>
+      <phrase lang="en">Introduction</phrase>
+	    <phrase lang="cs">Úvod</phrase>
+	    <phrase lang="de">Einführung</phrase>
+			<phrase lang="el">#Introduction#</phrase>
+			<phrase lang="es">#Introduction#</phrase>
+	    <phrase lang="fr">Introduction</phrase>
+	    <phrase lang="it">Introduzione</phrase>
+	    <phrase lang="nl">Introduktie</phrase>
+			<phrase lang="pt">#Introduction#</phrase>
+	    <phrase lang="sv">Introduktion</phrase>
+	    <phrase lang="zh_CN">简介</phrase>
+		</title>
+    &introduction.xml;
+  </chapter>
+
+  <chapter id="installation">
+		<title>
+	    <phrase lang="en">Installation</phrase>
+	    <phrase lang="el">#Installation#</phrase>
+	    <phrase lang="es">#Installation#</phrase>
+	    <phrase lang="pt">#Installation#</phrase>
+		</title>
+    &installation-requirements.xml;
+    &installation-quick.xml;
+    &installation-detail.xml;
+    &installation-configuration.xml;
+  </chapter>
+
+  <chapter id="usage">
+		<title>
+	    <phrase lang="en">Usage</phrase>
+	    <phrase lang="el">#Usage#</phrase>
+	    <phrase lang="es">#Usage#</phrase>
+	    <phrase lang="pt">#Usage#</phrase>
+		</title>
+		&usage.xml;
+    &usage-controls.xml;
+	  &usage-network.xml;
+		&usage-cddafs.xml;
+		&usage-dvdr.xml;
+		&usage-hdd.xml;
+    &usage-usb.xml;
+    &usage-mp3.xml;
+    &usage-subtitles.xml;
+	</chapter>
+
+  <appendix id="faq">
+    <title>
+      <phrase lang="en">Frequently Asked Questions</phrase>
+    </title>
+		&appendices-faq.xml;
+	</appendix>
+
+  <appendix>
+    <title>
+      <phrase lang="en">Bits and Pieces</phrase>
+    </title>
+		&appendices-bitsandpieces.xml;
+	</appendix>
+
+
+  &appendices-fdl.xml;
+</book>

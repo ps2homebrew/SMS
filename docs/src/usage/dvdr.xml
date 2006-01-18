@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-dvdr" xreflabel="DVD-R">
+  <title>
+    <phrase lang="en">Playing files from a DVD-R</phrase>
+  </title>
+  <warning>
+    <para lang="en">
+      Don't do this if you have a modchip. You don't need to, and this
+      actually prevents PS2's with some modchips from reading the DVD while
+      the chip is turned on. Modchip users can just burn a normal Data DVD.
+    </para>
+  </warning>
+
+  <para lang="en">
+    DVD Video Discs are playable in your PS2, and because of this, they can
+    be read without a modchip. The PS2 is able to access any other files that
+    happen to be on the disc alongside the video. In order for SMS to read
+    the DVD, we are going to make a dummy DVD Video disc, which we can then
+    fill up with our DivX files. We've already done the hard work of creatig
+    a suitable DVD Video, so all you have to do is burn it with Nero, along
+    with your video files.
+  </para>
+
+  <itemizedlist mark='number'>
+    <listitem>
+      <para lang="en">
+        Grab the dummy DVD movie
+        <ulink url="http://www.adam.com.au/kellyjones/YABB/dvdMini.zip">here</ulink>
+        (144k), and unzip it onto the Desktop. or create your own DVD-Video files.
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Open Nero. Select DVD, and choose to create a DVD-Video. Press New.
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Select DVD option.
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/usage-dvdr01.png"
+            format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>DVD-R Nero Step 1</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Drag the dummy DVD-Video files into the VIDEO_TS folder on the DVD.
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Copy dummy DVD-Video files
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/usage-dvdr02.png"
+            format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>DVD-R Nero Step 2</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Fill up the rest of the DVD with your favourite DivX and MP3 files.
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Copy your own media files.
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/usage-dvdr03.png"
+            format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>DVD-R Nero Step 3</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Burn the DVD. You can now play it using SMS in any unmodified console.
+      </para>
+    </listitem>
+  </itemizedlist>
+
+
+</sect1>

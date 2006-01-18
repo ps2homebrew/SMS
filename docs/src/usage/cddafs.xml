@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-cddafs" xreflabel="CDDAFS CD-R">
+  <title>
+    <phrase lang="en">Playing video files from a CD-R</phrase>
+  </title>
+
+  <note>
+    <para lang="en">
+      To play video files from a CD, you need to burn the CD in a special
+      format. The PS2 cannot read the data from ISO format CDRs. The
+      <quote>special format</quote> is created using CDXplorer.exe.
+    </para>
+  </note>
+
+  <sect2 id="usage-cddafs-short">
+    <title>
+      <phrase lang="en">Instructions in Short</phrase>
+    </title>
+<itemizedlist>
+<listitem>
+  <para lang="en">Download CDXplorer.exe from SVN;</para>
+</listitem>
+<listitem>
+  <para lang="en">Launch it on Windows;</para>
+</listitem>
+<listitem>
+  <para lang="en">Drag/drop the files you want from Windows explorer to the
+  application (or use '+' toolbar button);</para>
+</listitem>
+<listitem>
+  <para>
+    Save your compilation - you'll get cue/bin file pair;
+  </para>
+</listitem>
+<listitem>
+  <para>
+    Close the application;
+  </para>
+</listitem>
+<listitem>
+  <para>
+    Launch CD burning application (I use Nero);
+  </para>
+</listitem>
+<listitem>
+  <para>
+    Open generated cue file;
+  </para>
+</listitem>
+<listitem>
+  <para>
+    If you use Nero 5 then select Disk-at-once/96 option;
+  </para>
+</listitem>
+<listitem>
+  <para>
+    Burn it;
+  </para>
+</listitem>
+</itemizedlist>
+<para>
+Good luck
+</para>
+<para>
+Eugene
+</para>
+<para>
+  P.S. If you have a DVD burner you can also play .avi files stored on
+  DVD-video disks (just record short DVD/mpeg clip
+  on them also to get such a disks authorized by PS2);
+</para>
+
+  </sect2>
+  
+  <sect2 id="usage-cddafs-detail">
+    <title>
+      <phrase lang="en">Instructions in detail</phrase>
+    </title>
+
+    <para lang="en">
+      The unmodified PS2 cannot load data from a normal CDR. This is due to 
+      built in copy protection. To get around this, the developer of SMS 
+      designed a clever trick that fools the PS2 into thinking that the CD-R
+      is an <emphasis role="bold">audio CD</emphasis>. 
+      The PS2 is allowed to load a CDR if it's an audio CD.
+      The basic principle relies on creating a disc in the so called CDDAFS
+      format, which is essentially a disc that looks enough like an audio CD
+      for the PS2 to accept it. The disc contains your .avi file data hidden
+      inside audio tracks, and SMS converts these as it reads them. 
+      Clever huh?
+    </para>
+    <para lang="en">
+      The developer has written a utility (CDXplorer.exe) to create the 
+      .cue/.bin files from your .avi files, ready to burn to CDR. Then, 
+      provided your CD burning software knows how to read .cue/.bin files, 
+      you can burn them to CD.
+    </para>
+    <important>
+      <para lang="en">
+        You must not simply write the .cue and .bin files to an ISO (data) CD
+        format. This will not work. You must use a CD burning application
+        which understands .cue and .bin files. The only two known at present 
+        are Nero 5 and, cdrdao.
+      </para>
+    </important>
+    <para lang="en">
+      Download CDXplorer.exe from 
+      <ulink url="http://ps2dev.org/ps2/Projects/Softwares"/>
+      (<filename>CDXplorer.exe</filename> can be found in
+      <filename>SMS.zip</filename> file on the page).
+    </para>
+    <para lang="en">
+      Run the application by double clicking on it (no installation is
+      necessary).
+    </para>
+
+    <figure>
+      <title>
+        <phrase lang="en">
+          Screenshot of CDXplorer.
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-cdxplorer01.png" format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>Screenshot of CDXplorer.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <para lang="en">
+      Once CDXplorer is running, drag and drop 1 or more AVI files into
+      the right hand window.
+    </para>
+
+    <figure>
+      <title>
+        <phrase lang="en">
+          Screenshot of CDXplorer showing avi file 
+          <filename>testvid.avi</filename>
+          after dragging and dropping from Windows Explorer.
+        </phrase>
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/usage-cdxplorer02.png" format="PNG"/>
+        </imageobject>
+        <textobject>
+          <phrase>Screenshot of CDXplorer.</phrase>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <para lang="en">
+      Click file->SaveAs, then type in a name (e.g. 'test') then press 
+      &lt;enter&gt;. This will automatically save two files 
+      <filename>test.cue</filename> and <filename>test.bin</filename> 
+      in the current folder.
+    </para>
+
+
+
+    <para lang="en">
+      Now you can close down CDXplorer.
+    </para>
+    <para lang="en">
+      Next open up your CD burning application. This must be a CD burning
+      application that allows you to load .cue files. Open the cue file.
+    </para>
+    <para lang="en">
+      (unconfirmed): It may be necessary to use a CDR (rather than a 
+      CD-RW) – I only suspect this because i've not yet managed to get a 
+      CD-RW to work.
+    </para>
+    <para lang="en">
+
+    </para>
+    
+    <sect3>
+      <title>
+        <phrase lang="en">Nero 5</phrase>
+      </title>
+      <para lang="en">
+        If you are using Nero 5, select
+        '<emphasis role="bold">Disk-at-once/96</emphasis>',
+        then burn to a CD-R.
+      </para>
+    </sect3>
+
+    <sect3>
+      <title>
+        <phrase lang="en">If You've Not Got Nero 5</phrase>
+      </title>
+      <para lang="en">
+        If you've not got Nero 5 (I haven't got it), then it is possible to 
+        use another (free) application to burn CDs in disc-at-once mode. The 
+        only program I've used successfully is 
+        <application>cdrdao</application> (CDR Disc At Once), which is a 
+        command line cd burning application. It is available for linux and 
+        windows. If you find any other applications that are easier to use,
+        please post the details on the SMS support forum. Installation of 
+        <application>cdrdao</application> is as follows:
+      </para>
+
+      <informaltable frame='none'>
+        <tgroup cols='2'>
+          <tbody>
+            <row>
+              <entry>
+                <para lang="en">Linux (Fedora Core 4)</para>
+              </entry>
+              <entry>
+                <para lang="en">
+                  <userinput># yum install cdrdao</userinput>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para lang="en">Windows</para>
+              </entry>
+              <entry>
+                <para lang="en">
+                  Download and install
+                  <ulink url="http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip"/>.
+                </para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+      
+      <para lang="en">
+        The CD is written with the following command: (Note the -–force 
+        option which is is needed to make the burn continue despite the 
+        'shorter than 4 seconds' warning.)
+      </para>
+
+      <para lang="en">
+        <userinput>cdrdao write --speed MAX --force test.cue</userinput>
+      </para>
+
+      <para lang="en">
+        The output will hopefully look something like this:
+      </para>
+
+      <screen><![CDATA[[dave@blue ~]$ cdrdao write --speed MAX --force test.cue
+Cdrdao version 1.1.9 - (C) Andreas Mueller <andreas@daneb.de>
+SCSI interface library - (C) Joerg Schilling
+Paranoia DAE library - (C) Monty
+Check http://cdrdao.sourceforge.net/drives.html#dt for current driver tables.
+WARNING: Track 1: Length is shorter than 4 seconds.
+Error trying to open /dev/cdrecorder exclusively ... retrying in 1 second.
+Using libscg version 'schily-0.8'
+/dev/cdrecorder: PHILIPS CDRW2412A Rev: P1.4
+Using driver: Generic SCSI-3/MMC - Version 2.0 (options 0x0000)
+Burning entire 74 mins disc.
+Starting write at speed 24...
+Pausing 10 seconds - hit CTRL-C to abort.
+Process can be aborted with QUIT signal (usually CTRL-\).
+Turning BURN-Proof on
+Executing power calibration...
+Power calibration successful.
+Writing track 01 (mode AUDIO/AUDIO )...
+Writing track 02 (mode AUDIO/AUDIO )...
+Wrote 110 of 110 MB (Buffers 100% 98%).
+Wrote 49178 blocks. Buffer fill min 93%/max 100%.
+Flushing cache...
+Writing finished successfully.
+[dave@blue ~]$]]></screen>
+
+      <para lang="en">
+        And there you have it. You should now have a CD with the SMS 
+        compatible AVI file on it. This CD won't work in your PC. In fact, 
+        if you put it in, it will probably try to play it as an audio file 
+        and you'll just hear 'noise'.  Start up SMS, then put the disc in
+        your PS2, and you should see the following:
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Screenshot showing display while disc is loading.
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/usage-sms-cdloading.png"
+            format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot showing display while disc is loading.</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Screenshot of SMS showing video file loaded via CD-R in
+            CD drive (CDDAFS format).
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/usage-sms-cdbrowsing.png"
+            format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>CDDAFS CD loaded</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        You can now browse to the file you copied, and press X to start
+        playback in the usual way.
+      </para>
+
+      <para lang="en">
+        If you don't see the file, and get constant whirring from your PS2,
+        or the following 'red' icon, then there is a problem with your disc.
+        You've probably got a coaster (i.e. wasted CDR), and will need to
+        try again. Check the instructions and try a lower burn speed. If you
+        were using a CD-RW, try a CD-R.
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Screenshot of SMS after loading failed or incompatible CD.
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/usage-sms-cderror.png"
+            format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>CDDAFS CD loaded</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+    </sect3>
+  </sect2>
+</sect1>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+
+<sect1 id="faq-bootcddafs">
+	<title>
+	  <phrase lang="en">
+		  <emphasis>I've made my CDDAFS CDR but my PS2 won't boot from it – It just
+			sees it as an audio CD. What's wrong?</emphasis>
+		</phrase>
+	</title>
+  <para lang="en">
+    CDXplorer does not create a CD-R which you can boot from. It just creates
+		a disc that can be read once SMS is running. CDDAFS is not a method to
+		launch SMS, it is a method to provide files to SMS once SMS is
+    running. As far as I know there is no way to 'boot' SMS off a CD, DVD-R or
+		any other removable media without a Mod-Chip. You always need either:
+	</para>
+  <itemizedlist mark='bullet'>
+    <listitem>
+      <para lang="en">An exploit</para>
+    </listitem>
+    <listitem>
+      <para lang="en">A mod chip</para>
+    </listitem>
+  </itemizedlist>
+  <para lang="en">
+    to run SMS first... and <emphasis>then</emphasis> you put in your CDDAFS
+		disc, DVD-R or whatever. In many cases, <filename>SMS.ELF</filename>
+		will be put on the memory card, then an exploit will be used to launch SMS
+		from the memory card. Without an exploit or modchip there is no known way
+		you can get your PS2 to run SMS. But if you find a way – let us know!
+  </para>
+</sect1>
+
+
+<sect1 id="faq-ps2reality">
+  <title>
+    <phrase lang="en">
+      <emphasis>How does SMS playback quality compare with
+      <application>PS2Reality Media Player</application>?</emphasis>
+    </phrase>
+  </title>
+
+    <para lang="en">
+      We aren't currently attempting to compare or benchmark SMS against any
+      other media players at the moment. The only goal is to make SMS as
+      good as possible. If you'd like to do some detailed comparisons
+      yourself, go ahead, we'd be interested in the results.
+    </para>
+
+</sect1>
+
+<sect1 id="faq-networkprobs01">
+  <title>
+    <phrase lang="en">
+      <emphasis>I can't see my network files – what's wrong?</emphasis>
+    </phrase>
+  </title>
+
+    <para lang="en">
+      Check in the network settings menu (on SMS: Start->Network Settings), 
+      and if you see it, press '<emphasis role="bold">start network 
+      now</emphasis>'. Turning on 
+      <emphasis role="bold">Autostart network</emphasis> will make SMS try 
+      to access a client at startup. If you are still having problems,
+      try restarting the client (e.g 
+      <application>RadHostClient</application>) on your PC, and check the 
+      instructions again.
+    </para>
+
+</sect1>
+
+<sect1 id="faq-exploit">
+  <title>
+    <phrase lang="en">
+      <emphasis>What's an exploit? This sounds bad. Can I go to prison for 
+      running an exploit?</emphasis>
+    </phrase>
+  </title>
+
+    <para lang="en">
+      <trademark>Sony Computer Entertainment</trademark> disapprove of 
+      exploits and mod-chips yet they continue to be sold across the world. 
+      A recent court case in Australia 
+      <ulink url="http://www.afterdawn.com/news/archive/6906.cfm"/> ruled 
+      that the use of mod-chips for legal purposes outweighed the illegal 
+      ones.  
+    </para>
+    <para lang="en">
+      However, this says nothing for copyright infringement.
+      If you intend to use a mod-chip or exploit to run pirate copies of
+      games this is copyright infringement and is illegal.
+    </para>
+    <para lang="en">
+      If you intend to copy or 'rip' DVD movies which you do not own to any
+      other format then this is also illegal.
+      Downloading copyrighted movies ripped by other people is also illegal.
+    </para>
+
+</sect1>
+
+
+
+<sect1 id="faq-independence" xreflabel="Independence Exploit">
+  <title>
+	  <phrase lang="en">
+	    <emphasis>What is the <quote>Independence Exploit</quote> and how does
+			it help me?</emphasis>
+	  </phrase>
+  </title>
+
+  <para lang="en">
+    The <emphasis role="bold">Independence Exploit</emphasis> is a software
+    based exploit that allows a PS2 to run unencrypted and homebrew applications
+    (such as SMS) from the memory card.  The most concise description of what
+    the exploit actually is can be found
+		<ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
+		here</ulink>.
+  </para>
+
+  <para lang="en">
+	  The Independence Exploit is one of the techniques that can be used to
+		trick your PS2 into running SMS.  Normally your PS2 does not allow you
+		to run unencrypted programs, and this protection is in place mainly
+		to reduce the spread of copied games.  When it comes to legitimate
+		open source projects like SMS, the protection only stands in the way of
+		running	SMS.  When installed, the Independence Exploit allows the user to 
+    run	a specific application stored on the memory card.  Often the chosen
+		application will be an ELF launching program (a file browser) which
+		then allows further applications to be launched.  The Exploit itself
+		is executed by inserting a chosen PS1 <quote>trigger disc</quote>,
+		inserting a memory card with specially modified files on it, and
+		then pressing reset.  Tutorial of how to get the correct specially
+		modified files onto your memory card can be found
+		<ulink url="http://www.exploitstation.com/index.php?page=faq">here</ulink>.
+  </para>
+
+  <para lang="en">
+    The recommended approach is to use the tutorial to install an ELF launching
+    program and an FTP server.  Then you can use the FTP server to install
+    as many other applications (ELF files) as you want.  It also then allows 
+		you to make backups of all your saved games which is handy for those
+		strange people who still use their PS2 to play games!
+  </para>
+
+  <para lang="en">
+    The exploit is significant to SMS users since it is one of the cheapest
+    ways of running SMS, requiring no additional hardware other than a
+    PS2, a memory card, and an original PS1 game.
+  </para>
+</sect1>

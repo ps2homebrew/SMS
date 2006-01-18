@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-subtitles">
+  <title>
+    <phrase lang="en">
+      Subtitles
+    </phrase>
+  </title>
+
+  <para lang="en">
+    Subtitle support was added in SMS v1.5. Support is included for
+    <filename>.srt</filename> (<application>SubRip</application>) and
+    <filename>.sub</filename> (<application>MicroDVD</application>) formats.
+  </para>
+
+  <sect2 id="usage-subtitles-playback">
+    <title>
+      <phrase lang="en">Playing Videos With Subtitles</phrase>
+    </title>
+
+  <para lang="en">
+    To play back a movie with subtitles, you'll need the movie
+    <filename>.avi</filename> file and a corresponding subtitle file in
+    the desired language.  Subtitle files are available from several
+    download sites, or you can rip your own from the DVD.  Where or how to
+    get subtitles is beyond the scope of this manual, but either way you'll
+    end up with a subtitle file.  A subtitle file is a human readable text
+    file (you can open it in notepad if you want), which defines the text
+    and the timing of the words which appear on the screen.
+  </para>
+
+  <para lang="en">
+    The <emphasis role="bold">Player Settings</emphasis> menu
+    (press <emphasis role="bold">Start</emphasis> in the SMS browser then
+    select <emphasis role="bold">Player Settings</emphasis>, and press
+    <emphasis role="bold">X</emphasis>) is used to control the subtitle
+    settings. The main option you'll want to turn on is
+    '<emphasis role="bold">Autoload subtitles</emphasis>'.
+    The subtitle position and colour can be adjusted here too.
+  </para>
+
+  <figure id="usage-subtitles-settingsfig">
+    <title>
+       <phrase lang="en">
+         Screenshot showing subtitle settings.
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-subtitlessettings.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS screenshot showing Player settings screen.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+
+  <para lang="en">
+    SMS currently supported subtitle formats:
+  </para>
+  <table frame='none'>
+    <title>
+      <phrase lang="en">Subtitle formats supported by SMS</phrase>
+    </title>
+    <tgroup cols='3'>
+      <thead>
+        <row>
+          <entry>
+            <para lang="en">Format</para>
+          </entry>
+          <entry>
+            <para lang="en">Extension</para>
+          </entry>
+          <entry>
+            <para lang="en">Example</para>
+          </entry>
+        </row>
+      </thead>
+      <tbody>
+      <row>
+        <entry>
+          <para><ulink url="http://www.lossepladsen.dk/all4you/TheLostWorld/MDVDPdocu.html#step5">MicroDVD</ulink></para>
+        </entry>
+        <entry>
+          <para><filename>.sub</filename></para>
+        </entry>
+        <entry>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="../images/usage-sub.png"
+              format="PNG"/>
+            </imageobject>
+            <textobject>
+              <phrase>MicroDVD sub file format.</phrase>
+            </textobject>
+          </mediaobject>
+        </entry>
+      </row>
+      <row>
+        <entry>
+          <para><ulink url="http://en.wikipedia.org/w/index.php?title=SubRip&amp;oldid=34934126">SubRip</ulink></para>
+        </entry>
+        <entry>
+          <para><filename>.srt</filename></para>
+        </entry>
+        <entry>
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="../images/usage-srt.png"
+              format="PNG"/>
+            </imageobject>
+            <textobject>
+              <phrase>SubRip srt file format.</phrase>
+            </textobject>
+          </mediaobject>
+        </entry>
+      </row>
+      </tbody>
+    </tgroup>
+  </table>
+
+  <tip>
+    <para lang="en">
+      If you aren't sure about subtitle files, then I recommend that you get
+      them working on your PC first, using a PC player that supports
+      subtitles (such as
+      <ulink url="http://www.mplayerhq.hu"><application>MPlayer</application></ulink>).
+      <application>Mplayer</application> follows the same rules as SMS when
+      searching for subtitle files, and plays them by default if it finds
+      them.  It's quite handy for quickly verifying files before trying them
+      on SMS.
+    </para>
+  </tip>
+
+  <para lang="en">
+    The subtitle file itself must be copied into the same directory as the 
+    video file, with the exact same filename as the video, the only 
+    difference being the extension (<filename>.srt</filename> or
+    <filename>.sub</filename>). The extension must be in lower-case.
+  </para>
+
+  <para lang="en">
+    Once you have the file in the right location, start SMS and navigate to
+    the <filename>.avi</filename> video file as usual, then press
+    <emphasis role="bold">X</emphasis>.
+  </para>
+
+  <figure>
+    <title>
+       <phrase lang="en">
+         Screenshot showing SMS while browsing for video (note 
+         subtitle file in same directory).
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-subtitlesbrowsing.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Screenshot showing SMS while browsing.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    SMS will automatically look for a subtitle file, and if it finds one,
+    the following 'loading subtitles' message will be displayed:
+  </para>
+
+  <figure>
+    <title>
+       <phrase lang="en">
+         Screenshot showing SMS while lauching video with subtitles.
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-subtitlesloading.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Screenshot showing SMS while lauching video with
+        subtitles.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    During playback, the subtitles will appear on the screen
+    (colour/position are adjustable in the
+    <link linkend="usage-subtitles-settingsfig">player settings menu</link>).
+  </para>
+
+  <figure>
+    <title>
+       <phrase lang="en">
+         Screenshot showing SMS playback with subtitles.
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-subtitlesplayback.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Screenshot showing SMS while lauching video with
+        subtitles.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    The synchronisation between the subtitles and the audio can sometimes go 
+    out.  You can fine tune the timing during playback (see 
+    <link linkend="usage-controls-playback">controls</link>) section.  I've 
+    found less synchronisation problems with <filename>.sub</filename> files 
+    than <filename>.srt</filename>, but your results may vary.
+  </para>
+
+  </sect2>
+
+  <sect2 id="usage-subtitles-non-ascii">
+    <title>
+      <phrase lang="en">Non-ASCII Character Sets</phrase>
+   </title>
+
+    <para lang="en">
+      If your subtitles have non-ASCII character sets, then you'll need to
+      add support for the fonts separately.
+    </para>
+
+    <para lang="en">
+      Details of how to do this may follow in a later version of the SMS
+      manual. For now, please refer to the official SMS forums
+      (<ulink url="http://www.ps2-scene.org/forums/forumdisplay.php?f=111"/>),
+      and the README for SMS.
+    </para>
+
+    <para lang="en">
+      This extract from the README may help you:
+    </para>
+<screen><![CDATA[Following fonts can be loaded:
+- mc0:SMS/ascii.mtf - contains 96 ascii characters ( 32-127)
+- mc0:SMS/latin2.mtf - contains 128 latin2 characters (128-255)
+- mc0:SMS/cyrillic.mtf - contains 128 cyrillic characters (128-255)
+- mc0:SMS/latin1.mtf - contains 128 latin1 characters (128-255)
+- mc0:SMS/greek.mft - contains 128 greek characters (128-255)
+New font can be created by 'MTKFontCreator' utility (google) (I've used version 0.6.2).
+During font save select "Save Mediatek Font -> 4 color comp., variable width (NEW mode)".
+Min height must be set to 32. During font generation Max Width and Height parameters
+(displayed on the status line) must not exceed 32. No error checks etc. are performed
+by SMS here, so use it very carefully and on your own risk :). Probably .ini file
+for that utility has to be adjusted on site in order to generate reduced character sets
+(96 and 128 characters instead of 256). By changing that .ini file it's possible to
+create virtually any character sets (ISO-8859-7, for instance);]]></screen>
+
+  </sect2>
+
+</sect1>

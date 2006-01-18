@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+
+<sect1>
+	<title>
+	  <phrase lang="en">
+		  VESA Video Modes
+		</phrase>
+	</title>
+
+  <para lang="en">
+    Two additional video modes are available for SMS:
+	</para>
+
+  <itemizedlist mark='bullet'>
+    <listitem>
+      <para lang="en">640x480@60Hz (press select+L1 during startup)</para>
+    </listitem>
+    <listitem>
+      <para lang="en">640x480@75Hz (press select+L2 during startup)</para>
+    </listitem>
+  </itemizedlist>
+  <para lang="en">
+    These modes are not accessible in the normal SMS configuration menu –
+    they can only be set at startup.
+  </para>
+  <note>
+    <para lang="en">
+      These have only been tested using a viewsonic VX910 TFT monitor with
+      the official Sony cable.
+    </para>
+  </note>
+</sect1>

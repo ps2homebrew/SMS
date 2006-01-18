@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: 1.31 $ -->
+
+<sect1 id="usage-hdd" xreflabel="Internal HDD">
+  <title>
+    <phrase lang="en">
+      Playing video files from a PS2 Internal Hard Drive
+    </phrase>
+  </title>
+
+  <note>
+    <para lang="en">
+      This section of the documentation is not yet completed in full.
+    </para>
+  </note>
+  <para lang="en">
+    &lt;Section to be completed&gt; for now, here's the basics in short:
+  </para>
+
+
+  <itemizedlist>
+    <listitem>
+      <para lang="en">Copy files to hdd via ftp or other means.</para>
+    </listitem>
+    <listitem>
+      <para lang="en">Select hdd from device menu icon on SMS screen.</para>
+    </listitem>
+    <listitem>
+      <para lang="en">Browse to file and press
+      <emphasis role="bold">X</emphasis>.</para>
+    </listitem>
+  </itemizedlist>
+
+</sect1>

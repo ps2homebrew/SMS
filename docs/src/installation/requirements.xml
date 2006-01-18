@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- $Revision: 1.26 $ -->
+
+<sect1 id="sms-installation-requirements">
+  <title>
+    <phrase lang="en">Requirements</phrase>
+    <phrase lang="el">#Requirements#</phrase>
+    <phrase lang="es">#Requirements#</phrase>
+    <phrase lang="pt">#Requirements#</phrase>
+  </title>
+  
+  <para lang="en">
+    To install SMS on your Playstation 2 you will need the following:
+  </para>
+
+  <itemizedlist mark='number'>
+    <listitem>
+      <para lang="en">
+        A PS2 (chubby version if you'll be using the independence exploit)
+      </para>
+      <para lang="el">
+        #A PS2 (chubby version if you'll be using the independence exploit)#
+      </para>
+      <para lang="es">
+        #A PS2 (chubby version if you'll be using the independence exploit)#
+      </para>
+      <para lang="pt">
+        #A PS2 (chubby version if you'll be using the independence exploit)#
+      </para>
+    </listitem>
+
+    <listitem>
+      <para lang="en">
+        Working exploit or modchip which allows you to run ELF files
+      </para>
+      <para lang="el">
+        #Working exploit or modchip which allows you to run ELF files#
+      </para>
+      <para lang="es">
+        #Working exploit or modchip which allows you to run ELF files#
+      </para>
+      <para lang="pt">
+        #Working exploit or modchip which allows you to run ELF files#
+      </para>
+    </listitem>
+
+    <listitem>
+      <para lang="en">
+        (optional but recommended) Official PS2 Network Adaptor kit - for
+        playing your PC's movie collection via a local area network.
+      </para>
+      <para lang="el">
+        #(optional but recommended) Official PS2 Network Adaptor kit - for
+        playing your PC's movie collection via a local area network.#
+      </para>
+      <para lang="es">
+        #(optional but recommended) Official PS2 Network Adaptor kit - for
+        playing your PC's movie collection via a local area network.#
+      </para>
+      <para lang="pt">
+        #(optional but recommended) Official PS2 Network Adaptor kit - for
+        playing your PC's movie collection via a local area network.#
+      </para>
+    </listitem>
+  </itemizedlist>
+
+
+  <important>
+    <para lang="en">
+      To use SMS on your
+      Playstation, you will need to already have a working method to run
+      arbitrary ELF files from your PS2 memory card.  Normal PS2s can't do
+      this.  SMS is not an exploit to run ELF files, it needs an exploit or
+      modchip to run.   You can't just burn the SMS.ELF file to CD as the PS2
+      copy protection  system will stop you from running it.  Please also note
+      that the CDXplorer CD-R method is not a method of starting SMS either.
+      Rather it is a way of supplying media files to SMS once SMS is already
+      running.
+    </para>
+  </important>
+
+  <para lang="en">
+    You will need one of the following (some of which are free):
+  </para>
+
+  <itemizedlist>
+    <listitem>
+      <para lang="en">
+        A working exploit in place (such as the independence exploit
+        <ulink url="http://en.wikipedia.org/wiki/PS2_Independence_Exploit"/>
+        <ulink url="http://www.exploitstation.com/index.php?page=faq"/>)
+        AND a working ELF launching program (such as
+        LaunchELF), AND a PSX (playstation 1) trigger disc.
+      </para>
+    </listitem>
+
+    <listitem override='none'>
+      <para lang="en">OR</para>
+    </listitem>
+
+    <listitem>
+      <para lang="en">
+        A mod chip in your PS2 that lets you run arbitrary ELF files.
+      </para>
+    </listitem>
+
+    <listitem override='none'>
+      <para lang="en">OR</para>
+    </listitem>
+
+    <listitem>
+      <para lang="en">
+        PS2 linux kit and some way of using this to launch arbitrary ELF
+        files (try <ulink url="http://playstation2-linux.com/projects/haven/">
+        here</ulink>).
+      </para>
+    </listitem>
+  </itemizedlist>
+
+  <para lang="en">
+    If you do not have any of the the above three items, you will not be able
+    to run SMS. You need to get one of them <emphasis>before</emphasis>
+    going any further with this installation guide.
+  </para>
+
+  <para lang="en">
+    Assuming you do, please read on to the next section for how to install
+    SMS onto your PS2 memory card.
+  </para>
+
+</sect1>
