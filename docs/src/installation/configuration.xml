@@ -6,12 +6,12 @@
     <phrase lang="en">
       Configuration
     </phrase>
-	</title>
+  </title>
 
-	<tip>
-	  <para lang="en">
-	    Normally there is no need to change any configuration files to
-	    get SMS running.  If you are just using using SMS in standalone mode,
+  <tip>
+    <para lang="en">
+      Normally there is no need to change any configuration files to
+      get SMS running.  If you are just using using SMS in standalone mode,
       you can skip this section.  You only need to change the configuration
       if you want to use SMS in network mode (i.e. play files over a LAN).
     </para>
@@ -34,10 +34,10 @@
 
     <para lang="en">
       IP configuration data for SMS is stored in
-  		<filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>. (not
-  		<filename>CONFIG.DAT</filename>).  Note that the two files are seperate. SMS
+      <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>. (not
+      <filename>CONFIG.DAT</filename>).  Note that the two files are seperate. SMS
       will not look for settings in
-  		<filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
+      <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
     </para>
 
     <para lang="en">
@@ -68,51 +68,51 @@
       (or static) IP configuration.
     </para>
 
-  	<informaltable frame='none'>
-  	<tgroup cols='2'>
-  	<tbody>
-  	<row>
-  	  <entry morerows="2">PS2 Settings</entry>
-  	  <entry>
-  		  <para lang="en">PS2 IP Address:</para>
-  		</entry>
-  		<entry>192.168.a.x</entry>
-  	</row>
-  	<row>
-  	  <entry>
-  		  <para lang="en">PS2 Subnet Mask:</para>
-  		</entry>
-  		<entry>255.255.255.0</entry>
-  	</row>
-  	<row>
-  	  <entry>
-  		  <para lang="en">PS2 Default Gateway:</para>
-  		</entry>
-  		<entry>192.168.a.z</entry>
-  	</row>
-  	<row>
-  	  <entry morerows="2">PC Settings</entry>
-  	  <entry>
-  		  <para lang="en">PC IP Address:</para>
-  		</entry>
-  		<entry>192.168.a.y</entry>
-  	</row>
-  	<row>
-  	  <entry>
-  		  <para lang="en">PC Subnet Mask:</para>
-  		</entry>
-  		<entry>255.255.255.0</entry>
-  	</row>
-  	<row>
-  	  <entry>
-  		  <para lang="en">PC Default Gateway:</para>
-  		</entry>
-  		<entry>192.168.a.z</entry>
-  	</row>
-  	</tbody>
-  	</tgroup>
-  	</informaltable>
-  	
+    <informaltable frame='none'>
+    <tgroup cols='2'>
+    <tbody>
+    <row>
+      <entry morerows="2">PS2 Settings</entry>
+      <entry>
+        <para lang="en">PS2 IP Address:</para>
+      </entry>
+      <entry>192.168.a.x</entry>
+    </row>
+    <row>
+      <entry>
+        <para lang="en">PS2 Subnet Mask:</para>
+      </entry>
+      <entry>255.255.255.0</entry>
+    </row>
+    <row>
+      <entry>
+        <para lang="en">PS2 Default Gateway:</para>
+      </entry>
+      <entry>192.168.a.z</entry>
+    </row>
+    <row>
+      <entry morerows="2">PC Settings</entry>
+      <entry>
+        <para lang="en">PC IP Address:</para>
+      </entry>
+      <entry>192.168.a.y</entry>
+    </row>
+    <row>
+      <entry>
+        <para lang="en">PC Subnet Mask:</para>
+      </entry>
+      <entry>255.255.255.0</entry>
+    </row>
+    <row>
+      <entry>
+        <para lang="en">PC Default Gateway:</para>
+      </entry>
+      <entry>192.168.a.z</entry>
+    </row>
+    </tbody>
+    </tgroup>
+    </informaltable>
+    
 
 
     <sect3>
@@ -126,66 +126,66 @@
         gateway is set to the IP address of the PC.
       </para>
 
-    	<informaltable frame='none'>
-    	<tgroup cols='2'>
-    	<tbody>
-    	<row>
-    	  <entry morerows="3">PS2 Settings</entry>
-    	  <entry>
-    		  <para lang="en">PS2 IP Address:</para>
-    		</entry>
-    		<entry>192.168.0.2</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">PS2 Subnet Mask:</para>
-    		</entry>
-    		<entry>255.255.255.0</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">PS2 Default Gateway:</para>
-    		</entry>
-    		<entry>192.168.0.1</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
-    		</entry>
-    		<entry>
-    		<mediaobject>
-    		  <imageobject>
-    		    <imagedata fileref="../images/installation-ipconfig.dat1.png"
+      <informaltable frame='none'>
+      <tgroup cols='2'>
+      <tbody>
+      <row>
+        <entry morerows="3">PS2 Settings</entry>
+        <entry>
+          <para lang="en">PS2 IP Address:</para>
+        </entry>
+        <entry>192.168.0.2</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">PS2 Subnet Mask:</para>
+        </entry>
+        <entry>255.255.255.0</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">PS2 Default Gateway:</para>
+        </entry>
+        <entry>192.168.0.1</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
+        </entry>
+        <entry>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-ipconfig.dat1.png"
             format="PNG"/>
-    		  </imageobject>
-    		  <textobject>
-    		    <phrase>Sample ipconfig.dat file screenshot.</phrase>
-    		  </textobject>
-    		</mediaobject>
-    		</entry>
-    	</row>
-    	<row>
-    	  <entry morerows="2">PC Settings</entry>
-    	  <entry>
-    		  <para lang="en">PC IP Address:</para>
-    		</entry>
-    		<entry>192.168.0.1</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">PC Subnet Mask:</para>
-    		</entry>
-    		<entry>255.255.255.0</entry>
-    	</row>
-    	<row>
-  	  <entry>
-  		  <para lang="en">PC Default Gateway:</para>
-  		</entry>
-  		<entry>192.168.0.1</entry>
-  	</row>
-  	</tbody>
-  	</tgroup>
-  	</informaltable>
+          </imageobject>
+          <textobject>
+            <phrase>Sample ipconfig.dat file screenshot.</phrase>
+          </textobject>
+        </mediaobject>
+        </entry>
+      </row>
+      <row>
+        <entry morerows="2">PC Settings</entry>
+        <entry>
+          <para lang="en">PC IP Address:</para>
+        </entry>
+        <entry>192.168.0.1</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">PC Subnet Mask:</para>
+        </entry>
+        <entry>255.255.255.0</entry>
+      </row>
+      <row>
+      <entry>
+        <para lang="en">PC Default Gateway:</para>
+      </entry>
+      <entry>192.168.0.1</entry>
+    </row>
+    </tbody>
+    </tgroup>
+    </informaltable>
     </sect3>
 
     <sect3>
@@ -198,66 +198,66 @@
         at 192.168.2.1.
       </para>
 
-    	<informaltable frame='none'>
-    	<tgroup cols='2'>
-    	<tbody>
-    	<row>
-    	  <entry morerows="3">PS2 Settings</entry>
-    	  <entry>
-    		  <para lang="en">PS2 IP Address:</para>
-    		</entry>
-    		<entry>192.168.2.22</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">PS2 Subnet Mask:</para>
-    		</entry>
-    		<entry>255.255.255.0</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">PS2 Default Gateway:</para>
-    		</entry>
-    		<entry>192.168.2.1</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
-    		</entry>
-    		<entry>
-    		<mediaobject>
-    		  <imageobject>
-    		    <imagedata fileref="../images/installation-ipconfig.dat2.png"
+      <informaltable frame='none'>
+      <tgroup cols='2'>
+      <tbody>
+      <row>
+        <entry morerows="3">PS2 Settings</entry>
+        <entry>
+          <para lang="en">PS2 IP Address:</para>
+        </entry>
+        <entry>192.168.2.22</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">PS2 Subnet Mask:</para>
+        </entry>
+        <entry>255.255.255.0</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">PS2 Default Gateway:</para>
+        </entry>
+        <entry>192.168.2.1</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
+        </entry>
+        <entry>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-ipconfig.dat2.png"
             format="PNG"/>
-    		  </imageobject>
-    		  <textobject>
-    		    <phrase>Sample ipconfig.dat file screenshot.</phrase>
-    		  </textobject>
-    		</mediaobject>
-    		</entry>
-    	</row>
-    	<row>
-    	  <entry morerows="2">PC Settings</entry>
-    	  <entry>
-    		  <para lang="en">PC IP Address:</para>
-    		</entry>
-    		<entry>192.168.2.23</entry>
-    	</row>
-    	<row>
-    	  <entry>
-    		  <para lang="en">PC Subnet Mask:</para>
-    		</entry>
-    		<entry>255.255.255.0</entry>
-    	</row>
-    	<row>
-  	  <entry>
-  		  <para lang="en">PC Default Gateway:</para>
-  		</entry>
-  		<entry>192.168.2.1</entry>
-  	</row>
-  	</tbody>
-  	</tgroup>
-  	</informaltable>
+          </imageobject>
+          <textobject>
+            <phrase>Sample ipconfig.dat file screenshot.</phrase>
+          </textobject>
+        </mediaobject>
+        </entry>
+      </row>
+      <row>
+        <entry morerows="2">PC Settings</entry>
+        <entry>
+          <para lang="en">PC IP Address:</para>
+        </entry>
+        <entry>192.168.2.23</entry>
+      </row>
+      <row>
+        <entry>
+          <para lang="en">PC Subnet Mask:</para>
+        </entry>
+        <entry>255.255.255.0</entry>
+      </row>
+      <row>
+      <entry>
+        <para lang="en">PC Default Gateway:</para>
+      </entry>
+      <entry>192.168.2.1</entry>
+    </row>
+    </tbody>
+    </tgroup>
+    </informaltable>
 
 
     <warning>
@@ -290,10 +290,10 @@
     </title>
 
     <para lang="en">
-  	  SMS general configuration information is stored in
-  		<filename>mc0:/SMS/SMS.cfg</filename>. This file is written by the
-  		application when you save the configuration data, and is not designed to
-  		be edited by hand.
+      SMS general configuration information is stored in
+      <filename>mc0:/SMS/SMS.cfg</filename>. This file is written by the
+      application when you save the configuration data, and is not designed to
+      be edited by hand.
       <emphasis role="bold">You do not need to create this file</emphasis>.
       SMS will create the file when you save the configuration from within
       SMS (see configuration menu in 

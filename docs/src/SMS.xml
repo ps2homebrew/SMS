@@ -23,63 +23,62 @@
 <!ENTITY faq.xml	SYSTEM "faq.xml">
 ]>
 <book id="sms-main">
-	<bookinfo id="toc">
-		<title lang="en">
-		  <application>SMS</application> - Playstation 2 Simple Media System
-		</title>
+  <bookinfo id="toc">
+    <title lang="en">
+      <application>SMS</application> - Playstation 2 Simple Media System
+    </title>
 
-	  <subtitle lang='en'>User Manual</subtitle>
-	  <subtitle lang='cs'>Uživatelská příručka</subtitle>
-	  <subtitle lang='de'>Benutzerhandbuch</subtitle>
-	  <subtitle lang='el'>#User Manual#</subtitle>
-	  <subtitle lang='es'>#User Manual#</subtitle>
-	  <subtitle lang="fr">Guide Utilisateur</subtitle>
-	  <subtitle lang='it'>Manuale utente</subtitle>
-	  <subtitle lang="nl">Gebruikershandleiding</subtitle>
-	  <subtitle lang='pt'>#User Manual#</subtitle>
-	  <subtitle lang='sv'>Användarmanual</subtitle>
-	  <subtitle lang='zh_CN'>用户手册</subtitle>
+    <subtitle lang='en'>User Manual</subtitle>
+    <subtitle lang='cs'>Uživatelská příručka</subtitle>
+    <subtitle lang='de'>Benutzerhandbuch</subtitle>
+    <subtitle lang='el'>#User Manual#</subtitle>
+    <subtitle lang='es'>#User Manual#</subtitle>
+    <subtitle lang="fr">Guide Utilisateur</subtitle>
+    <subtitle lang='it'>Manuale utente</subtitle>
+    <subtitle lang="nl">Gebruikershandleiding</subtitle>
+    <subtitle lang='pt'>#User Manual#</subtitle>
+    <subtitle lang='sv'>Användarmanual</subtitle>
+    <subtitle lang='zh_CN'>用户手册</subtitle>
 
-		<subtitle><ulink url="http://www.adam.com.au/kellyjones/sms/index.htm"></ulink></subtitle>
+    <subtitle><ulink url="http://www.sms.ps2-scene.org"></ulink></subtitle>
 
 
+  <date>December 28, 2005</date>
+  <copyright>
+    <year>2005</year>
+    <year>2006</year>
+    <holder>The SMS Documentation Team, Contributors: Dave T, Juddman</holder>
+  </copyright>
 
-	<date>December 28, 2005</date>
-	<copyright>
-	  <year>2005</year>
-	  <year>2006</year>
-	  <holder>The SMS Documentation Team, Contributiors: Dave T, Juddman</holder>
-	</copyright>
+  <legalnotice lang="en;de">
+    <title>License</title>
+    <para lang="en">
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    or FITNESS FOR A PARTICULAR PURPOSE.
+    </para>
+    <para lang="en">
+    
+    
 
-	<legalnotice lang="en;de">
-	  <title>License</title>
-	  <para>
-		This program is distributed in the hope that it will be useful, but
-	  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-	  or FITNESS FOR A PARTICULAR PURPOSE.
-		</para>
-	  <para>
-	  
-	  
+    The code created specifically for this project is released under the
+    Academic Free License
+    <ulink url="http://www.opensource.org/licenses/academic.php">
+    <citetitle>http://www.opensource.org/licenses/academic.php</citetitle>
+    </ulink>.  For parts of the project derrived from the ffmpeg project, the
+    code is released under the GNU Lesser General Public License as published
+    by the Free Software Foundation; either version 2 of the License, or (at
+    your option) any later version.
+    </para>
 
-		The code created specifically for this project is released under the
-		Academic Free License
-		<ulink url="http://www.opensource.org/licenses/academic.php">
-		<citetitle>http://www.opensource.org/licenses/academic.php</citetitle>
-		</ulink>.  For parts of the project derrived from the ffmpeg project, the
-		code is released under the GNU Lesser General Public License as published
-		by the Free Software Foundation; either version 2 of the License, or (at
-		your option) any later version.
-		</para>
-
-		<para>
-		Permission is granted to copy, distribute and/or modify this document under
-		the terms of the GNU Free Documentation License, Version 1.2 or any later
-		version published by the Free Software Foundation; with no Invariant
-		Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the
-		license is included in the section enphrased GNU Free Documentation License.
-		</para>
-	</legalnotice>
+    <para lang="en">
+    Permission is granted to copy, distribute and/or modify this document under
+    the terms of the GNU Free Documentation License, Version 1.2 or any later
+    version published by the Free Software Foundation; with no Invariant
+    Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the
+    license is included in the section enphrased GNU Free Documentation License.
+    </para>
+  </legalnotice>
 
 <!--
 
@@ -162,27 +161,27 @@
   <chapter id="introduction">
     <title>
       <phrase lang="en">Introduction</phrase>
-	    <phrase lang="cs">Úvod</phrase>
-	    <phrase lang="de">Einführung</phrase>
-			<phrase lang="el">#Introduction#</phrase>
-			<phrase lang="es">#Introduction#</phrase>
-	    <phrase lang="fr">Introduction</phrase>
-	    <phrase lang="it">Introduzione</phrase>
-	    <phrase lang="nl">Introduktie</phrase>
-			<phrase lang="pt">#Introduction#</phrase>
-	    <phrase lang="sv">Introduktion</phrase>
-	    <phrase lang="zh_CN">简介</phrase>
-		</title>
+      <phrase lang="cs">Úvod</phrase>
+      <phrase lang="de">Einführung</phrase>
+      <phrase lang="el">#Introduction#</phrase>
+      <phrase lang="es">#Introduction#</phrase>
+      <phrase lang="fr">Introduction</phrase>
+      <phrase lang="it">Introduzione</phrase>
+      <phrase lang="nl">Introduktie</phrase>
+      <phrase lang="pt">#Introduction#</phrase>
+      <phrase lang="sv">Introduktion</phrase>
+      <phrase lang="zh_CN">简介</phrase>
+    </title>
     &introduction.xml;
   </chapter>
 
   <chapter id="installation">
-		<title>
-	    <phrase lang="en">Installation</phrase>
-	    <phrase lang="el">#Installation#</phrase>
-	    <phrase lang="es">#Installation#</phrase>
-	    <phrase lang="pt">#Installation#</phrase>
-		</title>
+    <title>
+      <phrase lang="en">Installation</phrase>
+      <phrase lang="el">#Installation#</phrase>
+      <phrase lang="es">#Installation#</phrase>
+      <phrase lang="pt">#Installation#</phrase>
+    </title>
     &installation-requirements.xml;
     &installation-quick.xml;
     &installation-detail.xml;
@@ -190,36 +189,36 @@
   </chapter>
 
   <chapter id="usage">
-		<title>
-	    <phrase lang="en">Usage</phrase>
-	    <phrase lang="el">#Usage#</phrase>
-	    <phrase lang="es">#Usage#</phrase>
-	    <phrase lang="pt">#Usage#</phrase>
-		</title>
-		&usage.xml;
+    <title>
+      <phrase lang="en">Usage</phrase>
+      <phrase lang="el">#Usage#</phrase>
+      <phrase lang="es">#Usage#</phrase>
+      <phrase lang="pt">#Usage#</phrase>
+    </title>
+    &usage.xml;
     &usage-controls.xml;
-	  &usage-network.xml;
-		&usage-cddafs.xml;
-		&usage-dvdr.xml;
-		&usage-hdd.xml;
+    &usage-network.xml;
+    &usage-cddafs.xml;
+    &usage-dvdr.xml;
+    &usage-hdd.xml;
     &usage-usb.xml;
     &usage-mp3.xml;
     &usage-subtitles.xml;
-	</chapter>
+  </chapter>
 
   <appendix id="faq">
     <title>
       <phrase lang="en">Frequently Asked Questions</phrase>
     </title>
-		&appendices-faq.xml;
-	</appendix>
+    &appendices-faq.xml;
+  </appendix>
 
   <appendix>
     <title>
       <phrase lang="en">Bits and Pieces</phrase>
     </title>
-		&appendices-bitsandpieces.xml;
-	</appendix>
+    &appendices-bitsandpieces.xml;
+  </appendix>
 
 
   &appendices-fdl.xml;

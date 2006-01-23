@@ -30,43 +30,43 @@
   application (or use '+' toolbar button);</para>
 </listitem>
 <listitem>
-  <para>
+  <para lang="en">
     Save your compilation - you'll get cue/bin file pair;
   </para>
 </listitem>
 <listitem>
-  <para>
+  <para lang="en">
     Close the application;
   </para>
 </listitem>
 <listitem>
-  <para>
+  <para lang="en">
     Launch CD burning application (I use Nero);
   </para>
 </listitem>
 <listitem>
-  <para>
+  <para lang="en">
     Open generated cue file;
   </para>
 </listitem>
 <listitem>
-  <para>
+  <para lang="en">
     If you use Nero 5 then select Disk-at-once/96 option;
   </para>
 </listitem>
 <listitem>
-  <para>
+  <para lang="en">
     Burn it;
   </para>
 </listitem>
 </itemizedlist>
-<para>
+<para lang="en">
 Good luck
 </para>
-<para>
+<para lang="en">
 Eugene
 </para>
-<para>
+<para lang="en">
   P.S. If you have a DVD burner you can also play .avi files stored on
   DVD-video disks (just record short DVD/mpeg clip
   on them also to get such a disks authorized by PS2);
@@ -156,7 +156,7 @@ Eugene
     </figure>
 
     <para lang="en">
-      Click file->SaveAs, then type in a name (e.g. 'test') then press 
+      Click file->SaveAs, then type in a name (e.g. 'test') then press
       &lt;enter&gt;. This will automatically save two files 
       <filename>test.cue</filename> and <filename>test.bin</filename> 
       in the current folder.
@@ -173,7 +173,7 @@ Eugene
     </para>
     <para lang="en">
       (unconfirmed): It may be necessary to use a CDR (rather than a 
-      CD-RW) – I only suspect this because i've not yet managed to get a 
+      CD-RW) - I only suspect this because i've not yet managed to get a
       CD-RW to work.
     </para>
     <para lang="en">
@@ -198,8 +198,8 @@ Eugene
       <para lang="en">
         If you've not got Nero 5 (I haven't got it), then it is possible to 
         use another (free) application to burn CDs in disc-at-once mode. The 
-        only program I've used successfully is 
-        <application>cdrdao</application> (CDR Disc At Once), which is a 
+        only program I've used successfully is
+        <application>cdrdao</application> (CDR Disc At Once), which is a
         command line cd burning application. It is available for linux and 
         windows. If you find any other applications that are easier to use,
         please post the details on the SMS support forum. Installation of 
@@ -235,7 +235,7 @@ Eugene
       </informaltable>
       
       <para lang="en">
-        The CD is written with the following command: (Note the -–force 
+        The CD is written with the following command: (Note the --force 
         option which is is needed to make the burn continue despite the 
         'shorter than 4 seconds' warning.)
       </para>

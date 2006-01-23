@@ -3,19 +3,19 @@
 
 
 <sect1 id="faq-bootcddafs">
-	<title>
-	  <phrase lang="en">
-		  <emphasis>I've made my CDDAFS CDR but my PS2 won't boot from it – It just
-			sees it as an audio CD. What's wrong?</emphasis>
-		</phrase>
-	</title>
+  <title>
+    <phrase lang="en">
+      <emphasis>I've made my CDDAFS CDR but my PS2 won't boot from it - It just
+      sees it as an audio CD. What's wrong?</emphasis>
+    </phrase>
+  </title>
   <para lang="en">
     CDXplorer does not create a CD-R which you can boot from. It just creates
-		a disc that can be read once SMS is running. CDDAFS is not a method to
-		launch SMS, it is a method to provide files to SMS once SMS is
+    a disc that can be read once SMS is running. CDDAFS is not a method to
+    launch SMS, it is a method to provide files to SMS once SMS is
     running. As far as I know there is no way to 'boot' SMS off a CD, DVD-R or
-		any other removable media without a Mod-Chip. You always need either:
-	</para>
+    any other removable media without a Mod-Chip. You always need either:
+  </para>
   <itemizedlist mark='bullet'>
     <listitem>
       <para lang="en">An exploit</para>
@@ -26,10 +26,10 @@
   </itemizedlist>
   <para lang="en">
     to run SMS first... and <emphasis>then</emphasis> you put in your CDDAFS
-		disc, DVD-R or whatever. In many cases, <filename>SMS.ELF</filename>
-		will be put on the memory card, then an exploit will be used to launch SMS
-		from the memory card. Without an exploit or modchip there is no known way
-		you can get your PS2 to run SMS. But if you find a way – let us know!
+    disc, DVD-R or whatever. In many cases, <filename>SMS.ELF</filename>
+    will be put on the memory card, then an exploit will be used to launch SMS
+    from the memory card. Without an exploit or modchip there is no known way
+    you can get your PS2 to run SMS. But if you find a way - let us know!
   </para>
 </sect1>
 
@@ -54,7 +54,7 @@
 <sect1 id="faq-networkprobs01">
   <title>
     <phrase lang="en">
-      <emphasis>I can't see my network files – what's wrong?</emphasis>
+      <emphasis>I can't see my network files - what's wrong?</emphasis>
     </phrase>
   </title>
 
@@ -82,20 +82,9 @@
     <para lang="en">
       <trademark>Sony Computer Entertainment</trademark> disapprove of 
       exploits and mod-chips yet they continue to be sold across the world. 
-      A recent court case in Australia 
-      <ulink url="http://www.afterdawn.com/news/archive/6906.cfm"/> ruled 
-      that the use of mod-chips for legal purposes outweighed the illegal 
-      ones.  
-    </para>
-    <para lang="en">
-      However, this says nothing for copyright infringement.
-      If you intend to use a mod-chip or exploit to run pirate copies of
-      games this is copyright infringement and is illegal.
-    </para>
-    <para lang="en">
-      If you intend to copy or 'rip' DVD movies which you do not own to any
-      other format then this is also illegal.
-      Downloading copyrighted movies ripped by other people is also illegal.
+      Legislation may vary in different countries, so you are advised to
+      check local laws before installing an exploit or purchasing a 
+      mod-chip.
     </para>
 
 </sect1>
@@ -104,10 +93,10 @@
 
 <sect1 id="faq-independence" xreflabel="Independence Exploit">
   <title>
-	  <phrase lang="en">
-	    <emphasis>What is the <quote>Independence Exploit</quote> and how does
-			it help me?</emphasis>
-	  </phrase>
+    <phrase lang="en">
+      <emphasis>What is the <quote>Independence Exploit</quote> and how does
+      it help me?</emphasis>
+    </phrase>
   </title>
 
   <para lang="en">
@@ -115,33 +104,33 @@
     based exploit that allows a PS2 to run unencrypted and homebrew applications
     (such as SMS) from the memory card.  The most concise description of what
     the exploit actually is can be found
-		<ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
-		here</ulink>.
+    <ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
+    here</ulink>.
   </para>
 
   <para lang="en">
-	  The Independence Exploit is one of the techniques that can be used to
-		trick your PS2 into running SMS.  Normally your PS2 does not allow you
-		to run unencrypted programs, and this protection is in place mainly
-		to reduce the spread of copied games.  When it comes to legitimate
-		open source projects like SMS, the protection only stands in the way of
-		running	SMS.  When installed, the Independence Exploit allows the user to 
-    run	a specific application stored on the memory card.  Often the chosen
-		application will be an ELF launching program (a file browser) which
-		then allows further applications to be launched.  The Exploit itself
-		is executed by inserting a chosen PS1 <quote>trigger disc</quote>,
-		inserting a memory card with specially modified files on it, and
-		then pressing reset.  Tutorial of how to get the correct specially
-		modified files onto your memory card can be found
-		<ulink url="http://www.exploitstation.com/index.php?page=faq">here</ulink>.
+    The Independence Exploit is one of the techniques that can be used to
+    trick your PS2 into running SMS.  Normally your PS2 does not allow you
+    to run unencrypted programs, and this protection is in place mainly
+    to reduce the spread of copied games.  When it comes to legitimate
+    open source projects like SMS, the protection only stands in the way of
+    running  SMS.  When installed, the Independence Exploit allows the user to
+    run  a specific application stored on the memory card.  Often the chosen
+    application will be an ELF launching program (a file browser) which
+    then allows further applications to be launched.  The Exploit itself
+    is executed by inserting a chosen PS1 <quote>trigger disc</quote>,
+    inserting a memory card with specially modified files on it, and
+    then pressing reset.  Tutorial of how to get the correct specially
+    modified files onto your memory card can be found
+    <ulink url="http://www.exploitstation.com/index.php?page=faq">here</ulink>.
   </para>
 
   <para lang="en">
     The recommended approach is to use the tutorial to install an ELF launching
     program and an FTP server.  Then you can use the FTP server to install
     as many other applications (ELF files) as you want.  It also then allows 
-		you to make backups of all your saved games which is handy for those
-		strange people who still use their PS2 to play games!
+    you to make backups of all your saved games which is handy for those
+    strange people who still use their PS2 to play games!
   </para>
 
   <para lang="en">
@@ -150,3 +139,82 @@
     PS2, a memory card, and an original PS1 game.
   </para>
 </sect1>
+
+<sect1 id="faq-dhcp">
+  <title>
+    <phrase lang="en">
+      <emphasis>I can't access SMS on my DHCP network.  SMS won't
+      autoconfigure it's IP address.  What's wrong?
+      </emphasis>
+    </phrase>
+  </title>
+  <para lang="en">
+    SMS will not automatically configure it's IP address from a DHCP (Dynamic
+    Host Configuration Protocol) server, such as the DHCP server normally
+    found running in wireless access points etc.  SMS requires a static
+    (or manual) IP address, set in
+    <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>, (see
+    <xref linkend="installation-configuration-ipconfig"/>).
+  </para>
+
+  <para lang="en">
+    This does not mean that you need to disable DHCP and make your whole
+    network run on static IP addresses.  All you need to do is check the
+    configuration of the DHCP server, and manually set your PS2 IP address
+    to be compatible.  Most DHCP servers will have a range of IP addresses
+    that they will assign to DHCP clients (for example, my linksys WRT54G
+    access point assigns IP addresses from 192.168.1.100 to 192.168.1.254)
+  </para>
+
+  <para lang="en">
+    As long as you set your PS2 IP address outside of this range (e.g.
+    192.168.1.22), then SMS will run happily alongside your DHCP clients.
+    You may need to adjust your DHCP settings by changing the start IP
+    address if there is not already a range you can use.
+  </para>
+
+  <para lang="en">
+    Of course you need to make sure that the IP address you use is not
+    used by any other nodes on your network (such as PCs, other PS2s, or
+    the access point itself), and the PS2 must be on the same subnet (i.e.
+    the first 3 numbers of the IP address must be the same as other nodes on
+    your network).
+  </para>
+
+  <tip>
+    <para lang="en">
+      If you are not sure whether you've got a DHCP server or not, go to
+      a command prompt, and type <userinput>ipconfig /all</userinput>.  If
+      you see a DHCP server listed with an IP address, then it means
+      you <emphasis role="bold">have</emphasis> got a DHCP server running.
+      You can usually access the configuration settings of access points
+      by typing the access point IP address into a web browser.
+    </para>
+  </tip>
+</sect1>
+
+<sect1 id="faq-opticalout">
+  <title>
+    <phrase lang="en">
+      <emphasis>Does the PS2 optical digital output work in SMS for AC3 
+      passthrough?</emphasis>
+    </phrase>
+  </title>
+  <para lang="en">
+    No.  The PS2 optical digital output is not currently supported by SMS.
+  </para>
+
+  <para lang="en">
+    The optical digital output would allow the PS2 output to be connected
+    via a fibre optic cable to an external audio processor such as a dolby
+    digital home cinema system.  However, this is not yet supported, and you
+    are advised to use the standard audio outputs in the mean time.
+  </para>
+
+  <para lang="en">
+    This feature may be introduced in a future release of SMS.  Anyone who
+    would like to (and has the necessary hardware) is welcome to develop it.
+  </para>
+</sect1>
+
+

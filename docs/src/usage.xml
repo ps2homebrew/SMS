@@ -1,64 +1,108 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.31 $ -->
 
   <para lang="en">
     So, now that you've got SMS installed on your PS2
-		(see <xref linkend="installation"/>), how do you get it play movies?  This
-		chapter explains all you need to know.
-	</para>
+    (see <xref linkend="installation"/>), how do you get it play movies?  This
+    chapter explains all you need to know.
+  </para>
+  <para lang="pt">
+    Agora que o SMS j est instalado na PS2
+    (veja <xref linkend="installation"/>), como ver os filmes?  Este
+    explica tudo o que voc precisa de saber.
+  </para>
 
-	<para lang="en">
-	  To run SMS you first need to run your exploit or start up your PS2 with
-		the modchip installed.  Then use the appropriate technique to start the
-		SMS program. If you're using the
-		<xref linkend="faq-independence"/>
-		insert your (legitimate) PS1 trigger disc, and press reset. This will boot 
-    your chosen launcher application, where you can select which actual ELF 
+  <para lang="en">
+    To run SMS you first need to run your exploit or start up your PS2 with
+    the modchip installed.  Then use the appropriate technique to start the
+    SMS program. If you're using the
+    <xref linkend="faq-independence"/>
+    insert your (legitimate) PS1 trigger disc, and press reset. This will boot
+    your chosen launcher application, where you can select which actual ELF
     you want to run.
+  </para>
+  <para lang="pt">
+    Para correr o SMS primeiro voc precisa de correr o 'exploit' ou ligar a 
+    PS2 se tiver modchip instalado.  Depois tem de utilizar a tcnica 
+    apropriada para ligar o SMS.  Se estiver a usar o
+    <xref linkend="faq-independence"/>
+    insira o seu CD de PS1 (original), e pressione reset. Isto executar
+    a aplicao de gesto ('LaunchElf por exemplo'), onde puder escolher qual o 
+    ELF que quer executar.
   </para>
 
   <para lang="en">
     Next, if you're using LaunchELF as your boot application, you can run SMS
-		by navigating to SMS.ELF and pressing O. You may want to assign a shortcut
-		button to it so it is easier to load next time.
+    by navigating to SMS.ELF and pressing O. You may want to assign a shortcut
+    button to it so it is easier to load next time.
+  </para>
+  <para lang="pt">
+    De seguida, se estiver a usar o LaunchELF como aplicao inicial, pode
+    corre o SMS bastando para isso navegar ate ao ficheiro SMS.ELF e 
+    pressionar O.  Talvez queira adicionar um buto de atalho para o SMS para 
+    ser mais fcil de carregar na prxima vez.
   </para>
 
   <tip>
     <para lang="en">
       If you use SMS regularly, you may want to assign it as the 'default'
-      option in LauchELF, so that it starts automatically, after a short 
+      option in LauchELF, so that it starts automatically, after a short
       delay.
+    </para>
+    <para lang="pt">
+      Se voc usa o SMS regularmente, talvez queira adicion-lo como a opo
+      'default' no LauchELF, para que ele seja executado automticamente, 
+      passado pouco tempo.
     </para>
   </tip>
 
   <para lang="en">
     Once you've got SMS running, you should see the nice SMS graphical
-		interface on your TV set. From this point onwards, all the instructions
-		are the same, whichever Exploit/Modchip you are using.
+    interface on your TV set. From this point onwards, all the instructions
+    are the same, whichever Exploit/Modchip you are using.
+  </para>
+  <para lang="pt">
+    Assim que tiver o SMS a correr, dever ver a bela 'interface' do SMS
+    no seu televisor. Daqui para a frente, todas as instrues
+    so as mesmas, qualquer que seja o 'exploit'/modchip que estiver a usar.
   </para>
 
-	<figure>
-	  <title>
-		   <phrase lang="en">
-			   Screenshot of SMS main GUI. (files you see are a directory listing
-				 of the current CD in the drive – the independence trigger disc in this
-				 case).
-			</phrase>
-	  </title>
-		<mediaobject>
-		  <imageobject>
-		    <imagedata fileref="../images/usage-sms-maingui.png" format="PNG"/>
-		  </imageobject>
-		  <textobject>
-		    <phrase lang="en">SMS Main GUI</phrase>
-		  </textobject>
-		</mediaobject>
-	</figure>
+  <figure>
+    <title>
+       <phrase lang="en">
+         Screenshot of SMS main GUI. (files you see are a directory listing
+         of the current CD in the drive - the independence trigger disc in
+         this case).
+      </phrase>
+      <phrase lang="pt">
+        Screenshot do interface do SMS. (os ficheiros que voc v so os
+        ficheiros presentes no CD que se encontra na PS2 - o disco de
+        arranque do 'exploit independence' neste caso).
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-maingui.png" format="PNG"/>
+      </imageobject>
+      <textobject lang="en">
+        <phrase>SMS Main GUI</phrase>
+      </textobject>
+      <textobject lang="pt">
+        <phrase>GUI principal do SMS</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
 
   <para lang="en">
     This is the screen where you will access most features from. The files
-		can be navigated using up/down/left right on controller 1 or 2, and you 
-		can play them by pressing <emphasis role="bold">X</emphasis>.
-		A special configuration menu is accessed by
-		pressing <emphasis role="bold">start</emphasis>.
+    can be navigated using up/down/left right on controller 1 or 2, and you
+    can play them by pressing <emphasis role="bold">X</emphasis>.
+    A special configuration menu is accessed by
+    pressing <emphasis role="bold">start</emphasis>.
+  </para>
+  <para lang="pt">
+    Este  o ecr de onde poder aceder a mais opes. Pode navegar pelos
+    ficheiros usando as teclas cima/baixo/esq./dir. nos controladores 1 ou 2,
+    e poder corre-los pressionando <emphasis role="bold">X</emphasis>.
+    Um menu de configurao pode ser acedido
+    pressionando <emphasis role="bold">start</emphasis>.
   </para>

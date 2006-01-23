@@ -51,7 +51,7 @@
   </para>
   
   <para lang="en">
-    Download the above zip file, and open it up – inside you will find a 
+    Download the above zip file, and open it up - inside you will find a 
     file called <filename>npm-usbd.irx</filename>. Copy this file to a local
     folder on your computer, then <emphasis role="bold">rename</emphasis>
     it to <filename>USBD.IRX</filename> (must be in capitals). 
