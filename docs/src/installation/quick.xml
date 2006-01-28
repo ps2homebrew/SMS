@@ -1,13 +1,18 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- $Revision: 1.26 $ -->
 
 <sect1 id="sms-installation-quick">
   <title>
     <phrase lang="en">Installation Instructions For The Impatient:</phrase>
+    <phrase lang="pt">Instruções de Instalação para Impacientes:</phrase>
   </title>
   <para lang="en">
     If you know what you are doing, you can perform the following steps to
     install SMS on your PS2.
+  </para>
+  <para lang="pt">
+    Se souber o que está a fazer, pode seguir estas instruções para instalar o
+    SMS na sua PS2.
   </para>
 
   <itemizedlist mark='number'>
@@ -17,12 +22,20 @@
         Download the latest zipped <filename>SMS.ELF</filename> binary from
         <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
       </para>
+      <para lang="pt">
+        Downloade o último <filename>SMS.ELF</filename> zipado de 
+        <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
+      </para>
     </listitem>
 
     <listitem>
       <para lang="en">
         Unzip the <filename>SMS.ELF</filename> file to a local folder on your 
         computer.
+      </para>
+      <para lang="pt">
+        Extraia o ficheiro <filename>SMS.ELF</filename> para um directório no
+        seu PC.
       </para>
     </listitem>
 
@@ -31,6 +44,10 @@
         Copy the file to your PS2's memory card (via ExecFTP or FileBrowser +
         USB, ....).
       </para>
+      <para lang="pt">
+        Copie o ficheiro para o Cartão de Memória da sua PS2 (utilizando o
+        ExecFTP ou FileBrowser+USB, entre outros...)
+      </para>
     </listitem>
 
     <listitem>
@@ -38,12 +55,22 @@
         Restart your PS2 and run the <filename>SMS.ELF</filename> file from 
         your memory card.
       </para>
+      <para lang="pt">
+        Reinicie a sua PS2 e corra o ficheiro <filename>SMS.ELF</filename> do
+        seu Cartão de Memória.
+      </para>
     </listitem>
   </itemizedlist>
   <para lang="en">
      <emphasis>
        If the above doesn't make any sense, please read the
        <link linkend="sms-installation-detail">next section</link>.
+     </emphasis>
+  </para>
+  <para lang="pt">
+     <emphasis>
+       Se os passos anteriores não fizerem sentido para si, por favor leia a
+       <link linkend="sms-installation-detail">secção seguinte</link>.
      </emphasis>
   </para>
 

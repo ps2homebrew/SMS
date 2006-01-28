@@ -6,11 +6,18 @@
     <phrase lang="en">
       Playing video files from a USB mass storage drive connected to the PS2
     </phrase>
+    <phrase lang="pt">
+      Correndo ficheiros de video a partir de um dispositivo USB ligado à PS2.
+    </phrase>
   </title>
 
   <para lang="en">
     You can play audio and video files from a USB stick connected to the
     front of your PS2.
+  </para>
+  <para lang="pt">
+    Pode utilizar um dispositivo USB ligado à frente da sua PS2 para ver
+    videos ou tocar os seus MP3.
   </para>
 
   <para lang="en">
@@ -18,6 +25,13 @@
     issues, the USB driver <filename>USBD.IRX</filename> is not included with 
     the SMS distribution.  SMS looks for it in the following folders:
   </para>
+  <para lang="pt">
+    O SMS é capaz de ler ficheiros a partir de um dispositvo USB, mas devido a
+    problemas de licensiamento, o ficheiro <filename>USBD.IRX</filename> não
+    está incluido na distribuição do SMS. O SMS procura-o nos seguintes
+    directórios:
+  </para>
+
 
   <itemizedlist>
     <listitem>
@@ -48,10 +62,16 @@
     the distribution of <application>naplink</application>: 
     naplink-ps2-v1.0.1a. This can be found at
     <ulink url="http://naplink.napalm-x.com/"/>.
+  </para>  
+  <para lang="pt">
+    Uma versão do ficheiro <filename>USBD.IRX</filename> pode ser encontrada 
+    na distribuição do <application>naplink</application>: 
+    naplink-ps2-v1.0.1a. Isto pode ser encontrado em
+    <ulink url="http://naplink.napalm-x.com/"/>.
   </para>
   
   <para lang="en">
-    Download the above zip file, and open it up - inside you will find a 
+    Download the above zip file, and open it up – inside you will find a 
     file called <filename>npm-usbd.irx</filename>. Copy this file to a local
     folder on your computer, then <emphasis role="bold">rename</emphasis>
     it to <filename>USBD.IRX</filename> (must be in capitals). 
@@ -62,10 +82,24 @@
     Press <emphasis role="bold">RIGHT</emphasis> to select this icon and
     browse the USB drive.
   </para>
+  <para lang="pt">
+    Faça o download do .zip acima mencionado e abra-o - dentro do mesmo
+    encontrará um ficheiro chamado <filename>npm-usbd.irx</filename>.
+    Copie este ficheiro para um directório no seu PC, depois tem de
+    <emphasis role="bold">renome-á-lo</emphasis> para 
+    <filename>USBD.IRX</filename> (tem de ser em letras maiúsculas).
+    Depois use um programa de FTP ou qualquer outro método para copiar
+    o ficheiro para um dos locais mencionados em cima. Da próxima vez 
+    que iniciar o SMS, terá suporte para USB. Não verá qualquer diferença 
+    até ligar um dispositivo USB à PS2. Nessa altura verá um icon igual
+    ao mostrado em baixo. Pressione <emphasis role="bold">DIREITA</emphasis>
+    para seleccionar este icon e navegar no dispositivo USB.
+  </para>
 
   <figure>
     <title>
       <phrase lang="en">SMS with USB support activated.</phrase>
+      <phrase lang="pt">SMS com suporte USB activado.</phrase>
     </title>
     <mediaobject>
       <imageobject>
@@ -81,6 +115,10 @@
   <para lang="en">
     As usual, press <emphasis role="bold">X</emphasis> to play the selected 
     video file.
+  </para>
+  <para lang="pt">
+    Como habitualmente, pressione <emphasis role="bold">X</emphasis> para
+    correr o ficheiro seleccionado.
   </para>
 
 </sect1>

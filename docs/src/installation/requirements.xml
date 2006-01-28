@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- $Revision: 1.26 $ -->
 
 <sect1 id="sms-installation-requirements">
@@ -6,11 +6,14 @@
     <phrase lang="en">Requirements</phrase>
     <phrase lang="el">#Requirements#</phrase>
     <phrase lang="es">#Requirements#</phrase>
-    <phrase lang="pt">#Requirements#</phrase>
+    <phrase lang="pt">Requerimentos</phrase>
   </title>
   
   <para lang="en">
     To install SMS on your Playstation 2 you will need the following:
+  </para>
+  <para lang="pt">
+    Para instalar o SMS na sua PlayStation 2 necessita do seguinte:
   </para>
 
   <itemizedlist mark='number'>
@@ -25,7 +28,7 @@
         #A PS2 (chubby version if you'll be using the independence exploit)#
       </para>
       <para lang="pt">
-        #A PS2 (chubby version if you'll be using the independence exploit)#
+        Uma PS2 (versão 'grande' se estiver a usar o 'independence exploit')
       </para>
     </listitem>
 
@@ -40,7 +43,7 @@
         #Working exploit or modchip which allows you to run ELF files#
       </para>
       <para lang="pt">
-        #Working exploit or modchip which allows you to run ELF files#
+        Exploit ou Modchip que lhe permitam correr ficheiros ELF
       </para>
     </listitem>
 
@@ -58,8 +61,8 @@
         playing your PC's movie collection via a local area network.#
       </para>
       <para lang="pt">
-        #(optional but recommended) Official PS2 Network Adaptor kit - for
-        playing your PC's movie collection via a local area network.#
+        (opcional mas recomendado) Adaptador de Rede para PS2 - para 
+        vizualizar os seus filmes através da rede.
       </para>
     </listitem>
   </itemizedlist>
@@ -77,10 +80,24 @@
       Rather it is a way of supplying media files to SMS once SMS is already
       running.
     </para>
+    <para lang="pt">
+      Para utilizar o SMS na sua Playstation necessitará de ter um método para
+      correr ficheiros ELF a partir do seu Cartão de Memória.  PS2 normais
+      não conseguem fazer isto.  O SMS não é um meio para correr ficheiros 
+      ELF, ele necessita de um exploit ou de um modchip para correr.  Não
+      pode simplesmente gravar o SMS.ELF para um CD visto que o sistema de
+      protecção anti-cópia da PS2 o impedirá de ler.  Por favor tenha também 
+      em atenção que o método do CDXplorer também não servirá para correr o 
+      SMS.  É apenas um método de fornecer ficheiros de media ao SMS assim que
+      o SMS já esteja a correr.
+    </para>
   </important>
 
   <para lang="en">
     You will need one of the following (some of which are free):
+  </para>
+  <para lang="pt">
+    Precisará de um dos seguintes (alguns são grátis):
   </para>
 
   <itemizedlist>
@@ -92,20 +109,32 @@
         AND a working ELF launching program (such as
         LaunchELF), AND a PSX (playstation 1) trigger disc.
       </para>
+      <para lang="pt">
+        Um exploit a funcionar (tal como o independence exploit
+        <ulink url="http://en.wikipedia.org/wiki/PS2_Independence_Exploit"/>
+        <ulink url="http://www.exploitstation.com/index.php?page=faq"/>)
+        E ainda um programa para executar ficheiros ELF (tal como o LaunchELF),
+        E um disco de PSX (playstation 1) original.
+      </para>
     </listitem>
 
     <listitem override='none'>
       <para lang="en">OR</para>
+      <para lang="pt">OU</para>
     </listitem>
 
     <listitem>
       <para lang="en">
         A mod chip in your PS2 that lets you run arbitrary ELF files.
       </para>
+      <para lang="pt">
+        Um modchip na sua PS2 que o deixe correr ficheiros ELF.
+      </para>
     </listitem>
 
     <listitem override='none'>
       <para lang="en">OR</para>
+      <para lang="pt">OU</para>
     </listitem>
 
     <listitem>
@@ -113,6 +142,12 @@
         PS2 linux kit and some way of using this to launch arbitrary ELF
         files (try <ulink url="http://playstation2-linux.com/projects/haven/">
         here</ulink>).
+      </para>
+      <para lang="pt">
+        O kit de Linux para PS2 e uma maneira de o utilizar para executar 
+        ficheiros ELF (tente 
+        <ulink url="http://playstation2-linux.com/projects/haven/">
+        aqui</ulink>).
       </para>
     </listitem>
   </itemizedlist>
@@ -122,10 +157,19 @@
     to run SMS. You need to get one of them <emphasis>before</emphasis>
     going any further with this installation guide.
   </para>
+  <para lang="pt">
+    Se não tiver nenhum dos items acima descritos não poderá correr o SMS. 
+    Necessita de ter um deles <emphasis>antes</emphasis> de ir mais longe no
+    guia da instalação.
+  </para>
 
   <para lang="en">
     Assuming you do, please read on to the next section for how to install
     SMS onto your PS2 memory card.
+  </para>
+  <para lang="pt">
+    Assumindo que tem um destes métodos, leia a próxima secção para instalar o
+    SMS no Cartão de Memória da sua PS2.
   </para>
 
 </sect1>

@@ -6,27 +6,41 @@
     <phrase lang="en">
       Playing video files from a PS2 Internal Hard Drive
     </phrase>
+    <phrase lang="pt">
+      Correndo ficheiros de Video a partir do Disco Rigido da PS2
+    </phrase>
   </title>
 
   <note>
     <para lang="en">
       This section of the documentation is not yet completed in full.
     </para>
+    <para lang="pt">
+      Esta secção do Manual ainda não está totalmente completa.
+    </para>
   </note>
   <para lang="en">
     &lt;Section to be completed&gt; for now, here's the basics in short:
+  </para>
+  <para lang="pt">
+    &lt;Secção a ser completada&gt; por agora, aqui fica o básico:
   </para>
 
 
   <itemizedlist>
     <listitem>
       <para lang="en">Copy files to hdd via ftp or other means.</para>
+      <para lang="pt">Copie os ficheiros para o HDD via ftp ou 
+      qualquer outro método.</para>
     </listitem>
     <listitem>
       <para lang="en">Select hdd from device menu icon on SMS screen.</para>
+      <para lang="pt">Seleccione o icon do HDD no menu do SMS.</para>
     </listitem>
     <listitem>
       <para lang="en">Browse to file and press
+      <emphasis role="bold">X</emphasis>.</para>
+      <para lang="pt">Navegue até ao ficheiro e pressione 
       <emphasis role="bold">X</emphasis>.</para>
     </listitem>
   </itemizedlist>

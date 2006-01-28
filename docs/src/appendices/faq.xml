@@ -8,6 +8,10 @@
       <emphasis>I've made my CDDAFS CDR but my PS2 won't boot from it - It just
       sees it as an audio CD. What's wrong?</emphasis>
     </phrase>
+    <phrase lang="pt">
+      <emphasis>Criei o meu CD-R CDDAFS mas a minha PS2 não o inicia - apenas
+      o vê como um CD de áudio. O que está errado?</emphasis>
+    </phrase>
   </title>
   <para lang="en">
     CDXplorer does not create a CD-R which you can boot from. It just creates
@@ -16,12 +20,22 @@
     running. As far as I know there is no way to 'boot' SMS off a CD, DVD-R or
     any other removable media without a Mod-Chip. You always need either:
   </para>
+  <para lang="pt">
+    O CDXplorer não cria um CD-R a partir do qual se pode arrancar. Apenas 
+    cria um disco que pode ser lido quando o SMS já está a correr. CDDAFS não
+    é um método de inicializar o SMS, é um método de fornecer os ficheiros ao
+    SMS quando este já está a correr. Que eu saiba, não existe nenhum método
+    para executar o SMS a partir de um CD, DVD-R ou qualquer outro tipo de 
+    media amovivel sem ter um Mod-Chip. Precisa sempre de:
+  </para>
   <itemizedlist mark='bullet'>
     <listitem>
       <para lang="en">An exploit</para>
+      <para lang="pt">Um exploit</para>
     </listitem>
     <listitem>
       <para lang="en">A mod chip</para>
+      <para lang="pt">Ou um Mod-chip</para>
     </listitem>
   </itemizedlist>
   <para lang="en">
@@ -30,6 +44,14 @@
     will be put on the memory card, then an exploit will be used to launch SMS
     from the memory card. Without an exploit or modchip there is no known way
     you can get your PS2 to run SMS. But if you find a way - let us know!
+  </para>
+  <para lang="pt">
+    para executar o SMS primeiro... e <emphasis>depois</emphasis> coloca o seu
+    disco CDDAFS, DVD-R, etc. Em muitos casos, o <filename>SMS.ELF</filename>
+    será colocado no cartão de memória, depois será usado um exploit para 
+    executar o SMS do cartão de memória. Sem um exploit ou sem um modchip não
+    existe nenhum método conhecido para executar o SMS. Mas se descobrir uma
+    maneira - diga-nos!!!
   </para>
 </sect1>
 
@@ -40,6 +62,10 @@
       <emphasis>How does SMS playback quality compare with
       <application>PS2Reality Media Player</application>?</emphasis>
     </phrase>
+    <phrase lang="pt">
+      <emphasis>Como é que a qualidade de vizualização do SMS se compara com 
+      o <application>PS2Reality Media Player</application>?</emphasis>
+    </phrase>
   </title>
 
     <para lang="en">
@@ -48,6 +74,12 @@
       good as possible. If you'd like to do some detailed comparisons
       yourself, go ahead, we'd be interested in the results.
     </para>
+    <para lang="pt">
+      Não estamos a tentar comparar o SMS contra outros leitores de media de 
+      momento. O único objectivo é fazer o SMS o melhor possível. Se estiver
+      interessado em fazer as suas próprias comparações, força nisso, seria
+      interessante ver os resultados.
+    </para>
 
 </sect1>
 
@@ -55,6 +87,9 @@
   <title>
     <phrase lang="en">
       <emphasis>I can't see my network files - what's wrong?</emphasis>
+    </phrase>
+    <phrase lang="pt">
+      <emphasis>Não consigo ver os ficheiros na rede - o que se passa?</emphasis>
     </phrase>
   </title>
 
@@ -68,6 +103,15 @@
       <application>RadHostClient</application>) on your PC, and check the 
       instructions again.
     </para>
+    <para lang="pt">
+      Veja no menu de opções de rede (no SMS: Start->Network Settings),
+      e se o vir, pressione '<emphasis role="bold">start network 
+      now</emphasis>'. Ligar o 
+      <emphasis role="bold">Autostart network</emphasis> fará com que o SMS
+      tente ligar-se a um cliente ao iniciar. Se os problemas persistirem,
+      tente reiniciar o cliente (e.g. <application>RadHostClient</application>) 
+      no seu PC e releia as instruções.
+    </para>
 
 </sect1>
 
@@ -77,6 +121,10 @@
       <emphasis>What's an exploit? This sounds bad. Can I go to prison for 
       running an exploit?</emphasis>
     </phrase>
+    <phrase lang="pt">
+      <emphasis>O que é um 'exploit'? Cheira-me a esturro. Posso ir para a 
+      prisão por usar um 'exploit'?</emphasis>
+    </phrase>
   </title>
 
     <para lang="en">
@@ -85,6 +133,12 @@
       Legislation may vary in different countries, so you are advised to
       check local laws before installing an exploit or purchasing a 
       mod-chip.
+    </para>
+    <para lang="pt">
+      A <trademark>Sony Computer Entertainment</trademark> desaprova os 
+      exploits e mod-chips, mas estes continuam a ser vendidos em todo o mundo.
+      A legislação pode variar de país para país, por isso é aconselhável que
+      se informe das leis locaisantes de instalar o mod-chip ou exploit.
     </para>
 
 </sect1>
@@ -97,6 +151,10 @@
       <emphasis>What is the <quote>Independence Exploit</quote> and how does
       it help me?</emphasis>
     </phrase>
+    <phrase lang="pt">
+      <emphasis>O que é o <quote>Independence Exploit</quote> e como é que me 
+      ajuda?</emphasis>
+    </phrase>
   </title>
 
   <para lang="en">
@@ -106,6 +164,14 @@
     the exploit actually is can be found
     <ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
     here</ulink>.
+  </para>
+  <para lang="pt">
+    O <emphasis role="bold">Independence Exploit</emphasis> é um exploit 
+    baseado em software que deixa a PS2 ler aplicações não encriptadas (tal
+    como o SMS) a partir do cartão de memória.  A explicação mais concisa do
+    que é o exploit pode ser encontrada 
+    <ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
+    aqui</ulink>.
   </para>
 
   <para lang="en">
@@ -124,6 +190,22 @@
     modified files onto your memory card can be found
     <ulink url="http://www.exploitstation.com/index.php?page=faq">here</ulink>.
   </para>
+  <para lang="pt">
+    O Independence Exploit é uma das técnicas que pode ser usada para enganar
+    a PS2 para correr o SMS.  Normalmente a PS2 não permite que corra 
+    programas não-encriptados, esta protecção existe principalmente para 
+    reduzir a utilização de jogos copiados.  No que toca a projectos legitimos
+    como o SMS, a protecção so impede que este seja executado. Quando instalado,
+    O Independence Exploit deixa o utilizador correr uma aplicação especifica
+    que esteja no cartão de memória.  Normamente a aplicação escolhida é um 
+    programa de execução de ficheiros ELF (um navegador de ficheiros) que 
+    depois permite correr outras aplicações. O Exploit em si é executado 
+    introduzindo um  jogo de PS1 (escolhido), inserindo um cartão de memória
+    com ficheiros especificamente modificados nele, e pressionando Reset. Um
+    tutorial de como arranjar os ficheiros modificados para o cartão de 
+    memória pode ser encontrado
+    <ulink url="http://www.exploitstation.com/index.php?page=faq">aqui</ulink>.
+  </para>
 
   <para lang="en">
     The recommended approach is to use the tutorial to install an ELF launching
@@ -132,11 +214,24 @@
     you to make backups of all your saved games which is handy for those
     strange people who still use their PS2 to play games!
   </para>
+  <para lang="pt">
+    A aproximação recomendada é utilizar o tutorial para instalar um programa
+    de execução de ficheiros ELF e um servidor de FTP. Depois pode utilizar o 
+    servidor de FTP para instalar todas as aplicações (ficheiros ELF)que 
+    desejar.  Isto permite também que faça cópias de segurança de todos os seus
+    saves, que pode ser útil para aquelas pessoas estranhas que ainda usam a 
+    PS2 para jogar jogos!
+  </para>
 
   <para lang="en">
     The exploit is significant to SMS users since it is one of the cheapest
     ways of running SMS, requiring no additional hardware other than a
     PS2, a memory card, and an original PS1 game.
+  </para>
+  <para lang="pt">
+    O Exploit é importante para os utilizadores do SMS visto que é o método 
+    mais barato de executar o SMS, não requerindo qualquer hardware extra para
+    além da PS2, cartão de memória e um jogo original PS1.
   </para>
 </sect1>
 
@@ -145,6 +240,11 @@
     <phrase lang="en">
       <emphasis>I can't access SMS on my DHCP network.  SMS won't
       autoconfigure it's IP address.  What's wrong?
+      </emphasis>
+    </phrase>
+    <phrase lang="pt">
+      <emphasis>Não consigo aceder ao SMS na minha rede DHCP.  O SMS não 
+      configura o seu IP automaticamente. O que se passa?
       </emphasis>
     </phrase>
   </title>
@@ -156,6 +256,14 @@
     <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>, (see
     <xref linkend="installation-configuration-ipconfig"/>).
   </para>
+  <para lang="pt">
+    O SMS não configura o seu endereço de IP numa rede de DHCP (Dynamic Host 
+    Configuration Protocol), tal como os servidores DHCP normalmente 
+    encontrados em access points wireless, etc.  SMS requere um endereço de IP
+    estático (ou manual) configurado em
+    <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>, (veja
+    <xref linkend="installation-configuration-ipconfig"/>).
+  </para>
 
   <para lang="en">
     This does not mean that you need to disable DHCP and make your whole
@@ -165,12 +273,27 @@
     that they will assign to DHCP clients (for example, my linksys WRT54G
     access point assigns IP addresses from 192.168.1.100 to 192.168.1.254)
   </para>
+  <para lang="pt">
+    Isto não significa que tenha de desligar o DHCP e fazer com que toda a sua
+    rede funcione com endereços estáticos.  Basta verificar a configuração do
+    seu servidor de DHCP, e configurar o endereço de IP da PS2 manualmente para
+    ser compatível.  A grande maioria dos servidores de DHCP tem um raio de
+    endereços IP que irá atribuir aos clientes (por exemplo, a minha access
+    point linksys WRT54G atribui endereços de IP de 192.168.1.100 a 
+    192.168.1.254).
+  </para>
 
   <para lang="en">
     As long as you set your PS2 IP address outside of this range (e.g.
     192.168.1.22), then SMS will run happily alongside your DHCP clients.
     You may need to adjust your DHCP settings by changing the start IP
     address if there is not already a range you can use.
+  </para>
+  <para lang="pt">
+    Desde que atribua à PS2 um IP fora deste raio (e.g. 192.168.1.22), então
+    o SMS correrá feliz junto com os seus clientes de DHCP. Pode ter de
+    ajustar as suas definições de DHCP modificando o endereço de IP inicial se
+    ainda não houver um raio que possa usar.
   </para>
 
   <para lang="en">
@@ -179,6 +302,13 @@
     the access point itself), and the PS2 must be on the same subnet (i.e.
     the first 3 numbers of the IP address must be the same as other nodes on
     your network).
+  </para>
+  <para lang="pt">
+    Tem de se certificar que o IP que está a usar não é usado por outros 
+    aparelhos na sua rede local (tal como PC's, outras PS2's, ou a própria
+    access point), e a PS2 tem de estar na mesma 'subnet' (i.e. os primeiros
+    3 números do endereço de IP devem ser os mesmos que os outros aparelhos
+    na sua rede local).
   </para>
 
   <tip>
@@ -190,6 +320,14 @@
       You can usually access the configuration settings of access points
       by typing the access point IP address into a web browser.
     </para>
+    <para lang="pt">
+      Se não estiver certo se tem ou não um servidor de DHCP, vá ao command
+      prompt e insira <userinput>ipconfig /all</userinput>.
+      Se vir um servidor de DHCP listado com um endereço de IP, então isso
+      significa que você <emphasis role="bold">tem</emphasis> um servidor de
+      DHCP a correr. Pode normalmente aceder à configuração das access points
+      inserindo o seu endereço de IP num navegador de internet.
+    </para>
   </tip>
 </sect1>
 
@@ -199,9 +337,16 @@
       <emphasis>Does the PS2 optical digital output work in SMS for AC3 
       passthrough?</emphasis>
     </phrase>
+    <phrase lang="pt">
+      <emphasis>A saída óptica digital da PS2 funciona no SMS para som AC3?
+      </emphasis>
+    </phrase>
   </title>
   <para lang="en">
     No.  The PS2 optical digital output is not currently supported by SMS.
+  </para>
+  <para lang="pt">
+    Não. A saída óptica digital da PS2 não é suportada pelo SMS.
   </para>
 
   <para lang="en">
@@ -210,10 +355,21 @@
     digital home cinema system.  However, this is not yet supported, and you
     are advised to use the standard audio outputs in the mean time.
   </para>
+  <para lang="pt">
+    A saída óptica digital permitiria à PS2 ser conectada por um cabo de fibra
+    óptica a um amplificador e processador de áudio externo tal como um sistema
+    home cinema dolby digital.  No entanto, isto ainda não é suportado, e é 
+    recomendado que use as saídas de áudio normais por enquanto.
+  </para>
 
   <para lang="en">
     This feature may be introduced in a future release of SMS.  Anyone who
     would like to (and has the necessary hardware) is welcome to develop it.
+  </para>
+  <para lang="pt">
+    Esta capacidade pode ser introduzida numa publicação futura do SMS.  
+    Alguém que queira (e tenha o hardware necessário) é bem-vindo a
+    desenvolve-la.
   </para>
 </sect1>
 

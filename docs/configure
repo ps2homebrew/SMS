@@ -8,7 +8,7 @@ _xmllintwrapper="xmllint.sh"
 
 echo "Searching for XML catalogs..."
 for _try_catalog in \
-  /etc/sgml/catalog \
+  /etc/xml/catalog \
   /usr/share/sgml/docbook/xml-dtd-4.1.2/xmlcatalog \
   /usr/share/apps/ksgmltools2/customization/en/catalog \
   /usr/share/sgml/catalog \
@@ -27,12 +27,64 @@ done
 
 if test -n "$_catalog"
 then
-  echo "Found SGML catalog at $_catalog"
-  _sgmlcatalog="export SGML_CATALOG_FILES=$_catalog"
+  echo "Found XML catalog at $_catalog"
+  _xmlcatalog="export SGML_CATALOG_FILES=$_catalog"
 else
-  echo "No SGML catalog found."
+  echo "No XML catalog found."
 fi
 
+echo "Searching for DTD..."
+for _try_dtd in \
+  /usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd \
+  /usr/share/docbook-xml42/docbookx.dtd \
+  /usr/share/sgml/docbook/xml-dtd-4.1.2*/docbookx.dtd \
+  /usr/share/sgml/docbook/xml-dtd-4.2/docbookx.dtd \
+  /usr/share/xml/docbook/schema/dtd/4.2/docbookx.dtd \
+  /usr/share/sgml/docbook/dtd/4.2/docbookx.dtd \
+  /usr/share/xml/docbook/4.*/docbookx.dtd 
+do
+  if test -f "$_try_dtd"
+  then
+    _dtd=$_try_dtd
+    break
+  fi
+done
+
+if test -z "$_dtd"
+then
+  _dtd=http://www.docbook.org/xml/4.3/docbookx.dtd
+  echo "Not found. Using fallback web version ($_dtd)."
+  _web_dtd=yes
+  _web_needed=yes
+else
+  echo "Found docbookx.dtd at $_dtd"
+fi
+
+echo "Searching for profiling/profile.xsl..."
+for _try_profile_xsl in \
+  /usr/share/sgml/docbook/stylesheet/xsl/nwalsh/profiling/profile.xsl \
+  /usr/share/sgml/docbook/yelp/docbook/html/profiling/profile.xsl \
+  /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/profiling/profile.xsl \
+  /usr/local/share/sgml/docbook/yelp/docbook/profiling/profile.xsl \
+  /usr/share/docbook-xsl/profiling/profile.xsl \
+  /usr/share/sgml/docbook/xsl-stylesheets*/profiling/profile.xsl
+do
+  if test -f "$_try_profile_xsl"
+  then
+    _profile_xsl=$_try_profile_xsl
+    break
+  fi
+done
+
+if test -z "$_profile_xsl"
+then
+  _profile_xsl=http://docbook.sourceforge.net/release/xsl/current/profiling/profile.xsl
+  echo "Not found. Using fallback web-version ($_profile_xsl)."
+  _web_profile_xsl=yes
+  _web_needed=yes
+else
+  echo "Found profile.xsl at $_profile_xsl"
+fi
 
 echo "Searching for stylesheets..."
 echo "Searching for html/chunk.xsl..."
@@ -42,7 +94,7 @@ for _try_chunk_xsl in \
   /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl \
   /usr/local/share/sgml/docbook/yelp/docbook/html/chunk.xsl \
   /usr/share/docbook-xsl/html/chunk.xsl \
-  /usr/share/sgml/docbook/xsl-stylesheets*/html/chunk.xsl 
+  /usr/share/sgml/docbook/xsl-stylesheets*/html/chunk.xsl
 do
   if test -f "$_try_chunk_xsl"
   then
@@ -54,8 +106,9 @@ done
 if test -z "$_chunk_xsl"
 then
   _chunk_xsl=/usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl
-  echo "Not found. Using default ($_chunk_xsl)"
-  _fake_chunk_xsl=yes
+  echo "Not found. Using fallback web version ($_chunk_xsl)"
+  _web_chunk_xsl=yes
+  _web_needed=yes
 else
   echo "Found chunk.xsl at $_chunk_xsl"
 fi
@@ -67,7 +120,7 @@ for _try_docbook_xsl in \
   /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl \
   /usr/local/share/sgml/docbook/yelp/docbook/html/docbook.xsl \
   /usr/share/docbook-xsl/html/docbook.xsl \
-  /usr/share/sgml/docbook/xsl-stylesheets*/html/docbook.xsl 
+  /usr/share/sgml/docbook/xsl-stylesheets*/html/docbook.xsl
 do
   if test -f "$_try_docbook_xsl"
   then
@@ -78,12 +131,30 @@ done
 
 if test -z "$_docbook_xsl"
 then
-  _docbook_xsl=/usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl
-  echo "Not found. Using default ($_docbook_xsl)"
-  _fake_docbook_xsl=yes
+  _docbook_xsl=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
+  echo "Not found. Using fallback web version ($_docbook_xsl)"
+  _web_docbook_xsl=yes
+  _web_needed=yes
 else
   echo "Found docbook.xsl at $_docbook_xsl"
 fi
+
+cat > stylesheets/profile.xsl << EOF
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version='1.0'>
+<!-- **************************************************
+     This file is generated automatically. DO NOT EDIT.
+     ************************************************** -->
+
+  <xsl:import
+      href="$_profile_xsl" />
+
+  <!-- Generate DocBook instance with correct DOCTYPE -->
+  <xsl:output method="xml" encoding="utf-8"
+    doctype-public="-//OASIS//DTD DocBook XML V4.3//EN"
+    doctype-system="http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"/>
+</xsl:stylesheet>
+EOF
 
 cat > stylesheets/html-chunk.xsl << EOF
 <?xml version="1.0" encoding="ISO-8859-1"?>
@@ -93,12 +164,12 @@ cat > stylesheets/html-chunk.xsl << EOF
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="1.0">
 
-  <xsl:import href="$_chunk_xsl"/>
+  <xsl:import
+      href="$_chunk_xsl"/>
   <xsl:include href="html-common.xsl"/>
 
 </xsl:stylesheet>
 EOF
-
 
 cat > stylesheets/html-single.xsl << EOF
 <?xml version="1.0" encoding="ISO-8859-1"?>
@@ -108,56 +179,12 @@ cat > stylesheets/html-single.xsl << EOF
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="1.0">
 
-  <xsl:import href="$_docbook_xsl"/>
+  <xsl:import 
+      href="$_docbook_xsl"/>
   <xsl:include href="html-common.xsl"/>
 
 </xsl:stylesheet>
 EOF
-
-echo "Searching for DTD..."
-for _try_dtd in \
-  /usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd \
-  /usr/share/docbook-xml42/docbookx.dtd \
-  /usr/share/sgml/docbook/xml-dtd-4.1.2*/docbookx.dtd \
-  /usr/share/sgml/docbook/xml-dtd-4.2/docbookx.dtd \
-  /usr/share/xml/docbook/schema/dtd/4.2/docbookx.dtd \
-  /usr/share/sgml/docbook/dtd/4.2/docbookx.dtd
-do
-  if test -f "$_try_dtd"
-  then
-    _dtd=$_try_dtd
-    break
-  fi
-done
-
-if test -z "$_dtd"
-then
-  _dtd=/usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd
-  echo "Not found. Using default ($_dtd)."
-else
-  echo "Found docbookx.dtd at $_dtd"
-fi
-
-#for lang in `grep 'SUBDIRS =' Makefile|cut -d= -f2`; do
-#  cat > $lang/main.xml << EOF
-#<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
-#<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-#    "$_dtd"
-#[
-#EOF
-#
-#  for file in `find $lang en -name \*.xml -exec basename \{\} \; | sort -u`; do
-#    echo '<!ENTITY '$file'	SYSTEM "'$file'">' >> $lang/main.xml
-#  done
-#
-#  cat >> $lang/main.xml << EOF
-#]>
-#<book id="index" lang="$lang">
-#&documentation.xml;
-#</book>
-#EOF
-#
-#done
 
 echo "Looking for a valid XSLT processor..."
 # Checks for xsltproc, then checks for the Saxon processor (it needs Java).
@@ -166,20 +193,35 @@ echo "Looking for a valid XSLT processor..."
 
 if xsltproc --version &> /dev/null
 then
-  if test -z "$_fake_chunk_xsl"
+  if test -z "$_web_needed"
   then
-    echo "Found xsltproc. If it works, it's probably the best choice."
+    echo "Found xsltproc & all required resources, ready to start build process."
+  else
+    echo "ERROR: Found xsltproc but some stylesheets were not on your system."
+    echo "Please check that you've installed docbook-xsl and docbook-xml and "
+    echo "and if necessary, make sure that ./configure is looking for them in "
+    echo "the right places."
+    echo "If all else fails... you can continue from here, but you'll need "
+    echo "an open connection to the internet, every time you build, there'll "
+    echo "probably be some downloading."
     if test -n "$_catalog"
     then
-      _xsltcommand="xsltproc --catalogs --stringparam profile.lang \"\$4\" -o \$1 \$2 \$3"
+      echo "I found a catalog ($_catalog), and I'll use this to resolve to "
+      echo "local resources wherever I can."
     else
-      _xsltcommand="xsltproc --stringparam profile.lang \"\$4\" -o \$1 \$2 \$3"
+      echo "I didn't find a catalog, so I won't be able to resolve any of "
+      echo "these urls to local resources."
     fi
+  fi
+
+  if test -n "$_catalog"
+  then
+    _xsltcommand="xsltproc --catalogs --stringparam l10n.gentext.default.language \"\$4\" --stringparam profile.lang \"\$4\" -o \$1 \$2 \$3"
   else
-    echo "Found xsltproc but no stylesheets on your system."
-    echo "xsltproc is unusable without stylesheets."
+    _xsltcommand="xsltproc --stringparam l10n.gentext.default.language \"\$4\" --stringparam profile.lang \"\$4\" -o \$1 \$2 \$3"
   fi
 fi
+
 
 # xsltproc not found.
 # Now try to find a good Java virtual machine.
@@ -248,6 +290,8 @@ cd \$_DIRNAME &&
   fi
 fi
 
+
+
 if test -z "$_xsltcommand"
 then
   # Java not found.
@@ -310,7 +354,7 @@ cat > $_xsltwrapper << EOF
 # It accepts 4 arguments: <output_dir> <stylesheet_name> <main XML file name> <lang>
 _IN_DIR=\`pwd\`
 
-$_sgmlcatalog
+$_xmlcatalog
 $_xsltcommand
 EOF
 
@@ -345,7 +389,7 @@ cat > $_xmllintwrapper << EOF
 # This file is generated automatically. DO NOT EDIT.
 # **************************************************
 # This is a small wrapper for XML lintian programs.
-$_sgmlcatalog
+$_xmlcatalog
 $_xmllint_command
 EOF
 

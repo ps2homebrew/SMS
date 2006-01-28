@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- $Revision: 1.26 $ -->
 
 <sect1 id="sms-installation-detail">
@@ -6,7 +6,7 @@
     <phrase lang="en">Installation Instructions In Detail</phrase>
     <phrase lang="el">#Installation Instructions In Detail#</phrase>
     <phrase lang="es">#Installation Instructions In Detail#</phrase>
-    <phrase lang="pt">#Installation Instructions In Detail#</phrase>
+    <phrase lang="pt">Instruções de Instalação Detalhadas</phrase>
   </title>
   <para lang="en">
     First download a copy of the latest <filename>SMS.ELF</filename>. The 
@@ -16,13 +16,26 @@
     <ulink url="http://ps2dev.org/ps2/Projects"/>. Developers can download the
     source from svn://svn.ps2dev.org.
   </para>
+  <para lang="pt">
+    Primeiro faça o download da última versão do <filename>SMS.ELF</filename>.
+    A última versão está disponível em
+    <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
+    algumas das versões antigas também estão disponíveis em 
+    <ulink url="http://ps2dev.org/ps2/Projects"/>. Os programadores podem 
+    fazer download do código fonte em svn://svn.ps2dev.org.
+  </para>
   <para lang="en">
     Now copy this file to your memory card (memory card 0). The recommended
     (and probably easiest) way to copy the ELF file to your PS2 is using FTP.
   </para>
+  <para lang="en">
+    Agora copie o ficheiro para o seu cartão de memória (cartão de memória 0).
+    O método mais fácil e recomendado para o fazer é usando o FTP.
+  </para>
   <sect2>
   <title id="installation-detail-copyftp">
     <phrase lang="en">Copying SMS to your PS2 using FTP</phrase>
+    <phrase lang="pt">Copiando o SMS para a PS2 usando FTP</phrase>
   </title>
   <para lang="en">
     You'll need an
@@ -31,10 +44,17 @@
     a  crossover cable between the two, or patch cables linking them both to a
     network switch.
   </para>
+  <para lang="pt">
+    Necessitará de um <emphasis role="bold">servidor de FTP</emphasis> 
+    a correr na PS2, e um <emphasis role="bold">cliente de FTP</emphasis> 
+    a correr no seu PC, com um cabo cruzado a ligar os dois ou ambos ligados 
+    a um switcher com cabos direitos.
+  </para>
 
   <sect3>
   <title>
     <phrase lang="en">Starting the FTP server</phrase>
+    <phrase lang="pt">Inicializando o servidor de FTP</phrase>
   </title>
 
   <para lang="en">
@@ -43,11 +63,20 @@
     start EXECFTPS.ELF directly, or navigate to it using the filebrowser,
     then run it from there).
   </para>
+  <para lang="pt">
+    Inicie o servidor de FTP (e.g. ExecFTPs) na sua PS2 utilizando o exploit 
+    (se estiver a usar o LaunchELF, pode configurar um dos butões para 
+    iniciar o EXECFTPS.ELF directamente, ou navegar até este utilizando o
+    filebrowser).
+  </para>
   
   <figure>
     <title>
-       <phrase lang="en">
+      <phrase lang="en">
          Start ExecFTPs by navigating to the ELF using LaunchELF.
+      </phrase>
+      <phrase lang="pt">
+         Inicie o ExecFTPs navegando até ao ELF utilizando o LaunchELF.
       </phrase>
     </title>
     <mediaobject>
@@ -62,9 +91,12 @@
 
   <figure>
     <title>
-       <phrase lang="en">
+      <phrase lang="en">
          Starting ExecFTPs using a configured button (the configuration above
          shows that by pressing start on controller 1, ExecFTPs will be started).
+      </phrase>
+      <phrase lang="pt">
+         Inicializando o ExecFTPs utilizando um butão configurado.
       </phrase>
     </title>
     <mediaobject>
@@ -81,11 +113,18 @@
     Either way, once you've got the FTP server running, you should see your
     TV screen show something like this:
   </para>
+  <para lang="pt">
+    De qualquer modo, quando tiver o servidor de FTP a correr, deverá ver na 
+    sua TV algo deste género:
+  </para>
 
   <figure id="installation-execftps03">
     <title>
        <phrase lang="en">
          Screenshot of ExecFTPs running using default IP configuration.
+      </phrase>
+      <phrase lang="pt">
+         Screenshot do ExecFTPs a correr com a configuração de IP por defeito.
       </phrase>
     </title>
     <mediaobject>
@@ -102,6 +141,9 @@
     <title>
        <phrase lang="en">
          Screenshot of ExecFTPs running using custom IP configuration.
+      </phrase>
+      <phrase lang="pt">
+         Screenshot do ExecFTPs a correr com a configuração de IP alterada.
       </phrase>
     </title>
     <mediaobject>
@@ -122,11 +164,25 @@
     PS2 is). If it's working, you'll see
     <computeroutput>reply from ...</computeroutput> shown on the screen.
   </para>
+  <para lang="pt">
+    Pode certificar-se que a conecção entre o PC e a PS2 está a funcionar 
+    iniciando o command prompt <emphasis role="bold">no PC</emphasis> 
+    (iniciar->executar, 'cmd' &lt;enter&gt;).  Depois introduza
+    <userinput>ping 192.168.0.10</userinput> (ou qualquer que seja o IP da sua
+    PS2). Se estiver a funcionar, verá 
+    <computeroutput>reply from ...</computeroutput> na janela.
+  </para>
   <para lang="en">
     You can change the IP address of your PS2 from default 192.168.0.10 to
     anything you want, but it must be on the same subnet as your PC. The
     configuration is stored in
     <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> and is of the form:
+  </para>
+  <para lang="pt">
+    Pode alterar o endereço de IP da sua PS2 de 192.168.0.10 para qualquer
+    outro que deseje, mas tem de ser da mesma 'subnet' que o seu PC. A 
+    configuração é guardada em 
+    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> e está na forma:
   </para>
   <screen>
     &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
@@ -136,13 +192,22 @@
     If you intend to copy a custom <filename>CONFIG.DAT</filename> to your
     PS2 via FTP, then you'll need to get it working with the defaults first.
   </para>
+  <para lang="pt">
+    Se pretender copiar um ficheiro <filename>CONFIG.DAT</filename> para a PS2
+    via FTP, terá de o colocar a funcionar com os valores de defeito primeiro.
+  </para>
   <sect4>
   <title>
     <phrase lang="en">Default Configuration</phrase>
+    <phrase lang="pt">Configuração de Defeito</phrase>
   </title>
   <para lang="en">
     These are the settings that ExecFTPs will use if you do not have a 
     <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> file.
+  </para>
+  <para lang="pt">
+    Estas são as definições que o ExecFTPs usará se não tiver um ficheiro
+    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
   </para>
 
   <informaltable frame='none'>
@@ -152,24 +217,28 @@
     <entry morerows="3">PS2 Settings</entry>
     <entry>
       <para lang="en">PS2 IP Address:</para>
+      <para lang="pt">Endereço de IP da PS2:</para>
     </entry>
     <entry>192.168.0.10</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Subnet Mask:</para>
+      <para lang="pt">'Subnet Mask':</para>
     </entry>
     <entry>255.255.255.0</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Default Gateway:</para>
+      <para lang="pt">'Default Gateway':</para>
     </entry>
     <entry>192.168.0.1</entry>
   </row>
   <row>
     <entry>
       <para lang="en">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
+      <para lang="pt">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
     </entry>
     <entry> file not created</entry>
   </row>
@@ -185,6 +254,14 @@
     that's in the same subnet, but with a different IP address. You will have
     to turn DHCP off, and use a manual (static) IP configuration, e.g:
   </para>
+  <para lang="pt">
+    Se tiver a usar a configuração em cima (e a sua TV se parecer com
+    <xref linkend="installation-execftps03" />, 
+    então terá de editar a sua configuração de IP do PC para obedecer. Isto 
+    significa que terá de atribuir ao seu PC um IP da mesma 'subnet', mas com 
+    um endereço diferente. Terá de desligar o DHCP, e usar um IP manual
+    (estático), e.g.:
+  </para>
 
   <informaltable frame='none'>
   <tgroup cols='2'>
@@ -193,18 +270,21 @@
     <entry morerows="2">PC Settings</entry>
     <entry>
       <para lang="en">PC IP Address:</para>
+      <para lang="pt">Endereço de IP do PC:</para>
     </entry>
     <entry>192.168.0.1</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Subnet Mask:</para>
+      <para lang="pt">'Subnet Mask':</para>
     </entry>
     <entry>255.255.255.0</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Default Gateway:</para>
+      <para lang="pt">'Default Gateway':</para>
     </entry>
     <entry>192.168.0.1</entry>
   </row>
@@ -215,12 +295,20 @@
   <sect4>
   <title>
     <phrase lang="en">Example Configuration</phrase>
+    <phrase lang="pt">Configuração de Exemplo</phrase>
   </title>
   <para lang="en">
     If you are using a custom configuration, you can use any settings you
     want, provided both PC and PS2 are on the same subnet. Here's my home
     setup, where both are on a 192.168.2.x subnet, and my internet
     access point / router is at 192.168.2.1.
+  </para>
+  <para lang="pt">
+    Se estiver a usar uma configuração modificada, pode usar quaisqueres 
+    definições que quiser, desde que tanto o PC como a PS2 tenham a mesma
+    'subnet'. Aqui está a configuração da minha rede doméstica, onde ambos 
+    estão numa subnet 192.168.2.xxx, e o meu router/access point é
+    192.168.2.1.
   </para>
   <informaltable frame='none'>
   <tgroup cols='2'>
@@ -229,24 +317,28 @@
     <entry morerows="3">PS2 Settings</entry>
     <entry>
       <para lang="en">PS2 IP Address:</para>
+      <para lang="pt">Endereçod de IP da PS2:</para>
     </entry>
     <entry>192.168.2.22</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Subnet Mask:</para>
+      <para lang="pt">'Subnet Mask':</para>
     </entry>
     <entry>255.255.255.0</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Default Gateway:</para>
+      <para lang="pt">'Default Gateway':</para>
     </entry>
     <entry>192.168.2.1</entry>
   </row>
   <row>
     <entry>
       <para lang="en">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
+      <para lang="pt">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
     </entry>
     <entry>
     <mediaobject>
@@ -266,6 +358,10 @@
   <para lang="en">
     The above PS2 settings require slightly different PC settings:
   </para>
+  <para lang="pt">
+    Estas definições da PS2 requerem definições ligeiramente diferentes para o
+    PC:
+  </para>
 
   <informaltable frame='none'>
   <tgroup cols='2'>
@@ -274,18 +370,21 @@
     <entry morerows="2">PC Settings</entry>
     <entry>
       <para lang="en">PC IP Address:</para>
+      <para lang="pt">Endereço de IP do PC:</para>
     </entry>
     <entry>192.168.2.23</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Subnet Mask:</para>
+      <para lang="pt">'Subnet Mask':</para>
     </entry>
     <entry>255.255.255.0</entry>
   </row>
   <row>
     <entry>
       <para lang="en">Default Gateway:</para>
+      <para lang="pt">'Default Gateway':</para>
     </entry>
     <entry>192.168.2.1</entry>
   </row>
@@ -301,6 +400,9 @@
     <phrase lang="en">
       Starting the FTP Client
     </phrase>
+    <phrase lang="pt">
+      Iniciando o cliente de FTP
+    </phrase>
   </title>
   <para lang="en">
     Once you've got the FTP server working, and successfully PINGed your PS2, 
@@ -311,6 +413,15 @@
     clients will work. For example I couldn't get FTPexplorer to work for
     some reason.
   </para>
+  <para lang="pt">
+    Assim que tiver o servidor de FTP a funcionar, e tiver PINGado a PS2 com
+    sucesso, execute o seu cliente de FTP. Muitas pessoas parecem recomendar o
+    FlashFXP (<ulink url="http://www.inicom.net/pages/en.ffxp-download.php"/>), 
+    mas eu estou contente com o FileZilla
+    (<ulink url="http://sourceforge.net/projects/filezilla"/>). Nem todos os
+    clientes de FTP funcionam, eu não consegui meter o FTPexplorer a 
+    funcionar por alguma razão.
+  </para>
   <para lang="en">
     Load the FTP client on your PC (example is FileZilla), then type in the
     IP address of your PS2 in the 'Host:' box. Some people have also
@@ -318,12 +429,23 @@
     that this isn't necessary, but by all means go ahead if you like, the
     setting is accessed by clicking the 'Advanced' button on the form below.
   </para>
+  <para lang="pt">
+    Inicie o cliente de FTP no seu PC (exemplo: FileZilla), depois insira no
+    endereço de IP da sua PS2 na caixa 'Host:'. Algumas pessoas recomendam que
+    ligue o modo Passivo (ou PASV). Para mim não foi necessário, mas de qualquer
+    modo ligue-o se desejar, esta definição pode ser acedida clicando no butão
+    'Advanced' na fórmula em baixo.
+  </para>
 
   <figure>
     <title>
        <phrase lang="en">
          Setting up the IP to connect to (note that the default IP address 
          for the PS2 is 192.168.0.10).
+      </phrase>
+      <phrase lang="pt">
+         Configurando o IP ao qual se quer ligar (repare que o IP de defeito 
+         para a PS2 é 192.168.0.10).
       </phrase>
     </title>
     <mediaobject>
@@ -340,11 +462,18 @@
     When you are ready, click 'Connect', and after a blur of messages at 
     the top of the screen, you should see something like the following page:
   </para>
+  <para lang="pt">
+    Quando estiver pronto, clique 'Connect', e depois de um monte de mensagens
+    no topo do ecrã, deverá ver algo deste género:
+  </para>
 
   <figure>
     <title>
        <phrase lang="en">
          FileZilla FTP client while connected to PS2.
+      </phrase>
+      <phrase lang="pt">
+         FileZilla ligado à PS2.
       </phrase>
     </title>
     <mediaobject>
@@ -365,6 +494,14 @@
     <filename>/mc/0</filename> and <filename>/mc/1</filename> (slots 1 and 2
     on the Playstation2).
   </para>
+  <para lang="pt">
+    Na secção 'Remote Site' deverá ver 'hdd, mc, pfs'. Estes são os dispositivos
+    de armazenamento na PS2. HDD é o disco rigido, o MC é o cartão de memória.
+    (se não vir nada tente carregar F5 para 'refrescar'). Faça duplo clique no
+    MC, depois '0'. As duas slotes de cartão de memória são acedidas via 
+    <filename>/mc/0</filename> e <filename>/mc/1</filename> (slotes 1 e 2 na
+    Playstation 2).
+  </para>
 
   <para lang="en">
     I'd recommend putting your <filename>SMS.ELF</filename> in a folder called
@@ -372,17 +509,32 @@
     <filename>/mc/0/SMS</filename>, but you can put it where you wish.
     Right click to create a new folder if necessary.
   </para>
+  <para lang="pt">
+    Eu recomendo colocar o <filename>SMS.ELF</filename> numa pasta chamada
+    'SMS', visto que as definições também serão guardadas em 
+    <filename>/mc/0/SMS</filename>, mas pode colocá-las onde desejar.
+    Clique direito para criar um novo directório se necessário.
+  </para>
 
   <para lang="en">
     Navigate to your downloaded <filename>SMS.ELF</filename> in the local
     site browser, then drag the file from the left window to the right window.
     You should see a progress bar as the transfer completes:
   </para>
+  <para lang="pt">
+    Navegue até ao seu ficheiro <filename>SMS.ELF</filename> no navegador 
+    'Local Site', depois arraste o ficheiro da janela da esquerda para a
+    janela da direita. Deverá ver uma barra de progresso durante a 
+    transferência:
+  </para>
 
   <figure>
     <title>
        <phrase lang="en">
          FileZilla FTP client: Transfer of file in progress.
+      </phrase>
+      <phrase lang="pt">
+         Cliente de FTP FileZilla: Transferência em progresso.
       </phrase>
     </title>
     <mediaobject>
@@ -398,6 +550,10 @@
   <para lang="en">
     Congratulations, you've now copied the SMS executable to your memory 
     card. Close down your FTP client then restart your PS2.
+  </para>
+  <para lang="pt">
+    Parabéns, conseguiu copiar o executável do SMS para o seu cartão de 
+    memória. Feche o seu cliente de FTP e reinicie a PS2.
   </para>
 
   </sect3>

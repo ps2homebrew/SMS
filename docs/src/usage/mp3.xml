@@ -6,6 +6,9 @@
     <phrase lang="en">
       MP3 Audio Playback
     </phrase>
+    <phrase lang="pt">
+      Leitura de ficheiros MP3
+    </phrase>
   </title>
 
   <para lang="en">
@@ -18,10 +21,22 @@
     <xref linkend="usage-hdd"/> or
     <xref linkend="usage-usb"/>).
   </para>
+  <para lang="pt">
+    SMS (1.5 para a frente) contém um leitor de MP3 com suporte para
+    ficheiros de 'playlist' M3U. Todos os ficheiros podem ser acedidos
+    da mesma maneira que os ficheiros de video
+    (via
+    <xref linkend="usage-network"/>,
+    <xref linkend="usage-cddafs"/>,
+    <xref linkend="usage-dvdr"/>,
+    <xref linkend="usage-hdd"/> or
+    <xref linkend="usage-usb"/>).
+  </para>
 
   <sect2>
     <title>
       <phrase lang="en">Playing single MP3 files</phrase>
+      <phrase lang="pt">Correndo um só ficheiro MP3</phrase>
     </title>
 
     <para lang="en">
@@ -29,11 +44,18 @@
       video file. Locate the file using the browser, then press
       <emphasis role="bold">X</emphasis> to start the playback.
     </para>
+    <para lang="pt">
+      Para tocar um ficheiro de MP3 deverá fazer o mesmo que faz para
+      ver um ficheiro AVI. Basta navegar até ao ficheiro e pressionar
+      <emphasis role="bold">X</emphasis> para começar a tocar.
+    </para>
 
     <figure>
       <title>
         <phrase lang="en">Screenshot showing selection of MP3 file in file
         browser.</phrase>
+        <phrase lang="pt">Screenshot mostrando uma lista de ficheiros MP3
+        no gestor de ficheiros.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -49,6 +71,7 @@
     <figure>
       <title>
         <phrase lang="en">Screenshot showing MP3 playback.</phrase>
+        <phrase lang="pt">Screenshot mostrando MP3 a tocar.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -66,6 +89,8 @@
   <sect2>
     <title>
       <phrase lang="en">Playing Multiple MP3 files in a Playlist</phrase>
+      <phrase lang="pt">Tocando múltiplos ficheiros MP3 numa 
+      'Playlist'</phrase>
     </title>
 
     <para lang="en">
@@ -75,6 +100,13 @@
       <emphasis role="bold">relative paths</emphasis> and not 
       <emphasis role="bold">absolute paths</emphasis>.
     </para>
+    <para lang="pt">
+      Múltiplos ficheiros MP3 podem ser tocados usando uma 'playlist'
+      <filename>.m3u</filename>. Poderá ter de editar o ficheiro 
+      <filename>.m3u</filename> para se certificar que este só contém
+      <emphasis role="bold">caminhos relativos</emphasis> e não 
+      <emphasis role="bold">caminhos absolutos</emphasis>.
+    </para>
     <itemizedlist>
       <listitem>
         <para lang="en">
@@ -83,6 +115,13 @@
           File->Save Playlist As), navigate to the folder where the mp3
           files are stored, select <filename>.m3u</filename> format and
           type a filename.
+        </para>
+        <para lang="pt">
+          <emphasis role="bold">No seu PC</emphasis>, utilizando o 
+          Windows Media Player/Winamp/etc. poderá criar um ficheiro .m3u.
+          (no WMP basta fazer: File->Save Playlist As), navegue até ao
+          directório onde os ficheiros MP3 estão localizados, seleccione
+          o formato <filename>.m3u</filename> e insira um nome.
         </para>
       </listitem>
 
@@ -95,6 +134,14 @@
           the right place, windows media player should have removed these for
           you, if not, manually remove them yourself, and save the file.
         </para>
+        <para lang="pt">
+          Abra o ficheiro m3u num editor de texto (i.e. 
+          <application>Notepad</application>) e apague os caminhos. 
+          (i.e. Converta '<filename>c:\my music\myfile.mp3</filename>' para 
+          '<filename>myfile.mp3</filename>'). Se tiver gravado o ficheiro
+          m3u no local correcto, o WMP deverá ter removido os caminhos, caso
+          contrário terá de os remover manualmente e salvar o ficheiro.
+        </para>
       </listitem>
 
       <listitem>
@@ -103,6 +150,13 @@
           where the m3u file is (e.g. .m3u file can point to files in a
           subdirectory), but it must not contain your full system path
           (this is because SMS won't know what to do when it sees
+          <filename>C:\...</filename>!).
+        </para>
+        <para lang="pt">
+          Os nomes podem conter um directório relativo ao local onde o
+          ficheiro m3u se encontra (e.g. .m3u pode apontar para ficheiros
+          num sub-directório), mas não pode conter caminhos completos
+          (porque o SMS não saberia o que fazer quando vê 
           <filename>C:\...</filename>!).
         </para>
       </listitem>
@@ -116,6 +170,14 @@
           <emphasis role="bold">RIGHT</emphasis> to skip forwards or
           backwards. (you can only skip once a file is playing).
         </para>
+        <para lang="pt">
+          Na PS2, ligue o SMS e navegue até ao ficheiro 
+          <filename>.m3u</filename> que criou. Pressione
+          <emphasis role="bold">X</emphasis> para começar a tocar. Use
+          <emphasis role="bold">ESQUERDA</emphasis> e
+          <emphasis role="bold">DIREITA</emphasis> para mudar de faixas
+          (só pode mudar assim que a faixa estiver a tocar).
+        </para>
       </listitem>
 
     </itemizedlist>
@@ -123,6 +185,7 @@
     <figure>
       <title>
         <phrase lang="en">Screenshot showing M3U file loading.</phrase>
+        <phrase lang="pt">Screenshot o carregamento de um M3U.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -138,6 +201,7 @@
     <figure>
       <title>
         <phrase lang="en">Screenshot showing M3U playlist playing.</phrase>
+        <phrase lang="en">Screenshot mostrando uma 'playlist' M3U a tocar.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -157,12 +221,23 @@
         help reduce this until the problems are permanently fixed.  If you
         are experiencing problems, try shortenning your filenames.
       </para>
+      <para lang="pt">
+        Suporte para ficheiros M3U ainda está em desenvolvimento; alguns
+        utilizadores tiveram 'crashes'. Manter os nomes dos MP3 o mais curto
+        possivel ajudará a evitar estes problemas até que eles sejam 
+        corrigidos permanentemente. Se tiver qualquer problema, experimente
+        encurtar os nomes dos seus MP3.
+      </para>
     </warning>
 
     <note>
       <para lang="en">
         It is not possible to edit a playlist on the PS2, playlists can only
         be edited on a PC then transfered to the PS2.
+      </para>
+      <para lang="pt">
+        Não é possível editar 'playlists' na PS2, terão de ser editadas no
+        PC e de seguida transferidas para a PS2.
       </para>
     </note>
     

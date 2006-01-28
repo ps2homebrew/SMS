@@ -31,6 +31,9 @@ libxml2, libxslt, docbook-dtds, docbook-style-xsl
 On Debian Sarge you will need these packages:
 libxml2, libxml2-utils, docbook-xsl, libxslt1.1, docbook, docbook-utils
 
+On Cygwin, you need to run setup.exe click keep, and add these packages:
+devel->make, text->docbook-xml43, text->docbook-xsl, text->libxml2, 
+text->libxslt. You can do this while cygwin is running.
 
 Installing the required tools from source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,35 +80,16 @@ Before trying to build the documentation, run
 	make help
 
 to see all available build targets and make your choice. If something goes
-wrong, check the Configuration section of the toplevel Makefile and adjust
-the variables.
+wrong, check the Configuration section of the Makefile and adjust the
+variables.
 
+The general procedure is:
 
-A few words about SGML catalog files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   sh ./configure
+   make html-single-en
+   
+This will build the 'big html file' version of the english documentation.
+'make help' describes more options.
 
-As far as I know, the document type declaration in XML files requires
-both a public and a system identifier. For example:
-
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-	"/usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd">
-
-where
-
-	"-//OASIS//DTD DocBook XML V4.1.2//EN"
-
-is the public, and
-
-	"/usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd"
-
-is the system identifier.
-
-The problem is that the system identifier is most probably system-dependent.
-To avoid the need to manually fix the system identifiers before building the
-documentation, I've decided to use SGML catalogs. If you have your catalogs
-set up correctly, xmllint and xsltproc will use them to find the DTDs
-based on the public identifiers.
-
-Note that this works only if public identifiers override system identifiers
-(i.e. the catalog file must contain 'OVERRIDE YES'). (I had no problem with
-these on my system, since the Debian people took care of everything. ;-))
+Please look at the output of the configure script, it can help to figure
+out what the problems are, if any.

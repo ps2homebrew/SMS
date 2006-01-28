@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- $Revision: 1.26 $ -->
 
 <sect1 id="installation-configuration">
@@ -6,14 +6,23 @@
     <phrase lang="en">
       Configuration
     </phrase>
+    <phrase lang="pt">
+      Configuração
+    </phrase>
   </title>
 
   <tip>
     <para lang="en">
       Normally there is no need to change any configuration files to
-      get SMS running.  If you are just using using SMS in standalone mode,
+      get SMS running.  If you are just using SMS in standalone mode,
       you can skip this section.  You only need to change the configuration
       if you want to use SMS in network mode (i.e. play files over a LAN).
+    </para>
+    <para lang="pt">
+      Normalmente não é necessário modificar nenhum dos ficheiros de
+      configuração para que o SMS funcione.  Se estiver apenas a usar o SMS de
+      forma simples, pode saltar esta secção.  Só necessita de alterar a
+      configuração do SMS se quiser que este funcione em rede.
     </para>
   </tip>
 
@@ -21,6 +30,9 @@
     <title>
       <phrase lang="en">
         Network Configuration
+      </phrase>
+      <phrase lang="pt">
+        Configuração de Rede
       </phrase>
     </title>
 
@@ -31,6 +43,13 @@
       you'll want this in a semi permanent set-up, so this section helps you
       pick settings that will be compatible with your home network.
     </para>
+    <para lang="pt">
+      Se tiver um adaptador de rede oficial da <trademark>Sony</trademark>,
+      e pretender usar o SMS para vizualizar ficheiros através da rede, terá 
+      de atribuir um endereço de IP e subnet à PS2.  Provavelmente quererá isto
+      num modo semi-permanente, esta secção ajudá-lo-á a escolher opções 
+      compatíveis com a seua rede doméstica.
+    </para>
 
     <para lang="en">
       IP configuration data for SMS is stored in
@@ -39,12 +58,24 @@
       will not look for settings in
       <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
     </para>
+    <para lang="pt">
+      Configuração de IP para o SMS está guardado em
+      <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>. (não
+      <filename>CONFIG.DAT</filename>).  Repare que os dois ficheiros estão
+      separados. O SMS não procurará por definições em 
+      <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
+    </para>
 
     <para lang="en">
       To set the IP address for your PS2, you will need to create a file
       named
       <filename>IPCONFIG.DAT</filename> (e.g. using notepad) and it should 
       have just one line of text:
+    </para>
+    <para lang="pt">
+      Para atribuir um endereço de IP à PS2, terá de criar um ficheiro 
+      chamado <filename>IPCONFIG.DAT</filename> (e.g. usando o notepad) 
+      e deverá ter apenas uma linha de texto:
     </para>
     <screen>
       &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
@@ -60,12 +91,27 @@
       <link linkend="installation-detail-copyftp">installation</link>
       section.
     </para>
+    <para lang="pt">
+      Se crou um ficheiro <filename>CONFIG.DAT</filename> na secção
+      <xref linkend="installation"/> pode usar o mesmo ficheiro, mas lembre-se
+      de o renomear para <filename>IPCONFIG.DAT</filename>.  Assim the tiver
+      criado este ficheiro, tem de copiá-lo para a sua PS2, para a localização
+      <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>. Pode fazer isto
+      utilizando a técnica de FTP referida na secção
+      <link linkend="installation-detail-copyftp">instalação</link>.
+    </para>
     
     <para lang="en">
       You'll need to choose an IP address for your PS2 that is different from
       the IP address of any other node on your network, but on the same subnet
       as your PC.  You will have to turn DHCP off on your PC, and use a manual
       (or static) IP configuration.
+    </para>
+    <para lang="pt">
+      Terá de escolher um endereço de IP que seja diferente de todos os outros
+      endereços de IP dos PC's na seua rede local, mas com a mesma subnet que 
+      o seu PC.  Terá de desligar a opção DHCP no seu PC, e usar uma 
+      configuração de IP manual (ou estático).
     </para>
 
     <informaltable frame='none'>
@@ -75,18 +121,21 @@
       <entry morerows="2">PS2 Settings</entry>
       <entry>
         <para lang="en">PS2 IP Address:</para>
+        <para lang="pt">Endereço de IP da PS2:</para>
       </entry>
       <entry>192.168.a.x</entry>
     </row>
     <row>
       <entry>
         <para lang="en">PS2 Subnet Mask:</para>
+        <para lang="pt">'Subnet Mask' da PS2:</para>
       </entry>
       <entry>255.255.255.0</entry>
     </row>
     <row>
       <entry>
         <para lang="en">PS2 Default Gateway:</para>
+        <para lang="pt">'Gateway' da PS2:</para>
       </entry>
       <entry>192.168.a.z</entry>
     </row>
@@ -94,18 +143,21 @@
       <entry morerows="2">PC Settings</entry>
       <entry>
         <para lang="en">PC IP Address:</para>
+        <para lang="pt">Endereço de IP do PC:</para>
       </entry>
       <entry>192.168.a.y</entry>
     </row>
     <row>
       <entry>
         <para lang="en">PC Subnet Mask:</para>
+        <para lang="pt">'Subnet Mask' do PC:</para>
       </entry>
       <entry>255.255.255.0</entry>
     </row>
     <row>
       <entry>
         <para lang="en">PC Default Gateway:</para>
+        <para lang="pt">'Gateway' do PC:</para>
       </entry>
       <entry>192.168.a.z</entry>
     </row>
@@ -118,12 +170,18 @@
     <sect3>
       <title>
         <phrase lang="en">Example configuration 1</phrase>
+        <phrase lang="pt">Configuração de Exemplo 1</phrase>
       </title>
       <para lang="en">
         This configuration is for a PS2 and PC connected directly
         with a crossover cable, or for both connected to a network 
         switch.  There is no internet gateway device to connect to, so the
         gateway is set to the IP address of the PC.
+      </para>
+      <para lang="pt">
+        Esta configuração é para um PC e PS2 ligados directamente com um cabo
+        cruzado, ou ambos ligados a um 'switcher'.  Não existe nenhum 'gateway'
+        de internet ao qual se ligar, por isso o 'gateway' é o IP do PC.
       </para>
 
       <informaltable frame='none'>
@@ -133,24 +191,28 @@
         <entry morerows="3">PS2 Settings</entry>
         <entry>
           <para lang="en">PS2 IP Address:</para>
+          <para lang="pt">Endereço de IP da PS2:</para>
         </entry>
         <entry>192.168.0.2</entry>
       </row>
       <row>
         <entry>
           <para lang="en">PS2 Subnet Mask:</para>
+          <para lang="pt">'Subnet Mask' da PS2:</para>
         </entry>
         <entry>255.255.255.0</entry>
       </row>
       <row>
         <entry>
           <para lang="en">PS2 Default Gateway:</para>
+          <para lang="pt">'Gateway' da PS2:</para>
         </entry>
         <entry>192.168.0.1</entry>
       </row>
       <row>
         <entry>
           <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
+          <para lang="pt">mc0:/SYS-CONF/IPCONFIG.DAT</para>
         </entry>
         <entry>
         <mediaobject>
@@ -168,18 +230,21 @@
         <entry morerows="2">PC Settings</entry>
         <entry>
           <para lang="en">PC IP Address:</para>
+          <para lang="pt">Endereço de IP do PC:</para>
         </entry>
         <entry>192.168.0.1</entry>
       </row>
       <row>
         <entry>
           <para lang="en">PC Subnet Mask:</para>
+          <para lang="pt">'Subnet Mask' do PC:</para>
         </entry>
         <entry>255.255.255.0</entry>
       </row>
       <row>
       <entry>
         <para lang="en">PC Default Gateway:</para>
+        <para lang="pt">'Gateway' do PC:</para>
       </entry>
       <entry>192.168.0.1</entry>
     </row>
@@ -191,11 +256,16 @@
     <sect3>
       <title>
         <phrase lang="en">Example configuration 2</phrase>
+        <phrase lang="pt">Configuração de Exemplo 2</phrase>
       </title>
       <para lang="en">
         Here is the configuration I use at home.  Both PS2 and PC are on the
         same 192.168.2._ subnet, and my internet access point / router is
         at 192.168.2.1.
+      </para>
+      <para lang="pt">
+        Aqui está a configuração que uso em casa.  PC e PS2 estão na mesma 
+        'subnet' 192.168.2.___, e o meu router/access point são 192.168.2.1.
       </para>
 
       <informaltable frame='none'>
@@ -205,24 +275,28 @@
         <entry morerows="3">PS2 Settings</entry>
         <entry>
           <para lang="en">PS2 IP Address:</para>
+          <para lang="pt">Endereço de IP da PS2:</para>
         </entry>
         <entry>192.168.2.22</entry>
       </row>
       <row>
         <entry>
           <para lang="en">PS2 Subnet Mask:</para>
+          <para lang="pt">'Subnet Mask' da PS2:</para>
         </entry>
         <entry>255.255.255.0</entry>
       </row>
       <row>
         <entry>
           <para lang="en">PS2 Default Gateway:</para>
+          <para lang="pt">'Gateway' da PS2:</para>
         </entry>
         <entry>192.168.2.1</entry>
       </row>
       <row>
         <entry>
           <para lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</para>
+          <para lang="pt">mc0:/SYS-CONF/IPCONFIG.DAT</para>
         </entry>
         <entry>
         <mediaobject>
@@ -240,18 +314,21 @@
         <entry morerows="2">PC Settings</entry>
         <entry>
           <para lang="en">PC IP Address:</para>
+          <para lang="pt">Endereço de IP do PC:</para>
         </entry>
         <entry>192.168.2.23</entry>
       </row>
       <row>
         <entry>
           <para lang="en">PC Subnet Mask:</para>
+          <para lang="pt">'Subnet Mask' do PC:</para>
         </entry>
         <entry>255.255.255.0</entry>
       </row>
       <row>
       <entry>
         <para lang="en">PC Default Gateway:</para>
+        <para lang="pt">'Gateway' do PC:</para>
       </entry>
       <entry>192.168.2.1</entry>
     </row>
@@ -275,6 +352,18 @@
         settings by typing <userinput>ipconfig /all</userinput> at the
         command prompt.
       </para>
+      <para lang="pt">
+        Se estiver ligado a internet pela mesma rede que usa para se ligar à 
+        PS2 <emphasis role="bold">tenha muito cuidado</emphasis> quando 
+        alterar a configuração de rede do seu PC.  Verifique que o seu PC se
+        encontra na mesma 'subnet' que o seu router/access point (i.e. os 
+        primeiros três números do IP do seu PC têm de ser os mesmos do IP do
+        router), e de que o 'Gateway' permanece o mesmo (isto será normalmente
+        o endereço de IP do router. Não fazer isto pode resultar numa perda de
+        ligação à internet. Se não tiver a certeza do que está a fazer, por 
+        favor tome nota das suas definições iniciais escrevendo 
+        <userinput>ipconfig /all</userinput> no command prompt.
+      </para>
     </warning>
 
     </sect3>
@@ -286,6 +375,9 @@
     <title>
       <phrase lang="en">
         General Configuration
+      </phrase>
+      <phrase lang="pt">
+        Configuração Geral
       </phrase>
     </title>
 
@@ -299,12 +391,27 @@
       SMS (see configuration menu in 
       <link linkend="usage-controls-navigation">usage</link> section).
     </para>
+    <para lang="pt">
+      A configuração geral do SMS está guardada em 
+      <filename>mc0:/SMS/SMS.cfg</filename>. Este ficheiro é criado pela
+      aplicação quando você salva as suas definições, e não está feito para
+      ser editado à mão.
+      <emphasis role="bold">Não precisa de criar este ficheiro</emphasis>.
+      O SMS cria-lo-á quando salvar as definições no SMS (veja o menu de 
+      configuração na secção 
+      <link linkend="usage-controls-navigation">Utilização</link>).
+    </para>
 
     <note>
       <para lang="en">
         If you are having problems with the configuration settings, it is
         suggested that you delete your <filename>mc0:/SMS/SMS.cfg</filename>
         file, and let SMS create a new one for you next time it runs.
+      </para>
+      <para lang="pt">
+        Se tiver problemas com as definições, é aconselhável que apague o seu
+        ficheiro <filename>mc0:/SMS/SMS.cfg</filename> , e deixe o SMS criar 
+        um novo da próxima vez que for executado.
       </para>
     </note>
 

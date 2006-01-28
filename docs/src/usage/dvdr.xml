@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.31 $ -->
+<!-- $Revision: -->
 
 <sect1 id="usage-dvdr" xreflabel="DVD-R">
   <title>
     <phrase lang="en">Playing files from a DVD-R</phrase>
+    <phrase lang="pt">Correndo ficheiros a partir de um DVD-R</phrase>
   </title>
   <warning>
     <para lang="en">
       Don't do this if you have a modchip. You don't need to, and this
       actually prevents PS2's with some modchips from reading the DVD while
       the chip is turned on. Modchip users can just burn a normal Data DVD.
+    </para>
+    <para lang="pt">
+      Se tiver um modchip instalado na PS2 não utilize este método. Não
+      precisa, aliás, a PS2 pode nem sequer conseguir ler este DVD
+      enquanto o modchip estiver ligado. OS utilizadores com modchip
+      podem simplesmente gravar um DVD de dados normal.
     </para>
   </warning>
 
@@ -22,6 +29,14 @@
     a suitable DVD Video, so all you have to do is burn it with Nero, along
     with your video files.
   </para>
+  <para lang="pt">
+    DVD's de Video podem ser lidos em qualquer PS2, mesmo sem modchip. A PS2
+    consegue aceder a qualquer outro ficheiro que esteja no DVD. Para que o
+    SMS consiga ler o DVD, vamos criar um DVD de video com um 'dummy', que
+    depois poderemos encher com ficheiros DivX. O video para o DVD já está
+    criado, por isso tudo o que você tem de fazer é gravá-lo com o Nero,
+    junto com os seus ficheiros de video (AVI).
+  </para>
 
   <itemizedlist mark='number'>
     <listitem>
@@ -30,15 +45,27 @@
         <ulink url="http://www.adam.com.au/kellyjones/YABB/dvdMini.zip">here</ulink>
         (144k), and unzip it onto the Desktop. or create your own DVD-Video files.
       </para>
+      <para lang="pt">
+        Faça o download do video de DVD
+        <ulink url="http://www.adam.com.au/kellyjones/YABB/dvdMini.zip">aqui</ulink>
+        (144k), e extraia-o para o Ambiente de Trabalho. 
+        Ou se preferir crie os seus ficheiros de video.
+      </para>
     </listitem>
     <listitem>
       <para lang="en">
         Open Nero. Select DVD, and choose to create a DVD-Video. Press New.
       </para>
+      <para lang="pt">
+        Abra o Nero. Seleccione DVD, e escolha DVD-Video. Pressione 'New'.
+      </para>
       <figure>
         <title>
           <phrase lang="en">
             Select DVD option.
+          </phrase>
+          <phrase lang="pt">
+            Seleccione a Opção DVD.
           </phrase>
         </title>
         <mediaobject>
@@ -56,10 +83,16 @@
       <para lang="en">
         Drag the dummy DVD-Video files into the VIDEO_TS folder on the DVD.
       </para>
+      <para lang="pt">
+        Arraste os ficheiros 'dummy' para a pasta VIDEO-TS no DVD.
+      </para>
       <figure>
         <title>
           <phrase lang="en">
             Copy dummy DVD-Video files
+          </phrase>
+          <phrase lang="pt">
+            Copie os ficheiros 'dummy'
           </phrase>
         </title>
         <mediaobject>
@@ -77,10 +110,16 @@
       <para lang="en">
         Fill up the rest of the DVD with your favourite DivX and MP3 files.
       </para>
+      <para lang="pt">
+        Preencha o resto do DVD com os seus ficheiros DivX e MP3 favoritos.
+      </para>
       <figure>
         <title>
           <phrase lang="en">
             Copy your own media files.
+          </phrase>
+          <phrase lang="pt">
+            Copie os seus ficheiros de media.
           </phrase>
         </title>
         <mediaobject>
@@ -97,6 +136,10 @@
     <listitem>
       <para lang="en">
         Burn the DVD. You can now play it using SMS in any unmodified console.
+      </para>
+      <para lang="pt">
+        Grave o DVD. Pode agora usá-lo com o SMS em qualquer consola
+        não modificada.
       </para>
     </listitem>
   </itemizedlist>

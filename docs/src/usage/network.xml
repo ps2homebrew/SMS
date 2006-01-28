@@ -4,6 +4,7 @@
 <sect1 id="usage-network" xreflabel="Network">
   <title>
     <phrase lang="en">Playing Files Over A Local Area Network</phrase>
+    <phrase lang="pt">Correndo ficheiros numa Rede Local</phrase>
   </title>
 
   <para lang="en">
@@ -17,10 +18,23 @@
     RadHostClient is a little easier to use than ps2client-gui, and can 
     involve less running back and forth between the PC and PS2.
   </para>
+  <para lang="pt">
+    Primeiro que tudo, necessitará de uma rede a funcionar. ISto significa
+    que precisará de um switcher/router com um cabo de rede (direito) ligado
+    à PS2 e outro cabo igual ligado ao PC. Em alternativa, poderá utilizar um
+    cabo de rede (cruzado) para ligar o PC directamente à PS2. Se não conseguir
+    fazer PING à PS2 enquanto o SMS estiver ligado, significa que algo está mal
+    e precisa de ser corrigido antes de continuar. Assim que a rede estiver a 
+    funcionar poderá utilizar o RadHostClient ou o PS2Client-gui no seu PC para
+    partilhar os seus directórios. O RadHostClient é um pouco mais fácil de
+    utilizar e pode poupar umas deslocações do PC para a PS2 e vice-versa.
+  </para>
 
   <sect2>
     <title>
       <phrase lang="en">Playing Network Video Files Using RadHostClient</phrase>
+      <phrase lang="pt">Vizualizando ficheiros de Video pela rede
+      utilizando o RadHostClient</phrase>
     </title>
 
     <para lang="en">
@@ -30,11 +44,21 @@
       in the text box at the top.  Drag folders into the list at the bottom.
       They will automatically be made available to the PS2.
     </para>
+    <para lang="pt">
+      Faça Download e Instale o RadHostClient de 
+      <ulink url="http://ps2dev.org/ps2/Tools/Misc_tools/Rad_Host_Client_1.4"/>.
+      Execute a aplicação no seu PC, e insira o endereço de IP da sua PS2 na
+      caixa de texto no topo. Arraste os directórios para a lista em baixo.
+      Estes ficarão automaticamente disponíveis para a PS2.
+    </para>
 
     <figure>
       <title>
         <phrase lang="en">
           RadHostClient in operation.
+        </phrase>
+        <phrase lang="pt">
+          RadHostClient em operação.
         </phrase>
       </title>
       <mediaobject>
@@ -56,9 +80,21 @@
       <emphasis role="bold">start network interface now</emphasis>
       and press <emphasis role="bold">X</emphasis>.
     </para>
+    <para lang="pt">
+      Se ainda não o tiver feito, inicie o SMS na sua PS2, depois
+      <emphasis role="bold">na PS2</emphasis> pressione
+      <emphasis role="bold">START</emphasis> para mostrar o menu de 
+      configuração do SMS, depois seleccione
+      <emphasis role="bold">Nework settings...</emphasis>, de seguida
+      <emphasis role="bold">start network interface now</emphasis>
+      e pressione <emphasis role="bold">X</emphasis>.
+    </para>
     <para lang="en">
       Within 10 seconds you should see a new device icon at the top of the
       SMS screen:
+    </para>
+    <para lang="pt">
+      Dentro de 10 segundos, deverá ver um novo icon no topo do ecrã do SMS:
     </para>
 
     <figure>
@@ -66,6 +102,10 @@
         <phrase lang="en">
           Screenshot of SMS with network support activated, (note additional 
           icon at top of screen).
+        </phrase>
+        <phrase lang="pt">
+          Screenshot do SMS com o suporte de rede activado, (repare no icon
+          adicional no topo do ecrã).
         </phrase>
       </title>
       <mediaobject>
@@ -85,12 +125,21 @@
       <emphasis role="bold">X</emphasis>, the PS2 will begin playback, and
       will stream the file from your PC across the network.
     </para>
+    <para lang="pt">
+      Agora pressione <emphasis role="bold">DIREITA</emphasis> para 
+      seleccionar o icon de rede (network), e navegue até ao directório no seu
+      PC. Quando pressionar <emphasis role="bold">X</emphasis>, a PS2 executará
+      o ficheiro e transmiti-lo-á através da rede.
+    </para>
 
 
     <figure>
       <title>
         <phrase lang="en">
           Browsing networked folder shared from remote PC.
+        </phrase>
+        <phrase lang="pt">
+          Navegando em directórios partilhados no PC.
         </phrase>
       </title>
       <mediaobject>
@@ -111,8 +160,16 @@
         via the client. This will cause both RadHostClient and the PS2 to 
         crash.
       </para>
+      <para lang="pt">
+        Não feche o RadHostClient enquanto a PS2 estiver navegando os ficheiros
+        partilhados no PC. Isto fará a PS2 e o RadHostClient 'crasharem'.
+      </para>
       <para lang="en">
         If the PS2 crashes or restarts, you may need to restart RadHostClient.
+      </para>
+      <para lang="pt">
+        Se a PS2 'crashar' ou reiniciar, talvez tenha de reiniciar o 
+        RadHostClient.
       </para>
     </warning>
   </sect2>
@@ -120,6 +177,8 @@
   <sect2>
     <title>
       <phrase lang="en">Playing Network Video Files Using PS2Client-gui</phrase>
+      <phrase lang="pt">Vizualizando ficheiros de Video pela rede
+      utilizando o PS2Client-gui</phrase>
     </title>
     <para lang="en">
       <emphasis role="bold">On the PC</emphasis> download and install 
@@ -128,6 +187,14 @@
       files, enter that directory. It doesn't matter if your files are in 
       subdirectories within this one, as you will be able to navigate them 
       in SMS. Once you click OK, it will make this available to your PS2.
+    </para>
+    <para lang="pt">
+      <emphasis role="bold">No seu PC</emphasis> downloade e instale o
+      ps2client-gui. Execute o GUI, e seleccione os directórios onde se
+      encontram os seus ficheiros de video. Se tiver um directório que contém
+      todos os seus ficheiros, escolha esse directório. Não importa se os seus
+      ficheiros estão em sub-directórios, porque conseguirá navega-los no SMS.
+      Assim que carregar OK, estes passarão a estar disponíveis para a PS2.
     </para>
     <para lang="en">
       If you have not done so already, start SMS on your PS2, then
@@ -138,6 +205,15 @@
       <emphasis role="bold">start network interface now</emphasis>
       and press <emphasis role="bold">X</emphasis>.
     </para>
+    <para lang="pt">
+      Se ainda não o tiver feito, inicie o SMS na sua PS2, depois
+      <emphasis role="bold">na PS2</emphasis> pressione
+      <emphasis role="bold">START</emphasis> para mostrar o menu de 
+      configuração do SMS, depois seleccione
+      <emphasis role="bold">Nework settings...</emphasis>, de seguida
+      <emphasis role="bold">start network interface now</emphasis>
+      e pressione <emphasis role="bold">X</emphasis>.
+    </para>
 
     <para lang="en">
       You should see a new device icon appear at the top of the screen. 
@@ -146,6 +222,15 @@
       around 15seconds), press <emphasis role="bold">RIGHT</emphasis> to 
       select it, then <emphasis role="bold">X</emphasis>. You should now be 
       able to navigate all folders beneath the one you shared.
+    </para>
+    <para lang="pt">
+      Deverá ver um novo icon aparecer no topo do ecrã. Se não vir nada 
+      depois de 20 segundos, tente parar e reiniciar o ps2client-gui no
+      seu PC. Assim que o icon aparecer (pode demorar cerca de 15 seg.), 
+      pressione <emphasis role="bold">DIREITA</emphasis> para o seleccionar,
+      depois pressione <emphasis role="bold">X</emphasis>. Agora deverá
+      poder navegar todos os directórios e ficheiros dentro daquele que
+      partilhou.
     </para>
 
   </sect2>

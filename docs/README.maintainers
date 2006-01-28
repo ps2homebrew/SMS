@@ -42,7 +42,7 @@ General information
 	 2) Modify your local copy
 	 
 	 3) If possible, revalidate and generate the output (requires linux or
-	    _maybe_ cygwin) to do this.  A good quick test is
+	    cygwin) to do this.  A good quick test is
 	    $ make html-single-xx
 			(where xx is the language).  This will build
 	    the html single file version, but only for the language you
@@ -50,8 +50,11 @@ General information
 	    For more options go to the docs folder and type:
 			$ make help
 
-	 4) Email the changes back as a patch file to the maintainer:
-	    ps2{ a t }davet.org.
+	 4) Email the changed xml files back to the maintainer:
+	    ps2{ a t }davet.org.  Please note that due to limitations in the
+	    patchfile generation system (can't cope with character accents etc), 
+      it is not possible to submit changes as a patch file.  Instead, send
+      the new xml files in a zip.
 
  - The ./configure script, css stylesheet and part of the makefile for this 
    documentation were based on the MPlayer documentation

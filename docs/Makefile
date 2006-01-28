@@ -1,7 +1,7 @@
 # Makefile for generating the HTML documentation
 
 # List of languages to be processed (new langs added here - space between)
-SUBDIRS = en
+SUBDIRS = en pt
 
 # Generated chunked HTML files go here.
 HTML_CHUNKED = HTML
@@ -139,7 +139,7 @@ html-chunked-$(1): $(XSL_DEPS) xsltproc.sh xmllint.sh chunked-dir \
 	-rm -f $(HTML_CHUNKED)/$(1)/*
 	@echo creating chunked html output...
 	cp -f $(HTML_STYLESHEET) $(HTML_CHUNKED)/$(1)/
-	./xsltproc.sh $(HTML_CHUNKED)/$(1)/ $(HTML_CHUNK_XSL) $(TEMP_DIR)/sms-$(1).xml
+	./xsltproc.sh $(HTML_CHUNKED)/$(1)/ $(HTML_CHUNK_XSL) $(TEMP_DIR)/sms-$(1).xml $(1)
 
 html-single-$(1): $(XSL_DEPS) xsltproc.sh xmllint.sh single-dir \
     single-dir-$(1) images-single $(TEMP_DIR)/sms-$(1).xml

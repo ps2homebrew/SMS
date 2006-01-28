@@ -6,9 +6,9 @@
     chapter explains all you need to know.
   </para>
   <para lang="pt">
-    Agora que o SMS j est instalado na PS2
-    (veja <xref linkend="installation"/>), como ver os filmes?  Este
-    explica tudo o que voc precisa de saber.
+    Agora que o SMS já está instalado na PS2
+    (veja <xref linkend="installation"/>), como ver os filmes?  Este capítulo
+    explica tudo o que você precisa de saber.
   </para>
 
   <para lang="en">
@@ -21,13 +21,13 @@
     you want to run.
   </para>
   <para lang="pt">
-    Para correr o SMS primeiro voc precisa de correr o 'exploit' ou ligar a 
-    PS2 se tiver modchip instalado.  Depois tem de utilizar a tcnica 
+    Para correr o SMS primeiro você precisa de correr o 'exploit' ou ligar a 
+    PS2 se tiver modchip instalado.  Depois tem de utilizar a técnica 
     apropriada para ligar o SMS.  Se estiver a usar o
     <xref linkend="faq-independence"/>
-    insira o seu CD de PS1 (original), e pressione reset. Isto executar
-    a aplicao de gesto ('LaunchElf por exemplo'), onde puder escolher qual o 
-    ELF que quer executar.
+    insira o seu CD de PS1 (original), e pressione reset. Isto executará
+    a aplicação de gestão ('LaunchElf por exemplo'), onde puderá escolher qual
+    o ELF que quer executar.
   </para>
 
   <para lang="en">
@@ -36,10 +36,10 @@
     button to it so it is easier to load next time.
   </para>
   <para lang="pt">
-    De seguida, se estiver a usar o LaunchELF como aplicao inicial, pode
-    corre o SMS bastando para isso navegar ate ao ficheiro SMS.ELF e 
-    pressionar O.  Talvez queira adicionar um buto de atalho para o SMS para 
-    ser mais fcil de carregar na prxima vez.
+    De seguida, se estiver a usar o LaunchELF como aplicação inicial, pode
+    correr o SMS bastando para isso navegar até ao ficheiro SMS.ELF e 
+    pressionar O.  Talvez queira adicionar um butão de atalho para o SMS para 
+    ser mais fácil de carregar na próxima vez.
   </para>
 
   <tip>
@@ -49,8 +49,8 @@
       delay.
     </para>
     <para lang="pt">
-      Se voc usa o SMS regularmente, talvez queira adicion-lo como a opo
-      'default' no LauchELF, para que ele seja executado automticamente, 
+      Se você usa o SMS regularmente, talvez queira adicioná-lo como a opção
+      'default' no LauchELF, para que ele seja executado automáticamente, 
       passado pouco tempo.
     </para>
   </tip>
@@ -61,9 +61,9 @@
     are the same, whichever Exploit/Modchip you are using.
   </para>
   <para lang="pt">
-    Assim que tiver o SMS a correr, dever ver a bela 'interface' do SMS
-    no seu televisor. Daqui para a frente, todas as instrues
-    so as mesmas, qualquer que seja o 'exploit'/modchip que estiver a usar.
+    Assim que tiver o SMS a correr, deverá ver a bela 'interface' do SMS
+    no seu televisor. Daqui para a frente, todas as instruções
+    são as mesmas, qualquer que seja o 'exploit'/modchip que estiver a usar.
   </para>
 
   <figure>
@@ -74,7 +74,7 @@
          this case).
       </phrase>
       <phrase lang="pt">
-        Screenshot do interface do SMS. (os ficheiros que voc v so os
+        Screenshot do interface do SMS. (os ficheiros que você vê são os
         ficheiros presentes no CD que se encontra na PS2 - o disco de
         arranque do 'exploit independence' neste caso).
       </phrase>
@@ -100,9 +100,9 @@
     pressing <emphasis role="bold">start</emphasis>.
   </para>
   <para lang="pt">
-    Este  o ecr de onde poder aceder a mais opes. Pode navegar pelos
+    Este é o ecrã de onde poderá aceder a mais opções. Pode navegar pelos
     ficheiros usando as teclas cima/baixo/esq./dir. nos controladores 1 ou 2,
-    e poder corre-los pressionando <emphasis role="bold">X</emphasis>.
-    Um menu de configurao pode ser acedido
+    e pode corre-los pressionando <emphasis role="bold">X</emphasis>.
+    Um menu de configuração pode ser acedido
     pressionando <emphasis role="bold">start</emphasis>.
   </para>

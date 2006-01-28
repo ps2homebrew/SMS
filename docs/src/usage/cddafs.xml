@@ -4,6 +4,7 @@
 <sect1 id="usage-cddafs" xreflabel="CDDAFS CD-R">
   <title>
     <phrase lang="en">Playing video files from a CD-R</phrase>
+    <phrase lang="pt">Correndo ficheiros de video a partir de um CD-R</phrase>
   </title>
 
   <note>
@@ -12,64 +13,105 @@
       format. The PS2 cannot read the data from ISO format CDRs. The
       <quote>special format</quote> is created using CDXplorer.exe.
     </para>
+    <para lang="pt">
+      Para correr ficheiros de video a partir de um CD, precisa de gravar
+      o CD num formato especial. A PS2 não consegue ler data de CD's com
+      formato ISO. O <quote>formato especial</quote> é criado utilizando
+      o CDXplorer.exe.
+    </para>
   </note>
 
   <sect2 id="usage-cddafs-short">
     <title>
       <phrase lang="en">Instructions in Short</phrase>
+      <phrase lang="pt">Instruções curtas</phrase>
     </title>
 <itemizedlist>
 <listitem>
   <para lang="en">Download CDXplorer.exe from SVN;</para>
+  <para lang="pt">Faça o download do CDXplorer.exe do SVN;</para>
 </listitem>
 <listitem>
   <para lang="en">Launch it on Windows;</para>
+  <para lang="pt">Execute-o no Windows;</para>
 </listitem>
 <listitem>
   <para lang="en">Drag/drop the files you want from Windows explorer to the
   application (or use '+' toolbar button);</para>
+  <para lang="pt">Arraste os ficheiros que deseja do Explorador do Widnows
+  para a aplicação (ou use o butão '+' na barra de ferramentas);</para>
 </listitem>
 <listitem>
   <para lang="en">
     Save your compilation - you'll get cue/bin file pair;
+  </para>
+  <para lang="pt">
+    Salve a compilação - ficará com um ficheiro cue e um bin;
   </para>
 </listitem>
 <listitem>
   <para lang="en">
     Close the application;
   </para>
+  <para lang="pt">
+    Feche a aplicação;
+  </para>
 </listitem>
 <listitem>
   <para lang="en">
     Launch CD burning application (I use Nero);
+  </para>
+  <para lang="pt">
+    Execute uma aplicação de gravação de CD's (i.e. Nero);
   </para>
 </listitem>
 <listitem>
   <para lang="en">
     Open generated cue file;
   </para>
+  <para lang="pt">
+    Abra o ficheiro .cue;
+  </para>
 </listitem>
 <listitem>
   <para lang="en">
     If you use Nero 5 then select Disk-at-once/96 option;
+  </para>
+  <para lang="pt">
+    Se estiver a usar o Nero 5 seleccione a opção Disk-at-once/96;
   </para>
 </listitem>
 <listitem>
   <para lang="en">
     Burn it;
   </para>
+  <para lang="pt">
+    Grave o CD;
+  </para>
 </listitem>
 </itemizedlist>
 <para lang="en">
 Good luck
 </para>
+<para lang="pt">
+Boa Sorte
+</para>
 <para lang="en">
 Eugene
 </para>
+<para lang="pt">
+Eugene
+</para>
+
 <para lang="en">
   P.S. If you have a DVD burner you can also play .avi files stored on
   DVD-video disks (just record short DVD/mpeg clip
   on them also to get such a disks authorized by PS2);
+</para>
+<para lang="pt">
+  P.S. Se tiver um gravador de DVD pode ver filmes .avi gravados em 
+  discos DVD-Video (basta gravar um pequeno clip DVD/mpeg nesse mesmo
+  DVD para que o disco seja autorizado pela PS2);
 </para>
 
   </sect2>
@@ -77,6 +119,7 @@ Eugene
   <sect2 id="usage-cddafs-detail">
     <title>
       <phrase lang="en">Instructions in detail</phrase>
+      <phrase lang="pt">Instruções detalhadas</phrase>
     </title>
 
     <para lang="en">
@@ -91,11 +134,29 @@ Eugene
       inside audio tracks, and SMS converts these as it reads them. 
       Clever huh?
     </para>
+    <para lang="pt">
+      A PS2 não modificada não consegue ler data de um CD-R normal. Isto deve-
+      se a um mecanismo de protecção anti-cópia interno. Para dar a volta a
+      isto, o criador do SMS desenvolveu um pequeno truque que leva a PS2 a 
+      pensar que o CD-R é um <emphasis role="bold">CD de áudio</emphasis>.
+      A PS2 consegue ler o CD-R se este for um CD de áudio.
+      O principio básico consiste em criar um disco no formato CDDAFS, que é
+      essencialmente um disco que se parece suficientemente com um CD de áudio
+      para que a PS2 o aceite. O disco contém o seu ficheiro .avi escondido
+      dentro de pistas de áudio, e o SMS converte-as à medida que as lê.
+      Esperto huh?
+    </para>
     <para lang="en">
       The developer has written a utility (CDXplorer.exe) to create the 
       .cue/.bin files from your .avi files, ready to burn to CDR. Then, 
       provided your CD burning software knows how to read .cue/.bin files, 
       you can burn them to CD.
+    </para>
+    <para lang="pt">
+      O criador programou um utilitário (CDXplorer.exe) para criar os
+      ficheiros .cue/.bin do ficheiro .avi, pronto para ser gravado em CD-R.
+      Depois, desde que o software de gravação de CD's consiga ler ficheiros
+      .cue/.bin, pode gravar esses ficheiros num CD-R.
     </para>
     <important>
       <para lang="en">
@@ -104,6 +165,12 @@ Eugene
         which understands .cue and .bin files. The only two known at present 
         are Nero 5 and, cdrdao.
       </para>
+      <para lang="pt">
+        Não basta copiar os ficheiros .cue/.bin para um CD em formato ISO.
+        Isto não funciona. Tem de usar um software de gravação de CD que 
+        funcione com ficheiros .cue/.bin. Os únicos conhecidos de momento 
+        são o Nero e o cdrdao.
+      </para>
     </important>
     <para lang="en">
       Download CDXplorer.exe from 
@@ -111,15 +178,28 @@ Eugene
       (<filename>CDXplorer.exe</filename> can be found in
       <filename>SMS.zip</filename> file on the page).
     </para>
+    <para lang="pt">
+      Faça o download do CDXplorer.exe a partir de 
+      <ulink url="http://ps2dev.org/ps2/Projects/Softwares"/>
+      (<filename>CDXplorer.exe</filename> pode ser encontrado dentro do
+      ficheiro <filename>SMS.zip</filename> nesta página).
+    </para>
     <para lang="en">
       Run the application by double clicking on it (no installation is
       necessary).
+    </para>
+    <para lang="pt">
+      Execute a aplicação fasendo duplo clique sobre ela (não é necessário
+      instalar).
     </para>
 
     <figure>
       <title>
         <phrase lang="en">
           Screenshot of CDXplorer.
+        </phrase>
+        <phrase lang="pt">
+          Screenshot do CDXplorer.
         </phrase>
       </title>
       <mediaobject>
@@ -136,6 +216,10 @@ Eugene
       Once CDXplorer is running, drag and drop 1 or more AVI files into
       the right hand window.
     </para>
+    <para lang="pt">
+      Assim que o CDXplorer esteja a correr, arraste 1 ou mais ficheiros
+      AVI para a janela. 
+    </para>
 
     <figure>
       <title>
@@ -143,6 +227,11 @@ Eugene
           Screenshot of CDXplorer showing avi file 
           <filename>testvid.avi</filename>
           after dragging and dropping from Windows Explorer.
+        </phrase>
+        <phrase lang="pt">
+          Screenshot do CDXplorer mostrando ficheiro AVI 
+          <filename>testvid.avi</filename>
+          depois de este ser arrastado do Explorador do Windows.
         </phrase>
       </title>
       <mediaobject>
@@ -156,10 +245,15 @@ Eugene
     </figure>
 
     <para lang="en">
-      Click file->SaveAs, then type in a name (e.g. 'test') then press
+      Click file->SaveAs, then type in a name (e.g. 'test') then press 
       &lt;enter&gt;. This will automatically save two files 
       <filename>test.cue</filename> and <filename>test.bin</filename> 
       in the current folder.
+    </para>
+    <para lang="pt">
+      Clique file->SaveAs, insira um nome (e.g. 'test') e pressione 
+      &lt;enter&gt;. Isto salvará dois ficheiros: <filename>test.cue</filename>
+      e <filename>test.bin</filename> no directório actual.
     </para>
 
 
@@ -167,43 +261,75 @@ Eugene
     <para lang="en">
       Now you can close down CDXplorer.
     </para>
+    <para lang="pt">
+      Pode agora fechar o CDXplorer.
+    </para>
     <para lang="en">
       Next open up your CD burning application. This must be a CD burning
       application that allows you to load .cue files. Open the cue file.
     </para>
-    <para lang="en">
-      (unconfirmed): It may be necessary to use a CDR (rather than a 
-      CD-RW) - I only suspect this because i've not yet managed to get a
-      CD-RW to work.
+    <para lang="pt">
+      De seguida execute o seu programa de gravação de CD's. Tem de ser um
+      software que permita carregar ficheiros .cue. Carregue o ficheiro .cue.
     </para>
     <para lang="en">
+      (unconfirmed): It may be necessary to use a CDR (rather than a 
+      CD-RW) - I only suspect this because i've not yet managed to get a 
+      CD-RW to work.
+    </para>
+    <para lang="pt">
+      (não confirmado): pode ser necessário usar CD-R (em vez de CD-RW) - 
+      suspeito disto porque ainda não consegui pôr um CD-RW a funcionar.
+    </para>
+    <para lang="en">
+
+    </para>
+    <para lang="pt">
 
     </para>
     
     <sect3>
       <title>
         <phrase lang="en">Nero 5</phrase>
+        <phrase lang="pt">Nero 5</phrase>
       </title>
       <para lang="en">
         If you are using Nero 5, select
         '<emphasis role="bold">Disk-at-once/96</emphasis>',
         then burn to a CD-R.
       </para>
+      <para lang="pt">
+        Se estiver a usar o Nero 5, seleccione
+        '<emphasis role="bold">Disk-at-once/96</emphasis>',
+        e grave o CD-R
+      </para>
     </sect3>
 
     <sect3>
       <title>
         <phrase lang="en">If You've Not Got Nero 5</phrase>
+        <phrase lang="pt">Se não tiver o Nero 5</phrase>
       </title>
       <para lang="en">
         If you've not got Nero 5 (I haven't got it), then it is possible to 
         use another (free) application to burn CDs in disc-at-once mode. The 
-        only program I've used successfully is
-        <application>cdrdao</application> (CDR Disc At Once), which is a
+        only program I've used successfully is 
+        <application>cdrdao</application> (CDR Disc At Once), which is a 
         command line cd burning application. It is available for linux and 
         windows. If you find any other applications that are easier to use,
         please post the details on the SMS support forum. Installation of 
         <application>cdrdao</application> is as follows:
+      </para>
+      <para lang="pt">
+        Se você não tiver o Nero 5 (eu não tenho), pode utilizar outro 
+        software (grátis) para gravar CD's em modo disc-at-once. O único 
+        porgrama que eu consegui usar com sucesso foi o
+        <application>cdrdao</application> (CDR Disc At Once), que é uma
+        aplicação de linha de comando para gravar CD's. Está disponivel para
+        Linux e para Windows. Se encontrar outras aplicações que sejam mais
+        fáceis de utilizar, por favor refira os detalhes no forum do SMS.
+        Instalação do <application>cdrdao</application> pode ser feita da
+        seguinte maneira: 
       </para>
 
       <informaltable frame='none'>
@@ -212,9 +338,13 @@ Eugene
             <row>
               <entry>
                 <para lang="en">Linux (Fedora Core 4)</para>
+                <para lang="pt">Linux (Fedora Core 4)</para>
               </entry>
               <entry>
                 <para lang="en">
+                  <userinput># yum install cdrdao</userinput>
+                </para>
+                <para lang="pt">
                   <userinput># yum install cdrdao</userinput>
                 </para>
               </entry>
@@ -222,10 +352,15 @@ Eugene
             <row>
               <entry>
                 <para lang="en">Windows</para>
+                <para lang="pt">Windows</para>
               </entry>
               <entry>
                 <para lang="en">
                   Download and install
+                  <ulink url="http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip"/>.
+                </para>
+                <para lang="pt">
+                  Downloade e instale
                   <ulink url="http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip"/>.
                 </para>
               </entry>
@@ -235,17 +370,28 @@ Eugene
       </informaltable>
       
       <para lang="en">
-        The CD is written with the following command: (Note the --force 
+        The CD is written with the following command: (Note the -–force 
         option which is is needed to make the burn continue despite the 
         'shorter than 4 seconds' warning.)
+      </para>
+      <para lang="pt">
+        Para gravar o CD execute o seguinte comando: (Note a opção
+        --force que é necessária para efectuar a gravação sem ligar
+        ao aviso 'mais curto que 4 segundos')
       </para>
 
       <para lang="en">
         <userinput>cdrdao write --speed MAX --force test.cue</userinput>
       </para>
+      <para lang="pt">
+        <userinput>cdrdao write --speed MAX --force test.cue</userinput>
+      </para>
 
       <para lang="en">
         The output will hopefully look something like this:
+      </para>
+      <para lang="pt">
+        Deverá aparecer algo como isto: 
       </para>
 
       <screen><![CDATA[[dave@blue ~]$ cdrdao write --speed MAX --force test.cue
@@ -280,11 +426,21 @@ Writing finished successfully.
         and you'll just hear 'noise'.  Start up SMS, then put the disc in
         your PS2, and you should see the following:
       </para>
+      <para lang="pt">
+        E pronto. Deverá ter um CD com um ficheiro AVI compativel com o SMS.
+        Este Cd não funcionará no seu PC. Aliás, se o colocar no PC, ele 
+        provavelmente tentará tocá-lo como se fosse um CD de áudio e apenas
+        ouvirá 'ruido'. Inicie o SMS, depois coloque o CD na PS2 e deverá ver
+        o seguinte:
+      </para>
 
       <figure>
         <title>
           <phrase lang="en">
             Screenshot showing display while disc is loading.
+          </phrase>
+          <phrase lang="pt">
+            Screenshot mostrando o ecrã enquanto o disco está a carregar.
           </phrase>
         </title>
         <mediaobject>
@@ -304,6 +460,10 @@ Writing finished successfully.
             Screenshot of SMS showing video file loaded via CD-R in
             CD drive (CDDAFS format).
           </phrase>
+          <phrase lang="pt">
+            Screenshot do SMS mostrando o ficheiro de video carregado
+            a partir do CD-R em formato CDDAFS.
+          </phrase>
         </title>
         <mediaobject>
           <imageobject>
@@ -320,6 +480,10 @@ Writing finished successfully.
         You can now browse to the file you copied, and press X to start
         playback in the usual way.
       </para>
+      <para lang="pt">
+        Pode agora navegar até ao ficheiro que copiou, e pressionar X para
+        iniciar a leitura da maneira habitual.
+      </para>
 
       <para lang="en">
         If you don't see the file, and get constant whirring from your PS2,
@@ -328,11 +492,21 @@ Writing finished successfully.
         try again. Check the instructions and try a lower burn speed. If you
         were using a CD-RW, try a CD-R.
       </para>
+      <para lang="pt">
+        Se não vir o ficheiro, e a sua PS2 fizer um barulho constante, ou o 
+        seguinte icon 'vermelho', então existe um problema com o disco.
+        Provavelmente você tem um CD-R queimado (estragado), e terá de tentar
+        novamente. Repita as instruções mas com uma velocidade de gravação
+        mais baixa. Se utilizou um CD-RW, tente agora com um CD-R.
+      </para>
 
       <figure>
         <title>
           <phrase lang="en">
             Screenshot of SMS after loading failed or incompatible CD.
+          </phrase>
+          <phrase lang="pt">
+            Screenshot do SMS ao falhar a leitura de um CD incompativel.
           </phrase>
         </title>
         <mediaobject>

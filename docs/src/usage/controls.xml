@@ -1,16 +1,17 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!-- $Revision: 1.26 $ -->
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision: $ -->
 
 <sect1 id="usage-controls">
   <title>
     <phrase lang="en">Controls</phrase>
     <phrase lang="el">#Controls#</phrase>
     <phrase lang="es">#Controls#</phrase>
-    <phrase lang="pt">#Controls#</phrase>
+    <phrase lang="pt">Controlos</phrase>
   </title>
   <sect2>
     <title>
       <phrase lang="en">During Startup</phrase>
+      <phrase lang="pt">Durante a Iniciação</phrase>
     </title>
     <informaltable frame='none'>
       <tgroup cols='2'>
@@ -18,9 +19,11 @@
           <row>
             <entry>
               <para lang="en">Button</para>
+              <para lang="pt">Butão</para>
             </entry>
             <entry>
               <para lang="en">Action</para>
+              <para lang="pt">Acção</para>
             </entry>
           </row>
         </thead>
@@ -28,6 +31,7 @@
         <row>
           <entry>
             <para lang="en">Select + R1</para>
+            <para lang="pt">Select + R1</para>
           </entry>
           <entry>
             <para>NTSC</para>
@@ -36,6 +40,7 @@
         <row>
           <entry>
             <para lang="en">Select + R2</para>
+            <para lang="pt">Select + R2</para>
           </entry>
           <entry>
             <para>PAL</para>
@@ -44,17 +49,21 @@
         <row>
           <entry>
             <para lang="en">Select + R1 + SQUARE</para>
+            <para lang="pt">Select + R1 + QUADRADO</para>
           </entry>
           <entry>
             <para lang="en">Non-interlaced NTSC</para>
+            <para lang="pt">NTSC Não-Entrelaçado</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">Select + R2 + SQUARE</para>
+            <para lang="pt">Select + R2 + QUADRADO</para>
           </entry>
           <entry>
             <para lang="en">Non-Interlaced PAL</para>
+            <para lang="pt">PAL Não-Entrelaçado</para>
           </entry>
         </row>
         </tbody>
@@ -65,6 +74,7 @@
   <sect2 id="usage-controls-navigation">
     <title>
       <phrase lang="en">During Navigation</phrase>
+      <phrase lang="pt">Durante a Navegação</phrase>
     </title>
     <informaltable frame='none'>
       <tgroup cols='2'>
@@ -72,9 +82,11 @@
           <row>
             <entry>
               <para lang="en">Button</para>
+              <para lang="pt">Butão</para>
             </entry>
             <entry>
               <para lang="en">Action</para>
+              <para lang="pt">Acção</para>
             </entry>
           </row>
         </thead>
@@ -82,33 +94,43 @@
         <row>
           <entry>
             <para lang="en">UP/DOWN</para>
+            <para lang="pt">CIMA/BAIXO</para>
           </entry>
           <entry>
             <para lang="en">Navigate Files</para>
+            <para lang="pt">Navegar Ficheiros</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">LEFT/RIGHT</para>
+            <para lang="pt">ESQUERDA/DIREITA</para>
           </entry>
           <entry>
             <para lang="en">
               Select between file menu and device menu (e.g. CD
               Network, USB etc)
             </para>
+            <para lang="pt">
+              Seleccione entre menu de ficheiros e menu de dispositivos (e.g.
+              CD, Rede, USB, etc.)
+            </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">START</para>
+            <para lang="pt">START</para>
           </entry>
           <entry>
             <para lang="en">Accesses special configuration menu</para>
+            <para lang="pt">Acede ao menu de configuração</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT</para>
+            <para lang="pt">SELECT</para>
           </entry>
           <entry>
             <para>-</para>
@@ -120,10 +142,16 @@
           </entry>
           <entry>
             <para lang="en">Navigate into selected directory</para>
+            <para lang="pt">Navegar para o directório seleccionado</para>
             <para lang="en">OR</para>
+            <para lang="pt">OU</para>
             <para lang="en">Start playback of selected file</para>
+            <para lang="pt">Iniciar vizualização do ficheiro seleccionado</para>
             <para lang="en">OR</para>
+            <para lang="pt">OU</para>
             <para lang="en">Increase numerical value</para>
+            <para lang="pt">Aumentar valor numérico</para>
+            
           </entry>
         </row>
         <row>
@@ -132,21 +160,27 @@
           </entry>
           <entry>
             <para lang="en">Decrease numerical value</para>
+            <para lang="pt">Diminuir valor numérico</para>
           </entry>
         </row>
         <row>
           <entry>
-            <para>TRIANGLE</para>
+            <para lang="en">TRIANGLE</para>
+            <para lang="pt">TRIÂNGULO</para>
           </entry>
           <entry>
             <para lang="en">Up one directory level</para>
+            <para lang="pt">Um directório para trás</para>
             <para lang="en">OR</para>
+            <para lang="pt">OU</para>
             <para lang="en">Quit current menu</para>
+            <para lang="pt">Sair do menu actual</para>
           </entry>
         </row>
         <row>
           <entry>
-            <para>SQUARE</para>
+            <para lang="en">SQUARE</para>
+            <para lang="pt">QUADRADO</para>
           </entry>
           <entry>
             <para>-</para>
@@ -155,25 +189,31 @@
         <row>
           <entry>
             <para lang="en">SELECT + TRIANGLE</para>
+            <para lang="pt">SELECT + TRIÂNGULO</para>
           </entry>
           <entry>
             <para lang="en">Exit to boot browser (Quit SMS)</para>
+            <para lang="pt">Sair para o menu inicial (Sair do SMS)</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT + O</para>
+            <para lang="pt">SELECT + O</para>
           </entry>
           <entry>
             <para lang="en">Power off PS2</para>
+            <para lang="pt">Desligar a PS2</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">L1 + L2 + L3 + L4</para>
+            <para lang="pt">L1 + L2 + L3 + L4</para>
           </entry>
           <entry>
             <para lang="en">Displays 'about' screen / credits</para>
+            <para lang="pt">Mostra a janela 'sobre' / créditos</para>
           </entry>
         </row>
         </tbody>
@@ -184,6 +224,7 @@
   <sect2 id="usage-controls-playback">
     <title>
       <phrase lang="en">During Playback</phrase>
+      <phrase lang="pt">Durante a Vizualização</phrase>
     </title>
     <informaltable frame='none'>
       <tgroup cols='2'>
@@ -191,9 +232,11 @@
           <row>
             <entry>
               <para lang="en">Button</para>
+              <para lang="pt">Butão</para>
             </entry>
             <entry>
               <para lang="en">Action</para>
+              <para lang="pt">Acção</para>
             </entry>
           </row>
         </thead>
@@ -201,43 +244,61 @@
         <row>
           <entry>
             <para lang="en">UP/DOWN</para>
+            <para lang="pt">CIMA/BAIXO</para>
           </entry>
           <entry>
             <para lang="en">Volume up/down</para>
+            <para lang="pt">Aumentar/Baixar Volume</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">LEFT/RIGHT</para>
+            <para lang="pt">ESQUERDA/DIREITA</para>
           </entry>
           <entry>
             <para lang="en">Scroll forwards/backwards</para>
+            <para lang="pt">Navegar para frente/trás</para>
             <para lang="en">OR</para>
+            <para lang="pt">OU</para>
             <para lang="en">
               (after pressing select) Navigate progress bar to required point in 
               film
+            </para>
+            <para lang="pt">
+              (ao carregar select) Navegar na barra de busca até um determinado
+              ponto no filme.
             </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">START</para>
+            <para lang="pt">START</para>
           </entry>
           <entry>
             <para lang="en">
               Activate <xref linkend="usage-controls-playermenu"/>
             </para>
+            <para lang="pt">
+              Activar <xref linkend="usage-controls-playermenu"/>
+            </para>
             <para lang="en">OR</para>
+            <para lang="pt">OU</para>
             <para lang="en">Resume playback after pause</para>
+            <para lang="pt">Resumir vizualização depois de Pausa</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT</para>
+            <para lang="pt">SELECT</para>
           </entry>
           <entry>
             <para lang="en">Pause playback and show progress bar
             (press again to hide text)</para>
+            <para lang="pt">Pausa a vizualização e mostra a barra de busca
+            (pressione de novo para esconder)</para>
           </entry>
         </row>
         <row>
@@ -246,6 +307,7 @@
           </entry>
           <entry>
             <para lang="en">Terminate scrolling and continue playback</para>
+            <para lang="pt">Terminar busca e resumir vizualização</para>
           </entry>
         </row>
         <row>
@@ -258,88 +320,122 @@
               [and if available the subtitle/video synchronisation offset
               (S/V)]
             </para>
+            <para lang="pt">
+              Mostra/esconde o offset da sincronização de audio/video (V/A)
+              [e, se disponível, a o offset da sincronização de legendas/video
+              (S/V)]
+            </para>
           </entry>
         </row>
         <row>
           <entry>
-            <para>TRIANGLE</para>
+            <para lang="en">TRIANGLE</para>
+            <para lang="pt">TRIÂNGULO</para>
           </entry>
           <entry>
             <para lang="en">Stop playback</para>
+            <para lang="pt">Parar vizualização</para>
           </entry>
         </row>
         <row>
           <entry>
-            <para>SQUARE</para>
+            <para lang="en">SQUARE</para>
+            <para lang="pt">QUADRADO</para>
           </entry>
           <entry>
-            <para>Cycle between the five different letterbox/pan-scan modes</para>
+            <para lang="en">Cycle between the five different letterbox/pan-scan modes</para>
+            <para lang="pt">Rodar entre os cinco diferentes modos de
+            'letterbox'/'pan-scan'</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">L2 / R2</para>
+            <para lang="pt">L2 / R2</para>
           </entry>
           <entry>
             <para lang="en">
               (see O) Adjust audio/video synchronisation offset. (+/-250ms)
             </para>
+            <para lang="pt">
+              (veja O) Ajustar offset da sincronização de audio/video (+/-250ms)
+            </para>
             <para lang="en">OR</para>
+            <para lang="pt">OU</para>
             <para lang="en">
               Adjust subtitle/video synchronisation offset. (+/-250ms)
+            </para>
+            <para lang="pt">
+              Ajustar o offset da sincronização de legendas/video. (+/-250ms)
             </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">L1 / R1</para>
+            <para lang="pt">L1 / R1</para>
           </entry>
           <entry>
             <para lang="en">
               Pan left or right in pan-scan mode
+            </para>
+            <para lang="pt">
+              'Pan' para esquerda ou direita em modo 'pan-scan'
             </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">L1 + R1</para>
+            <para lang="pt">L1 + R1</para>
           </entry>
           <entry>
             <para lang="en">
               Reset pan-scan to centre
+            </para>
+            <para lang="pt">
+              Restaurar 'pan-scan' par ao centro
             </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT + L1</para>
+            <para lang="pt">SELECT + L1</para>
           </entry>
           <entry>
             <para lang="en">Adjust screen position left</para>
+            <para lang="pt">Ajustar tela para esquerda</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT + R1</para>
+            <para lang="pt">SELECT + R1</para>
           </entry>
           <entry>
             <para lang="en">Adjust screen position right</para>
+            <para lang="pt">Ajustar tela para direita</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT + L2</para>
+            <para lang="pt">SELECT + L2</para>
           </entry>
           <entry>
             <para lang="en">Adjust screen position up</para>
+            <para lang="pt">Ajustar tela para cima</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT + R2</para>
+            <para lang="pt">SELECT + R2</para>
           </entry>
           <entry>
             <para lang="en">Adjust screen position down</para>
+            <para lang="pt">Ajustar tela para baixo</para>
           </entry>
         </row>
 
@@ -351,17 +447,26 @@
   <sect2 id="usage-controls-playermenu" xreflabel="Player Menu">
     <title>
       <phrase lang="en">Player Menu</phrase>
+      <phrase lang="pt">Menu do Leitor</phrase>
     </title>
     <para lang="en">
       The player menu (SMS v1.5 and above), allows you to change settings 
       mid-way through playback. Press START during playback to access the 
       player menu.
     </para>
+    <para lang="pt">
+      O menu do leitor (SMS v1.5 para cima), deixa que você altere as opções
+      a meio da vizualização. Pressione START durante a vizualização para 
+      aceder ao menu do leitor.
+    </para>
 
     <figure>
       <title>
-         <phrase lang="en">
+        <phrase lang="en">
            Screenshot showing Player Menu.
+        </phrase>
+        <phrase lang="pt">
+           Screenshot mostrando o menu do leitor.
         </phrase>
       </title>
       <mediaobject>
@@ -380,27 +485,35 @@
           <row>
             <entry>
               <para lang="en">Menu Item</para>
+              <para lang="pt">Item do Menu</para>
             </entry>
             <entry>
               <para lang="en">Description</para>
+              <para lang="pt">Descrição</para>
             </entry>
           </row>
         </thead>
         <tbody>
         <row>
           <entry>
-            <para lang="en">Lanugage:</para>
+            <para lang="en">Language:</para>
+            <para lang="pt">Linguagem:</para>
           </entry>
           <entry>
             <para lang="en">
               <emphasis role="bold">X</emphasis> to change the audio 
               language (for avi files with multiple audio streams)
             </para>
+            <para lang="pt">
+              <emphasis role="bold">X</emphasis> para mudar a linguagem de
+              audio (para ficheiros avi com múltiplas pistas de áudio).
+            </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">Display:</para>
+            <para lang="pt">Ecrã:</para>
           </entry>
           <entry>
             <para lang="en">
@@ -408,7 +521,12 @@
               modes: letterbox, pan-scan 1, pan-scan 2, pan-scan 3, 
               fullscreen.
             </para>
-            <para>
+            <para lang="pt">
+              <emphasis role="bold">X</emphasis> para rodar entre os 5 modos 
+              de vizualização disponíveis: 'letterbox', 'pan-scan 1/2/3', e 
+              ecrã completo.
+            </para>
+            <para lang="en">
               Letterbox display mode shows the full width of the original 
               video with black bands at top and bottom of screen. Pan-scan
               zooms in on the video, using more vertical lines of the 
@@ -419,26 +537,51 @@
               this is useful when playing a widescreen movie file on
               a widescreen TV.
             </para>
+            <para lang="en">
+              O modo 'letterbox' mostra o video com o seu comprimento original
+              com bandas pretas no topo e fundo do ecrã. 'Pan-Scan' amplia 
+              o video, utilizando mais linhas verticais do ecrã, mostrando uma
+              imagem maior no centro. O aspecto negativo é que os lados esq. e
+              dir. da imagem são cortados. Quanto maior o nivel de 'pan-scan',
+              maior a ampliação e o corte. O modo de ecrã completo estica a 
+              imagem para que esta caiba o ecrã da TV - isto é útil ao
+              vizualizar um video em formato 'widescreen' numa TV 'widescreen'.
+            </para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">Auto power-off: (sleep timer)</para>
+            <para lang="pt">Desligar automaticamente: (temporizador)</para>
           </entry>
           <entry>
             <para lang="en">
               Automatically powers off PS2 after the time specified. Time
               starts counting from last button press.
             </para>
+            <para lang="pt">
+              Desliga a PS2 automaticamente depois de um tempo especificado. O
+              tempo começa a contar a partir do último butão pressionado.
+            </para>
             <para lang="en">
               <emphasis role="bold">X</emphasis> to increase
+            </para>
+            <para lang="pt">
+              <emphasis role="bold">X</emphasis> para aumentar
             </para>
             <para lang="en">
               <emphasis role="bold">O</emphasis> to decrease
             </para>
+            <para lang="pt">
+              <emphasis role="bold">O</emphasis> para diminuir
+            </para>
             <para lang="en">
               <emphasis role="bold">auto</emphasis> = power off when movie 
               ends.
+            </para>
+            <para lang="pt">
+              <emphasis role="bold">auto</emphasis> = desligar quando o filme
+              acabar.
             </para>
           </entry>
         </row>
@@ -450,6 +593,7 @@
   <sect2 id="usage-controls-scrollbar">
     <title>
       <phrase lang="en">Scrollbar</phrase>
+      <phrase lang="pt">Barra de Busca</phrase>
     </title>
     <para lang="en">
       New in version 1.5 is a scroll bar, accessible during playback by
@@ -460,11 +604,23 @@
       <emphasis role="bold">X</emphasis> or
       <emphasis role="bold">START</emphasis>.
     </para>
+    <para lang="pt">
+      Novo na versão 1.5 é a Barra de Busca, acessível durante a vizualização
+      pressionando <emphasis role="bold">SELECT</emphasis>. Quando activada, a
+      barra de busca mostra a posição corrente do video. Isto pode ser 
+      ajustado pressionando <emphasis role="bold">ESQUERDA/DIREITA</emphasis>,
+      depois a vizualização pode ser resumida desse ponto pressionando 
+      <emphasis role="bold">X</emphasis> ou
+      <emphasis role="bold">START</emphasis>.
+    </para>
 
     <figure>
       <title>
-         <phrase lang="en">
+        <phrase lang="en">
            Screenshot showing Scrollbar feature.
+        </phrase>
+        <phrase lang="pt">
+           Screenshot mostrando a barra de busca.
         </phrase>
       </title>
       <mediaobject>
@@ -480,34 +636,56 @@
   <para lang="en">
     Yeah, that's all well and good, but how do I play my DivX movies?
   </para>
+  <para lang="pt">
+    Sim, isso é tudo muito bonito, mas como é k vejo os meus filmes DivX?
+  </para>
   <para lang="en">
     There are several ways of playing video files:
+  </para>
+  <para lang="pt">
+    Existem várias maneiras de vizualizar ficheiros de video:
   </para>
   <itemizedlist mark='bullet'>
     <listitem>
       <para lang="en">
         <link linkend="usage-network">Streaming over a network</link>
       </para>
+      <para lang="pt">
+        <link linkend="usage-network">Através da Rede Local</link>
+      </para>
     </listitem>
     <listitem>
       <para lang="en">
         <link linkend="usage-cddafs">From a CD</link>
+      </para>
+      <para lang="pt">
+        <link linkend="usage-cddafs">A partir de um CD</link>
       </para>
     </listitem>
     <listitem>
       <para lang="en">
         <link linkend="usage-dvdr">From a DVD-R</link>
       </para>
+      <para lang="pt">
+        <link linkend="usage-dvdr">A partir de um DVD-R</link>
+      </para>
     </listitem>
     <listitem>
       <para lang="en">
         <link linkend="usage-hdd">From a PS2 internal hard disc drive</link>
+      </para>
+      <para lang="pt">
+        <link linkend="usage-hdd">A partir do Disco Rigido da PS2</link>
       </para>
     </listitem>
     <listitem>
       <para lang="en">
         <link linkend="usage-usb">From a USB drive attached to the 
         PS2</link> (also called USB mass storage device).
+      </para>
+      <para lang="pt">
+        <link linkend="usage-usb">A partir de um dispositivo USB ligado à PS2
+        </link> (também chamado dispositivo de armazenamento USB).
       </para>
     </listitem>
   </itemizedlist>

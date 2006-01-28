@@ -6,6 +6,9 @@
     <phrase lang="en">
       Subtitles
     </phrase>
+    <phrase lang="pt">
+      Legendas
+    </phrase>
   </title>
 
   <para lang="en">
@@ -13,10 +16,16 @@
     <filename>.srt</filename> (<application>SubRip</application>) and
     <filename>.sub</filename> (<application>MicroDVD</application>) formats.
   </para>
+  <para lang="pt">
+    Suporte para legendas foi adicionado no SMS v1.5. Os formatos suportados 
+    são <filename>.srt</filename> (<application>SubRip</application>) e
+    <filename>.sub</filename> (<application>MicroDVD</application>).
+  </para>
 
   <sect2 id="usage-subtitles-playback">
     <title>
       <phrase lang="en">Playing Videos With Subtitles</phrase>
+      <phrase lang="pt">Vizualizando videos com Legendas</phrase>
     </title>
 
   <para lang="en">
@@ -29,6 +38,17 @@
     file (you can open it in notepad if you want), which defines the text
     and the timing of the words which appear on the screen.
   </para>
+  <para lang="pt">
+    Para ver um filme com legendas, necessitará de um filme 
+    <filename>.avi</filename> com o ficheiro de legendas correspondente na
+    linguagem desejada.  Ficheiros de legendas estão disponíveis para
+    download em vários sites, ou pode 'ripar' as suas próprias legendas do
+    DVD. Como e onde arranjar legendas não faz parte do objectivo deste
+    manual, mas de qualquer maneira ficará com um ficheiro de legendas. Um
+    ficheiro de legendas é um ficheiro de texto (pode abri-lo no notepad se 
+    lhe apetecer), onde estão definidos o texto e o tempo das palavras que 
+    aparecem no ecrã.
+   </para>
 
   <para lang="en">
     The <emphasis role="bold">Player Settings</emphasis> menu
@@ -39,11 +59,23 @@
     '<emphasis role="bold">Autoload subtitles</emphasis>'.
     The subtitle position and colour can be adjusted here too.
   </para>
+  <para lang="pt">
+    O menu <emphasis role="bold">Player Settings</emphasis> menu
+    (pressione <emphasis role="bold">Start</emphasis> no navegador do SMS e 
+    seleccione <emphasis role="bold">Player Settings</emphasis>, e pressione
+    <emphasis role="bold">X</emphasis>) é usado para controlar as opções das
+    legendas. A principal opção que quererá ligar é
+    '<emphasis role="bold">Autoload subtitles</emphasis>'.
+    As cores e posição das legendas podem ser ajustadas aqui também.
+  </para>
 
   <figure id="usage-subtitles-settingsfig">
     <title>
        <phrase lang="en">
          Screenshot showing subtitle settings.
+      </phrase>
+      <phrase lang="pt">
+         Screenshot mostrando as opções de legendas.
       </phrase>
     </title>
     <mediaobject>
@@ -61,21 +93,28 @@
   <para lang="en">
     SMS currently supported subtitle formats:
   </para>
+  <para lang="pt">
+    Formatos de Legendas suportados pelo SMS:
+  </para>
   <table frame='none'>
     <title>
       <phrase lang="en">Subtitle formats supported by SMS</phrase>
+      <phrase lang="pt">Formatos de Legendas suportados pelo SMS</phrase>
     </title>
     <tgroup cols='3'>
       <thead>
         <row>
           <entry>
             <para lang="en">Format</para>
+            <para lang="pt">Formato</para>
           </entry>
           <entry>
             <para lang="en">Extension</para>
+            <para lang="pt">Extensão</para>
           </entry>
           <entry>
             <para lang="en">Example</para>
+            <para lang="pt">Exemplo</para>
           </entry>
         </row>
       </thead>
@@ -133,6 +172,16 @@
       them.  It's quite handy for quickly verifying files before trying them
       on SMS.
     </para>
+    <para lang="pt">
+      Se não tiver a certeza acerca dos ficheiros de legendas, recomendo que 
+      os meta a funcionar no seu PC primeiro, usando um leitor de PC que 
+      suporte legendas (tal como o 
+      <ulink url="http://www.mplayerhq.hu"><application>MPlayer</application></ulink>).
+      O <application>Mplayer</application> segue as mesmas regras que o SMS 
+      quando procura ficheiros de legendas, e liga-os por defeito se os
+      encontrar.  É bastante útil para verificar ficheiros rapidamente antes 
+      de os testar no SMS.
+    </para>
   </tip>
 
   <para lang="en">
@@ -141,10 +190,21 @@
     difference being the extension (<filename>.srt</filename> or
     <filename>.sub</filename>). The extension must be in lower-case.
   </para>
+  <para lang="pt">
+    O ficheiro de legendas em si deve ser copiado para o mesmo directório que
+    o ficheiro de video, exactamente com o mesmo nome que o ficheiro de video,
+    residindo a única diferença na extensão (<filename>.srt</filename> ou
+    <filename>.sub</filename>). A extensão tem de ser em letras minúsculas.
+  </para>
 
   <para lang="en">
     Once you have the file in the right location, start SMS and navigate to
     the <filename>.avi</filename> video file as usual, then press
+    <emphasis role="bold">X</emphasis>.
+  </para>
+  <para lang="pt">
+    Assim que tiver o ficheiro na localização correcta, ligue o SMS e navegue
+    até aoficheiro <filename>.avi</filename> como de costume, e pressione
     <emphasis role="bold">X</emphasis>.
   </para>
 
@@ -153,6 +213,10 @@
        <phrase lang="en">
          Screenshot showing SMS while browsing for video (note 
          subtitle file in same directory).
+      </phrase>
+      <phrase lang="pt">
+         Screenshot mostrando o SMS navegando até ao video (repare no ficheiro
+         de legendas no mesmo directório).
       </phrase>
     </title>
     <mediaobject>
@@ -170,11 +234,18 @@
     SMS will automatically look for a subtitle file, and if it finds one,
     the following 'loading subtitles' message will be displayed:
   </para>
+  <para lang="pt">
+    O SMS irá procurar automaticamente por um ficheiro de legendas, e se 
+    encontrar um, a mensagem 'loading subtitles' aparecerá:
+  </para>
 
   <figure>
     <title>
        <phrase lang="en">
          Screenshot showing SMS while lauching video with subtitles.
+      </phrase>
+      <phrase lang="pt">
+         Screenshot mostrando o SMS carregando um video com legendas.
       </phrase>
     </title>
     <mediaobject>
@@ -194,11 +265,19 @@
     (colour/position are adjustable in the
     <link linkend="usage-subtitles-settingsfig">player settings menu</link>).
   </para>
+  <para lang="pt">
+    Durante a vizualização, as legendas aparecerão no ecrã (cor e posição são
+    ajustáveis no menu 
+    <link linkend="usage-subtitles-settingsfig">player settings</link>).
+  </para>
 
   <figure>
     <title>
        <phrase lang="en">
          Screenshot showing SMS playback with subtitles.
+      </phrase>
+      <phrase lang="pt">
+         Screenshot mostrando as legendas no SMS.
       </phrase>
     </title>
     <mediaobject>
@@ -220,17 +299,30 @@
     found less synchronisation problems with <filename>.sub</filename> files 
     than <filename>.srt</filename>, but your results may vary.
   </para>
+  <para lang="pt">
+    Por vezes, a sincronização entre as legendas e o som pode ser alterada.
+    Pode ajustar a sincronização durante a vizualização (veja a secção
+    <link linkend="usage-controls-playback">controlos</link>).  Eu encontrei
+    menos problemas de sincronização com ficheiros <filename>.sub</filename>
+    do que com ficheiros <filename>.srt</filename>, mas os resultados podem
+    variar.
+  </para>
 
   </sect2>
 
   <sect2 id="usage-subtitles-non-ascii">
     <title>
       <phrase lang="en">Non-ASCII Character Sets</phrase>
+      <phrase lang="pt">Caracteres não-ASCII</phrase>
    </title>
 
     <para lang="en">
       If your subtitles have non-ASCII character sets, then you'll need to
       add support for the fonts separately.
+    </para>
+    <para lang="pt">
+      Se as suas legendas têm caracteres não-ASCII, então terá de adicionar
+      suporte para esses caracteres separadamente.
     </para>
 
     <para lang="en">
@@ -239,9 +331,18 @@
       (<ulink url="http://www.ps2-scene.org/forums/forumdisplay.php?f=111"/>),
       and the README for SMS.
     </para>
+    <para lang="pt">
+      Detalhes de como fazer isto podem ser implementados nas próximas versões
+      deste manual. Por agora, por favor visite o forum oficial do SMS
+      (<ulink url="http://www.ps2-scene.org/forums/forumdisplay.php?f=111"/>),
+      ou ao README do SMS.
+    </para>
 
     <para lang="en">
       This extract from the README may help you:
+    </para>
+    <para lang="pt">
+      Este extracto do README pode ajudá-lo:
     </para>
 <screen><![CDATA[Following fonts can be loaded:
 - mc0:SMS/ascii.mtf - contains 96 ascii characters ( 32-127)

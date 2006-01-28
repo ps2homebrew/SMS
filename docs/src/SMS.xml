@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-    "/usr/share/sgml/docbook/xml-dtd-4.1.2-1.0-26/docbookx.dtd"
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+    "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
 <!ENTITY introduction.xml	SYSTEM "introduction.xml">
 <!ENTITY installation-requirements.xml SYSTEM "installation/requirements.xml">
@@ -27,6 +27,9 @@
     <title lang="en">
       <application>SMS</application> - Playstation 2 Simple Media System
     </title>
+    <title lang="pt">
+      <application>SMS</application> - Playstation 2 Simple Media System
+    </title>
 
     <subtitle lang='en'>User Manual</subtitle>
     <subtitle lang='cs'>Uživatelská příručka</subtitle>
@@ -36,7 +39,7 @@
     <subtitle lang="fr">Guide Utilisateur</subtitle>
     <subtitle lang='it'>Manuale utente</subtitle>
     <subtitle lang="nl">Gebruikershandleiding</subtitle>
-    <subtitle lang='pt'>#User Manual#</subtitle>
+    <subtitle lang='pt'>Manual do Utilizador</subtitle>
     <subtitle lang='sv'>Användarmanual</subtitle>
     <subtitle lang='zh_CN'>用户手册</subtitle>
 
@@ -47,7 +50,8 @@
   <copyright>
     <year>2005</year>
     <year>2006</year>
-    <holder>The SMS Documentation Team, Contributors: Dave T, Juddman</holder>
+    <holder>The SMS Documentation Team, Contributors: Dave T, Juddman.
+    Translators: Nuno Bento</holder>
   </copyright>
 
   <legalnotice lang="en;de">
@@ -168,7 +172,7 @@
       <phrase lang="fr">Introduction</phrase>
       <phrase lang="it">Introduzione</phrase>
       <phrase lang="nl">Introduktie</phrase>
-      <phrase lang="pt">#Introduction#</phrase>
+      <phrase lang="pt">Introdução</phrase>
       <phrase lang="sv">Introduktion</phrase>
       <phrase lang="zh_CN">简介</phrase>
     </title>
@@ -180,7 +184,7 @@
       <phrase lang="en">Installation</phrase>
       <phrase lang="el">#Installation#</phrase>
       <phrase lang="es">#Installation#</phrase>
-      <phrase lang="pt">#Installation#</phrase>
+      <phrase lang="pt">Instalação</phrase>
     </title>
     &installation-requirements.xml;
     &installation-quick.xml;
@@ -193,7 +197,7 @@
       <phrase lang="en">Usage</phrase>
       <phrase lang="el">#Usage#</phrase>
       <phrase lang="es">#Usage#</phrase>
-      <phrase lang="pt">#Usage#</phrase>
+      <phrase lang="pt">Utilização</phrase>
     </title>
     &usage.xml;
     &usage-controls.xml;
@@ -209,6 +213,7 @@
   <appendix id="faq">
     <title>
       <phrase lang="en">Frequently Asked Questions</phrase>
+      <phrase lang="pt">FAQ - Questões Mais Frequentes</phrase>
     </title>
     &appendices-faq.xml;
   </appendix>
@@ -216,6 +221,7 @@
   <appendix>
     <title>
       <phrase lang="en">Bits and Pieces</phrase>
+      <phrase lang="pt">Variados</phrase>
     </title>
     &appendices-bitsandpieces.xml;
   </appendix>

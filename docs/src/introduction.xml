@@ -9,6 +9,14 @@
   resolution movies at good frame rate on an unmodded PS2 without any extra
   equipment such as HDD and network adapter.
 </para>
+<para lang="pt">
+  Simple Media System (<application>SMS</application>) é o resultado 
+  da curiosidade do autor (Eugene Plotnikov) acerca da Playstation 2, MIPS, 
+  DivX e MP3. 
+  O objectivo inicial era criar um simples leitor de DivX, capaz  de correr 
+  filmes com boa resolução e bom 'frame rate' numa PS2 não-modificada sem 
+  qualquer equipamento extra tal como o HDD ou o Adaptador de Rede.
+</para>
 
 <para lang="en">
   Why create a complete "system"? Just because having only a player program
@@ -16,6 +24,13 @@
   took the idea of Drakonite with his UMCDR and developed his own "UMCDR".
   (called CDDAFS). It just stores data on a CD audio disk format, which can
   be read on (hopefully) any PS2.
+</para>
+<para lang="pt">
+  Porquê criar um 'sistema' completo? Simplesmente porque ter apenas um 
+  programa de leitura não é suficiente. Visto que a PS2 normalmente ignora 
+  discos "ilegais", ele usou a ideia do Drakonite e do seu UMCDR e desenvolveu
+  o seu próprio "UMCDR" (chamado CDDAFS). Basicamente os dados são gravados 
+  num CD de áudio, que pode ser lido em qualquer PS2.
 </para>
 
 <para lang="en">
@@ -28,6 +43,16 @@
   with many DivX/XviD movies with different screen resolutions and encoding
   methods and it seems to be working.
 </para>
+<para lang="pt">
+  Este é o primeiro componente do SMS. O segundo componente é um programa de 
+  PC que cria ficheiros cue/bin para serem gravados num CD. E, finalmente, vem
+  o leitor propriamente dito. Este sistema ainda não está completo, mas já é 
+  capaz de correr filmes DivX com boa qualidade de som e bom 'frame rate'. A 
+  base do leitor é o famoso projecto ffmpeg. O autor (EEUG) tirou algumas 
+  partes do projecto e efectuou algumas alterações especificas para o hardware
+  da PS2. O programa já foi testado com vários filmes Xvid/DivX com diferentes
+  resoluções e 'frame rates' e parece funcionar às mil maravilhas.
+</para>
 
 <para lang="en">
   Since the initial concept, the SMS project has now grown to include
@@ -38,6 +63,15 @@
   interesting for PS2 enthusiasts who use it as a base for their own
   development.
 </para>
+<para lang="pt">
+  Desde o conceito inicial, o projecto SMS tem crescido bastante. Neste 
+  momento já suporta dispositivos USB, ficheiros por rede, disco rigido (HDD).
+  Neste momento existe também suporte para legendas e um leitor completo para 
+  ficheiros de áudio MP3. O software está disponivel no 'subversion' (SVN) no 
+  ps2dev.org. O código fonte foi disponilizado com o intuito de chamar a 
+  atenção de entusiastas da PS2 que queiram usá-lo como base do seu próprio 
+  trabalho.
+</para>
 
 <para lang="en">
   This document provides comprehensive installation and usage instructions.
@@ -45,4 +79,11 @@
   for output in a variety of formats including single HTML and HTML pages
   grouped into sections.  Later it will (hopefully) be distributed in PDF
   format as well.
+</para>
+<para lang="pt">
+  Este documento contém intruções para instalação e modo de usar. Neste 
+  momento, é escrito e mantido em formato DocBook XML, e processado para 
+  distribuição em vários formatos incluindo simples HTML e grupo de páginas 
+  HTML agrupadas em secções. Mais tarde passará a ser distribuido em formato 
+  PDF também.
 </para>
