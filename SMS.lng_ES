@@ -1,0 +1,169 @@
+Interfáz:  
+ninguna
+Inicializando SMS...
+Guardando configuración...
+Cargando %s...
+Inicializando Red...
+Localizando USBD.IRX...
+Esperando Medio (presionar "Start" para Menú)...
+Leyendo Disco...
+Disco Ilegal (presionar "Cruz" para continuar)...
+Leyendo Medio...
+Opciones de Pantalla...
+Opciones de Dispositivo...
+Opciones de Navegador...
+Opciones de Reproductor...
+Ayuda...
+Guardar Configuración
+Apagar Consola
+Salir de SMS
+Sistema TV
+PAL
+NTSC
+Automático
+Mapa de Caracteres
+Latino 1
+Latino 2
+Cirilico
+Griego
+Opciones de Pantalla
+Menú SMS
+Mover Imagen hacia Izquierda
+Mover Imagen hacia Derecha
+Mover Imagen hacia Arriba
+Mover Imagen hacia Abajo
+Autoiniciar Red
+Autoiniciar USB
+Autoiniciar HDD
+Opciones de Dispositivos
+Iniciar Soporte de Red
+Iniciar Soporte de HDD
+Iniciar Soporte de USB
+Editar IPCONFIG.DAT...
+Editar IPCONFIG.DAT
+Dirección IP (octeto 1)
+Dirección IP (octeto 2)
+Dirección IP (octeto 3)
+Dirección IP (octeto 4)
+Máscara (octeto 1)
+Máscara (octeto 2)
+Máscara (octeto 3)
+Máscara (octeto 4)
+Puerta Enlace (octeto 1)
+Puerta Enlace (octeto 2)
+Puerta Enlace (octeto 3)
+Puerta Enlace (octeto 4)
+Guardar/Actualizar IPCONFIG.DAT
+Opciones de Navegador
+Usar Imagen de Fondo
+Ordenar Archivos
+Filtrar Archivos Multimedia
+Mostrar Particiones HDL
+Ocultar Particiones Sistema
+Color de Borde Activo
+Color de Borde Inactivo
+Color de Texto
+Color de Linea de Estado
+Opciones de Reproductor
+Volumen Predeterminado
+Alineamiento de Subtítulo
+Altura de Subtítulo
+Autocargar Subtítulo
+Fondo Opaco de Subtítulo
+Color Subtítulo Normal
+Color Subtítulo Negrita
+Color Subtítulo Itálica
+Color Subtítulo Subrayado
+Apagado Automático
+Largo de Cursor
+Posición de Cursor
+Mostrar Tiempo en Cursor
+Color de Cursor
+Color de Barra de Volumen
+Animación de Audio
+Arriba
+Abajo
+no
+Centrado
+Izq.
+%d min
+%d pts
+Ancho Fuente Subtítulo
+Altura Fuente Subtítulo
+Ayuda Rapida
+ 
+Al Inicio:
+Select+R1 - Modo NTSC
+Select+R2 - Modo PAL
+Navegador:
+Triángulo - Subir Directorio
+Izquierda/Derecha - Selección Interfáz
+Arriba/Abajo - Navegar Directorio
+Cruz - Acción
+Select+Círculo - Apagar
+Select+R1 - Ajustar Imagen Derecha
+Select+L1 - Ajustar Imagen Izquierda
+Select+R2 - Ajustar Imagen Arriba
+Select+L2 - Ajustar Imagen Abajo
+Select+Cuadrado - Guardar Config.
+Select+Triángulo - Navegador PS2
+L1+L2+R1+R2 - Créditos
+Reproductor:
+Arriba/Abajo - Ajustar Volumen
+Derecha/Izquierda - Modo Avance/Retr.
+Cruz - Salir Modo Avance/Retroceso
+Triángulo - Detener
+Select - Pausa/Cursor
+Start - Continuar/Menú
+Cruz - Mostrar tiempo
+Cuadrado - Modo Zoom
+L1 - Mover Izquierda
+R1 - Mover Derecha
+Círculo - V/A (S/V) Sincronización
+L2 - Decrementar Sincronización
+R2 - Aumentar Sincronización
+Menú SMS:
+Cruz/Círculo - Acción/Siguiente Nivel
+Triángulo - Subir Nivel/Salir Menú
+Error (presionar "Cruz" para continuar)...
+Guardando IPCONFIG.DAT...
+Color de Barra Selección
+Opciones Avanzadas...
+Altura de Pantalla
+Aplicar Configuración
+Opciones Avanzadas
+Ejemplo Ajuste
+Inglés
+Español
+Lenguaje
+Cargando Indices...
+Cargando Subtítulos...
+Subtítulo: %s error (%d), presionar "Cruz" para continuar...
+Formato
+Secuencia
+Almacenando Archivo %s...
+Detectando Formato de Archivo...
+Pausa
+Detener
+Pista 1
+V/A:
+S/V:
+Reproducir 
+Avanzar 
+Retroceder 
+Cursor
+Formato no Soportado (presionar \"Cruz\" para continuar)...
+Restante
+Menú de Reproductor
+Ajuste de Pantalla
+Original
+Zoom 1
+Zoom 2
+Zoom 3
+Pantalla Completa
+Mostrar Subtítulos
+Seleccionar Subtítulos
+Navegador PS2
+mc0:/BOOT/BOOT.ELF
+mc0:/BADATA-SYSTEM/BOOT.ELF
+Reiniciar y Cargar

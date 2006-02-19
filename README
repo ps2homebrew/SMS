@@ -560,7 +560,48 @@ Update (01-JAN-2006)
 --------------------
 - fixed "first letter is missing" for "sub" subtitles format bug (thanks to
   "LaptoniC" and "deank" for remarks);
-- fixed "SMS crashes when an unsupported file is selected" (thanks tp "deank"
+- fixed "SMS crashes when an unsupported file is selected" (thanks to "deank"
   for the remark);
-- added "save display mode (letterbox/pan-scan)" feature; (thanks tp "deank"
+- added "save display mode (letterbox/pan-scan)" feature; (thanks to "deank"
   for the remark);
+
+Update (16-JAN-2006)
+--------------------
+- fixed bug in MP3 decoder - sound quality is improved (thanks to "Mr.Worm~~"
+  and "Voldemar_u2" for testing);
+- another attempt has been made to fix hang during m3u playback/scroll;
+- relaxed format interpretation for .srt subtitles. Thanks to "Voldemar_u2"
+  for the implementation;
+
+Update (19-FEB-2006)
+--------------------
+- GS related code is rewritten from scratch (no VESA video mode support yet);
+- Browser and GUI are rewritten (same look and feel, but totally different code
+  featuring "object oriented" desktop, so, new GUI objects can be added without
+  changing other parts of the application);
+- Scalable fonts are implemented, so, subtitle size is adjustable now;
+- Multilanguage support is implemented. Custom language strings are loaded from
+  mc0:/SMS/SMS.lng file (which is just a text file);
+- Skin format is changed slightly, so, it's possible to create skins of arbitrary
+  size using updated version of "SMS Skin generator" application. Old skins are not
+  supported anymore. Don't use a very high resulution (> 800x600) skins, otherwise
+  results are not guaranteed. Note: new filename for skin is "mc0:/SMS/SMS.skn"
+  (for consistency with other filenames like "SMS.lng" and "SMS.pal");
+- Added functionality to select custom subtitles. This works as follows: pressing
+  "circle" pad button while .avi file is selected activates a "mini-browser" with
+  .sub/.srt files found in the same directory as .avi. If there're no .sub/.srt
+  files found then playback begins instantly. Pressing "triangle" pad button while
+  in "mini-browser" cancels selection, and starts playback with default subtitle
+  selection algorithm (same name as .avi etc.). Pressing "cross" or "circle" button
+  while in "mini-browser" selects subtitle and starts playback;
+- .avi files with associated subtitles are displayed using different icon;
+- added a possibility to launch user defined application upon exit. There're 3
+  options: boot browser and 2 user defined (in SMS.lng) applications (default
+  are "mc0:/BOOT/BOOT.ELF" and "mc0:/B?DATA-SYSTEM/BOOT.ELF). This feature is still
+  experimental one, so, results are not guaranteed and the only supported media for
+  launched programs is memory card and CD-ROM (not tested).
+  (thanks to "Marcus R. Brown" for the loader code example); 
+- some new configuration options are added (thanks to "bix64" for IPCONFIG.DAT
+  "editor");
+- some other "cosmetic" changes are made;
+  Thanks to "Mr.Worm~~" for suggestions and testing;
