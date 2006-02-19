@@ -390,6 +390,8 @@ void SMS_LocaleInit ( void ) {
 
  int lFD = fioOpen ( s_SMSLng, O_RDONLY );
 
+ memcpy (  g_SMString, s_SMStringDef, sizeof ( g_SMString )  );
+
  if ( lFD >= 0 ) {
 
   long lSize = fioLseek ( lFD, 0, SEEK_END );
@@ -434,7 +436,9 @@ void SMS_LocaleInit ( void ) {
 
   fioClose ( lFD );
 
- } else STR_EXEC1.m_pStr[ 6 ] = g_pBXDATASYS[ 6 ];
+ }  /* end else */
+
+ STR_EXEC1.m_pStr[ 6 ] = g_pBXDATASYS[ 6 ];
 
 }  /* end SMS_LocaleInit */
 

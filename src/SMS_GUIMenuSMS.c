@@ -20,6 +20,7 @@
 #include "SMS_MC.h"
 #include "SMS_FileDir.h"
 #include "SMS_EE.h"
+#include "SMS_Timer.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -646,6 +647,8 @@ void _exit_handler ( GUIMenu* apMenu, int aDir ) {
 
  sprintf ( lBuffer, STR_LOADING.m_pStr, s_ExitTo[ lIdx ] -> m_pStr );
  GUI_Status ( lBuffer );
+
+ Timer_Destroy ();
 
  if ( !lIdx ) {
 
