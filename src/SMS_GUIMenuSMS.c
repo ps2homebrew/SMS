@@ -1037,8 +1037,8 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  strcat ( lBuf, s_IP[ i ] );
-  strcat ( lBuf, g_DotStr  );
+  SMS_Strcat ( lBuf, s_IP[ i ] );
+  SMS_Strcat ( lBuf, g_DotStr  );
 
  }  /* end for */
 
@@ -1049,8 +1049,8 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  strcat ( lBuf, s_MSK[ i ] );
-  strcat ( lBuf, g_DotStr  );
+  SMS_Strcat ( lBuf, s_MSK[ i ] );
+  SMS_Strcat ( lBuf, g_DotStr  );
 
  }  /* end for */
 
@@ -1063,8 +1063,8 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  strcat ( lBuf, s_GW[ i ] );
-  strcat ( lBuf, g_DotStr  );
+  SMS_Strcat ( lBuf, s_GW[ i ] );
+  SMS_Strcat ( lBuf, g_DotStr  );
 
  }  /* end for */
 
@@ -1515,7 +1515,7 @@ static void _advset_handler ( GUIMenu* apMenu, int aDir) {
 
 static void _disph_handler ( GUIMenu* apMenu, int aDir ) {
 
- static int lMin[ 2 ] __attribute__(   (  section( ".data" )  )   ) = { 448, 512 };
+ static int lMin[ 2 ] __attribute__(   (  section( ".data" )  )   ) = { 416, 448 };
  static int lMax[ 2 ] __attribute__(   (  section( ".data" )  )   ) = { 480, 576 };
 
  int lIdx    = GS_Params () -> m_GSCRTMode - 2;

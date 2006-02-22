@@ -10,6 +10,7 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include "SMS.h"
 #include "SMS_FileDir.h"
 #include "SMS_GUIcons.h"
 #include "SMS_GUI.h"
@@ -102,7 +103,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
    lFD = fileXioDopen ( g_CWD );
 
-   strcat ( g_CWD, g_SlashStr );
+   SMS_Strcat ( g_CWD, g_SlashStr );
 
    if ( lFD >= 0 ) {
 
@@ -131,13 +132,23 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
  lpFileList = SMS_ListInit ();
  lFD        = strlen ( g_CWD ) - 1;
 
+__asm__ __volatile__(
+ ".set noreorder\n\t"
+ "pxor $a0, $a0, $a0\r\n"
+ "pxor $a1, $a1, $a1\r\n"
+ "pxor $a2, $a2, $a2\r\n"
+ "pxor $a3, $a3, $a3\r\n"
+ ".set reorder\n\t"
+ ::: "a0", "a1", "a2", "a3"
+ );
+
  if ( g_CMedia == 4 ) {
 
-  if ( apPath[ 0 ] && g_CWD[ 5 ] && g_CWD[ lFD ] != '\\' && apPath[ 0 ] != '\\' ) strcat ( g_CWD, g_BSlashStr );
+  if ( apPath[ 0 ] && g_CWD[ 5 ] && g_CWD[ lFD ] != '\\' && apPath[ 0 ] != '\\' ) SMS_Strcat ( g_CWD, g_BSlashStr );
 
- } else if ( apPath[ 0 ] != '/' && g_CWD[ lFD ] != '/' ) strcat ( g_CWD, g_SlashStr );
+ } else if ( apPath[ 0 ] != '/' && g_CWD[ lFD ] != '/' ) SMS_Strcat ( g_CWD, g_SlashStr );
 
- strcat ( g_CWD, apPath );
+ SMS_Strcat ( g_CWD, apPath );
 
  if ( g_CMedia == 1 && g_pCDDACtx ) {
 
@@ -187,7 +198,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
   }  /* end if */
 
   strcpy ( g_CWD, g_pCDDAFS );
-  strcat ( g_CWD, apPath    );
+  SMS_Strcat ( g_CWD, apPath );
 
  } else if ( g_CMedia != 3 ) {
 
@@ -217,7 +228,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
      }  /* end if */
 
      strcpy ( lPath, s_pHST );
-     strcat ( lPath, lBuf   );
+     SMS_Strcat ( lPath, lBuf );
 
      lID = fioOpen ( lPath, O_RDONLY );
 
@@ -257,7 +268,7 @@ doScan:
 
     strcpy ( lPath, g_CWD );
 
-    if (  lPath[ strlen ( lPath ) - 1 ] != '\\'  ) strcat ( lPath, g_BSlashStr );
+    if (  lPath[ strlen ( lPath ) - 1 ] != '\\'  ) SMS_Strcat ( lPath, g_BSlashStr );
 
     lpPtr = lPath + strlen ( lPath );
 

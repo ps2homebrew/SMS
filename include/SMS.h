@@ -384,6 +384,7 @@ void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int            );
 int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t            );
 void     SMS_StartNetwork     ( void*                                );
 void     SMS_ResetIOP         ( void                                 );
+void     SMS_Strcat           ( char*, const char*                   );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

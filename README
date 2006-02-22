@@ -605,3 +605,11 @@ Update (19-FEB-2006)
   "editor");
 - some other "cosmetic" changes are made;
   Thanks to "Mr.Worm~~" for suggestions and testing;
+
+Update (21-FEB-2006)
+--------------------
+- an attempt to fix "can't browse folders" bug;
+  (thanks to everybody involved in this discovery);
+- an attempt to fix "files on USB device are not selectable" bug;
+- added possibility to decrease screen height in "display settings" ->
+  "advanced settings" menu (thanks to "Voldemar_u2" for suggestion);

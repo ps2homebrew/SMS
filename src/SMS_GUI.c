@@ -412,7 +412,6 @@ void GUI_Initialize ( int afCold ) {
 
   int           i;
   unsigned long lTimer;
-
   GSVideoMode   lVideoMode = GSVideoMode_Default;
   ee_sema_t     lSema;
   ee_thread_t   lThread;

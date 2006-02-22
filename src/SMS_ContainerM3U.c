@@ -60,9 +60,10 @@ static SMS_Container* _open_file ( SMS_Container* apCont, SMS_ListNode* apNode, 
  SMS_Container* retVal = NULL;
  FileContext*   lpFileCtx;
 
- strcpy (  lFileName, g_CWD                        );
- strcat (  lFileName, g_SlashStr                   );
- strcat (  lFileName, MYENTR( apNode ) -> m_pPath  );
+ strcpy ( lFileName, g_CWD );
+ SMS_Strcat (  lFileName, g_SlashStr                   );
+ SMS_Strcat (  lFileName, MYENTR( apNode ) -> m_pPath  );
+
  lpFileCtx            = apOpen ( lFileName, apOpenParam );
  apCont -> m_pFileCtx = lpFileCtx;
 

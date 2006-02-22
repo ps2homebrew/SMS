@@ -47,9 +47,9 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
  GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
  char*         lpName  = g_CMedia == 1 && g_pCDDACtx ? &lPath[ 7 ] : lPath;
 
- strcpy ( lPath, g_CWD                                         );
- strcat ( lPath, g_SlashStr                                    );
- strcat ( lPath, lpState -> m_pCurr -> m_pOptionName -> m_pStr );
+ strcpy ( lPath, g_CWD );
+ SMS_Strcat ( lPath, g_SlashStr                                    );
+ SMS_Strcat ( lPath, lpState -> m_pCurr -> m_pOptionName -> m_pStr );
 
  s_pFileCtxSub = s_pFileCtx -> Open ( lpName, s_pFileCtx -> m_pOpenParam );
 

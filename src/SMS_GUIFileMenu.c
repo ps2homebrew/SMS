@@ -357,10 +357,12 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
  char*        lpPathEnd;
  FileContext* lpFileCtx;
 
- strcpy ( lPath, g_CWD      );
- strcat ( lPath, g_SlashStr );
+ strcpy ( lPath, g_CWD );
+
+ if (  lPath[ strlen ( lPath ) - 1 ] != '/'  ) SMS_Strcat ( lPath, g_SlashStr );
+
  lpPathEnd = lPath + strlen ( lPath );
- strcat ( lPath, apMenu -> m_pCurrent -> m_pString );
+ SMS_Strcat ( lPath, apMenu -> m_pCurrent -> m_pString );
 
  if ( g_CMedia == 1 && g_pCDDACtx )
 
@@ -464,9 +466,9 @@ static void _action_partition ( GUIFileMenu* apMenu, int afPopup ) {
  char lPath[ 2 ] __attribute__(   (  aligned( 4 )  )   );
  char lMountPath[ strlen ( apMenu -> m_pCurrent -> m_pString ) + 6 ];
 
- strcpy ( lMountPath, g_pDevName[ 2 ]                   );
- strcat ( lMountPath, g_ColonStr                        );
- strcat ( lMountPath, apMenu -> m_pCurrent -> m_pString );
+ strcpy ( lMountPath, g_pDevName[ 2 ] );
+ SMS_Strcat ( lMountPath, g_ColonStr                        );
+ SMS_Strcat ( lMountPath, apMenu -> m_pCurrent -> m_pString );
 
  *( unsigned int* )&g_CWD[ 0 ] = 0x30736670;
  *( unsigned int* )&g_CWD[ 4 ] = 0x0000003A;
