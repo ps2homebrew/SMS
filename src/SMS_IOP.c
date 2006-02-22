@@ -234,7 +234,7 @@ void SMS_IOPReset ( void ) {
  SifExitRpc     (); 
  SifIopReset ( s_pUDNL, 0 );
 
- while (  SifIopSync ()  );
+ while (  !SifIopSync ()  );
 
  SifInitRpc ( 0 );
 

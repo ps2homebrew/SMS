@@ -60,6 +60,8 @@ T0_Handler:
     lw	    $t0, 0($v0)
     addu    $sp, $sp, 16
     ori	    $t0, $t0, 0x0400
-    jr      $ra
     sw	    $t0, 0($v0)
+    sync
+    jr      $ra
+    ei
 .end T0_Handler

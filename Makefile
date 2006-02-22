@@ -55,4 +55,4 @@ clean:
 
 include $(PS2SDK)/Defs.make
 
-EE_CFLAGS := -DLOCK_QUEUES -DVB_SYNC -D_EE -O2 -G8192 -mgpopt -Wall -mno-check-zero-division
+EE_CFLAGS := -DVB_SYNC -D_EE -O2 -G8192 -mgpopt -Wall -mno-check-zero-division

@@ -178,7 +178,7 @@ void SMS_PlayerMenu ( void ) {
  s_PlayerMenu[ 0 ].m_IconRight = ( unsigned int )&s_Lang;
  s_PlayerMenu[ 1 ].m_IconRight = ( unsigned int )s_ModeNames[ s_Player.m_PanScan ];
  s_PlayerMenu[ 2 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
- s_PlayerMenu[ 3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[ 3 ].m_IconRight = s_Player.m_Flags & SMS_PF_SUBS ? GUICON_ON : GUICON_OFF;
  s_PlayerMenu[ 4 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
  s_PlayerMenu[ 5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
  s_PlayerMenu[ 6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;

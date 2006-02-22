@@ -245,6 +245,8 @@ static int IPU_DMAHandlerFromIPU ( int aChan ) {
   "sw       $at, 0($a2)\n\t"
   ".set at\n\t"
   ".set reorder\n\t"
+  "sync\n\t"
+  "ei\n\t"
   :: "m"( g_IPUCtx.m_DestY      ),
      "m"( g_IPUCtx.m_nMBSlice   ),
      "m"( g_IPUCtx.m_pDMAPacket ),
@@ -281,7 +283,12 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
  } else g_IPUCtx.m_fBlank = 1;
 
- return -1;
+ __asm__ __volatile__(
+  "sync\n\t"
+  "ei\n\t"
+ );
+
+ return 0;
 
 }  /* end IPU_VBlankStartHandler */
 
@@ -289,7 +296,12 @@ static int IPU_VBlankEndHandler ( int aCause ) {
 
  g_IPUCtx.m_fBlank = 0;
 
- return -1;
+ __asm__ __volatile__(
+  "sync\n\t"
+  "ei\n\t"
+ );
+
+ return 0;
 
 }  /* end IPU_VBlankEndHandler */
 #endif  /* VB_SYNC */
@@ -332,6 +344,11 @@ static int IPU_DMAHandlerToGIF ( int aChan ) {
   g_IPUCtx.GIFHandler ();
 
  }  /* end if */
+
+ __asm__ __volatile__(
+  "sync\n\t"
+  "ei\n\t"
+ );
 
  return 0;
 
@@ -615,7 +632,12 @@ static int IPU_DummyVBlankStartHandler ( int aCause ) {
 
  } else g_IPUCtx.m_fBlank = 1;
 
- return -1;
+ __asm__ __volatile__(
+  "sync\n\t"
+  "ei\n\t"
+ );
+
+ return 0;
 
 }  /* end IPU_DummyVBlankStartHandler */
 #endif  /* VB_SYNC */
@@ -726,8 +748,7 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
   g_IPUCtx.m_DMAHandlerID_IPU = AddDmacHandler ( DMAC_I_FROM_IPU, IPU_DMAHandlerFromIPU, 0 );
   EnableDmac ( DMAC_I_FROM_IPU );
 #ifdef VB_SYNC
-  g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( 2, IPU_VBlankStartHandler, 0 );
-  g_IPUCtx.m_VBlankEndHandlerID   = AddIntcHandler ( 3, IPU_VBlankEndHandler,   0 );
+  g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( INTC_VB_ON,  IPU_VBlankStartHandler, 0 );
 #endif  /* VB_SYNC */
  } else {
 
@@ -744,10 +765,11 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
   g_IPUCtx.Repaint    = IPU_DummyRepaint;
 #ifdef VB_SYNC
   g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( INTC_VB_ON,  IPU_DummyVBlankStartHandler, 0 );
-  g_IPUCtx.m_VBlankEndHandlerID   = AddIntcHandler ( INTC_VB_OFF, IPU_VBlankEndHandler,        0 );
 #endif  /* VB_SYNC */
  }  /* end else */
-
+#ifdef VB_SYNC
+ g_IPUCtx.m_VBlankEndHandlerID = AddIntcHandler ( INTC_VB_OFF, IPU_VBlankEndHandler, 0 );
+#endif  /* VB_SYNC */
  g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler ( DMAC_I_GIF, IPU_DMAHandlerToGIF, 0 );
  EnableDmac ( DMAC_I_GIF );
 #ifdef VB_SYNC

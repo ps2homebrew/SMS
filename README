@@ -613,3 +613,12 @@ Update (21-FEB-2006)
 - an attempt to fix "files on USB device are not selectable" bug;
 - added possibility to decrease screen height in "display settings" ->
   "advanced settings" menu (thanks to "Voldemar_u2" for suggestion);
+
+Update (22-FEB-2006)
+--------------------
+- fixed "Display subtitles" checkmark issue in player menu;
+- fixed error reporting issue (too long messages leave onscreen artefacts);
+- changed IOP reset routine (thanks to "dlanor" for the research/note);
+- disabled internal queue locks by removing -DLOCK_QUEUES macro from the
+  Makefile (it appears that queue locks are not needed since threads are
+  non-preemptive anyway);
