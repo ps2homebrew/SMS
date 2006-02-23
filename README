@@ -622,3 +622,9 @@ Update (22-FEB-2006)
 - disabled internal queue locks by removing -DLOCK_QUEUES macro from the
   Makefile (it appears that queue locks are not needed since threads are
   non-preemptive anyway);
+
+Update (23-FEB-2006)
+--------------------
+- changed loader code in attempt to fix "hangings" upon exit to
+  user defined aplication;
+
