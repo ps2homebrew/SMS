@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- $Revision$ -->
+
+<sect1 id="usage-skin">
+  <title>
+    <phrase lang="en">Skinning</phrase>
+    <phrase lang="pt">#Skinning#</phrase>
+  </title>
+
+  <para lang="en">
+    SMS allows basic 'skinning' of the player.  Essentially, this means you
+    can change the backdrop wallpaper of the browser to be an image of your
+    choice.
+  </para>
+  <para lang="pt">
+    #SMS allows basic 'skinning' of the player.  Essentially, this means you
+    can change the backdrop wallpaper of the browser to be an image of your
+    choice.#
+  </para>
+
+  <note>
+    <para lang="en">
+      The current support for skinning only allows you to change the
+      background image of the browser.  It does not allow you to re-arrange
+      the layout of the controls on the screen.
+    </para>
+    <para lang="pt">
+      #The current support for skinning only allows you to change the
+      background image of the browser.  It does not allow you to re-arrange
+      the layout of the controls on the screen.#
+    </para>
+  </note>
+
+  <sect2 id="usage-skin-create">
+    <title>
+      <phrase lang="en">Creating a Skin</phrase>
+      <phrase lang="pt">#Creating a Skin#</phrase>
+    </title>
+
+  <para lang="en">
+    The skin file is a DivX5xx/XviD encoded I-Frame, named
+    <filename>mc0:/SMS/skin.sms</filename>.  A small windows program
+    (<application>pic2sms.exe</application>) has been written to allow you
+    to create these files from normal image files.  You'll first of all
+    need an image file to start from.  In this example, I've used a holiday
+    photo (jpeg).
+  </para>
+  <para lang="pt">
+    #The skin file is a DivX5xx/XviD encoded I-Frame, named
+    <filename>mc0:/SMS/skin.sms</filename>.  A small windows program
+    (<application>pic2sms.exe</application>) has been written to allow you
+    to create these files from normal image files.  You'll first of all
+    need an image file to start from.  In this example, I've used a holiday
+    photo (jpeg).#
+  </para>
+
+  <para lang="en">
+    What you need to create is a bitmap file, with dimensions 640x512.
+    If you want some help finding out where the screen elements are in
+    relation to this, you can download a template file from here:
+    <ulink url="http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982"/>.
+    This is a <application>Photoshop</application> format
+    (<filename>.psd</filename>) file, but if you haven't got
+    <application>Photoshop</application> you can open it up in the GIMP
+    (free graphics editor) <ulink url="http://www.gimp.org/"/>.  When
+    you've finished playing with how it looks, save the file as a single
+    layer bitmap (<filename>.bmp</filename>) file into an empty folder on
+    your computer.
+  </para>
+  <para lang="pt">
+    #What you need to create is a bitmap file, with dimensions 640x512.
+    If you want some help finding out where the screen elements are in
+    relation to this, you can download a template file from here:
+    <ulink url="http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982"/>.
+    This is a <application>Photoshop</application> format
+    (<filename>.psd</filename>) file, but if you haven't got
+    <application>Photoshop</application> you can open it up in the GIMP
+    (free graphics editor) <ulink url="http://www.gimp.org/"/>.  When
+    you've finished playing with how it looks, save the file as a single
+    layer bitmap (<filename>.bmp</filename>) file into an empty folder on
+    your computer.#
+  </para>
+
+  <para lang="en">
+    Next, download the skin generator <application>pic2sms.exe</application>
+    from <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
+    Copy it into the same folder on your computer.  Then try double clicking
+    the file.  If it opens up first time with no errors, everything's ok.
+    If you see a message saying 'cannot find xvidcore.dll', close the
+    program, then download <filename>xvidcore.dll</filename> from
+    <ulink url="http://www.dll-files.com/dllindex/dll-files.shtml?xvidcore"/>
+    or any other location (try google).  Copy the file
+    <filename>xvidcore.dll</filename> into the same directory as
+    <application>pic2sms.exe</application>.  When you run the program again,
+    you should get no errors.
+  </para>
+  <para lang="pt">
+    #Next, download the skin generator <application>pic2sms.exe</application>
+    from <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
+    Copy it into the same folder on your computer.  Then try double clicking
+    the file.  If it opens up first time with no errors, everything's ok.
+    If you see a message saying 'cannot find xvidcore.dll', close the
+    program, then download <filename>xvidcore.dll</filename> from
+    <ulink url="http://www.dll-files.com/dllindex/dll-files.shtml?xvidcore"/>
+    or any other location (try google).  Copy the file
+    <filename>xvidcore.dll</filename> into the same directory as
+    <application>pic2sms.exe</application>.  When you run the program again,
+    you should get no errors.#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">Pic2sms.exe application.</phrase>
+      <phrase lang="pt">#Pic2sms.exe application.#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-pic2sms01.png" format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Pic2sms.exe application</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    Now click on the 'open' button and open the bitmap file you just created.
+  </para>
+  <para lang="pt">
+    #Now click on the 'open' button and open the bitmap file you just 
+    created.#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">Open the image file</phrase>
+      <phrase lang="pt">#Open the image file#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-pic2sms02.png" format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Pic2sms.exe application</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <figure>
+    <title>
+      <phrase lang="en">Image file loaded</phrase>
+      <phrase lang="pt">#Image file loaded#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-pic2sms03.png" format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Pic2sms.exe application</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    You should see your image appear in the window.  Click the save button
+    to create a <filename>.sms</filename> file in the same directory.
+    That's it - your skin is created.
+  </para>
+  <para lang="pt">
+    #You should see your image appear in the window.  Click the save button
+    to create a <filename>.sms</filename> file in the same directory.
+    That's it - your skin is created.#
+  </para>
+
+  </sect2>
+
+  <sect2 id="usage-skin-apply">
+
+  <title>
+    <phrase lang="en">Applying a Skin</phrase>
+    <phrase lang="pt">#Applying a Skin#</phrase>
+  </title>
+
+  <para lang="en">
+    To apply a skin (whether it's one you've downloaded, or one you made
+    yourself), you need to do the following:
+  </para>
+  <para lang="pt">
+    #To apply a skin (whether it's one you've downloaded, or one you made
+    yourself), you need to do the following:#
+  </para>
+
+  <para lang="en">
+    Get hold of your <filename>skin.sms</filename> file.  If your file is 
+    <filename>xxxxxx.sms</filename>, rename it to 
+    <filename>skin.sms</filename>.
+  </para>
+  <para lang="pt">
+    #Get hold of your <filename>skin.sms</filename> file.  If your file is
+    <filename>xxxxxx.sms</filename>, rename it to
+    <filename>skin.sms</filename>.#
+  </para>
+
+  <para lang="en">
+    Now you need to transfer the file to 
+    <filename>mc0:SMS/skin.sms</filename> (i.e onto the memory card in
+    slot 1 on your PS2).  Here we'll assume that you're transfering via FTP.  
+    <emphasis role="bold">On your PS2</emphasis>, start your ELF
+    launcher (such as uLaunchELF), and select the FTP server program 
+    (e.g PS2NET).
+  </para>
+  <para lang="pt">
+    #Now you need to transfer the file to
+    <filename>mc0:SMS/skin.sms</filename> (i.e onto the memory card in
+    slot 1 on your PS2).  Here we'll assume that you're transfering via FTP.
+    <emphasis role="bold">On your PS2</emphasis>, start your ELF
+    launcher (such as uLaunchELF), and select the FTP server program
+    (e.g PS2NET).#
+  </para>
+
+  <para lang="en">
+    Once your PS2 FTP server is running, <emphasis role="bold">go to your
+    PC</emphasis>, start up your FTP client (e.g. FileZilla), and connect
+    to the PS2.
+  </para>
+  <para lang="pt">
+    #Once your PS2 FTP server is running, <emphasis role="bold">go to your
+    PC</emphasis>, start up your FTP client (e.g. FileZilla), and connect
+    to the PS2.#
+  </para>
+
+  <para lang="en">
+    Drag and drop the file <filename>skin.sms</filename> into the location
+    <filename>mc0:/SMS/skin.sms</filename>.  When it completes, disconnect
+    the FTP client and restart the PS2.
+  </para>
+  <para lang="pt">
+    #Drag and drop the file <filename>skin.sms</filename> into the location
+    <filename>mc0:/SMS/skin.sms</filename>.  When it completes, disconnect
+    the FTP client and restart the PS2.#
+  </para>
+
+  <figure>
+    <title>
+       <phrase lang="en">Transfering skin file to PS2.</phrase>
+      <phrase lang="pt">#Transfering skin file to PS2.#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-ftpexplorer-skintransfer.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>FTP explorer screenshot.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    <emphasis role="bold">On your PS2</emphasis>, start up SMS as normal,
+    then press <emphasis role="bold">START</emphasis> to bring up the
+    configuration menu, then select
+    '<emphasis role="bold">browser settings</emphasis>'.
+  </para>
+  <para lang="pt">
+    <emphasis role="bold">On your PS2</emphasis>, start up SMS as normal,
+    then press <emphasis role="bold">START</emphasis> to bring up the
+    configuration menu, then select
+    '<emphasis role="bold">browser settings</emphasis>'.
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">Browser settings menu.</phrase>
+      <phrase lang="pt">#Browser settings menu.#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-browsersettings01.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS browser settings menu screenshot</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    Tick the option '<emphasis role="bold">Use background image</emphasis>'
+    to turn the skin on.  You should see the background immediately change.
+  </para>
+  <para lang="pt">
+    #Tick the option '<emphasis role="bold">Use background image</emphasis>'
+    to turn the skin on.  You should see the background immediately change.#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">Browser settings menu (skin activated).</phrase>
+      <phrase lang="pt">#Browser settings menu (skin activated).#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-browsersettings02.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS browser settings menu screenshot</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    If you need to change the skin, copy a new
+    <filename>skin.sms</filename> over the top of the old one.
+  </para>
+  <para lang="pt">
+    #If you need to change the skin, copy a new
+    <filename>skin.sms</filename> over the top of the old one.#
+  </para>
+
+  <figure>
+    <title>
+       <phrase lang="en">Example skin.</phrase>
+      <phrase lang="pt">#Example skin.#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-skinned.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS with skin active (screenshot)</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  </sect2>
+
+</sect1>

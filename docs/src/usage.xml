@@ -21,8 +21,8 @@
     you want to run.
   </para>
   <para lang="pt">
-    Para correr o SMS primeiro você precisa de correr o 'exploit' ou ligar a 
-    PS2 se tiver modchip instalado.  Depois tem de utilizar a técnica 
+    Para correr o SMS primeiro você precisa de correr o 'exploit' ou ligar a
+    PS2 se tiver modchip instalado.  Depois tem de utilizar a técnica
     apropriada para ligar o SMS.  Se estiver a usar o
     <xref linkend="faq-independence"/>
     insira o seu CD de PS1 (original), e pressione reset. Isto executará
@@ -31,26 +31,26 @@
   </para>
 
   <para lang="en">
-    Next, if you're using LaunchELF as your boot application, you can run SMS
-    by navigating to SMS.ELF and pressing O. You may want to assign a shortcut
-    button to it so it is easier to load next time.
+    Next, if you're using LaunchELF/uLaunchELF as your boot application, you
+    can run SMS by navigating to SMS.ELF and pressing O. You may want to
+    assign a shortcut button to it so it is easier to load next time.
   </para>
   <para lang="pt">
-    De seguida, se estiver a usar o LaunchELF como aplicação inicial, pode
-    correr o SMS bastando para isso navegar até ao ficheiro SMS.ELF e 
-    pressionar O.  Talvez queira adicionar um butão de atalho para o SMS para 
-    ser mais fácil de carregar na próxima vez.
+    De seguida, se estiver a usar o LaunchELF/uLaunchELF como aplicação
+    inicial, pode correr o SMS bastando para isso navegar até ao ficheiro
+    SMS.ELF e pressionar O.  Talvez queira adicionar um butão de atalho
+    para o SMS para ser mais fácil de carregar na próxima vez.
   </para>
 
   <tip>
     <para lang="en">
       If you use SMS regularly, you may want to assign it as the 'default'
-      option in LauchELF, so that it starts automatically, after a short
+      option in LaunchELF, so that it starts automatically, after a short
       delay.
     </para>
     <para lang="pt">
       Se você usa o SMS regularmente, talvez queira adicioná-lo como a opção
-      'default' no LauchELF, para que ele seja executado automáticamente, 
+      'default' no LaunchELF, para que ele seja executado automáticamente,
       passado pouco tempo.
     </para>
   </tip>

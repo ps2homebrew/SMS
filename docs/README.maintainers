@@ -29,42 +29,39 @@ General information
    <para lang="en">Here is my paragraph in english </para>
    <para lang="de">Hier ist mein Punkt auf Deutsch</para>
 
-	 A process known as 'profiling' seperates the text for a particular
-	 language during processing. Text where the language is not specified
-	 will appear in all translations.
+   A process known as 'profiling' seperates the text for a particular
+   language during processing. Text where the language is not specified
+   will appear in all translations.
 
  - The prefered procedure for submitting translations or translation updates
    is:
    1) Download latest version of SMS source from SVN
-	    (svn://svn.ps2dev.org/ps2ware/trunk/SMS) This includes the 
-			documentation source.
+      (svn://svn.ps2dev.org/ps2ware/trunk/SMS) This includes the 
+      documentation source.
 
-	 2) Modify your local copy
-	 
-	 3) If possible, revalidate and generate the output (requires linux or
-	    cygwin) to do this.  A good quick test is
-	    $ make html-single-xx
-			(where xx is the language).  This will build
-	    the html single file version, but only for the language you
-	    specified.
-	    For more options go to the docs folder and type:
-			$ make help
+   2) Modify your local copy
+   
+   3) If possible, revalidate and generate the output (requires linux or
+      cygwin) to do this.  A good quick test is
+      $ make html-single-xx
+      (where xx is the language).  This will build
+      the html single file version, but only for the language you
+      specified.
+      For more options go to the docs folder and type:
+      $ make help
 
-	 4) Email the changed xml files back to the maintainer:
-	    ps2{ a t }davet.org.  Please note that due to limitations in the
-	    patchfile generation system (can't cope with character accents etc), 
-      it is not possible to submit changes as a patch file.  Instead, send
-      the new xml files in a zip.
+   4) Create a patchfile of your changes and email it back to the maintainer:
+      ps2(á)davet.org.
 
  - The ./configure script, css stylesheet and part of the makefile for this 
    documentation were based on the MPlayer documentation
-	 (http://www.mplayerhq.hu).
+   (http://www.mplayerhq.hu).
    Many thanks to them for the info which helped to get this whole DocBook 
-	 thing figured out in my head!  Technically, this means that the build
-	 scripts  are under the GPL license version 2 as well:
-	 (http://www.gnu.org/licenses/gpl.txt) for details.
-	 Also, some ideals for the XML layout were based on the gimp documentation
-	 project.  Many thanks for their help too (http://docs.gimp.org/).
+   thing figured out in my head!  Technically, this means that the build
+   scripts  are under the GPL license version 2 as well:
+   (http://www.gnu.org/licenses/gpl.txt) for details.
+   Also, some ideals for the XML layout were based on the gimp documentation
+   project.  Many thanks for their help too (http://docs.gimp.org/).
 
 
 File organistaion/structure
@@ -77,8 +74,8 @@ File organistaion/structure
 
  - All other source files are in a subdirectory named after the chapter they
    are found in.  There is only one level of subdirectories.  Therefore all
-	 files are docs/src/chaptername.xml or docs/src/chaptername/sectionname.xml
-	 and no deeper.
+   files are docs/src/chaptername.xml or docs/src/chaptername/sectionname.xml
+   and no deeper.
 
  - Generated files are created in docs/HTML/ and docs/HTML-single/ please
    dont attempt to modify these html files, as your changes will be lost
@@ -92,7 +89,7 @@ File organistaion/structure
  - Image files must be stored in the main images directory (docs/images) or
    subdirectory, and referenced to this directory using relative paths in the
    xml (this is to make sure that the images all work when the images
-	 directory is copied for distributions.
+   directory is copied for distributions.
 
  - Images are all in png format.  Screenshots from the PS2 are all 400x300px.
 
@@ -123,11 +120,11 @@ Rules & notation
    Usually changes will be submitted via a patch emailed to the maintaner,
    but if you are editing code too please submit those changes as seperate
    commits.   Equally, if you are committing changes to the c code, please
-	 don't (accidentally or otherwise) commit changes to the docs section.
+   don't (accidentally or otherwise) commit changes to the docs section.
 
  - Also, don't commit to SVN any documentation you know fails to
-	 compile.  If you are really having trouble, email what you've done as
-	 a patch and explain the problems.
+   compile.  If you are really having trouble, email what you've done as
+   a patch and explain the problems.
 
 
 Special syntax used for this documentation

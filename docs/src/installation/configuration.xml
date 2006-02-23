@@ -100,17 +100,27 @@
       utilizando a técnica de FTP referida na secção
       <link linkend="installation-detail-copyftp">instalação</link>.
     </para>
+
+    <para lang="en">
+      If you are using <application>uLaunchELF</application> as your boot
+      browser, it's easy to configure your SMS IP settings.  Just use the
+      boot browser's <emphasis role="bold">Network Settings</emphasis>
+      option to change the settings with your D-Pad.  There's no need to
+      create an <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename> file
+      manually.
+    </para>
     
     <para lang="en">
       You'll need to choose an IP address for your PS2 that is different from
       the IP address of any other node on your network, but on the same subnet
       as your PC.  You will have to turn DHCP off on your PC, and use a manual
-      (or static) IP configuration.
+      (or static) IP configuration.  SMS cannot autoconfigure it's IP address
+      from a DHCP server (see <link linkend="faq-dhcp">DHCP FAQ</link>.
     </para>
     <para lang="pt">
       Terá de escolher um endereço de IP que seja diferente de todos os outros
-      endereços de IP dos PC's na seua rede local, mas com a mesma subnet que 
-      o seu PC.  Terá de desligar a opção DHCP no seu PC, e usar uma 
+      endereços de IP dos PC's na seua rede local, mas com a mesma subnet que
+      o seu PC.  Terá de desligar a opção DHCP no seu PC, e usar uma
       configuração de IP manual (ou estático).
     </para>
 

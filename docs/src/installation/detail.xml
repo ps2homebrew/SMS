@@ -24,14 +24,16 @@
     <ulink url="http://ps2dev.org/ps2/Projects"/>. Os programadores podem 
     fazer download do código fonte em svn://svn.ps2dev.org.
   </para>
+
   <para lang="en">
     Now copy this file to your memory card (memory card 0). The recommended
     (and probably easiest) way to copy the ELF file to your PS2 is using FTP.
   </para>
-  <para lang="en">
+  <para lang="pt">
     Agora copie o ficheiro para o seu cartão de memória (cartão de memória 0).
     O método mais fácil e recomendado para o fazer é usando o FTP.
   </para>
+
   <sect2>
   <title id="installation-detail-copyftp">
     <phrase lang="en">Copying SMS to your PS2 using FTP</phrase>
@@ -45,31 +47,469 @@
     network switch.
   </para>
   <para lang="pt">
-    Necessitará de um <emphasis role="bold">servidor de FTP</emphasis> 
+    Necessitará de um <emphasis role="bold">servidor de FTP</emphasis>
     a correr na PS2, e um <emphasis role="bold">cliente de FTP</emphasis> 
     a correr no seu PC, com um cabo cruzado a ligar os dois ou ambos ligados 
     a um switcher com cabos direitos.
   </para>
 
-  <sect3>
+  <sect3 id="installation-detail-copyftp-ulaunchelf">
   <title>
-    <phrase lang="en">Starting the FTP server</phrase>
-    <phrase lang="pt">Inicializando o servidor de FTP</phrase>
+    <phrase lang="en">Starting the FTP Server (uLaunchELF)</phrase>
+    <phrase lang="pt">Inicializando o servidor de FTP (uLaunchELF)</phrase>
   </title>
 
   <para lang="en">
-    Start the FTP server (e.g. ExecFTPs) on your PS2 using your exploit (if 
-    you're running LaunchELF, you can either configure one of the buttons to 
-    start EXECFTPS.ELF directly, or navigate to it using the filebrowser,
-    then run it from there).
+    The recommended (and again, probably easiest) PS2 FTP server to use is
+    the built in FTP server of 'unofficial' LaunchELF.
+    You can get the <filename>BOOT.ELF</filename> for uLaunchELF from here:
+    <ulink url="http://www.ps2newz.net/forums/showthread.php?t=43279"/>.
   </para>
   <para lang="pt">
-    Inicie o servidor de FTP (e.g. ExecFTPs) na sua PS2 utilizando o exploit 
-    (se estiver a usar o LaunchELF, pode configurar um dos butões para 
-    iniciar o EXECFTPS.ELF directamente, ou navegar até este utilizando o
-    filebrowser).
+    #The recommended (and again, probably easiest) PS2 FTP server to use is
+    the built in FTP server of 'unofficial' LaunchELF.
+    You can get the <filename>BOOT.ELF</filename> for uLaunchELF from here:
+    <ulink url="http://www.ps2newz.net/forums/showthread.php?t=43279"/>.#
   </para>
-  
+
+  <para lang="en">
+    Assuming you've already copied the <filename>BOOT.ELF</filename> onto
+    your memory card using one of the exploit installation techniques, it
+    is very easy to start the FTP server.
+  </para>
+
+  <para lang="en">
+    Turn on your PS2 and activate your exploit/modchip; first time you
+    use uLaunchELF, it will look something like this:
+  </para>
+  <para lang="pt">
+    #Turn on your PS2 and activate your exploit/modchip; first time you
+    use uLaunchELF, it will look something like this:#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF startup screen.
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF startup screen.#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf01.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    Press <emphasis role="bold">SELECT</emphasis>, go to
+    <emphasis role="bold">Network Settings</emphasis>, then press
+    <emphasis role="bold">O</emphasis>
+  </para>
+  <para lang="pt">
+    #Press <emphasis role="bold">SELECT</emphasis>, go to
+    <emphasis role="bold">Network Settings</emphasis>, then press
+    <emphasis role="bold">O</emphasis>#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF Network Settings - step 1
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Network Settings#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf02.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    The next screen allows you to change the network settings using your
+    controller pad.  The settings are stored in the file
+    <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>.
+  </para>
+  <para lang="pt">
+    #The next screen allows you to change the network settings using your
+    controller pad.  The settings are stored in the file#
+    <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>.
+  </para>
+
+  <para lang="en">
+    You can change the IP address of your PS2 from the default
+    192.168.0.10 to anything you want, but it must be on the same subnet
+    as your PC.  For more information on network settings, please see the
+    <xref linkend="installation-configuration-ipconfig"/> section.
+    You can edit the values using the D-pad.
+  </para>
+  <para lang="pt">
+    #You can change the IP address of your PS2 from the default
+    192.168.0.10 to anything you want, but it must be on the same subnet
+    as your PC.  For more information on network settings, please see the
+    <xref linkend="installation-configuration-ipconfig"/> section.
+    You can edit the values using the D-pad.#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF Network Settings - step 2
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Network Settings#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf03.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    Once you are happy with the settings, select
+    <emphasis role="bold">SAVE</emphasis> and press
+    <emphasis role="bold">O</emphasis>:
+  </para>
+  <para lang="pt">
+    #Once you are happy with the settings, select
+    <emphasis role="bold">SAVE</emphasis> and press
+    <emphasis role="bold">O</emphasis>:#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF Network Settings - step 3
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Network Settings#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf04.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    On the main screen select <emphasis role="bold">OK</emphasis> and press
+    <emphasis role="bold">O</emphasis>:
+  </para>
+  <para lang="pt">
+    #On the main screen select <emphasis role="bold">OK</emphasis> and press
+    <emphasis role="bold">O</emphasis>:#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF Network Settings - step 4
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Network Settings#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf05.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    You should see a message saying that the configuration has been saved:
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF Network Settings - step 5
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Network Settings#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf06.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    Now you need to assign a button to launch the FTP server.  Press
+    <emphasis role="bold">SELECT</emphasis>, then move to any entry on the
+    list (here, we've used 'START').  Press
+    <emphasis role="bold">O</emphasis>, and navigate to
+    <emphasis role="bold">MISC</emphasis>, then
+    <emphasis role="bold">PS2Net</emphasis>.
+  </para>
+  <para lang="pt">
+    #Now you need to assign a button to launch the FTP server.  Press
+    <emphasis role="bold">SELECT</emphasis>, then move to any entry on the
+    list (here, we've used 'START').  Press
+    <emphasis role="bold">O</emphasis>, and navigate to
+    <emphasis role="bold">MISC</emphasis>, then
+    <emphasis role="bold">PS2Net</emphasis>.#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF: Assigning a Menu Button - step 1
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Assigning a Menu Button#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf07.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF: Assigning a Menu Button - step 2
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Assigning a Menu Button#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf08.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF: Assigning a Menu Button - step 3
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Assigning a Menu Button#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf09.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <note>
+    <para lang="en">
+      <application>PS2Net</application> is the name of the FTP server program
+      that comes built in to uLaunchELF's
+      <filename>BOOT.ELF</filename> file.
+    </para>
+    <para lang="pt">
+      #<application>PS2Net</application> is the name of the FTP server program
+      that comes built in to uLaunchELF's
+      <filename>BOOT.ELF</filename> file.#
+    </para>
+  </note>
+
+  <para lang="en">
+    Once you've pressed
+    <emphasis role="bold">O</emphasis> to confirm, then
+    <emphasis role="bold">OK</emphasis>, and
+    <emphasis role="bold">O</emphasis> again, you'll see the following 
+    screen:
+  </para>
+  <para lang="pt">
+    Once you've pressed
+    <emphasis role="bold">O</emphasis> to confirm, then
+    <emphasis role="bold">OK</emphasis>, and
+    <emphasis role="bold">O</emphasis> again, you'll see the following 
+    screen:
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF: Assigning a Menu Button - step 4
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF Assigning a Menu Button#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf10.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    You'll now see the above screen every time <filename>BOOT.ELF</filename>
+    starts up.
+  </para>
+  <para lang="pt">
+    #You'll now see the above screen every time <filename>BOOT.ELF</filename>
+    starts up.#
+  </para>
+
+  <para lang="en">
+    This means that if you press <emphasis role="bold">START</emphasis>,
+    PS2Net will be launched, and if you press
+    <emphasis role="bold">SELECT</emphasis>, you will go to the config
+    screen.
+  </para>
+  <para lang="pt">
+    #This means that if you press <emphasis role="bold">START</emphasis>,
+    PS2Net will be launched, and if you press
+    <emphasis role="bold">SELECT</emphasis>, you will go to the config
+    screen.#
+  </para>
+
+  <tip>
+    <para lang="en">
+      You can assign many buttons on this screen.  You will probably
+      want to later assign SMS to one of the buttons.  If you assign anything
+      to <emphasis role="bold">DEFAULT</emphasis>, it will launch
+      automatically after a pre-set delay.
+    </para>
+    <para lang="pt">
+      #You can assign many buttons on this screen.  You will probably
+      want to later assign SMS to one of the buttons.  If you assign anything
+      to <emphasis role="bold">DEFAULT</emphasis>, it will launch
+      automatically after a pre-set delay.#
+    </para>
+  </tip>
+
+  <para lang="en">
+    Now press
+    <emphasis role="bold">START</emphasis> to launch PS2Net.  The following
+    screen is shown while your FTP server is running:
+  </para>
+  <para lang="pt">
+    #Now press
+    <emphasis role="bold">START</emphasis> to launch PS2Net.  The following
+    screen is shown while your FTP server is running:#
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">
+         uLaunchELF: Starting the FTP server
+      </phrase>
+      <phrase lang="pt">
+         #uLaunchELF: Starting the FTP server#
+      </phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-ulaunchelf11.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>uLaunchELF</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    You can check that the connection between the PC and PS2 is working by 
+    starting a command prompt on the PC  (start->run, 'cmd' &lt;enter&gt;).
+    Then type <userinput>ping 192.168.0.10</userinput> (or whatever the IP 
+    address of your PS2 is). If it's working, you'll see
+    <computeroutput>reply from ...</computeroutput> shown on the screen.
+  </para>
+  <para lang="pt">
+    #You can check that the connection between the PC and PS2 is working by
+    starting a command prompt on the PC  (start->run, 'cmd' &lt;enter&gt;).
+    Then type <userinput>ping 192.168.0.10</userinput> (or whatever the IP
+    address of your PS2 is). If it's working, you'll see
+    <computeroutput>reply from ...</computeroutput> shown on the screen.#
+  </para>
+
+  <para lang="en">
+    Now that you've got your FTP server running, skip ahead to
+    <xref linkend="installation-detail-ftpclient"/> for how to upload
+    SMS to your memcard.
+  </para>
+  </sect3>
+
+  <sect3 id="installation-detail-copyftp-execftps">
+  <title>
+    <phrase lang="en">Starting the FTP Server (ExecFTPs)</phrase>
+    <phrase lang="pt">Inicializando o servidor de FTP (ExecFTPs)</phrase>
+  </title>
+
+  <para lang="en">
+    If you are <emphasis>not</emphasis>
+    <link linkend="installation-detail-copyftp-ulaunchelf">using 
+    uLaunchELF</link>, you'll need to load a seperate FTP server
+    application onto your memory card such as
+    <filename>EXECFTPS.ELF</filename>.  Activate your exploit, and boot
+    to your boot browser (e.g. LaunchELF).  You can either configure one of 
+    the buttons to start <filename>EXECFTPS.ELF</filename> directly, or
+    navigate to it using the filebrowser, then run it from there.
+  </para>
+  <para lang="pt">
+    #If you are <emphasis>not</emphasis>
+    <link linkend="installation-detail-copyftp-ulaunchelf">using
+    uLaunchELF</link>, you'll need to load a seperate FTP server
+    application onto your memory card such as
+    <filename>EXECFTPS.ELF</filename>.  Activate your exploit, and boot
+    to your boot browser (e.g. LaunchELF).  You can either configure one of
+    the buttons to start <filename>EXECFTPS.ELF</filename> directly, or
+    navigate to it using the filebrowser, then run it from there.#
+  </para>
+
   <figure>
     <title>
       <phrase lang="en">
@@ -165,49 +605,40 @@
     <computeroutput>reply from ...</computeroutput> shown on the screen.
   </para>
   <para lang="pt">
-    Pode certificar-se que a conecção entre o PC e a PS2 está a funcionar 
-    iniciando o command prompt <emphasis role="bold">no PC</emphasis> 
+    Pode certificar-se que a conecção entre o PC e a PS2 está a funcionar
+    iniciando o command prompt <emphasis role="bold">no PC</emphasis>
     (iniciar->executar, 'cmd' &lt;enter&gt;).  Depois introduza
     <userinput>ping 192.168.0.10</userinput> (ou qualquer que seja o IP da sua
-    PS2). Se estiver a funcionar, verá 
+    PS2). Se estiver a funcionar, verá
     <computeroutput>reply from ...</computeroutput> na janela.
   </para>
+
   <para lang="en">
-    You can change the IP address of your PS2 from default 192.168.0.10 to
-    anything you want, but it must be on the same subnet as your PC. The
-    configuration is stored in
-    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> and is of the form:
+    The configuration settings for <application>ExecFTPs</application> are
+    stored in <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>, in the
+    form:
   </para>
   <para lang="pt">
-    Pode alterar o endereço de IP da sua PS2 de 192.168.0.10 para qualquer
-    outro que deseje, mas tem de ser da mesma 'subnet' que o seu PC. A 
-    configuração é guardada em 
-    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> e está na forma:
+    The configuration settings for <application>ExecFTPs</application> are
+    stored in <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>, in the
+    form:
   </para>
+
   <screen>
     &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
   </screen>
 
   <para lang="en">
-    If you intend to copy a custom <filename>CONFIG.DAT</filename> to your
-    PS2 via FTP, then you'll need to get it working with the defaults first.
+    If you do not have a
+    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> file,
+    <application>ExecFTPs</application> will automatically use the following
+    defaults:
   </para>
   <para lang="pt">
-    Se pretender copiar um ficheiro <filename>CONFIG.DAT</filename> para a PS2
-    via FTP, terá de o colocar a funcionar com os valores de defeito primeiro.
-  </para>
-  <sect4>
-  <title>
-    <phrase lang="en">Default Configuration</phrase>
-    <phrase lang="pt">Configuração de Defeito</phrase>
-  </title>
-  <para lang="en">
-    These are the settings that ExecFTPs will use if you do not have a 
-    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> file.
-  </para>
-  <para lang="pt">
-    Estas são as definições que o ExecFTPs usará se não tiver um ficheiro
-    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.
+    #If you do not have a
+    <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename> file,
+    <application>ExecFTPs</application> will automatically use the following
+    defaults:#
   </para>
 
   <informaltable frame='none'>
@@ -247,156 +678,34 @@
   </informaltable>
 
   <para lang="en">
-    If you are using the default configuration above (and your TV looks like
-    <xref linkend="installation-execftps03" />, 
-    then you'll have to manually set your PC IP settings to
-    comply. That means you'll have to assign an IP address to your PC
-    that's in the same subnet, but with a different IP address. You will have
-    to turn DHCP off, and use a manual (static) IP configuration, e.g:
-  </para>
-  <para lang="pt">
-    Se tiver a usar a configuração em cima (e a sua TV se parecer com
-    <xref linkend="installation-execftps03" />, 
-    então terá de editar a sua configuração de IP do PC para obedecer. Isto 
-    significa que terá de atribuir ao seu PC um IP da mesma 'subnet', mas com 
-    um endereço diferente. Terá de desligar o DHCP, e usar um IP manual
-    (estático), e.g.:
+    If you want to use a custom IP configuration, you will need to modify
+    the file <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.  However,
+    if you intend to use FTP to copy a custom
+    <filename>CONFIG.DAT</filename> file to your PS2, then you'll need to
+    get it working with the defaults first.  For more information on network
+    settings, please see
+    <xref linkend="installation-configuration-ipconfig"/>.
   </para>
 
-  <informaltable frame='none'>
-  <tgroup cols='2'>
-  <tbody>
-  <row>
-    <entry morerows="2">PC Settings</entry>
-    <entry>
-      <para lang="en">PC IP Address:</para>
-      <para lang="pt">Endereço de IP do PC:</para>
-    </entry>
-    <entry>192.168.0.1</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">Subnet Mask:</para>
-      <para lang="pt">'Subnet Mask':</para>
-    </entry>
-    <entry>255.255.255.0</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">Default Gateway:</para>
-      <para lang="pt">'Default Gateway':</para>
-    </entry>
-    <entry>192.168.0.1</entry>
-  </row>
-  </tbody>
-  </tgroup>
-  </informaltable>
-  </sect4>
-  <sect4>
-  <title>
-    <phrase lang="en">Example Configuration</phrase>
-    <phrase lang="pt">Configuração de Exemplo</phrase>
-  </title>
-  <para lang="en">
-    If you are using a custom configuration, you can use any settings you
-    want, provided both PC and PS2 are on the same subnet. Here's my home
-    setup, where both are on a 192.168.2.x subnet, and my internet
-    access point / router is at 192.168.2.1.
-  </para>
-  <para lang="pt">
-    Se estiver a usar uma configuração modificada, pode usar quaisqueres 
-    definições que quiser, desde que tanto o PC como a PS2 tenham a mesma
-    'subnet'. Aqui está a configuração da minha rede doméstica, onde ambos 
-    estão numa subnet 192.168.2.xxx, e o meu router/access point é
-    192.168.2.1.
-  </para>
-  <informaltable frame='none'>
-  <tgroup cols='2'>
-  <tbody>
-  <row>
-    <entry morerows="3">PS2 Settings</entry>
-    <entry>
-      <para lang="en">PS2 IP Address:</para>
-      <para lang="pt">Endereçod de IP da PS2:</para>
-    </entry>
-    <entry>192.168.2.22</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">Subnet Mask:</para>
-      <para lang="pt">'Subnet Mask':</para>
-    </entry>
-    <entry>255.255.255.0</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">Default Gateway:</para>
-      <para lang="pt">'Default Gateway':</para>
-    </entry>
-    <entry>192.168.2.1</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
-      <para lang="pt">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
-    </entry>
-    <entry>
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="../images/installation-config.dat.png" format="PNG"/>
-      </imageobject>
-      <textobject>
-        <phrase>Sample config.dat file screenshot.</phrase>
-      </textobject>
-    </mediaobject>
-    </entry>
-  </row>
-  </tbody>
-  </tgroup>
-  </informaltable>
+  <note>
+    <para lang="en">
+      ExecFTPs stores its settings in
+      <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.  This is different
+      from the file <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename> where
+      SMS and uLaunchELF/PS2Net store their settings.
+    </para>
+    <para lang="pt">
+      #ExecFTPs stores its settings in
+      <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.  This is different
+      from the file <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename> where
+      SMS and uLaunchELF/PS2Net store their settings.#
+    </para>
+  </note>
 
-  <para lang="en">
-    The above PS2 settings require slightly different PC settings:
-  </para>
-  <para lang="pt">
-    Estas definições da PS2 requerem definições ligeiramente diferentes para o
-    PC:
-  </para>
-
-  <informaltable frame='none'>
-  <tgroup cols='2'>
-  <tbody>
-  <row>
-    <entry morerows="2">PC Settings</entry>
-    <entry>
-      <para lang="en">PC IP Address:</para>
-      <para lang="pt">Endereço de IP do PC:</para>
-    </entry>
-    <entry>192.168.2.23</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">Subnet Mask:</para>
-      <para lang="pt">'Subnet Mask':</para>
-    </entry>
-    <entry>255.255.255.0</entry>
-  </row>
-  <row>
-    <entry>
-      <para lang="en">Default Gateway:</para>
-      <para lang="pt">'Default Gateway':</para>
-    </entry>
-    <entry>192.168.2.1</entry>
-  </row>
-  </tbody>
-  </tgroup>
-  </informaltable>
-
-  </sect4>
   </sect3>
-  
+
   <sect3>
-  <title>
+  <title id="installation-detail-ftpclient">
     <phrase lang="en">
       Starting the FTP Client
     </phrase>
@@ -405,7 +714,7 @@
     </phrase>
   </title>
   <para lang="en">
-    Once you've got the FTP server working, and successfully PINGed your PS2, 
+    Once you've got the FTP server working, and successfully PINGed your PS2,
     start your FTP client. Lots of people seem to be recommending FlashFXP 
     (<ulink url="http://www.inicom.net/pages/en.ffxp-download.php"/>), but I 
     was happier with the free (and non-nagware) GPL FileZilla 
@@ -524,7 +833,7 @@
   <para lang="pt">
     Navegue até ao seu ficheiro <filename>SMS.ELF</filename> no navegador 
     'Local Site', depois arraste o ficheiro da janela da esquerda para a
-    janela da direita. Deverá ver uma barra de progresso durante a 
+    janela da direita. Deverá ver uma barra de progresso durante a
     transferência:
   </para>
 
