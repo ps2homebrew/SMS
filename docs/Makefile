@@ -81,20 +81,21 @@ pdf-dir:
 .PHONY: xmllint
 xmllint: xmllint.sh
 
-.PHONY: clean-html-chunked
+.PHONY: clean-temp clean-html-chunked clean-html-single clean-zip
+clean-temp:
+	-rm -rf $(TEMP_DIR)
+
 clean-html-chunked:
 	-rm -rf $(HTML_CHUNKED)
 
-.PHONY: clean-html-single
 clean-html-single:
 	-rm -rf $(HTML_SINGLE)
 
-.PHONY: clean-zip
 clean-zip:
 	-rm -rf $(ZIP)
 
 .PHONY: releaseclean distclean clean
-releaseclean: $(addprefix releaseclean-,$(SUBDIRS))
+releaseclean: clean-temp $(addprefix releaseclean-,$(SUBDIRS))
 	-rm -f html-chunk.xsl html-single.xsl xsltproc.sh xmllint.sh
 
 distclean: clean releaseclean
@@ -102,7 +103,7 @@ distclean: clean releaseclean
 xsltproc.sh xmllint.sh:
 	sh configure
 
-clean: clean-html-chunked clean-html-single clean-zip
+clean: clean-temp clean-html-chunked clean-html-single clean-zip
 
 .PHONY: images-single images-chunked
 images-single: single-dir

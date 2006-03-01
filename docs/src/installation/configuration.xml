@@ -128,7 +128,10 @@
     <tgroup cols='2'>
     <tbody>
     <row>
-      <entry morerows="2">PS2 Settings</entry>
+      <entry morerows="2">
+        <para lang="en">PS2 Settings</para>
+        <para lang="pt">Definições da PS2</para>
+      </entry>
       <entry>
         <para lang="en">PS2 IP Address:</para>
         <para lang="pt">Endereço de IP da PS2:</para>
@@ -150,7 +153,10 @@
       <entry>192.168.a.z</entry>
     </row>
     <row>
-      <entry morerows="2">PC Settings</entry>
+      <entry morerows="2">
+        <para lang="en">PC Settings</para>
+        <para lang="pt">Definições do PC</para>
+      </entry>
       <entry>
         <para lang="en">PC IP Address:</para>
         <para lang="pt">Endereço de IP do PC:</para>
@@ -198,7 +204,10 @@
       <tgroup cols='2'>
       <tbody>
       <row>
-        <entry morerows="3">PS2 Settings</entry>
+        <entry morerows="3">
+          <para lang="en">PS2 Settings</para>
+          <para lang="pt">Definições da PS2</para>
+        </entry>
         <entry>
           <para lang="en">PS2 IP Address:</para>
           <para lang="pt">Endereço de IP da PS2:</para>
@@ -237,7 +246,10 @@
         </entry>
       </row>
       <row>
-        <entry morerows="2">PC Settings</entry>
+        <entry morerows="2">
+          <para lang="en">PC Settings</para>
+          <para lang="pt">Definições do PC</para>
+        </entry>
         <entry>
           <para lang="en">PC IP Address:</para>
           <para lang="pt">Endereço de IP do PC:</para>
@@ -282,7 +294,10 @@
       <tgroup cols='2'>
       <tbody>
       <row>
-        <entry morerows="3">PS2 Settings</entry>
+        <entry morerows="3">
+          <para lang="en">PS2 Settings</para>
+          <para lang="pt">Definições da PS2</para>
+        </entry>
         <entry>
           <para lang="en">PS2 IP Address:</para>
           <para lang="pt">Endereço de IP da PS2:</para>
@@ -321,7 +336,10 @@
         </entry>
       </row>
       <row>
-        <entry morerows="2">PC Settings</entry>
+        <entry morerows="2">
+          <para lang="en">PC Settings</para>
+          <para lang="pt">Definições do PC</para>
+        </entry>
         <entry>
           <para lang="en">PC IP Address:</para>
           <para lang="pt">Endereço de IP do PC:</para>

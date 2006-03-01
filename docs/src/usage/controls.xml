@@ -216,6 +216,46 @@
             <para lang="pt">Mostra a janela 'sobre' / créditos</para>
           </entry>
         </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + L1</para>
+            <para lang="pt">SELECT + L1</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position left</para>
+            <para lang="pt">Ajustar tela para esquerda</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + R1</para>
+            <para lang="pt">SELECT + R1</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position right</para>
+            <para lang="pt">Ajustar tela para direita</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + L2</para>
+            <para lang="pt">SELECT + L2</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position up</para>
+            <para lang="pt">Ajustar tela para cima</para>
+          </entry>
+        </row>
+        <row>
+          <entry>
+            <para lang="en">SELECT + R2</para>
+            <para lang="pt">SELECT + R2</para>
+          </entry>
+          <entry>
+            <para lang="en">Adjust screen position down</para>
+            <para lang="pt">Ajustar tela para baixo</para>
+          </entry>
+        </row>
         </tbody>
       </tgroup>
     </informaltable>
@@ -262,11 +302,11 @@
             <para lang="en">OR</para>
             <para lang="pt">OU</para>
             <para lang="en">
-              (after pressing select) Navigate progress bar to required point in
+              (after pressing SELECT) Navigate progress bar to required point in
               film
             </para>
             <para lang="pt">
-              (ao carregar select) Navegar na barra de busca até um determinado
+              (ao carregar SELECT) Navegar na barra de busca até um determinado
               ponto no filme.
             </para>
           </entry>
@@ -296,9 +336,11 @@
           </entry>
           <entry>
             <para lang="en">Pause playback and show progress bar
-            (press again to hide text)</para>
+            (press again to hide text), then use LEFT/RIGHT to
+            navigate progress bar to required point in film.</para>
             <para lang="pt">Pausa a vizualização e mostra a barra de busca
-            (pressione de novo para esconder)</para>
+            (pressione de novo para esconder), #then use LEFT/RIGHT to
+            navigate progress bar to required point in film.#</para>
           </entry>
         </row>
         <row>
@@ -306,7 +348,14 @@
             <para>X</para>
           </entry>
           <entry>
-            <para lang="en">Terminate scrolling and continue playback</para>
+            <para lang="en">(During playback) Toggle On Screen Display (OSD)
+            - cycles between [ time | time remaining | off ].</para>
+            <para lang="pt">#(During playback) Toggle On Screen Display (OSD)
+            - cycles between [time | remaining time | off].#</para>
+            <para lang="en">OR</para>
+            <para lang="pt">OU</para>
+            <para lang="en">(After pressing SELECT) Terminate scrolling and
+            continue playback</para>
             <para lang="pt">Terminar busca e resumir vizualização</para>
           </entry>
         </row>
@@ -398,46 +447,6 @@
             </para>
           </entry>
         </row>
-        <row>
-          <entry>
-            <para lang="en">SELECT + L1</para>
-            <para lang="pt">SELECT + L1</para>
-          </entry>
-          <entry>
-            <para lang="en">Adjust screen position left</para>
-            <para lang="pt">Ajustar tela para esquerda</para>
-          </entry>
-        </row>
-        <row>
-          <entry>
-            <para lang="en">SELECT + R1</para>
-            <para lang="pt">SELECT + R1</para>
-          </entry>
-          <entry>
-            <para lang="en">Adjust screen position right</para>
-            <para lang="pt">Ajustar tela para direita</para>
-          </entry>
-        </row>
-        <row>
-          <entry>
-            <para lang="en">SELECT + L2</para>
-            <para lang="pt">SELECT + L2</para>
-          </entry>
-          <entry>
-            <para lang="en">Adjust screen position up</para>
-            <para lang="pt">Ajustar tela para cima</para>
-          </entry>
-        </row>
-        <row>
-          <entry>
-            <para lang="en">SELECT + R2</para>
-            <para lang="pt">SELECT + R2</para>
-          </entry>
-          <entry>
-            <para lang="en">Adjust screen position down</para>
-            <para lang="pt">Ajustar tela para baixo</para>
-          </entry>
-        </row>
 
         </tbody>
       </tgroup>
@@ -451,12 +460,12 @@
     </title>
     <para lang="en">
       The player menu (SMS v1.5 and above), allows you to change settings 
-      mid-way through playback. Press START during playback to access the 
+      mid-way through playback. Press START during playback to access the
       player menu.
     </para>
     <para lang="pt">
       O menu do leitor (SMS v1.5 para cima), deixa que você altere as opções
-      a meio da vizualização. Pressione START durante a vizualização para 
+      a meio da vizualização. Pressione START durante a vizualização para
       aceder ao menu do leitor.
     </para>
 
@@ -529,9 +538,9 @@
             <para lang="en">
               Letterbox display mode shows the full width of the original 
               video with black bands at top and bottom of screen. Pan-scan
-              zooms in on the video, using more vertical lines of the 
+              zooms in on the video, using more vertical lines of the
               screen, showing a larger image in the centre. The downside is 
-              that the left and right edges of the picture are cropped. 
+              that the left and right edges of the picture are cropped.
               Higher pan-scan modes zoom in more (and crop more).
               Fullscreen mode stretches the image to fit the TV screen - 
               this is useful when playing a widescreen movie file on
@@ -576,7 +585,7 @@
               <emphasis role="bold">O</emphasis> para diminuir
             </para>
             <para lang="en">
-              <emphasis role="bold">auto</emphasis> = power off when movie 
+              <emphasis role="bold">auto</emphasis> = power off when movie
               ends.
             </para>
             <para lang="pt">

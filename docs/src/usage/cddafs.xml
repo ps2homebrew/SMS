@@ -103,19 +103,19 @@ Eugene
 Eugene
 </para>
 
-<para lang="en">
-  P.S. If you have a DVD burner you can also play .avi files stored on
-  DVD-video disks (just record short DVD/mpeg clip
-  on them also to get such a disks authorized by PS2);
-</para>
-<para lang="pt">
-  P.S. Se tiver um gravador de DVD pode ver filmes .avi gravados em 
-  discos DVD-Video (basta gravar um pequeno clip DVD/mpeg nesse mesmo
-  DVD para que o disco seja autorizado pela PS2);
-</para>
+  <note>
+    <para lang="en">
+      If you want to burn avi files to a DVDR, please refer to the
+      <xref linkend="usage-dvdr"/> section.
+    </para>
+    <para lang="pt">
+      #If you want to burn avi files to a DVDR, please refer to the
+      <xref linkend="usage-dvdr"/> section.#
+    </para>
+  </note>
 
   </sect2>
-  
+
   <sect2 id="usage-cddafs-detail">
     <title>
       <phrase lang="en">Instructions in detail</phrase>
