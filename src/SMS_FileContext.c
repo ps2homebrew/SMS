@@ -9,6 +9,7 @@
 #
 */
 #include "SMS_FileContext.h"
+#include "SMS_Sounds.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -1665,15 +1666,13 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
 
 void File_Skip ( FileContext* apFileCtx, unsigned int aCount ) {
 
- static char s_lBuff[ 512 ];
-
  unsigned int lnBlocks = aCount / 512;
  unsigned int lnRem    = aCount % 512;
  unsigned int i;
 
- for ( i = 0; i < lnBlocks; ++i ) apFileCtx -> Read ( apFileCtx, s_lBuff, 512 );
+ for ( i = 0; i < lnBlocks; ++i ) apFileCtx -> Read ( apFileCtx, g_SMSounds, 512 );
 
- if ( lnRem ) apFileCtx -> Read ( apFileCtx, s_lBuff, lnRem );
+ if ( lnRem ) apFileCtx -> Read ( apFileCtx, g_SMSounds, lnRem );
 
 }  /* end File_Skip */
 

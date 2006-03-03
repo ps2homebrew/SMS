@@ -19,6 +19,7 @@
 # define SMS_BF_MENU 0x00000020
 # define SMS_BF_DISK 0x00000040
 # define SMS_BF_UDFL 0x00000080
+# define SMS_BF_SDFX 0x00000100
 
 # define SMS_DF_AUTO_NET 0x00000001
 # define SMS_DF_AUTO_USB 0x00000002
@@ -76,6 +77,9 @@ typedef struct SMSConfig {
  char         m_Language[ 56 ];
  float        m_PAR  [ 2 ];
  int          m_DispH[ 2 ];
+/* Version 4 fields - 32 bytes */
+ int          m_DXPALOther[ 4 ];
+ int          m_DYPALOther[ 4 ];
 } SMSConfig;
 
 extern SMSConfig    g_Config        __attribute__(   (  section( ".data" )  )   );

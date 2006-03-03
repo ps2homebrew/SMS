@@ -21,6 +21,8 @@
 #include "SMS_CDVD.h"
 #include "SMS_FileContext.h"
 #include "SMS_SubtitleContext.h"
+#include "SMS_SPU.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -111,7 +113,7 @@ static unsigned long* GUIFileMenu_RenderItem ( SMS_ListNode* apNode, int anY, in
        )
  ) lLen -= 4;
 
- while (  GSFont_Width ( apNode -> m_pString, lLen ) > aWidth  ) --lLen;
+ while (  GSFont_WidthEx ( apNode -> m_pString, lLen, -2 ) > aWidth  ) --lLen;
 
  lDWC = GS_TSP_PACKET_SIZE() + GS_TXT_PACKET_SIZE( lLen );
 
@@ -119,7 +121,7 @@ static unsigned long* GUIFileMenu_RenderItem ( SMS_ListNode* apNode, int anY, in
  GUI_DrawIcon (
   ( int )apNode -> m_Param + afDim, 8, anY, GUIcon_Browser, lpDMA
  );
- GSFont_Render (  apNode -> m_pString, lLen, 46, anY, lpDMA + GS_TSP_PACKET_SIZE()  );
+ GSFont_RenderEx (  apNode -> m_pString, lLen, 46, anY, lpDMA + GS_TSP_PACKET_SIZE(), -2, 0  );
 
  lpDMA[ -1 ] = VIF_DIRECT( lDWC >> 1 );
 
@@ -557,7 +559,12 @@ redraw:
 
   case SMS_PAD_CROSS:
 
-   if ( lpMenu -> m_pCurrent ) Action[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 0 );
+   if ( lpMenu -> m_pCurrent ) {
+
+    SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
+    Action[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 0 );
+
+   }  /* end if */
 
    retVal = GUIHResult_Handled;
 
@@ -565,7 +572,12 @@ redraw:
 
   case SMS_PAD_CIRCLE:
 
-   if ( lpMenu -> m_pCurrent ) Action[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 1 );
+   if ( lpMenu -> m_pCurrent ) {
+
+    SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
+    Action[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 1 );
+
+   }  /* end if */
 
    retVal = GUIHResult_Handled;
 
@@ -573,7 +585,7 @@ redraw:
 
   case SMS_PAD_TRIANGLE: {
 
-   int lLevel  = lpMenu -> m_pLevels -> m_Size;
+   int lLevel = lpMenu -> m_pLevels -> m_Size;
 
    if ( lLevel ) {
 
@@ -582,6 +594,8 @@ redraw:
     _LevelInfo*   lpInfo  = ( _LevelInfo* )( unsigned int )lpState -> m_Param;
     char          lCWD[ sizeof ( g_CWD ) ] __attribute__(   (  aligned( 4 )  )   );
     char*         lpPtr;
+
+    SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
 
     if ( lLevel > 1 ) {
 

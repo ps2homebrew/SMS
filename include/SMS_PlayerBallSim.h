@@ -19,9 +19,8 @@
 extern "C" {
 # endif  /* __cplusplus */
 
-uint64_t* SMS_PlayerBallSim_Init    ( uint32_t* );
-void      SMS_PlayerBallSim_Destroy ( uint64_t* );
-void      SMS_PlayerBallSim_Update  ( uint64_t* );
+uint64_t* SMS_PlayerBallSim_Init   ( uint32_t* );
+void      SMS_PlayerBallSim_Update ( uint64_t* );
 
 # ifdef __cplusplus
 }

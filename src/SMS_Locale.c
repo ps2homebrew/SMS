@@ -210,6 +210,7 @@ static unsigned char s_pBootBrowser    [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pExec0          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/BOOT/BOOT.ELF";
 static unsigned char s_pExec1          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/BEDATA-SYSTEM/BOOT.ELF";
 static unsigned char s_pExitTo         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Exit to";
+static unsigned char s_pSoundFX        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Sound FX";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -380,7 +381,8 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pBootBrowser     ) - 1, s_pBootBrowser     },
  { sizeof ( s_pExec0           ) - 1, s_pExec0           },
  { sizeof ( s_pExec1           ) - 1, s_pExec1           },
- { sizeof ( s_pExitTo          ) - 1, s_pExitTo          }
+ { sizeof ( s_pExitTo          ) - 1, s_pExitTo          },
+ { sizeof ( s_pSoundFX         ) - 1, s_pSoundFX         }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );
@@ -415,10 +417,11 @@ void SMS_LocaleInit ( void ) {
 
     *lpPtr = '\x00';
 
-    s_SMStringUDF[ lIdx   ].m_pStr = lpBuff;
-    s_SMStringUDF[ lIdx++ ].m_Len  = lpPtr - lpBuff;
+    s_SMStringUDF[ lIdx ].m_pStr = lpBuff;
+    s_SMStringUDF[ lIdx ].m_Len  = lpPtr - lpBuff;
 
-    if ( lpPtr++ == lpEnd ) break;
+    if ( lpPtr++ == lpEnd || !s_SMStringUDF[ lIdx++ ].m_Len ) break;
+
     if (  lIdx == sizeof ( s_SMStringUDF ) / sizeof ( s_SMStringUDF[ 0 ] )  ) break;
     if ( *lpPtr  == '\n'  ) ++lpPtr;
 

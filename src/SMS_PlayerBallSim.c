@@ -12,24 +12,26 @@
 #include "SMS_PlayerBallSim.h"
 #include "SMS_GS.h"
 #include "SMS_DMA.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <stdlib.h>
 #include <malloc.h>
 
-#define NBALLS 512
 #define Z_MAX  100
 #define SPEED    2
 
 extern unsigned char g_IconBall[ 4096 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
 
-static struct {
+typedef struct _ball_pos {
 
  int m_X;
  int m_Y;
  int m_Z;
 
-} s_BallPos[ NBALLS ] __attribute__(   (  section( ".bss" )  )   );
+} _ball_pos;
+
+# define s_BallPos (  ( _ball_pos* )g_Balls  )
 
 static int _ball_rand ( void ) {
 
@@ -50,16 +52,12 @@ static void _create_ball ( int anIdx ) {
 uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
 
  int       i;
- uint64_t* lpDMA;
  uint64_t* lpUDMA;
 
- lpDMA  = ( uint64_t* )malloc (  ( 10 + NBALLS * 4 ) * sizeof ( uint64_t )  );
- lpUDMA = _U( lpDMA );
-
- FlushCache ( 0 );
+ lpUDMA = _U( g_BallPkt );
 
  GS_InitLoadImage (  ( GSLoadImage* )lpUDMA, g_GSCtx.m_VRAMPtr, 1, GSPixelFormat_PSMCT32, 0,  0, 32, 32  );
- GS_LoadImage (  ( GSLoadImage* )lpDMA, g_IconBall );
+ GS_LoadImage (  ( GSLoadImage* )g_BallPkt, g_IconBall );
  DMA_Wait ( DMAC_GIF );
 
  lpUDMA[ 0 ] = GIF_TAG( 3, 0, 0, 0, 0, 1 );
@@ -70,10 +68,10 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
  lpUDMA[ 5 ] = GS_ALPHA_1;
  lpUDMA[ 6 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 );
  lpUDMA[ 7 ] = GS_PRIM;
- lpUDMA[ 8 ] = GIF_TAG( NBALLS, 1, 0, 0, 1, 4 );
+ lpUDMA[ 8 ] = GIF_TAG( 512, 1, 0, 0, 1, 4 );
  lpUDMA[ 9 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
 
- for ( i = 0; i < NBALLS; ++i ) {
+ for ( i = 0; i < 512; ++i ) {
 
   lpUDMA[ 10 + i * 4 ] = GS_SET_UV(   8,   8 );
   lpUDMA[ 12 + i * 4 ] = GS_SET_UV( 504, 504 );
@@ -82,24 +80,18 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
 
  }  /* end for */
 
- *apQWC = (  ( 10 + NBALLS * 4 ) * sizeof ( uint64_t )  ) >> 4;
+ *apQWC = (  ( 10 + 512 * 4 ) * sizeof ( uint64_t )  ) >> 4;
 
- return lpDMA;
+ return g_BallPkt;
 
 }  /* end SMS_PlayerBallSim_Init */
-
-void SMS_PlayerBallSim_Destroy ( uint64_t* apPacket ) {
-
- if ( apPacket ) free ( apPacket );
-
-}  /* end SMS_PlayerBallSim_Destroy */
 
 void SMS_PlayerBallSim_Update ( uint64_t* apDMA ) {
 
  int  i, lW = ( int )( g_GSCtx.m_Width  >> 1   ),
          lH = ( int )( g_GSCtx.m_Height / 2.3F );
 
- for ( i = 0; i < NBALLS; ++i ) {
+ for ( i = 0; i < 512; ++i ) {
 
   int  lX, lY;
   u64* lpDMA = ( u64* )_U(  apDMA + 10 + ( i << 2 )  );

@@ -7,6 +7,9 @@
 #include "SMS_GS.h"
 #include "SMS_PAD.h"
 #include "SMS_SubtitleContext.h"
+#include "SMS_SPU.h"
+#include "SMS_Sounds.h"
+#include "SMS_Config.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -46,6 +49,8 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
  char          lPath[ 1024 ];
  GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
  char*         lpName  = g_CMedia == 1 && g_pCDDACtx ? &lPath[ 7 ] : lPath;
+
+ SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
 
  strcpy ( lPath, g_CWD );
  SMS_Strcat ( lPath, g_SlashStr                                    );

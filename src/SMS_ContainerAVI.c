@@ -636,7 +636,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
        lData[ 0 ] == 'i' && lData[ 1 ] == 'x' &&
        lCount < ( int32_t )lpCont -> m_nStm   &&
        i + lSize <= ( int32_t )lpAVICont -> m_MoviEnd
-  ) lpBuf -> Seek ( lpBuf, lpBuf -> m_CurPos + lSize );
+  ) File_Skip ( lpBuf, lSize );
             
   lCount = ( lData[ 0 ] - '0' ) * 10 + ( lData[ 1 ] - '0' );
 

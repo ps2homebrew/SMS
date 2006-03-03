@@ -207,7 +207,7 @@ static void _font_character ( _MTKFontHeader* apHdr, unsigned int aChr, void* ap
 
  for ( i = 0; i < 32; ++i, lpBuff += 16 ) {
 
-  int lGap = 0;
+  int lGap = -1;
 
   for ( j = 0; j < 16; ++j ) {
 
@@ -224,7 +224,7 @@ static void _font_character ( _MTKFontHeader* apHdr, unsigned int aChr, void* ap
   }  /* end for */
 
   apIndent[ 0 ] = lGap;
-  lGap          = 0;
+  lGap          = -1;
 
   for ( j = 15; j >= 0; --j ) { 
 
@@ -245,6 +245,25 @@ static void _font_character ( _MTKFontHeader* apHdr, unsigned int aChr, void* ap
  }  /* end for */
 
 }  /* end _font_character */
+
+static void _set_indent ( void* apDst, unsigned short anIndent ) {
+
+ __asm__ __volatile__ (
+  "srl      $v1,  %1, 8\n\t"
+  "pextlb    %1,  %1, %1\n\t"
+  "pextlb   $v1, $v1, $v1\n\t"
+  "pcpyh     %1,  %1\n\t"
+  "pcpyh    $v1, $v1\n\t"
+  "pcpyld    %1,  %1,  %1\n\t"
+  "pcpyld   $v1, $v1, $v1\n\t"
+  "sq       $v1,  0(%0)\n\t"
+  "sq       $v1, 16(%0)\n\t"
+  "sq        %1, 32(%0)\n\t"
+  "sq        %1, 48(%0)\n\t"
+  :: "r"( apDst ), "r"( anIndent )
+ );
+
+}  /* end _set_indent */
 
 void GSFont_Init ( void ) {
 
@@ -301,16 +320,9 @@ void GSFont_Init ( void ) {
 
  }  /* end for */
 
- __asm__ __volatile__ (
-  "li       $v0, 0x0B0B\n\t"
-  "pcpyh    $v0, $v0\n\t"
-  "pcpyld   $v0, $v0, $v0\n\t"
-  "sq       $v0,  0(%0)\n\t"
-  "sq       $v0, 16(%0)\n\t"
-  "sq       $v0, 32(%0)\n\t"
-  "sq       $v0, 48(%0)\n\t"
-  :: "r"( g_GSCharIndent ) : "v0"
- );
+ _set_indent ( &g_GSCharIndent[ ' ' - ' ' ], 0x0B0B );
+ _set_indent ( &g_GSCharIndent[ '.' - ' ' ], 0x0018 );
+ _set_indent ( &g_GSCharIndent[ ',' - ' ' ], 0x0018 );
 
  g_GSCtx.m_VRAMPtr += 496;
 

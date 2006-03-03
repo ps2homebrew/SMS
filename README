@@ -628,3 +628,16 @@ Update (23-FEB-2006)
 - changed loader code in attempt to fix "hangings" upon exit to
   user defined aplication;
 
+Update (03-MAR-2006)
+--------------------
+- fixed incorrect subtitle position for multiline subtitles (thanks to
+  "Voldemar_u2" for the note);
+- sound made louder a bit (SPU2 volume values are adjusted);
+- changed character indentation;
+- added separate management for image offsets in different video modes
+  (thanks to "Mr. Worm~~" and "Voldemar_u2" for the suggestion);
+- added sound effects to the browser (for errors, usb/host mount/unmount
+  and file/folder actions) - rather silly, just for demonstration of some
+  SPU2 ADPCM decoding features;
+- fixed a "crash" issue with some mp3 files (thanks to "sigmar" for the
+  research/note);

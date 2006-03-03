@@ -24,6 +24,7 @@
 #include "SMS_SubtitleContext.h"
 #include "SMS_List.h"
 #include "SMS_Locale.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -34,15 +35,6 @@
 
 static char s_TimeFmt[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "0:00:00";
 
-static uint64_t s_OSDNR[ GS_TXT_PACKET_SIZE( 8 ) ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
-
-static uint64_t s_DummyErase[                                                    6 ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
-static uint64_t s_DummyPaint[ ( GS_VGR_PACKET_SIZE() << 1 ) + GS_RRT_PACKET_SIZE() ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
-
-static uint64_t  s_VCPaint [  66 ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
-static uint64_t  s_VCErase [  16 ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
-static uint64_t  s_SCPaint [ 274 ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
-static uint64_t  s_SCErase [  16 ] SMS_BSS_SECTION __attribute__(   (  aligned( 16 )  )   );
 static uint64_t  s_IntTime;
 static int       s_VCDY;
 static uint64_t* s_pPTS;
@@ -79,26 +71,12 @@ static void TimerHandler ( void ) {
 
  if ( g_Timer >= s_IntTime ) {
 
-  g_IPUCtx.iQueuePacket ( 8, s_VCErase );
+  g_IPUCtx.iQueuePacket ( 8, g_VCErase );
   Timer_iRegisterHandler ( 1, NULL );
 
  }  /* end if */
 
 }  /* end TimerHandler */
-
-int PlayerControl_Index2Volume ( void ) {
-
- static unsigned s_lScale[ 25 ] = {
-      0,   150,   400,   560,   800,
-   1070,  1330,  1530,  1730,  2190,
-   2550,  3010,  3520,  4080,  4490,
-   5250,  5970,  6990,  8000,  9080,
-  10450, 12030, 13560, 14940, 16383
- };
-
- return s_lScale[ g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume, 0, 24 ) ];
-
-}  /* end PlayerControl_Index2Volume */
 
 static void _FormatTime ( char* apBuf, uint64_t aTime ) {
 
@@ -125,8 +103,8 @@ static void _create_status ( SMString* apStr, int anIdx ) {
 
 void PlayerControl_Init ( void ) {
 
- uint64_t* lpPaint = _U( s_VCPaint );
- uint64_t* lpErase = _U( s_VCErase );
+ uint64_t* lpPaint = _U( g_VCPaint );
+ uint64_t* lpErase = _U( g_VCErase );
 /* Initialize volume control display list */
  int lX = 20 << 4;
  int lY = ( g_GSCtx.m_Height - 288 ) >> 1;
@@ -222,7 +200,7 @@ void PlayerControl_Init ( void ) {
  s_pDelta = GSContext_NewList (  GS_TXT_PACKET_SIZE( 7 )  );
  SyncDCache (  s_pDelta - 2, s_pDelta + (  GS_TXT_PACKET_SIZE( 7 ) >> 1  )  );
 /* Initialize song numbers for MP3 player */
- s_Player.m_OSDPackets[ 6 ] = s_OSDNR;
+ s_Player.m_OSDPackets[ 6 ] = g_OSDNR;
 /* Initialize bix64's scrollbar */
  lX = g_GSCtx.m_Width - 30;
 
@@ -263,8 +241,8 @@ void PlayerControl_Init ( void ) {
 
  lX <<= 4;
 
- lpPaint = _U( s_SCPaint );
- lpErase = _U( s_SCErase );
+ lpPaint = _U( g_SCPaint );
+ lpErase = _U( g_SCErase );
 
  lpPaint[ 0 ] =                                                                                             lpErase[ 0 ] = 0;
  lpPaint[ 1 ] = VIF_DIRECT(     (    (   (  ( g_Config.m_ScrollBarNum * 2 ) + 18  ) / 2   ) - 1    )     ); lpErase[ 1 ] = VIF_DIRECT( 7 );
@@ -351,7 +329,7 @@ void PlayerControl_Init ( void ) {
 
  } else s_Player.m_OSDPackets[ 4 ] = NULL;
 /* Initialize MP3/M3U display */
- lpPaint = _U( s_DummyErase );
+ lpPaint = _U( g_DErase );
 
  lpPaint[ 0 ] = GIF_TAG( 1, 0, 0, 0, 1, 4 );
  lpPaint[ 1 ] = GS_PRIM | ( GS_RGBAQ << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 );
@@ -360,7 +338,7 @@ void PlayerControl_Init ( void ) {
  lpPaint[ 4 ] = 0L;
  lpPaint[ 5 ] = ( g_GSCtx.m_PWidth << 4 ) | ( g_GSCtx.m_PHeight << 20 );
 
- lpPaint = _U( s_DummyPaint );
+ lpPaint = _U( g_DPaint );
 
  GS_RenderRoundRect (
   ( GSRoundRectPacket* )(  lpPaint + (  GS_VGR_PACKET_SIZE() << 1  ) - 2  ),
@@ -378,10 +356,10 @@ void PlayerControl_Init ( void ) {
   GS_SET_RGBAQ( 0x00, 0x00, 0x80, 0x80, 0x00 )
  );
 
- s_Player.m_OSDPackets[ 2 ] = s_DummyErase;
- s_Player.m_OSDPackets[ 3 ] = s_DummyPaint;
- s_Player.m_OSDQWC    [ 2 ] = 3;
- s_Player.m_OSDQWC    [ 3 ] = sizeof ( s_DummyPaint ) >> 4;
+ s_Player.m_OSDPackets[ 2 ] = g_DErase;
+ s_Player.m_OSDPackets[ 3 ] = g_DPaint;
+ s_Player.m_OSDQWC    [ 2 ] =  3;
+ s_Player.m_OSDQWC    [ 3 ] = 29;
 
 }  /* end PlayerControl_Init */
 
@@ -446,7 +424,7 @@ void PlayerControl_DisplayTime ( int anOp, int64_t aTime, int afDraw ) {
 void PlayerControl_AdjustVolume ( int aDelta ) {
 
  int i,    lVol    = g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume + aDelta, 0, 24 );
- uint64_t* lpPaint = _U( s_VCPaint );
+ uint64_t* lpPaint = _U( g_VCPaint );
  uint64_t  lV      = lpPaint[ 10 ];
  uint64_t  lX      = ( lV & 0xFFFF ) + ( 12 << 4 );
  uint64_t  lY      = ( lV >> 16 ) & 0xFFFF;
@@ -476,12 +454,12 @@ void PlayerControl_AdjustVolume ( int aDelta ) {
 
  }  /* end for */
 
- g_IPUCtx.QueuePacket ( 33, s_VCPaint );
+ g_IPUCtx.QueuePacket ( 33, g_VCPaint );
 
  s_IntTime = g_Timer + 2000;
  Timer_RegisterHandler ( 1, TimerHandler );
 
- s_Player.m_pSPUCtx -> SetVolume (  PlayerControl_Index2Volume ()  );
+ s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
 
 }  /* end PlayerControl_AdjustVolume */
 
@@ -930,7 +908,7 @@ unsigned int PlayerControl_GSPacket ( int anY, SMS_List* apList, uint64_t* apDMA
 static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
  int       i;
- uint64_t* lpPaint = _U( s_SCPaint );
+ uint64_t* lpPaint = _U( g_SCPaint );
  uint64_t  lX      = lpPaint[ 10 ] & 0xFFFF;
  uint64_t  lY1;
  uint64_t  lY2;
@@ -1003,7 +981,7 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
  }  /* end for */
 
- g_IPUCtx.QueuePacket ( lQWC, s_SCPaint );
+ g_IPUCtx.QueuePacket ( lQWC, g_SCPaint );
 
  s_IntTime = g_Timer + 10000;
 
@@ -1074,7 +1052,7 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
 
   }  /* end else */
 
-  if ( s_IntTime <= g_Timer ) lpIPUCtx -> QueuePacket ( 8, s_SCErase );
+  if ( s_IntTime <= g_Timer ) lpIPUCtx -> QueuePacket ( 8, g_SCErase );
 
   lpIPUCtx -> Flush   ();
   lpIPUCtx -> Repaint ();
@@ -1115,7 +1093,7 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
     
      if ( lTestPause == 1 ) {
 
-      g_IPUCtx.QueuePacket ( 8, s_SCErase );
+      g_IPUCtx.QueuePacket ( 8, g_SCErase );
       lTestPause = 0;
       s_IntTime  = g_Timer;
 
@@ -1176,7 +1154,7 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
  }  /* end if */
 
  lpPacket -> Destroy ( lpPacket );
- lpIPUCtx -> QueuePacket ( 8, s_SCErase );
+ lpIPUCtx -> QueuePacket ( 8, g_SCErase );
  lpIPUCtx -> Resume ();
 
  while (  GUI_ReadButtons ()  );
@@ -1221,7 +1199,7 @@ void PlayerControl_UpdateItemNr ( void ) {
 
  sprintf ( lBuff, "% 3d /% 3d", s_Player.m_PlayItemNr, s_Player.m_pCont -> m_pPlayList -> m_Size );
 
- lpDMA = _U( s_OSDNR );
+ lpDMA = _U( g_OSDNR );
  lLen  = strlen ( lBuff );
 
  s_Player.m_OSDQWC[ 6 ] = GS_TXT_PACKET_SIZE( lLen ) >> 1;

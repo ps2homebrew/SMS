@@ -10,6 +10,7 @@
 */
 # include "SMS.h"
 # include "SMS_AudioBuffer.h"
+# include "SMS_Data.h"
 
 static SMS_AudioBuffer s_AudioBuffer;
 
@@ -19,8 +20,6 @@ static SMS_AudioBuffer s_AudioBuffer;
 # include <stdio.h>
 # define UNCACHED_SEG( a ) ( a )
 #endif  /* _WIN32 */
-
-extern unsigned char g_DataBuffer[ SMS_DATA_BUFFER_SIZE ];
 
 static SMS_AudioBuffer s_AudioBuffer;
 static int             s_Sema;

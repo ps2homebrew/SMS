@@ -26,6 +26,8 @@
 #include "SMS_CDDA.h"
 #include "SMS_CDVD.h"
 #include "SMS_FileDir.h"
+#include "SMS_SPU.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <loadfile.h>
@@ -406,7 +408,41 @@ void GUI_SetColors ( void ) {
 
 }  /* end GUI_SetColors */
 
+void _set_dx_dy ( int** appDX, int** appDY ) {
+
+ if ( g_Config.m_DisplayMode == GSVideoMode_Default ) g_Config.m_DisplayMode = *( volatile char* )0x1FC7FF52 == 'E' ? GSVideoMode_PAL : GSVideoMode_NTSC;
+
+ switch ( g_Config.m_DisplayMode ) {
+
+  case GSVideoMode_NTSC:
+
+   *appDX = &g_Config.m_DX;
+   *appDY = &g_Config.m_DY;
+
+  break;
+
+  case GSVideoMode_PAL:
+
+   *appDX = &g_Config.m_DXPALOther[ 0 ];
+   *appDY = &g_Config.m_DYPALOther[ 0 ];
+
+  break;
+
+  case GSVideoMode_DTV_720x480P:
+
+   *appDX = &g_Config.m_DXPALOther[ 1 ];
+   *appDY = &g_Config.m_DYPALOther[ 1 ];
+
+  break;
+
+ }  /* end switch */
+
+}  /* end _set_dx_dy */
+
 void GUI_Initialize ( int afCold ) {
+
+ int* lpDX;
+ int* lpDY;
 
  if ( afCold ) {
 
@@ -490,8 +526,10 @@ void GUI_Initialize ( int afCold ) {
       g_Config.m_DisplayMode != GSVideoMode_NTSC
  ) g_Config.m_DisplayMode = GSVideoMode_Default;
 
- g_GSCtx.m_OffsetX  = g_Config.m_DX;
- g_GSCtx.m_OffsetY  = g_Config.m_DY;
+ _set_dx_dy ( &lpDX, &lpDY );
+
+ g_GSCtx.m_OffsetX  = *lpDX;
+ g_GSCtx.m_OffsetY  = *lpDY;
  g_GSCtx.m_CodePage = g_Config.m_DisplayCharset;
 
  GS_VSync ();

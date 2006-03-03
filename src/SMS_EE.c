@@ -485,7 +485,6 @@ void SMS_EEInit ( void ) {
  lpDMAC -> m_RBOR = 0;
 
  ChangeThreadPriority (  GetThreadId (), 64  );
- FlushCache ( 0 );
 
  lFD = fioOpen ( s_pROMVER, O_RDONLY );
  fioRead (  lFD, lROMVer, sizeof ( lROMVer )  );

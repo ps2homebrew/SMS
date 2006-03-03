@@ -20,6 +20,8 @@
 #include "SMS_FileDir.h"
 #include "SMS_FileContext.h"
 #include "SMS_CDVD.h"
+#include "SMS_SPU.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -73,7 +75,7 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
   int            lCumSize = lPktSize;
   unsigned long* lpDMA;
 
-  lpMenu -> m_XOffset = GSFont_WidthEx ( STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len, 8 );
+  lpMenu -> m_XOffset = GSFont_WidthEx ( STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len, 4 );
 
   if ( !lpNode ) lCumSize += GS_TXT_PACKET_SIZE( STR_NONE.m_Len );
 
@@ -87,7 +89,7 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
   g_GSCtx.m_TextColor = 0;
   GSFont_RenderEx (
    STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len,
-   8, 12, lpDMA + GS_RRT_PACKET_SIZE(), 8, 0
+   8, 12, lpDMA + GS_RRT_PACKET_SIZE(), 4, 0
   );
 
   if ( !lpNode ) GSFont_Render (
@@ -197,6 +199,8 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
   }  /* end else */
 
+  if ( lDevID == 0 || lDevID == 4 ) SPU_PlaySound ( SMSound_Mount, g_Config.m_PlayerVolume );
+
  } else {
 
   SMS_ListNode* lpNode = lpList -> m_pHead;
@@ -257,6 +261,8 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
     } else lMsg = GUI_MSG_MEDIA_REMOVED;
 
     GUI_PostMessage ( lMsg );
+
+    if ( lDevID == 0 || lDevID == 4 ) SPU_PlaySound ( SMSound_UMount, g_Config.m_PlayerVolume );
 
     break;
 
@@ -329,6 +335,7 @@ redraw:
 
     g_CMedia = lpItem -> m_DevID;
 
+    SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
     GUI_PostMessage ( GUI_MSG_MEDIA_SELECTED );
 
     retVal = GUIHResult_Handled;

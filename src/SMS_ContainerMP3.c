@@ -51,6 +51,7 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
  int          retVal = 0;
  uint8_t      lBuf[ ID3_HEADER_SIZE ];
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
+ unsigned int lMP3Pos;
 
  if (  lpFileCtx -> Read ( lpFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
 
@@ -65,6 +66,8 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
    File_Skip (  lpFileCtx, ( uint32_t )lVal  );
 
   } else lpFileCtx -> Seek ( lpFileCtx, 0 );
+
+  lMP3Pos = lpFileCtx -> m_CurPos;
 
   if (  lpFileCtx -> Read ( lpFileCtx, &lVal, 4 ) == 4 &&
         MP3_CheckHeader (
@@ -121,7 +124,7 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
    apCont -> m_Duration = 0L;
 
-   lpFileCtx -> Seek ( lpFileCtx, 0 );
+   lpFileCtx -> Seek ( lpFileCtx, lMP3Pos );
 
    apCont -> m_pPlayList = SMS_ListInit ();
    lpSlash = lpFileCtx -> m_pPath + strlen ( lpFileCtx -> m_pPath ) - 1;

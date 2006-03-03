@@ -22,6 +22,7 @@
 #include "SMS_MPEG4.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_IPU.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -268,7 +269,7 @@ void GUI_Status ( unsigned char* apMsg ) {
  int lLen   = strlen ( apMsg );
  int lWidth = g_GSCtx.m_Width - 18;
  int lQWC;
- int lDX = 0;
+ int lDX = -2;
 
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth && lDX >= -12  ) --lDX;
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth                ) --lLen;
@@ -301,21 +302,22 @@ void GUI_Status ( unsigned char* apMsg ) {
 void GUI_Error ( unsigned char* apMsg ) {
 
  int            lLen   = strlen ( apMsg );
- int            lWidth = g_GSCtx.m_Width - 40;
+ int            lWidth = g_GSCtx.m_Width - 48;
  unsigned long* lpDMA;
- int            lDX = 0;
+ int            lDX = -2;
 
- while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth && lDX >= -12  ) --lDX;
+ while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth && lDX >= -16  ) --lDX;
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth                ) --lLen;
 
  g_GSCtx.m_TextColor = 0;
  lpDMA = GSContext_NewPacket (  1, GS_TXT_PACKET_SIZE( lLen ), GSPaintMethod_Init  );
- GSFont_RenderEx ( apMsg, lLen, 40, lWidth = g_GSCtx.m_Height - 34, lpDMA, 0, -2 );
+ GSFont_RenderEx ( apMsg, lLen, 40, lWidth = g_GSCtx.m_Height - 34, lpDMA, lDX, -2 );
  lpDMA = GSContext_NewPacket (  1, GS_TSP_PACKET_SIZE(), GSPaintMethod_Continue  );
  GUI_DrawIcon ( GUICON_ERROR, 8, lWidth, GUIcon_Misc, lpDMA );
 
  GSContext_BitBlt ( &s_BitBltSL );
  GSContext_Flush ( 1, GSFlushMethod_KeepLists );
+ SPU_PlaySound ( SMSound_Error, g_Config.m_PlayerVolume );
  GUI_WaitButtons ( SMS_PAD_CROSS, 200 );
 
  GSContext_NewPacket (  1, 0, GSPaintMethod_Init  );
@@ -337,7 +339,7 @@ void GUI_Progress ( unsigned char* apStr, int aPos ) {
   int lLen   = strlen ( apStr );
   int lWidth = g_GSCtx.m_Width - 16;
 
-  while (   GSFont_Width ( apStr, lLen ) > lWidth  ) --lLen;
+  while (   GSFont_WidthEx ( apStr, lLen, -2 ) > lWidth  ) --lLen;
 
   if ( !s_lpListRRT ) s_lpListRRT = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
 
@@ -347,7 +349,7 @@ void GUI_Progress ( unsigned char* apStr, int aPos ) {
    s_lpListTxt = GSContext_NewList (  GS_TXT_PACKET_SIZE( s_lLen = lLen )  );
 
    g_GSCtx.m_TextColor = 0;
-   GSFont_RenderEx ( apStr, lLen, 8, g_GSCtx.m_Height - 34, s_lpListTxt, 0, -2 );
+   GSFont_RenderEx ( apStr, lLen, 8, g_GSCtx.m_Height - 34, s_lpListTxt, -2, -2 );
 
   }  /* end if */
 

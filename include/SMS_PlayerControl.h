@@ -19,7 +19,6 @@ extern "C" {
 
 void                 PlayerControl_Init           ( void                             );
 void                 PlayerControl_Destroy        ( void                             );
-int                  PlayerControl_Index2Volume   ( void                             );
 void                 PlayerControl_AdjustVolume   ( int                              );
 int                  PlayerControl_FastForward    ( void                             );
 int                  PlayerControl_Rewind         ( void                             );

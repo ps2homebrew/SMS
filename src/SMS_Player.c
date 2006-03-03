@@ -29,6 +29,7 @@
 #include "SMS_PlayerBallSim.h"
 #include "SMS_DMA.h"
 #include "SMS_Locale.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -87,9 +88,7 @@ static int               s_SemaPauseAudio;
 static int               s_SemaPauseVideo;
 static int               s_SemaAckPause;
 static int               s_MainThreadID;
-static uint8_t           s_VideoRStack[ 0x8000 ] __attribute__(   (  aligned( 16 )  )   );
 static uint8_t           s_VideoDStack[ 0x8000 ] __attribute__(   (  aligned( 16 )  )   );
-static uint8_t           s_AudioRStack[ 0x8000 ] __attribute__(   (  aligned( 16 )  )   );
 static uint8_t           s_AudioDStack[ 0x8000 ] __attribute__(   (  aligned( 16 )  )   );
 static SMS_FrameBuffer*  s_pFrame;
 static SMS_AudioBuffer*  s_AudioSamples;
@@ -523,7 +522,7 @@ static void _sms_audio_only_renderer ( void* apParam ) {
    s_Player.m_pSPUCtx -> Silence ();
    SignalSema ( s_SemaAckPause );
    WaitSema ( s_SemaPauseAudio );
-   s_Player.m_pSPUCtx -> SetVolume (  PlayerControl_Index2Volume ()  );
+   s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
 
   }  /* end if */
 
@@ -562,7 +561,7 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
     s_Player.m_pSPUCtx -> Destroy ();
     s_Player.m_pSPUCtx = SPU_InitContext (
-     s_Player.m_AudioChannels, s_Player.m_AudioSampleRate, PlayerControl_Index2Volume ()
+     s_Player.m_AudioChannels, s_Player.m_AudioSampleRate, SPU_Index2Volume ( g_Config.m_PlayerVolume )
     );
 
    }  /* end if */
@@ -738,7 +737,7 @@ static void _sms_audio_renderer ( void* apParam ) {
    s_Player.m_pSPUCtx -> Silence ();
    SignalSema ( s_SemaAckPause );
    WaitSema ( s_SemaPauseAudio );
-   s_Player.m_pSPUCtx -> SetVolume (  PlayerControl_Index2Volume ()  );
+   s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
 
   }  /* end if */
 
@@ -997,7 +996,7 @@ static void _sms_play ( void ) {
 
   s_Player.m_pSPUCtx = SPU_InitContext (
    s_Player.m_AudioChannels, s_Player.m_AudioSampleRate,
-   PlayerControl_Index2Volume ()
+   SPU_Index2Volume ( g_Config.m_PlayerVolume )
   );
   ++lnDec;
 
@@ -1381,8 +1380,6 @@ static void _Destroy ( void ) {
 
  if (  g_Config.m_PowerOff < 0 && !( s_Flags & SMS_FLAGS_STOP )  ) hddPowerOff ();
 
- SMS_PlayerBallSim_Destroy ( s_Player.m_OSDPackets[ 5 ] );
-
 }  /* end _Destroy */
 
 SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, unsigned int aSubFormat ) {
@@ -1472,8 +1469,8 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
 
   s_Player.Play = _sms_play;
 
-  lThread.stack_size       = sizeof ( s_VideoRStack );
-  lThread.stack            = s_VideoRStack;
+  lThread.stack_size       = 16384;
+  lThread.stack            = g_VRStack;
   lThread.initial_priority = lCurrentThread.current_priority;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpVR;
@@ -1486,8 +1483,8 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
   lThread.func             = _sms_video_decoder;
   THREAD_ID_VD = CreateThread ( &lThread );
 
-  lThread.stack_size       = sizeof ( s_AudioRStack );
-  lThread.stack            = s_AudioRStack;
+  lThread.stack_size       = 16384;
+  lThread.stack            = g_ARStack;
   lThread.initial_priority = lCurrentThread.current_priority;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpAR;

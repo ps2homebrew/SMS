@@ -90,7 +90,7 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
   while (  GSFont_WidthEx ( lpItem -> m_pOptionName -> m_pStr, lLen, -6 ) > lWidth  ) --lLen;
 
   lpDMA = GSContext_NewPacket (  aCtx, GS_TXT_PACKET_SIZE( lLen ), GSPaintMethod_Continue  );
-  GSFont_RenderEx ( lpItem -> m_pOptionName -> m_pStr, lLen, lX, lY, lpDMA, -6, 0 );
+  GSFont_RenderEx ( lpItem -> m_pOptionName -> m_pStr, lLen, lX, lY, lpDMA, -7, 0 );
 
   if (  lpItem == lpState -> m_pCurr && !( lpState -> m_Flags & MENU_FLAGS_TEXT )  ) {
 

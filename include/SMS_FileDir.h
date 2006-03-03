@@ -29,7 +29,6 @@ extern unsigned char* g_pDevName[ 6 ];
 extern SMS_List*           g_pFileList;
 extern int                 g_CMedia;
 extern struct CDDAContext* g_pCDDACtx;
-extern char                g_CWD[ 1024 ] __attribute__(   (  section( ".bss" )  )   );
 
 # ifdef __cplusplus
 extern "C" {

@@ -13,6 +13,7 @@
 #include "SMS_List.h"
 #include "SMS_Locale.h"
 #include "SMS_FileDir.h"
+#include "SMS_Sounds.h"
 
 #include <string.h>
 #include <malloc.h>

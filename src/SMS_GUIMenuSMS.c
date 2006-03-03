@@ -21,6 +21,7 @@
 #include "SMS_FileDir.h"
 #include "SMS_EE.h"
 #include "SMS_Timer.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -78,6 +79,7 @@ static void _gw4_handler     ( GUIMenu*, int );
 static void _saveipc_handler ( GUIMenu*, int );
 
 static void _usebg_handler  ( GUIMenu*, int );
+static void _sound_handler  ( GUIMenu*, int );
 static void _sortfs_handler ( GUIMenu*, int );
 static void _filter_handler ( GUIMenu*, int );
 static void _dsphdl_handler ( GUIMenu*, int );
@@ -165,6 +167,7 @@ static GUIMenuItem s_IPCMenu[] __attribute__(   (  section( ".data" )  )   ) = {
 
 static GUIMenuItem s_BrowserMenu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0,                     &STR_USE_BACKGROUND_IMAGE, 0, 0, _usebg_handler,  0, 0 },
+ { 0,                     &STR_SOUND_FX,             0, 0, _sound_handler,  0, 0 },
  { 0,                     &STR_SORT_FS_OBJECTS,      0, 0, _sortfs_handler, 0, 0 },
  { 0,                     &STR_FILTER_MEDIA_FILES,   0, 0, _filter_handler, 0, 0 },
  { 0,                     &STR_DISPLAY_HDL_PART,     0, 0, _dsphdl_handler, 0, 0 },
@@ -461,17 +464,18 @@ static void _browser_handler ( GUIMenu* apMenu, int aDir ) {
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
 
  s_BrowserMenu[  0 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SKIN ? GUICON_ON : GUICON_OFF;
- s_BrowserMenu[  1 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SORT ? GUICON_ON : GUICON_OFF;
- s_BrowserMenu[  2 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_AVIF ? GUICON_ON : GUICON_OFF;
- s_BrowserMenu[  3 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_HDLP ? GUICON_ON : GUICON_OFF;
- s_BrowserMenu[  4 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SYSP ? GUICON_ON : GUICON_OFF;
- s_BrowserMenu[  5 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserABCIdx;
- s_BrowserMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserIBCIdx;
- s_BrowserMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserTxtIdx;
- s_BrowserMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSBCIdx;
- s_BrowserMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSCIdx;
- s_BrowserMenu[ 10 ].m_IconRight = ( unsigned int )s_ExitTo[ g_Config.m_BrowserFlags >> 28 ];
- s_BrowserMenu[ 10 ].m_Type     |= 112 << 24;
+ s_BrowserMenu[  1 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SDFX ? GUICON_ON : GUICON_OFF;
+ s_BrowserMenu[  2 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SORT ? GUICON_ON : GUICON_OFF;
+ s_BrowserMenu[  3 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_AVIF ? GUICON_ON : GUICON_OFF;
+ s_BrowserMenu[  4 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_HDLP ? GUICON_ON : GUICON_OFF;
+ s_BrowserMenu[  5 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SYSP ? GUICON_ON : GUICON_OFF;
+ s_BrowserMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserABCIdx;
+ s_BrowserMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserIBCIdx;
+ s_BrowserMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserTxtIdx;
+ s_BrowserMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSBCIdx;
+ s_BrowserMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSCIdx;
+ s_BrowserMenu[ 11 ].m_IconRight = ( unsigned int )s_ExitTo[ g_Config.m_BrowserFlags >> 28 ];
+ s_BrowserMenu[ 11 ].m_Type     |= 112 << 24;
 
  lpState -> m_pItems =
  lpState -> m_pFirst =
@@ -716,13 +720,20 @@ static void _lang_handler ( GUIMenu* apMenu, int aDir ) {
 
 }  /* end _lang_handler */
 
+extern void _set_dx_dy ( int**, int** );
+
 void _check_dc_offset ( void ) {
+
+ int* lpDX;
+ int* lpDY;
+
+ _set_dx_dy ( &lpDX, &lpDY );
 
  SMS_clip ( g_GSCtx.m_OffsetX, -160, 160 );
  SMS_clip ( g_GSCtx.m_OffsetY,  -64,  64 );
 
- g_Config.m_DX = g_GSCtx.m_OffsetX;
- g_Config.m_DY = g_GSCtx.m_OffsetY;
+ *lpDX = g_GSCtx.m_OffsetX;
+ *lpDY = g_GSCtx.m_OffsetY;
 
 }  /* end _check_dc_offset */
 
@@ -738,28 +749,48 @@ static void _init_set_dc ( void ) {
 
 void _adjleft_handler ( GUIMenu* apMenu, int aDir ) {
 
- g_GSCtx.m_OffsetX = g_Config.m_DX -= 1;
+ int* lpDX;
+ int* lpDY;
+
+ _set_dx_dy ( &lpDX, &lpDY );
+
+ g_GSCtx.m_OffsetX = *lpDX -= 1;
  _init_set_dc ();
 
 }  /* end _adjleft_handler */
 
 void _adjright_handler ( GUIMenu* apMenu, int aDir ) {
 
- g_GSCtx.m_OffsetX = g_Config.m_DX += 1;
+ int* lpDX;
+ int* lpDY;
+
+ _set_dx_dy ( &lpDX, &lpDY );
+
+ g_GSCtx.m_OffsetX = *lpDX += 1;
  _init_set_dc ();
 
 }  /* end _adjright_handler */
 
 void _adjup_handler ( GUIMenu* apMenu, int aDir ) {
 
- g_GSCtx.m_OffsetY = g_Config.m_DY -= 1;
+ int* lpDX;
+ int* lpDY;
+
+ _set_dx_dy ( &lpDX, &lpDY );
+
+ g_GSCtx.m_OffsetY = *lpDY -= 1;
  _init_set_dc ();
 
 }  /* end _adjup_handler */
 
 void _adjdown_handler ( GUIMenu* apMenu, int aDir ) {
 
- g_GSCtx.m_OffsetY = g_Config.m_DY += 1;
+ int* lpDX;
+ int* lpDY;
+
+ _set_dx_dy ( &lpDX, &lpDY );
+
+ g_GSCtx.m_OffsetY = *lpDY += 1;
  _init_set_dc ();
 
 }  /* end _adjdown_handler */
@@ -1119,15 +1150,21 @@ static void _usebg_handler ( GUIMenu* apMenu, int aDir ) {
 
 }  /* end _usebg_handler */
 
+static void _sound_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 1, &g_Config.m_BrowserFlags, SMS_BF_SDFX );
+
+}  /* end _sound_handler */
+
 static void _sortfs_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 1, &g_Config.m_BrowserFlags, SMS_BF_SORT );
+ _switch_flag ( apMenu, 2, &g_Config.m_BrowserFlags, SMS_BF_SORT );
 
 }  /* end _sortfs_handler */
 
 static void _filter_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 2, &g_Config.m_BrowserFlags, SMS_BF_AVIF );
+ _switch_flag ( apMenu, 3, &g_Config.m_BrowserFlags, SMS_BF_AVIF );
 
  g_pFileMenu -> HandleEvent ( g_pFileMenu, GUI_MSG_REFILL_BROWSER );
 
@@ -1155,14 +1192,14 @@ static void _apply_hdd_filter ( GUIMenu* apMenu ) {
 
 static void _dsphdl_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 3, &g_Config.m_BrowserFlags, SMS_BF_HDLP );
+ _switch_flag ( apMenu, 4, &g_Config.m_BrowserFlags, SMS_BF_HDLP );
  _apply_hdd_filter ( apMenu );
 
 }  /* end _dsphdl_handler */
 
 static void _hidesp_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 4, &g_Config.m_BrowserFlags, SMS_BF_SYSP );
+ _switch_flag ( apMenu, 5, &g_Config.m_BrowserFlags, SMS_BF_SYSP );
  _apply_hdd_filter ( apMenu );
 
 } /* end _hidesp_handler */
@@ -1255,7 +1292,7 @@ static void _exit_2_handler ( GUIMenu* apMenu, int aDir ) {
 
  else if ( lIndex > 2 ) lIndex = 0;
 
- s_BrowserMenu[ 10 ].m_IconRight = ( unsigned int )s_ExitTo[ lIndex ];
+ s_BrowserMenu[ 11 ].m_IconRight = ( unsigned int )s_ExitTo[ lIndex ];
 
  g_Config.m_BrowserFlags &= 0x0FFFFFFF;
  g_Config.m_BrowserFlags |= lIndex << 28;
@@ -1549,6 +1586,8 @@ GUIObject* GUI_CreateMenuSMS ( void ) {
  int           lWidth  = g_GSCtx.m_Width  - ( g_GSCtx.m_Width  >> 2 );
  int           lHeight = g_GSCtx.m_Height - ( g_GSCtx.m_Height >> 2 );
  GUIMenuState* lpState;
+
+ lWidth += lWidth / 12;
 
  HandleEventBase = retVal -> HandleEvent;
 

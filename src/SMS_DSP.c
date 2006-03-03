@@ -12,6 +12,7 @@
 #
 */
 #include "SMS_DSP.h"
+#include "SMS_Data.h"
 
 #include <string.h>
 

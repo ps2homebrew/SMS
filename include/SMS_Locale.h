@@ -189,6 +189,7 @@ typedef struct SMString {
 # define STR_EXEC0                SMS_STRING( 166 )
 # define STR_EXEC1                SMS_STRING( 167 )
 # define STR_EXIT_TO              SMS_STRING( 168 )
+# define STR_SOUND_FX             SMS_STRING( 169 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );

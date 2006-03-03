@@ -433,6 +433,7 @@ static void _produce_packets ( void ) {
  int          lDW    = g_Config.m_SubHIncr << 4;
  float        lAR    = ( 32.0F + g_Config.m_SubHIncr ) / 32.0F;
  int          lDH    = g_Config.m_SubVIncr;
+ int          lChrH  = 32 + lDH;
 
  s_SubCtx.m_pDMA     = ( uint64_t*       )calloc (  s_nAlloc,       sizeof ( uint64_t       )  );
  s_SubCtx.m_pPackets = ( SubtitlePacket* )calloc (  s_SubCtx.m_Cnt, sizeof ( SubtitlePacket )  );
@@ -444,7 +445,7 @@ static void _produce_packets ( void ) {
   unsigned int    j, k     = 8;
   SMS_ListNode*   lpSNode  = lpNode -> m_pList -> m_pHead;
   SubtitlePacket* lpPacket = &s_SubCtx.m_pPackets[ i ];
-  unsigned int    lY       = g_GSCtx.m_Height - g_Config.m_PlayerSubOffset * lpNode -> m_pList -> m_Size;
+  unsigned int    lY       = g_GSCtx.m_Height - lChrH * ( lpNode -> m_pList -> m_Size - 1 ) - g_Config.m_PlayerSubOffset;
   unsigned int    lLen     = strlen ( lpSNode -> m_pString );
   unsigned int    lCumLen  = lLen;
 
@@ -561,6 +562,7 @@ static void _produce_opackets ( void ) {
  int          lDW    = g_Config.m_SubHIncr << 4;
  float        lAR    = ( 32.0F + g_Config.m_SubHIncr ) / 32.0F;
  int          lDH    = g_Config.m_SubVIncr;
+ int          lChrH  = 32 + lDH;
 
  s_SubCtx.m_pDMA     = ( uint64_t*       )calloc (  s_nAlloc,       sizeof ( uint64_t       )  );
  s_SubCtx.m_pPackets = ( SubtitlePacket* )calloc (  s_SubCtx.m_Cnt, sizeof ( SubtitlePacket )  );
@@ -572,7 +574,7 @@ static void _produce_opackets ( void ) {
   unsigned int    j, k;
   SMS_ListNode*   lpSNode  = lpNode -> m_pList -> m_pHead;
   SubtitlePacket* lpPacket = &s_SubCtx.m_pPackets[ i ];
-  unsigned int    lY       = g_GSCtx.m_Height - g_Config.m_PlayerSubOffset * lpNode -> m_pList -> m_Size;
+  unsigned int    lY       = g_GSCtx.m_Height - lChrH * ( lpNode -> m_pList -> m_Size - 1 ) - g_Config.m_PlayerSubOffset;
   unsigned int    lLen     = strlen ( lpSNode -> m_pString );
   uint64_t*       lpVIF    = &lpDMA[ 1 ];
 

@@ -13,6 +13,7 @@
 */
 #include "SMS_CDDA.h"
 #include "SMS_SIF.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <string.h>
@@ -46,7 +47,6 @@ static unsigned char      s_NCmdRecvBuff[ 48 ] __attribute__ (   (  aligned( 64 
 static unsigned char      s_SCmdRecvBuff[ 48 ] __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_InitMode           __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_GetTOCmd[    3 ]   __attribute__ (   (  aligned( 64 )  )   );
-static unsigned char      s_TOCBuf  [ 2064 ]   __attribute__ (   (  aligned( 64 ), section( ".bss" )  )   );
 static unsigned int       s_ReadData[    6 ]   __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_ReadResp[   64 ]   __attribute__ (   (  aligned( 64 )  )   );
 
@@ -105,9 +105,9 @@ int CDDA_ReadTOC ( CDDA_TOC* apTOC ) {
  unsigned char* lpTOCbegin;
  unsigned char* lpTOCend;
 
- s_GetTOCmd[ 0 ] = ( unsigned int )s_TOCBuf;
+ s_GetTOCmd[ 0 ] = ( unsigned int )g_TOC;
 
- SifWriteBackDCache ( s_TOCBuf, 2064 );
+ SifWriteBackDCache ( g_TOC,    2064 );
  SifWriteBackDCache ( s_GetTOCmd, 12 );
 
  if (  SifCallRpc (
@@ -115,7 +115,7 @@ int CDDA_ReadTOC ( CDDA_TOC* apTOC ) {
        ) >= 0
  ) {
 
-  lpTOCbegin = UNCACHED_SEG( s_TOCBuf );
+  lpTOCbegin = UNCACHED_SEG( g_TOC );
 
   if (  *( unsigned int* )( s_NCmdRecvBuff + 4 )  ) {
 

@@ -19,6 +19,7 @@
 #include "SMS_CDVD.h"
 #include "SMS_CDDA.h"
 #include "SMS_FileContext.h"
+#include "SMS_Sounds.h"
 
 #include <tamtypes.h>
 #include <string.h>
@@ -49,7 +50,6 @@ unsigned char* g_pDevName[ 6 ] = {
 SMS_List*    g_pFileList;
 int          g_CMedia;
 CDDAContext* g_pCDDACtx;
-char         g_CWD[ 1024 ] __attribute__(   (  section( ".bss" )  )   );
 
 int _set_id ( char* apName ) {
 
@@ -81,7 +81,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
  SMS_List*     lpFileList;
  SMS_List*     lpList;
  iox_dirent_t  lEntry;
- char          lPath[ sizeof ( g_CWD ) + 5 ] __attribute__(   (  aligned( 4 )  )   );
+ char          lPath[ 1024 ] __attribute__(   (  aligned( 4 )  )   );
  char*         lpPtr;
  SMS_ListNode* lpNode;
 
@@ -131,16 +131,6 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
  lpDirList  = SMS_ListInit ();
  lpFileList = SMS_ListInit ();
  lFD        = strlen ( g_CWD ) - 1;
-
-__asm__ __volatile__(
- ".set noreorder\n\t"
- "pxor $a0, $a0, $a0\r\n"
- "pxor $a1, $a1, $a1\r\n"
- "pxor $a2, $a2, $a2\r\n"
- "pxor $a3, $a3, $a3\r\n"
- ".set reorder\n\t"
- ::: "a0", "a1", "a2", "a3"
- );
 
  if ( g_CMedia == 4 ) {
 
@@ -210,7 +200,7 @@ __asm__ __volatile__(
 
    if ( lpFileCtx ) {
 
-    char lBuf [ sizeof ( g_CWD ) ];
+    char lBuf [ 1024 ];
     int  lID;
 
     while ( 1 ) {

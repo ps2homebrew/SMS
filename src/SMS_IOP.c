@@ -17,6 +17,9 @@
 #include "SMS_Config.h"
 #include "SMS_GUI.h"
 #include "SMS_Locale.h"
+#include "SMS_SIF.h"
+#include "SMS_SPU.h"
+#include "SMS_Sounds.h"
 
 #include <kernel.h>
 #include <sifrpc.h>
@@ -228,13 +231,12 @@ void SMS_IOPReset ( void ) {
 #if 1
  SMS_IOPExec ( 1, s_pC7 );
 
- SifInitRpc     ( 0 ); 
  SifExitIopHeap (); 
  SifLoadFileExit(); 
  SifExitRpc     (); 
  SifIopReset ( s_pUDNL, 0 );
 
- while (  !SifIopSync ()  );
+ while (  !SIF_SyncIOP ()  );
 
  SifInitRpc ( 0 );
 
@@ -359,6 +361,8 @@ void SMS_IOPInit ( void ) {
 
  for (  i = 0; i < 5; ++i  ) _load_module ( i );
 
+ SPU_Initialize ();
+
  if ( g_IOPFlags & SMS_IOPF_DEV9 ) {
 
   if ( g_Config.m_NetworkFlags & SMS_DF_AUTO_NET ) SMS_IOPStartNet ();
@@ -375,5 +379,9 @@ void SMS_IOPInit ( void ) {
  EI();
 
  hddPreparePoweroff ();
+
+ SPU_LoadData (  g_SMSounds, sizeof ( g_SMSounds )  );
+
+ FlushCache ( 0 );
 
 }  /* end SMS_IOPInit */

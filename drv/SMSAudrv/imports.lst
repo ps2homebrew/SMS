@@ -18,15 +18,16 @@ intrman_IMPORTS_end
 
 libsd_IMPORTS_start
  I_sceSdInit
+ I_sceSdSetCoreAttr
  I_sceSdSetParam
  I_sceSdSetTransCallback
  I_sceSdBlockTrans
  I_sceSdBlockTransStatus
+ I_sceSdSetAddr
+ I_sceSdSetSwitch
+ I_sceSdVoiceTrans
+ I_sceSdVoiceTransStatus
 libsd_IMPORTS_end
-
-loadcore_IMPORTS_start
- I_FlushDcache
-loadcore_IMPORTS_end
 
 sifcmd_IMPORTS_start
  I_sceSifInitRpc

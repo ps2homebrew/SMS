@@ -166,7 +166,18 @@ int SMS_LoadConfig ( void  ) {
            MC_Read ( lFD, &g_Config.m_SubHIncr, 80 );
            MC_Sync ( &lLen );
 
-           if ( lLen == 80 ) retVal = 1;
+           if ( lLen == 80 ) {
+
+            if ( g_Config.m_Version > 3 ) {
+
+             MC_Read ( lFD, g_Config.m_DXPALOther, 32 );
+             MC_Sync ( &lLen );
+
+             if ( lLen == 32 ) retVal = 1;
+
+            } else retVal = 1;
+
+           }  /* end if */
 
           } else retVal = 1;
 
@@ -221,7 +232,7 @@ int SMS_LoadConfig ( void  ) {
 
  }  /* end if */
 
- g_Config.m_Version       = 3;
+ g_Config.m_Version       = 4;
  g_Config.m_BrowserFlags |= lUDFL;
 
  SMS_clip ( g_Config.m_DX, -160, 160 );

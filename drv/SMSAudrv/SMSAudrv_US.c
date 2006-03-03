@@ -79,18 +79,26 @@ static void _direct_copy ( const void* apMux, void* apDemux ) {
  __asm__ __volatile__ (
   ".set noreorder\n\t"
   ".set nomacro\n\t"
-  "li   $t0, 128\n\t"
+  "li       $t0, 32\n\t"
   "1:\n\t"
-  "lw       $a2,  0($a0)\n\t"
-  "lw       $a3,  4($a0)\n\t"
-  "lw       $v0,  8($a0)\n\t"
-  "lw       $v1, 12($a0)\n\t"
+  "lw       $a2,   0($a0)\n\t"
+  "lw       $a3,   4($a0)\n\t"
+  "lw       $v0,   8($a0)\n\t"
+  "lw       $v1,  12($a0)\n\t"
+  "lw       $t1, 512($a0)\n\t"
+  "lw       $t2, 516($a0)\n\t"
+  "lw       $t3, 520($a0)\n\t"
+  "lw       $t4, 524($a0)\n\t"
   "addiu    $t0, $t0, -1\n\t"
   "addiu    $a0, $a0, 16\n\t"
-  "sw       $a2,  0($a1)\n\t"
-  "sw       $a3,  4($a1)\n\t"
-  "sw       $v0,  8($a1)\n\t"
-  "sw       $v1, 12($a1)\n\t"
+  "sw       $a2,    0($a1)\n\t"
+  "sw       $a3,    4($a1)\n\t"
+  "sw       $v0,    8($a1)\n\t"
+  "sw       $v1,   12($a1)\n\t"
+  "sw       $t1, 1024($a1)\n\t"
+  "sw       $t2, 1028($a1)\n\t"
+  "sw       $t3, 1032($a1)\n\t"
+  "sw       $t4, 1036($a1)\n\t"
   "bgtz     $t0, 1b\n\t"
   "addiu    $a1, $a1, 16\n\t"
   ".set macro\n\t"
@@ -138,7 +146,7 @@ UPSFunc SMSAudrv_GetUPS ( int aFreq, int aBS, int anChannels, int* apBlockSize )
 
    case 1 : *apBlockSize = 1024; return _demux_mono;
    case 2 : *apBlockSize = 2048; return _demux_stereo;
-   case 5 : *apBlockSize = 2048; return _direct_copy;
+   case 5 : *apBlockSize = 1024; return _direct_copy;
    default: *apBlockSize = 2048; return _no_sound;
 
   }  /* end switch */
