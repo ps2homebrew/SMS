@@ -53,6 +53,8 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
  unsigned int lMP3Pos;
 
+ if (  ( int )lpFileCtx < 0  ) return retVal;
+
  if (  lpFileCtx -> Read ( lpFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
 
   uint64_t lVal;

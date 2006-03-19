@@ -1387,7 +1387,7 @@ static void DSP_PutNoRndPixels16XY2 ( uint8_t* apBlock, const uint8_t* apPixels,
 
    }  /* end for */
 
-   lpPixels += 4 - aBlockStride    * ( aH + 1 );
+   lpPixels += 4 - aBlockStride   * ( aH + 1 );
    lpBlock  += 4 - BLOCK_STRIDE_Y * aH;
 
   }  /* end for */

@@ -967,6 +967,8 @@ int SMS_GetContainerAVI ( SMS_Container* apCont ) {
  int      retVal = 0;
  uint32_t lRiffEnd;
 
+ if (  ( int )apCont -> m_pFileCtx < 0  ) return retVal;
+
  if (  _ProbeFile ( apCont -> m_pFileCtx , &lRiffEnd )  ) {
 
   apCont -> m_pCtx = ( _AVIContainer* )calloc (  1, sizeof ( _AVIContainer )  );

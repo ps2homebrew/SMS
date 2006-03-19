@@ -62,6 +62,13 @@ static void SPU_Silence ( void ) {
 
 }  /* end Silence */
 
+void SPU_Shutdown ( void ) {
+
+ SifCallRpc ( &s_ClientDataV, 2, SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, _audio_callback, &s_SemaVol );
+ WaitSema ( s_SemaVol );
+
+}  /* end SPU_Shutdown */
+
 static void SPU_PlayPCM ( void* apBuf ) {
 
  SifCallRpc (
@@ -125,9 +132,10 @@ void SPU_PlaySound ( SMSound* apSound, int aVol ) {
 
   s_Buffer[ 0 ] = apSound -> m_Sound;
   s_Buffer[ 1 ] = SPU_Index2Volume ( aVol );
+  s_Buffer[ 2 ] = apSound -> m_Size;
 
   SifCallRpc (
-   &s_ClientDataA, 4, SIF_RPC_M_NOWAIT, s_Buffer, 8, NULL, 0, _audio_callback, &s_SemaPCM
+   &s_ClientDataA, 4, SIF_RPC_M_NOWAIT, s_Buffer, 12, NULL, 0, _audio_callback, &s_SemaPCM
   );
   WaitSema ( s_SemaPCM );
 

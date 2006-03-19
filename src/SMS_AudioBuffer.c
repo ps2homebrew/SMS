@@ -132,7 +132,7 @@ static void _sms_audio_buffer_reset ( void ) {
 
  s_AudioBuffer.m_pInp  =
  s_AudioBuffer.m_pOut  =
- s_AudioBuffer.m_pBeg  = UNCACHED_SEG( g_DataBuffer                          );
+ s_AudioBuffer.m_pBeg  = UNCACHED_SEG( AUD_BUFF                              );
  s_AudioBuffer.m_pEnd  = UNCACHED_SEG( &g_DataBuffer[ SMS_DATA_BUFFER_SIZE ] );
  s_AudioBuffer.m_Len   = 0;
  s_AudioBuffer.m_pPos  = NULL;

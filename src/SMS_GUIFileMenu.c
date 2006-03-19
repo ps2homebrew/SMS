@@ -345,11 +345,67 @@ static void _fill ( GUIFileMenu* apMenu, char* apPath ) {
 
 }  /* end _fill */
 
+void RestoreFileDir ( void** apParam ) {
+ 
+ apParam[ 0 ] = ( void* )(  ( unsigned int )apParam[ 0 ] & 0x7FFFFFFF  );
+
+ SMS_ListDestroy (  ( SMS_List* )apParam[ 0 ], 1  );
+ g_pFileList = ( SMS_List* )apParam[ 1 ];
+ strcpy (  g_CWD, ( char* )( apParam + 2 )  );
+ free ( apParam );
+
+ GUI_UpdateStatus ();
+
+}  /* end RestoreFileDir */
+
 static void _action_folder ( GUIFileMenu* apMenu, int afPopup ) {
 
- _push_state ( apMenu );
- _fill ( apMenu, apMenu -> m_pCurrent -> m_pString );
- _redraw ( apMenu );
+ if ( !afPopup ) {
+
+  _push_state ( apMenu );
+  _fill ( apMenu, apMenu -> m_pCurrent -> m_pString );
+  _redraw ( apMenu );
+
+ } else {
+
+  void**        lpParam = ( void** )malloc (  strlen ( g_CWD ) + (  sizeof ( SMS_List* ) << 1  ) + 1   );
+  SMS_ListNode* lpNode;
+
+  lpParam[ 0 ] = SMS_ListInit ();
+  lpParam[ 1 ] = g_pFileList;
+  strcpy (  ( char* )( lpParam + 2 ), g_CWD  );
+
+  g_pFileList = NULL;
+  SMS_FileDirInit ( apMenu -> m_pCurrent -> m_pString );
+
+  lpNode = g_pFileList -> m_pHead;
+
+  while ( lpNode ) {
+
+   if (  ( int )lpNode -> m_Param == GUICON_MP3  )
+
+    SMS_ListPushBack (  ( SMS_List* )lpParam[ 0 ], lpNode -> m_pString  );
+
+   lpNode = lpNode -> m_pNext;
+
+  }  /* end lpNode */
+
+  SMS_ListDestroy ( g_pFileList, 1 );
+
+  if (   (  ( SMS_List* )lpParam[ 0 ]  ) -> m_Size   ) {
+
+   unsigned long lEvent = GUI_MSG_FOLDER_MP3;
+
+   SMS_ListSort (  ( SMS_List* )lpParam[ 0 ]  );
+
+   lpParam[ 0 ] = ( void* )(  ( unsigned int )lpParam[ 0 ] | 0x80000000  );
+   lEvent      |= (  ( unsigned long )( unsigned int )lpParam  ) << 28;
+
+   GUI_PostMessage ( lEvent );
+
+  } else RestoreFileDir ( lpParam );
+
+ }  /* end else */
 
 }  /* end _action_folder */
 
@@ -387,7 +443,7 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
 
   if ( aFlags & FA_FLAGS_SUB ) lpParam[ 1 ] = GUI_MiniBrowser ( lpFileCtx, lPath, &lpParam[ 2 ] );
 
-  if ( aFlags & FA_FLAGS_AVI && !lpParam[ 1 ] ) {
+  if (  ( aFlags & FA_FLAGS_AVI ) && !lpParam[ 1 ] && ( g_Config.m_PlayerFlags & SMS_PF_SUBS )  ) {
 
    int            i;
    char*          lpDot;

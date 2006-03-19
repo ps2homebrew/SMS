@@ -1,3 +1,13 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #include "SMS_GUI.h"
 #include "SMS_FileContext.h"
 #include "SMS_Player.h"
@@ -19,17 +29,24 @@ static void GUICmdProc_Cleanup ( GUIObject* apObj ) {
 
 }  /* end GUICmdProc_Cleanup */
 
+extern void RestoreFileDir ( void** );
+
 static int GUICmdProc_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
- int retVal = GUIHResult_Void;
+ int           retVal = GUIHResult_Void;
+ unsigned long lEvent = anEvent & 0xF000000000000000L;
 
- if (  ( anEvent & 0xF000000000000000 ) == GUI_MSG_FILE  ) {
+ if ( lEvent == GUI_MSG_FILE || lEvent == GUI_MSG_FOLDER_MP3 ) {
 
   void** lpParam = ( void** )( unsigned int )(  ( anEvent & 0x0FFFFFFFFFFFFFFFL ) >> 28  );
 
   _start_player (  ( FileContext* )lpParam[ 0 ], ( FileContext* )lpParam[ 1 ], ( SubtitleFormat )lpParam[ 2 ]  );
 
-  free ( lpParam );
+  if ( lEvent == GUI_MSG_FILE )
+
+   free ( lpParam );
+
+  else RestoreFileDir ( lpParam );
 
   retVal = GUIHResult_Handled;
 

@@ -1,14 +1,3 @@
-/*
-#     ___  _ _      ___
-#    |    | | |    |
-# ___|    |   | ___|    PS2DEV Open Source Project.
-#----------------------------------------------------------
-# (c) 2003 Marcus R. Brown <mrbrown@0xd6.org>
-# Adopted for SMS in 2006 by Eugene Plotnikov <e-plotnikov@operamail.com>
-# Licenced under Academic Free License version 2.0
-# Review ps2sdk README & LICENSE files for further details.
-#
-*/
 #include <kernel.h>
 #include <loadfile.h>
 #include <iopcontrol.h>
@@ -16,6 +5,8 @@
 #include <string.h>
 
 static char s_pProgName[ 1024 ];
+
+int SIF_SyncIOP ( void );
 
 void _start (  char* apProgName, void ( *error ) ( void )  ) {
 
@@ -31,6 +22,16 @@ void _start (  char* apProgName, void ( *error ) ( void )  ) {
 
  if ( lXData.epc ) {
 
+  SifLoadFileExit ();
+  SifExitRpc      ();
+  SifResetIop     ();
+
+  while (  !SIF_SyncIOP ()  );
+
+  SifLoadModule ( "rom0:SIO2MAN", 0, NULL );
+  SifLoadModule ( "rom0:MCMAN",   0, NULL );
+  SifLoadModule ( "rom0:MCMAN",   0, NULL );
+
   FlushCache ( 0 );
   FlushCache ( 2 );
   ExecPS2 (  ( void* )lXData.epc, ( void* )lXData.gp, 1, lpArgv  );
@@ -40,3 +41,9 @@ void _start (  char* apProgName, void ( *error ) ( void )  ) {
  error ();
 
 }  /* end _start */
+
+int SIF_SyncIOP ( void ) {
+
+ return SifGetReg ( 4 ) & 0x00040000; 
+
+}  /* end SIF_SyncIOP */

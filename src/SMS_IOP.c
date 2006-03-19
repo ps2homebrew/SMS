@@ -149,20 +149,7 @@ static char s_pPS2POff[] __attribute__(   (  section( ".data" ), aligned( 1 )  )
 static char s_pUDNL   [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:UDNL rom0:EELOADCNF";
 static char s_pC7     [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "\xC7\x00";
 static char s_pD1     [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "\xD1\x00";
-static char s_pUSBD0  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "host:USBD.IRX";
-static char s_pUSBD1  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/BOOT/USBD.IRX";
-static char s_pUSBD2  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/PS2OSCFG/USBD.IRX";
-static char s_pUSBD3  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SYS-CONF/USBD.IRX";
-static char s_pUSBD4  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/PS2MP3/USBD.IRX";
-static char s_pUSBD5  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/BOOT/PS2MP3/USBD.IRX";
-static char s_pUSBD6  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SMS/USBD.IRX";
-static char s_pUSBD7  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "                   USBD.IRX";
 static char s_pLIBSD  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:LIBSD";
-
-static const char* s_USBDPath[] __attribute__(   (  section( ".data" )  )   )= {
- s_pUSBD0, s_pUSBD1, s_pUSBD2, s_pUSBD3,
- s_pUSBD4, s_pUSBD5, s_pUSBD6, s_pUSBD7
-};
 
 struct {
 
@@ -290,16 +277,14 @@ int SMS_IOPStartUSB ( void ) {
 
  GUI_Status ( STR_LOCATING_USBD.m_pStr );
 
- for (  i = 0; i < sizeof ( s_USBDPath ) / sizeof ( s_USBDPath[ 0 ] ); ++i  )
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_USBD_OFFSET ], SMS_USBD_SIZE, 0, NULL, &i );
 
-  if (  SifLoadModule ( s_USBDPath[ i ], 0, NULL ) >= 0  ) {
+ if ( i >= 0 ) {
 
-   g_IOPFlags |= SMS_IOPF_USB;
-   SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
+  g_IOPFlags |= SMS_IOPF_USB;
+  SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
 
-   break;
-
-  }  /* end if */
+ }  /* end if */
 
  return g_IOPFlags & SMS_IOPF_USB;
 
@@ -325,8 +310,6 @@ void SMS_IOPInit ( void ) {
 
  int  i, lFD;
  char lBuff[ 64 ];
-
- memcpy ( s_pUSBD7, g_pBXDATASYS, 19 );
 
  SifLoadModule ( s_pLIBSD, 0, NULL );
  SMS_IOPExec   ( 1, s_pD1 );

@@ -21,6 +21,7 @@
 #include "SMS_FileDir.h"
 #include "SMS_EE.h"
 #include "SMS_Timer.h"
+#include "SMS_SPU.h"
 #include "SMS_Sounds.h"
 
 #include <kernel.h>
@@ -95,6 +96,7 @@ static void _autols_handler  ( GUIMenu*, int );
 static void _opaqs_handler   ( GUIMenu*, int );
 static void _dsbt_handler    ( GUIMenu*, int );
 static void _aadsp_handler   ( GUIMenu*, int );
+static void _spdif_handler   ( GUIMenu*, int );
        void _subclr_handler  ( GUIMenu*, int );
        void _subbclr_handler ( GUIMenu*, int );
        void _subiclr_handler ( GUIMenu*, int );
@@ -185,6 +187,7 @@ static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) 
  { 0,                     &STR_OPAQUE_SUBTITLES,    0, 0, _opaqs_handler,   0, 0 },
  { 0,                     &STR_DISPLAY_SB_TIME,     0, 0, _dsbt_handler,    0, 0 },
  { 0,                     &STR_AUDIO_ANIM_DISPLAY,  0, 0, _aadsp_handler,   0, 0 },
+ { 0,                     &STR_SPDIF_DD,            0, 0, _spdif_handler,   0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_COLOR,      0, 0, _subclr_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_BOLD_COLOR, 0, 0, _subbclr_handler, 0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_ITL_COLOR,  0, 0, _subiclr_handler, 0, 0 },
@@ -547,8 +550,8 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )lpStr;
- s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
+ s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
 
  sprintf (    s_OffsetBuffer, "%d",                  g_Config.m_PlayerSubOffset                                                      );
  sprintf (    s_VolumeBuffer, "%d%%",                ( int )(   (  ( float )g_Config.m_PlayerVolume / 24.0F ) * 100.0F + 0.5F   )    );
@@ -562,11 +565,11 @@ static void _update_pstr ( int anIncr ) {
  g_StrPlayer[ 4 ].m_Len = strlen ( s_SHSizeBuffer );
  g_StrPlayer[ 5 ].m_Len = strlen ( s_SVSizeBuffer );
 
- s_PlayerMenu[ 10 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
- s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
- s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
- s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
- s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
+ s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
+ s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
+ s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
+ s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
+ s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
 
  switch ( g_Config.m_ScrollBarPos ) {
 
@@ -576,7 +579,7 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )lpStr;
 
 }  /* end _update_pstr */
 
@@ -584,16 +587,17 @@ static void _player_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
 
- s_PlayerMenu[ 0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[ 1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_OSUB ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[ 2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_TIME ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[ 3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[ 4 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
- s_PlayerMenu[ 5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
- s_PlayerMenu[ 6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
- s_PlayerMenu[ 7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
- s_PlayerMenu[ 8 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSBCIdx;
- s_PlayerMenu[ 9 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerVBCIdx;
+ s_PlayerMenu[  0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_OSUB  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_TIME  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  4 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SPDIF ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
+ s_PlayerMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
+ s_PlayerMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
+ s_PlayerMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
+ s_PlayerMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSBCIdx;
+ s_PlayerMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerVBCIdx;
 
  _update_pstr ( 0 );
 
@@ -648,6 +652,8 @@ void _exit_handler ( GUIMenu* apMenu, int aDir ) {
 
  int  lIdx = g_Config.m_BrowserFlags >> 28;
  char lBuffer[ 1024 ] __attribute__(   (  aligned( 4 )  )   );
+
+ SPU_Shutdown ();
 
  sprintf ( lBuffer, STR_LOADING.m_pStr, s_ExitTo[ lIdx ] -> m_pStr );
  GUI_Status ( lBuffer );
@@ -1324,6 +1330,12 @@ static void _aadsp_handler ( GUIMenu* apMenu, int aDir ) {
  _switch_flag ( apMenu, 3, &g_Config.m_PlayerFlags, SMS_PF_ANIM );
 
 }  /* end _aadsp_handler */
+
+static void _spdif_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 4, &g_Config.m_PlayerFlags, SMS_PF_SPDIF );
+
+}  /* end _spdif_handler */
 
 static void _rotate_palette_2 ( GUIMenu* apMenu, int* apVal, int aDir ) {
 

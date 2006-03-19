@@ -1,3 +1,4 @@
-This foder contains IOP drivers for SMS:
+This folder contains IOP drivers for SMS:
 - SMSCDVD : cd/dvd driver with support of DVD video disks;
 - SMSAudrv: audio driver with demuxers and upsamplers;
+- SMSUSBM : modified usb_mass driver from ps2sdk;

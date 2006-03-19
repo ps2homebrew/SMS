@@ -4,7 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # (c) 2005 by gawd (Gil Megidish) (original idea and code)
-# (c) 2005 by Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005-2006 by Eugene Plotnikov <e-plotnikov@operamail.com>
 #
 # Licensed under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
@@ -34,6 +34,7 @@
 #define SD_CORE_1    1
 
 static int     s_SemaPlay;
+static int     s_SemaVoice;
 static int     s_SemaQueue;
 static u8      s_SPUBuf [  4096 ] __attribute__(   (  aligned( 64 )  )   );
 static u8      s_RingBuf[ 18432 ];
@@ -50,14 +51,41 @@ static void SDTransCallback ( void* apArg ) {
 
 }  /* end SDTransCallback */
 
+static SdBatch s_Mute0Params[] = {
+ { SD_BATCH_SETPARAM, SD_CORE_0 | SD_PARAM_MVOLL, 0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_0 | SD_PARAM_MVOLR, 0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_1 | SD_PARAM_AVOLL, 0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_1 | SD_PARAM_AVOLR, 0x0000 }
+};
+
 static void _Mute0 ( int afMute ) {
 
  int lVol = afMute ? 0 : 0x3FFF;
 
- sceSdSetParam ( SD_CORE_0 | SD_PARAM_MVOLL, lVol );
- sceSdSetParam ( SD_CORE_0 | SD_PARAM_MVOLR, lVol );
+ s_Mute0Params[ 0 ].value =
+ s_Mute0Params[ 1 ].value =
+ s_Mute0Params[ 2 ].value =
+ s_Mute0Params[ 3 ].value = lVol;
+
+ sceSdProcBatch (  s_Mute0Params, NULL, sizeof ( s_Mute0Params ) / sizeof ( s_Mute0Params[ 0 ] )  );
 
 }  /* end _Mute0 */
+
+static SdBatch s_Mute1Params[] = {
+ { SD_BATCH_SETPARAM, SD_CORE_1 | SD_PARAM_MVOLL, 0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_1 | SD_PARAM_MVOLR, 0x0000 }
+};
+
+static void _Mute1 ( int afMute ) {
+
+ int lVol = afMute ? 0 : 0x3FFF;
+
+ s_Mute1Params[ 0 ].value =
+ s_Mute1Params[ 1 ].value = lVol;
+
+ sceSdProcBatch (  s_Mute1Params, NULL, sizeof ( s_Mute1Params ) / sizeof ( s_Mute1Params[ 0 ] )  );
+
+}  /* end _Mute1 */
 
 static void _SetVolume ( int aCore, int aVol ) {
 
@@ -128,6 +156,9 @@ static void* _StartAudio ( void* apData, int aSize ) {
  int lnChan  = (  ( int* )apData  )[ 2 ];
  int lVolume = (  ( int* )apData  )[ 3 ];
 
+ WaitSema   ( s_SemaVoice );
+ SignalSema ( s_SemaVoice );
+
  _Mute0     ( 1 );
  _Silence   ();
  _SetVolume ( 0, 0 );
@@ -142,15 +173,28 @@ static void* _StartAudio ( void* apData, int aSize ) {
   s_Core  = SD_CORE_0;
   lBS     = SPU_DMA_CHN0_IRQ;
   lVolume = 0;
+  lFreq   = 0x801;
+
+  EnableIntr ( SPU_DMA_CHN0_IRQ );
+   sceSdVoiceTrans (  SD_CORE_0, 0, s_SPUBuf, ( void* )0x4000, 0x1000  );
+   sceSdVoiceTransStatus ( SD_CORE_0, 1 );
+  DisableIntr ( SPU_DMA_CHN0_IRQ, &lnChan );
+
+  sceSdSetParam ( SD_CORE_1 | SD_PARAM_AVOLL, 0 );
+  sceSdSetParam ( SD_CORE_1 | SD_PARAM_AVOLR, 0 );
 
  } else {
 
   s_Core = SD_CORE_1;
   lBS    = SPU_DMA_CHN1_IRQ;
+  lFreq  = 0;
 
  }  /* end else */
 
+ _Mute1     ( !lVolume   );
  _SetVolume ( 1, lVolume );
+
+ sceSdSetCoreAttr ( SD_CORE_SPDIF_MODE, lFreq );
 
  EnableIntr ( lBS );
 
@@ -168,11 +212,10 @@ static void* _StopAudio ( void* apData, int aSize ) {
  int lRes;
 
  _SetVolume ( 1, 0 );
+ _Mute1     ( 0    );
 
  sceSdSetTransCallback ( s_Core, NULL );
-
  DisableIntr ( SPU_DMA_CHN1_IRQ, &lRes );
-
  sceSdSetCoreAttr ( SD_CORE_SPDIF_MODE, 0 );
 
  return NULL;
@@ -216,7 +259,7 @@ static void* _LoadData ( void* apData, int aSize ) {
  int   lSize  = (  ( unsigned int* )apData  )[ 1 ];
 
  EnableIntr ( SPU_DMA_CHN0_IRQ );
-  sceSdVoiceTrans (  0, SD_TRANS_WRITE | SD_TRANS_MODE_DMA, lpData, ( u8* )0x5010, lSize  );
+  sceSdVoiceTrans (  0, 0, lpData, ( void* )0x5010, lSize  );
   sceSdVoiceTransStatus ( 0, 1 );
  DisableIntr ( SPU_DMA_CHN0_IRQ, &lSize );
 
@@ -224,24 +267,33 @@ static void* _LoadData ( void* apData, int aSize ) {
 
 }  /* end _LoadData */
 
+static int SDCallback ( int aCore, void* apParam ) {
+
+ sceSdSetSwitch ( SD_CORE_0 | SD_SWITCH_KEYUP, 1 );
+ sceSdSetCoreAttr ( 4, 0 );
+ _Mute0 ( 1 );
+
+ iSignalSema ( s_SemaVoice );
+
+ return 0;
+
+}  /* end SDCallback */
+
 static void* _PlaySound ( void* apData, int aSize ) {
 
  unsigned int lSound   = (  ( unsigned int* )apData  )[ 0 ];
  unsigned int lVolume  = (  ( unsigned int* )apData  )[ 1 ];
+ unsigned int lSize    = (  ( unsigned int* )apData  )[ 2 ];
  unsigned int lVVolume = lVolume >> 1;
 
- for ( aSize = 0; aSize < 2; ++aSize ) {
+ WaitSema ( s_SemaVoice );
 
-  sceSdSetParam (  SD_VOICE( aSize, 0 ) | SD_VPARAM_VOLL, lVVolume  );
-  sceSdSetParam (  SD_VOICE( aSize, 0 ) | SD_VPARAM_VOLR, lVVolume  );
-
-  _SetVolume ( aSize, lVolume );
-
- }  /* end for */
-
- _Mute0 ( 0 );
-
+ sceSdSetParam (  SD_VOICE( 0, 0 ) | SD_VPARAM_VOLL, lVVolume  );
+ sceSdSetParam (  SD_VOICE( 0, 0 ) | SD_VPARAM_VOLR, lVVolume  );
+ sceSdSetCoreAttr ( 4, 1 );
+ sceSdSetAddr ( SD_CORE_0 | SD_ADDR_IRQA, 0x5010 + lSound + lSize  );
  sceSdSetAddr (  SD_VOICE( 0, 0 ) | SD_VADDR_SSA, 0x5010 + lSound  );
+ _Mute0 ( 0 );
  sceSdSetSwitch ( SD_CORE_0 | SD_SWITCH_KEYDOWN, 1 );
 
  return NULL;
@@ -260,10 +312,13 @@ static void* _RPCServer_SMSA ( int aCmd, void* apData, int aSize ) {
 
 static void* _RPCServer_SMSV ( int aCmd, void* apData, int aSize ) {
 
+ int lState;
+
  switch ( aCmd ) {
 
   case 0: _SetVolume (  1, *( int* )apData  ); break;
   case 1: _Silence   ();                       break;
+  case 2: DisableIntr ( SPU_IRQ, &lState );    break;
 
  }  /* end switch */
 
@@ -303,6 +358,16 @@ static void _SMS_AudrvV ( void* apParam ) {
 
 }  /* end _SMS_AudrvV */
 
+static SdBatch s_InitParams[] = {
+ { SD_BATCH_SETPARAM, SD_CORE_0 | SD_PARAM_BVOLL,         0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_0 | SD_PARAM_BVOLR,         0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_0 | SD_PARAM_EVOLL,         0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_0 | SD_PARAM_EVOLR,         0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_1 | SD_PARAM_EVOLL,         0x0000 },
+ { SD_BATCH_SETPARAM, SD_CORE_1 | SD_PARAM_EVOLR,         0x0000 },
+ { SD_BATCH_SETPARAM, SD_VOICE( 0, 0 ) | SD_VPARAM_PITCH, 0x1000 }
+};
+
 int _start ( int argc, char** argv ) {
 
  iop_thread_t lThread;
@@ -315,13 +380,17 @@ int _start ( int argc, char** argv ) {
  s_SemaPlay  = CreateSema ( &lSema );
  s_SemaQueue = CreateSema ( &lSema );
 
- sceSdInit ( SD_INIT_COLD );
+ lSema.initial = 1;
+ s_SemaVoice   = CreateSema ( &lSema );
 
- sceSdSetParam ( SD_CORE_1 | SD_PARAM_MVOLL, 0x3FFF );
- sceSdSetParam ( SD_CORE_1 | SD_PARAM_MVOLR, 0x3FFF );
- sceSdSetParam (  SD_VOICE( 0, 0 ) | SD_VPARAM_PITCH, 0x1000  );
+ sceSdInit ( SD_INIT_COLD );
+ sceSdProcBatch (  s_InitParams, NULL, sizeof ( s_InitParams ) / sizeof ( s_InitParams[ 0 ] )  );
 
  _Mute0 ( 1 );
+ _Mute1 ( 0 );
+
+ EnableIntr ( SPU_IRQ );
+ sceSdSetSpu2IntrHandler ( SDCallback, NULL );
 
  lThread.attr      = TH_C;
  lThread.thread    = _PlaybackThread;

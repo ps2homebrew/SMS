@@ -112,13 +112,13 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
 
   if (  s_CCreator[ i++ ] ( retVal )  ) break;
 
-  apFileCtx -> Seek ( apFileCtx, 0 );
+  if (  ( int )apFileCtx > 0  ) apFileCtx -> Seek ( apFileCtx, 0 );
 
  }  /* end while */
 
  if ( retVal -> m_pName == NULL ) {
 
-  apFileCtx -> Destroy ( apFileCtx );
+  if (  ( int )apFileCtx > 0  ) apFileCtx -> Destroy ( apFileCtx );
 
   free ( retVal );
   retVal = NULL;

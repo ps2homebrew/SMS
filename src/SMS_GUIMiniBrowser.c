@@ -1,3 +1,13 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #include "SMS_GUIMenu.h"
 #include "SMS_FileContext.h"
 #include "SMS_FileDir.h"
@@ -53,6 +63,9 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
  SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
 
  strcpy ( lPath, g_CWD );
+
+ if (  lPath[ strlen ( lPath ) - 1 ] != '/'  ) SMS_Strcat ( lPath, g_SlashStr );
+
  SMS_Strcat ( lPath, g_SlashStr                                    );
  SMS_Strcat ( lPath, lpState -> m_pCurr -> m_pOptionName -> m_pStr );
 

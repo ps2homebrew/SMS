@@ -29,6 +29,7 @@
 # define GUI_MSG_REFILL_BROWSER 0x5000000000000000L
 # define GUI_MSG_QUIT           0x4000000000000000L
 # define GUI_MSG_FILE           0x3000000000000000L
+# define GUI_MSG_FOLDER_MP3     0x2000000000000000L
 
 # define DECLARE_GUI_OBJECT()                                \
  void ( *Render      ) ( struct GUIObject*, int           ); \

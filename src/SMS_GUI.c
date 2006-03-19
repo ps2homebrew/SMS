@@ -410,9 +410,11 @@ void GUI_SetColors ( void ) {
 
 void _set_dx_dy ( int** appDX, int** appDY ) {
 
- if ( g_Config.m_DisplayMode == GSVideoMode_Default ) g_Config.m_DisplayMode = *( volatile char* )0x1FC7FF52 == 'E' ? GSVideoMode_PAL : GSVideoMode_NTSC;
+ GSVideoMode lMode = g_Config.m_DisplayMode;
 
- switch ( g_Config.m_DisplayMode ) {
+ if ( lMode == GSVideoMode_Default ) lMode = *( volatile char* )0x1FC7FF52 == 'E' ? GSVideoMode_PAL : GSVideoMode_NTSC;
+
+ switch ( lMode ) {
 
   case GSVideoMode_NTSC:
 
@@ -421,6 +423,7 @@ void _set_dx_dy ( int** appDX, int** appDY ) {
 
   break;
 
+  case GSVideoMode_Default:
   case GSVideoMode_PAL:
 
    *appDX = &g_Config.m_DXPALOther[ 0 ];

@@ -17,6 +17,7 @@
 #
 */
 #include "SMS_AC3.h"
+#include "SMS_Config.h"
 
 #include <string.h>
 #include <malloc.h>
@@ -311,12 +312,16 @@ static int8_t s_LATab[ 256 ] = {
 };
 
 static SMS_Codec_AC3Context s_AC3Ctx;
+static int ( *DecodeFrame ) ( int, int );
 
 #define MYCTX() (  ( SMS_Codec_AC3Context* )apCtx -> m_pCodec -> m_pCtx  )
 
 static int32_t AC3_Init    ( SMS_CodecContext*                            );
 static int32_t AC3_Decode  ( SMS_CodecContext*, void**, uint8_t*, int32_t );
 static void    AC3_Destroy ( SMS_CodecContext*                            );
+
+static int _ac3_decode ( int, int );
+static int _ac3_spdif  ( int, int );
 
 void SMS_Codec_AC3_Open ( SMS_CodecContext* apCtx ) {
 
@@ -327,6 +332,12 @@ void SMS_Codec_AC3_Open ( SMS_CodecContext* apCtx ) {
  apCtx -> m_pCodec -> Init    = AC3_Init;
  apCtx -> m_pCodec -> Decode  = AC3_Decode;
  apCtx -> m_pCodec -> Destroy = AC3_Destroy;
+
+ if (  !( g_Config.m_PlayerFlags & SMS_PF_SPDIF )  )
+
+  DecodeFrame = _ac3_decode;
+
+ else DecodeFrame = _ac3_spdif;
 
 }  /* end SMS_Codec_AC3_Open */
 
@@ -2408,16 +2419,109 @@ static SMS_INLINE void _ac3_float_to_int ( sample_t* apSamples, int16_t* apOutpu
 
 }  /* end _ac3_float_to_int */
 
+static int _ac3_decode ( int anChannels, int aLen ) {
+
+ int      lFlags = s_AC3Ctx.m_Flags;
+ sample_t lLevel = 8 << 24;
+ int      i, retVal;
+ short*   lpOutBuf;
+
+ if ( anChannels == 1 )
+
+  lFlags = AC3_MONO;
+
+ else if ( anChannels == 2 )
+
+  lFlags = AC3_STEREO;
+
+ else lFlags |= AC3_ADJUST_LEVEL;
+
+ if (  _ac3_frame ( s_AC3Ctx.m_InBuf, &lFlags, &lLevel, 384 )  ) {
+
+  s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
+  s_AC3Ctx.m_FrameSize = 0;
+
+  return 0;
+
+ }  /* end if */
+
+ retVal   = 6 * anChannels * 256 * sizeof ( short );
+ lpOutBuf = ( short* )s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal );
+
+ for ( i = 0; i < 6; ++i ) {
+
+  _ac3_block ();
+  _ac3_float_to_int (
+   s_AC3Ctx.m_pSamples, lpOutBuf + i * 256 * anChannels, anChannels
+  );
+
+ }  /* end for */
+
+ return retVal;
+
+}  /* end _ac3_decode */
+
+static int _ac3_spdif ( int anChannels, int aLen ) {
+
+ int            retVal   = 6144;
+ unsigned char* lpOutBuf = s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal );
+
+ (  ( uint16_t* )lpOutBuf  )[ 0 ] = 0xF872;
+ (  ( uint16_t* )lpOutBuf  )[ 1 ] = 0x4E1F;
+ (  ( uint16_t* )lpOutBuf  )[ 2 ] = 0x0001;
+
+ lpOutBuf[ 6 ] = ( aLen << 3 ) & 0xFF;
+ lpOutBuf[ 7 ] = ( aLen >> 5 ) & 0xFF;
+
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  "srl      $t6, %2, 5\n\t"
+  "1:\n\t"
+  "lq       $v1,  0(%1)\n\t"
+  "lq       $t9, 16(%1)\n\t"
+  "psllh    $t8, $v1, 8\n\t"
+  "psllh    $t7, $t9, 8\n\t"
+  "psrlh    $v1, $v1, 8\n\t"
+  "psrlh    $t9, $t9, 8\n\t"
+  "por      $t8, $v1, $t8\n\t"
+  "por      $t7, $t9, $t7\n\t"
+  "pcpyud   $v1, $t8, $zero\n\t"
+  "pcpyud   $t9, $t7, $zero\n\t"
+  "sw       $t8,  0(%0)\n\t"
+  "dsrl32   $t8, $t8, 0\n\t"
+  "sw       $t8,  4(%0)\n\t"
+  "sw       $v1,  8(%0)\n\t"
+  "dsrl32   $v1, $v1, 0\n\t"
+  "sw       $v1, 12(%0)\n\t"
+  "sw       $t7, 16(%0)\n\t"
+  "dsrl32   $t7, $t7, 0\n\t"
+  "sw       $t7, 20(%0)\n\t"
+  "sw       $t9, 24(%0)\n\t"
+  "dsrl32   $t9, $t9, 0\n\t"
+  "sw       $t9, 28(%0)\n\t"
+  "addiu    $t6, $t6, -1\n\t"
+  "addiu    %1, %1, 32\n\t"
+  "bgtz     $t6, 1b\n\t"
+  "addiu    %0, %0, 32\n\t"
+  ".set reorder\n\t"
+  :: "r"( lpOutBuf + 8 ), "r"( s_AC3Ctx.m_InBuf ), "r"( aLen )
+   : "v1", "t6", "t7", "t8", "t9"
+ );
+
+ memset ( lpOutBuf + 8 + aLen, 0, 6144 - 8 - aLen );
+
+ return retVal;
+
+}  /* end _ac3_spdif */
+
 static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apBuf, int32_t aBufSize ) {
 
  static const int s_AC3Channels[ 8 ] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
  uint8_t*          lpBuf = apBuf;
- int               lFlags, i, lLen;
+ int               lLen;
  int               lSampleRate, lBitRate;
- sample_t          lLevel;
  SMS_AudioBuffer** lppBuffer = ( SMS_AudioBuffer** )apData;
- short*            lpOutBuf;
  int               retVal = 0;
 
  *lppBuffer = s_AC3Ctx.m_pOutBuffer;
@@ -2497,40 +2601,7 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apB
 
   } else {
 
-   lFlags = s_AC3Ctx.m_Flags;
-
-   if ( apCtx -> m_Channels == 1 )
-
-    lFlags = AC3_MONO;
-
-   else if ( apCtx -> m_Channels == 2 )
-
-    lFlags = AC3_STEREO;
-
-   else lFlags |= AC3_ADJUST_LEVEL;
-
-   lLevel = 8 << 24;
-
-   if (  _ac3_frame ( s_AC3Ctx.m_InBuf, &lFlags, &lLevel, 384 )  ) {
-
-    s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
-    s_AC3Ctx.m_FrameSize = 0;
-
-    continue;
-
-   }  /* end if */
-
-   retVal   = 6 * apCtx -> m_Channels * 256 * sizeof ( short );
-   lpOutBuf = ( short* )s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal );
-
-   for ( i = 0; i < 6; ++i ) {
-
-    _ac3_block ();
-    _ac3_float_to_int (
-     s_AC3Ctx.m_pSamples, lpOutBuf + i * 256 * apCtx -> m_Channels, apCtx -> m_Channels
-    );
-
-   }  /* end for */
+   if (   !(  retVal = DecodeFrame ( apCtx -> m_Channels, lLen )  )   ) continue;
 
    s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
    s_AC3Ctx.m_FrameSize = 0;

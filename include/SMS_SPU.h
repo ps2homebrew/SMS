@@ -14,7 +14,7 @@
 typedef struct SMSound {
 
  unsigned int m_Sound;
- unsigned int m_Duration;
+ unsigned int m_Size;
 
 } SMSound;
 
@@ -38,6 +38,7 @@ SPUContext* SPU_InitContext  ( int, int, int );
 void        SPU_LoadData     ( void*, int    );
 void        SPU_PlaySound    ( SMSound*, int );
 int         SPU_Index2Volume ( int           );
+void        SPU_Shutdown     ( void          );
 
 # ifdef __cplusplus
 }

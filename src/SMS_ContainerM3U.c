@@ -190,18 +190,49 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
  char         lTitle[ 512 ];
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
  int          retVal    = 0;
+ SMS_List*    lpList    = NULL;
+ _M3UEntry*   lpEntry;
+
+ if (  ( int )lpFileCtx < 0  ) {
+
+  SMS_List*     lpFileList = ( SMS_List* )(  ( unsigned int )lpFileCtx & 0x7FFFFFFF  );
+  SMS_ListNode* lpNode     = lpFileList -> m_pHead;
+
+  lpList = SMS_ListInit ();
+
+  while ( lpNode ) {
+
+   int lLen = strlen ( lpNode -> m_pString );
+
+   lpEntry = ( _M3UEntry* )malloc (  sizeof ( _M3UEntry )  );
+   lpEntry -> m_pPath    = ( char* )malloc ( lLen + 1 );
+   lpEntry -> m_Duration = 0;
+
+   strcpy ( lpEntry -> m_pPath, lpNode -> m_pString );
+   lpNode -> m_pString[ lLen - 4 ] = '\x00';
+
+   SMS_ListPushBack ( lpList, lpNode -> m_pString ) -> m_Param = ( unsigned int )lpEntry;
+
+   lpNode = lpNode -> m_pNext;
+
+  }  /* end while */
+
+  retVal = 1;
+
+  goto start;
+
+ }  /* end if */
 
  File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
 
  if (  !strcmp ( lBuf, g_pExtM3UStr )  ) {
 
-  SMS_List* lpList = SMS_ListInit ();
+  lpList = SMS_ListInit ();
 
   while ( 1 ) {
 
    char*        lpPtr = &lBuf[ 7 ];
    char*        lpPath;
-   _M3UEntry*   lpEntry;
    unsigned int lDuration;
 
    File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
@@ -241,8 +272,7 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
    lpEntry -> m_Duration = lDuration;
    lpEntry -> m_pPath    = lpPath;
 
-   SMS_ListPushBack ( lpList, lTitle );
-   lpList -> m_pTail -> m_Param = ( unsigned int )lpEntry;
+   SMS_ListPushBack ( lpList, lTitle ) -> m_Param = ( unsigned int )lpEntry;
 
   }  /* end while */
 
@@ -253,13 +283,27 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
 
   } else {
 
-   _M3UContainer* lpCont = ( _M3UContainer* )(   apCont -> m_pCtx = calloc (  1, sizeof ( _M3UContainer )  )   );
-   SMS_Container* lpSubCont;
+   _M3UContainer*  lpCont;
+   SMS_Container*  lpSubCont;
+   FileContext* ( *lpOpen ) ( const char*, void* );
+   void*           lpOpenParam;
+start:
+   lpCont = ( _M3UContainer* )(   apCont -> m_pCtx = calloc (  1, sizeof ( _M3UContainer )  )   );
 
-   FileContext* ( *lpOpen ) ( const char*, void* ) = apCont -> m_pFileCtx -> Open;
-   void*           lpOpenParam                     = apCont -> m_pFileCtx -> m_pOpenParam;
+   if ( g_CMedia == 1 && g_pCDDACtx ) {
 
-   apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
+    lpOpen      = CDDA_InitFileContext;
+    lpOpenParam = g_pCDDACtx;
+
+   } else {
+
+    lpOpen      = STIO_InitFileContext;
+    lpOpenParam = NULL;
+
+   }  /* end else */
+
+   if (  ( int )apCont -> m_pFileCtx > 0  ) apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
+
    apCont -> m_pFileCtx = NULL;
 
    apCont -> m_pName    = g_pM3UStr;
@@ -274,6 +318,7 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
 
     free ( apCont -> m_pCtx );
     _m3u_destroy_list ( lpList );
+    apCont -> m_pName = NULL;
 
     retVal = 0;
 

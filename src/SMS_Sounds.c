@@ -1,10 +1,20 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
 #include "SMS_Sounds.h"
 
 SMSound g_SMSound[ 4 ] __attribute__(   (  section( ".data" )  )   ) = {
- { 0x0000, 915U },
- { 0x60D0, 112U },
- { 0xBD00, 829U },
- { 0x65A0, 827U },
+ { 0x0000, 0x60BF },
+ { 0x60D0, 0x04BF },
+ { 0xBD00, 0x578F },
+ { 0x65A0, 0x574F }
 };
 
 unsigned char g_SMSounds[ 70816 ] __attribute__(   (  aligned( 64 ), section( ".data" )  )   ) = {

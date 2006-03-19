@@ -17,13 +17,15 @@ intrman_IMPORTS_start
 intrman_IMPORTS_end
 
 libsd_IMPORTS_start
+ I_sceSdBlockTrans
+ I_sceSdBlockTransStatus
  I_sceSdInit
+ I_sceSdProcBatch
  I_sceSdSetCoreAttr
  I_sceSdSetParam
  I_sceSdSetTransCallback
- I_sceSdBlockTrans
- I_sceSdBlockTransStatus
  I_sceSdSetAddr
+ I_sceSdSetSpu2IntrHandler
  I_sceSdSetSwitch
  I_sceSdVoiceTrans
  I_sceSdVoiceTransStatus

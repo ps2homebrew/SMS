@@ -641,3 +641,28 @@ Update (03-MAR-2006)
   SPU2 ADPCM decoding features;
 - fixed a "crash" issue with some mp3 files (thanks to "sigmar" for the
   research/note);
+
+Update (10-MAR-2006)
+--------------------
+- fixed "autoload subtitles" issue. Thanks to "suram884" for the remark;
+- "Dolby Digital" passthrough mode (via S/PDIF optical output) is implemented
+  (available through SMS Menu -> Player settings). Tested only with SoundBlaster
+  PC sound card and 384kb/s ac3 streams. No volume adjustment is possible in
+  this mode;
+- fixed "Display Settings"/"TV system" menu issue (thanks to "Voldemar_u2" for
+  the remark);
+- fixed usb device hot swapping issue (bug in "usb_mass" device driver). Thanks
+  to "hip203" for the research and note;
+
+Update (16-MAR-2006)
+--------------------
+- Updated code for "Dolby Digital" output, so, any valid ac3 streams should be
+  playable now (formerly only 5 channel streams were supported)(thanks to
+  "lolo123" and "rathunter" for sample video clips);
+- Added "play all mp3 files in the folder" functionality. It is activated by
+  "circle" pad button while the folder is selected in the browser. Files are
+  played in alphabethical order;
+- USBD.IRX (free one, from ps2dev) is now integrated into SMS. No need for
+  "external" usb driver anymore (thanks to "dlanor" for the suggestion);
+- fixed "double speed ac3 sound" issue (thanks to "shiro" for the sample video
+  clip);
