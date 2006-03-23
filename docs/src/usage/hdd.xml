@@ -11,38 +11,238 @@
     </phrase>
   </title>
 
-  <note>
-    <para lang="en">
-      This section of the documentation is not yet completed in full.
-    </para>
-    <para lang="pt">
-      Esta secção do Manual ainda não está totalmente completa.
-    </para>
-  </note>
   <para lang="en">
-    &lt;Section to be completed&gt; for now, here's the basics in short:
+    If you have a Hard Drive (HDD) on your PS2 you can use it to store and 
+    play video and music files using SMS.
   </para>
   <para lang="pt">
-    &lt;Secção a ser completada&gt; por agora, aqui fica o básico:
+    Se tiver um Disco Rigido (HDD) na sua PS2, pode utilizá-lo para guardar
+    e tocar os seus ficheiros de video e música através do SMS.
+  </para>
+  <para lang="en">
+    You can use any type of Hard Drive you want, whether it is Sony's 
+    official PS2 HDD or any 'normal' PC HDD. For a list of different HDDs
+    showing which ones work on the PS2, look here:
+    <ulink url="http://ps2drives.x-pec.com/"/>.
+    Please keep in mind that you <emphasis role="bold">need</emphasis> a 
+    Sony Network Adaptor to be able to connect the HDD to the PS2.
+  </para>
+  <para lang="pt">
+    Pode utilizar qualquer tipo de HDD que quiser, quer seja o HDD oficial 
+    da Sony para a PS2 ou um HDD 'normal' de PC.  Para uma lista dos HDDs 
+    que funcionam/não funcionam na PS2, veja aqui:
+    <ulink url="http://ps2drives.x-pec.com/"/>.
+    Tenha em atenção que <emphasis role="bold">necessita</emphasis> de um
+    adaptador de rede oficial da Sony para poder ligar o HDD à PS2.
   </para>
 
+  <note>
+    <para lang="en">
+      Some users have reported problems about SMS not detecting the HDD on
+      their Slimline PSTwo, when using mods like HDConnect.  Therefore we
+      assume HDD detection only works on 'older versions' of the PS2 
+      (V0-11).
+    </para>
+    <para lang="pt">
+      Alguns utilizadores tiveram problemas com o SMS não ser capaz de
+      detectar o HDD nas suas PSTwo (versões finas), aquando da utilização 
+      de mods como o HDConnect.  Assim sendo, assumimos que só é possível 
+      detectar o HDD nas versões antigas da PS2 (V0-11).
+    </para>
+  </note>
 
+  <para lang="en">
+    You can transfer the files to your HDD in many ways.  You can do it via
+    FTP, using the 'host' functionality in uLaunchELF or using a Windows
+    application called 'PFS Explorer'.
+  </para>
+  <para lang="pt">
+    Pode transferir ficheiros para o seu HDD de várias formas.  Pode fazê-lo
+    por FTP, utilizando a função 'host' do uLaunchELF ou utilizando uma 
+    aplicação de Windows chamada 'PFS Explorer'.
+  </para>
+  
+  <para lang="en">
+    Transfering files to the HDD is out of the scope of this Manual, but you
+    can follow the instructions in the
+    <xref linkend="installation-detail-copyftp-ulaunchelf"/> section, and 
+    transfer the files you want to your HDD using the FTP method explained 
+    there.
+  </para>
+  <para lang="pt">
+    Transferir ficheiros para o HDD não faz parte dos objectivos deste 
+    manual, mas pode sempre seguir as instruções na secção
+    <xref linkend="installation-detail-copyftp-ulaunchelf"/>, e transferir 
+    os ficheiros que quiser para o seu HDD utilizando o mesmo método de FTP
+    explicado aí.
+  </para>
+
+  <warning>
+    <para lang="en">
+      It is not recommended to use the 'PFS Explorer' to transfer files to
+      the HDD since some users have reported problems with the application 
+      (e.g. lost data, deleted partitions, etc).
+    </para>
+    <para lang="pt">
+      Não é recomendado o uso do 'PFS Explorer' para transferir ficheiros 
+      para o HDD porque alguns utilizadores parecem ter tido problemas com 
+      esta aplicação (e.g. informação perdida, partições apagadas, etc).
+    </para>
+  </warning>
+
+  <para lang="en">
+    Whichever method you choose to transfer files to your HDD, you should
+    create a new partition to store your media files.  To create a partition
+    you will need a tool called <emphasis role="italic">'DMS HDD Format 
+    Tool' </emphasis>.  For a step-by-step instruction on how to use this 
+    tool look here:
+    <ulink url="http://www.exploitstation.com/articles/launchelf_tut/launchtut.html"/>
+    (scroll down).  After you have created the partition you can use the
+    methods mentioned above to transfer your media files to the HDD
+    partition(s) you just created.
+  </para>
+  <para lang="pt">
+    Qualquer que seja o método utilizado para transferir ficheiros para o 
+    HDD, deverá criar uma nova partição para guardas os ficheiros de media.  
+    Para criar as partições necessitará de uma aplicação chamada 'DMS HDD 
+    Format Tool'.  Instruções passo-a-passo de como utilizar esta ferramenta 
+    podem ser encontradas aqui:
+    <ulink url="http://www.exploitstation.com/articles/launchelf_tut/launchtut.html"/>
+    (role para baixo).  Depois de criar as partições pode utilizar os 
+    métodos mencionados em cima para transferir os seus ficheiros de media 
+    para as partições do HDD que acabou de criar.
+  </para>
+  
+  <para lang="en">
+    When you launch SMS you should see the HDD icon next to the other 
+    devices in 'Available Media'.  If you don't and you are using SMS v1.6 
+    or above you probably need to go to the menu and start the HDD support 
+    from there.  To do this, just open the menu (hit
+    <emphasis role="bold">START</emphasis> in the browser window), go to 
+    'Device Settings' and choose the 'Start HDD Support' option.
+  </para>
+  <para lang="pt">
+    Quando iniciar o SMS deverá ver o icon do HDD ao lado dos outros 
+    dispositivos em 'Available Media' (Media disponível).  Se não vir, e
+    estiver a usar o SMS v1.6 ou superior provavelmente necessita de ir ao
+    menu e iniciar o suporte de HDD a partir de lá.  para fazer isto, abra o
+    menu (pressione
+    <emphasis role="bold">START</emphasis> na janela do navegador), vá a
+    'Device Settings' (Opções do Dispositivo) e escolha a opção
+    'Start HDD Support' (Iniciar suporte de HDD).
+  </para>
+  <para lang="en">
+    You'll probably want SMS to detect the HDD when it starts.  To activate
+    this, check the option 'Autostart HDD' in the menu.
+  </para>
+  <para lang="pt">
+    Provavelmente quererá que o SMS detecte o HDD ao iniciar.  Para activar
+    esta funcionalidade, ligue a opção 'Autostart HDD' (Carregar HDD auto) 
+    no menu.
+  </para>
+
+  <figure>
+    <title>
+      <phrase lang="en">SMS 1.6 Device Settings Menu.</phrase>
+      <phrase lang="pt">SMS 1.6 Menu Device Settings (Opções do 
+      Dispositivo).</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-devicesettings.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS 1.6 Device Settings Menu.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+
+  <para lang="en">
+    If you want, you can go to the 'Browser Settings' menu and change some
+    options related to the HDD:
+  </para>
+  <para lang="pt">
+    Se desejar, pode ir ao menu 'Browser Settings' (Opções do Navegador) e 
+    alterar algumas opções relacionadas com o HDD:
+  </para>
   <itemizedlist>
     <listitem>
-      <para lang="en">Copy files to hdd via ftp or other means.</para>
-      <para lang="pt">Copie os ficheiros para o HDD via ftp ou 
-      qualquer outro método.</para>
+      <para lang="en">
+      <emphasis role="bold">Display HDL partitions - </emphasis>Enabling 
+      this option will make the partitions created by HDLoader to show up in 
+      the browser.  (recommended: OFF)
+      </para>
+      <para lang="pt">
+      <emphasis role="bold">Display HDL partitions (Mostrar Partições do 
+      HDL) - </emphasis>Ligar esta opção fará com que as partições criadas 
+      pelo HDLoader sejam visiveis no navegador.  (recomendado: Desligado)
+      </para>
     </listitem>
     <listitem>
-      <para lang="en">Select hdd from device menu icon on SMS screen.</para>
-      <para lang="pt">Seleccione o icon do HDD no menu do SMS.</para>
-    </listitem>
-    <listitem>
-      <para lang="en">Browse to file and press
-      <emphasis role="bold">X</emphasis>.</para>
-      <para lang="pt">Navegue até ao ficheiro e pressione 
-      <emphasis role="bold">X</emphasis>.</para>
+      <para lang="en">
+      <emphasis role="bold">Hide system partitions - </emphasis>Enabling 
+      this option will make the partitions created by the PS2 not to show up
+      in the browser.  (recommended: ON)
+      </para>
+      <para lang="pt">
+      <emphasis role="bold">Hide system partitions (Esconder Partições do
+      Sistema) - </emphasis>Ligar estaopção fará com que as partições
+      criadas pela PS2 não sejam mostradas no navegador.  (recomendado:
+      Ligado)
+      </para>
     </listitem>
   </itemizedlist>
+  
+  <figure>
+    <title>
+      <phrase lang="en">SMS Browser Settings Menu.</phrase>
+      <phrase lang="pt">Menu de Browser Settings (Opções do 
+      Navegador).</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-browsersettings03.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS Browser Settings Menu.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+  
+  <para lang="en">
+    Now exit the menu, and press <emphasis role="bold">RIGHT</emphasis> on
+    your gamepad to select the HDD icon and browse the contents of the HDD.
+  </para>
+  <para lang="pt">
+    Agora saia do menu, e pressione <emphasis role="bold">DIREITA</emphasis>
+    no seu controlador e seleccione o icon do HDD para navegar no seu 
+    conteúdo.
+  </para>
+  
+  <figure>
+    <title>
+      <phrase lang="en">SMS with HDD support activated.</phrase>
+      <phrase lang="pt">SMS com suporte para HDD activado.</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/usage-sms-hddbrowsing.png"
+        format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>SMS with HDD support activated.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
 
+  <para lang="en">
+    Select the file you want to play and press <emphasis role="bold">X
+    </emphasis> to start playback.
+  </para>
+  <para lang="pt">
+    Seleccione o ficheiro que deseja tocar e pressione 
+    <emphasis role="bold">X</emphasis> para iniciar a vizualização.
+  </para>
 </sect1>

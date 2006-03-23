@@ -73,10 +73,10 @@
     É necessário criar um ficheiro bitmap, com dimensões &lt; 800x600.
     Se precisar de ajuda a perceber onde se localizão os elementos do sistema
     em relação a estas dimensões, pode fazer o download de um ficheiro de
-    template aqui:
+    'template' aqui:
     <ulink url="http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982"/>.
-    #[Warning - changes from SMS V1.5 to V1.6 may not be reflected in
-    this template.]#
+    [Atenção - As alterações entre o SMS 1.5 e o 1.6 podem não estar 
+    reflectidas neste 'template'.]
     Este ficheiro está em formato de <application>Photoshop</application>
     (<filename>.psd</filename>), mas se não tiver o 
     <application>Photoshop</application> pode abri-lo utilizando o GIMP
@@ -105,10 +105,10 @@
   <para lang="pt">
     De seguida, faça o download do gerador de skin
     <application>pic2sms.exe</application> de
-    <ulink url="http://home.casema.nl/eugene_plotnikov/"/>, #and
-    extract the <filename>pic2sms.exe</filename> file
-    from the <filename>pic2sms.rar</filename> file using
-    <ulink url="http://www.rarlab.com/download.htm">WinRAR</ulink>.#
+    <ulink url="http://home.casema.nl/eugene_plotnikov/"/>, e extraia
+    o ficheiro <filename>pic2sms.exe</filename>
+    do ficheiro <filename>pic2sms.rar</filename> utilizando o 
+    <ulink url="http://www.rarlab.com/download.htm">WinRAR</ulink>.
     Copie-o para o mesmo directório do seu PC.  Depois faça duplo clique no
     ficheiro.  Se este abrir à primeira vez sem erros está tudo bem.
     Se aparecer uma mensagem a dizer 'cannot find xvidcore.dll', feche o 
@@ -361,14 +361,14 @@
       <ulink url="http://sms.ps2-scene.org">SMS web site</ulink>.
     </para>
     <para lang="pt">
-      #SMS v1.5 and below had a different skin format, which used
-      a <filename>mc0:/SMS/skin.sms</filename> file instead of
-      <filename>mc0:/SMS/SMS.skn</filename>.  There was also a different
-      version of the skin generator pic2sms.exe.  The old skin generator
-      is no longer available for download.  If you have an old
-      version of SMS, we recommend upgrading both SMS and pic2sms.exe
-      to the latest versions from the
-      <ulink url="http://sms.ps2-scene.org">SMS web site</ulink>.#
+      O SMS 1.5 e anteriores versões têm um formato de skin diferente que 
+      utilizava um ficheiro <filename>mc0:/SMS/skin.sms</filename> em vez de
+      <filename>mc0:/SMS/SMS.skn</filename>.  Existia também uma versão 
+      diferente do pic2sms.exe (gerador de skins).  O antigo gerador de skins 
+      já não se encontra disponível para download.  Se ainda tiver uma versão
+      antiga do SMS e do pic2sms.exe, aconselhamos que faça um upgrade para
+      as versões mais recentes.  Ambos podem ser encontrados no 
+      <ulink url="http://sms.ps2-scene.org">site do SMS</ulink>.
     </para>
   </note>
   </sect2>
