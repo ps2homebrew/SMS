@@ -2183,7 +2183,6 @@ static void _msmpeg4_decode_slice ( void ) {
  g_MPEGCtx.m_FirstSliceLine = 1;
  g_MPEGCtx.m_ResyncMBX      = g_MPEGCtx.m_MBX;
  g_MPEGCtx.m_ResyncMBY      = g_MPEGCtx.m_MBY;
- g_MPEGCtx.m_pCache         = NULL;
 
  SMS_MPEG_SetQScale ( g_MPEGCtx.m_QScale );
 
@@ -2203,7 +2202,7 @@ static void _msmpeg4_decode_slice ( void ) {
         g_MPEGCtx.m_ResyncMBY + 1 == g_MPEGCtx.m_MBY
    ) g_MPEGCtx.m_FirstSliceLine = 0;
 
-   g_MPEGCtx.m_DSPCtx.IDCT_ClrBlocks ( g_MPEGCtx.m_pBlock[ 0 ] );
+   IDCT_ClrBlocks ( g_MPEGCtx.m_pBlock[ 0 ] );
 
    g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
    g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;

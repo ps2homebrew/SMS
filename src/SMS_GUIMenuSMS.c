@@ -118,6 +118,11 @@ static void _apply_handler   ( GUIMenu*, int );
 static void _enter_sample ( GUIMenu* );
 static void _leave_sample ( GUIMenu* );
 
+static void _mp3_handler        ( GUIMenu*, int );
+static void _mp3_rand_handler   ( GUIMenu*, int );
+static void _mp3_repeat_handler ( GUIMenu*, int );
+static void _mp3_asd_handler    ( GUIMenu*, int );
+
 static GUIMenuItem s_SMSMenu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0, &STR_DISPLAY_SETTINGS,     GUICON_DISPLAY, 0, _display_handler,  0, 0 },
  { 0, &STR_DEVICE_SETTINGS,      GUICON_NETWORK, 0, _device_handler,   0, 0 },
@@ -183,6 +188,7 @@ static GUIMenuItem s_BrowserMenu[] __attribute__(   (  section( ".data" )  )   )
 };
 
 static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) = {
+ { 0,                     &STR_MP3_SETTINGS,        0, 0, _mp3_handler,     0, 0 },
  { 0,                     &STR_AUTOLOAD_SUBTITLES,  0, 0, _autols_handler,  0, 0 },
  { 0,                     &STR_OPAQUE_SUBTITLES,    0, 0, _opaqs_handler,   0, 0 },
  { 0,                     &STR_DISPLAY_SB_TIME,     0, 0, _dsbt_handler,    0, 0 },
@@ -202,6 +208,12 @@ static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) 
  { MENU_ITEM_TYPE_TEXT,   &STR_SUBTITLE_OFFSET,     0, 0, _suboff_handler,  _enter_sample, _leave_sample },
  { MENU_ITEM_TYPE_TEXT,   &STR_SUB_FONT_HSIZE,      0, 0, _sfonth_handler,  _enter_sample, _leave_sample },
  { MENU_ITEM_TYPE_TEXT,   &STR_SUB_FONT_VSIZE,      0, 0, _sfontv_handler,  _enter_sample, _leave_sample }
+};
+
+static GUIMenuItem s_MP3Menu[] __attribute__(   (  section( ".data" )  )   ) = {
+ { 0, &STR_RANDOMIZE_PLAYLIST, 0, 0, _mp3_rand_handler,   0, 0 },
+ { 0, &STR_REPEAT_MODE,        0, 0, _mp3_repeat_handler, 0, 0 },
+ { 0, &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 }
 };
 
 static GUIMenuItem s_HelpMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -550,8 +562,8 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )lpStr;
- s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
+ s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
 
  sprintf (    s_OffsetBuffer, "%d",                  g_Config.m_PlayerSubOffset                                                      );
  sprintf (    s_VolumeBuffer, "%d%%",                ( int )(   (  ( float )g_Config.m_PlayerVolume / 24.0F ) * 100.0F + 0.5F   )    );
@@ -565,11 +577,11 @@ static void _update_pstr ( int anIncr ) {
  g_StrPlayer[ 4 ].m_Len = strlen ( s_SHSizeBuffer );
  g_StrPlayer[ 5 ].m_Len = strlen ( s_SVSizeBuffer );
 
- s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
- s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
- s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
- s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
- s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
+ s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
+ s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
+ s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
+ s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
+ s_PlayerMenu[ 19 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
 
  switch ( g_Config.m_ScrollBarPos ) {
 
@@ -579,7 +591,7 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )lpStr;
 
 }  /* end _update_pstr */
 
@@ -587,17 +599,17 @@ static void _player_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
 
- s_PlayerMenu[  0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS  ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[  1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_OSUB  ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[  2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_TIME  ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[  3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM  ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[  4 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SPDIF ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[  5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
- s_PlayerMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
- s_PlayerMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
- s_PlayerMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
- s_PlayerMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSBCIdx;
- s_PlayerMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerVBCIdx;
+ s_PlayerMenu[  1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_OSUB  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_TIME  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  4 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM  ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  5 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SPDIF ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
+ s_PlayerMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
+ s_PlayerMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
+ s_PlayerMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
+ s_PlayerMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSBCIdx;
+ s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerVBCIdx;
 
  _update_pstr ( 0 );
 
@@ -1309,31 +1321,31 @@ static void _exit_2_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _autols_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 0, &g_Config.m_PlayerFlags, SMS_PF_SUBS );
+ _switch_flag ( apMenu, 1, &g_Config.m_PlayerFlags, SMS_PF_SUBS );
 
 }  /* end _autols_handler */
 
 static void _opaqs_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 1, &g_Config.m_PlayerFlags, SMS_PF_OSUB );
+ _switch_flag ( apMenu, 2, &g_Config.m_PlayerFlags, SMS_PF_OSUB );
 
 }  /* end _opaqs_handler */
 
 static void _dsbt_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 2, &g_Config.m_PlayerFlags, SMS_PF_TIME );
+ _switch_flag ( apMenu, 3, &g_Config.m_PlayerFlags, SMS_PF_TIME );
 
 }  /* end _dsbt_handler */
 
 static void _aadsp_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 3, &g_Config.m_PlayerFlags, SMS_PF_ANIM );
+ _switch_flag ( apMenu, 4, &g_Config.m_PlayerFlags, SMS_PF_ANIM );
 
 }  /* end _aadsp_handler */
 
 static void _spdif_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 4, &g_Config.m_PlayerFlags, SMS_PF_SPDIF );
+ _switch_flag ( apMenu, 5, &g_Config.m_PlayerFlags, SMS_PF_SPDIF );
 
 }  /* end _spdif_handler */
 
@@ -1543,7 +1555,7 @@ static void _update_advs ( void ) {
 
 }  /* end _update_advs */
 
-static void _advset_handler ( GUIMenu* apMenu, int aDir) {
+static void _advset_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
 
@@ -1591,6 +1603,43 @@ static void _apply_handler ( GUIMenu* apMenu, int aDir ) {
  _update_status ( apMenu );
 
 }  /* end _apply_handler */
+
+static void _mp3_handler ( GUIMenu* apMenu, int aDir ) {
+
+ GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
+
+ lpState -> m_pItems =
+ lpState -> m_pFirst =
+ lpState -> m_pCurr  = s_MP3Menu;
+ lpState -> m_pLast  = &s_MP3Menu[ sizeof ( s_MP3Menu ) / sizeof ( s_MP3Menu[ 0 ] ) - 1 ];
+ lpState -> m_pTitle = &STR_MP3_SETTINGS;
+
+ s_MP3Menu[ 0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_RAND ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_REP  ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ASD  ? GUICON_ON : GUICON_OFF;
+
+ _update_status ( apMenu );
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _mp3_handler */
+
+static void _mp3_rand_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 0, &g_Config.m_PlayerFlags, SMS_PF_RAND );
+
+}  /* end _mp3_rand_handler */
+
+static void _mp3_repeat_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 1, &g_Config.m_PlayerFlags, SMS_PF_REP );
+
+}  /* end _mp3_repeat_handler */
+
+static void _mp3_asd_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 2, &g_Config.m_PlayerFlags, SMS_PF_ASD );
+
+}  /* end _mp3_asd_handler */
 
 GUIObject* GUI_CreateMenuSMS ( void ) {
 

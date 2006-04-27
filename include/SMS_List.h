@@ -42,6 +42,7 @@ void          SMS_ListDestroy  ( SMS_List*, int           );
 void          SMS_ListRemove   ( SMS_List*, SMS_ListNode* );
 SMS_ListNode* SMS_ListFind     ( SMS_List*, const char*   );
 SMS_ListNode* SMS_ListFindI    ( SMS_List*, const char*   );
+SMS_ListNode* SMS_ListAt       ( SMS_List*, int           );
 void          SMS_ListAppend   ( SMS_List*, SMS_List*     );
 
 # ifdef __cplusplus

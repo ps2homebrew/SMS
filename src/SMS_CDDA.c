@@ -52,6 +52,12 @@ static unsigned int       s_ReadResp[   64 ]   __attribute__ (   (  aligned( 64 
 
 int g_CDDASpeed;
 
+static void _cd_callback ( void* apParam ) {
+
+ iSignalSema ( s_Sema );
+
+}  /* end _cd_callback */
+
 int CDDA_Init ( void ) {
 
  int retVal = 1;
@@ -110,10 +116,16 @@ int CDDA_ReadTOC ( CDDA_TOC* apTOC ) {
  SifWriteBackDCache ( g_TOC,    2064 );
  SifWriteBackDCache ( s_GetTOCmd, 12 );
 
+ CDDA_DiskReady ();
+
+ s_SyncFlag = 1;
+
  if (  SifCallRpc (
-        &s_ClientNCmd, CD_CMD_GETTOC, 0, s_GetTOCmd, 12, s_NCmdRecvBuff, 8, 0, 0
+        &s_ClientNCmd, CD_CMD_GETTOC, 0, s_GetTOCmd, 12, s_NCmdRecvBuff, 8, _cd_callback, 0
        ) >= 0
  ) {
+
+  CDDA_Synchronize ();
 
   lpTOCbegin = UNCACHED_SEG( g_TOC );
 
@@ -147,7 +159,7 @@ int CDDA_ReadTOC ( CDDA_TOC* apTOC ) {
 
   retVal = 1;
 
- }  /* end if */
+ } else s_SyncFlag = 0;
 
  return retVal;
 
@@ -206,12 +218,6 @@ int CDDA_Synchronize ( void ) {
  return 1;
 
 }  /* end CDDA_Syncronize */
-
-static void _cd_callback ( void* apParam ) {
-
- iSignalSema ( s_Sema );
-
-}  /* end _cd_callback */
 
 void CDDA_Standby ( void ) {
 

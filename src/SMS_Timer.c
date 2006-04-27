@@ -38,11 +38,6 @@ static void T1_Handler ( int aCause ) {
 
  T1_MODE |= 1024;
 
- __asm__ __volatile__(
-  "sync\n\t"
-  "ei\n\t"
- );
-
 }  /* end T1_Handler */
 
 void Timer_Init ( void ) {

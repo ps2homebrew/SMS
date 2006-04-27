@@ -31,6 +31,7 @@
 #include "SMS_Locale.h"
 #include "SMS_Sounds.h"
 #include "SMS_Data.h"
+#include "SMS_Spectrum.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -280,10 +281,11 @@ static void _init_queues ( int afCreate ) {
 
 static void _sms_dummy_video_renderer ( void* apParam ) {
 
- static u64 s_lDMA[ 14 ] __attribute__(   (  aligned( 16 )  )   );
+ static u64 s_lDMA[ 16 ] __attribute__(   (  aligned( 16 )  )   );
 
- u64* lpDMA  = _U( s_lDMA );
- int  i      = 0;
+ u64*   lpDMA     = _U( s_lDMA );
+ short* lpSamples = NULL;
+ int    i         = 0;
 
  SleepThread ();
 
@@ -312,6 +314,13 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 1 ] - 1, 1, DMATAG_ID_REF, 0, ( u32 )( s_Player.m_OSDPackets[ 1 ] + 2 ), 0   );
  lpDMA[ i++ ] = 0;
+
+ if ( g_Config.m_PlayerFlags & SMS_PF_ASD ) {
+
+  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 7 ], 1, DMATAG_ID_REF, 0, ( u32 )( s_Player.m_OSDPackets[ 7 ] ), 0   );
+  lpDMA[ i++ ] = 0;
+
+ }  /* end if */
 
  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 0 ] - 1, 1, DMATAG_ID_REFE, 0, ( u32 )( s_Player.m_OSDPackets[ 0 ] + 2 ), 0   );
  lpDMA[ i   ] = 0;
@@ -357,11 +366,19 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
   SMS_PlayerBallSim_Update ( s_Player.m_OSDPackets[ 5 ] );
 
+  if ( s_Player.m_pAudioSamples && lpSamples == s_Player.m_pAudioSamples )
+
+   lpSamples += 1024;
+
+  else lpSamples = s_Player.m_pAudioSamples;
+
+  SMS_SpectrumUpdate ( lpSamples );
+
   __asm__ __volatile__( "sync\n\t" );
 
   s_Player.m_pIPUCtx -> Display ( s_lDMA );
 
-  Timer_Wait ( 64 );
+  Timer_Wait ( 40 );
 
  }  /* end while */
 
@@ -581,9 +598,14 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
      } else {
 
-      s_Player.m_pPlayItem = s_Player.m_pPlayItem -> m_pPrev;
-      s_Flags             &= ~SMS_FLAGS_ABSCROLL;
-      --s_Player.m_PlayItemNr;
+      if ( s_Player.m_PlayItemNr > 1 ) {
+
+       s_Player.m_pPlayItem = s_Player.m_pPlayItem -> m_pPrev;
+       --s_Player.m_PlayItemNr;
+
+      }  /* end if */
+
+      s_Flags &= ~SMS_FLAGS_ABSCROLL;
 
      }  /* end else */
 
@@ -591,7 +613,7 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
      if (  !( s_Flags & SMS_FLAGS_ASCROLL )  ) {
 
-      s_Player.m_OSDPLInc = -2;
+      s_Player.m_OSDPLInc = -4;
       s_Player.m_OSDPLRes = s_Player.m_OSDPLPos - 32;
       s_Flags            |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_AASCROLL );
 
@@ -603,6 +625,7 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
   } else s_Player.m_AudioTime += ( int64_t )( uint32_t )( lLen * lMult );
 
+  s_Player.m_pAudioSamples = ( short* )lpFrame -> m_pBuf + 4;
   s_Player.m_pSPUCtx -> PlayPCM ( lpFrame -> m_pBuf );
 
   s_AudioSamples -> Release ();
@@ -887,8 +910,10 @@ static int _FFwd_A ( void ) {
 
   if ( s_Player.m_pPlayItem -> m_pNext ) {
 
-   s_Player.m_OSDPLInc = -2;
-   s_Player.m_OSDPLRes = s_Player.m_OSDPLPos - 32;
+   s_Player.m_pAudioSamples = NULL;
+   s_Player.m_OSDPLInc      = -4;
+   s_Player.m_OSDPLRes      = s_Player.m_OSDPLPos - 32;
+
    s_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL );
    WakeupThread ( THREAD_ID_VR );
 
@@ -915,8 +940,10 @@ static int _Rew_A ( void ) {
 
   if ( s_Player.m_pPlayItem -> m_pPrev ) {
 
-   s_Player.m_OSDPLInc = 2;
-   s_Player.m_OSDPLRes = s_Player.m_OSDPLPos + 32;
+   s_Player.m_pAudioSamples = NULL;
+   s_Player.m_OSDPLInc      = 4;
+   s_Player.m_OSDPLRes      = s_Player.m_OSDPLPos + 32;
+
    s_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_ABSCROLL );
    WakeupThread ( THREAD_ID_VR );
 
@@ -1022,13 +1049,15 @@ static void _sms_play ( void ) {
   s_Player.m_OSDPackets[ 5 ] = SMS_PlayerBallSim_Init ( &s_Player.m_OSDQWC[ 5 ] );
   s_Player.m_pIPUCtx -> Resume  ();
 
+  SMS_SpectrumInit ();
+
   PlayerControl_HandleOSD ( 0, 0 );
   PlayerControl_UpdateDuration ( 0, s_Player.m_pCont -> m_Duration );
   PlayerControl_UpdateItemNr ();
   WakeupThread ( THREAD_ID_VR );
 
  } else s_Player.m_OSDPackets[ 5 ] = NULL;
-
+repeat:
  while ( 1 ) {
 
   uint32_t lButtons = GUI_ReadButtons ();
@@ -1289,6 +1318,38 @@ nextPacket:
 
  }  /* end while */
 
+ if (  !( s_Flags & SMS_FLAGS_STOP ) && lfNoVideo && ( g_Config.m_PlayerFlags & SMS_PF_REP )  ) {
+
+  SMS_Container* lpCont = s_Player.m_pCont;
+
+  if ( lpCont -> m_pPlayList -> m_Size == 1 ) {
+
+   lpCont -> m_pFileCtx -> Seek ( lpCont -> m_pFileCtx, 0 );
+
+  } else {
+
+   s_Player.m_PlayItemNr = 1;
+   s_Player.m_OSDPLRes   = g_GSCtx.m_Height - 96;
+   s_Player.m_OSDPLInc   = 16;
+   s_Flags              |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ABSCROLL | SMS_FLAGS_ASCROLL );
+   s_Player.m_pPlayItem  = s_Player.m_pCont -> m_pPlayList -> m_pHead;
+
+   lpCont -> Seek (  lpCont, 0, 0, ( uint32_t )lpCont -> m_pPlayList -> m_pHead  );
+
+   WaitSema ( s_SemaAckPause );
+
+  }  /* end else */
+
+  s_Player.m_pAudioSamples = NULL;
+  s_Player.m_AudioTime     = 0;
+  lSize                    = 0;
+
+  s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
+
+  goto repeat;
+
+ }  /* end if */
+
  s_Flags |= SMS_FLAGS_EXIT;
 
  DeleteSema ( lSema );
@@ -1394,6 +1455,8 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
  s_VideoBuffer   = NULL;
  s_AudioBuffer   = NULL;
  s_Flags         =    0;
+
+ g_pSPRTop = SMS_SPR_FREE;
 
  GUI_Status ( STR_DETECTING_FFORMAT.m_pStr );
 
@@ -1517,14 +1580,15 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
 
   ExitThreadFunc = ExitDeleteThread;
 
-  s_Player.m_Flags    |= SMS_PF_SUBS;
-  s_Player.m_OSD       = 0;
-  s_Player.m_PanScan   = g_Config.m_PlayerFlags >> 28;
-  s_Player.m_AVDelta   = 0;
-  s_Player.m_SVDelta   = 0;
-  s_Player.SetColors   = _set_colors;
-  s_Player.m_OSDPLPos  = g_GSCtx.m_Height - 96;
-  s_Player.m_pPlayItem = NULL;
+  s_Player.m_Flags        |= SMS_PF_SUBS;
+  s_Player.m_OSD           = 0;
+  s_Player.m_PanScan       = g_Config.m_PlayerFlags >> 28;
+  s_Player.m_AVDelta       = 0;
+  s_Player.m_SVDelta       = 0;
+  s_Player.SetColors       = _set_colors;
+  s_Player.m_OSDPLPos      = g_GSCtx.m_Height - 96;
+  s_Player.m_pPlayItem     = NULL;
+  s_Player.m_pAudioSamples = NULL;
 
  } else {
 

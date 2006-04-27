@@ -33,18 +33,10 @@ typedef struct _ball_pos {
 
 # define s_BallPos (  ( _ball_pos* )g_Balls  )
 
-static int _ball_rand ( void ) {
-
- static int s_lSeed = 1;
-
- return s_lSeed = ( 161140751 * s_lSeed + 13 ) % 219441163;
-
-}  /* end _ball_rand */
-
 static void _create_ball ( int anIdx ) {
 
- s_BallPos[ anIdx ].m_X = _ball_rand () % ( int )g_GSCtx.m_Width;
- s_BallPos[ anIdx ].m_Y = _ball_rand () % ( int )( g_GSCtx.m_Height / 6 );
+ s_BallPos[ anIdx ].m_X = SMS_rand () % ( int )g_GSCtx.m_Width;
+ s_BallPos[ anIdx ].m_Y = SMS_rand () % ( int )( g_GSCtx.m_Height / 6 );
  s_BallPos[ anIdx ].m_Z = Z_MAX;
 
 }  /* end CreateBall */

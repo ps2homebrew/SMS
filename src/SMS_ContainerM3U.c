@@ -14,6 +14,7 @@
 #include "SMS_Locale.h"
 #include "SMS_FileDir.h"
 #include "SMS_Sounds.h"
+#include "SMS_Config.h"
 
 #include <string.h>
 #include <malloc.h>
@@ -288,6 +289,30 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
    FileContext* ( *lpOpen ) ( const char*, void* );
    void*           lpOpenParam;
 start:
+   if ( g_Config.m_PlayerFlags & SMS_PF_RAND ) {
+
+    SMS_List*    lpNewList = SMS_ListInit ();
+    unsigned int lSize     = lpList -> m_Size;
+
+    while ( lSize ) {
+
+     unsigned int  lIdx   = SMS_rand () % lSize;
+     SMS_ListNode* lpNode = SMS_ListAt ( lpList, lIdx );
+
+     if ( !lpNode || SMS_ListFind ( lpNewList, lpNode -> m_pString )  ) continue;
+
+     SMS_ListPushBack ( lpNewList, lpNode -> m_pString ) -> m_Param = lpNode -> m_Param;
+     SMS_ListRemove ( lpList, lpNode );
+
+     --lSize;
+
+    }  /* end while */
+
+    SMS_ListDestroy ( lpList, 1 );
+    lpList = lpNewList;
+
+   }  /* end if */
+
    lpCont = ( _M3UContainer* )(   apCont -> m_pCtx = calloc (  1, sizeof ( _M3UContainer )  )   );
 
    if ( g_CMedia == 1 && g_pCDDACtx ) {

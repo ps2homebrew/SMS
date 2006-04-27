@@ -33,6 +33,8 @@
 # define g_OSDNR   (  ( unsigned long* )&g_SMSounds[ 29696 ]  )
 # define g_VRStack (  ( unsigned char* )&g_SMSounds[ 30000 ]  )
 # define g_ARStack (  ( unsigned char* )&g_SMSounds[ 46384 ]  )
+# define g_SPCPkt  (  ( unsigned long* )&g_SMSounds[ 62768 ]  )
+# define g_FFTWsp  (  ( unsigned long* )&g_SMSounds[ 63952 ]  )
 
 extern SMSound       g_SMSound [     4 ] __attribute__(   (  section( ".data" )  )   );
 extern unsigned char g_SMSounds[ 70816 ] __attribute__(   (  aligned( 64 ), section( ".data" )  )   );

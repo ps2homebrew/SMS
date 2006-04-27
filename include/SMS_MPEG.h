@@ -128,7 +128,6 @@ typedef struct SMS_MPEGContext {
  int16_t           ( *m_pACVal[ 3 ] )[ 16 ];
  int16_t*          m_pDCVal[ 3 ];
  SMS_Rational      m_SampleAspectRatio;
- SMS_MacroBlock*   m_pMacroBlock[ 2 ];
  int64_t           m_Time;
  int64_t           m_LastNonBTime;
  int               m_SpriteShift [ 2 ];
@@ -145,8 +144,6 @@ typedef struct SMS_MPEGContext {
  SMS_Frame*        m_pLastPic;
  SMS_Frame*        m_pNextPic;
  SMS_MacroBlock*   m_pDest;
- SMS_MacroBlock*   m_pMCBuffer;
- SMS_MacroBlock*   m_pCache;
  int*              m_pMBIdx2XY;
  int16_t*          m_pDCValBase;
  int16_t           ( *m_pACValBase  )[ 16 ];
@@ -159,17 +156,10 @@ typedef struct SMS_MPEGContext {
  uint8_t*          m_pMBSkipTbl;
  uint8_t*          m_pPrevPicTypes;
  uint8_t*          m_pBSBuf;
- uint8_t*          m_pEdgeEmuBufY;
- uint8_t*          m_pEdgeEmuBufCb;
- uint8_t*          m_pEdgeEmuBufCr;
- uint8_t*          m_pMCYBuf;
- uint8_t*          m_pMCCbBuf;
- uint8_t*          m_pMCCrBuf;
  uint8_t*          m_pCodedBlockBase;
  uint8_t*          m_pCodedBlock;
  const uint8_t*    m_pChromaQScaleTbl;
  int               m_fDirtyCache;
- int               m_IdxRes;
  int               m_Y_DCScale;
  int               m_C_DCScale;
  int               m_ACPred;
@@ -254,7 +244,7 @@ typedef struct SMS_MPEGContext {
  int               m_Dropable;
  int               m_NextPFrameDamaged;
  int               m_CodedPicNr;
- int               m_ErrorCount;
+ int               m_LineStride;
  int               m_PicStruct;
  int               m_FirstField;
  int               m_BSBufSize;
@@ -298,18 +288,13 @@ int  SMS_MPEGContext_FindUnusedPic ( void                                      )
 # endif  /* __cplusplus */
 
 static void SMS_INLINE SMS_MPEG_CleanBuffers ( void ) {
-#ifdef _WIN32
- g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 0 ] =
- g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 1 ] =
- g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 0 ] =
- g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 1 ] = 0;
-#else
+
  __asm__ __volatile__(
   "sd   $zero, %0\n\t"
   "sd   $zero, %1\n\t"
   :: "m"( g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 0 ] ), "m"( g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 0 ] )
  );
-#endif
+
 }  /* end SMS_MPEG_CleanBuffers */
 
 static SMS_INLINE void SMS_MPEG_UpdateBlockIdx ( void ) {

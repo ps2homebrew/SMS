@@ -14,53 +14,34 @@
 struct SMS_MacroBlock;
 struct SMS_FrameBuffer;
 
-# ifdef _WIN32
-typedef struct IPUContext {
+# define IPU_REG_CMD  (  ( volatile unsigned long* )0x10002000  )
+# define IPU_REG_CTRL (  ( volatile unsigned int*  )0x10002010  )
+# define IPU_REG_BP   (  ( volatile unsigned int*  )0x10002020  )
+# define IPU_REG_TOP  (  ( volatile unsigned long* )0x10002030  )
+# define IPU_FIFO_I   (  ( volatile unsigned long* )0x10007000  )
+# define IPU_FIFO_O   (  ( volatile unsigned long* )0x10007010  )
 
- unsigned int m_MBWidth;
- unsigned int m_MBHeight;
- unsigned int m_Width;
- unsigned int m_UVWidth;
- unsigned int m_Height;
- unsigned int m_UVHeight;
- unsigned int m_Linesize;
-
- void ( *Destroy ) ( void );
- void ( *Display ) ( struct SMS_FrameBuffer* );
- void ( *Sync    ) ( void );
-
-} IPUContext;
-
-# else  /* PS2 */
-
-#  define IPU_REG_CMD  (  ( volatile unsigned long* )0x10002000  )
-#  define IPU_REG_CTRL (  ( volatile unsigned int*  )0x10002010  )
-#  define IPU_REG_BP   (  ( volatile unsigned int*  )0x10002020  )
-#  define IPU_REG_TOP  (  ( volatile unsigned long* )0x10002030  )
-#  define IPU_FIFO_I   (  ( volatile unsigned long* )0x10007000  )
-#  define IPU_FIFO_O   (  ( volatile unsigned long* )0x10007010  )
-
-#  define IPU_SET_CMD( CODE, OPTION ) \
+# define IPU_SET_CMD( CODE, OPTION ) \
  *IPU_REG_CMD = ( unsigned long )(  ( CODE << 28 ) | OPTION  )
 
-#  define IPU_CMD_BCLR( BP ) IPU_SET_CMD( 0, BP )
+# define IPU_CMD_BCLR( BP ) IPU_SET_CMD( 0, BP )
 
-#  define IPU_CMD_IDEC( FB, QSC, DTD, SGN, DTE, OFM ) \
+# define IPU_CMD_IDEC( FB, QSC, DTD, SGN, DTE, OFM ) \
  IPU_SET_CMD(  1, FB | ( QSC << 20 ) | ( DTD << 24 ) | ( SGN << 25  ) | ( DTE << 26 ) | ( OFM << 27 )  )
 
-#  define IPU_CMD_FDEC( FB ) IPU_SET_CMD( 4, FB )
+# define IPU_CMD_FDEC( FB ) IPU_SET_CMD( 4, FB )
 
-#  define IPU_CMD_SETTH( TH0, TH1 ) \
+# define IPU_CMD_SETTH( TH0, TH1 ) \
  IPU_SET_CMD(  9, TH0 | ( TH1 << 16 )  )
 
-#  define IPU_CMD_CSC( MBC, DTE, OFM ) \
+# define IPU_CMD_CSC( MBC, DTE, OFM ) \
  IPU_SET_CMD(  7, MBC | ( DTE << 26 ) | ( OFM << 27 )  )
 
-#  define IPU_TOP() (  ( u32 )*IPU_REG_TOP  )
-#  define IPU_CMD() (  ( u32 )*IPU_REG_CMD  )
+# define IPU_TOP() (  ( u32 )*IPU_REG_TOP  )
+# define IPU_CMD() (  ( u32 )*IPU_REG_CMD  )
 
-#  define IPU_WAIT() while (  *IPU_REG_CTRL & 0x80000000 )
-#  define IPU_RESET() *IPU_REG_CTRL = ( 1 << 30 ); IPU_WAIT(); IPU_CMD_BCLR( 0 );  IPU_WAIT()
+# define IPU_WAIT() while (  *IPU_REG_CTRL & 0x80000000 )
+# define IPU_RESET() *IPU_REG_CTRL = ( 1 << 30 ); IPU_WAIT(); IPU_CMD_BCLR( 0 );  IPU_WAIT()
 
 typedef struct IPUContext {
 
@@ -128,7 +109,7 @@ typedef struct IPUContext {
  void ( *Flush        ) ( void         );
 
 } IPUContext;
-#endif  /* _WIN32 */
+
 extern IPUContext g_IPUCtx;
 # ifdef __cplusplus
 extern "C" {

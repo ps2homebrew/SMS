@@ -212,6 +212,10 @@ static unsigned char s_pExec1          [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pExitTo         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Exit to";
 static unsigned char s_pSoundFX        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Sound FX";
 static unsigned char s_pSPDIFDD        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "S/PDIF - Dolby Digital";
+static unsigned char s_pMP3Settings    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "MP3 settings...";
+static unsigned char s_pRandomizePL    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Randomize playlist";
+static unsigned char s_pRepeat         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Repeat mode";
+static unsigned char s_pAudioSpectrum  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Audio spectrum display";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -384,7 +388,11 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pExec1           ) - 1, s_pExec1           },
  { sizeof ( s_pExitTo          ) - 1, s_pExitTo          },
  { sizeof ( s_pSoundFX         ) - 1, s_pSoundFX         },
- { sizeof ( s_pSPDIFDD         ) - 1, s_pSPDIFDD         }
+ { sizeof ( s_pSPDIFDD         ) - 1, s_pSPDIFDD         },
+ { sizeof ( s_pMP3Settings     ) - 1, s_pMP3Settings     },
+ { sizeof ( s_pRandomizePL     ) - 1, s_pRandomizePL     },
+ { sizeof ( s_pRepeat          ) - 1, s_pRepeat          },
+ { sizeof ( s_pAudioSpectrum   ) - 1, s_pAudioSpectrum   }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );

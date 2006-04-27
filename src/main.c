@@ -20,7 +20,6 @@ int main ( void ) {
 
  SMS_IOPReset ();
  SMS_EEInit   ();
- SMS_DSPInit  ();
 
  GUI_Initialize ( 1 );
  GUI_Status ( STR_INITIALIZING_SMS.m_pStr );

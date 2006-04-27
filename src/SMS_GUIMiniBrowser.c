@@ -13,7 +13,7 @@
 #include "SMS_FileDir.h"
 #include "SMS_List.h"
 #include "SMS_Locale.h"
-#include "SMS_GUICons.h"
+#include "SMS_GUIcons.h"
 #include "SMS_GS.h"
 #include "SMS_PAD.h"
 #include "SMS_SubtitleContext.h"

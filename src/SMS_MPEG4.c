@@ -22,10 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-# include <ctype.h>
-#endif  /* _WIN32 */
-
 #define BASECTX() g_MPEGCtx
 
 #define STATIC_SPRITE          1
@@ -1347,6 +1343,19 @@ static void _mpeg4_decode_sprite_trajectory ( SMS_BitContext* apBitCtx ) {
   }  /* end for */
 
   g_MPEGCtx.m_RealSpriteWarpPts = g_MPEGCtx.m_nSpriteWarpPts;
+
+  g_GMCData.m_Uo       = g_MPEGCtx.m_SpriteOffset[ 0 ][ 0 ];
+  g_GMCData.m_Vo       = g_MPEGCtx.m_SpriteOffset[ 0 ][ 1 ];
+  g_GMCData.m_UCo      = g_MPEGCtx.m_SpriteOffset[ 1 ][ 0 ];
+  g_GMCData.m_VCo      = g_MPEGCtx.m_SpriteOffset[ 1 ][ 1 ];
+  g_GMCData.m_Width    = g_MPEGCtx.m_Width  << 4;
+  g_GMCData.m_Height   = g_MPEGCtx.m_Height << 4;
+  g_GMCData.m_Accuracy = g_MPEGCtx.m_SpriteWarpAccuracy;
+  g_GMCData.m_nWarpPts = g_MPEGCtx.m_RealSpriteWarpPts;
+  g_GMCData.m_dU[ 0 ]  = g_MPEGCtx.m_SpriteDelta[ 0 ][ 0 ];
+  g_GMCData.m_dU[ 1 ]  = g_MPEGCtx.m_SpriteDelta[ 0 ][ 1 ];
+  g_GMCData.m_dV[ 0 ]  = g_MPEGCtx.m_SpriteDelta[ 1 ][ 0 ];
+  g_GMCData.m_dV[ 1 ]  = g_MPEGCtx.m_SpriteDelta[ 1 ][ 1 ];
 
  }  /* end else */
 
@@ -3095,7 +3104,6 @@ static int32_t _mpeg4_decode_slice ( void ) {
  g_MPEGCtx.m_FirstSliceLine   = 1;
  g_MPEGCtx.m_ResyncMBX        = g_MPEGCtx.m_MBX;
  g_MPEGCtx.m_ResyncMBY        = g_MPEGCtx.m_MBY;
- g_MPEGCtx.m_pCache           = NULL;
 
  SMS_MPEG_SetQScale ( g_MPEGCtx.m_QScale );
 
@@ -3127,7 +3135,7 @@ static int32_t _mpeg4_decode_slice ( void ) {
         g_MPEGCtx.m_ResyncMBY + 1 == g_MPEGCtx.m_MBY
    ) g_MPEGCtx.m_FirstSliceLine = 0;
 
-   g_MPEGCtx.m_DSPCtx.IDCT_ClrBlocks ( g_MPEGCtx.m_pBlock[ 0 ] );
+   IDCT_ClrBlocks ( g_MPEGCtx.m_pBlock[ 0 ] );
             
    g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
    g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;

@@ -666,3 +666,32 @@ Update (16-MAR-2006)
   "external" usb driver anymore (thanks to "dlanor" for the suggestion);
 - fixed "double speed ac3 sound" issue (thanks to "shiro" for the sample video
   clip);
+
+Update (06-APR-2006)
+--------------------
+- Performance is improved (video decoder core is rewritten in assembler using
+  R5900 CPU multimedia instructions). Mainly this affects video clips encoded
+  with QPel/GMC options (these are kinda watchable now) though playback of
+  "usual" video clips also got a bit smoother;
+- Some motion compensation related bugs in video decoder are fixed and new ones
+  are added :);
+
+Update (10-APR-2006)
+--------------------
+- Fixed bug in video decoder (QPel motion compensation related). Thanks to "Crash"
+  for sample video clip;
+- Fixed scrollbar issue in the player (on-screen garbage in some cases);
+
+Update (27-APR-2006)
+--------------------
+- Updated MP3 related code to deal with LAME-encoded files (thanks to
+  "KanedA_PL" for the sample audio clip);
+- Added "randomize playlist" and "repeat" options to the MP3 player.
+  Note: "repeat" mode is applicable for both "m3u" and "mp3" files;
+- Implemented rather primitive "audio spectrum display" feature during
+  mp3 playback (8 bars for the left channel and 8 for the right one).
+  It's not very precise for sample rates different from 48000Hz (since
+  upsampling is performed on IOP side), but it just adds some fanciness
+  to the "flying balls";
+- Slightly improved performance of the MP3 decoder (assembler
+  implementation of the 64-bit integer multiplication routine);

@@ -12,11 +12,7 @@
 
 #include <malloc.h>
 
-#ifndef _WIN32
-# include <kernel.h>
-#endif  /* _WIN32 */
-
-# define SMS_VIDEO_BUFFER_SIZE 15
+#define SMS_VIDEO_BUFFER_SIZE 15
 
 static SMS_FrameBuffer s_FrameBuffer[ SMS_VIDEO_BUFFER_SIZE ];
 static SMS_VideoBuffer s_VideoBuffer;

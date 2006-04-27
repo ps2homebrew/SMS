@@ -219,64 +219,7 @@ int SMS_H263_RoundChroma ( int aX ) {
  }  /* end else */
 
 }  /* end SMS_H263_RoundChroma */
-#ifdef _WIN32
-void SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock, int aN, int aQScale ) {
 
- int i;
- int lLevel, lQMul, lQAdd, lnCoeffs;
-
- lQMul    = aQScale << 1;
- lQAdd    = ( aQScale - 1 ) | 1;
- lnCoeffs = g_MPEGCtx.m_ACPred ? 63 : g_MPEGCtx.m_InterScanTbl.m_RasterEnd[  g_MPEGCtx.m_BlockLastIdx[ aN ]  ];
-
- apBlock[ 0 ] *= aN < 4 ? g_MPEGCtx.m_Y_DCScale : g_MPEGCtx.m_C_DCScale;
-
- for ( i = 1; i <= lnCoeffs; ++i ) {
-
-  lLevel = apBlock[ i ];
-
-  if ( lLevel ) {
-
-   lLevel = lLevel < 0 ? ( lLevel * lQMul - lQAdd ) : ( lLevel * lQMul + lQAdd );
-   apBlock[ i ] = lLevel;
-
-  }  /* end if */
-
- }  /* end for */
-
-}  /* end SMS_H263_DCTUnquantizeIntra */
-
-void SMS_H263_DCTUnquantizeInter ( SMS_DCTELEM* apBlock, int aN, int aQScale ) {
-
- int i, lLevel;
-
- int lQMul, lQAdd, lnCoeffs;
-
- lQAdd = ( aQScale - 1 ) | 1;
- lQMul = aQScale << 1;
-    
- lnCoeffs = g_MPEGCtx.m_InterScanTbl.m_RasterEnd[  g_MPEGCtx.m_BlockLastIdx[ aN ]  ];
-
- for ( i = 0; i <= lnCoeffs; ++i ) {
-
-  lLevel = apBlock[ i ];
-
-  if ( lLevel ) {
-
-   if ( lLevel < 0 )
-
-    lLevel = lLevel * lQMul - lQAdd;
-
-   else lLevel = lLevel * lQMul + lQAdd;
-
-   apBlock[ i ] = lLevel;
-
-  }  /* end if */
-
- }  /* end for */
-
-}  /* end SMS_H263_DCTUnquantizeInter */
-#else  /* PS2 */
 void SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock, int aN, int aQScale ) {
 
  const int lQMul    = aQScale << 1;
@@ -349,4 +292,4 @@ void SMS_H263_DCTUnquantizeInter ( SMS_DCTELEM* apBlock, int aN, int aQScale ) {
  );
 
 }  /* end SMS_H263_DCTUnquantizeInter */
-#endif  /* _WIN32 */
+

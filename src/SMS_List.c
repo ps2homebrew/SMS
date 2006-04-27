@@ -252,6 +252,25 @@ void SMS_ListRemove ( SMS_List* apList, SMS_ListNode* apNode ) {
 
 }  /* end SMS_ListRemove */
 
+SMS_ListNode* SMS_ListAt ( SMS_List* apList, int anIdx ) {
+
+ SMS_ListNode* lpNode;
+
+ if ( anIdx >= apList -> m_Size ) return NULL;
+
+ lpNode = apList -> m_pHead;
+
+ while ( anIdx ) {
+
+  lpNode = lpNode -> m_pNext;
+  --anIdx;
+
+ }  /* end while */
+
+ return lpNode;
+
+}  /* end SMS_ListAt */
+
 static SMS_ListNode* _find ( SMS_List* apList, const char* apStr, int ( *compare ) ( const char*, const char* )  ) {
 
  SMS_ListNode* lpNode = apList -> m_pHead;

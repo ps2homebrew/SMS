@@ -16,7 +16,7 @@
 #include "SMS_Player.h"
 #include "SMS_PlayerControl.h"
 #include "SMS_Config.h"
-#include "SMS_GUICons.h"
+#include "SMS_GUIcons.h"
 #include "SMS_DMA.h"
 
 #include <kernel.h>

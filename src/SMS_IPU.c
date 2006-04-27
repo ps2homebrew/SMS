@@ -8,145 +8,20 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include <kernel.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "SMS_INTC.h"
+#include "SMS_DMA.h"
+#include "SMS_Config.h"
 #include "SMS_IPU.h"
 #include "SMS_GS.h"
 #include "SMS.h"
 #include "SMS_VideoBuffer.h"
 
 IPUContext g_IPUCtx;
-#ifdef _WIN32
-static void IPU_Destroy ( void ) {
-
-}  /* end IPU_Destroy */
-
-static void IPU_Sync ( void ) {
-
-}  /* end IPU_Sync */
-
-static void IPU_Display ( struct SMS_FrameBuffer* apMB ) {
-
- if ( g_IPUCtx.m_pGSCtx -> m_pVideo ) {
-
-  uint32_t        lY, lX;
-  uint8_t*        lpVideoY  = ( uint8_t* )g_IPUCtx.m_pGSCtx -> m_pVideo;
-  uint8_t*        lpVideoCr = lpVideoY  + g_IPUCtx.m_Width * g_IPUCtx.m_Height;
-  uint8_t*        lpVideoCb = lpVideoCr + (  ( g_IPUCtx.m_Width * g_IPUCtx.m_Height ) >> 2  );
-  SMS_MacroBlock* lpData    = apMB -> m_pData;
-
-  for ( lY = 0; lY < g_IPUCtx.m_MBHeight; ++lY ) {
-
-   SMS_MacroBlock* lpMB = lpData;
-
-   for ( lX = 0; lX < g_IPUCtx.m_MBWidth; ++lX, ++lpMB ) {
-
-    int      i;
-    uint8_t* lpVideo = lpVideoY;
-
-    for ( i = 0; i < 16; ++i ) {
-
-     memcpy ( lpVideo, &lpMB -> m_Y[ i ][ 0 ], 16 );
-     lpVideo += g_IPUCtx.m_Width;
-
-    }  /* end for */
-
-    lpVideoY += 16;
-    lpVideo   = lpVideoCb;
-
-    for ( i = 0; i < 8; ++i ) {
-
-     memcpy ( lpVideo, &lpMB -> m_Cb[ i ][ 0 ], 8 );
-     lpVideo += g_IPUCtx.m_UVWidth;
-
-    }  /* end for */
-
-    lpVideoCb += 8;
-    lpVideo    = lpVideoCr;
-
-    for ( i = 0; i < 8; ++i ) {
-
-     memcpy ( lpVideo, &lpMB -> m_Cr[ i ][ 0 ], 8 );
-     lpVideo += g_IPUCtx.m_UVWidth;
-
-    }  /* end for */
-
-    lpVideoCr += 8;
-
-   }  /* end for */
-
-   lpVideoY  += 15 * g_IPUCtx.m_Width;
-   lpVideoCb +=  7 * g_IPUCtx.m_UVWidth;
-   lpVideoCr +=  7 * g_IPUCtx.m_UVWidth;
-
-   lpData += g_IPUCtx.m_Linesize;
-
-  }  /* end for */
-
-  PostMessage ( g_IPUCtx.m_pGSCtx -> m_hWnd, WM_APP, 1, 0 );
-
- }  /* end if */
-
-}  /* end IPU_Display */
-
-IPUContext* IPU_InitContext ( GSContext* apGSCtx, int aWidth, int aHeight ) {
-
- unsigned int lLeft,  lTop,  lRight,  lBottom;
- float        lAR   = (  ( float )aWidth  ) / (  ( float )aHeight  );
-
- SMS_Linesize ( aWidth, &g_IPUCtx.m_Linesize );
-
- if ( apGSCtx -> m_Width < apGSCtx -> m_Height * lAR ) {
-
-  int lH = ( int )( apGSCtx -> m_Width / lAR );
-
-  lLeft  = 0;
-  lRight = apGSCtx -> m_Width;
-
-  lTop    = ( apGSCtx -> m_Height - lH ) >> 1;
-  lBottom = lTop + lH;
-
- } else {
-
-  int lW = ( int )( apGSCtx -> m_Height * lAR );
-
-  lTop    = 0;
-  lBottom = apGSCtx -> m_Height;
-
-  lLeft  = ( apGSCtx -> m_Width - lW ) >> 1;
-  lRight = lLeft + lW;
-
- }  /* end else */
-
- if ( apGSCtx -> m_hWnd ) {
-
-  LPARAM lParam = *( LPARAM* )&lAR;
-
-  SendMessage (  apGSCtx -> m_hWnd, WM_APP, 2, lParam );
-  SendMessage (  apGSCtx -> m_hWnd, WM_APP, 3, MAKELPARAM( aHeight, aWidth )  );
-
- }  /* end if */
-
- g_IPUCtx.m_MBWidth  = aWidth  >> 4;
- g_IPUCtx.m_MBHeight = aHeight >> 4;
- g_IPUCtx.m_Width    = aWidth;
- g_IPUCtx.m_UVWidth  = aWidth  >> 1;
- g_IPUCtx.m_Height   = aHeight;
- g_IPUCtx.m_UVHeight = aHeight >> 1;
- g_IPUCtx.m_pGSCtx   = apGSCtx;
- g_IPUCtx.Destroy    = IPU_Destroy;
- g_IPUCtx.Display    = IPU_Display;
- g_IPUCtx.Sync       = IPU_Sync;
-
- return &g_IPUCtx;
-
-}  /* end IPU_InitContext */
-#else  /* PS2 */
-# include <kernel.h>
-# include <stdlib.h>
-# include <stdio.h>
-# include <string.h>
-# include "SMS_INTC.h"
-# include "SMS_DMA.h"
-# include "SMS_Config.h"
 
 # define VIF_PIDX (  sizeof ( g_IPUCtx.m_DMAVIFDraw ) / sizeof ( g_IPUCtx.m_DMAVIFDraw[ 0 ] ) - 2  )
 # define ViF_PIDX (  sizeof ( g_IPUCtx.m_DMAViFDraw ) / sizeof ( g_IPUCtx.m_DMAViFDraw[ 0 ] ) - 2  )
@@ -173,8 +48,7 @@ static void IPU_DestroyContext ( void ) {
   DisableDmac ( DMAC_I_FROM_IPU );
   RemoveDmacHandler ( DMAC_I_FROM_IPU, g_IPUCtx.m_DMAHandlerID_IPU );
 
-  free ( g_IPUCtx.m_pDMAPacket );
-  free ( g_IPUCtx.m_pResult    );
+  free ( g_IPUCtx.m_pResult );
   g_IPUCtx.m_pResult = NULL;
 
  }  /* end if */
@@ -227,10 +101,12 @@ static int IPU_DMAHandlerFromIPU ( int aChan ) {
   "ld       $a0, %0\n\t"
   "lw       $a1, %1\n\t"
   "li       $t0, 0x8000\n\t"
-  "lui      $v1, 0x2000\n\t"
+  "lui      $t1, 0x8000\n\t"
+  "li       $v1, 0x3FFF\n\t"
   "sw       $zero, 32($a2)\n\t"
-  "sw       $v0, 48($a2)\n\t"
-  "or       $v0, $v0, $v1\n\t"
+  "and      $v1, $v1, $v0\n\t"
+  "or       $v1, $v1, $t1\n\t"
+  "sw       $v1, 48($a2)\n\t"
   "dsll     $t0, $t0, 21\n\t"
   "addiu    $v0, $v0, 48\n\t"
   "1:\n\t"
@@ -245,8 +121,6 @@ static int IPU_DMAHandlerFromIPU ( int aChan ) {
   "sw       $at, 0($a2)\n\t"
   ".set at\n\t"
   ".set reorder\n\t"
-  "sync\n\t"
-  "ei\n\t"
   :: "m"( g_IPUCtx.m_DestY      ),
      "m"( g_IPUCtx.m_nMBSlice   ),
      "m"( g_IPUCtx.m_pDMAPacket ),
@@ -283,11 +157,6 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
  } else g_IPUCtx.m_fBlank = 1;
 
- __asm__ __volatile__(
-  "sync\n\t"
-  "ei\n\t"
- );
-
  return 0;
 
 }  /* end IPU_VBlankStartHandler */
@@ -295,11 +164,6 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 static int IPU_VBlankEndHandler ( int aCause ) {
 
  g_IPUCtx.m_fBlank = 0;
-
- __asm__ __volatile__(
-  "sync\n\t"
-  "ei\n\t"
- );
 
  return 0;
 
@@ -344,11 +208,6 @@ static int IPU_DMAHandlerToGIF ( int aChan ) {
   g_IPUCtx.GIFHandler ();
 
  }  /* end if */
-
- __asm__ __volatile__(
-  "sync\n\t"
-  "ei\n\t"
- );
 
  return 0;
 
@@ -397,9 +256,15 @@ static void IPU_ChangeMode ( unsigned int anIdx ) {
    g_IPUCtx.m_DMAGIFDraw[ 14 ] = GIF_TAG( 2, 1, 0, 0, 1, 2 );
    g_IPUCtx.m_DMAGIFDraw[ 15 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
    g_IPUCtx.m_DMAGIFDraw[ 16 ] = GS_SET_XYZ( 0, 0, 0 );
-   g_IPUCtx.m_DMAGIFDraw[ 17 ] = GS_SET_XYZ( g_IPUCtx.m_ScrRight, g_IPUCtx.m_ImgTop[ anIdx ], 0 );
-   g_IPUCtx.m_DMAGIFDraw[ 18 ] = GS_SET_XYZ( 0,  g_IPUCtx.m_ImgBottom[ anIdx ], 0 );
-   g_IPUCtx.m_DMAGIFDraw[ 19 ] = GS_SET_XYZ( g_IPUCtx.m_ScrRight, g_IPUCtx.m_ScrBottom, 0 );
+   if ( !g_IPUCtx.m_ImgLeft[ anIdx ] ) {
+    g_IPUCtx.m_DMAGIFDraw[ 17 ] = GS_SET_XYZ( g_IPUCtx.m_ScrRight, g_IPUCtx.m_ImgTop[ anIdx ], 0 );
+    g_IPUCtx.m_DMAGIFDraw[ 18 ] = GS_SET_XYZ( 0,  g_IPUCtx.m_ImgBottom[ anIdx ], 0 );
+    g_IPUCtx.m_DMAGIFDraw[ 19 ] = GS_SET_XYZ( g_IPUCtx.m_ScrRight, g_IPUCtx.m_ScrBottom, 0 );
+   } else {
+    g_IPUCtx.m_DMAGIFDraw[ 17 ] = GS_SET_XYZ( g_IPUCtx.m_ImgLeft [ anIdx ], g_IPUCtx.m_ScrBottom, 0 );
+    g_IPUCtx.m_DMAGIFDraw[ 18 ] = GS_SET_XYZ( g_IPUCtx.m_ImgRight[ anIdx ], 0, 0 );
+    g_IPUCtx.m_DMAGIFDraw[ 19 ] = GS_SET_XYZ( g_IPUCtx.m_ScrRight, g_IPUCtx.m_ScrBottom, 0 );
+   }  /* end else */
    SyncDCache ( g_IPUCtx.m_DMAGIFDraw, &g_IPUCtx.m_DMAGIFDraw[ 20 ] );
   EIntr ();
 
@@ -632,11 +497,6 @@ static int IPU_DummyVBlankStartHandler ( int aCause ) {
 
  } else g_IPUCtx.m_fBlank = 1;
 
- __asm__ __volatile__(
-  "sync\n\t"
-  "ei\n\t"
- );
-
  return 0;
 
 }  /* end IPU_DummyVBlankStartHandler */
@@ -685,11 +545,13 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
   g_IPUCtx.m_ScrBottom       = g_GSCtx.m_PHeight << 4;
   g_IPUCtx.m_pResult         = ( unsigned char* )malloc ( 1024 * g_IPUCtx.m_nMBSlice );
 
-  g_IPUCtx.m_pDMAPacket = ( uint64_t* )malloc ( g_IPUCtx.m_nMBSlice * 16 * 8 );
+  g_IPUCtx.m_pDMAPacket = ( uint64_t* )g_pSPRTop;
   FlushCache ( 0 );
 
-  lpRes = g_IPUCtx.m_pResult;
-  lpBuf = ( uint64_t* )UNCACHED_SEG( g_IPUCtx.m_pDMAPacket );
+  g_pSPRTop += g_IPUCtx.m_nMBSlice * 16 * 8;
+  lpRes      = g_IPUCtx.m_pResult;
+  lpBuf      = g_IPUCtx.m_pDMAPacket;
+
 
   g_IPUCtx.m_VRAM    = lVRAM;
   g_IPUCtx.m_TBW     = lTBW;
@@ -779,4 +641,4 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
  return &g_IPUCtx;
 
 }  /* end IPU_InitContext */
-#endif  /* _WIN32 */
+

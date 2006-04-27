@@ -23,11 +23,7 @@
 #include <malloc.h>
 #include <string.h>
 
-#ifdef _WIN32
-# include <ctype.h>
-#endif  /* _WIN32 */
-
-# define SMS_INTERNAL_BUFFER_SIZE 32
+#define SMS_INTERNAL_BUFFER_SIZE 32
 
 typedef struct SMS_InternalBuffer {
 

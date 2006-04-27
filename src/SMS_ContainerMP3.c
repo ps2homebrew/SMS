@@ -50,14 +50,15 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
  int          retVal = 0;
  uint8_t      lBuf[ ID3_HEADER_SIZE ];
+ SMS_ALIGN( uint8_t lHeader[ 4 ], 4  ) = { 0xFF, 0xFF, 0xFF, 0xFF };
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
- unsigned int lMP3Pos;
+ unsigned int lMP3Pos   = 16384;
 
  if (  ( int )lpFileCtx < 0  ) return retVal;
 
  if (  lpFileCtx -> Read ( lpFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
 
-  uint64_t lVal;
+  uint64_t lVal = 0;
 
   if (  _id3_match ( lBuf )  ) {
 
@@ -69,14 +70,23 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
   } else lpFileCtx -> Seek ( lpFileCtx, 0 );
 
-  lMP3Pos = lpFileCtx -> m_CurPos;
+  while (  lMP3Pos && !FILE_EOF( lpFileCtx )  ) {
 
-  if (  lpFileCtx -> Read ( lpFileCtx, &lVal, 4 ) == 4 &&
-        MP3_CheckHeader (
-         ( uint32_t )(   lVal = SMS_bswap32 (  ( uint32_t )lVal  ) & SMS_INT64( 0x00000000FFFFFFFF )   )
-        ) &&
-        (   4 - (  ( lVal >> 17 ) & 3  )   )      == 3
-  ) {
+   lHeader[ 0 ] = lHeader[ 1 ];
+   lHeader[ 1 ] = lHeader[ 2 ];
+   lHeader[ 2 ] = lHeader[ 3 ];
+   lHeader[ 3 ] = File_GetByte ( lpFileCtx );
+
+   lVal  = SMS_bswap32 (  *( uint32_t* )lHeader  );
+   lVal &= SMS_INT64( 0x00000000FFFFFFFF );
+
+   if (    MP3_CheckHeader (  ( uint32_t )lVal  ) && (   4 - (  ( lVal >> 17 ) & 3  )   ) == 3    ) break;
+
+   --lMP3Pos;
+
+  }  /* end while */
+
+  if (  lMP3Pos && !FILE_EOF( lpFileCtx )  ) {
 
    int               lMPEG25;
    int               lLSF;
@@ -87,6 +97,8 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
    SMS_CodecContext* lpCodecCtx;
    char*             lpSlash;
    char*             lpDot;
+
+   lMP3Pos = lpFileCtx -> m_CurPos - 4;
 
    if (  lVal & ( 1 << 20 )  ) {
 

@@ -22,7 +22,8 @@ EE_OBJS  = main.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_TimerHandler.o SMS_Timer.
            SMS_GUIDesktop.o SMS_GUIDevMenu.o SMS_GUIFileMenu.o SMS_Locale.o       \
            SMS_FileDir.o SMS_GUIMenu.o SMS_GUIMenuSMS.o SMS_DummyAV.o             \
            SMS_SubtitleContext.o SMS_GUICmdProc.o SMS_PlayerMenu.o                \
-           SMS_GUIMiniBrowser.o SMS_Sounds.o
+           SMS_GUIMiniBrowser.o SMS_Sounds.o SMS_DSP_QPel.o SMS_Spectrum.o        \
+           SMS_Utils.o SMS_DSP_FFT.o
 
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJ_DIR)%)
 

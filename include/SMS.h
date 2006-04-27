@@ -12,8 +12,8 @@
 #ifndef __SMS_H
 # define __SMS_H
 
-extern int g_Trace;
-extern int g_SMSFlags;
+extern int            g_SMSFlags;
+extern unsigned char* g_pSPRTop;
 
 # define SMS_FLAG_DEV9 0x00000001
 # define SMS_FLAG_USB  0x00000002
@@ -93,66 +93,6 @@ extern const uint32_t g_SMS_InvTbl[ 256 ];
 #  define NULL (  ( void* )0  )
 # endif  /* NULL */
 
-# ifdef _WIN32
-
-#  include <sys/timeb.h>
-
-typedef signed   __int64  int64_t;
-typedef unsigned __int64 uint64_t;
-
-typedef struct u128 {
-
- uint64_t m_Low;
- uint64_t m_High;
-
-} u128;
-
-#  define SMS_INT64( c )    c##i64
-#  define SMS_INLINE        __inline
-#  define SMS_ALIGN( d, a ) __declspec(  align( a )  ) d
-#  define SMS_DATA_SECTION
-#  define SMS_BSS_SECTION
-
-#  pragma warning( disable: 4035 )
-static __inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
- __asm mov   eax, [ aVal ]
- __asm bswap eax
-}  /* end SMS_bswap32 */
-
-static __inline int32_t SMS_ModP2 ( int32_t aVal, uint32_t aDiv ) {
- __asm mov  eax, [ aVal ]
- __asm cdq
- __asm and  edx, [ aDiv ]
- __asm add  eax, edx
- __asm and  eax, [ aDiv ]
- __asm sub  eax, edx
-}  /* end SMS_ModP2 */
-#  pragma warning( default: 4035 )
-
-static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
- int retVal = 31;
- if ( !aVal ) return 0;
- while (  !( aVal & 0x80000000 )  ) {
-  aVal <<= 1;
-  --retVal;
- }  /* end while */
- return retVal;
-}  /* end SMS_log2 */
-
-static __inline uint32_t SMS_unaligned32 ( const void* apData ) {
- return *( const uint32_t* )apData;
-}  /* end SMS_unaligned32 */
-
-static __inline uint64_t SMS_unaligned64 ( const void* apData ) {
- return *( const uint64_t* )apData;
-}  /* end SMS_unaligned64 */
-
-static SMS_INLINE uint64_t SMS_Time ( void ) {
- struct _timeb lTime; _ftime ( &lTime );
- return ( uint64_t )lTime.time * 1000i64 + ( uint64_t )lTime.millitm;
-}  /* end SMS_Time */
-# else  /* PS2 */
-
 typedef signed   long int  int64_t;
 typedef unsigned long int uint64_t;
 typedef unsigned int     uint128_t __attribute__(   (  mode( TI )  )   );
@@ -172,31 +112,10 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_BSS_SECTION   __attribute__(   (  section( ".bss"  )  )   )
 #  define _U( p )           (    ( uint64_t* )(   (  ( uint32_t )( p )  ) | 0x20000000   )    )
 
-#  define SMS_MPEG_SPR_DMA_MB_BUF  (  ( uint8_t* )0  )
-#  define SMS_MPEG_SPR_DMA_Y_BUF   ( SMS_MPEG_SPR_DMA_MB_BUF + 1536 )
-#  define SMS_MPEG_SPR_DMA_Cb_BUF  ( SMS_MPEG_SPR_DMA_Y_BUF  + 4096 )
-#  define SMS_MPEG_SPR_DMA_Cr_BUF  ( SMS_MPEG_SPR_DMA_Cb_BUF + 1024 )
-#  define SMS_MPEG_SPR_DMA_BLOCKS  ( SMS_MPEG_SPR_DMA_Cr_BUF + 1024 )
-#  define SMS_DSP_SPR_DMA_FULL     ( SMS_MPEG_SPR_DMA_BLOCKS +  768 )
-#  define SMS_DSP_SPR_DMA_HALF     ( SMS_DSP_SPR_DMA_FULL    +  416 )
-#  define SMS_DSP_SPR_DMA_HALF_HV  ( SMS_DSP_SPR_HALF        +  272 )
-#  define SMS_MPEG_SPR_DMA_MB_0    ( SMS_DSP_SPR_HALF_HV     +  256 )
-#  define SMS_MPEG_SPR_DMA_MB_1    ( SMS_MPEG_SPR_DMA_MB_0   +  384 )
-#  define SMS_DSP_SPR_DMA_CONST    ( SMS_MPEG_SPR_DMA_MB_1   +  384 )
-#  define SMS_SPR_DMA_FREE         ( SMS_DSP_SPR_DMA_CONST   +  368 )
-
-#  define SMS_MPEG_SPR_MB_BUF (  ( SMS_MacroBlock* )0x70000000  )
-#  define SMS_MPEG_SPR_Y_BUF  (  ( uint128_t*      )( SMS_MPEG_SPR_MB_BUF +   4 )  )
-#  define SMS_MPEG_SPR_Cb_BUF (  ( uint64_t*       )( SMS_MPEG_SPR_Y_BUF  + 256 )  )
-#  define SMS_MPEG_SPR_Cr_BUF (  ( uint64_t*       )( SMS_MPEG_SPR_Cb_BUF + 128 )  )
-#  define SMS_MPEG_SPR_BLOCKS (  ( SMS_DCTELEM*    )( SMS_MPEG_SPR_Cr_BUF + 128 )  )
-#  define SMS_DSP_SPR_FULL    (  ( uint8_t*        )( SMS_MPEG_SPR_BLOCKS + 384 )  )
-#  define SMS_DSP_SPR_HALF    (  ( uint8_t*        )( SMS_DSP_SPR_FULL    + 416 )  )
-#  define SMS_DSP_SPR_HALF_HV (  ( uint8_t*        )( SMS_DSP_SPR_HALF    + 272 )  )
-#  define SMS_MPEG_SPR_MB_0   (  ( SMS_MacroBlock* )( SMS_DSP_SPR_HALF_HV + 256 )  )
-#  define SMS_MPEG_SPR_MB_1   (  ( SMS_MacroBlock* )( SMS_MPEG_SPR_MB_0   +   1 )  )
-#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )( SMS_MPEG_SPR_MB_1   +   1 )  )
-#  define SMS_SPR_FREE        (  ( uint8_t*        )( SMS_DSP_SPR_CONST   + 184 )  )
+#  define SMS_MPEG_SPR_MB     (  ( SMS_MacroBlock* )0x70000280  )
+#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )0x70000400  )
+#  define SMS_MPEG_SPR_BLOCKS (  ( SMS_DCTELEM*    )0x70000570  )
+#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70000870  )
 
 static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
  uint32_t retVal;
@@ -208,20 +127,6 @@ static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
  );
  return retVal;
 }  /* end SMS_bswap32 */
-
-static inline int SMS_ModP2 ( int aVal, unsigned int aDiv ) {
- int retVal;
- __asm__ __volatile__ (
-  "dsll      $v1,  %1,  31\n\t"
-  "dsra32    $v1, $v1,  31\n\t"
-  "and       $v1, $v1,  %2\n\t"
-  "addu       %0,  %1, $v1\n\t"
-  "and        %0,  %0,  %2\n\t"
-  "subu       %0,  %0, $v1\n\t"
-  : "=r"( retVal ) : "r"( aVal ), "r"( aDiv ) : "$3"
- );
- return retVal;
-}  /* end SMS_ModP2 */
 
 static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
  int retVal;
@@ -247,7 +152,6 @@ static SMS_INLINE uint64_t SMS_Time ( void ) {
  volatile extern uint64_t g_Timer;
  return g_Timer;
 }  /* end SMS_Time */
-# endif  /* _WIN32 */
 
 # define SMS_MAXINT64 SMS_INT64( 0x7FFFFFFFFFFFFFFF )
 # define SMS_MININT64 SMS_INT64( 0x8000000000000000 )
@@ -352,6 +256,7 @@ int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t            );
 void     SMS_StartNetwork     ( void*                                );
 void     SMS_ResetIOP         ( void                                 );
 void     SMS_Strcat           ( char*, const char*                   );
+int      SMS_rand             ( void                                 );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

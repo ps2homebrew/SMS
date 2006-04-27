@@ -129,9 +129,9 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
  if ( lnIdx <= 0 ) return 0;
 
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 64 );
-#ifndef _WIN32
+
  GUI_Progress ( STR_LOADING_INDICES.m_pStr, 0 );
-#endif  /* _WIN32 */
+
  lPerc = lnIdx / 100 + 1;
 
  for ( i = 0; i < lnIdx; ++i ) {
@@ -143,7 +143,7 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
 
   lIdx  = (  ( lTag        & 0xFF  ) - '0'  ) * 10;
   lIdx += (  ( lTag >> 8 ) & 0xFF  ) - '0';
-#ifndef _WIN32
+
   if (  !( i % lPerc )  ) {
 
    float lPos = ( float )i / ( float ) lnIdx * 100.0F;
@@ -151,7 +151,7 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
    GUI_Progress (  STR_LOADING_INDICES.m_pStr, ( unsigned int )( lPos + 0.5F )  );
 
   }  /* end if */
-#endif  /* _WIN32 */
+
   if ( lIdx >= apCtx -> m_nStm ) continue;
 
   lpStm = MYSTRM( apCtx -> m_pStm[ lIdx ] );
