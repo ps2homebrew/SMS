@@ -695,3 +695,14 @@ Update (27-APR-2006)
   to the "flying balls";
 - Slightly improved performance of the MP3 decoder (assembler
   implementation of the 64-bit integer multiplication routine);
+
+Update (10-MAY-2006)
+--------------------
+- Fixed "zero volume" bug in the player. Thanks to "wallacee" for the remark;
+- An attempt has been made to get rid of "hangings" for "badly interleaved .avi"
+  (thanks to "Mr.Worm~~" for sample video clip);
+- Changed subtitle selectsion logic. Now pressing "triangle" button in the
+  "minibrowser" cancels default subtitle selection ("dlanor's" suggestion);
+- Audio spectrum is made "symmetric" ("rathunter's" suggestion);
+- "Audio animation display" menu option is moved to "MP3 settings..." submenu;
+- Timer code is rewritten;

@@ -65,6 +65,11 @@ void SMS_SpectrumInit ( void ) {
 
 void SMS_SpectrumUpdate ( short* apSamples ) {
 
+ static int s_lIdx[ 16 ] = {
+  0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8
+ };
+
+ int            i;
  int*           lpH      = ( int* )0x70003800;
  int            lYB      = g_GSCtx.m_Height - 192;
  int            lX       = (  ( g_GSCtx.m_Width - 480 ) >> 1  ) - 30;
@@ -72,8 +77,6 @@ void SMS_SpectrumUpdate ( short* apSamples ) {
  unsigned long* lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
 
  if ( !apSamples ) {
-
-  int i;
 
   for ( i = 0; i < 16; ++i ) lpH[ i ] = 2;
 
@@ -85,9 +88,11 @@ void SMS_SpectrumUpdate ( short* apSamples ) {
 
  }  /* end else */
 
+ i = 0;
+
  while ( lpDMA < lpDMAEnd ) {
 
-  unsigned lYT = lYB - *lpH++;
+  unsigned lYT = lYB - lpH[  s_lIdx[ i++ ]  ];
 
   lX += 30;
 

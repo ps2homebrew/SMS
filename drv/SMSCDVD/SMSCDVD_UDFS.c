@@ -631,9 +631,11 @@ static int UDF_Open ( iop_io_file_t* apFile, const char* apName ) {
 
  lFile.m_Location += s_PartInfo.m_Start;
 
- i = _AllocFD ( apFile -> unit, lFile.m_Location, lFile.m_Length );
+ i = _AllocFD ( lFile.m_Location, lFile.m_Length );
 
- return i >= 0 ? apFile -> unit : i;
+ apFile -> privdata = ( void* )i;
+
+ return i;
 
 }  /* end UDF_Open */
 
@@ -647,7 +649,7 @@ static int UDF_Read ( iop_io_file_t* apFile, void* apBuff, int aSize ) {
  unsigned int lnExtra = 0;
  char*        lpBuff;
 
- i = _LookupFD ( apFile -> unit );
+ i = _LookupFD (  ( int )apFile -> privdata  );
 
  if ( i < 0 ) return i;
 

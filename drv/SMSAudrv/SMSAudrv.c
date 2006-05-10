@@ -155,6 +155,7 @@ static void* _StartAudio ( void* apData, int aSize ) {
  int lBS     = (  ( int* )apData  )[ 1 ];
  int lnChan  = (  ( int* )apData  )[ 2 ];
  int lVolume = (  ( int* )apData  )[ 3 ];
+ int lfMute1;
 
  WaitSema   ( s_SemaVoice );
  SignalSema ( s_SemaVoice );
@@ -168,30 +169,32 @@ static void* _StartAudio ( void* apData, int aSize ) {
  s_WritePos  = 0;
  s_ReadPos   = s_Advance;
 
+ EnableIntr ( SPU_DMA_CHN0_IRQ );
+  sceSdVoiceTrans (  SD_CORE_0, 0, s_SPUBuf, ( void* )0x4000, 0x1000  );
+  sceSdVoiceTransStatus ( SD_CORE_0, 1 );
+ DisableIntr ( SPU_DMA_CHN0_IRQ, &lfMute1 );
+
  if ( lnChan == 5 ) {
 
   s_Core  = SD_CORE_0;
   lBS     = SPU_DMA_CHN0_IRQ;
   lVolume = 0;
   lFreq   = 0x801;
-
-  EnableIntr ( SPU_DMA_CHN0_IRQ );
-   sceSdVoiceTrans (  SD_CORE_0, 0, s_SPUBuf, ( void* )0x4000, 0x1000  );
-   sceSdVoiceTransStatus ( SD_CORE_0, 1 );
-  DisableIntr ( SPU_DMA_CHN0_IRQ, &lnChan );
+  lfMute1 = 1;
 
   sceSdSetParam ( SD_CORE_1 | SD_PARAM_AVOLL, 0 );
   sceSdSetParam ( SD_CORE_1 | SD_PARAM_AVOLR, 0 );
 
  } else {
 
-  s_Core = SD_CORE_1;
-  lBS    = SPU_DMA_CHN1_IRQ;
-  lFreq  = 0;
+  s_Core  = SD_CORE_1;
+  lBS     = SPU_DMA_CHN1_IRQ;
+  lFreq   = 0;
+  lfMute1 = 0;
 
  }  /* end else */
 
- _Mute1     ( !lVolume   );
+ _Mute1     ( lfMute1    );
  _SetVolume ( 1, lVolume );
 
  sceSdSetCoreAttr ( SD_CORE_SPDIF_MODE, lFreq );

@@ -154,9 +154,10 @@ int GUI_ReadButtons ( void ) {
 
 }  /* end GUI_ReadButtons */
 
-static void TimerHandler ( void ) {
+static void TimerHandler ( void* apArg ) {
 
  iWakeupThread ( s_GUIThreadID );
+ SMS_iTimerSet ( 0, 64, TimerHandler, NULL );
 
 }  /* end TimerHandler */
 
@@ -459,7 +460,7 @@ void GUI_Initialize ( int afCold ) {
   lSema.max_count  = 1;
   s_EventSema = CreateSema ( &lSema );
 
-  Timer_Init ();
+  SMS_TimerInit ();
 
   MC_Init  ();
   PAD_Init ();
@@ -546,7 +547,7 @@ void GUI_Initialize ( int afCold ) {
 
 void GUI_Suspend ( void ) {
 
- Timer_RegisterHandler ( 0, NULL );
+ SMS_TimerReset ( 0, NULL );
  SuspendThread ( s_GUIThreadID );
 
 }  /* end GUI_Suspend */
@@ -554,7 +555,7 @@ void GUI_Suspend ( void ) {
 void GUI_Resume ( void ) {
 
  ResumeThread ( s_GUIThreadID );
- Timer_RegisterHandler ( 0, TimerHandler );
+ SMS_TimerSet ( 0, 64, TimerHandler, NULL );
 
 }  /* end GUI_Resume */
 

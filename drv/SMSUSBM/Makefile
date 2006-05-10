@@ -19,7 +19,6 @@ IOP_CFLAGS += -DCOMPILE_DUMPS
 endif
 
 all: $(IOP_BIN)
-	cp $(IOP_BIN) D:/Eugene/MYDOCU~1/Projects/SMS/SM72A1~1/bin
 
 clean:
 	rm -f *.elf *.o *.a *.irx

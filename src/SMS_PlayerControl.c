@@ -55,26 +55,25 @@ static SMS_ListNode* s_pCurLang;
 
 extern SMS_Player s_Player;
 
-static void _osd_timer_handler_incr ( void ) {
+static void _osd_timer_handler_incr ( void* apArg ) {
 
  PlayerControl_MkTime ( s_Player.m_AudioTime );
 
+ SMS_iTimerSet ( 2, 1000, _osd_timer_handler_incr, NULL );
+
 }  /* end _osd_timer_handler_incr */
 
-static void _osd_timer_handler_decr ( void ) {
+static void _osd_timer_handler_decr ( void* apArg ) {
 
  PlayerControl_MkTime ( s_Player.m_pCont -> m_Duration - s_Player.m_AudioTime );
 
+ SMS_iTimerSet ( 2, 1000, _osd_timer_handler_decr, NULL );
+
 }  /* end _osd_timer_handler_decr */
 
-static void TimerHandler ( void ) {
+static void TimerHandler ( void* apArg ) {
 
- if ( g_Timer >= s_IntTime ) {
-
-  g_IPUCtx.iQueuePacket ( 8, g_VCErase );
-  Timer_iRegisterHandler ( 1, NULL );
-
- }  /* end if */
+ g_IPUCtx.iQueuePacket ( 8, g_VCErase );
 
 }  /* end TimerHandler */
 
@@ -456,8 +455,7 @@ void PlayerControl_AdjustVolume ( int aDelta ) {
 
  g_IPUCtx.QueuePacket ( 33, g_VCPaint );
 
- s_IntTime = g_Timer + 2000;
- Timer_RegisterHandler ( 1, TimerHandler );
+ SMS_TimerSet ( 1, 2000, TimerHandler, NULL );
 
  s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
 
@@ -475,7 +473,7 @@ static int PlayerControl_Scroll ( int aDir ) {
  int64_t        lIncr     = 3000LL * aDir;
  uint64_t       lNextTime = 0LL;
  uint32_t       lFilePos  = 0U;
- void*          lpHandler = Timer_RegisterHandler ( 2, NULL );
+ void*          lpHandler = SMS_TimerReset ( 2, NULL );
 
  lpIPUCtx -> Sync    ();
  lpIPUCtx -> Repaint ();
@@ -620,7 +618,7 @@ end:
 
  if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> m_Idx = 0;
 
- Timer_RegisterHandler ( 2, lpHandler );
+ SMS_TimerSet ( 2, 1000, lpHandler, NULL );
 
  return retVal;
 
@@ -691,7 +689,7 @@ static void _handle_timer_osd ( int aDir ) {
 
   (   (  void ( * ) ( void )  )s_pTimerOSDHandlers[ lOSD ]   ) ();
 
-  Timer_RegisterHandler ( 2, s_pTimerOSDHandlers[ lOSD ] );
+  SMS_TimerSet ( 2, 1000, s_pTimerOSDHandlers[ lOSD ], NULL );
 
  }   /* end else */
 
@@ -984,8 +982,6 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
  g_IPUCtx.QueuePacket ( lQWC, g_SCPaint );
 
  s_IntTime = g_Timer + 10000;
-
- Timer_RegisterHandler ( 1, TimerHandler );
 
 }  /* end PlayerControl_DisplayScrollBar */
 

@@ -148,11 +148,6 @@ static inline uint64_t SMS_unaligned64 ( const void* apData ) {
  return (  ( const SMS_Unaligned64* )apData  ) -> m_Val;
 }  /* end SMS_unaligned64 */
 
-static SMS_INLINE uint64_t SMS_Time ( void ) {
- volatile extern uint64_t g_Timer;
- return g_Timer;
-}  /* end SMS_Time */
-
 # define SMS_MAXINT64 SMS_INT64( 0x7FFFFFFFFFFFFFFF )
 # define SMS_MININT64 SMS_INT64( 0x8000000000000000 )
 

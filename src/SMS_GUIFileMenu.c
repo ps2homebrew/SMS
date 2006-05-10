@@ -443,7 +443,7 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
 
   if ( aFlags & FA_FLAGS_SUB ) lpParam[ 1 ] = GUI_MiniBrowser ( lpFileCtx, lPath, &lpParam[ 2 ] );
 
-  if (  ( aFlags & FA_FLAGS_AVI ) && !lpParam[ 1 ] && ( g_Config.m_PlayerFlags & SMS_PF_SUBS )  ) {
+  if (  ( aFlags & FA_FLAGS_AVI ) && !lpParam[ 1 ] && !( aFlags & FA_FLAGS_SUB ) && ( g_Config.m_PlayerFlags & SMS_PF_SUBS )  ) {
 
    int            i;
    char*          lpDot;

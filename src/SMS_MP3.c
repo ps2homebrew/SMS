@@ -20,12 +20,7 @@
 
 //#define SMS_MP3_AA_FLOAT
 
-#define DEV_ORDER        13
-#define POW_FRAC_BITS    24
-#define POW_FRAC_ONE     ( 1 << POW_FRAC_BITS )
 #define FIX( a )         (   ( int )(  ( a ) * FRAC_ONE      )   )
-#define POW_FIX( a )     (   ( int )(  ( a ) * POW_FRAC_ONE  )   )
-#define POW_MULL( a, b ) (   (  ( int64_t )( a ) * ( int64_t )( b )  ) >> POW_FRAC_BITS   )
 #define FRAC_ONE         ( 1 << FRAC_BITS )
 #define FIXR( a )        (   ( int )(  ( a ) * FRAC_ONE + 0.5  )   )
 #define FRAC_RND( a )    (   (  ( a ) + ( FRAC_ONE / 2 )  ) >> FRAC_BITS   )
@@ -2113,7 +2108,7 @@ static uint8_t s_mpa_quad_codes[ 2 ][ 16 ] = {
  { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }
 };
 
-extern int64_t SMS_INLINE MUL64 ( int64_t, int64_t );
+extern int64_t MUL64 ( int64_t, int64_t );
 
 static long SMS_INLINE _lrintf ( float aVal ) {
  return ( long )(  ( aVal ) + ( aVal > 0 ? 0.5F : -0.5F )  );
@@ -2247,9 +2242,7 @@ void SMS_Codec_MP3_Open ( SMS_CodecContext* apCtx ) {
  MYCTX() -> m_pInBufPtr      = MYCTX() -> m_pInBuf;
  MYCTX() -> m_FrameSize      = 0;
 
-}  /* end SMS_Codec_MPEG4_Open */
-
-#include <stdio.h>
+}  /* end SMS_Codec_MP3_Open */
 
 static int32_t MP3_Init ( SMS_CodecContext* apCtx ) {
 

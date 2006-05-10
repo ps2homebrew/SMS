@@ -95,7 +95,7 @@ typedef struct cdVolDesc {
  u8               m_Reserved3                   __attribute__(  ( packed )  );
  u8               m_SysIDName[ 32 ]             __attribute__(  ( packed )  );
  u8               m_VolName  [ 32 ]             __attribute__(  ( packed )  );
- u8	              m_Reserved5[  8 ]             __attribute__(  ( packed )  );
+ u8               m_Reserved5[  8 ]             __attribute__(  ( packed )  );
  u32              m_VolSize                     __attribute__(  ( packed )  );
  u32              m_VolSizeBE                   __attribute__(  ( packed )  );
  u8               m_Reserved6[ 32 ]             __attribute__(  ( packed )  );
@@ -212,8 +212,8 @@ static void* CDVDRpc_FlushCache ( void                   );
 
 static int strcasecmp ( const char*, const char* );
 
-static void _splitpath      ( const char*, char*, char* );
-static void TocEntryCopy    ( TocEntry*, dirTocEntry*   );
+static void _splitpath   ( const char*, char*, char* );
+static void TocEntryCopy ( TocEntry*, dirTocEntry*   );
 
 static enum PathMatch ComparePath ( const char* );
 
@@ -313,7 +313,7 @@ int CDVD_init ( iop_io_device_t* apDriver ) {
 
 }  /* end CDVD_init */
 
-static int _AllocFD ( int anUnit, unsigned int aPos, unsigned int aSize ) {
+static int _AllocFD ( unsigned int aPos, unsigned int aSize ) {
 
  int i;
 
@@ -324,7 +324,7 @@ static int _AllocFD ( int anUnit, unsigned int aPos, unsigned int aSize ) {
  s_FDUsed[ i ] = 1;
  ++s_FilesOpen;
 
- s_FDTable[ i ].m_FD       = anUnit;
+ s_FDTable[ i ].m_FD       = i;
  s_FDTable[ i ].m_FileSize = aSize;
  s_FDTable[ i ].m_LBA      = aPos;
  s_FDTable[ i ].m_FilePos  = 0;
@@ -333,11 +333,11 @@ static int _AllocFD ( int anUnit, unsigned int aPos, unsigned int aSize ) {
 
 }  /* end _AllocFD */
 
-static int _LookupFD ( int anUnit ) {
+static int _LookupFD ( int aFD ) {
 
  int i;
 
- for ( i = 0; i < 16; ++i ) if ( s_FDTable[ i ].m_FD == anUnit ) break;
+ for ( i = 0; i < 16; ++i ) if ( s_FDTable[ i ].m_FD == aFD ) break;
 
  return i < 16 ? i : -EBADF;
 
@@ -351,9 +351,11 @@ static int ISO_Open ( iop_io_file_t* apFile, const char* name ) {
 
  if (  CDVD_findfile ( name, &tocEntry ) != TRUE ) return -ENOENT;
 
- i = _AllocFD ( apFile -> unit, tocEntry.m_FileLBA, tocEntry.m_FileSize );
+ i = _AllocFD ( tocEntry.m_FileLBA, tocEntry.m_FileSize );
 
- return i >= 0 ? apFile -> unit : i;
+ apFile -> privdata = ( void* )i;
+
+ return i;
 
 }  /* end ISO_Open */
 
@@ -367,7 +369,7 @@ static int CDVD_open ( iop_io_file_t* apFile, const char* apName, int aMode, ...
 
 static int CDVD_lseek ( iop_io_file_t* apFile, unsigned long offset, int whence ) {
 
- int i = _LookupFD ( apFile -> unit );
+ int i = _LookupFD (  ( int )apFile -> privdata  );
 
  if ( i < 0 ) return i;
 
@@ -410,7 +412,7 @@ static int ISO_Read (  iop_io_file_t* apFile, void* buffer, int size ) {
  unsigned int num_sectors;
  unsigned int read = 0;
 
- i = _LookupFD ( apFile -> unit );
+ i = _LookupFD (  ( int )apFile -> privdata  );
 
  if ( i < 0 ) return i;
 
@@ -475,7 +477,7 @@ int CDVD_write ( iop_io_file_t* apDile, void* apBuffer, int aSize ) {
 
 int CDVD_close ( iop_io_file_t* apFile ) {
 
- int i = _LookupFD ( apFile -> unit );
+ int i = _LookupFD (  ( int )apFile -> privdata  );
 
  if ( i < 0 ) return i;
 

@@ -11,7 +11,7 @@
 #ifndef __SMS_Data_H
 # define __SMS_Data_H
 
-# define SMS_AUDSRV_SIZE      6781
+# define SMS_AUDSRV_SIZE      6765
 # define SMS_IDCT_CONST_SIZE   368
 # define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089

@@ -378,7 +378,7 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
   s_Player.m_pIPUCtx -> Display ( s_lDMA );
 
-  Timer_Wait ( 40 );
+  SMS_TimerWait ( 40 );
 
  }  /* end while */
 
@@ -422,7 +422,7 @@ static void _sms_video_renderer ( void* apParam ) {
 
    }  /* end if */
 
-   if ( lDiff > 20 ) Timer_Wait ( lDiff >> 2 );
+   if ( lDiff > 20 ) SMS_TimerWait ( lDiff >> 2 );
 
   }  /* end if */
 
@@ -864,6 +864,8 @@ static void _sms_audio_decoder ( void* apParam ) {
 
    } while ( s_AudioSamples -> m_Len > 0 );
 
+   if ( lPTS != SMS_NOPTS_VALUE ) s_Player.m_AudioTime = lPTS;
+
   }  /* end if */
 
   lpPacket -> Destroy ( lpPacket );
@@ -1100,7 +1102,7 @@ repeat:
 
      }  /* end while */
 resume:
-     Timer_Wait ( 500 );
+     SMS_TimerWait ( 500 );
      s_Flags &= ~SMS_FLAGS_PAUSE;
      SignalSema ( s_SemaPauseAudio );
      SignalSema ( s_SemaPauseVideo );
@@ -1437,7 +1439,7 @@ static void _Destroy ( void ) {
  s_Player.m_pCont -> Destroy ( s_Player.m_pCont );
  s_Player.m_pCont = NULL;
 
- Timer_RegisterHandler ( 2, NULL );
+ SMS_TimerReset ( 2, NULL );
  PlayerControl_Destroy ();
 
  if (  g_Config.m_PowerOff < 0 && !( s_Flags & SMS_FLAGS_STOP )  ) hddPowerOff ();

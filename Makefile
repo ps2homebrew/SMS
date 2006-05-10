@@ -10,7 +10,7 @@ EE_INCS    := -I$(EE_INC_DIR) $(EE_INCS) -I$(PS2SDK)/sbv/include
 EE_LIBS     = -lhdd -lpoweroff -lpatches -lfileXio -lc -lkernel
 EE_LDFLAGS  = -L$(PS2SDK)/sbv/lib -L$(PS2SDK)/ee/lib
 
-EE_OBJS  = main.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_TimerHandler.o SMS_Timer.o \
+EE_OBJS  = main.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_Timer.o                    \
            SMS_IPU.o SMS_Bitio.o SMS_MP3_MMI.o SMS_FileContext.o SMS_H263.o       \
            SMS_DSP.o SMS_DSP_MMI.o SMS_MPEG.o SMS_VLC.o SMS_MPEG4.o SMS_MPEG2.o   \
            SMS_MP3.o SMS_SPU.o SMS_CDDA.o SMS_Codec.o SMS_Integer.o SMS_SIF.o     \
