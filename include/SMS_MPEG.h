@@ -96,8 +96,7 @@
 typedef struct SMS_ScanTable {
 
  const uint8_t* m_pScantable;
- uint8_t        m_Permutated[ 64 ];
- uint8_t        m_RasterEnd [ 64 ];
+ uint8_t        m_RasterEnd[ 64 ];
 
 } SMS_ScanTable;
 
@@ -272,16 +271,16 @@ extern SMS_MPEGContext g_MPEGCtx;
 extern "C" {
 # endif  /* __cplusplus */
 
-void SMS_MPEGContext_Init          ( int, int                                  );
-void SMS_MPEGContext_Destroy       ( void                                      );
-int  SMS_MPEG_FrameStart           ( void                                      );
-void SMS_MPEG_InitBlockIdx         ( void                                      );
-void SMS_MPEG_InitScanTable        ( uint8_t*, SMS_ScanTable*, const uint8_t*  );
-void SMS_MPEG_SetQScale            ( int                                       );
-void SMS_MPEG_FrameEnd             ( void                                      );
-void SMS_MPEG_DecodeMB             ( SMS_DCTELEM[ 12 ][ 64 ]                   );
-void SMS_MPEG_CleanIntraTblEntries ( void                                      );
-int  SMS_MPEGContext_FindUnusedPic ( void                                      );
+void SMS_MPEGContext_Init          ( int, int                        );
+void SMS_MPEGContext_Destroy       ( void                            );
+int  SMS_MPEG_FrameStart           ( void                            );
+void SMS_MPEG_InitBlockIdx         ( void                            );
+void SMS_MPEG_InitScanTable        ( SMS_ScanTable*, const uint8_t*  );
+void SMS_MPEG_SetQScale            ( int                             );
+void SMS_MPEG_FrameEnd             ( void                            );
+void SMS_MPEG_DecodeMB             ( SMS_DCTELEM[ 12 ][ 64 ]         );
+void SMS_MPEG_CleanIntraTblEntries ( void                            );
+int  SMS_MPEGContext_FindUnusedPic ( void                            );
 
 # ifdef __cplusplus
 }

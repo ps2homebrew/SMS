@@ -160,11 +160,11 @@ static void _prepare_ipu_context ( void ) {
  GSContext_Init ( g_Config.m_DisplayMode, GSZTest_On, GSDoubleBuffer_Off );
  GS_VSync ();
 
+ _set_colors ();
+
  s_Player.m_pIPUCtx = IPU_InitContext ( lWidth, lHeight );
 
  if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> Prepare ();
-
- _set_colors ();
 
 }  /* end _prepare_ipu_context */
 
@@ -327,9 +327,9 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
  while ( 1 ) {
 
-  if (  s_Flags & ( SMS_FLAGS_STOP | SMS_FLAGS_EXIT )  ) break;
-
   s_Player.m_pIPUCtx -> Sync ();
+
+  if (  s_Flags & ( SMS_FLAGS_STOP | SMS_FLAGS_EXIT )  ) break;
 
   if ( s_Flags & SMS_FLAGS_PAUSE ) {
 
@@ -442,6 +442,8 @@ static void _sms_video_renderer ( void* apParam ) {
   SignalSema ( SEMA_R_PUT_VIDEO );
 
  }  /* end while */
+
+ s_Player.m_pIPUCtx -> Sync ();
 
  WakeupThread ( s_MainThreadID );
  ExitThreadFunc ();
@@ -988,7 +990,7 @@ static void _sms_play ( void ) {
    float lFPS = ( float )lpStms[ s_Player.m_VideoIdx ] -> m_RealFrameRate / 
                 ( float )lpStms[ s_Player.m_VideoIdx ] -> m_RealFrameRateBase;
 
-   GUI_Progress ( STR_LOADING_SUBTITLES.m_pStr, 100 );
+   GUI_Progress ( STR_LOADING_SUBTITLES.m_pStr, 100, 0 );
    s_Player.m_pSubFileCtx -> Stream ( s_Player.m_pSubFileCtx, 0, 10 );
    s_Player.m_pSubCtx = SubtitleContext_Init (
     s_Player.m_pSubFileCtx, s_Player.m_SubFormat, lFPS
@@ -1080,7 +1082,13 @@ repeat:
 
      s_Flags |= SMS_FLAGS_PAUSE;
 
-     for ( lBtn = 0; lBtn < lnDec; ++lBtn ) WaitSema ( s_SemaAckPause );
+     for ( lBtn = 0; lBtn < lnDec; ++lBtn ) {
+
+      WaitSema ( s_SemaAckPause );
+
+      if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
+
+     }  /* end for */
 
      while ( 1 ) {
 
@@ -1096,7 +1104,9 @@ repeat:
       if ( lBtn == SMS_PAD_SELECT ) {
 
        s_Player.m_pIPUCtx -> Sync    ();
+       s_Player.m_pIPUCtx -> Suspend ();
        s_Player.m_pIPUCtx -> Repaint ();
+       s_Player.m_pIPUCtx -> Resume  ();
 
       }  /* end if */
 
@@ -1112,7 +1122,13 @@ resume:
 
      s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
 
-     for ( lBtn = 0; lBtn < lnDec; ++lBtn ) WaitSema ( s_SemaAckPause );
+     for ( lBtn = 0; lBtn < lnDec; ++lBtn ) {
+
+      WaitSema ( s_SemaAckPause );
+
+      if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
+
+     }  /* end for */
 
      s_Flags &= ~( SMS_FLAGS_PAUSE | SMS_FLAGS_MENU );
 
@@ -1134,7 +1150,13 @@ resume:
 
     s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
 
-    for ( lButtons = 0; lButtons < lnDec; ++lButtons ) WaitSema ( s_SemaAckPause );
+    for ( lButtons = 0; lButtons < lnDec; ++lButtons ) {
+
+     WaitSema ( s_SemaAckPause );
+
+     if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
+
+    }  /* end for */
 
     s_Player.m_pIPUCtx -> Suspend ();
     SMS_PlayerMenu ();
@@ -1145,7 +1167,7 @@ resume:
 
     goto resume;
 
-   } else if (  lButtons & SMS_PAD_TRIANGLE && *( int* )&s_Player.m_AudioTime  ) {
+   } else if (  lButtons & SMS_PAD_TRIANGLE ) {
 
     _terminate_threads ( 1 );
     _clear_packet_queues ();
@@ -1153,11 +1175,11 @@ resume:
 
     break;
 
-   } else if (  lButtons == SMS_PAD_UP && lfVolume ) {
+   } else if (  lButtons == SMS_PAD_UP && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( 1 );
 
-   } else if ( lButtons == SMS_PAD_DOWN && lfVolume ) {
+   } else if ( lButtons == SMS_PAD_DOWN && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( -1 );
 

@@ -1576,10 +1576,10 @@ static int32_t MSMPEG4_Init ( SMS_CodecContext* apCtx ) {
 
  }  /* end if */
 
- SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_zigzag_direct             );
- SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_zigzag_direct             );
- SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_horizontal_scan );
- SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan   );
+ SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_zigzag_direct             );
+ SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_zigzag_direct             );
+ SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_horizontal_scan );
+ SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan   );
 
  BASECTX().m_pY_DCScaleTbl = s_y_dc_scale_table;
  BASECTX().m_pC_DCScaleTbl = s_c_dc_scale_table;
@@ -1819,10 +1819,10 @@ static SMS_INLINE int _msmpeg4_decode_block (
 
   if ( g_MPEGCtx.m_ACPred )
 
-   apScanTbl = !lDCPredDir ? g_MPEGCtx.m_IntraVScanTbl.m_Permutated
-                           : g_MPEGCtx.m_IntraHScanTbl.m_Permutated;
+   apScanTbl = !lDCPredDir ? g_MPEGCtx.m_IntraVScanTbl.m_pScantable
+                           : g_MPEGCtx.m_IntraHScanTbl.m_pScantable;
 
-  else apScanTbl = g_MPEGCtx.m_IntraScanTbl.m_Permutated;
+  else apScanTbl = g_MPEGCtx.m_IntraScanTbl.m_pScantable;
 
   lpRLVLC = lpRL ->m_pRLVLC[ 0 ];
 
@@ -1841,7 +1841,7 @@ static SMS_INLINE int _msmpeg4_decode_block (
 
   }  /* end if */
 
-  if ( !apScanTbl ) apScanTbl = g_MPEGCtx.m_InterScanTbl.m_Permutated;
+  if ( !apScanTbl ) apScanTbl = g_MPEGCtx.m_InterScanTbl.m_pScantable;
 
   lpRLVLC = lpRL -> m_pRLVLC[ g_MPEGCtx.m_QScale ];
 

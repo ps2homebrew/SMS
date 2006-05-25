@@ -195,6 +195,13 @@ typedef struct SMString {
 # define STR_RANDOMIZE_PLAYLIST   SMS_STRING( 172 )
 # define STR_REPEAT_MODE          SMS_STRING( 173 )
 # define STR_AUDIO_SPECTRUM_DSP   SMS_STRING( 174 )
+# define STR_COPY_TO_HDD          SMS_STRING( 175 )
+# define STR_COPYING              SMS_STRING( 176 )
+# define STR_KBS                  SMS_STRING( 177 )
+# define STR_SELECT_ACTION        SMS_STRING( 178 )
+# define STR_COLOR_RESOLUTION     SMS_STRING( 179 )
+# define STR_32_BIT               SMS_STRING( 180 )
+# define STR_16_BIT               SMS_STRING( 181 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );

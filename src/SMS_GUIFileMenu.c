@@ -37,6 +37,7 @@ static unsigned char s_pPPHDL[] __attribute__(   (  section( ".data" )  )   ) = 
 static unsigned char s_pHDLdr[] __attribute__(   (  section( ".data" )  )   ) = "HDLoade";
 
 extern FileContext* GUI_MiniBrowser ( FileContext*, char*, void** );
+extern void         GUI_FileCtxMenu ( char*, char*                );
 
 typedef struct _LevelInfo {
 
@@ -59,7 +60,6 @@ typedef struct GUIFileMenu {
  SMS_ListNode*  m_pLast;
  int            m_YOffset;
  unsigned long* m_pSelRect;
- int            m_PD;
  int            m_Active;
 
 } GUIFileMenu;
@@ -409,18 +409,24 @@ static void _action_folder ( GUIFileMenu* apMenu, int afPopup ) {
 
 }  /* end _action_folder */
 
+static void _make_path ( char* apBuff, char** appPathEnd, GUIFileMenu* apMenu ) {
+
+ strcpy ( apBuff, g_CWD );
+
+ if (  apBuff[ strlen ( apBuff ) - 1 ] != '/'  ) SMS_Strcat ( apBuff, g_SlashStr );
+
+ *appPathEnd = apBuff + strlen ( apBuff );
+ SMS_Strcat ( apBuff, apMenu -> m_pCurrent -> m_pString );
+
+}  /* end _make_path */
+
 static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
 
  char         lPath[ 1024 ];
  char*        lpPathEnd;
  FileContext* lpFileCtx;
 
- strcpy ( lPath, g_CWD );
-
- if (  lPath[ strlen ( lPath ) - 1 ] != '/'  ) SMS_Strcat ( lPath, g_SlashStr );
-
- lpPathEnd = lPath + strlen ( lPath );
- SMS_Strcat ( lPath, apMenu -> m_pCurrent -> m_pString );
+ _make_path ( lPath, &lpPathEnd, apMenu );
 
  if ( g_CMedia == 1 && g_pCDDACtx )
 
@@ -531,14 +537,14 @@ static void _action_partition ( GUIFileMenu* apMenu, int afPopup ) {
  *( unsigned int* )&g_CWD[ 0 ] = 0x30736670;
  *( unsigned int* )&g_CWD[ 4 ] = 0x0000003A;
 
- if ( apMenu -> m_PD >= 0 ) {
+ if ( g_PD >= 0 ) {
 
   fileXioUmount ( g_CWD );
-  apMenu -> m_PD = -1;
+  g_PD = -1;
 
  }  /* end if */
 
- lPD = fileXioMount ( g_CWD, lMountPath, FIO_MT_RDONLY );
+ lPD = fileXioMount ( g_CWD, lMountPath, FIO_MT_RDWR );
 
  if ( lPD >= 0 ) {
 
@@ -549,16 +555,46 @@ static void _action_partition ( GUIFileMenu* apMenu, int afPopup ) {
   _fill ( apMenu, lPath );
   _redraw ( apMenu );
 
-  apMenu -> m_PD = lPD;
+  g_PD = lPD;
 
  }  /* end if */
 
 }  /* end _action_partition */
 
+static void _context_action_part ( GUIFileMenu* apMenu, int afPopup ) {
+
+}  /* end _context_action_part */
+
+static void _context_action_fold ( GUIFileMenu* apMenu, int afPopup ) {
+
+}  /* end _context_action_fold */
+
+static void _context_action_file ( GUIFileMenu* apMenu, int afPopup ) {
+
+ if ( g_CMedia != 2 && g_PD >= 0 ) {
+
+  char  lPath[ 1024 ];
+  char* lpPathEnd;
+
+  _make_path ( lPath, &lpPathEnd, apMenu );
+
+  STIO_SetIOMode ( STIOMode_Ordinary );
+  GUI_FileCtxMenu ( lPath, lpPathEnd );
+
+ }  /* end if */
+
+}  /* end _context_action_file */
+
 static void ( *Action[ 7 ] ) ( GUIFileMenu*, int ) = {
  _action_folder, _action_avi,  _action_file,
  _action_file,   _action_file, _action_partition,
  _action_avi
+};
+
+static void ( *ContextAction[ 7 ] ) ( GUIFileMenu*, int ) = {
+ _context_action_fold, _context_action_file,  _context_action_file,
+ _context_action_file, _context_action_file, _context_action_part,
+ _context_action_file
 };
 
 static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
@@ -638,6 +674,14 @@ redraw:
    retVal = GUIHResult_Handled;
 
   break;
+
+  case SMS_PAD_SQUARE: {
+
+   ContextAction[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 1 );
+
+   retVal = GUIHResult_Handled;
+
+  } break;
 
   case SMS_PAD_TRIANGLE: {
 
@@ -790,7 +834,8 @@ GUIObject* GUI_CreateFileMenu ( void ) {
  retVal -> m_pFiltList = SMS_ListInit ();
  retVal -> m_pColor    = &g_Config.m_BrowserIBCIdx;
  retVal -> m_YOffset   = 0;
- retVal -> m_PD        = 0x80000000;
+
+ g_PD = 0x80000000;
 
  return ( GUIObject* )retVal;
 

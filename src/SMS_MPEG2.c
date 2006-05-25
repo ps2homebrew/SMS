@@ -28,7 +28,7 @@ void SMS_MPEG2_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock, int aN, int aQScale ) 
 
  for ( i = 1; i <= lnCoeffs; ++i ) {
 
-  int j = g_MPEGCtx.m_IntraScanTbl.m_Permutated[ i ];
+  int j = g_MPEGCtx.m_IntraScanTbl.m_pScantable[ i ];
 
   lLevel = apBlock[ j ];
 
@@ -62,7 +62,7 @@ void SMS_MPEG2_DCTUnquantizeInter ( SMS_DCTELEM* apBlock, int aN, int aQScale ) 
 
  for ( i = 0; i <= lnCoeffs; ++i ) {
 
-  int j = g_MPEGCtx.m_IntraScanTbl.m_Permutated[ i ];
+  int j = g_MPEGCtx.m_IntraScanTbl.m_pScantable[ i ];
 
   lLevel = apBlock[ j ];
 

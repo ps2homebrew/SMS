@@ -34,6 +34,8 @@
 # define SMS_PF_RAND  0x00000040
 # define SMS_PF_REP   0x00000080
 # define SMS_PF_ASD   0x00000100
+# define SMS_PF_C32   0x00000200
+# define SMS_PF_C16   0x00000400
 
 typedef enum SMScrollBarPos {
 

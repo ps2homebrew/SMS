@@ -14,6 +14,17 @@
 struct SMS_MacroBlock;
 struct SMS_FrameBuffer;
 
+typedef struct IPURegs {
+
+ volatile unsigned long m_CMD  __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int  m_CTRL __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int  m_BP   __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned long m_TOP  __attribute__(   (  aligned( 16 )  )   );
+
+} IPURegs;
+
+# define IPU (  ( volatile IPURegs* )0x10002000  )
+
 # define IPU_REG_CMD  (  ( volatile unsigned long* )0x10002000  )
 # define IPU_REG_CTRL (  ( volatile unsigned int*  )0x10002010  )
 # define IPU_REG_BP   (  ( volatile unsigned int*  )0x10002020  )
@@ -22,7 +33,7 @@ struct SMS_FrameBuffer;
 # define IPU_FIFO_O   (  ( volatile unsigned long* )0x10007010  )
 
 # define IPU_SET_CMD( CODE, OPTION ) \
- *IPU_REG_CMD = ( unsigned long )(  ( CODE << 28 ) | OPTION  )
+ IPU -> m_CMD = ( unsigned long )(  ( CODE << 28 ) | OPTION  )
 
 # define IPU_CMD_BCLR( BP ) IPU_SET_CMD( 0, BP )
 
@@ -40,8 +51,20 @@ struct SMS_FrameBuffer;
 # define IPU_TOP() (  ( u32 )*IPU_REG_TOP  )
 # define IPU_CMD() (  ( u32 )*IPU_REG_CMD  )
 
-# define IPU_WAIT() while (  *IPU_REG_CTRL & 0x80000000 )
-# define IPU_RESET() *IPU_REG_CTRL = ( 1 << 30 ); IPU_WAIT(); IPU_CMD_BCLR( 0 );  IPU_WAIT()
+# define IPU_WAIT() while (  ( int )IPU -> m_CTRL < 0  )
+# define IPU_RESET() IPU -> m_CTRL = ( 1 << 30 ); IPU_WAIT(); IPU_CMD_BCLR( 0 );  IPU_WAIT()
+
+typedef struct IPULoadImage {
+
+ unsigned long* m_pDMA;
+ unsigned char* m_pData;
+ unsigned int   m_Width;
+ unsigned int   m_Height;
+ unsigned int   m_QWC;
+
+ void ( *Destroy ) ( struct IPULoadImage* );
+
+} IPULoadImage;
 
 typedef struct IPUContext {
 
@@ -68,6 +91,8 @@ typedef struct IPUContext {
  unsigned int           m_QWCFromIPUSlice;
  unsigned int           m_DMAHandlerID_IPU;
  unsigned int           m_DMAHandlerID_GIF;
+ unsigned int           m_CSCmd;
+ unsigned int           m_PixFmt;
 # ifdef VB_SYNC
  unsigned int           m_VBlankStartHandlerID;
  unsigned int           m_VBlankEndHandlerID;
@@ -79,7 +104,6 @@ typedef struct IPUContext {
  unsigned int           m_TW;
  unsigned int           m_TH;
  unsigned int           m_SyncS;
- unsigned int           m_GIFlag;
  unsigned int           m_Width;
  unsigned int           m_Height;
  unsigned int           m_ScrRight;
@@ -116,6 +140,13 @@ extern "C" {
 # endif  /* __cplusplus */
 
 IPUContext* IPU_InitContext ( int, int );
+
+unsigned int IPU_FDEC ( unsigned                                                   );
+unsigned int IPU_IDEC ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );
+
+void         IPU_InitLoadImage ( IPULoadImage*, int, int                       );
+void         IPU_LoadImage     ( IPULoadImage*, void*, int, int, int, int, int );
+unsigned int IPU_ImageInfo     ( void*, unsigned int*                          );
 
 # ifdef __cplusplus
 }

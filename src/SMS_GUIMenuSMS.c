@@ -103,6 +103,7 @@ static void _spdif_handler   ( GUIMenu*, int );
        void _subu_handler    ( GUIMenu*, int );
 static void _sbclr_handler   ( GUIMenu*, int );
 static void _vbclr_handler   ( GUIMenu*, int );
+static void _clres_handler   ( GUIMenu*, int );
 static void _vol_handler     ( GUIMenu*, int );
 static void _salign_handler  ( GUIMenu*, int );
 static void _suboff_handler  ( GUIMenu*, int );
@@ -200,6 +201,7 @@ static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) 
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_UND_COLOR,  0, 0, _subu_handler,    0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SCROLLBAR_COLOR,     0, 0, _sbclr_handler,   0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_VOLUME_BAR_COLOR,    0, 0, _vbclr_handler,   0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_COLOR_RESOLUTION,    0, 0, _clres_handler,   0, 0 },
  { MENU_ITEM_TYPE_TEXT,   &STR_DEFAULT_VOLUME,      0, 0, _vol_handler,     0, 0 },
  { MENU_ITEM_TYPE_TEXT,   &STR_SUBTITLE_ALIGNMENT,  0, 0, _salign_handler,  0, 0 },
  { MENU_ITEM_TYPE_TEXT,   &STR_AUTO_POWER_OFF,      0, 0, _poff_handler,    0, 0 },
@@ -563,8 +565,16 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )lpStr;
- s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
+ s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
+
+ if ( g_Config.m_PlayerFlags & SMS_PF_C32 )
+  lpStr = &STR_32_BIT;
+ else if ( g_Config.m_PlayerFlags & SMS_PF_C16 )
+  lpStr = &STR_16_BIT;
+ else lpStr = &STR_AUTO;
+
+ s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )lpStr;
 
  sprintf (    s_OffsetBuffer, "%d",                  g_Config.m_PlayerSubOffset                                                      );
  sprintf (    s_VolumeBuffer, "%d%%",                ( int )(   (  ( float )g_Config.m_PlayerVolume / 24.0F ) * 100.0F + 0.5F   )    );
@@ -578,11 +588,11 @@ static void _update_pstr ( int anIncr ) {
  g_StrPlayer[ 4 ].m_Len = strlen ( s_SHSizeBuffer );
  g_StrPlayer[ 5 ].m_Len = strlen ( s_SVSizeBuffer );
 
- s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
- s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
- s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
- s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
- s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
+ s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
+ s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
+ s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
+ s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
+ s_PlayerMenu[ 19 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
 
  switch ( g_Config.m_ScrollBarPos ) {
 
@@ -592,7 +602,7 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )lpStr;
 
 }  /* end _update_pstr */
 
@@ -1392,6 +1402,24 @@ static void _sbclr_handler ( GUIMenu* apMenu, int aDir ) {
 static void _vbclr_handler ( GUIMenu* apMenu, int aDir ) {
 
  _rotate_palette_2 ( apMenu, &g_Config.m_PlayerVBCIdx, aDir );
+
+}  /* end _vbclr_handler */
+
+static void _clres_handler ( GUIMenu* apMenu, int aDir ) {
+
+ if (   !(  g_Config.m_PlayerFlags & ( SMS_PF_C32 | SMS_PF_C16 )  )   )
+
+  g_Config.m_PlayerFlags |= SMS_PF_C32;
+
+ else if ( g_Config.m_PlayerFlags & SMS_PF_C32 ) {
+
+  g_Config.m_PlayerFlags &= ~SMS_PF_C32;
+  g_Config.m_PlayerFlags |=  SMS_PF_C16;
+
+ } else g_Config.m_PlayerFlags &= ~( SMS_PF_C32 | SMS_PF_C16 );
+
+ _update_pstr ( 0 );
+ apMenu -> Redraw ( apMenu );
 
 }  /* end _vbclr_handler */
 

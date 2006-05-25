@@ -216,6 +216,13 @@ static unsigned char s_pMP3Settings    [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pRandomizePL    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Randomize playlist";
 static unsigned char s_pRepeat         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Repeat mode";
 static unsigned char s_pAudioSpectrum  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Audio spectrum display";
+static unsigned char s_pCopy2HDD       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Copy to HDD";
+static unsigned char s_pCopying        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Copying";
+static unsigned char s_pKBS            [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "KB/s";
+static unsigned char s_pSelectAction   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Select action";
+static unsigned char s_pColorResolution[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Color resolution";
+static unsigned char s_p32Bit          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "32 bit";
+static unsigned char s_p16Bit          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "16 bit";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -392,7 +399,14 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pMP3Settings     ) - 1, s_pMP3Settings     },
  { sizeof ( s_pRandomizePL     ) - 1, s_pRandomizePL     },
  { sizeof ( s_pRepeat          ) - 1, s_pRepeat          },
- { sizeof ( s_pAudioSpectrum   ) - 1, s_pAudioSpectrum   }
+ { sizeof ( s_pAudioSpectrum   ) - 1, s_pAudioSpectrum   },
+ { sizeof ( s_pCopy2HDD        ) - 1, s_pCopy2HDD        },
+ { sizeof ( s_pCopying         ) - 1, s_pCopying         },
+ { sizeof ( s_pKBS             ) - 1, s_pKBS             },
+ { sizeof ( s_pSelectAction    ) - 1, s_pSelectAction    },
+ { sizeof ( s_pColorResolution ) - 1, s_pColorResolution },
+ { sizeof ( s_p32Bit           ) - 1, s_p32Bit           },
+ { sizeof ( s_p16Bit           ) - 1, s_p16Bit           }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );

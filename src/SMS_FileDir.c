@@ -49,6 +49,7 @@ unsigned char* g_pDevName[ 6 ] = {
 
 SMS_List*    g_pFileList;
 int          g_CMedia;
+int          g_PD;
 CDDAContext* g_pCDDACtx;
 
 int _set_id ( char* apName ) {

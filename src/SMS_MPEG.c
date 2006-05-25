@@ -477,19 +477,15 @@ int SMS_MPEGContext_FindUnusedPic ( void ) {
 
 }  /* end SMS_MPEGContext_FindUnusedPic */
 
-void SMS_MPEG_InitScanTable ( uint8_t* apPermutation, SMS_ScanTable* apTbl, const uint8_t* apSrc ) {
+void SMS_MPEG_InitScanTable ( SMS_ScanTable* apTbl, const uint8_t* apSrc ) {
 
- int i, lEnd;
+ int i, lEnd = -1;
     
  apTbl -> m_pScantable = apSrc;
 
- for ( i = 0; i < 64; ++i ) apTbl -> m_Permutated[ i ] = apPermutation[  apSrc[ i ]  ];
-
- lEnd =- 1;
-
  for ( i = 0; i < 64; ++i ) {
 
-  int j = apTbl -> m_Permutated[ i ];
+  const int j = apSrc[ i ];
 
   if ( j > lEnd ) lEnd = j;
 

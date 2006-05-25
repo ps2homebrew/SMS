@@ -104,13 +104,14 @@ void SMS_DestroyContainer ( SMS_Container* apCont ) {
 SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
 
  int            i      = 0;
+ int            lSts   = 0;
  SMS_Container* retVal = ( SMS_Container* )calloc (  1, sizeof ( SMS_Container )  );
 
  retVal -> m_pFileCtx = apFileCtx;
 
  while ( s_CCreator[ i ] ) {
 
-  if (  s_CCreator[ i++ ] ( retVal )  ) break;
+  if (   (  lSts = s_CCreator[ i++ ] ( retVal )  )   ) break;
 
   if (  ( int )apFileCtx > 0  ) apFileCtx -> Seek ( apFileCtx, 0 );
 
@@ -129,6 +130,13 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
   if ( !retVal -> Destroy   ) retVal -> Destroy   = SMS_DestroyContainer;
 
  }  /* end else */
+
+ if ( retVal && lSts < 0 ) {
+
+  retVal -> Destroy ( retVal );
+  retVal = NULL;
+
+ }  /* end if */
 
  return retVal;
 

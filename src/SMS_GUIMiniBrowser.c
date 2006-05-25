@@ -26,12 +26,13 @@
 
 extern void GUIMenuSMS_Redraw ( GUIMenu* );
 
-static int ( *HandleEventBase ) ( GUIObject*, unsigned long );
+int ( *CtxMenu_HandleEventBase ) ( GUIObject*, unsigned long );
+
 static FileContext*   s_pFileCtx;
 static FileContext*   s_pFileCtxSub;
 static SubtitleFormat s_SubFmt;
 
-int GUIMiniBrowser_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+int CtxMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
@@ -44,15 +45,15 @@ quit:
   case SMS_PAD_CIRCLE:
   case SMS_PAD_CROSS :
 
-   HandleEventBase ( apObj, anEvent );
+   CtxMenu_HandleEventBase ( apObj, anEvent );
 
   goto quit;
 
  }  /* end switch */
 
- return HandleEventBase ( apObj, anEvent );
+ return CtxMenu_HandleEventBase ( apObj, anEvent );
 
-}  /* end GUIMiniBrowser_HandleEvent */
+}  /* end CtxMenu_HandleEvent */
 
 static void _handler ( GUIMenu* apMenu, int aDir ) {
 
@@ -149,7 +150,7 @@ FileContext* GUI_MiniBrowser ( FileContext* apCtx, char* apPath, void** appType 
  lWidth  = g_GSCtx.m_Width  / 1.7F;
  lHeight = g_GSCtx.m_Height / 1.7F;
 
- HandleEventBase = lpMenu -> HandleEvent;
+ CtxMenu_HandleEventBase = lpMenu -> HandleEvent;
 
  lpMenu -> m_Color      = 0x80301010UL;
  lpMenu -> m_X          = g_GSCtx.m_Width  - lWidth - 32;
@@ -160,7 +161,7 @@ FileContext* GUI_MiniBrowser ( FileContext* apCtx, char* apPath, void** appType 
  lpMenu -> m_pState     = SMS_ListInit ();
 
  lpMenu -> Redraw      = GUIMenuSMS_Redraw;
- lpMenu -> HandleEvent = GUIMiniBrowser_HandleEvent;
+ lpMenu -> HandleEvent = CtxMenu_HandleEvent;
  lpMenu -> m_IGroup    = GUIcon_Browser;
 
  lpState = GUI_MenuPushState ( lpMenu );

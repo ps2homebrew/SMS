@@ -22,16 +22,19 @@ typedef struct DMAChannel {
 
 } DMAChannel;
 
-typedef struct DMAC {
+typedef struct DMACRegs {
 
- volatile unsigned int m_CTRL __attribute__(   (  aligned( 16 )  )   );
- volatile unsigned int m_STAT __attribute__(   (  aligned( 16 )  )   );
- volatile unsigned int m_PCR  __attribute__(   (  aligned( 16 )  )   );
- volatile unsigned int m_SQWC __attribute__(   (  aligned( 16 )  )   );
- volatile unsigned int m_RBSR __attribute__(   (  aligned( 16 )  )   );
- volatile unsigned int m_RBOR __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_CTRL  __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_STAT  __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_PCR   __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_SQWC  __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_RBSR  __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_RBOR  __attribute__(   (  aligned( 16 )  )   );
+ volatile unsigned int m_STADR __attribute__(   (  aligned( 16 )  )   );
 
-} DMAC;
+} DMACRegs;
+
+# define DMAC (  ( volatile DMACRegs* )0x1000E000  )
 
 # define DMATAG_ID_REFE 0x0
 # define DMATAG_ID_CNT  0x1
@@ -61,9 +64,9 @@ typedef struct DMATag {
 } DMATag __attribute__(   (  aligned( 16 )  )   );
 
 # define DMA_TAG( QWC, PCE, ID, IRQ, ADDR, SPR ) (                              \
- (  ( unsigned long )( QWC  ) <<  0  ) | (  ( unsigned long )( PCE ) << 26  ) | \
- (  ( unsigned long )( ID   ) << 28  ) | (  ( unsigned long )( IRQ ) << 31  ) | \
- (  ( unsigned long )( ADDR ) << 32  ) | (  ( unsigned long )( SPR ) << 63  )   \
+ (  ( unsigned long )(                  QWC   ) <<  0  ) | (  ( unsigned long )( PCE ) << 26  ) | \
+ (  ( unsigned long )(                  ID    ) << 28  ) | (  ( unsigned long )( IRQ ) << 31  ) | \
+ (  ( unsigned long )(  ( unsigned int )ADDR  ) << 32  ) | (  ( unsigned long )( SPR ) << 63  )   \
 )
 
 # define DMA_SET_CTRL( A, B, C, D, E, F )                                                        \
@@ -196,6 +199,27 @@ static void inline DMA_SendChainA ( volatile DMAChannel* apChan, void* apAddr ) 
  );
 }  /* end DMA_SendChainA */
 
+static void inline DMA_SendChainT ( volatile DMAChannel* apChan, void* apAddr ) {
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set noat\n\t"
+  "1:\n\t"
+  "lw   $at, 0(%0)\n\t"
+  "nop\n\t"
+  "nop\n\t"
+  "andi $at, $at, 0x0100\n\t"
+  "nop\n\t"
+  "bne  $at, $zero, 1b\n\t"
+  "li   $at, 0x0145\n\t"
+  "sw   $zero, 32(%0)\n\t"
+  "sw   %1,    48(%0)\n\t"
+  "sw   $at,    0(%0)\n\t"
+  ".set at\n\t"
+  ".set reorder\n\t"
+  ::"r"( apChan ), "r"( apAddr ) : "at"
+ );
+}  /* end DMA_SendChainT */
+
 static void inline DMA_RecvA ( volatile DMAChannel* apChan, void* apAddr, unsigned int aQWC ) {
  __asm__ __volatile__(
   ".set noreorder\n\t"
@@ -240,6 +264,9 @@ static void inline DMA_SendS ( volatile DMAChannel* apChan, void* apDst, void* a
   ::"r"( apChan ), "r"( apDst ), "r"( apSrc ), "r"( aQWC ) : "at"
  );
 }  /* end DMA_SendS */
+
+void DMA_Stop ( volatile DMAChannel* );
+
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

@@ -706,3 +706,32 @@ Update (10-MAY-2006)
 - Audio spectrum is made "symmetric" ("rathunter's" suggestion);
 - "Audio animation display" menu option is moved to "MP3 settings..." submenu;
 - Timer code is rewritten;
+
+Update (25-MAY-2006)
+--------------------
+- changed image management routines. Now SMS uses unified image format for
+  skin and icons. IPU is fully utilized to perform image decompression (it's
+  quite fast (a 640x480 test image is decompressed from 30KB to 900KB and
+  uploaded to GS memory in just ~8ms)). A Win32 application (pic2smi.exe) is
+  provided to create such an images. This application is replaced an old one
+  (pic2sms.exe). It's possible to adjust image quality (better quality - bigger
+  image size) and brightness, but default settings should work OK in most cases.
+  These changes resulted smaller (by ~110KB uncompressed) SMS.elf size. Note new
+  skin filename: SMS.smi ('i' means "image" :)) (thanks to "Mr. Worm~~" for
+  trying it);
+- high resolution movies are performing using reduced color resolution
+  (dithered 16 bit), so no artefacts due to insufficient GS RAM should occur.
+  There's also a possibility to force desired color resolution via SMS menu
+  as 16 bit color resolution can improve performance a bit (less data traffic).
+  (thanks to "Mr. Worm~~" again for trying);
+- non-interleaved .avi's are treated as "unsupported". File treated as
+  non-interleaved if it contains more than 256 consecutive packets belonging
+  to the same stream (audio, video or other);
+- added function to copy selected file to HDD's current partition. Pressing
+  "square" pad button activates file context menu which currently has only
+  one item (Copy to HDD). Copy process can be terminated by "triangle" (there
+  can be some delay due to buffering, so press and hold "triangle" till "Stopping"
+  message will appear at the status line). This function is purely experimental
+  (just to measure device speed), so, use it on your own risk :) (files will be
+  overwritten without any prompt). Note also that only PS2 internal HDD is
+  supported;

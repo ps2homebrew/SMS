@@ -21,7 +21,8 @@
 #define MYCONT( c ) (  ( _AVIContainer* )c -> m_pCtx  )
 #define MYSTRM( s ) (  ( _AVIStream*    )s -> m_pCtx  )
 
-#define AVIIF_INDEX 0x10
+#define AVIIF_INDEX        0x10
+#define AVIF_ISINTERLEAVED 0x00000100
 
 typedef struct _AVIdxEntry {
 
@@ -124,13 +125,16 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
  _AVIStream*  lpStm;
  _AVIdxEntry* lpIndices;
  _AVIdxEntry* lpIndex;
- FileContext* lpFileCtx = apCtx -> m_pFileCtx;
+ FileContext* lpFileCtx    = apCtx -> m_pFileCtx;
+ int          lPrevIdx     = -1;
+ int          lnSameIdx    =  0;
+ int          lnMaxSameIdx = -1;
 
  if ( lnIdx <= 0 ) return 0;
 
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 64 );
 
- GUI_Progress ( STR_LOADING_INDICES.m_pStr, 0 );
+ GUI_Progress ( STR_LOADING_INDICES.m_pStr, 0, 0 );
 
  lPerc = lnIdx / 100 + 1;
 
@@ -148,11 +152,24 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
 
    float lPos = ( float )i / ( float ) lnIdx * 100.0F;
 
-   GUI_Progress (  STR_LOADING_INDICES.m_pStr, ( unsigned int )( lPos + 0.5F )  );
+   GUI_Progress (  STR_LOADING_INDICES.m_pStr, ( unsigned int )( lPos + 0.5F ), 0  );
 
   }  /* end if */
 
   if ( lIdx >= apCtx -> m_nStm ) continue;
+
+  if ( lIdx == lPrevIdx )
+
+   ++lnSameIdx;
+
+  else {
+
+   if ( lnMaxSameIdx < lnSameIdx ) lnMaxSameIdx = lnSameIdx;
+
+   lnSameIdx = 0;
+   lPrevIdx  = lIdx;
+
+  }  /* end else */
 
   lpStm = MYSTRM( apCtx -> m_pStm[ lIdx ] );
 
@@ -179,15 +196,16 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
 
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 0 );
 
- return 1;
+ return lnMaxSameIdx > 256 ? -1 : 1;
 
 }  /* end _Load_idx1 */
 
-static void _LoadIndex ( SMS_Container* apCont ) {
+static int _LoadIndex ( SMS_Container* apCont ) {
 
  uint32_t     lTag, lSize;
  uint32_t     lPos = apCont -> m_pFileCtx -> m_CurPos;
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
+ int          retVal    = 0;
 
  lpFileCtx -> Seek (  lpFileCtx, MYCONT( apCont ) -> m_MoviEnd  );
 
@@ -198,7 +216,7 @@ static void _LoadIndex ( SMS_Container* apCont ) {
    lTag  = File_GetUInt ( lpFileCtx );
    lSize = File_GetUInt ( lpFileCtx );
 
-   if (  lTag == SMS_MKTAG( 'i', 'd', 'x', '1' ) && _Load_idx1 ( apCont, lSize )  ) {
+   if (   lTag == SMS_MKTAG( 'i', 'd', 'x', '1' ) && (  retVal = _Load_idx1 ( apCont, lSize )  )   ) {
 
     apCont -> m_Flags |= SMS_CONT_FLAGS_SEEKABLE;
     break;
@@ -212,12 +230,14 @@ static void _LoadIndex ( SMS_Container* apCont ) {
 
  lpFileCtx -> Seek ( lpFileCtx, lPos );
 
+ return retVal;
+
 }  /* end _LoadIndex */
 
 static int _ReadHeader ( SMS_Container* apCtx ) {
 
  int                retVal;
- uint32_t           lTag, lSubTag, lSize, lnFrames, lLen, lStmIdx;
+ uint32_t           lTag, lSubTag, lSize, lnFrames, lLen, lStmIdx, lFlags = 0;
  int32_t            lFramePeriod = 0, lBitRate;
  int32_t            i, lCount, lScale, lRate;
  SMS_Stream*        lpStm;
@@ -255,10 +275,11 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
      lFramePeriod = File_GetUInt ( lpFileCtx );      /* dwMicroSecPerFrame */
      lBitRate     = File_GetUInt ( lpFileCtx ) * 8;  /* dwMaxBytesPerSec   */
-
-     lpFileCtx -> Seek ( lpFileCtx, lpFileCtx -> m_CurPos + 16 );
-
-     lCount = File_GetUInt ( lpFileCtx );  /* dwStreams */
+                    File_GetUInt ( lpFileCtx );      /* dwReserved1        */
+     lFlags       = File_GetUInt ( lpFileCtx );      /* dwFlags            */
+                    File_GetUInt ( lpFileCtx );      /* dwTotalFrames      */
+                    File_GetUInt ( lpFileCtx );      /* dwInitialFrames    */
+     lCount       = File_GetUInt ( lpFileCtx );      /* dwStreams          */
 
      for ( i = 0; i < lCount; ++i )
 
@@ -517,7 +538,7 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 endOfHeader:
  if ( lStmIdx != apCtx -> m_nStm - 1 )
 error: retVal = 0;
- if ( retVal ) _LoadIndex ( apCtx );
+ if ( retVal && _LoadIndex ( apCtx ) < 0  ) retVal = -1;
 
  return retVal;
 
@@ -973,7 +994,7 @@ int SMS_GetContainerAVI ( SMS_Container* apCont ) {
 
   apCont -> m_pCtx = ( _AVIContainer* )calloc (  1, sizeof ( _AVIContainer )  );
 
-  if (  _ReadHeader ( apCont )  ) {
+  if (   (  retVal = _ReadHeader ( apCont )  )   ) {
 
    MYCONT( apCont ) -> m_RiffEnd = lRiffEnd;
 
@@ -982,8 +1003,6 @@ int SMS_GetContainerAVI ( SMS_Container* apCont ) {
    apCont -> Seek       = _Seek;
 
    _CalcFrameRate ( apCont );
-
-   retVal = 1;
 
   } else free ( apCont -> m_pCtx );
 

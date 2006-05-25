@@ -37,7 +37,6 @@ typedef struct SMS_DSPGMCData {
 
 typedef struct SMS_DSPContext {
 
- uint8_t        m_Permutation       [ 64 ];
  SMS_QPelMCFunc m_PutQPelPixTab     [ 2 ][ 16 ];
  SMS_QPelMCFunc m_PutNoRndQPelPixTab[ 2 ][ 16 ];
  SMS_QPelMCFunc m_AvgQPelPixTab     [ 2 ][ 16 ];

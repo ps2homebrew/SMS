@@ -385,10 +385,6 @@ static unsigned short s_QPelConst[] __attribute__(   (  section( ".data" )  )   
 
 void SMS_DSPContextInit ( SMS_DSPContext* apCtx ) {
 
- int i;
-
- for ( i = 0; i < 64; ++i ) apCtx -> m_Permutation[ i ] = ( i & 0x38 ) | (  ( i & 6 ) >> 1  ) | (  ( i & 1 ) << 2  );
-
  memcpy (  ( void* )0x70000220, s_QPelConst, sizeof ( s_QPelConst )  );
 
  apCtx -> m_PutPixTab[ 0 ][ 0 ] = DSP_PutPixels16;

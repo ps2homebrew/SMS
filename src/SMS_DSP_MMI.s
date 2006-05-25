@@ -74,8 +74,10 @@ IDCT:
     mtc1    $s1, $f01
     mtc1    $s2, $f02
     lq      $s1, IDCT_CONST_OFFSET + 32($t8)
+    pinth   $s0, $s0, $s0
     mtc1    $s3, $f03
     lq      $s2, IDCT_CONST_OFFSET + 48($t8)
+    pinth   $s0, $s0, $s0
     mtc1    $s4, $f04
     lq      $a3, IDCT_CONST_OFFSET + 16($t8)
 # DCT_8_INV_ROW1
@@ -97,12 +99,14 @@ IDCT:
     psraw   $s1, $s1, 11
     psraw   $s4, $s4, 11
     ppach   $t0, $s4, $s1
+    lq      $s0,  16($a2)
     prevh   $v0, $t0
     pcpyud  $v0, $v0, $v0
+    pinth   $s0, $s0, $s0
     pcpyld  $t0, $v0, $t0
 # DCT_8_INV_ROW1
-    lq      $s0,  16($a2)
     lq      $s1, IDCT_CONST_OFFSET +  96($t8)
+    pinth   $s0, $s0, $s0
     lq      $s2, IDCT_CONST_OFFSET + 112($t8)
     prevh   $v0, $s0
     lq      $s3, IDCT_CONST_OFFSET + 128($t8)
@@ -123,8 +127,10 @@ IDCT:
     lq      $s0,  32($a2)
     ppach   $t1, $s4, $s1
     lq      $s1, IDCT_CONST_OFFSET + 160($t8)
+    pinth   $s0, $s0, $s0
     prevh   $v0, $t1
     lq      $s2, IDCT_CONST_OFFSET + 176($t8)
+    pinth   $s0, $s0, $s0
     pcpyud  $v0, $v0, $v0
     pcpyld  $t1, $v0, $t1
 # DCT_8_INV_ROW1
@@ -147,8 +153,10 @@ IDCT:
     lq      $s0,  48($a2)
     ppach   $t2, $s4, $s1
     lq      $s1, IDCT_CONST_OFFSET + 224($t8)
+    pinth   $s0, $s0, $s0
     prevh   $v0, $t2
     lq      $s2, IDCT_CONST_OFFSET + 240($t8)
+    pinth   $s0, $s0, $s0
     pcpyud  $v0, $v0, $v0
     pcpyld  $t2, $v0, $t2
 # DCT_8_INV_ROW1
@@ -171,8 +179,10 @@ IDCT:
     lq      $s0, 64($a2)
     ppach   $t3, $s4, $s1
     lq      $s1, IDCT_CONST_OFFSET + 32($t8)
+    pinth   $s0, $s0, $s0
     prevh   $v0, $t3
     lq      $s2, IDCT_CONST_OFFSET + 48($t8)
+    pinth   $s0, $s0, $s0
     pcpyud  $v0, $v0, $v0
     pcpyld  $t3, $v0, $t3
 # DCT_8_INV_ROW1
@@ -195,8 +205,10 @@ IDCT:
     lq      $s0,  80($a2)
     ppach   $t4, $s4, $s1
     lq      $s1, IDCT_CONST_OFFSET + 224($t8)
+    pinth   $s0, $s0, $s0
     prevh   $v0, $t4
     lq      $s2, IDCT_CONST_OFFSET + 240($t8)
+    pinth   $s0, $s0, $s0
     pcpyud  $v0, $v0, $v0
     pcpyld  $t4, $v0, $t4
 # DCT_8_INV_ROW1
@@ -219,8 +231,10 @@ IDCT:
     lq      $s0,  96($a2)
     ppach   $t5, $s4, $s1
     lq      $s1, IDCT_CONST_OFFSET + 160($t8)
+    pinth   $s0, $s0, $s0
     prevh   $v0, $t5
     lq      $s2, IDCT_CONST_OFFSET + 176($t8)
+    pinth   $s0, $s0, $s0
     pcpyud  $v0, $v0, $v0
     pcpyld  $t5, $v0, $t5
 # DCT_8_INV_ROW1
@@ -243,8 +257,10 @@ IDCT:
     lq      $s0, 112($a2)
     ppach   $t6, $s4, $s1
     lq      $s1, IDCT_CONST_OFFSET +  96($t8)
+    pinth   $s0, $s0, $s0
     prevh   $v0, $t6
     lq      $s2, IDCT_CONST_OFFSET + 112($t8)
+    pinth   $s0, $s0, $s0
     pcpyud  $v0, $v0, $v0
     pcpyld  $t6, $v0, $t6
 # DCT_8_INV_ROW1

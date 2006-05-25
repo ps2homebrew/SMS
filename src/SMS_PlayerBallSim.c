@@ -12,6 +12,7 @@
 #include "SMS_PlayerBallSim.h"
 #include "SMS_GS.h"
 #include "SMS_DMA.h"
+#include "SMS_IPU.h"
 #include "SMS_Sounds.h"
 
 #include <kernel.h>
@@ -21,7 +22,7 @@
 #define Z_MAX  100
 #define SPEED    2
 
-extern unsigned char g_IconBall[ 4096 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
+extern unsigned char g_IconBall[ 316 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
 
 typedef struct _ball_pos {
 
@@ -43,14 +44,17 @@ static void _create_ball ( int anIdx ) {
 
 uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
 
- int       i;
- uint64_t* lpUDMA;
+ int          i;
+ uint64_t*    lpUDMA;
+ IPULoadImage lLoadImage;
+
+ g_GSCtx.m_VRAMTexPtr = g_GSCtx.m_VRAMPtr;
 
  lpUDMA = _U( g_BallPkt );
 
- GS_InitLoadImage (  ( GSLoadImage* )lpUDMA, g_GSCtx.m_VRAMPtr, 1, GSPixelFormat_PSMCT32, 0,  0, 32, 32  );
- GS_LoadImage (  ( GSLoadImage* )g_BallPkt, g_IconBall );
- DMA_Wait ( DMAC_GIF );
+ IPU_InitLoadImage ( &lLoadImage, 32, 32 );
+ IPU_LoadImage (  &lLoadImage, g_IconBall, sizeof ( g_IconBall ), 0, 0, 0, 1  );
+ lLoadImage.Destroy ( &lLoadImage );
 
  lpUDMA[ 0 ] = GIF_TAG( 3, 0, 0, 0, 0, 1 );
  lpUDMA[ 1 ] = GIFTAG_REGS_AD;

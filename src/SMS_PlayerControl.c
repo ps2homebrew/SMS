@@ -476,7 +476,9 @@ static int PlayerControl_Scroll ( int aDir ) {
  void*          lpHandler = SMS_TimerReset ( 2, NULL );
 
  lpIPUCtx -> Sync    ();
+ lpIPUCtx -> Suspend ();
  lpIPUCtx -> Repaint ();
+ lpIPUCtx -> Resume  ();
  PlayerControl_DisplayTime ( aDir, lTime, 1 );
 
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos,  0 );
@@ -987,19 +989,19 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
 int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int aSemaV  ) {
 
- SMS_Container* lpCont      = s_Player.m_pCont;
- SMS_Stream*    lpStm       = lpCont -> m_pStm[ s_Player.m_VideoIdx ];
- FileContext*   lpFileCtx   = lpCont -> m_pFileCtx;
- IPUContext*    lpIPUCtx    = s_Player.m_pIPUCtx;
- SMS_AVPacket*  lpPacket    = lpCont -> NewPacket ( lpCont );
- int            retVal      = 0;
- uint64_t       lNextTime   = 0LL;
- uint64_t       lNextTime1  = 0LL;
- uint32_t       lFilePos    = 0U;
- int64_t        lTotalTime  = lpCont -> m_Duration;
- int64_t        lPassTime   = s_Player.m_VideoTime;
- int64_t        lScale      = (  lTotalTime / ( g_Config.m_ScrollBarNum + 1 )  );
- float          lCurPos1    = (  lPassTime / lScale  );
+ SMS_Container* lpCont     = s_Player.m_pCont;
+ SMS_Stream*    lpStm      = lpCont -> m_pStm[ s_Player.m_VideoIdx ];
+ FileContext*   lpFileCtx  = lpCont -> m_pFileCtx;
+ IPUContext*    lpIPUCtx   = s_Player.m_pIPUCtx;
+ SMS_AVPacket*  lpPacket   = lpCont -> NewPacket ( lpCont );
+ int            retVal     = 0;
+ uint64_t       lNextTime  = 0LL;
+ uint64_t       lNextTime1 = 0LL;
+ uint32_t       lFilePos   = 0U;
+ int64_t        lTotalTime = lpCont -> m_Duration;
+ int64_t        lPassTime  = s_Player.m_VideoTime;
+ int64_t        lScale     = (  lTotalTime / ( g_Config.m_ScrollBarNum + 1 )  );
+ float          lCurPos1   = (  lPassTime / lScale  );
  float          j;
  
  lpIPUCtx -> Suspend ();
@@ -1117,6 +1119,8 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
 
  }  /* end while */
 
+ lpIPUCtx -> Resume ();
+
  SignalSema ( aSemaA );
  SignalSema ( aSemaV );
 
@@ -1151,7 +1155,6 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
 
  lpPacket -> Destroy ( lpPacket );
  lpIPUCtx -> QueuePacket ( 8, g_SCErase );
- lpIPUCtx -> Resume ();
 
  while (  GUI_ReadButtons ()  );
 

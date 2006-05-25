@@ -51,44 +51,23 @@ static _MTKFontHeader* s_Fonts[ 4 ] = {
 };
 
 static inline unsigned int _unaligned32 ( const void* apData ) {
-
  return (  ( const _Unaligned32* )apData  ) -> m_Val;
-
 }  /* end _unaligned32 */
 
-static inline unsigned char _swap_nibble ( unsigned char c ) {
-
- unsigned char l = c & 0x0F;
- unsigned char h = c & 0xF0;
-
- return ( l << 4 ) + ( h >> 4 );
-
-}  /* end _swap_nibble */
-
-static inline void _swap_nibbles ( unsigned char* apBuff ) {
-
- apBuff[ 3 ] = _swap_nibble ( apBuff[ 3 ] );
- apBuff[ 2 ] = _swap_nibble ( apBuff[ 2 ] );
- apBuff[ 1 ] = _swap_nibble ( apBuff[ 1 ] );
- apBuff[ 0 ] = _swap_nibble ( apBuff[ 0 ] );
-
+static inline unsigned int _swap_nibbles ( unsigned int aVal ) {
+ return (  ( aVal & 0xF0F0F0F0 ) >> 4  ) |
+        (  ( aVal & 0x0F0F0F0F ) << 4  );
 }  /* end _swap_nibbles */
 
-static inline void _swap_bytes ( unsigned char* apBuff ) {
-
- unsigned char lVal = apBuff[ 0 ];
-
- apBuff[ 0 ] = apBuff[ 1 ];
- apBuff[ 1 ] = lVal;
- apBuff[ 2 ] = 0;
- apBuff[ 3 ] = 0;
-
+static inline unsigned int _swap_bytes ( unsigned int aVal ) {
+ return (  ( aVal & 0x00FF ) << 8 ) |
+        (  ( aVal & 0xFF00 ) >> 8 );
 }  /* end _swap_bytes */
 
 static unsigned int _next_block ( unsigned char* apBuf, int aBufPos, unsigned int* apColor, unsigned int* apLen ) {
 
- unsigned int   lBytePos = aBufPos / 8;
- unsigned int   lHiLo    = aBufPos % 8;
+ unsigned int   lBytePos = aBufPos >> 3;
+ unsigned int   lHiLo    = aBufPos  & 7;
  unsigned int   lData;
  unsigned char* lpData;
  unsigned char  lTest;
@@ -96,18 +75,10 @@ static unsigned int _next_block ( unsigned char* apBuf, int aBufPos, unsigned in
  lpData = apBuf + lBytePos;
  lData  = _unaligned32 ( lpData );
 
- if ( lHiLo > 0 ) {
-
-  _swap_nibbles (  ( unsigned char* )&lData  );
-  lData = lData >> 4;
-  _swap_nibbles (  ( unsigned char* )&lData  );
-
- }  /* end if */
+ if ( lHiLo > 0 ) lData = _swap_nibbles (  _swap_nibbles ( lData ) >> 4  );
 
  lTest = lData & 0xFF;
-
- _swap_bytes (  ( unsigned char* )&lData  );
-
+ lData = _swap_bytes ( lData );
 
  if (  !( lTest & 0xFC )  ) {
 

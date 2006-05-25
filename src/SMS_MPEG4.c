@@ -892,17 +892,15 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
 
    for ( i = 0; i < 64; ++i ) {
 
-    int j = g_MPEGCtx.m_DSPCtx.m_Permutation[ i ];
-
     v = s_default_intra_matrix[ i ];
 
-    g_MPEGCtx.m_IntraMatrix      [ j ] =
-    g_MPEGCtx.m_ChromaIntraMatrix[ j ] = v;
+    g_MPEGCtx.m_IntraMatrix      [ i ] =
+    g_MPEGCtx.m_ChromaIntraMatrix[ i ] = v;
                 
     v = s_default_non_intra_matrix[ i ];
 
-    g_MPEGCtx.m_InterMatrix      [ j ] =
-    g_MPEGCtx.m_ChromaInterMatrix[ j ] = v;
+    g_MPEGCtx.m_InterMatrix      [ i ] =
+    g_MPEGCtx.m_ChromaInterMatrix[ i ] = v;
 
    }  /* end for */
 
@@ -919,7 +917,7 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
      if ( !v ) break;
                     
      lLast = v;
-     j     = g_MPEGCtx.m_DSPCtx.m_Permutation[  g_SMS_DSP_zigzag_direct[ i ]  ];
+     j     = g_SMS_DSP_zigzag_direct[ i ];
 
      g_MPEGCtx.m_IntraMatrix      [ j ] =
      g_MPEGCtx.m_ChromaIntraMatrix[ j ] = v;
@@ -928,7 +926,7 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
 
     for ( ; i < 64; ++i ) {
 
-     int j = g_MPEGCtx.m_DSPCtx.m_Permutation[  g_SMS_DSP_zigzag_direct[ i ]  ];
+     int j = g_SMS_DSP_zigzag_direct[ i ];
 
      g_MPEGCtx.m_IntraMatrix      [ j ] =
      g_MPEGCtx.m_ChromaIntraMatrix[ j ] = lLast;
@@ -950,7 +948,7 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
      if ( !v ) break;
 
      lLast = v;
-     j     = g_MPEGCtx.m_DSPCtx.m_Permutation[  g_SMS_DSP_zigzag_direct[ i ]  ];
+     j     = g_SMS_DSP_zigzag_direct[ i ];
 
      g_MPEGCtx.m_InterMatrix      [ j ] =
      g_MPEGCtx.m_ChromaInterMatrix[ j ] = v;
@@ -959,7 +957,7 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
 
     for ( ; i < 64; ++i ) {
 
-     int j = g_MPEGCtx.m_DSPCtx.m_Permutation[  g_SMS_DSP_zigzag_direct[ i ]  ];
+     int j = g_SMS_DSP_zigzag_direct[ i ];
 
      g_MPEGCtx.m_InterMatrix      [ j ] =
      g_MPEGCtx.m_ChromaInterMatrix[ j ] = lLast;
@@ -1612,9 +1610,9 @@ void MPEG4_PredAC ( SMS_DCTELEM* apBlock, int aN, int aDir ) {
             
    if ( g_MPEGCtx.m_MBX == 0 || g_MPEGCtx.m_QScale == lpQScaleTbl[ lXY ] || aN == 1 || aN == 3 )
 
-    for ( i = 1; i < 8; ++i ) apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i << 3 ]  ] += lpACVal[ i ];
+    for ( i = 1; i < 8; ++i ) apBlock[ i << 3 ] += lpACVal[ i ];
 
-   else for ( i = 1; i < 8; ++i ) apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i << 3 ]  ] += SMS_ROUNDED_DIV( lpACVal[ i ] * lpQScaleTbl[ lXY ], g_MPEGCtx.m_QScale );
+   else for ( i = 1; i < 8; ++i ) apBlock[ i << 3 ] += SMS_ROUNDED_DIV( lpACVal[ i ] * lpQScaleTbl[ lXY ], g_MPEGCtx.m_QScale );
 
   } else {
 
@@ -1624,16 +1622,16 @@ void MPEG4_PredAC ( SMS_DCTELEM* apBlock, int aN, int aDir ) {
 
    if ( g_MPEGCtx.m_MBY == 0 || g_MPEGCtx.m_QScale == lpQScaleTbl[ lXY ] || aN == 2 || aN == 3 )
 
-    for ( i = 1; i < 8; ++i ) apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i ]  ] += lpACVal[ i + 8 ];
+    for ( i = 1; i < 8; ++i ) apBlock[ i ] += lpACVal[ i + 8 ];
 
-   else for ( i = 1; i < 8; ++i ) apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i ]  ] += SMS_ROUNDED_DIV( lpACVal[ i + 8 ] * lpQScaleTbl[ lXY ], g_MPEGCtx.m_QScale );
+   else for ( i = 1; i < 8; ++i ) apBlock[ i ] += SMS_ROUNDED_DIV( lpACVal[ i + 8 ] * lpQScaleTbl[ lXY ], g_MPEGCtx.m_QScale );
 
   }  /* end else */
 
  }  /* end if */
 
- for ( i = 1; i < 8; ++i ) lpACVal1[     i ] = apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i << 3 ]  ];
- for ( i = 1; i < 8; ++i ) lpACVal1[ 8 + i ] = apBlock[  g_MPEGCtx.m_DSPCtx.m_Permutation[ i      ]  ];
+ for ( i = 1; i < 8; ++i ) lpACVal1[     i ] = apBlock[ i << 3 ];
+ for ( i = 1; i < 8; ++i ) lpACVal1[ 8 + i ] = apBlock[ i      ];
 
 }  /* end MPEG4_PredAC */
 
@@ -1795,11 +1793,11 @@ static SMS_INLINE int _mpeg4_decode_block (
 
    if ( lDCPredDir == 0 ) 
 
-    lpScanTbl = g_MPEGCtx.m_IntraVScanTbl.m_Permutated;
+    lpScanTbl = g_MPEGCtx.m_IntraVScanTbl.m_pScantable;
 
-   else lpScanTbl = g_MPEGCtx.m_IntraHScanTbl.m_Permutated;
+   else lpScanTbl = g_MPEGCtx.m_IntraHScanTbl.m_pScantable;
 
-  } else lpScanTbl = g_MPEGCtx.m_IntraScanTbl.m_Permutated;
+  } else lpScanTbl = g_MPEGCtx.m_IntraScanTbl.m_pScantable;
 
   lQMul = 1;
   lQAdd = 0;
@@ -1821,7 +1819,7 @@ static SMS_INLINE int _mpeg4_decode_block (
 
   else lpRL = &s_rl_inter;
    
-  lpScanTbl = g_MPEGCtx.m_IntraScanTbl.m_Permutated;
+  lpScanTbl = g_MPEGCtx.m_IntraScanTbl.m_pScantable;
 
   if ( g_MPEGCtx.m_MPEGQuant ) {
 
@@ -2640,19 +2638,19 @@ static int _decode_vop_header ( SMS_BitContext* apBitCtx ) {
 
  if ( g_MPEGCtx.m_AltScan ) {
 
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_alternate_vertical_scan );
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_alternate_vertical_scan );
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_vertical_scan );
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_alternate_vertical_scan );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_alternate_vertical_scan );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_vertical_scan );
 
  } else {
 
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_zigzag_direct             );
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_zigzag_direct             );
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_horizontal_scan );
-  SMS_MPEG_InitScanTable ( g_MPEGCtx.m_DSPCtx.m_Permutation, &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan   );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_zigzag_direct             );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_zigzag_direct             );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_horizontal_scan );
 
  }  /* end else */
+
+ SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan   );
 
  if ( g_MPEGCtx.m_PicType == SMS_FT_S_TYPE && (
        g_MPEGCtx.m_VolSpriteUsage == STATIC_SPRITE ||

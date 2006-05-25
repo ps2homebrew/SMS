@@ -28,6 +28,7 @@ extern unsigned char* g_pDevName[ 6 ];
 
 extern SMS_List*           g_pFileList;
 extern int                 g_CMedia;
+extern int                 g_PD;
 extern struct CDDAContext* g_pCDDACtx;
 
 # ifdef __cplusplus

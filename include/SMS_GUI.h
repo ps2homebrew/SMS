@@ -71,22 +71,22 @@ extern void*      g_pActiveNode;
 extern "C" {
 # endif  /* __cplusplus */
 
-void          GUI_Initialize   ( int                     );
-int           GUI_ReadButtons  ( void                    );
-int           GUI_WaitButtons  ( int, int                );
-void          GUI_AddObject    ( const char*, GUIObject* );
-void          GUI_Redraw       ( GUIRedrawMethod         );
-void          GUI_Status       ( unsigned char*          );
-void          GUI_Error        ( unsigned char*          );
-void          GUI_Progress     ( unsigned char*, int     );
-void          GUI_Run          ( void                    );
-void          GUI_Suspend      ( void                    );
-void          GUI_Resume       ( void                    );
-unsigned long GUI_WaitEvent    ( void                    );
-void          GUI_PostMessage  ( unsigned long           );
-void          GUI_DeleteObject ( const unsigned char*    );
-void          GUI_UpdateStatus ( void                    );
-void          GUI_SetColors    ( void                    );
+void          GUI_Initialize   ( int                      );
+int           GUI_ReadButtons  ( void                     );
+int           GUI_WaitButtons  ( int, int                 );
+void          GUI_AddObject    ( const char*, GUIObject*  );
+void          GUI_Redraw       ( GUIRedrawMethod          );
+void          GUI_Status       ( unsigned char*           );
+void          GUI_Error        ( unsigned char*           );
+void          GUI_Progress     ( unsigned char*, int, int );
+void          GUI_Run          ( void                     );
+void          GUI_Suspend      ( void                     );
+void          GUI_Resume       ( void                     );
+unsigned long GUI_WaitEvent    ( void                     );
+void          GUI_PostMessage  ( unsigned long            );
+void          GUI_DeleteObject ( const unsigned char*     );
+void          GUI_UpdateStatus ( void                     );
+void          GUI_SetColors    ( void                     );
 
 # ifdef __cplusplus
 }

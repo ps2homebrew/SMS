@@ -347,7 +347,7 @@ static inline int _read_sectors ( int aStart, int aCount, u8* apBuf ) {
 
 static int _find_signature ( CDDAContext* apCtx ) {
 
- u8  lBuf[ 2352 * 512 ];
+ u8  lBuf[ 2352 * 512 ] __attribute__(   (  aligned( 64 )  )   );
  int retVal = 0;
  int lPos   = 0;
  int i;
@@ -734,6 +734,10 @@ static int CDDA_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 static void CDDA_DestroyFileContext ( FileContext* apCtx ) {
 
  if ( apCtx != NULL ) {
+
+  CDDAFilePrivate* lpPriv = ( CDDAFilePrivate* )apCtx -> m_pData;
+
+  CDDA_Sync ( lpPriv -> m_pCtx );
 
   free ( apCtx -> m_pData      );
   free ( apCtx -> m_pBase[ 0 ] );

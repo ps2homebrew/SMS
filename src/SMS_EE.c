@@ -121,9 +121,9 @@ int SMS_rand ( void ) {
 
 void SMS_EEInit ( void ) {
 
- unsigned char lROMVer[ 16 ];
- DMAC*         lpDMAC = ( DMAC* )0x1000E000;
- int           lFD;
+ unsigned char      lROMVer[ 16 ];
+ volatile DMACRegs* lpDMAC = DMAC;
+ int                lFD;
 
  lpDMAC -> m_CTRL = DMA_SET_CTRL( 1, D_CTRL_RELE_ON, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC, D_CTRL_STD_OFF, D_CTRL_RCYC_8 );
  lpDMAC -> m_STAT = 0;

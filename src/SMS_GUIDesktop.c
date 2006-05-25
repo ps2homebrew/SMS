@@ -18,9 +18,6 @@
 #include "SMS_PAD.h"
 #include "SMS_GUIMenu.h"
 #include "SMS_Locale.h"
-#include "SMS_Codec.h"
-#include "SMS_MPEG4.h"
-#include "SMS_VideoBuffer.h"
 #include "SMS_IPU.h"
 #include "SMS_Sounds.h"
 
@@ -36,7 +33,7 @@ extern void About ( void );
 
 static GSBitBltPacket s_BitBltPrg;
 
-static char s_pSMSkn[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/SMS.skn";
+static char s_pSMSkn[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/SMS.smi";
 
 static int DrawSkin ( void ) {
 
@@ -55,61 +52,34 @@ static int DrawSkin ( void ) {
 
   if ( lpData ) {
 
+   int lWidth, lHeight;
+
    fioRead ( lFD, lpData, lSize );
 
-   if (  *( unsigned int* )lpData == 0x40534D53  ) {
+   lWidth = IPU_ImageInfo ( lpData, &lHeight );
 
-    int              lWidth   = *( unsigned int* )( lpData + 4 );
-    int              lHeight  = *( unsigned int* )( lpData + 8 );
-    unsigned int     lVRAMPtr = g_GSCtx.m_VRAMPtr;
-    IPUContext*      lpIPUCtx;
-    SMS_CodecContext lCodecCtx; 
+   if ( lWidth ) {
 
-    g_GSCtx.m_VRAMPtr = g_GSCtx.m_VRAMPtr2 << 5;
-    lpIPUCtx          = IPU_InitContext ( lWidth, lHeight );
+    IPULoadImage   lLoadImg;
+    unsigned long* lpDMA;
 
-    lCodecCtx.m_Width     = lWidth;
-    lCodecCtx.m_Height    = lHeight;
-    lCodecCtx.m_Type      = SMS_CodecTypeVideo;
-    lCodecCtx.m_ID        = SMS_CodecID_MPEG4;
-    lCodecCtx.m_IntBufCnt = 0; 
-    lCodecCtx.m_pIntBuf   = NULL;
-    lCodecCtx.m_HurryUp   = 0;
+    g_GSCtx.m_VRAMTexPtr = g_GSCtx.m_VRAMPtr;
+    g_GSCtx.m_TBW        = ( lWidth + 63 ) >> 6;
+    g_GSCtx.m_TW         = GS_PowerOf2 ( lWidth  );
+    g_GSCtx.m_TH         = GS_PowerOf2 ( lHeight );
 
-    if (  SMS_CodecOpen ( &lCodecCtx )  ) {
+    IPU_InitLoadImage ( &lLoadImg, lWidth, lHeight );
+    IPU_LoadImage ( &lLoadImg, lpData, lSize, 0, 0, 0, 0 );
+    lLoadImg.Destroy ( &lLoadImg );
 
-     if (  lCodecCtx.m_pCodec -> Init ( &lCodecCtx )  ) {
+    lpDMA = GSContext_NewPacket (  0, GS_TSP_PACKET_SIZE(), GSPaintMethod_InitClear  );
+    GSContext_RenderTexSprite (
+     ( GSTexSpritePacket* )( lpDMA - 2 ),
+     0, 0, g_GSCtx.m_Width, g_GSCtx.m_Height, 0, 0, lWidth, lHeight
+    );
+    GSContext_Flush ( 0, GSFlushMethod_DeleteLists );
 
-      SMS_FrameBuffer* lpFrame = NULL; 
-
-      lCodecCtx.m_pCodec -> Decode ( 
-       &lCodecCtx, ( void** )&lpFrame, lpData + 12, lSize - 12
-      );
-
-      if ( !lpFrame ) lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
-
-      if ( lpFrame ) {
-
-       lpIPUCtx -> Display ( lpFrame );
-       lpIPUCtx -> Sync ();
-       GUI_SetColors ();
-       GSFont_Init   ();
-
-       retVal = 1;
-
-      }  /* end if */
-
-      lCodecCtx.m_pCodec -> Destroy ( &lCodecCtx ); 
-
-     }  /* end if */
-
-     SMS_CodecClose ( &lCodecCtx ); 
-
-    }  /* end if */
-
-    lpIPUCtx -> Destroy (); 
-
-    g_GSCtx.m_VRAMPtr = lVRAMPtr;
+    retVal = 1;
 
    }  /* end if */
 
@@ -327,12 +297,19 @@ void GUI_Error ( unsigned char* apMsg ) {
 
 }  /* end GUI_Error */
 
-void GUI_Progress ( unsigned char* apStr, int aPos ) {
+void GUI_Progress ( unsigned char* apStr, int aPos, int afForceUpdate ) {
 
  static unsigned long* s_lpListTxt;
  static unsigned long* s_lpListRRT;
  static int            s_lLen;
  static int            s_lPos;
+
+ if ( afForceUpdate ) {
+
+  s_lLen = -1;
+  s_lPos = -1;
+
+ }  /* end if */
 
  if ( apStr ) {
 
