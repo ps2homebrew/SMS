@@ -63,7 +63,7 @@ static int DrawSkin ( void ) {
     IPULoadImage   lLoadImg;
     unsigned long* lpDMA;
 
-    g_GSCtx.m_VRAMTexPtr = g_GSCtx.m_VRAMPtr;
+    g_GSCtx.m_VRAMTexPtr = g_GSCtx.m_VRAMPtr2 << 5;
     g_GSCtx.m_TBW        = ( lWidth + 63 ) >> 6;
     g_GSCtx.m_TW         = GS_PowerOf2 ( lWidth  );
     g_GSCtx.m_TH         = GS_PowerOf2 ( lHeight );
@@ -78,6 +78,9 @@ static int DrawSkin ( void ) {
      0, 0, g_GSCtx.m_Width, g_GSCtx.m_Height, 0, 0, lWidth, lHeight
     );
     GSContext_Flush ( 0, GSFlushMethod_DeleteLists );
+
+    GUI_SetColors ();
+    GSFont_Init   ();
 
     retVal = 1;
 
