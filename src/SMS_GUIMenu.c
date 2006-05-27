@@ -256,7 +256,7 @@ int GUIMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  }  /* end switch */
 
- return GUIHResult_Handled;
+ return anEvent & GUI_MSG_MOUNT_MASK ? GUIHResult_Void : GUIHResult_Handled;
 
 }  /* end GUIMenu_HandleEvent */
 

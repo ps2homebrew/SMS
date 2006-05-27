@@ -111,6 +111,8 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
  unsigned int   lH      = apLoadImg -> m_Height + anY;
  unsigned int   i, lCode;
 
+ SyncDCache (  apData, (  ( char* )apData  ) + aSize  );
+
  IPU_RESET();
  IPU -> m_CTRL |= 1 << 23;
  IPU_CMD_SETTH( aTH0, 0 );
@@ -166,7 +168,8 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
 
  }  /* end if */
 
- DMA_Stop ( DMAC_TO_IPU );
+ DMA_Stop ( DMAC_FROM_IPU );
+ DMA_Stop ( DMAC_TO_IPU   );
  IPU_RESET();
 
 }  /* end IPU_LoadImage */

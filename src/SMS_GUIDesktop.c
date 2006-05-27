@@ -20,6 +20,7 @@
 #include "SMS_Locale.h"
 #include "SMS_IPU.h"
 #include "SMS_Sounds.h"
+#include "SMS_MC.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -33,11 +34,11 @@ extern void About ( void );
 
 static GSBitBltPacket s_BitBltPrg;
 
-static char s_pSMSkn[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/SMS.smi";
+static char s_pSMSkn[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "SMS/SMS.smi";
 
 static int DrawSkin ( void ) {
 
- int lFD    = fioOpen ( s_pSMSkn, O_RDONLY ); 
+ int lFD    = MC_OpenS ( 0, 0, s_pSMSkn, O_RDONLY ); 
  int retVal = 0;
 
  if ( lFD >= 0 ) { 
@@ -45,8 +46,8 @@ static int DrawSkin ( void ) {
   long           lSize; 
   unsigned char* lpData; 
 
-  lSize = fioLseek ( lFD, 0, SEEK_END ); 
-  fioLseek ( lFD, 0, SEEK_SET ); 
+  lSize = MC_SeekS ( lFD, 0, SEEK_END ); 
+  MC_SeekS ( lFD, 0, SEEK_SET ); 
 
   lpData = malloc ( lSize ); 
 
@@ -54,7 +55,7 @@ static int DrawSkin ( void ) {
 
    int lWidth, lHeight;
 
-   fioRead ( lFD, lpData, lSize );
+   MC_ReadS ( lFD, lpData, lSize );
 
    lWidth = IPU_ImageInfo ( lpData, &lHeight );
 
@@ -90,7 +91,7 @@ static int DrawSkin ( void ) {
 
   }  /* end if */
 
-  fioClose ( lFD );
+  MC_CloseS ( lFD );
 
  }  /* end if */
 

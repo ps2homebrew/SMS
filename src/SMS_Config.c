@@ -132,88 +132,64 @@ int SMS_LoadConfig ( void  ) {
 
   if ( lRes ) {
 
-   int lFD = MC_Open ( 0, 0, s_pSMSCfg, O_RDONLY );
+   int lFD = MC_OpenS ( 0, 0, s_pSMSCfg, O_RDONLY );
 
-   if ( lFD ) {
+   if ( lFD >= 0 ) {
 
-    MC_Sync ( &lFD );
+    int lLen = MC_ReadS ( lFD, &g_Config, 272 );
 
-    if ( lFD >= 0 ) {
+    if ( lLen == 272 ) {
 
-     int lLen;
+     if ( g_Config.m_Version > 0 ) {
 
-     MC_Read ( lFD, &g_Config, 272 );
-     MC_Sync ( &lLen );
+      lLen = MC_ReadS ( lFD, &g_Config.m_BrowserABCIdx, 32 );
 
-     if ( lLen == 272 ) {
+      if ( lLen == 32 ) {
 
-      if ( g_Config.m_Version > 0 ) {
+       if ( g_Config.m_Version > 1 ) {
 
-       MC_Read ( lFD, &g_Config.m_BrowserABCIdx, 32 );
-       MC_Sync ( &lLen );
+        lLen = MC_ReadS ( lFD, &g_Config.m_PlayerFlags, 60 );
 
-       if ( lLen == 32 ) {
+        if ( lLen == 60 ) {
 
-        if ( g_Config.m_Version > 1 ) {
+         if ( g_Config.m_Version > 2 ) {
 
-         MC_Read ( lFD, &g_Config.m_PlayerFlags, 60 );
-         MC_Sync ( &lLen );
+          lLen = MC_ReadS ( lFD, &g_Config.m_SubHIncr, 80 );
 
-         if ( lLen == 60 ) {
+          if ( lLen == 80 ) {
 
-          if ( g_Config.m_Version > 2 ) {
+           if ( g_Config.m_Version > 3 ) {
 
-           MC_Read ( lFD, &g_Config.m_SubHIncr, 80 );
-           MC_Sync ( &lLen );
+            lLen = MC_ReadS ( lFD, g_Config.m_DXPALOther, 32 );
 
-           if ( lLen == 80 ) {
+            if ( lLen == 32 ) retVal = 1;
 
-            if ( g_Config.m_Version > 3 ) {
+           } else retVal = 1;
 
-             MC_Read ( lFD, g_Config.m_DXPALOther, 32 );
-             MC_Sync ( &lLen );
+          }  /* end if */
 
-             if ( lLen == 32 ) retVal = 1;
+         } else retVal = 1;
 
-            } else retVal = 1;
+        }  /* end if */
 
-           }  /* end if */
+       } else retVal = 1;
 
-          } else retVal = 1;
+      }  /* end if */
 
-         }  /* end if */
-
-        } else retVal = 1;
-
-       }  /* end if */
-
-      } else retVal = 1;
-
-     }  /* end if */
-
-     MC_Close ( lFD );
-     MC_Sync ( &lFD );
+     } else retVal = 1;
 
     }  /* end if */
+
+    MC_CloseS ( lFD );
 
    }  /* end if */
 
-   lFD = MC_Open ( 0, 0, s_pSMSPal, O_RDONLY );
+   lFD = MC_OpenS ( 0, 0, s_pSMSPal, O_RDONLY );
 
-   if ( lFD ) {
+   if ( lFD >= 0 ) {
 
-    MC_Sync ( &lFD );
-
-    if ( lFD >= 0 ) {
-
-     int lLen;
-
-     MC_Read (  lFD, g_Palette, sizeof ( g_Palette )  );
-     MC_Sync ( &lLen );
-     MC_Close ( lFD );
-     MC_Sync ( &lLen );
-
-    }  /* end if */
+    MC_ReadS (  lFD, g_Palette, sizeof ( g_Palette )  );
+    MC_CloseS ( lFD );
 
    }  /* end if */
 
@@ -232,8 +208,9 @@ int SMS_LoadConfig ( void  ) {
 
  }  /* end if */
 
- g_Config.m_Version       = 4;
- g_Config.m_BrowserFlags |= lUDFL;
+ g_Config.m_Version = 4;
+
+ if ( !lUDFL ) g_Config.m_BrowserFlags &= ~SMS_BF_UDFL;
 
  SMS_clip ( g_Config.m_DX, -160, 160 );
  SMS_clip ( g_Config.m_DY,  -64,  64 );

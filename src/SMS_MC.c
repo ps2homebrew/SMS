@@ -21,6 +21,7 @@
 #define MC_RPCCMD_OPEN     0x71
 #define MC_RPCCMD_CLOSE    0x72
 #define MC_RPCCMD_READ     0x73
+#define MC_RPCCMD_SEEK     0x75
 #define MC_RPCCMD_GET_DIR  0x76
 #define MC_RPCCMD_GET_INFO 0x78
 
@@ -253,3 +254,68 @@ int MC_Close ( int aFD ) {
  return retVal;
 
 }  /* end MC_Close */
+
+int MC_OpenS ( int aPort, int aSlot, const char* apName, int aMode ) {
+
+ int lFD = MC_Open ( aPort, aSlot, apName, aMode );
+
+ if ( lFD )
+  MC_Sync ( &lFD );
+ else lFD = -1;
+
+ return lFD;
+
+}  /* end MC_OpenS */
+
+int MC_ReadS ( int aFD, void* apBuf, int aSize ) {
+
+ int retVal = 0;
+
+ MC_Read ( aFD, apBuf, aSize );
+ MC_Sync ( &retVal );
+
+ return retVal;
+
+}  /* end MC_ReadS */
+
+void MC_CloseS ( int aFD ) {
+
+ MC_Close ( aFD );
+ MC_Sync ( &aFD );
+
+}  /* end MC_CloseS */
+
+int MC_Seek ( int aFD, int anOffset, int anOrigin ) {
+
+ int retVal = 0;
+	
+ if ( s_LastCmd ) return retVal;
+
+ s_MCFileCmd.m_FD     = aFD;
+ s_MCFileCmd.m_Offset = anOffset;
+ s_MCFileCmd.m_Origin = anOrigin;
+
+ if (  SifCallRpc (
+        &s_Client, MC_RPCCMD_SEEK, 1, &s_MCFileCmd, 48, s_RecvData, 4, NULL, NULL
+       ) >= 0
+ ) {
+
+  retVal    = 1;
+  s_LastCmd = MC_RPCCMD_SEEK;
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end MC_Seek */
+
+int MC_SeekS ( int aFD, int anOffset, int anOrigin ) {
+
+ int retVal;
+
+ MC_Seek ( aFD, anOffset, anOrigin );
+ MC_Sync ( &retVal );
+
+ return retVal;
+
+}  /* end MC_SeekS */

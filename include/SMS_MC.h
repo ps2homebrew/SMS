@@ -76,6 +76,12 @@ int MC_GetDir  ( int, int, const char*, unsigned, int, SMS_MCTable* );
 int MC_Open    ( int, int, const char*, int                         );
 int MC_Read    ( int, void*, int                                    );
 int MC_Close   ( int                                                );
+int MC_Seek    ( int, int, int                                      );
+
+int  MC_OpenS  ( int, int, const char*, int );
+int  MC_ReadS  ( int, void*, int            );
+void MC_CloseS ( int                        );
+int  MC_SeekS  ( int, int, int              );
 
 # ifdef __cplusplus
 }

@@ -475,14 +475,14 @@ static void _sms_video_decoder ( void* apParam ) {
         )
   ) {
 
+   WaitSema ( SEMA_R_PUT_VIDEO );
+
    if ( s_Flags & SMS_FLAGS_STOP ) {
 
     lpPacket -> Destroy ( lpPacket );
     break;
 
    }  /* end if */
-
-   WaitSema ( SEMA_R_PUT_VIDEO );
 
    if ( lpCtx -> m_HasBFrames && lpFrame -> m_FrameType != SMS_FT_B_TYPE ) {
 
@@ -688,14 +688,14 @@ static void _sms_audio_only_decoder ( void* apParam ) {
           )
     ) {
 
+     WaitSema ( SEMA_R_PUT_AUDIO );
+
      if ( s_Flags & SMS_FLAGS_STOP ) {
 
       lpPacket -> Destroy ( lpPacket );
       goto end;
 
      }  /* end if */
-
-     WaitSema ( SEMA_R_PUT_AUDIO );
 
      LOCK( s_SemaALock );
       lpFrame = SMS_RB_PUSHSLOT( s_AudioQueue );
@@ -842,14 +842,14 @@ static void _sms_audio_decoder ( void* apParam ) {
           )
     ) {
 
+     WaitSema ( SEMA_R_PUT_AUDIO );
+
      if ( s_Flags & SMS_FLAGS_STOP ) {
 
       lpPacket -> Destroy ( lpPacket );
       goto end;
 
      }  /* end if */
-
-     WaitSema ( SEMA_R_PUT_AUDIO );
 
      LOCK( s_SemaALock );
       lpFrame = SMS_RB_PUSHSLOT( s_AudioQueue );

@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <libhdd.h>
+#include <fileXio_rpc.h>
 
 typedef struct _Sample {
 
@@ -681,6 +682,14 @@ void _exit_handler ( GUIMenu* apMenu, int aDir ) {
  GUI_Status ( lBuffer );
 
  SMS_TimerDestroy ();
+
+ if ( g_PD >= 0 ) {
+
+  *( unsigned int* )&g_CWD[ 0 ] = 0x30736670;
+  *( unsigned int* )&g_CWD[ 4 ] = 0x0000003A;
+  fileXioUmount ( g_CWD );
+
+ }  /* end if */
 
  if ( !lIdx ) {
 

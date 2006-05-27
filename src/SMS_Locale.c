@@ -10,12 +10,13 @@
 */
 #include "SMS_Locale.h"
 #include "SMS_Config.h"
+#include "SMS_MC.h"
 
 #include <string.h>
 #include <fileio.h>
 #include <malloc.h>
 
-static char s_SMSLng[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:SMS/SMS.lng";
+static char s_SMSLng[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMS/SMS.lng";
 
 char g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "";
 char g_SlashStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "/";
@@ -414,13 +415,13 @@ static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef
 
 void SMS_LocaleInit ( void ) {
 
- int lFD = fioOpen ( s_SMSLng, O_RDONLY );
+ int lFD = MC_OpenS ( 0, 0, s_SMSLng, O_RDONLY );
 
  memcpy (  g_SMString, s_SMStringDef, sizeof ( g_SMString )  );
 
  if ( lFD >= 0 ) {
 
-  long lSize = fioLseek ( lFD, 0, SEEK_END );
+  long lSize = MC_SeekS ( lFD, 0, SEEK_END );
 
   if ( lSize > 0 ) {
 
@@ -432,8 +433,8 @@ void SMS_LocaleInit ( void ) {
    lpEnd = lpBuff + lSize;
    lIdx  = 0;
 
-   fioLseek ( lFD, 0, SEEK_SET );
-   fioRead ( lFD, lpBuff, lSize );
+   MC_SeekS ( lFD, 0, SEEK_SET   );
+   MC_ReadS ( lFD, lpBuff, lSize );
 
    while ( 1 ) {
 
@@ -463,7 +464,7 @@ void SMS_LocaleInit ( void ) {
 
   }  /* end if */
 
-  fioClose ( lFD );
+  MC_CloseS ( lFD );
 
  }  /* end else */
 
