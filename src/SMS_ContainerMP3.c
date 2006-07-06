@@ -46,19 +46,14 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
 }  /* end _ReadPacket */
 
-int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
+uint64_t SMS_MP3_Probe ( FileContext* apFileCtx ) {
 
- int          retVal = 0;
- uint8_t      lBuf[ ID3_HEADER_SIZE ];
+ uint8_t  lBuf[ ID3_HEADER_SIZE ];
  SMS_ALIGN( uint8_t lHeader[ 4 ], 4  ) = { 0xFF, 0xFF, 0xFF, 0xFF };
- FileContext* lpFileCtx = apCont -> m_pFileCtx;
- unsigned int lMP3Pos   = 16384;
+ unsigned int lMP3Pos = 16384;
+ uint64_t     lVal    = 0;
 
- if (  ( int )lpFileCtx < 0  ) return retVal;
-
- if (  lpFileCtx -> Read ( lpFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
-
-  uint64_t lVal = 0;
+ if (  apFileCtx -> Read ( apFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
 
   if (  _id3_match ( lBuf )  ) {
 
@@ -66,16 +61,16 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
           (  ( lBuf[ 7 ] & 0x7F ) << 14  ) |
           (  ( lBuf[ 8 ] & 0x7F ) <<  7  ) |
              ( lBuf[ 9 ] & 0x7F );
-   File_Skip (  lpFileCtx, ( uint32_t )lVal  );
+   File_Skip (  apFileCtx, ( uint32_t )lVal  );
 
-  } else lpFileCtx -> Seek ( lpFileCtx, 0 );
+  } else apFileCtx -> Seek ( apFileCtx, 0 );
 
-  while (  lMP3Pos && !FILE_EOF( lpFileCtx )  ) {
+  while (  lMP3Pos && !FILE_EOF( apFileCtx )  ) {
 
    lHeader[ 0 ] = lHeader[ 1 ];
    lHeader[ 1 ] = lHeader[ 2 ];
    lHeader[ 2 ] = lHeader[ 3 ];
-   lHeader[ 3 ] = File_GetByte ( lpFileCtx );
+   lHeader[ 3 ] = File_GetByte ( apFileCtx );
 
    lVal  = SMS_bswap32 (  *( uint32_t* )lHeader  );
    lVal &= SMS_INT64( 0x00000000FFFFFFFF );
@@ -86,79 +81,94 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
   }  /* end while */
 
-  if (  lMP3Pos && !FILE_EOF( lpFileCtx )  ) {
+  if (  !lMP3Pos || FILE_EOF( apFileCtx )  ) lVal = 0;
 
-   int               lMPEG25;
-   int               lLSF;
-   int               lSampleRate;
-   int               lnChannels;
-   int               lBitRateIdx;
-   SMS_Stream*       lpStm;
-   SMS_CodecContext* lpCodecCtx;
-   char*             lpSlash;
-   char*             lpDot;
+ }  /* end if */
 
-   lMP3Pos = lpFileCtx -> m_CurPos - 4;
+ return lVal;
 
-   if (  lVal & ( 1 << 20 )  ) {
+}  /* end SMS_MP3_Probe */
 
-    lLSF    = (  lVal & ( 1 << 19 )  ) ? 0 : 1;
-    lMPEG25 = 0;
+int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
-   } else {
+ int          retVal = 0;
+ FileContext* lpFileCtx = apCont -> m_pFileCtx;
+ uint64_t     lVal;
 
-    lLSF    = 1;
-    lMPEG25 = 1;
+ if (  ( int )lpFileCtx < 0  ) return retVal;
 
-   }  /* end else */
+ lVal = SMS_MP3_Probe ( lpFileCtx );
 
-   lSampleRate = g_mpa_freq_tab[ ( lVal >> 10 ) & 3 ] >> ( lLSF + lMPEG25 );
-   lnChannels  = (  ( lVal >> 6 ) & 3  ) == SMS_MPA_MONO ? 1 : 2;
-   lBitRateIdx = (  ( uint32_t )lVal >> 12  ) & 0xF;
+ if ( lVal ) {
 
-   apCont -> m_pName    = g_pMP3Str;
-   apCont -> ReadPacket = _ReadPacket;
+  int               lMPEG25;
+  int               lLSF;
+  int               lSampleRate;
+  int               lnChannels;
+  int               lBitRateIdx;
+  SMS_Stream*       lpStm;
+  SMS_CodecContext* lpCodecCtx;
+  char*             lpSlash;
+  char*             lpDot;
+  unsigned int      lMP3Pos = lpFileCtx -> m_CurPos - 4;
 
-   apCont -> m_pStm[ 0 ] = lpStm = ( SMS_Stream* )calloc (  1, sizeof ( SMS_Stream )  );
-   apCont -> m_nStm              = 1;
+  if (  lVal & ( 1 << 20 )  ) {
 
-   lpStm -> m_pCodec = lpCodecCtx = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
+   lLSF    = (  lVal & ( 1 << 19 )  ) ? 0 : 1;
+   lMPEG25 = 0;
 
-   lpStm -> m_Flags     |= SMS_STRM_FLAGS_AUDIO;
-   lpStm -> m_SampleRate = lSampleRate;
+  } else {
 
-   lpCodecCtx -> m_Type          = SMS_CodecTypeAudio;
-   lpCodecCtx -> m_Tag           = 0x00000055;
-   lpCodecCtx -> m_ID            = SMS_CodecID_MP3;
-   lpCodecCtx -> m_Channels      = lnChannels;
-   lpCodecCtx -> m_SampleRate    = lSampleRate;
-   lpCodecCtx -> m_BitsPerSample = 16;
+   lLSF    = 1;
+   lMPEG25 = 1;
 
-   if ( lBitRateIdx ) lpCodecCtx -> m_BitRate = g_mpa_bitrate_tab[ lLSF ][ 2 ][ lBitRateIdx ] * 1000;
+  }  /* end else */
 
-   apCont -> m_Duration = 0L;
+  lSampleRate = g_mpa_freq_tab[ ( lVal >> 10 ) & 3 ] >> ( lLSF + lMPEG25 );
+  lnChannels  = (  ( lVal >> 6 ) & 3  ) == SMS_MPA_MONO ? 1 : 2;
+  lBitRateIdx = (  ( uint32_t )lVal >> 12  ) & 0xF;
 
-   lpFileCtx -> Seek ( lpFileCtx, lMP3Pos );
+  apCont -> m_pName    = g_pMP3Str;
+  apCont -> ReadPacket = _ReadPacket;
 
-   apCont -> m_pPlayList = SMS_ListInit ();
-   lpSlash = lpFileCtx -> m_pPath + strlen ( lpFileCtx -> m_pPath ) - 1;
-   lpDot   = NULL;
+  apCont -> m_pStm[ 0 ] = lpStm = ( SMS_Stream* )calloc (  1, sizeof ( SMS_Stream )  );
+  apCont -> m_nStm              = 1;
 
-   while ( *lpSlash != '\\' && *lpSlash != '/' ) {
+  lpStm -> m_pCodec = lpCodecCtx = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
 
-    if ( !lpDot && *lpSlash == '.' ) lpDot = lpSlash;
+  lpStm -> m_Flags     |= SMS_STRM_FLAGS_AUDIO;
+  lpStm -> m_SampleRate = lSampleRate;
 
-    --lpSlash;
+  lpCodecCtx -> m_Type          = SMS_CodecTypeAudio;
+  lpCodecCtx -> m_Tag           = 0x00000055;
+  lpCodecCtx -> m_ID            = SMS_CodecID_MP3;
+  lpCodecCtx -> m_Channels      = lnChannels;
+  lpCodecCtx -> m_SampleRate    = lSampleRate;
+  lpCodecCtx -> m_BitsPerSample = 16;
 
-   }  /* end while */
+  if ( lBitRateIdx ) lpCodecCtx -> m_BitRate = g_mpa_bitrate_tab[ lLSF ][ 2 ][ lBitRateIdx ] * 1000;
 
-   if ( lpDot ) *lpDot = '\x00';
-    SMS_ListPushBack ( apCont -> m_pPlayList, lpSlash + 1 );
-   if ( lpDot ) *lpDot = '.';
+  apCont -> m_Duration = 0L;
 
-   retVal = 1;
+  lpFileCtx -> Seek ( lpFileCtx, lMP3Pos );
 
-  }  /* end if */
+  apCont -> m_pPlayList = SMS_ListInit ();
+  lpSlash = lpFileCtx -> m_pPath + strlen ( lpFileCtx -> m_pPath ) - 1;
+  lpDot   = NULL;
+
+  while ( *lpSlash != '\\' && *lpSlash != '/' ) {
+
+   if ( !lpDot && *lpSlash == '.' ) lpDot = lpSlash;
+
+   --lpSlash;
+
+  }  /* end while */
+
+  if ( lpDot ) *lpDot = '\x00';
+   SMS_ListPushBack ( apCont -> m_pPlayList, lpSlash + 1 );
+  if ( lpDot ) *lpDot = '.';
+
+  retVal = 1;
 
  }  /* end if */
 

@@ -735,3 +735,52 @@ Update (25-MAY-2006)
   (just to measure device speed), so, use it on your own risk :) (files will be
   overwritten without any prompt). Note also that only PS2 internal HDD is
   supported;
+
+Update (06-JUL-2006)
+--------------------
+- fixed "...the .srt subtitle file which is selected by entering "Select subtitles"
+  menu can't be loaded with .avi if they are stored in mass:..." bug. Thanks to
+  "magusneo" for the remark;
+- added remote control support and removed gamepad support for slot 1:
+  * for PS2 models without built-in IR sensor AND WITH rom1:RMMAN module an external
+    IR sensor should be plugged into slot 1;
+  * for PS2 models without built-in IR sensor AND WITHOUT rom1:RMMAN module SMS looks
+    for mc0:/SMS/RMMAN.IRX module which is just a copy of rom1:RMMAN module from PS2
+    models where this module is present. An external IR sensor should be plugged into
+    slot 1;
+  * for PS2 models with built-in IR sensor an external IR sensor has no effect;
+  * for PS2 models without built-in IR sensor AND without rom1:RMMAN module AND
+    without mc0:/SMS/RMMAN.IRX module remote control support is disabled;
+  * Button mappings in SMS file browser:
+    - "Reset"    - turns console off;
+    - "Enter"    - equivalent to "cross" gamepad button;
+    - "Play"     - equivalent to "cross" gamepad button;
+    - "A-B"      - display about;
+    - "Menu"     - display SMS menu;
+    - "Top menu" - activate device browser menu (ignored in the device browser);
+    - "Subtitle" - equivalent to "circle" gamepad button (ignored in the device browser);
+    - "Program"  - equivalent to "square" gamepad button (ignored in the device browser);
+    - "Return"   - equivalent to "triangle" gamepad button (ignored in the device browser);
+  * Button mappings in SMS player:
+    - "Pause"   - pause;
+    - "Menu"    - player menu;
+    - "Play"    - resume;
+    - "Reset"   - equivalent to "triangle" gamepad button;
+    - "Return"  - equivalent to "triangle" gamepad button;
+    - "Stop"    - equivalent to "triangle" gamepad button;
+    - "Scan >>" - equivalent to "right" gamepad button;
+    - "Scan <<" - equivalent to "left" gamepad button;
+    - "Display" - equivalent to "square" gamepad button;
+    - "Time"    - equivalent to "cross" gamepad button;
+    - "Audio"   - equivalent to "circle" gamepad button;
+
+Note that in order to get remote control (with "external" IR sensor) working while
+preserving gamepad and memory card functionalities unaffected a modified SIO2MAN
+module is created (based on Marcus R. Brown code from SVN and my own disassembly
+works) and integrated into SMS (source code of it can also be found in SVN).
+THERE'S NO WARRANTY THAT OTHER DEVICES LIKE MULTITAP ETC. WILL WIRK WITH IT.
+Thanks to "Mr.Worm~~" and "Rathunter" for testing;
+
+- added 'FMP4' fourcc recognition. Thanks to "ntt2005" for the research/note;
+- added support for "simple" M3U list. Only relative paths are supported;
+- updated some IOP drivers from ps2sdk;

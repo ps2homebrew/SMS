@@ -32,6 +32,7 @@
 #include "SMS_Sounds.h"
 #include "SMS_Data.h"
 #include "SMS_Spectrum.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -1064,19 +1065,17 @@ static void _sms_play ( void ) {
 repeat:
  while ( 1 ) {
 
-  uint32_t lButtons = GUI_ReadButtons ();
+  uint32_t lBtn = GUI_ReadButtons ();
 
-  if ( lButtons ) {
+  if ( lBtn ) {
 
    lPOffTime = g_Timer + g_Config.m_PowerOff;
 
    if ( g_Timer <= lNextTime ) goto skip;
 
-   lNextTime = g_Timer + 200;
+   lNextTime = g_Timer + 300;
 
-   if ( lButtons & SMS_PAD_SELECT ) {
-
-    unsigned long int lBtn;
+   if ( lBtn == SMS_PAD_SELECT || lBtn == RC_PAUSE ) {
 
     if ( g_Config.m_ScrollBarPos == SMScrollBarPos_Inactive || lfNoVideo ) {
 
@@ -1092,16 +1091,20 @@ repeat:
 
      while ( 1 ) {
 
-      lBtn = GUI_WaitButtons ( SMS_PAD_START | SMS_PAD_SELECT, 200 );
+      static unsigned s_ResBtn[] __attribute__(   (  section( ".data" )  )   ) = {
+       SMS_PAD_START, SMS_PAD_SELECT, RC_PAUSE, RC_PLAY
+      };
 
-      if ( lBtn == SMS_PAD_START ) {
+      lBtn = GUI_WaitButtons ( 4, s_ResBtn, 200 );
+
+      if ( lBtn == SMS_PAD_START || lBtn == RC_PLAY ) {
 
        lPOffTime = g_Timer + g_Config.m_PowerOff;
        break;
 
       }  /* end if */
 
-      if ( lBtn == SMS_PAD_SELECT ) {
+      if ( lBtn == SMS_PAD_SELECT || lBtn == RC_PAUSE ) {
 
        s_Player.m_pIPUCtx -> Sync    ();
        s_Player.m_pIPUCtx -> Suspend ();
@@ -1112,7 +1115,6 @@ repeat:
 
      }  /* end while */
 resume:
-     SMS_TimerWait ( 500 );
      s_Flags &= ~SMS_FLAGS_PAUSE;
      SignalSema ( s_SemaPauseAudio );
      SignalSema ( s_SemaPauseVideo );
@@ -1146,11 +1148,11 @@ resume:
 
     }  /* end else */
 
-   } else if (  ( lButtons & SMS_PAD_START ) && !lfNoVideo  ) {
+   } else if (  ( lBtn == SMS_PAD_START || lBtn == RC_MENU ) && !lfNoVideo  ) {
 
     s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
 
-    for ( lButtons = 0; lButtons < lnDec; ++lButtons ) {
+    for ( lBtn = 0; lBtn < lnDec; ++lBtn ) {
 
      WaitSema ( s_SemaAckPause );
 
@@ -1167,7 +1169,11 @@ resume:
 
     goto resume;
 
-   } else if (  lButtons & SMS_PAD_TRIANGLE ) {
+   } else if ( lBtn == SMS_PAD_TRIANGLE ||
+               lBtn == RC_RESET         ||
+               lBtn == RC_RETURN        ||
+               lBtn == RC_STOP
+          ) {
 
     _terminate_threads ( 1 );
     _clear_packet_queues ();
@@ -1175,15 +1181,15 @@ resume:
 
     break;
 
-   } else if (  lButtons == SMS_PAD_UP && lfVolume && s_Player.m_pSPUCtx ) {
+   } else if (  lBtn == SMS_PAD_UP && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( 1 );
 
-   } else if ( lButtons == SMS_PAD_DOWN && lfVolume && s_Player.m_pSPUCtx ) {
+   } else if ( lBtn == SMS_PAD_DOWN && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( -1 );
 
-   } else if (  lButtons == SMS_PAD_RIGHT && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
+   } else if (  ( lBtn == SMS_PAD_RIGHT || lBtn == RC_SCAN_RIGHT ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
 
     if (  !FFwdFunc ()  ) {
 
@@ -1194,7 +1200,7 @@ resume:
 
     lSize = 0;
 
-   } else if (  lButtons == SMS_PAD_LEFT && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
+   } else if (  ( lBtn == SMS_PAD_LEFT || lBtn == RC_SCAN_LEFT ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
 
     if (  !RewFunc ()  ) {
 
@@ -1205,7 +1211,7 @@ resume:
 
     lSize = 0;
 
-   } else if ( lButtons == SMS_PAD_SQUARE ) {
+   } else if ( lBtn == SMS_PAD_SQUARE || lBtn == RC_DISPLAY ) {
 
     if ( ++s_Player.m_PanScan == 5 ) s_Player.m_PanScan = 0;
 
@@ -1214,39 +1220,39 @@ resume:
 
     s_Player.m_pIPUCtx -> ChangeMode ( s_Player.m_PanScan );
 
-   } else if ( lButtons == SMS_PAD_L1 ) {
+   } else if ( lBtn == SMS_PAD_L1 ) {
 
     s_Player.m_pIPUCtx -> Pan ( 1 );
 
-   } else if ( lButtons == SMS_PAD_R1 ) {
+   } else if ( lBtn == SMS_PAD_R1 ) {
 
     s_Player.m_pIPUCtx -> Pan ( -1 );
 
-   } else if (  lButtons == ( SMS_PAD_R1 | SMS_PAD_L1 )  ) {
+   } else if (  lBtn == ( SMS_PAD_R1 | SMS_PAD_L1 )  ) {
 
     s_Player.m_pIPUCtx -> Reset ();
 
-   } else if ( lButtons == SMS_PAD_CROSS && !lfNoVideo ) {
+   } else if (  ( lBtn == SMS_PAD_CROSS || lBtn == RC_TIME ) && !lfNoVideo  ) {
 
     PlayerControl_HandleOSD ( 0, 0 );
 
-   } else if ( lButtons == SMS_PAD_L2 && !lfNoVideo ) {
+   } else if ( lBtn == SMS_PAD_L2 && !lfNoVideo ) {
 
     if ( s_Player.m_OSD == 3 )
 
-     PlayerControl_HandleOSD ( 1, -250 );
+     PlayerControl_HandleOSD ( 1, -25 );
 
-    else if ( s_Player.m_OSD == 4 ) PlayerControl_HandleOSD ( 2, -250 );
+    else if ( s_Player.m_OSD == 4 ) PlayerControl_HandleOSD ( 2, -25 );
 
-   } else if ( lButtons == SMS_PAD_R2 && !lfNoVideo ) {
+   } else if ( lBtn == SMS_PAD_R2 && !lfNoVideo ) {
 
     if ( s_Player.m_OSD == 3 )
 
-     PlayerControl_HandleOSD ( 1, 250 );
+     PlayerControl_HandleOSD ( 1, 25 );
 
-    else if ( s_Player.m_OSD == 4 && !lfNoVideo ) PlayerControl_HandleOSD ( 2, 250 );
+    else if ( s_Player.m_OSD == 4 && !lfNoVideo ) PlayerControl_HandleOSD ( 2, 25 );
 
-   } else if (  lButtons == ( SMS_PAD_L2 | SMS_PAD_R2 ) && !lfNoVideo  ) {
+   } else if (  lBtn == ( SMS_PAD_L2 | SMS_PAD_R2 ) && !lfNoVideo  ) {
 
     if ( s_Player.m_OSD == 3 ) {
 
@@ -1260,7 +1266,7 @@ resume:
 
     }  /* end if */
 
-   } else if ( lButtons == SMS_PAD_CIRCLE && !lfNoVideo ) {
+   } else if (  ( lBtn == SMS_PAD_CIRCLE || lBtn == RC_AUDIO ) && !lfNoVideo  ) {
 
     if ( s_Player.m_OSD < 3 ) {
 

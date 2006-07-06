@@ -11,10 +11,12 @@
 #ifndef __SMS_IOP_H
 # define __SMS_IOP_H
 
-# define SMS_IOPF_DEV9 0x00000001
-# define SMS_IOPF_HDD  0x00000002
-# define SMS_IOPF_NET  0x00000004
-# define SMS_IOPF_USB  0x00000008
+# define SMS_IOPF_DEV9   0x00000001
+# define SMS_IOPF_HDD    0x00000002
+# define SMS_IOPF_NET    0x00000004
+# define SMS_IOPF_USB    0x00000008
+# define SMS_IOPF_RMMAN  0x00000010
+# define SMS_IOPF_RMMAN2 0x00000020
 
 extern unsigned int g_IOPFlags;
 

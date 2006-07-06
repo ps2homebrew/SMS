@@ -28,6 +28,7 @@
 #include "SMS_FileDir.h"
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <loadfile.h>
@@ -67,7 +68,6 @@ static GSBitBltPacket s_BitBlt;
 static unsigned char s_pMsgStr [] __attribute__(   (  section( ".data" )  )   ) = "_POSTED_MESSAGE";
 
 static unsigned char s_PadBuf0[  256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
-static unsigned char s_PadBuf1[  256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
 static unsigned char s_Stack  [ 4096 ] __attribute__(   (  aligned( 16 ), section( ".data"  )  )   );
 
 static void ( *QueryPad ) ( void );
@@ -148,7 +148,7 @@ int GUI_ReadButtons ( void ) {
 
  int retVal = PAD_Read ( 0, 0 );
 
- if ( !retVal ) retVal = PAD_Read ( 1, 0 );
+ if ( !retVal ) retVal = RC_Read ();
 
  return retVal;
 
@@ -465,7 +465,6 @@ void GUI_Initialize ( int afCold ) {
   MC_Init  ();
   PAD_Init ();
   PAD_OpenPort ( 0, 0, s_PadBuf0 );
-  PAD_OpenPort ( 1, 0, s_PadBuf1 );
 
   SMS_LocaleInit ();
   SMS_LoadConfig ();
@@ -596,9 +595,9 @@ unsigned long GUI_WaitEvent ( void ) {
 
 }  /* end GUI_WaitEvent */
 
-int GUI_WaitButtons ( int aButtons, int aTimeout ) {
+int GUI_WaitButtons ( int anButtons, unsigned* apButtons, int aTimeout ) {
 
- int           retVal;
+ int           i, retVal;
  unsigned long lTime;
 
  lTime = g_Timer + aTimeout;
@@ -607,11 +606,12 @@ int GUI_WaitButtons ( int aButtons, int aTimeout ) {
 
   retVal = GUI_ReadButtons ();
 
-  if ( g_Timer < lTime    ) continue;
-  if ( retVal  & aButtons ) break;
+  if ( g_Timer < lTime ) continue;
+
+  for ( i = 0; i < anButtons; ++i ) if ( retVal == apButtons[ i ] ) goto end;
 
  }  /* end while */
-
+end:
  while (  GUI_ReadButtons ()  );
 
  return retVal;

@@ -15,9 +15,11 @@
 extern int            g_SMSFlags;
 extern unsigned char* g_pSPRTop;
 
-# define SMS_FLAG_DEV9 0x00000001
-# define SMS_FLAG_USB  0x00000002
-# define SMS_FLAG_NET  0x00000004
+# define SMS_FLAG_DEV9   0x00000001
+# define SMS_FLAG_USB    0x00000002
+# define SMS_FLAG_NET    0x00000004
+# define SMS_FLAG_RMMAN  0x00000008
+# define SMS_FLAG_RMMAN2 0x00000010
 
 typedef signed   char  int8_t;
 typedef unsigned char uint8_t;

@@ -23,6 +23,7 @@
 #include "SMS_Timer.h"
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -336,6 +337,7 @@ int GUIMenuSMS_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_RETURN       :
   case SMS_PAD_TRIANGLE: {
 
    SMS_ListNode* lpNode = lpMenu -> m_pState -> m_pTail;

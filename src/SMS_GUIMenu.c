@@ -15,6 +15,7 @@
 #include "SMS_GUIcons.h"
 #include "SMS_Config.h"
 #include "SMS_PAD.h"
+#include "SMS_RC.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -242,6 +243,7 @@ int GUIMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
   break;
 
+  case RC_ENTER     :
   case SMS_PAD_CROSS:
 
    if ( lpState -> m_pCurr -> Handler ) lpState -> m_pCurr -> Handler ( lpMenu, 1 );

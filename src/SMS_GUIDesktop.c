@@ -21,6 +21,7 @@
 #include "SMS_IPU.h"
 #include "SMS_Sounds.h"
 #include "SMS_MC.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -149,6 +150,7 @@ static int Desktop_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  if ( anEvent & GUI_MSG_PAD_MASK ) switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_MENU      :
   case SMS_PAD_START: {
 
    GUI_AddObject (  g_SMSMenuStr, GUI_CreateMenuSMS ()  );
@@ -164,8 +166,10 @@ static int Desktop_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
   case SMS_PAD_SELECT | SMS_PAD_R2      : _adjdown_handler  ( NULL, 1 ); retVal = GUIHResult_Handled; break;
   case SMS_PAD_SELECT | SMS_PAD_SQUARE  : _save_handler     ( NULL, 1 ); retVal = GUIHResult_Handled; break;
   case SMS_PAD_SELECT | SMS_PAD_TRIANGLE: _exit_handler     ( NULL, 1 ); retVal = GUIHResult_Handled; break;
+  case RC_RESET                         :
   case SMS_PAD_SELECT | SMS_PAD_CIRCLE  : _shutdown_handler ( NULL, 1 ); retVal = GUIHResult_Handled; break;
 
+  case RC_A_B                                           :
   case SMS_PAD_R1 | SMS_PAD_L1 | SMS_PAD_R2 | SMS_PAD_L2: About (); retVal = GUIHResult_Handled; break;
 
  }  /* end switch */
@@ -277,8 +281,9 @@ void GUI_Error ( unsigned char* apMsg ) {
 
  int            lLen   = strlen ( apMsg );
  int            lWidth = g_GSCtx.m_Width - 48;
+ int            lDX    = -2;
+ unsigned int   lWait  = SMS_PAD_CROSS;
  unsigned long* lpDMA;
- int            lDX = -2;
 
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth && lDX >= -16  ) --lDX;
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth                ) --lLen;
@@ -292,7 +297,7 @@ void GUI_Error ( unsigned char* apMsg ) {
  GSContext_BitBlt ( &s_BitBltSL );
  GSContext_Flush ( 1, GSFlushMethod_KeepLists );
  SPU_PlaySound ( SMSound_Error, g_Config.m_PlayerVolume );
- GUI_WaitButtons ( SMS_PAD_CROSS, 200 );
+ GUI_WaitButtons ( 1, &lWait, 200 );
 
  GSContext_NewPacket (  1, 0, GSPaintMethod_Init  );
  GSContext_BitBlt ( &s_BitBltSL );

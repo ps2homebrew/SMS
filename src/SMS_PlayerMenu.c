@@ -18,6 +18,7 @@
 #include "SMS_Config.h"
 #include "SMS_GUIcons.h"
 #include "SMS_DMA.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <string.h>
@@ -72,6 +73,8 @@ int GUIMenuPlayer_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_RESET        :
+  case RC_RETURN       :
   case SMS_PAD_TRIANGLE: GUI_PostMessage ( GUI_MSG_QUIT ); return GUIHResult_Handled;
 
  }  /* end switch */
@@ -217,5 +220,7 @@ void SMS_PlayerMenu ( void ) {
  GS_SetGC ( &g_GSCtx.m_DrawCtx[ 1 ] );
 
  g_GSCtx.m_VRAMPtr = lVRAMPtr;
+
+ while (  GUI_ReadButtons ()  );
 
 }  /* end SMS_PlayerMenu */

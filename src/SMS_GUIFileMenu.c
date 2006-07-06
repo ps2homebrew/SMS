@@ -23,6 +23,7 @@
 #include "SMS_SubtitleContext.h"
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -604,6 +605,7 @@ static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  if ( anEvent & GUI_MSG_PAD_MASK ) switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_TOP_MENU  :
   case SMS_PAD_LEFT :
   case SMS_PAD_RIGHT:
 
@@ -649,6 +651,8 @@ redraw:
 
   break;
 
+  case RC_ENTER     :
+  case RC_PLAY      :
   case SMS_PAD_CROSS:
 
    if ( lpMenu -> m_pCurrent ) {
@@ -662,6 +666,7 @@ redraw:
 
   break;
 
+  case RC_SUBTITLE:
   case SMS_PAD_CIRCLE:
 
    if ( lpMenu -> m_pCurrent ) {
@@ -675,6 +680,7 @@ redraw:
 
   break;
 
+  case RC_PROGRAM    :
   case SMS_PAD_SQUARE: {
 
    ContextAction[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 1 );
@@ -683,6 +689,7 @@ redraw:
 
   } break;
 
+  case RC_RETURN       :
   case SMS_PAD_TRIANGLE: {
 
    int lLevel = lpMenu -> m_pLevels -> m_Size;

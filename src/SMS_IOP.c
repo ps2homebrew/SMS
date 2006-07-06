@@ -20,6 +20,7 @@
 #include "SMS_SIF.h"
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <sifrpc.h>
@@ -33,7 +34,6 @@
 
 unsigned int g_IOPFlags;
 
-static unsigned char s_pSIO2MAN[] __attribute__(   (  section( ".data" )  )   ) = "rom0:SIO2MAN";
 static unsigned char s_pPADMAN [] __attribute__(   (  section( ".data" )  )   ) = "rom0:PADMAN";
 static unsigned char s_pMCMAN  [] __attribute__(   (  section( ".data" )  )   ) = "rom0:MCMAN";
 static unsigned char s_pMCSERV [] __attribute__(   (  section( ".data" )  )   ) = "rom0:MCSERV";
@@ -212,7 +212,7 @@ int SMS_IOPExec ( int argc, void* argv ) {
 
 void SMS_IOPReset ( void ) {
 
- static const char* lpModules[ 4 ] = { s_pSIO2MAN, s_pPADMAN, s_pMCMAN, s_pMCSERV };
+ static const char* lpModules[ 3 ] = { s_pPADMAN, s_pMCMAN, s_pMCSERV };
 
  int i;
 #if 1
@@ -230,7 +230,9 @@ void SMS_IOPReset ( void ) {
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
 #endif
- for ( i = 0; i < 4; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_SIO2MAN_OFFSET ], SMS_AUDSRV_SIZE, 0, NULL, &i );
+
+ for ( i = 0; i < 3; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
 
 }  /* end SMS_IOPReset */
 
@@ -364,6 +366,10 @@ void SMS_IOPInit ( void ) {
  hddPreparePoweroff ();
 
  SPU_LoadData (  g_SMSounds, sizeof ( g_SMSounds )  );
+
+ if (  RCX_Load () && RCX_Start () && RCX_Open ()  )
+  g_IOPFlags |= SMS_IOPF_RMMAN2;
+ else if (  RC_Load () && RC_Start () && RC_Open ( 1 )  ) g_IOPFlags |= SMS_IOPF_RMMAN;
 
  FlushCache ( 0 );
 

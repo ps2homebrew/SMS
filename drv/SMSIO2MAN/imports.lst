@@ -1,0 +1,44 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
+dmacman_IMPORTS_start
+ I_dmac_ch_set_dpcr
+ I_dmac_disable
+ I_dmac_enable
+ I_dmac_request
+ I_dmac_transfer
+dmacman_IMPORTS_end
+
+intrman_IMPORTS_start
+ I_CpuResumeIntr
+ I_CpuSuspendIntr
+ I_DisableIntr
+ I_EnableIntr
+ I_RegisterIntrHandler
+ I_ReleaseIntrHandler
+intrman_IMPORTS_end
+
+loadcore_IMPORTS_start
+ I_RegisterLibraryEntries
+loadcore_IMPORTS_end
+
+thbase_IMPORTS_start
+ I_CreateThread
+ I_GetThreadId
+ I_StartThread
+thbase_IMPORTS_end
+
+thevent_IMPORTS_start
+ I_ClearEventFlag
+ I_CreateEventFlag
+ I_iSetEventFlag
+ I_SetEventFlag
+ I_WaitEventFlag
+thevent_IMPORTS_end

@@ -25,6 +25,7 @@
 #include "SMS_List.h"
 #include "SMS_Locale.h"
 #include "SMS_Sounds.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -531,11 +532,11 @@ static int PlayerControl_Scroll ( int aDir ) {
 
      lNextTime = g_Timer + 200;
 
-     if ( lButtons == SMS_PAD_TRIANGLE ) {
+     if ( lButtons == SMS_PAD_TRIANGLE || lButtons == RC_RESET || lButtons == RC_RETURN || lButtons == RC_STOP ) {
 
       goto end;
 
-     } else if ( lButtons == SMS_PAD_RIGHT ) {
+     } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT ) {
 
       if ( aDir > 0 ) {
 
@@ -552,7 +553,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
       }  /* end else */
 
-     } else if ( lButtons == SMS_PAD_LEFT ) {
+     } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT ) {
 
       if ( aDir > 0 ) {
 
@@ -569,7 +570,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
       } else if ( lIncr > -60000LL ) lIncr -= 3000LL;
 
-     } else if ( lButtons == SMS_PAD_CROSS ) {
+     } else if ( lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
 
       lpIPUCtx -> Sync ();
       PlayerControl_DisplayTime ( 0, lpPacket -> m_PTS, 0 );
@@ -709,9 +710,9 @@ static void _handle_adjust_osd ( int aDelta, int* apVal, int aLimit ) {
 
  if ( lVal == aLimit && aDelta > 0 )
 
-  lVal = aLimit - 250;
+  lVal = aLimit - 25;
 
- else if ( lVal == -aLimit && aDelta < 0 ) lVal = -( aLimit - 250 );
+ else if ( lVal == -aLimit && aDelta < 0 ) lVal = -( aLimit - 25 );
 
  lVal += aDelta;
 
@@ -1063,7 +1064,7 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
 
    lNextTime = g_Timer + 100;
 
-   if ( lButtons == SMS_PAD_START || lButtons == SMS_PAD_CROSS ) {
+   if ( lButtons == SMS_PAD_START || lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
 
     lpIPUCtx -> Repaint ();
     PlayerControl_DisplayTime ( 0, lTime, 1 );
@@ -1071,14 +1072,14 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
     retVal = 1;
     break;
 
-   } else if ( lButtons == SMS_PAD_RIGHT && lCurPos < g_Config.m_ScrollBarNum ) {
+   } else if (  ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT ) && lCurPos < g_Config.m_ScrollBarNum  ) {
 
     lCurPos = SMS_clip ( ( lCurPos + 1 ) , 0, g_Config.m_ScrollBarNum );
     lResume = 0;
 
     PlayerControl_DisplayScrollBar ( lCurPos );
 
-   } else if ( lButtons == SMS_PAD_LEFT && lCurPos > 0 ) {
+   } else if (  ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_RIGHT ) && lCurPos > 0  ) {
 
     lCurPos = SMS_clip (  ( lCurPos - 1 ), 0, g_Config.m_ScrollBarNum  );
     lResume = 0;
@@ -1108,7 +1109,7 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
     lNextTime1  = g_Timer + 250;
     lTestSelect = 1;
     
-   } else if ( lButtons == SMS_PAD_TRIANGLE ) {
+   } else if ( lButtons == SMS_PAD_TRIANGLE || lButtons == RC_RESET || lButtons == RC_RETURN || lButtons == RC_STOP ) {
 
     lResume = 0;
     break;

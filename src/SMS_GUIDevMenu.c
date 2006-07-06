@@ -22,6 +22,7 @@
 #include "SMS_CDVD.h"
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
+#include "SMS_RC.h"
 
 #include <kernel.h>
 #include <malloc.h>
@@ -323,6 +324,8 @@ redraw:
 
   break;
 
+  case RC_PLAY      :
+  case RC_ENTER     :
   case SMS_PAD_CROSS:
 
    if ( apMenu -> m_pSelected ) {

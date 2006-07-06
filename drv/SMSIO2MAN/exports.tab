@@ -1,0 +1,77 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2003 Marcus R. Brown <mrbrown@0xd6.org>
+# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+*/
+DECLARE_EXPORT_TABLE( sio2man, 1, 2 )
+ DECLARE_EXPORT( _start               )  /* 0x0000 */
+ DECLARE_EXPORT( _dummy               )  /* 0x0001 */
+ DECLARE_EXPORT( _stop                )  /* 0x0002 */
+ DECLARE_EXPORT( _dummy               )  /* 0x0003 */
+ DECLARE_EXPORT( SIO2_SetCtrl         )  /* 0x0004 */
+ DECLARE_EXPORT( SIO2_GetCtrl         )  /* 0x0005 */
+ DECLARE_EXPORT( SIO2_GetStat6C       )  /* 0x0006 */
+ DECLARE_EXPORT( SIO2_SetPortNCtrl1   )  /* 0x0007 */
+ DECLARE_EXPORT( SIO2_GetPortNCtrl1   )  /* 0x0008 */
+ DECLARE_EXPORT( SIO2_SetPortNCtrl2   )  /* 0x0009 */
+ DECLARE_EXPORT( SIO2_GetPortNCtrl2   )  /* 0x000A */
+ DECLARE_EXPORT( SIO2_GetStat70       )  /* 0x000B */
+ DECLARE_EXPORT( SIO2_SetReg          )  /* 0x000C */
+ DECLARE_EXPORT( SIO2_GetReg          )  /* 0x000D */
+ DECLARE_EXPORT( SIO2_GetStat74       )  /* 0x000E */
+ DECLARE_EXPORT( SIO2_SetUnk78        )  /* 0x000F */
+ DECLARE_EXPORT( SIO2_GetUnk78        )  /* 0x0010 */
+ DECLARE_EXPORT( SIO2_SetUnk7C        )  /* 0x0011 */
+ DECLARE_EXPORT( SIO2_GetUnk7C        )  /* 0x0012 */
+ DECLARE_EXPORT( SIO2_DataOut         )  /* 0x0013 */
+ DECLARE_EXPORT( SIO2_DataIn          )  /* 0x0014 */
+ DECLARE_EXPORT( SIO2_SetStat         )  /* 0x0015 */
+ DECLARE_EXPORT( SIO2_GetStat         )  /* 0x0016 */
+ DECLARE_EXPORT( SIO2_TransferInit0   )  /* 0x0017 */
+ DECLARE_EXPORT( SIO2_TransferInit1   )  /* 0x0018 */
+ DECLARE_EXPORT( SIO2_TransferLegacy  )  /* 0x0019 */
+ DECLARE_EXPORT( SIO2_TransferReset   )  /* 0x001A */
+ DECLARE_EXPORT( SIO2_SetCtrl         )  /* 0x001B */
+ DECLARE_EXPORT( SIO2_GetCtrl         )  /* 0x001C */
+ DECLARE_EXPORT( SIO2_GetStat6C       )  /* 0x001D */
+ DECLARE_EXPORT( SIO2_SetPortNCtrl1   )  /* 0x001E */
+ DECLARE_EXPORT( SIO2_GetPortNCtrl1   )  /* 0x001F */
+ DECLARE_EXPORT( SIO2_SetPortNCtrl2   )  /* 0x0020 */
+ DECLARE_EXPORT( SIO2_GetPortNCtrl2   )  /* 0x0021 */
+ DECLARE_EXPORT( SIO2_GetStat70       )  /* 0x0022 */
+ DECLARE_EXPORT( SIO2_SetReg          )  /* 0x0023 */
+ DECLARE_EXPORT( SIO2_GetReg          )  /* 0x0024 */
+ DECLARE_EXPORT( SIO2_GetStat74       )  /* 0x0025 */
+ DECLARE_EXPORT( SIO2_SetUnk78        )  /* 0x0026 */
+ DECLARE_EXPORT( SIO2_GetUnk78        )  /* 0x0027 */
+ DECLARE_EXPORT( SIO2_SetUnk7C        )  /* 0x0028 */
+ DECLARE_EXPORT( SIO2_GetUnk7C        )  /* 0x0029 */
+ DECLARE_EXPORT( SIO2_DataOut         )  /* 0x002A */
+ DECLARE_EXPORT( SIO2_DataIn          )  /* 0x002B */
+ DECLARE_EXPORT( SIO2_SetStat         )  /* 0x002C */
+ DECLARE_EXPORT( SIO2_GetStat         )  /* 0x002D */
+ DECLARE_EXPORT( SIO2_TransferInit0   )  /* 0x002E */
+ DECLARE_EXPORT( SIO2_TransferInit1   )  /* 0x002F */
+ DECLARE_EXPORT( SIO2_TransferInit2   )  /* 0x0030 */
+ DECLARE_EXPORT( SIO2_TransferInit3   )  /* 0x0031 */
+ DECLARE_EXPORT( SIO2_TransferInit4   )  /* 0x0032 */
+ DECLARE_EXPORT( SIO2_Transfer        )  /* 0x0033 */
+ DECLARE_EXPORT( SIO2_TransferReset   )  /* 0x0034 */
+ DECLARE_EXPORT( SIO2_SetCallback0    )  /* 0x0035 */
+ DECLARE_EXPORT( SIO2_SetCallback1    )  /* 0x0036 */
+ DECLARE_EXPORT( SIO2_SetCallback2    )  /* 0x0037 */
+ DECLARE_EXPORT( SIO2_SetCallback3    )  /* 0x0038 */
+ DECLARE_EXPORT( SIO2_Callback0       )  /* 0x0039 */
+ DECLARE_EXPORT( SIO2_Callback1       )  /* 0x003A */
+ DECLARE_EXPORT( SIO2_Callback2       )  /* 0x003B */
+ DECLARE_EXPORT( SIO2_Callback3       )  /* 0x003C */
+ DECLARE_EXPORT( SIO2_TransferInit0W  )  /* 0x003D */
+ DECLARE_EXPORT( SIO2_TransferResetW  )  /* 0x003E */
+ DECLARE_EXPORT( SIO2_TransferInit1W  )  /* 0x003F */
+END_EXPORT_TABLE

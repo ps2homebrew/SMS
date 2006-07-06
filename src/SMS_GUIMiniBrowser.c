@@ -67,7 +67,6 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
 
  if (  lPath[ strlen ( lPath ) - 1 ] != '/'  ) SMS_Strcat ( lPath, g_SlashStr );
 
- SMS_Strcat ( lPath, g_SlashStr                                    );
  SMS_Strcat ( lPath, lpState -> m_pCurr -> m_pOptionName -> m_pStr );
 
  s_pFileCtxSub = s_pFileCtx -> Open ( lpName, s_pFileCtx -> m_pOpenParam );

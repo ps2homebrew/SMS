@@ -73,7 +73,7 @@ extern "C" {
 
 void          GUI_Initialize   ( int                      );
 int           GUI_ReadButtons  ( void                     );
-int           GUI_WaitButtons  ( int, int                 );
+int           GUI_WaitButtons  ( int, unsigned*, int      );
 void          GUI_AddObject    ( const char*, GUIObject*  );
 void          GUI_Redraw       ( GUIRedrawMethod          );
 void          GUI_Status       ( unsigned char*           );
