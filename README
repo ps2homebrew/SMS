@@ -778,7 +778,7 @@ Note that in order to get remote control (with "external" IR sensor) working whi
 preserving gamepad and memory card functionalities unaffected a modified SIO2MAN
 module is created (based on Marcus R. Brown code from SVN and my own disassembly
 works) and integrated into SMS (source code of it can also be found in SVN).
-THERE'S NO WARRANTY THAT OTHER DEVICES LIKE MULTITAP ETC. WILL WIRK WITH IT.
+THERE'S NO WARRANTY THAT OTHER DEVICES LIKE MULTITAP ETC. WILL WORK WITH IT.
 Thanks to "Mr.Worm~~" and "Rathunter" for testing;
 
 - added 'FMP4' fourcc recognition. Thanks to "ntt2005" for the research/note;
