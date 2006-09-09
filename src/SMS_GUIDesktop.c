@@ -71,7 +71,7 @@ static int DrawSkin ( void ) {
     g_GSCtx.m_TH         = GS_PowerOf2 ( lHeight );
 
     IPU_InitLoadImage ( &lLoadImg, lWidth, lHeight );
-    IPU_LoadImage ( &lLoadImg, lpData, lSize, 0, 0, 0, 0 );
+    IPU_LoadImage ( &lLoadImg, lpData, lSize, 0, 0, 0, 0, 0 );
     lLoadImg.Destroy ( &lLoadImg );
 
     lpDMA = GSContext_NewPacket (  0, GS_TSP_PACKET_SIZE(), GSPaintMethod_InitClear  );

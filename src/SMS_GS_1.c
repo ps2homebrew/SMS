@@ -31,9 +31,8 @@ static unsigned int s_CLUT[ 16 ] __attribute__(  (  aligned( 16 )  )   );
 
 void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf ) {
 
- GSInterlaceMode lIMode = GSInterlaceMode_On;
- unsigned int    lSize;
- GSParams*       lpPar = GS_Params ();
+ unsigned int lSize;
+ GSParams*    lpPar = GS_Params ();
 
  lpPar -> m_PARNTSC = g_Config.m_PAR[ 0 ];
  lpPar -> m_PARPAL  = g_Config.m_PAR[ 1 ];
@@ -43,22 +42,30 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
  switch ( aMode ) {
 
   case GSVideoMode_NTSC:
+   g_GSCtx.m_PWidth  = 640;
    g_GSCtx.m_PHeight = g_Config.m_DispH[ 0 ];
   break;
 
   default             :
   case GSVideoMode_PAL:
+   g_GSCtx.m_PWidth  = 640;
    g_GSCtx.m_PHeight = g_Config.m_DispH[ 1 ];
   break;
 
   case GSVideoMode_DTV_720x480P:
-   lIMode            = GSInterlaceMode_Off;
+   g_GSCtx.m_PWidth  = 720;
+   g_GSCtx.m_PHeight = 480;
+  break;
+
+  case GSVideoMode_VESA_60Hz:
+  case GSVideoMode_VESA_75Hz:
+   g_GSCtx.m_PWidth  = 640;
    g_GSCtx.m_PHeight = 480;
   break;
 
  }  /* end switch */
 
- GS_Reset ( lIMode, aMode, GSFieldMode_Field );
+ GS_Reset ( GSInterlaceMode_On, aMode, GSFieldMode_Field );
  GS_InitDC ( &g_GSCtx.m_DispCtx, GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, g_GSCtx.m_OffsetX, g_GSCtx.m_OffsetY );
  lSize = GS_InitGC ( 0, &g_GSCtx.m_DrawCtx[ 0 ], GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, aZTest );
          GS_InitGC ( 1, &g_GSCtx.m_DrawCtx[ 1 ], GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, aZTest );

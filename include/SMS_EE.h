@@ -15,8 +15,9 @@
 extern "C" {
 # endif  /* __cplusplus */
 
-void SMS_EEInit ( void  );
-void SMS_EExec  ( char* );
+void SMS_EEInit      ( void  );
+void SMS_EExec       ( char* );
+void SMS_EEPort2Init ( void  );
 
 # ifdef __cplusplus
 }

@@ -104,7 +104,7 @@ static void _darken_image ( unsigned char* apBuf, unsigned int aQWC ) {
 
 }  /* end _darken_image */
 
-void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, int anY, int afDarken, int aTH0 ) {
+void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, int anY, int afDarken, int aTH0, int aTH1 ) {
 
  unsigned long* lpBegin = UNCACHED_SEG( apLoadImg -> m_pDMA + 12 );
  unsigned long* lpEnd   = UNCACHED_SEG( apLoadImg -> m_pData     );
@@ -115,7 +115,7 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
 
  IPU_RESET();
  IPU -> m_CTRL |= 1 << 23;
- IPU_CMD_SETTH( aTH0, 0 );
+ IPU_CMD_SETTH( aTH0, aTH1 );
 
  DMA_Send (  DMAC_TO_IPU, apData, ( aSize + 15 ) >> 4  );
 

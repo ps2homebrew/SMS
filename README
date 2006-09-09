@@ -784,3 +784,29 @@ Thanks to "Mr.Worm~~" and "Rathunter" for testing;
 - added 'FMP4' fourcc recognition. Thanks to "ntt2005" for the research/note;
 - added support for "simple" M3U list. Only relative paths are supported;
 - updated some IOP drivers from ps2sdk;
+
+Update (01-SEP-2006)
+--------------------
+- DTV 480p video mode support added. Note: not tested here;
+- added menu option to configure controller port 2. There're 3 options:
+  - gamepad: remote control is disabled and controller port 2 is configured
+             for gamepad;
+  - remote control: controller port 2 is configured for the official remote control
+                    with external IR sensor plugged into controller slot 2;
+  - none: controller port 2 is disabled and support for the official remote control
+          with built-in IR sensor is enabled;
+  Notes: second option will appear only if there's no rom1:RMMAN2 module;
+- added brightness control to the player. Use 'L2' gamepad button to decrease
+  brightness and 'R2' to increase it;
+- added high precision mode to the MP3 decoder. Sound appears better in this mode but
+  it's more demanding in computational sense. This mode is always on for audio files
+  and it's selectable for video files via SMS menu;
+- fixed cdvd driver (ISO9660:1999 mode). Thanks to 'Voldemar_U2' for the research and
+  implementation;
+- added support for arabic subtitles. Activated by
+  "SMS menu->Player Settings->Subtitle Alignment->right" option. I'm not sure if I did
+  it correctly (original strings are reversed and displayed right aligned), so any
+  comments are welcome. Thanks to 'ALI' for explanations;
+- updated USB drivers;
+- network drivers are slightly optimized resulting a bit faster network transactions
+  (I've got ~690KB/s while transferring a video file to the hard disk);

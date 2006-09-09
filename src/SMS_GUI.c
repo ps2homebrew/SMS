@@ -54,6 +54,8 @@ GUIObject* g_pDevMenu;
 GUIObject* g_pFileMenu;
 void*      g_pActiveNode;
 
+int ( *GUI_ReadButtons ) ( void );
+
 static SMS_List*      s_pObjectList;
 static SMS_List*      s_pMsgQueue;
 static int            s_EventSema;
@@ -68,6 +70,7 @@ static GSBitBltPacket s_BitBlt;
 static unsigned char s_pMsgStr [] __attribute__(   (  section( ".data" )  )   ) = "_POSTED_MESSAGE";
 
 static unsigned char s_PadBuf0[  256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
+       unsigned char g_PadBuf1[  256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
 static unsigned char s_Stack  [ 4096 ] __attribute__(   (  aligned( 16 ), section( ".data"  )  )   );
 
 static void ( *QueryPad ) ( void );
@@ -144,7 +147,7 @@ void GUI_AddObject ( const char* apName, GUIObject* apObj ) {
 
 }  /* end GUI_AddObject */
 
-int GUI_ReadButtons ( void ) {
+int GUI_ReadButtons0 ( void ) {
 
  int retVal = PAD_Read ( 0, 0 );
 
@@ -152,7 +155,23 @@ int GUI_ReadButtons ( void ) {
 
  return retVal;
 
-}  /* end GUI_ReadButtons */
+}  /* end GUI_ReadButtons0 */
+
+int GUI_ReadButtons1 ( void ) {
+
+ int retVal = PAD_Read ( 0, 0 );
+
+ if ( !retVal ) retVal = PAD_Read ( 1, 0 );
+
+ return retVal;
+
+}  /* end GUI_ReadButtons1 */
+
+int GUI_ReadButtons2 ( void ) {
+
+ return PAD_Read ( 0, 0 );
+
+}  /* end GUI_ReadButtons2 */
 
 static void TimerHandler ( void* apArg ) {
 
@@ -418,25 +437,29 @@ void _set_dx_dy ( int** appDX, int** appDY ) {
  switch ( lMode ) {
 
   case GSVideoMode_NTSC:
-
    *appDX = &g_Config.m_DX;
    *appDY = &g_Config.m_DY;
-
   break;
 
   case GSVideoMode_Default:
   case GSVideoMode_PAL:
-
    *appDX = &g_Config.m_DXPALOther[ 0 ];
    *appDY = &g_Config.m_DYPALOther[ 0 ];
-
   break;
 
   case GSVideoMode_DTV_720x480P:
-
    *appDX = &g_Config.m_DXPALOther[ 1 ];
    *appDY = &g_Config.m_DYPALOther[ 1 ];
+  break;
 
+  case GSVideoMode_VESA_60Hz:
+   *appDX = &g_Config.m_DXPALOther[ 2 ];
+   *appDY = &g_Config.m_DYPALOther[ 2 ];
+  break;
+
+  case GSVideoMode_VESA_75Hz:
+   *appDX = &g_Config.m_DXPALOther[ 3 ];
+   *appDY = &g_Config.m_DYPALOther[ 3 ];
   break;
 
  }  /* end switch */
@@ -462,12 +485,12 @@ void GUI_Initialize ( int afCold ) {
 
   SMS_TimerInit ();
 
-  MC_Init  ();
   PAD_Init ();
   PAD_OpenPort ( 0, 0, s_PadBuf0 );
+  MC_Init  ();
 
-  SMS_LocaleInit ();
   SMS_LoadConfig ();
+  SMS_LocaleInit ();
   SMS_LocaleSet  ();
 
   i      = PAD_State ( 0, 0 );
@@ -487,7 +510,7 @@ void GUI_Initialize ( int afCold ) {
 
   while ( 1 ) {
 
-   i = GUI_ReadButtons ();
+   i = GUI_ReadButtons2 ();
 
    if (   (  i & ( SMS_PAD_SELECT | SMS_PAD_R1 )  ) == ( SMS_PAD_SELECT | SMS_PAD_R1 )   ) {
 
@@ -525,8 +548,11 @@ void GUI_Initialize ( int afCold ) {
 
  }  /* end if */
 
- if ( g_Config.m_DisplayMode != GSVideoMode_PAL &&
-      g_Config.m_DisplayMode != GSVideoMode_NTSC
+ if ( g_Config.m_DisplayMode != GSVideoMode_PAL          &&
+      g_Config.m_DisplayMode != GSVideoMode_NTSC         &&
+      g_Config.m_DisplayMode != GSVideoMode_DTV_720x480P &&
+      g_Config.m_DisplayMode != GSVideoMode_VESA_60Hz    &&
+      g_Config.m_DisplayMode != GSVideoMode_VESA_75Hz
  ) g_Config.m_DisplayMode = GSVideoMode_Default;
 
  _set_dx_dy ( &lpDX, &lpDY );

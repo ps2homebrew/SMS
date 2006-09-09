@@ -16,6 +16,7 @@
 #include "SMS_GUIcons.h"
 #include "SMS_GS.h"
 #include "SMS_PAD.h"
+#include "SMS_RC.h"
 #include "SMS_SubtitleContext.h"
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
@@ -36,12 +37,14 @@ int CtxMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_RESET        :
   case SMS_PAD_TRIANGLE:
 quit:
    GUI_PostMessage ( GUI_MSG_QUIT );
 
   return GUIHResult_Handled;
 
+  case RC_ENTER      :
   case SMS_PAD_CIRCLE:
   case SMS_PAD_CROSS :
 

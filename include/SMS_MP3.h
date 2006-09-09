@@ -24,16 +24,6 @@
 #  include "SMS_AudioBuffer.h"
 # endif  /* __SMS_AudioBuffer_H */
 
-//# define SMS_USE_HIGHPRECISION
-
-#ifdef SMS_USE_HIGHPRECISION
-# define FRAC_BITS  23
-# define WFRAC_BITS 16
-#else
-# define FRAC_BITS  15
-# define WFRAC_BITS 14
-#endif  /* SMS_USE_HIGHPRECISION */
-
 # define SMS_HEADER_SIZE                 4
 # define SMS_MPA_MAX_CODED_FRAME_SIZE 1792
 # define SMS_BACKSTEP_SIZE             512
@@ -48,12 +38,6 @@
 # define SMS_MPA_MONO    3
 
 # define SMS_SAME_HEADER_MASK (  0xFFE00000 | ( 3 << 17 ) | (0xF << 12 ) | ( 3 << 10 ) | ( 3 << 19 )  )
-
-#if FRAC_BITS <= 15
-typedef int16_t SMS_MPA_INT;
-#else
-typedef int32_t SMS_MPA_INT;
-#endif  /* FRAC_BITS <= 15 */
 
 extern const uint16_t g_mpa_freq_tab   [ 3 ];
 extern const uint16_t g_mpa_bitrate_tab[ 2 ][ 3 ][ 15 ];
@@ -85,7 +69,7 @@ typedef struct SMS_Codec_MP3Context {
  int32_t          m_SBSamples[ 2 ][ 36 ][ SMS_SBLIMIT ];
  int32_t          m_MDCTBuf  [ 2 ][ SMS_SBLIMIT * 18  ];
  uint8_t          m_InBuf[ 2 ][ SMS_MPA_MAX_CODED_FRAME_SIZE + SMS_BACKSTEP_SIZE ];
- SMS_MPA_INT      m_SynthBuf[ 2 ][ 1024 ];
+ int32_t          m_SynthBuf[ 2 ][ 1024 ];
  SMS_BitContext   m_BitCtx;
  int              m_SynthBuffOffset[ 2 ];
  SMS_AudioBuffer* m_pOutBuffer;
@@ -103,10 +87,15 @@ typedef struct SMS_Codec_MP3Context {
  int              m_FrameSize;
  int              m_OldFrameSize;
  int              m_LSF;
+ int              m_FracBits;
+ int              m_SQRT2;
  uint8_t*         m_pInBufPtr;
  uint8_t*         m_pInBuf;
 
- void ( *ComputeAntiAlias ) ( SMS_GranuleDef* );
+ void ( *ComputeAntiAlias ) ( SMS_GranuleDef*                            );
+ int  ( *Unscale          ) ( int, int                                   );
+ void ( *IMDCT            ) ( SMS_GranuleDef*, int32_t*, int32_t*        );
+ void ( *SynthFilter      ) ( int, int16_t*, int, int32_t[ SMS_SBLIMIT ] );
 
 } SMS_Codec_MP3Context;
 

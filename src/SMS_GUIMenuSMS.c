@@ -59,6 +59,7 @@ static void _lang_handler     ( GUIMenu*, int );
        void _adjup_handler    ( GUIMenu*, int );
        void _adjdown_handler  ( GUIMenu*, int );
 
+static void _cntslot_handler  ( GUIMenu*, int );
 static void _autonet_handler  ( GUIMenu*, int );
 static void _autousb_handler  ( GUIMenu*, int );
 static void _autohdd_handler  ( GUIMenu*, int );
@@ -125,6 +126,7 @@ static void _mp3_handler        ( GUIMenu*, int );
 static void _mp3_rand_handler   ( GUIMenu*, int );
 static void _mp3_repeat_handler ( GUIMenu*, int );
 static void _mp3_asd_handler    ( GUIMenu*, int );
+static void _mp3_hp_handler     ( GUIMenu*, int );
 
 static GUIMenuItem s_SMSMenu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0, &STR_DISPLAY_SETTINGS,     GUICON_DISPLAY, 0, _display_handler,  0, 0 },
@@ -153,10 +155,11 @@ static GUIMenuItem s_AdvDispMenu[] __attribute__(   (  section( ".data" )  )   )
  {                   0, &STR_APPLY_SETTINGS,     0, 0, _apply_handler, 0, 0 }
 };
 
-static GUIMenuItem s_DevMenu[ 7 ] __attribute__(   (  section( ".data" )  )   ) = {
- { 0, &STR_AUTOSTART_NETWORK, 0, 0, _autonet_handler, 0, 0 },
- { 0, &STR_AUTOSTART_USB,     0, 0, _autousb_handler, 0, 0 },
- { 0, &STR_AUTOSTART_HDD,     0, 0, _autohdd_handler, 0, 0 }
+static GUIMenuItem s_DevMenu[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
+ { MENU_ITEM_TYPE_TEXT, &STR_CONTROLLER_SLOT2,  0, 0, _cntslot_handler, 0, 0 },
+ {                   0, &STR_AUTOSTART_NETWORK, 0, 0, _autonet_handler, 0, 0 },
+ {                   0, &STR_AUTOSTART_USB,     0, 0, _autousb_handler, 0, 0 },
+ {                   0, &STR_AUTOSTART_HDD,     0, 0, _autohdd_handler, 0, 0 }
 };
 
 static GUIMenuItem s_IPCMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -195,7 +198,6 @@ static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) 
  { 0,                     &STR_AUTOLOAD_SUBTITLES,  0, 0, _autols_handler,  0, 0 },
  { 0,                     &STR_OPAQUE_SUBTITLES,    0, 0, _opaqs_handler,   0, 0 },
  { 0,                     &STR_DISPLAY_SB_TIME,     0, 0, _dsbt_handler,    0, 0 },
-
  { 0,                     &STR_SPDIF_DD,            0, 0, _spdif_handler,   0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_COLOR,      0, 0, _subclr_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_BOLD_COLOR, 0, 0, _subbclr_handler, 0, 0 },
@@ -218,7 +220,8 @@ static GUIMenuItem s_MP3Menu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0, &STR_AUDIO_ANIM_DISPLAY, 0, 0, _aadsp_handler,      0, 0 },
  { 0, &STR_RANDOMIZE_PLAYLIST, 0, 0, _mp3_rand_handler,   0, 0 },
  { 0, &STR_REPEAT_MODE,        0, 0, _mp3_repeat_handler, 0, 0 },
- { 0, &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 }
+ { 0, &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 },
+ { 0, &STR_MP3_HP,             0, 0, _mp3_hp_handler,     0, 0 }
 };
 
 static GUIMenuItem s_HelpMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -338,6 +341,7 @@ int GUIMenuSMS_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
   case RC_RETURN       :
+  case RC_RESET        :
   case SMS_PAD_TRIANGLE: {
 
    SMS_ListNode* lpNode = lpMenu -> m_pState -> m_pTail;
@@ -391,10 +395,11 @@ static void _update_display_menu ( void ) {
 
  switch ( g_Config.m_DisplayMode ) {
 
-  case GSVideoMode_NTSC   : lpStr = &STR_NTSC; break;
-  case GSVideoMode_PAL    : lpStr = &STR_PAL;  break;
-  default                 :
-  case GSVideoMode_Default: lpStr = &STR_AUTO; break;
+  case GSVideoMode_NTSC        : lpStr = &STR_NTSC;     break;
+  case GSVideoMode_PAL         : lpStr = &STR_PAL;      break;
+  case GSVideoMode_DTV_720x480P: lpStr = &STR_DTV_480P; break;
+  default                      :
+  case GSVideoMode_Default     : lpStr = &STR_AUTO;     break;
 
  }  /* end switch */
 
@@ -431,11 +436,17 @@ static void _display_handler ( GUIMenu* apMenu, int aDir ) {
 static void _device_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
- unsigned int  lSize   = 2;
+ unsigned int  lSize   = 3;
 
- s_DevMenu[ 0 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_NET ? GUICON_ON : GUICON_OFF;
- s_DevMenu[ 1 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_USB ? GUICON_ON : GUICON_OFF;
- s_DevMenu[ 2 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_HDD ? GUICON_ON : GUICON_OFF;
+ if ( g_Config.m_NetworkFlags & SMS_DF_GAMEPAD )
+  s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_GAMEPAD;
+ else if (  ( g_IOPFlags & SMS_IOPF_RMMAN ) && ( g_Config.m_NetworkFlags & SMS_DF_REMOTE )  )
+  s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_REMOTE_CONTROL;
+ else s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_NONE;
+
+ s_DevMenu[ 1 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_NET ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 2 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_USB ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 3 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_HDD ? GUICON_ON   : GUICON_OFF;
 
  if ( g_IOPFlags & SMS_IOPF_DEV9 ) {
 
@@ -565,6 +576,7 @@ static void _update_pstr ( int anIncr ) {
   default:
   case 0 : lpStr = &STR_CENTER; break;
   case 1 : lpStr = &STR_LEFT;   break;
+  case 2 : lpStr = &STR_RIGHT;  break;
 
  }  /* end switch */
 
@@ -707,6 +719,8 @@ static void _tvsys_handler ( GUIMenu* apMenu, int aDir ) {
  if ( g_Config.m_DisplayMode == GSVideoMode_PAL )
   g_Config.m_DisplayMode = GSVideoMode_NTSC;
  else if ( g_Config.m_DisplayMode == GSVideoMode_NTSC )
+  g_Config.m_DisplayMode = GSVideoMode_DTV_720x480P;
+ else if ( g_Config.m_DisplayMode == GSVideoMode_DTV_720x480P )
   g_Config.m_DisplayMode = GSVideoMode_Default;
  else g_Config.m_DisplayMode = GSVideoMode_PAL;
 
@@ -768,8 +782,8 @@ void _check_dc_offset ( void ) {
 
  _set_dx_dy ( &lpDX, &lpDY );
 
- SMS_clip ( g_GSCtx.m_OffsetX, -160, 160 );
- SMS_clip ( g_GSCtx.m_OffsetY,  -64,  64 );
+ g_GSCtx.m_OffsetX = SMS_clip ( g_GSCtx.m_OffsetX, -160, 160 );
+ g_GSCtx.m_OffsetY = SMS_clip ( g_GSCtx.m_OffsetY,  -64,  64 );
 
  *lpDX = g_GSCtx.m_OffsetX;
  *lpDY = g_GSCtx.m_OffsetY;
@@ -856,21 +870,81 @@ static void _switch_flag ( GUIMenu* apMenu, int anIndex, unsigned int* apFlag, u
 
 }  /* end _switch_flag */
 
+extern int GUI_ReadButtons0 ( void );
+extern int GUI_ReadButtons1 ( void );
+extern int GUI_ReadButtons2 ( void );
+
+extern unsigned char g_PadBuf1[ 256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
+
+static void _cntslot_handler ( GUIMenu* apMenu, int aDir ) {
+
+ unsigned int lStr;
+
+ if ( g_Config.m_NetworkFlags & SMS_DF_GAMEPAD ) {
+
+  g_Config.m_NetworkFlags &= ~SMS_DF_GAMEPAD;
+  PAD_ClosePort ( 1, 0 );
+
+  if ( g_IOPFlags & SMS_IOPF_RMMAN ) {
+
+   RC_Open ( 1 );
+   GUI_ReadButtons = GUI_ReadButtons0;
+   g_Config.m_NetworkFlags |=  SMS_DF_REMOTE;
+   lStr                     = ( unsigned int )&STR_REMOTE_CONTROL;
+
+  } else {
+setNone:
+   if ( g_IOPFlags & SMS_IOPF_RMMAN2 ) {
+
+    RCX_Open ();
+    GUI_ReadButtons = GUI_ReadButtons0;
+
+   } else GUI_ReadButtons = GUI_ReadButtons2;
+
+   lStr = ( unsigned int )&STR_NONE;
+
+  }  /* end else */
+
+ } else if ( g_Config.m_NetworkFlags & SMS_DF_REMOTE ) {
+
+  g_Config.m_NetworkFlags &= ~SMS_DF_REMOTE;
+  goto setNone;
+
+ } else {
+
+  if ( g_IOPFlags & SMS_IOPF_RMMAN2 )
+   RCX_Close ();
+  else if ( g_IOPFlags & SMS_IOPF_RMMAN ) RC_Close ( 1 );
+
+  PAD_OpenPort ( 1, 0, g_PadBuf1 );
+  GUI_ReadButtons = GUI_ReadButtons1;
+
+  g_Config.m_NetworkFlags |= SMS_DF_GAMEPAD;
+  lStr                     = ( unsigned int )&STR_GAMEPAD;
+
+ }  /* end else */
+
+ s_DevMenu[ 0 ].m_IconRight = lStr;
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _cntslot_handler */
+
 static void _autonet_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 0, &g_Config.m_NetworkFlags, SMS_DF_AUTO_NET );
+ _switch_flag ( apMenu, 1, &g_Config.m_NetworkFlags, SMS_DF_AUTO_NET );
 
 }  /* end _autonet_handler */
 
 static void _autousb_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 1, &g_Config.m_NetworkFlags, SMS_DF_AUTO_USB );
+ _switch_flag ( apMenu, 2, &g_Config.m_NetworkFlags, SMS_DF_AUTO_USB );
 
 }  /* end _autousb_handler */
 
 static void _autohdd_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 2, &g_Config.m_NetworkFlags, SMS_DF_AUTO_HDD );
+ _switch_flag ( apMenu, 3, &g_Config.m_NetworkFlags, SMS_DF_AUTO_HDD );
 
 }  /* end _autohdd_handler */
 
@@ -1449,7 +1523,7 @@ static void _vol_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _salign_handler ( GUIMenu* apMenu, int aDir ) {
 
- g_Config.m_PlayerSAlign ^= 1;
+ g_Config.m_PlayerSAlign = ++g_Config.m_PlayerSAlign & 3;
 
  _update_pstr ( 0 );
  apMenu -> Redraw ( apMenu );
@@ -1647,10 +1721,11 @@ static void _mp3_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pLast  = &s_MP3Menu[ sizeof ( s_MP3Menu ) / sizeof ( s_MP3Menu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_MP3_SETTINGS;
 
- s_MP3Menu[ 0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM ? GUICON_ON : GUICON_OFF;
- s_MP3Menu[ 1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_RAND ? GUICON_ON : GUICON_OFF;
- s_MP3Menu[ 2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_REP  ? GUICON_ON : GUICON_OFF;
- s_MP3Menu[ 3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ASD  ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM  ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_RAND  ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_REP   ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ASD   ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 4 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_MP3HP ? GUICON_ON : GUICON_OFF;
 
  _update_status ( apMenu );
  apMenu -> Redraw ( apMenu );
@@ -1678,6 +1753,12 @@ static void _mp3_repeat_handler ( GUIMenu* apMenu, int aDir ) {
 static void _mp3_asd_handler ( GUIMenu* apMenu, int aDir ) {
 
  _switch_flag ( apMenu, 3, &g_Config.m_PlayerFlags, SMS_PF_ASD );
+
+}  /* end _mp3_asd_handler */
+
+static void _mp3_hp_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 4, &g_Config.m_PlayerFlags, SMS_PF_MP3HP );
 
 }  /* end _mp3_asd_handler */
 

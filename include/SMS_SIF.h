@@ -23,6 +23,6 @@ int SIF_BindRPC ( SifRpcClientData_t*, int );
 int SIF_SyncIOP ( void                     );
 
 # ifdef __cplusplus
-extern "C" {
+}
 # endif  /* __cplusplus */
 #endif  /* __SMS_SIF_H */

@@ -179,7 +179,7 @@ void cbw_scsi_start_stop_unit(cbw_packet* packet) {
 	packet->comData[1] = 1;			//lun/reserved/immed
 	packet->comData[2] = 0;			//reserved
 	packet->comData[3] = 0;			//reserved
-	packet->comData[4] = 3;			//reserved/LoEj/Start (load and stard)
+	packet->comData[4] = 1;			//reserved/LoEj/Start (load and stard)
 	packet->comData[5] = 0;			//control
 }
 
@@ -375,7 +375,7 @@ void usb_bulk_reset(mass_dev* dev, int mode) {
 		0x21,			//bulk reset
 		0xFF,
 		0,
-		0,			//interface number  FIXME - correct number
+		dev->interfaceNumber,
 		0,			//length
 		NULL,			//data
 		usb_callback, 
@@ -439,7 +439,7 @@ int usb_bulk_manage_status(mass_dev* dev, int tag) {
 	csw_packet csw;
 
 	ret = usb_bulk_status(dev, &csw, tag); /* Attempt to read CSW from bulk in endpoint */
-	if (ret == 4 || ret < 0) { /* STALL bulk in  -OR- Bulk error */
+	if (ret == USB_RC_STALL || ret < 0) { /* STALL bulk in  -OR- Bulk error */
 		usb_bulk_clear_halt(dev, 0); /* clear the stall condition for bulk in */
 		
 		ret = usb_bulk_status(dev, &csw, tag); /* Attempt to read CSW from bulk in endpoint */
@@ -447,7 +447,7 @@ int usb_bulk_manage_status(mass_dev* dev, int tag) {
 	}
 
 	/* CSW not valid  or stalled or phase error */
-	if (csw.signature !=  0x53425355 || csw.tag != tag || ret != 0) {
+	if (csw.signature !=  0x53425355 || csw.tag != tag) {
 		usb_bulk_reset(dev, 3);	/* Perform reset recovery */
 	}
 
@@ -557,13 +557,13 @@ void usb_bulk_probeEndpoint(mass_dev* dev, UsbEndpointDescriptor* endpoint) {
 		/* out transfer */
 		if ((endpoint->bEndpointAddress & 0x80) == 0 && dev->bulkEpO < 0) {
 			dev->bulkEpOAddr = endpoint->bEndpointAddress;
-			dev->bulkEpO = UsbOpenBulkEndpoint(dev->devId, endpoint);
+			dev->bulkEpO = UsbOpenEndpointAligned(dev->devId, endpoint);
 			dev->packetSzO = endpoint->wMaxPacketSizeHB * 256 + endpoint->wMaxPacketSizeLB;
 		}else
 		/* in transfer */
 		if ((endpoint->bEndpointAddress & 0x80) != 0 && dev->bulkEpI < 0) {
 			dev->bulkEpIAddr = endpoint->bEndpointAddress;
-			dev->bulkEpI = UsbOpenBulkEndpoint(dev->devId, endpoint);
+			dev->bulkEpI = UsbOpenEndpointAligned(dev->devId, endpoint);
 			dev->packetSzI = endpoint->wMaxPacketSizeHB * 256 + endpoint->wMaxPacketSizeLB;
 		}
 	}
@@ -797,7 +797,7 @@ int mass_stor_getStatus ( void ) {
   for ( i = 0; i < 0xFFFFF; ++i ) __asm__ __volatile__( "nop\nnop\nnop\nnop" );	
 
   set_interface ( &mass_device, mass_device.interfaceNumber, mass_device.interfaceAlt );
-  mass_device.status += DEVICE_CONFIGURED;
+  mass_device.status |= DEVICE_CONFIGURED;
   i = mass_stor_warmup ();
 
   if ( i < 0 ) {

@@ -36,6 +36,7 @@ s_SinCos:   .word   0x00000000
 .globl GS_SetDC
 .globl GS_XYZ
 .globl GS_XYZF
+.globl GS_XYZv
 .globl GS_InitGC
 .globl GS_SetGC
 .globl GS_InitClear
@@ -120,7 +121,31 @@ GS_InitDC:
     li      $v1, 0x50
     beql    $v0, $v1, 2f
     li      $v1, 720
+    li      $v1, 0x1A
+    beql    $v0, $v1, 4f
+    addiu   $t0, $t0, 276
+    li      $v1, 0x1C
+    beql    $v0, $v1, 5f
+    addiu   $t0, $t0, 356
     break   7
+4:
+    beql    $zero, $zero, 6f
+    addiu   $t1, $t1, 34
+5:
+    addiu   $t1, $t1, 18
+6:
+    lui     $v1, 0x0080
+    lui     $t6, 0x001D
+    li      $t3, 0xF4FF
+    dsll32  $t6, $t6, 0
+    dsll32  $t3, $t3, 0
+    sll     $t1, $t1, 12
+    or      $t6, $t6, $t3
+    or      $t6, $t6, $v1
+    or      $t6, $t6, $t1
+    or      $t6, $t6, $t0
+    beq     $zero, $zero, 3f
+    li      $v1, 640
 2:
     subu    $v1, $v1, $a2
     sll     $t0, $t0, 1
@@ -252,6 +277,52 @@ GS_XYZF:
     jr      $ra
     or      $v0, $v0, $a3
 .end GS_XYZF
+
+.ent GS_XYZv
+GS_XYZv:
+    lw      $t1, 0($a3)
+    lw      $t2, 4($a3)
+    lw      $t3, 8($a3)
+    sll     $v1, $a2, 2
+    pextlw  $t1, $t1, $t1
+    pextlw  $t2, $t2, $t2
+    pextlw  $t3, $t3, $t3
+    pextlw  $t1, $t1, $t1
+    pextlw  $t2, $t2, $t2
+    pextlw  $t3, $t3, $t3
+    qmtc2   $t1, $vf01
+    qmtc2   $t2, $vf02
+    qmtc2   $t3, $vf03
+    dsll32  $t0, $t0, 0
+    addu    $a3, $a1, $v1
+    pcpyld  $t0, $t0
+1:
+    lqc2    $vf04, 0($a1)
+    lqc2    $vf05, 0($a3)
+    vmul.xyzw   $vf04, $vf04, $vf01
+    vmul.xyzw   $vf05, $vf05, $vf01
+    vadd.xyzw   $vf04, $vf04, $vf02
+    vadd.xyzw   $vf05, $vf05, $vf03
+    vftoi4.xyzw $vf04, $vf04
+    vmul.xyzw   $vf05, $vf05, $vf31
+    qmfc2   $t1, $vf04
+    vftoi4.xyzw $vf05, $vf05
+    addu    $a2, $a2, -4
+    addu    $a1, $a1, 16
+    qmfc2   $t2, $vf05
+    addu    $a3, $a3, 16
+    pinteh  $t2, $t2, $zero
+    por     $t1, $t1, $t2
+    pextlw  $t3, $zero, $t1
+    pextuw  $t1, $zero, $t1
+    por     $t3, $t3, $t0
+    por     $t1, $t1, $t0
+    sq      $t3,  0($a0)
+    sq      $t1, 16($a0)
+    bgtz    $a2, 1b
+    addu    $a0, $a0, 32
+    jr      $ra
+.end GS_XYZv
 
 .ent GS_InitGC
 GS_InitGC:

@@ -24,9 +24,8 @@
 # define SMS_DF_AUTO_NET 0x00000001
 # define SMS_DF_AUTO_USB 0x00000002
 # define SMS_DF_AUTO_HDD 0x00000004
-# define SMS_DF_RC_PORT0 0x00000008
-# define SMS_DF_RC_PORT1 0x00000010
-# define SMS_DF_RC_PORTI 0x00000020
+# define SMS_DF_GAMEPAD  0x00000008
+# define SMS_DF_REMOTE   0x00000010
 
 # define SMS_PF_SUBS  0x00000001
 # define SMS_PF_TIME  0x00000002
@@ -39,6 +38,8 @@
 # define SMS_PF_ASD   0x00000100
 # define SMS_PF_C32   0x00000200
 # define SMS_PF_C16   0x00000400
+# define SMS_PF_MP3HP 0x00000800
+# define SMS_PF_AUDHP 0x00001000
 
 typedef enum SMScrollBarPos {
 
@@ -89,6 +90,8 @@ typedef struct SMSConfig {
 /* Version 4 fields - 32 bytes */
  int          m_DXPALOther[ 4 ];
  int          m_DYPALOther[ 4 ];
+/* Version 4 fields - 4 bytes */
+ unsigned int m_PlayerBrightness;
 } SMSConfig;
 
 extern SMSConfig    g_Config        __attribute__(   (  section( ".data" )  )   );

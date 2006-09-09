@@ -214,6 +214,7 @@ void SMS_PlayerMenu ( void ) {
  lDMA[ 4 ] = GS_SET_TEST_2( 0, 1, 0x80, 0, 0, 0, 1, 1 );
  SyncDCache ( lDMA, lDMA + 6 );
  DMA_Send ( DMAC_GIF, lDMA, 3 );
+ GS_VSync ();
  g_IPUCtx.Repaint ();
 
  GS_SetGC ( &g_GSCtx.m_DrawCtx[ 0 ] );

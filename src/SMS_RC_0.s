@@ -63,7 +63,7 @@ RC_ReadI:
 
 RC_DefTranslator:
     addiu   $at, $zero, 0x05DF
-    andi    $v1, $a0, 0x05DF
+    andi    $v1, $a0, 0x0FFF
     beql    $v1, $at, 1f
     srl     $a0, $a0, 12
     jr      $ra

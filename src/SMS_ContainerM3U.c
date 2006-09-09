@@ -422,10 +422,6 @@ start:
    apCont -> m_Duration  = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
    apCont -> m_Flags    |= SMS_CONT_FLAGS_SEEKABLE;
 
-   if (  !SMS_MP3_Probe ( lpSubCont -> m_pFileCtx )  )
-    retVal = -1;
-   else lpSubCont -> m_pFileCtx -> Seek ( lpSubCont -> m_pFileCtx, 0 );
-
   }  /* end else */
 
  }  /* end else */

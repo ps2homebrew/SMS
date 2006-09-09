@@ -15,6 +15,7 @@
 #include "SMS_Integer.h"
 #include "SMS_GUI.h"
 #include "SMS_Locale.h"
+#include "SMS_Config.h"
 
 #include <malloc.h>
 
@@ -1003,6 +1004,8 @@ int SMS_GetContainerAVI ( SMS_Container* apCont ) {
    apCont -> Seek       = _Seek;
 
    _CalcFrameRate ( apCont );
+
+   g_Config.m_PlayerFlags &= ~SMS_PF_AUDHP;
 
   } else free ( apCont -> m_pCtx );
 

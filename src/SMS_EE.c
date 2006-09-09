@@ -16,6 +16,9 @@
 #include "SMS_Locale.h"
 #include "SMS_GUI.h"
 #include "SMS_Data.h"
+#include "SMS_Config.h"
+#include "SMS_PAD.h"
+#include "SMS_RC.h"
 
 #include <loadfile.h>
 
@@ -118,6 +121,24 @@ int SMS_rand ( void ) {
  return s_lSeed = ( 161140751 * s_lSeed + 13 ) % 219441163;
 
 }  /* end SMS_rand */
+
+char* SMS_ReverseString ( char* apStr, int aLen ) {
+
+ char* lpFirst = apStr;
+ char* lpLast  = apStr + aLen;
+
+ for ( ; lpFirst != lpLast && lpFirst != --lpLast; ++lpFirst ) {
+
+  char lChr = *lpFirst;
+
+  *lpFirst = *lpLast;
+  *lpLast  = lChr;
+
+ }  /* end for */
+
+ return apStr;
+
+}  /* end SMS_ReverseString */
 
 void SMS_EEInit ( void ) {
 
@@ -640,3 +661,34 @@ void SMS_EExec ( char* apPath ) {
  );
 
 }  /* end SMS_EExec */
+
+extern int GUI_ReadButtons0 ( void );
+extern int GUI_ReadButtons1 ( void );
+extern int GUI_ReadButtons2 ( void );
+
+extern unsigned char g_PadBuf1[ 256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
+
+void SMS_EEPort2Init ( void ) {
+
+ if ( g_Config.m_NetworkFlags & SMS_DF_GAMEPAD ) {
+
+  PAD_OpenPort ( 1, 0, g_PadBuf1 );
+  GUI_ReadButtons = GUI_ReadButtons1;
+
+ } else if (  ( g_Config.m_NetworkFlags & SMS_DF_REMOTE ) && ( g_IOPFlags & SMS_IOPF_RMMAN )  ) {
+
+  RC_Open ( 1 );
+  GUI_ReadButtons = GUI_ReadButtons0;
+
+ } else {
+
+  if ( g_IOPFlags & SMS_IOPF_RMMAN2 ) {
+
+   RCX_Open ();
+   GUI_ReadButtons = GUI_ReadButtons0;
+
+  } else GUI_ReadButtons = GUI_ReadButtons2;
+
+ }  /* end else */
+
+}  /* end SMS_Port2Init */

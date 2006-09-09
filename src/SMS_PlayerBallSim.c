@@ -53,7 +53,7 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
  lpUDMA = _U( g_BallPkt );
 
  IPU_InitLoadImage ( &lLoadImage, 32, 32 );
- IPU_LoadImage (  &lLoadImage, g_IconBall, sizeof ( g_IconBall ), 0, 0, 0, 1  );
+ IPU_LoadImage (  &lLoadImage, g_IconBall, sizeof ( g_IconBall ), 0, 0, 0, 1, 16  );
  lLoadImage.Destroy ( &lLoadImage );
 
  lpUDMA[ 0 ] = GIF_TAG( 3, 0, 0, 0, 0, 1 );

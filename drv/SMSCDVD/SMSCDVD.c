@@ -5,48 +5,49 @@
 #----------------------------------------------------------
 # Copyright (c) 2002, A.Lee & Nicholas Van Veen
 # Copyright (c) 2005, Eugene Plotnikov (SMS project)
+# Copyright (c) 2006, Voldemar_U2 (Joliet fix)
 # All rights reserved.
-# 
+#
 # Redistribution and use of this software, in source and binary forms, with or
 # without modification, are permitted provided that the following conditions are
 # met:
-# 
-# 1. Redistributions of source code must retain the above copyright notice, this 
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
 #    list of conditions and the following disclaimer.
-#     
+#
 # 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation 
+#    this list of conditions and the following disclaimer in the documentation
 #    and/or other materials provided with the distribution.
-#     
+#
 # 3. You are granted a license to use this software for academic, research and
 #    non-commercial purposes only.
-# 
+#
 # 4. The copyright holder imposes no restrictions on any code developed using
 #    this software. However, the copyright holder retains a non-exclusive
 #    royalty-free license to any modifications to the distribution made by the
 #    licensee.
-# 
+#
 # 5. Any licensee wishing to make commercial use of this software should contact
 #    the copyright holder to execute the appropriate license for such commercial
 #    use. Commercial use includes:
-#  
-#    -  Integration of all or part of the source code into a product for sale 
+#
+#    -  Integration of all or part of the source code into a product for sale
 #       or commercial license by or on behalf of Licensee to third parties, or
-# 
-#    -  Distribution of the binary code or source code to third parties that 
-#       need it to utilize a commercial product sold or licensed by or on 
+#
+#    -  Distribution of the binary code or source code to third parties that
+#       need it to utilize a commercial product sold or licensed by or on
 #       behalf of Licensee.
-#        
-#  
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
-# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+#
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
 # OF SUCH DAMAGE.
 */
 #include "SMSCDVD.h"
@@ -98,7 +99,8 @@ typedef struct cdVolDesc {
  u8               m_Reserved5[  8 ]             __attribute__(  ( packed )  );
  u32              m_VolSize                     __attribute__(  ( packed )  );
  u32              m_VolSizeBE                   __attribute__(  ( packed )  );
- u8               m_Reserved6[ 32 ]             __attribute__(  ( packed )  );
+ u8               m_EscapeSeq[3]                __attribute__(  ( packed )  );
+ u8               m_Reserved6[ 29 ]             __attribute__(  ( packed )  );
  u32              m_Unknown1                    __attribute__(  ( packed )  );
  u32              m_Uunknown1BE                 __attribute__(  ( packed )  );
  u16              m_VolDescSize                 __attribute__(  ( packed )  );
@@ -229,7 +231,7 @@ static int ReadSect ( u32 aStartSector, u32 anSectors, void* apBuf, cd_read_mode
  int lResult = 0;
 
  s_CDReadMode.trycount = 32;
-	
+
  for ( lRetry=0; lRetry < 32; ++lRetry ) {
 
   if ( lRetry <= 8 )
@@ -237,7 +239,7 @@ static int ReadSect ( u32 aStartSector, u32 anSectors, void* apBuf, cd_read_mode
    s_CDReadMode.spindlctrl = 1;
 
   else s_CDReadMode.spindlctrl = 0;
-	
+
   CdDiskReady ( 0 );
 
   if (  CdRead ( aStartSector, anSectors, apBuf, aMode ) != TRUE  ) {
@@ -255,7 +257,7 @@ static int ReadSect ( u32 aStartSector, u32 anSectors, void* apBuf, cd_read_mode
    break;
 
   }  /* end else */
-	
+
   lResult = CdGetError ();
 
   if ( !lResult ) break;
@@ -424,7 +426,7 @@ static int ISO_Read (  iop_io_file_t* apFile, void* buffer, int size ) {
 
  if ( size <= 0 ) return 0;
 
- if ( size > 16384 ) size = 16384; 
+ if ( size > 16384 ) size = 16384;
 
  start_sector = s_FDTable[ i ].m_LBA + ( s_FDTable[ i ].m_FilePos >> 11 );
  off_sector   = s_FDTable[ i ].m_FilePos & 0x7FF;
@@ -441,7 +443,7 @@ static int ISO_Read (  iop_io_file_t* apFile, void* buffer, int size ) {
   s_LastBk = 0;
 
  }  /* end if */
-	
+
  s_LastSector = start_sector + num_sectors - 1;
 
  if (  read == 0 || ( read == 1 && num_sectors > 1 )  ) {
@@ -450,7 +452,7 @@ static int ISO_Read (  iop_io_file_t* apFile, void* buffer, int size ) {
    start_sector + read, num_sectors - read, s_Buffer + ( read << 11 ),
    &s_CDReadMode
   );
-	 
+
   s_LastBk = num_sectors - 1;
 
  }  // end if
@@ -564,7 +566,7 @@ static int CDVD_findfile ( const char* fname, struct TocEntry* tocEntry ) {
  while ( CachedDirInfo.m_CacheSize > 0 ) {
 
   ( char* )tocEntryPointer = CachedDirInfo.cache;
-		
+
   if ( !CachedDirInfo.m_CacheOffset ) ( char* )tocEntryPointer += tocEntryPointer -> m_Length;
 
   for (  ; ( char* )tocEntryPointer < (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  );
@@ -582,7 +584,7 @@ static int CDVD_findfile ( const char* fname, struct TocEntry* tocEntry ) {
    if (  !strcasecmp ( tocEntry -> m_Filename, filename )  ) return TRUE;
 
   }  /* end for */
-		
+
   CDVD_Cache_Dir ( pathname, CACHE_NEXT );
 
  }  /* end while */
@@ -602,7 +604,7 @@ int CDVD_Cache_Dir ( const char* apPath, enum Cache_getMode aMode ) {
    if ( aMode == CACHE_START ) {
 
     if ( !CachedDirInfo.m_CacheOffset )
-					
+
      return CachedDirInfo.m_Valid = TRUE;
 
     else {
@@ -759,7 +761,7 @@ static int FindPath ( char* pathname ) {
      if ( !dir_entry ) {
 
       if ( CachedDirInfo.m_PathDepth > 0 ) --CachedDirInfo.m_PathDepth;
-						
+
       if ( !CachedDirInfo.m_PathDepth )
 
        CachedDirInfo.m_Pathname[ 0 ] = '\x00';
@@ -848,8 +850,12 @@ static void inline _copy_name ( char* apName, struct dirTocEntry* apTOCEntry ) {
 
  int i, lLen;
 
- if ( CDVolDesc.m_FSType == 2 ) {
-// This is a Joliet Filesystem, so use Unicode to ISO string copy
+if( ( CDVolDesc.m_EscapeSeq[0] == 0x25 ) && ( CDVolDesc.m_EscapeSeq[1] == 0x2F ) ) {
+
+  // This is a Joliet Filesystem, so use Unicode to ISO string copy
+  //The Joliet specification resolves the following ISO 9660 ambiguitie for UCS-2 volumes:
+  //The UCS-2 escape sequences used are: (25)(2F)(40), (25)(2F)(43), or (25)(2F)(45).
+
   lLen = apTOCEntry -> m_FilenameLength / 2;
 
   for ( i = 0; i < lLen; ++i ) apName[ i ] = apTOCEntry -> m_Filename[ ( i << 1 ) + 1 ];
@@ -1068,13 +1074,17 @@ static void TocEntryCopy ( TocEntry* apTocEntry, dirTocEntry* apIntTocEntry ) {
  apTocEntry -> m_FileLBA        = apIntTocEntry -> m_FileLBA;
  apTocEntry -> m_FileProperties = apIntTocEntry -> m_FileProperties;
 
- if ( CDVolDesc.m_FSType == 2 ) {
+ if( ( CDVolDesc.m_EscapeSeq[0] == 0x25 ) && ( CDVolDesc.m_EscapeSeq[1] == 0x2F ) ) {
+
+  // This is a Joliet Filesystem, so use Unicode to ISO string copy
+  //The Joliet specification resolves the following ISO 9660 ambiguitie for UCS-2 volumes:
+  //The UCS-2 escape sequences used are: (25)(2F)(40), (25)(2F)(43), or (25)(2F)(45).
 
   lFNameLen = apIntTocEntry -> m_FilenameLength / 2;
 
   for ( i = 0; i < lFNameLen; ++i )
 
-   apTocEntry -> m_Filename[ i ] = apIntTocEntry -> m_Filename[ ( i <<1 ) + 1 ];
+   apTocEntry -> m_Filename[ i ] = apIntTocEntry -> m_Filename[ ( i << 1 ) + 1 ];
 
  } else {
 

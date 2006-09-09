@@ -224,6 +224,12 @@ static unsigned char s_pSelectAction   [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pColorResolution[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Color resolution";
 static unsigned char s_p32Bit          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "32 bit";
 static unsigned char s_p16Bit          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "16 bit";
+static unsigned char s_pDTV480P        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DTV 480P";
+static unsigned char s_pCPort2         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Controller port 2";
+static unsigned char s_pGamepad        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "gamepad";
+static unsigned char s_pRemoteControl  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "remote control";
+static unsigned char s_pMP3HP          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "High precision mode for .avi";
+static unsigned char s_pRight          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "right";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -407,7 +413,13 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pSelectAction    ) - 1, s_pSelectAction    },
  { sizeof ( s_pColorResolution ) - 1, s_pColorResolution },
  { sizeof ( s_p32Bit           ) - 1, s_p32Bit           },
- { sizeof ( s_p16Bit           ) - 1, s_p16Bit           }
+ { sizeof ( s_p16Bit           ) - 1, s_p16Bit           },
+ { sizeof ( s_pDTV480P         ) - 1, s_pDTV480P         },
+ { sizeof ( s_pCPort2          ) - 1, s_pCPort2          },
+ { sizeof ( s_pGamepad         ) - 1, s_pGamepad         },
+ { sizeof ( s_pRemoteControl   ) - 1, s_pRemoteControl   },
+ { sizeof ( s_pMP3HP           ) - 1, s_pMP3HP           },
+ { sizeof ( s_pRight           ) - 1, s_pRight           }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );
@@ -416,8 +428,6 @@ static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef
 void SMS_LocaleInit ( void ) {
 
  int lFD = MC_OpenS ( 0, 0, s_SMSLng, O_RDONLY );
-
- memcpy (  g_SMString, s_SMStringDef, sizeof ( g_SMString )  );
 
  if ( lFD >= 0 ) {
 
@@ -468,8 +478,6 @@ void SMS_LocaleInit ( void ) {
 
  }  /* end else */
 
- STR_EXEC1.m_pStr[ 6 ] = g_pBXDATASYS[ 6 ];
-
 }  /* end SMS_LocaleInit */
 
 void SMS_LocaleSet ( void ) {
@@ -483,5 +491,7 @@ void SMS_LocaleSet ( void ) {
  else lpStr = s_SMStringDef;
 
  memcpy (  g_SMString, lpStr, sizeof ( g_SMString )  );
+
+ if ( lpStr == s_SMStringDef ) STR_EXEC1.m_pStr[ 6 ] = g_pBXDATASYS[ 6 ];
 
 }  /* end SMS_LocaleSet */

@@ -367,9 +367,9 @@ void SMS_IOPInit ( void ) {
 
  SPU_LoadData (  g_SMSounds, sizeof ( g_SMSounds )  );
 
- if (  RCX_Load () && RCX_Start () && RCX_Open ()  )
+ if (  RCX_Load () && RCX_Start ()  )
   g_IOPFlags |= SMS_IOPF_RMMAN2;
- else if (  RC_Load () && RC_Start () && RC_Open ( 1 )  ) g_IOPFlags |= SMS_IOPF_RMMAN;
+ else if (  RC_Load () && RC_Start ()  ) g_IOPFlags |= SMS_IOPF_RMMAN;
 
  FlushCache ( 0 );
 

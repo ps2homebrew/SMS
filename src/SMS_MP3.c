@@ -12,21 +12,23 @@
 */
 #include "SMS_MP3.h"
 #include "SMS_VLC.h"
+#include "SMS_Config.h"
 
 #include <malloc.h>
 #include <string.h>
 
 #include <kernel.h>
 
-//#define SMS_MP3_AA_FLOAT
+#define TABLE_4_3_SIZE ( 8191 + 16 )
 
-#define FIX( a )         (   ( int )(  ( a ) * FRAC_ONE      )   )
-#define FRAC_ONE         ( 1 << FRAC_BITS )
-#define FIXR( a )        (   ( int )(  ( a ) * FRAC_ONE + 0.5  )   )
-#define FRAC_RND( a )    (   (  ( a ) + ( FRAC_ONE / 2 )  ) >> FRAC_BITS   )
-#define TABLE_4_3_SIZE   ( 8191 + 16 )
-#define MULL( a, b )     (   (  ( int64_t )( a ) * ( int64_t )( b )  ) >> FRAC_BITS   )
+#define FRAC_ONE         ( 1 << 15 )
+#define FIXR( a )        (   ( int )(  ( a ) * FRAC_ONE + 0.5  )    )
+#define FRAC_RND( a )    (   (  ( a ) + ( FRAC_ONE / 2 )  ) >> 15   )
 #define ISQRT2           FIXR( 0.70710678118654752440 )
+#define FRAC_ONE_HP      ( 1 << 23 )
+#define FIXR_HP( a )     (   ( int )(  ( a ) * FRAC_ONE_HP + 0.5  )    )
+#define FRAC_RND_HP( a ) (   (  ( a ) + ( FRAC_ONE_HP / 2 )  ) >> 23   )
+#define ISQRT2_HP        FIXR_HP( 0.70710678118654752440 )
 
 static int32_t MP3_Init    ( SMS_CodecContext*                            );
 static int32_t MP3_Decode  ( SMS_CodecContext*, void**, uint8_t*, int32_t );
@@ -40,9 +42,9 @@ static SMS_VLC  s_huff_vlc       [ 16 ];
 static uint8_t* s_huff_code_table[ 16 ];
 static SMS_VLC  s_huff_quad_vlc  [  2 ];
 
-static SMS_ALIGN( SMS_MPA_INT s_Window[ 512 ], 16 );
-#if FRAC_BITS <= 15
-static const int32_t s_mdct_win [ 8 ][ 36 ] = {
+static SMS_ALIGN( int32_t s_Window[ 512 ], 16 );
+
+static const int32_t s_mdct_win[ 8 ][ 36 ] = {
  { 0x00000595, 0x000010B5, 0x00001BB4, 0x0000267E, 0x000030FC, 0x00003B1B, 0x000044C6, 0x00004DEC, 0x0000567A, 0x00005E5F, 0x0000658D, 0x00006BF4, 0x0000718A, 0x00007642, 0x00007A13, 0x00007CF7, 0x00007EE8, 0x00007FE1, 0x00007FE1, 0x00007EE8, 0x00007CF7, 0x00007A13, 0x00007642, 0x0000718A, 0x00006BF4, 0x0000658D, 0x00005E5F, 0x0000567A, 0x00004DEC, 0x000044C6, 0x00003B1B, 0x000030FC, 0x0000267E, 0x00001BB4, 0x000010B5, 0x00000595 },
  { 0x00000595, 0x000010B5, 0x00001BB4, 0x0000267E, 0x000030FC, 0x00003B1B, 0x000044C6, 0x00004DEC, 0x0000567A, 0x00005E5F, 0x0000658D, 0x00006BF4, 0x0000718A, 0x00007642, 0x00007A13, 0x00007CF7, 0x00007EE8, 0x00007FE1, 0x00008000, 0x00008000, 0x00008000, 0x00008000, 0x00008000, 0x00008000, 0x00007EE8, 0x00007642, 0x0000658D, 0x00004DEC, 0x000030FC, 0x000010B5, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
  { 0x000010B5, 0x000030FC, 0x00004DEC, 0x0000658D, 0x00007642, 0x00007EE8, 0x00007EE8, 0x00007642, 0x0000658D, 0x00004DEC, 0x000030FC, 0x000010B5, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -567,8 +569,7 @@ static const uint16_t s_table_4_3_value[ TABLE_4_3_SIZE ] = {
  0xA0DA, 0xA0E0, 0xA0E7, 0xA0EE, 0xA0F4, 0xA0FB, 0xA102, 0xA109, 0xA10F, 0xA116, 0xA11D, 0xA123, 0xA12A, 0xA131, 0xA138, 0xA13E,
  0xA145, 0xA14C, 0xA153, 0xA159, 0xA160, 0xA167, 0xA16D, 0xA174, 0xA17B, 0xA182, 0xA188, 0xA18F, 0xA196, 0xA19C, 0xA1A3
 };
-#else
-static const int32_t s_mdct_win[ 8 ][ 36 ] = {
+static const int32_t s_mdct_win_hp[ 8 ][ 36 ] = {
  { 0x00059552, 0x0010B515, 0x001BB44B, 0x00267D87, 0x0030FBC5, 0x003B1A94, 0x0044C63C, 0x004DEBE5, 0x005679BD, 0x005E5F1B, 0x00658C9A, 0x006BF440, 0x00718992, 0x007641AF, 0x007A1366, 0x007CF744, 0x007EE7AA, 0x007FE0D0, 0x007FE0D0, 0x007EE7AA, 0x007CF744, 0x007A1366, 0x007641AF, 0x00718992, 0x006BF440, 0x00658C9A, 0x005E5F1B, 0x005679BD, 0x004DEBE5, 0x0044C63C, 0x003B1A94, 0x0030FBC5, 0x00267D87, 0x001BB44B, 0x0010B515, 0x00059552 },
  { 0x00059552, 0x0010B515, 0x001BB44B, 0x00267D87, 0x0030FBC5, 0x003B1A94, 0x0044C63C, 0x004DEBE5, 0x005679BD, 0x005E5F1B, 0x00658C9A, 0x006BF440, 0x00718992, 0x007641AF, 0x007A1366, 0x007CF744, 0x007EE7AA, 0x007FE0D0, 0x00800000, 0x00800000, 0x00800000, 0x00800000, 0x00800000, 0x00800000, 0x007EE7AA, 0x007641AF, 0x00658C9A, 0x004DEBE5, 0x0030FBC5, 0x0010B515, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
  { 0x0010B515, 0x0030FBC5, 0x004DEBE5, 0x00658C9A, 0x007641AF, 0x007EE7AA, 0x007EE7AA, 0x007641AF, 0x00658C9A, 0x004DEBE5, 0x0030FBC5, 0x0010B515, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -578,7 +579,7 @@ static const int32_t s_mdct_win[ 8 ][ 36 ] = {
  { 0x0010B515, 0xFFCF043B, 0x004DEBE5, 0xFF9A7366, 0x007641AF, 0xFF811856, 0x007EE7AA, 0xFF89BE51, 0x00658C9A, 0xFFB2141B, 0x0030FBC5, 0xFFEF4AEB, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
  { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x0010B515, 0xFFCF043B, 0x004DEBE5, 0xFF9A7366, 0x007641AF, 0xFF811856, 0x00800000, 0xFF800000, 0x00800000, 0xFF800000, 0x00800000, 0xFF800000, 0x007FE0D0, 0xFF811856, 0x007CF744, 0xFF85EC9A, 0x007641AF, 0xFF8E766E, 0x006BF440, 0xFF9A7366, 0x005E5F1B, 0xFFA98643, 0x004DEBE5, 0xFFBB39C4, 0x003B1A94, 0xFFCF043B, 0x00267D87, 0xFFE44BB5, 0x0010B515, 0xFFFA6AAE }
 };
-static const uint32_t s_table_4_3_value[ TABLE_4_3_SIZE ] = {
+static const uint32_t s_table_4_3_value_hp[ TABLE_4_3_SIZE ] = {
  0x00000000, 0x00FFFFFA, 0x00A14515, 0x008A74B9, 0x00CB2FF2, 0x0088CC4E, 0x00AE718E, 0x00D63F90, 0x00FFFFFA, 0x0095C419, 0x00AC5AD1, 0x00C3B5D2, 0x00DBC8FD, 0x00F489EE, 0x0086F7CC, 0x0093F904,
  0x00A14515, 0x00AED8DD, 0x00BCB180, 0x00CACC6A, 0x00D92744, 0x00E7BFE7, 0x00F69457, 0x0082D160, 0x008A74B9, 0x0092336D, 0x009A0CBF, 0x00A20000, 0x00AA0C8A, 0x00B231C2, 0x00BA6F17, 0x00C2C3FE,
  0x00CB2FF2, 0x00D3B27E, 0x00DC4B28, 0x00E4F980, 0x00EDBD1E, 0x00F6959C, 0x00FF8296, 0x008441DA, 0x0088CC4E, 0x008D607C, 0x0091FE3D, 0x0096A568, 0x009B55D8, 0x00A00F69, 0x00A4D1F8, 0x00A99D65,
@@ -1093,7 +1094,6 @@ static const uint32_t s_table_4_3_value[ TABLE_4_3_SIZE ] = {
  0x00A0D99D, 0x00A0E054, 0x00A0E70B, 0x00A0EDC2, 0x00A0F47A, 0x00A0FB31, 0x00A101E8, 0x00A108A0, 0x00A10F58, 0x00A11610, 0x00A11CC7, 0x00A1237F, 0x00A12A37, 0x00A130EF, 0x00A137A7, 0x00A13E5F,
  0x00A14515, 0x00A14BCC, 0x00A15285, 0x00A1593D, 0x00A15FF6, 0x00A166AD, 0x00A16D68, 0x00A17420, 0x00A17AD9, 0x00A18190, 0x00A18849, 0x00A18F02, 0x00A195BC, 0x00A19C75, 0x00A1A32D
 };
-#endif  /* FRAC_BITS <= 15 */
 static const int8_t s_table_4_3_exp[ TABLE_4_3_SIZE ] = {
  0x00, 0xFF, 0x01, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03, 0x04, 0x04, 0x04, 0x04, 0x04, 0x05, 0x05,
  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
@@ -1633,7 +1633,6 @@ static const int32_t s_csa_table[ 8 ][ 4 ] = {
  { 32764,   -465, 32299, -33229 },
  { 32767,   -121, 32646, -32888 }
 };
-#ifdef SMS_MP3_AA_FLOAT
 static const float s_csa_table_float[ 8 ][ 4 ] = {
  { 0.857493F,   -0.514496F, 0.342997F,  -1.37199F },
  { 0.881742F,   -0.471732F, 0.410010F,  -1.35347F },
@@ -1644,7 +1643,6 @@ static const float s_csa_table_float[ 8 ][ 4 ] = {
  { 0.999899F,  -0.0141986F, 0.985701F,  -1.01410F },
  { 0.999993F, -0.00369997F, 0.996293F,  -1.00369F }
 };
-#endif  /* SMS_MP3_AA_FLOAT */
 static const int s_icos36[ 9 ] = {
  FIXR( 0.50190991877167369479 ), FIXR( 0.51763809020504152469 ), FIXR( 0.55168895948124587824 ),
  FIXR( 0.61038729438072803416 ), FIXR( 0.70710678118654752439 ), FIXR( 0.87172339781054900991 ),
@@ -1658,10 +1656,26 @@ static const int s_icos72[ 18 ] = {
  FIXR( -0.56369097343317117734 ), FIXR( -0.54119610014619698439 ), FIXR( -0.52426456257040533932 ),
  FIXR( -0.51213975715725461845 ), FIXR( -0.50431448029007636036 ), FIXR( -0.50047634258165998492 ),
 };
-
 static uint32_t s_scale_factor_mult3[ 4 ] = {
  FIXR( 1.0 ),                    FIXR( 1.18920711500272106671 ),
  FIXR( 1.41421356237309504880 ), FIXR( 1.68179283050742908605 )
+};
+static const int s_icos36_hp[ 9 ] = {
+ FIXR_HP( 0.50190991877167369479 ), FIXR_HP( 0.51763809020504152469 ), FIXR_HP( 0.55168895948124587824 ),
+ FIXR_HP( 0.61038729438072803416 ), FIXR_HP( 0.70710678118654752439 ), FIXR_HP( 0.87172339781054900991 ),
+ FIXR_HP( 1.18310079157624925896 ), FIXR_HP( 1.93185165257813657349 ), FIXR_HP( 5.73685662283492756461 )
+};
+static const int s_icos72_hp[ 18 ] = {
+ FIXR_HP(  0.74009361646113053152 ), FIXR_HP(  0.82133981585229078570 ), FIXR_HP(  0.93057949835178895673 ),
+ FIXR_HP(  1.08284028510010010928 ), FIXR_HP(  1.30656296487637652785 ), FIXR_HP(  1.66275476171152078719 ),
+ FIXR_HP(  2.31011315767264929558 ), FIXR_HP(  3.83064878777019433457 ), FIXR_HP( 11.46279281302667383546 ),
+ FIXR_HP( -0.67817085245462840086 ), FIXR_HP( -0.63023620700513223342 ), FIXR_HP( -0.59284452371708034528 ),
+ FIXR_HP( -0.56369097343317117734 ), FIXR_HP( -0.54119610014619698439 ), FIXR_HP( -0.52426456257040533932 ),
+ FIXR_HP( -0.51213975715725461845 ), FIXR_HP( -0.50431448029007636036 ), FIXR_HP( -0.50047634258165998492 ),
+};
+static uint32_t s_scale_factor_mult3_hp[ 4 ] = {
+ FIXR_HP( 1.0 ),                    FIXR_HP( 1.18920711500272106671 ),
+ FIXR_HP( 1.41421356237309504880 ), FIXR_HP( 1.68179283050742908605 )
 };
 static const float s_ci_table[ 8 ] = {
  -0.6F, -0.535F, -0.33F, -0.185F, -0.095F, -0.041F, -0.0142F, -0.0037F
@@ -2110,10 +2124,18 @@ static uint8_t s_mpa_quad_codes[ 2 ][ 16 ] = {
 
 extern int64_t MUL64 ( int64_t, int64_t );
 
+static int  _l3_unscale    ( int, int                                   );
+static void _compute_imdct ( SMS_GranuleDef*, int32_t*, int32_t*        );
+static void _synth_filter  ( int, int16_t*, int, int32_t[ SMS_SBLIMIT ] );
+
+static int  _l3_unscale_hp    ( int, int                                   );
+static void _compute_imdct_hp ( SMS_GranuleDef*, int32_t*, int32_t*        );
+static void _synth_filter_hp  ( int, int16_t*, int, int32_t[ SMS_SBLIMIT ] );
+
 static long SMS_INLINE _lrintf ( float aVal ) {
  return ( long )(  ( aVal ) + ( aVal > 0 ? 0.5F : -0.5F )  );
 }  /* end _lrintf */
-#ifdef SMS_MP3_AA_FLOAT
+
 static void _compute_antialias_float ( SMS_GranuleDef* apGran ) {
 
  int32_t* lPtr, *lPtr0, *lPtr1;
@@ -2166,7 +2188,7 @@ static void _compute_antialias_float ( SMS_GranuleDef* apGran ) {
  }  /* end for */
 
 }  /* end _compute_antialias_float */
-#endif  /* SMS_MP3_AA_FLOAT */
+
 static void _compute_antialias_integer ( SMS_GranuleDef* apGran ) {
 
  const int32_t* lpCSA;
@@ -2232,15 +2254,11 @@ void SMS_Codec_MP3_Open ( SMS_CodecContext* apCtx ) {
  apCtx -> m_pCodec -> Init    = MP3_Init;
  apCtx -> m_pCodec -> Decode  = MP3_Decode;
  apCtx -> m_pCodec -> Destroy = MP3_Destroy;
-#ifdef SMS_MP3_AA_FLOAT
- MYCTX() -> ComputeAntiAlias = _compute_antialias_float;
-#else
- MYCTX() -> ComputeAntiAlias = _compute_antialias_integer;
-#endif  /* SMS_MP3_AA_FLOAT */
- MYCTX() -> m_InBufIdx       = 0;
- MYCTX() -> m_pInBuf         = &MYCTX() -> m_InBuf[ 0 ][ SMS_BACKSTEP_SIZE ];
- MYCTX() -> m_pInBufPtr      = MYCTX() -> m_pInBuf;
- MYCTX() -> m_FrameSize      = 0;
+
+ MYCTX() -> m_InBufIdx  = 0;
+ MYCTX() -> m_pInBuf    = &MYCTX() -> m_InBuf[ 0 ][ SMS_BACKSTEP_SIZE ];
+ MYCTX() -> m_pInBufPtr = MYCTX() -> m_pInBuf;
+ MYCTX() -> m_FrameSize = 0;
 
 }  /* end SMS_Codec_MP3_Open */
 
@@ -2298,19 +2316,51 @@ static int32_t MP3_Init ( SMS_CodecContext* apCtx ) {
     &s_huff_quad_vlc[ i ], i == 0 ? 7 : 4, 16, s_mpa_quad_bits[ i ], 1, 1, s_mpa_quad_codes[ i ], 1, 1
    );
 
-  for ( i = 0; i < 257; ++i ) {
+  if (  ( g_Config.m_PlayerFlags & SMS_PF_MP3HP ) ||
+        ( g_Config.m_PlayerFlags & SMS_PF_AUDHP )
+  ) {
 
-   int lV = s_mpa_enwindow[ i ];
-#if WFRAC_BITS < 16
-   lV = (   lV + (  1 << ( 16 - WFRAC_BITS - 1 )  )   ) >> ( 16 - WFRAC_BITS );
-#endif  /* WFRAC_BITS < 16 */
-   s_Window[ i ] = lV;
+   for ( i = 0; i < 257; ++i ) {
 
-   if (  ( i & 63 ) != 0  ) lV = -lV;
+    int lV = s_mpa_enwindow[ i ];
 
-   if ( i != 0 ) s_Window[ 512 - i ] = lV;
+    s_Window[ i ] = lV;
 
-  }  /* end for */
+    if (  ( i & 63 ) != 0  ) lV = -lV;
+
+    if ( i != 0 ) s_Window[ 512 - i ] = lV;
+
+   }  /* end for */
+
+   s_MP3Ctx.m_FracBits       = 23;
+   s_MP3Ctx.m_SQRT2          = ISQRT2_HP;
+   s_MP3Ctx.ComputeAntiAlias = _compute_antialias_float;
+   s_MP3Ctx.Unscale          = _l3_unscale_hp;
+   s_MP3Ctx.IMDCT            = _compute_imdct_hp;
+   s_MP3Ctx.SynthFilter      = _synth_filter_hp;
+
+  } else {
+
+   for ( i = 0; i < 257; ++i ) {
+
+    int lV = ( s_mpa_enwindow[ i ] + 2 ) >> 2;
+
+    (  ( int16_t* )s_Window  )[ i ] = lV;
+
+    if (  ( i & 63 ) != 0  ) lV = -lV;
+
+    if ( i != 0 ) (  ( int16_t* )s_Window  )[ 512 - i ] = lV;
+
+   }  /* end for */
+
+   s_MP3Ctx.m_FracBits       = 15;
+   s_MP3Ctx.m_SQRT2          = ISQRT2;
+   s_MP3Ctx.ComputeAntiAlias = _compute_antialias_integer;
+   s_MP3Ctx.Unscale          = _l3_unscale;
+   s_MP3Ctx.IMDCT            = _compute_imdct;
+   s_MP3Ctx.SynthFilter      = _synth_filter;
+
+  }  /* end else */
 
  }  /* end if */
 
@@ -2464,6 +2514,25 @@ static int _decode_header ( uint32_t aHdr ) {
 
 }  /* end _decode_header */
 
+static void _wmemcpy ( void* apDst, void* apSrc, int aSize ) {
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  "blez %2, 2f\n\t"
+  "nop\n\t"
+  "1:\n\t"
+  "lw       $2, 0(%1)\n\t"
+  "addiu    %2, %2, -1\n\t"
+  "addiu    %1, %1, 4\n\t"
+  "sw       $2, 0(%0)\n\t"
+  "addiu    %0, %0, 4\n\t"
+  "bne      %2, $0, 1b\n\t"
+  "nop\n\t"
+  ".set reorder\n\t"
+  "2:\n\t"
+  :: "r"( apDst ), "r"( apSrc ), "r"( aSize ) : "$2"
+ );
+}  /* end _wmemcpy */
+
 static void _seek_to_main_data ( unsigned int aBackStep ) {
 
  uint8_t* lPtr = ( uint8_t* )(   s_MP3Ctx.m_BitCtx.m_pBuf + (  SMS_BitCount ( &s_MP3Ctx.m_BitCtx ) >> 3  )   );
@@ -2600,38 +2669,42 @@ static void _reorder_block ( SMS_GranuleDef* apGran ) {
 
   }  /* end for */
 
-  memcpy (  lPtr1, s_Tmp, lLen * 3 * sizeof ( int32_t )  );
+  _wmemcpy ( lPtr1, s_Tmp, lLen * 3 );
 
  }  /* end for */
 
 }  /* end _reorder_block */
 
-static SMS_INLINE int _l3_unscale ( int aVal, int anExp ) {
-#if FRAC_BITS <= 15
+static int _l3_unscale ( int aVal, int anExp ) {
+
  unsigned int lM;
-#else
- uint64_t lM;
-#endif  /* FRAC_BITS <= 15 */
- int lE = s_table_4_3_exp[ aVal ];
+ int          lE = s_table_4_3_exp[ aVal ];
 
  lE += ( anExp >> 2 );
- lE  = FRAC_BITS - lE;
-#if FRAC_BITS <= 15
+ lE  = 15 - lE;
  if ( lE > 31 ) lE = 31;
-#endif  /* FRAC_BITS <= 15 */
  lM = s_table_4_3_value[ aVal ];
-#if FRAC_BITS <= 15
  lM = ( lM * s_scale_factor_mult3[ anExp & 3 ] );
  lM = (   lM + (  1 << ( lE - 1 )  )   ) >> lE;
 
  return lM;
-#else
- lM = MUL64( lM, s_scale_factor_mult3[ anExp & 3 ] );
+
+}  /* end _l3_unscale */
+
+static int _l3_unscale_hp ( int aVal, int anExp ) {
+
+ uint64_t lM;
+ int      lE = s_table_4_3_exp[ aVal ];
+
+ lE += ( anExp >> 2 );
+ lE = 23 - lE;
+ lM = s_table_4_3_value_hp[ aVal ];
+ lM = MUL64( lM, s_scale_factor_mult3_hp[ anExp & 3 ] );
  lM = (   lM + (  SMS_INT64( 1 ) << ( lE - 1 )  )   ) >> lE;
 
  return ( int )lM;
-#endif  /* FRAC_BITS <= 15 */
-}  /* end _l3_unscale */
+
+}  /* end _l3_unscale_hp */
 
 static int _huffman_decode ( SMS_GranuleDef* apGran, int16_t* apExps, int anEndPos ) {
 
@@ -2681,7 +2754,7 @@ static int _huffman_decode ( SMS_GranuleDef* apGran, int16_t* apExps, int anEndP
 
     if ( lX == 15 ) lX += _get_bitsz ( lpBitCtx, lInBits );
 
-    lV = _l3_unscale ( lX, apExps[ lIdx ] );
+    lV = s_MP3Ctx.Unscale ( lX, apExps[ lIdx ] );
 
     if (  SMS_GetBit ( lpBitCtx )  ) lV = -lV;
 
@@ -2693,7 +2766,7 @@ static int _huffman_decode ( SMS_GranuleDef* apGran, int16_t* apExps, int anEndP
 
     if ( lY == 15 ) lY += _get_bitsz ( lpBitCtx, lInBits );
 
-    lV = _l3_unscale ( lY, apExps[ lIdx ] );
+    lV = s_MP3Ctx.Unscale ( lY, apExps[ lIdx ] );
 
     if (  SMS_GetBit ( lpBitCtx )  ) lV = -lV;
 
@@ -2734,7 +2807,7 @@ static int _huffman_decode ( SMS_GranuleDef* apGran, int16_t* apExps, int anEndP
 
    if (  lCode & ( 8 >> i )  ) {
 
-    lV = _l3_unscale ( 1, apExps[ lIdx ] );
+    lV = s_MP3Ctx.Unscale ( 1, apExps[ lIdx ] );
 
     if (  SMS_GetBit ( lpBitCtx )  ) lV = -lV;
 
@@ -2819,8 +2892,8 @@ static void _compute_stereo ( SMS_GranuleDef* apGran0, SMS_GranuleDef* apGran1 )
      for ( j = 0; j < lLen; ++j ) {
 
       lTmp0 = lpTab0[j];
-      lpTab0[ j ] = ( int )MULL( lTmp0, lV1);
-      lpTab1[ j ] = ( int )MULL( lTmp0, lV2);
+      lpTab0[ j ] = ( int )(  MUL64( lTmp0, lV1 ) >> s_MP3Ctx.m_FracBits  );
+      lpTab1[ j ] = ( int )(  MUL64( lTmp0, lV2 ) >> s_MP3Ctx.m_FracBits  );
 
      }  /* end for */
 
@@ -2832,8 +2905,8 @@ found1:
 
        lTmp0       = lpTab0[ j ];
        lTmp1       = lpTab1[ j ];
-       lpTab0[ j ] = ( int )MULL( lTmp0 + lTmp1, ISQRT2 );
-       lpTab1[ j ] = ( int )MULL( lTmp0 - lTmp1, ISQRT2 );
+       lpTab0[ j ] = ( int )(  MUL64( lTmp0 + lTmp1, s_MP3Ctx.m_SQRT2 ) >> s_MP3Ctx.m_FracBits  );
+       lpTab1[ j ] = ( int )(  MUL64( lTmp0 - lTmp1, s_MP3Ctx.m_SQRT2 ) >> s_MP3Ctx.m_FracBits  );
 
       }  /* end for */
 
@@ -2877,8 +2950,8 @@ found1:
     for ( j = 0; j < lLen; ++j ) {
 
      lTmp0       = lpTab0[ j ];
-     lpTab0[ j ] = ( int )MULL( lTmp0, lV1 );
-     lpTab1[ j ] = ( int )MULL( lTmp0, lV2 );
+     lpTab0[ j ] = ( int )(  MUL64( lTmp0, lV1 ) >> s_MP3Ctx.m_FracBits  );
+     lpTab1[ j ] = ( int )(  MUL64( lTmp0, lV2 ) >> s_MP3Ctx.m_FracBits  );
 
     }  /* end for */
 
@@ -2890,8 +2963,8 @@ found2:
 
       lTmp0       = lpTab0[ j ];
       lTmp1       = lpTab1[ j ];
-      lpTab0[ j ] = ( int )MULL( lTmp0 + lTmp1, ISQRT2 );
-      lpTab1[ j ] = ( int )MULL( lTmp0 - lTmp1, ISQRT2 );
+      lpTab0[ j ] = ( int )(  MUL64( lTmp0 + lTmp1, s_MP3Ctx.m_SQRT2 ) >> s_MP3Ctx.m_FracBits  );
+      lpTab1[ j ] = ( int )(  MUL64( lTmp0 - lTmp1, s_MP3Ctx.m_SQRT2 ) >> s_MP3Ctx.m_FracBits  );
 
      }  /* end for */
 
@@ -3068,19 +3141,19 @@ static void _imdct36 ( int* apOut, int* apIn ) {
   t2 = lTmp[ i + 1 ];
   t3 = lTmp[ i + 3 ];
 
-  s1 = ( int )MULL( t3 + t2, s_icos36[     j ] );
-  s3 = ( int )MULL( t3 - t2, s_icos36[ 8 - j ] );
+  s1 = ( int )(  MUL64( t3 + t2, s_icos36[     j ] ) >> 15  );
+  s3 = ( int )(  MUL64( t3 - t2, s_icos36[ 8 - j ] ) >> 15  );
         
-  t0 = ( int )MULL( s0 + s1, s_icos72[ 9 + 8 - j ] );
-  t1 = ( int )MULL( s0 - s1, s_icos72[     8 - j ] );
+  t0 = ( int )(  MUL64( s0 + s1, s_icos72[ 9 + 8 - j ] ) >> 15  );
+  t1 = ( int )(  MUL64( s0 - s1, s_icos72[     8 - j ] ) >> 15  );
 
   apOut[ 18 + 9 + j ] =  t0;
   apOut[ 18 + 8 - j ] =  t0;
   apOut[      9 + j ] = -t1;
   apOut[      8 - j ] =  t1;
         
-  t0 = ( int )MULL( s2 + s3, s_icos72[ 9 + j ] );
-  t1 = ( int )MULL( s2 - s3, s_icos72[     j ] );
+  t0 = ( int )(  MUL64( s2 + s3, s_icos72[ 9 + j ] ) >> 15  );
+  t1 = ( int )(  MUL64( s2 - s3, s_icos72[     j ] ) >> 15  );
 
   apOut[ 18 + 9 + ( 8 - j ) ] =  t0;
   apOut[ 18 + j             ] =  t0;
@@ -3092,9 +3165,9 @@ static void _imdct36 ( int* apOut, int* apIn ) {
  }  /* end for */
 
  s0 = lTmp[ 16 ];
- s1 = ( int )MULL( lTmp[ 17 ], s_icos36[     4 ] );
- t0 = ( int )MULL( s0 + s1,    s_icos72[ 9 + 4 ] );
- t1 = ( int )MULL( s0 - s1,    s_icos72[     4 ] );
+ s1 = ( int )(  MUL64( lTmp[ 17 ], s_icos36[     4 ] ) >> 15  );
+ t0 = ( int )(  MUL64( s0 + s1,    s_icos72[ 9 + 4 ] ) >> 15  );
+ t1 = ( int )(  MUL64( s0 - s1,    s_icos72[     4 ] ) >> 15  );
 
  apOut[ 18 + 9 + 4 ] =  t0;
  apOut[ 18 + 8 - 4 ] =  t0;
@@ -3147,8 +3220,8 @@ static void _compute_imdct ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t
 
   for ( i = 0; i < 18; ++i ) {
 
-   *lpOut     = ( int )MULL( lOut[ i      ], lpWin[ i      ] ) + lpBuf[ i ];
-   lpBuf[ i ] = ( int )MULL( lOut[ i + 18 ], lpWin[ i + 18 ] );
+   *lpOut     = ( int )(  MUL64( lOut[ i      ], lpWin[ i      ] ) >> 15  ) + lpBuf[ i ];
+   lpBuf[ i ] = ( int )(  MUL64( lOut[ i + 18 ], lpWin[ i + 18 ] ) >> 15  );
 
    lpOut += SMS_SBLIMIT;
 
@@ -3187,8 +3260,8 @@ static void _compute_imdct ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t
 
    for ( i = 0; i < 6; ++i ) {
 
-    lpBuf2[ i     ] = ( int )MULL( lOut2[ i     ], lpWin[ i     ] ) + lpBuf2[ i ];
-    lpBuf2[ i + 6 ] = ( int )MULL( lOut2[ i + 6 ], lpWin[ i + 6 ] );
+    lpBuf2[ i     ] = ( int )(  MUL64( lOut2[ i     ], lpWin[ i     ] ) >> 15  ) + lpBuf2[ i ];
+    lpBuf2[ i + 6 ] = ( int )(  MUL64( lOut2[ i + 6 ], lpWin[ i + 6 ] ) >> 15  );
 
    }  /* end for */
 
@@ -3231,16 +3304,323 @@ static void _compute_imdct ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t
 
 }  /* end _compute_imdct */
 
+#define C1_HP  FIXR_HP( 0.99144486137381041114 )
+#define C3_HP  FIXR_HP( 0.92387953251128675612 )
+#define C5_HP  FIXR_HP( 0.79335334029123516458 )
+#define C7_HP  FIXR_HP( 0.60876142900872063941 )
+#define C9_HP  FIXR_HP( 0.38268343236508977173 )
+#define C11_HP FIXR_HP( 0.13052619222005159154 )
+
+static void _imdct12_hp ( int* apOut, int* apIn ) {
+
+ int     lTmp;
+ int64_t lIn1_3, lIn1_9, lIn4_3, lIn4_9;
+
+ lIn1_3 = MUL64( apIn[ 1 ], C3_HP );
+ lIn1_9 = MUL64( apIn[ 1 ], C9_HP );
+ lIn4_3 = MUL64( apIn[ 4 ], C3_HP );
+ lIn4_9 = MUL64( apIn[ 4 ], C9_HP );
+
+ lTmp = ( int )FRAC_RND_HP(
+                MUL64( apIn[ 0 ], C7_HP  ) - lIn1_3 -
+                MUL64( apIn[ 2 ], C11_HP ) + 
+                MUL64( apIn[ 3 ], C1_HP  ) - lIn4_9 -
+                MUL64( apIn[ 5 ], C5_HP  )
+               );
+ apOut[ 0 ] =  lTmp;
+ apOut[ 5 ] = -lTmp;
+
+ lTmp = ( int )FRAC_RND_HP(
+                MUL64( apIn[ 0 ] - apIn[ 3 ], C9_HP ) - lIn1_3 + 
+                MUL64( apIn[ 2 ] + apIn[ 5 ], C3_HP ) - lIn4_9
+               );
+ apOut[ 1 ] =  lTmp;
+ apOut[ 4 ] = -lTmp;
+
+ lTmp = ( int )FRAC_RND_HP(
+                MUL64( apIn[ 0 ], C11_HP ) - lIn1_9 +
+                MUL64( apIn[ 2 ], C7_HP  ) -
+                MUL64( apIn[ 3 ], C5_HP  ) + lIn4_3 -
+                MUL64( apIn[ 5 ], C1_HP  )
+               );
+ apOut[ 2 ] =  lTmp;
+ apOut[ 3 ] = -lTmp;
+
+ lTmp = ( int )FRAC_RND_HP(
+                MUL64( -apIn[ 0 ], C5_HP  ) + lIn1_9 +
+                MUL64(  apIn[ 2 ], C1_HP  ) + 
+                MUL64(  apIn[ 3 ], C11_HP ) - lIn4_3 -
+                MUL64(  apIn[ 5 ], C7_HP  )
+               );
+ apOut[  6 ] = lTmp;
+ apOut[ 11 ] = lTmp;
+
+ lTmp = ( int )FRAC_RND_HP(
+                MUL64( -apIn[ 0 ] + apIn[ 3 ], C3_HP ) - lIn1_9 + 
+                MUL64(  apIn[ 2 ] + apIn[ 5 ], C9_HP ) + lIn4_3
+               );
+ apOut[  7 ] = lTmp;
+ apOut[ 10 ] = lTmp;
+
+ lTmp = ( int )FRAC_RND_HP(
+                -MUL64( apIn[ 0 ], C1_HP  ) - lIn1_3 -
+                 MUL64( apIn[ 2 ], C5_HP  ) -
+                 MUL64( apIn[ 3 ], C7_HP  ) - lIn4_9 -
+                 MUL64( apIn[ 5 ], C11_HP )
+               );
+ apOut[ 8 ] = lTmp;
+ apOut[ 9 ] = lTmp;
+
+}  /* end _imdct12_hp */
+
+#undef C1_HP
+#undef C3_HP
+#undef C5_HP
+#undef C7_HP
+
+#define C1_HP FIXR_HP( 0.98480775301220805936 )
+#define C2_HP FIXR_HP( 0.93969262078590838405 )
+#define C3_HP FIXR_HP( 0.86602540378443864676 )
+#define C4_HP FIXR_HP( 0.76604444311897803520 )
+#define C5_HP FIXR_HP( 0.64278760968653932632 )
+#define C6_HP FIXR_HP( 0.5                    )
+#define C7_HP FIXR_HP( 0.34202014332566873304 )
+#define C8_HP FIXR_HP( 0.17364817766693034885 )
+
+static void _imdct36_hp ( int* apOut, int* apIn ) {
+
+ int     i, j, t0, t1, t2, t3, s0, s1, s2, s3;
+ int     lTmp[ 18 ], *lpTmp1, *lpIn1;
+ int64_t lIn3_3, lIn6_6;
+
+ for ( i = 17; i >= 1; --i   ) apIn[ i ] += apIn[ i - 1 ];
+ for ( i = 17; i >= 3; i -=2 ) apIn[ i ] += apIn[ i - 2 ];
+
+ for ( j = 0; j < 2; ++j ) {
+
+  lpTmp1 = lTmp + j;
+  lpIn1  = apIn + j;
+
+  lIn3_3 = MUL64( lpIn1[  6 ], C3_HP );
+  lIn6_6 = MUL64( lpIn1[ 12 ], C6_HP );
+
+  lpTmp1[ 0 ] = ( int )FRAC_RND_HP(
+   MUL64( lpIn1[  2 ], C1_HP ) + lIn3_3 + 
+   MUL64( lpIn1[ 10 ], C5_HP ) + MUL64( lpIn1[ 14 ], C7_HP )
+  );
+  lpTmp1[ 2 ] = lpIn1[ 0 ] + ( int )FRAC_RND_HP(
+                                     MUL64( lpIn1[  4 ], C2_HP ) + 
+                                     MUL64( lpIn1[  8 ], C4_HP ) + lIn6_6 + 
+                                     MUL64( lpIn1[ 16 ], C8_HP )
+                                    );
+  lpTmp1[  4 ] = ( int )FRAC_RND_HP(
+                         MUL64( lpIn1[ 2 ] - lpIn1[ 10 ] - lpIn1[ 14 ], C3_HP )
+                        );
+  lpTmp1[  6 ] = ( int )FRAC_RND_HP(
+                         MUL64( lpIn1[ 4 ] - lpIn1[  8 ] - lpIn1[ 16 ], C6_HP )
+                        ) - lpIn1[ 12 ] + lpIn1[ 0 ];
+  lpTmp1[  8 ] = ( int )FRAC_RND_HP(
+                         MUL64( lpIn1[  2 ], C5_HP ) - lIn3_3 - 
+                         MUL64( lpIn1[ 10 ], C7_HP ) +
+                         MUL64( lpIn1[ 14 ], C1_HP )
+                        );
+  lpTmp1[ 10 ] = lpIn1[ 0 ] + ( int )FRAC_RND_HP(
+                                      MUL64( -lpIn1[  4 ], C8_HP ) - 
+                                      MUL64(  lpIn1[  8 ], C2_HP ) + lIn6_6 + 
+                                      MUL64(  lpIn1[ 16 ], C4_HP )
+                                     );
+  lpTmp1[ 12 ] = ( int )FRAC_RND_HP(
+                         MUL64( lpIn1[  2 ], C7_HP ) - lIn3_3 + 
+                         MUL64( lpIn1[ 10 ], C1_HP ) - 
+                         MUL64( lpIn1[ 14 ], C5_HP )
+                        );
+  lpTmp1[ 14 ] = lpIn1[ 0 ] + ( int )FRAC_RND_HP(
+                                      MUL64( -lpIn1[  4 ], C4_HP ) + 
+                                      MUL64(  lpIn1[  8 ], C8_HP ) + lIn6_6 - 
+                                      MUL64(  lpIn1[ 16 ], C2_HP )
+                                     );
+  lpTmp1[ 16 ] = lpIn1[ 0 ] - lpIn1[ 4 ] + lpIn1[ 8 ] - lpIn1[ 12 ] + lpIn1[ 16 ];
+
+ }  /* end for */
+
+ i = 0;
+
+ for ( j = 0; j < 4; ++j ) {
+
+  t0 = lTmp[ i     ];
+  t1 = lTmp[ i + 2 ];
+  s0 = t1 + t0;
+  s2 = t1 - t0;
+
+  t2 = lTmp[ i + 1 ];
+  t3 = lTmp[ i + 3 ];
+
+  s1 = ( int )(  MUL64( t3 + t2, s_icos36_hp[     j ] ) >> 23  );
+  s3 = ( int )(  MUL64( t3 - t2, s_icos36_hp[ 8 - j ] ) >> 23  );
+        
+  t0 = ( int )(  MUL64( s0 + s1, s_icos72_hp[ 9 + 8 - j ] ) >> 23  );
+  t1 = ( int )(  MUL64( s0 - s1, s_icos72_hp[     8 - j ] ) >> 23  );
+
+  apOut[ 18 + 9 + j ] =  t0;
+  apOut[ 18 + 8 - j ] =  t0;
+  apOut[      9 + j ] = -t1;
+  apOut[      8 - j ] =  t1;
+        
+  t0 = ( int )(  MUL64( s2 + s3, s_icos72_hp[ 9 + j ] ) >> 23  );
+  t1 = ( int )(  MUL64( s2 - s3, s_icos72_hp[     j ] ) >> 23  );
+
+  apOut[ 18 + 9 + ( 8 - j ) ] =  t0;
+  apOut[ 18 + j             ] =  t0;
+  apOut[      9 + ( 8 - j ) ] = -t1;
+  apOut[ j                  ] =  t1;
+
+  i += 4;
+
+ }  /* end for */
+
+ s0 = lTmp[ 16 ];
+ s1 = ( int )(  MUL64( lTmp[ 17 ], s_icos36_hp[     4 ] ) >> 23  );
+ t0 = ( int )(  MUL64( s0 + s1,    s_icos72_hp[ 9 + 4 ] ) >> 23  );
+ t1 = ( int )(  MUL64( s0 - s1,    s_icos72_hp[     4 ] ) >> 23  );
+
+ apOut[ 18 + 9 + 4 ] =  t0;
+ apOut[ 18 + 8 - 4 ] =  t0;
+ apOut[      9 + 4 ] = -t1;
+ apOut[      8 - 4 ] =  t1;
+
+}  /* end _imdct36_hp */
+
+static void _compute_imdct_hp ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t* apBuf ) {
+
+ const int32_t* lpWin, *lpWin1;
+
+ int32_t* lPtr, *lPtr1, *lpBuf, *lpBuf2, *lpOut;
+ int32_t  lIn  [  6 ];
+ int32_t  lOut [ 36 ];
+ int32_t  lOut2[ 12 ];
+ int      i, j, k, lMDCTLongEnd, lV, lSBLimit;
+
+ lPtr  = apGran -> m_SBHybrid + 576;
+ lPtr1 = apGran -> m_SBHybrid +  36;
+
+ while ( lPtr >= lPtr1 ) {
+
+  lPtr -= 6;
+  lV    = lPtr[ 0 ] | lPtr[ 1 ] | lPtr[ 2 ] | lPtr[ 3 ] | lPtr[ 4 ] | lPtr[ 5 ];
+
+  if ( lV != 0 ) break;
+
+ }  /* end while */
+
+ lSBLimit = (  ( lPtr - apGran -> m_SBHybrid ) / 18  ) + 1;
+
+ if ( apGran -> m_BlockType == 2 )
+
+  lMDCTLongEnd = apGran -> m_SwitchPoint ? 2 : 0;
+
+ else lMDCTLongEnd = lSBLimit;
+
+ lpBuf = apBuf;
+ lPtr  = apGran -> m_SBHybrid;
+
+ for ( j = 0; j < lMDCTLongEnd; ++j ) {
+
+  _imdct36_hp ( lOut, lPtr );
+  lpOut = apSamples + j;
+
+  lpWin1 = apGran -> m_SwitchPoint && j < 2 ? s_mdct_win_hp[ 0                     ]
+                                            : s_mdct_win_hp[ apGran -> m_BlockType ];
+  lpWin  = lpWin1 + (  ( 4 * 36 ) & -( j & 1 )  );
+
+  for ( i = 0; i < 18; ++i ) {
+
+   *lpOut     = ( int )(  MUL64( lOut[ i      ], lpWin[ i      ] ) >> 23  ) + lpBuf[ i ];
+   lpBuf[ i ] = ( int )(  MUL64( lOut[ i + 18 ], lpWin[ i + 18 ] ) >> 23  );
+
+   lpOut += SMS_SBLIMIT;
+
+  }  /* end for */
+
+  lPtr  += 18;
+  lpBuf += 18;
+
+ }  /* end for */
+
+ for ( j = lMDCTLongEnd; j < lSBLimit; ++j ) {
+
+  for ( i = 0; i < 6; ++i ) {
+
+   lOut[      i ] = 0;
+   lOut[  6 + i ] = 0;
+   lOut[ 30 + i ] = 0;
+
+  }  /* end for */
+
+  lpWin  = s_mdct_win_hp[ 2 ] + (  ( 4 * 36 ) & -( j & 1 )  );
+  lpBuf2 = lOut + 6;
+
+  for ( k = 0; k < 3; ++k ) {
+
+   lPtr1 = lPtr + k;
+
+   for ( i = 0; i < 6; ++i ) {
+
+    lIn[ i ] = *lPtr1;
+    lPtr1   += 3;
+
+   }  /* end for */
+
+   _imdct12_hp ( lOut2, lIn );
+
+   for ( i = 0; i < 6; ++i ) {
+
+    lpBuf2[ i     ] = ( int )(  MUL64( lOut2[ i     ], lpWin[ i     ] ) >> 23  ) + lpBuf2[ i ];
+    lpBuf2[ i + 6 ] = ( int )(  MUL64( lOut2[ i + 6 ], lpWin[ i + 6 ] ) >> 23  );
+
+   }  /* end for */
+
+   lpBuf2 += 6;
+
+  }  /* end for */
+
+  lpOut = apSamples + j;
+
+  for ( i = 0; i < 18; ++i ) {
+
+   *lpOut     = lOut[ i ] + lpBuf[ i ];
+   lpBuf[ i ] = lOut[ i + 18 ];
+
+   lpOut += SMS_SBLIMIT;
+
+  }  /* end for */
+
+  lPtr  += 18;
+  lpBuf += 18;
+
+ }  /* end for */
+
+ for ( j = lSBLimit; j < SMS_SBLIMIT; ++j ) {
+
+  lpOut = apSamples + j;
+
+  for ( i = 0; i < 18; ++i ) {
+
+   *lpOut     = lpBuf[ i ];
+   lpBuf[ i ] = 0;
+
+   lpOut += SMS_SBLIMIT;
+
+  }  /* end for */
+
+  lpBuf += 18;
+
+ }  /* end for */
+
+}  /* end _compute_imdct_hp */
+
 #define ADD( a, b ) apTab[ a ] += apTab[ b ]
-
-#if FRAC_BITS <= 15
-# define MACS( rt, ra, rb ) rt += ( ra ) * ( rb )
-# define MULS( ra, rb )     (  ( ra ) * ( rb )  )
-#else
-# define MULS( ra, rb ) MUL64( ra, rb )
-#endif  /* FRAC_BITS <= 15 */
-
-#define OUT_SHIFT ( WFRAC_BITS + FRAC_BITS - 15 )
+#define MACS( rt, ra, rb ) rt += ( ra ) * ( rb )
+#define MULS( ra, rb )     (  ( ra ) * ( rb )  )
 
 #define SUM8( sum, op, w, p ) {                \
  sum op MULS(  ( w )[ 0 * 64 ], p[ 0 * 64 ] ); \
@@ -3253,17 +3633,17 @@ static void _compute_imdct ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t
  sum op MULS(  ( w )[ 7 * 64 ], p[ 7 * 64 ] ); \
 }
 
-extern void ps2_dct32       ( int32_t*, int32_t*                       );
-extern void ps2_synth_sum8a ( SMS_MPA_INT*, SMS_MPA_INT*, SMS_MPA_INT* );
-extern void ps2_synth_sum8b ( SMS_MPA_INT*, SMS_MPA_INT*, SMS_MPA_INT* );
+extern void ps2_dct32       ( int32_t*, int32_t*           );
+extern void ps2_synth_sum8a ( int16_t*, int16_t*, int16_t* );
+extern void ps2_synth_sum8b ( int16_t*, int16_t*, int16_t* );
 
-#define OUT_SAMPLEt( sum ) {                                          \
- int lSum1 = (   lSum + ( 1 << ( OUT_SHIFT - 1 )  )   ) >> OUT_SHIFT; \
- if ( lSum1 < -32768 )                                                \
-  lSum1 = -32768;                                                     \
- else if ( lSum1 > 32767 )                                            \
-  lSum1 = 32767;                                                      \
- *lpTSamples++ = lSum1;                                               \
+#define OUT_SAMPLEt( sum ) {                 \
+ int lSum1 = (  lSum + ( 1 << 13 )  ) >> 14; \
+ if ( lSum1 < -32768 )                       \
+  lSum1 = -32768;                            \
+ else if ( lSum1 > 32767 )                   \
+  lSum1 = 32767;                             \
+ *lpTSamples++ = lSum1;                      \
 }
 
 static void _dct32 ( int32_t* apOut, int32_t* apTab ) {
@@ -3326,47 +3706,42 @@ static void _dct32 ( int32_t* apOut, int32_t* apTab ) {
 
 static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSBSamples[ SMS_SBLIMIT ] ) {
 
- SMS_ALIGN( int32_t     lTmp        [ 32 ], 16 );
- SMS_ALIGN( SMS_MPA_INT lSamplesTmp [ 32 ], 16 );
- SMS_ALIGN( SMS_MPA_INT lSamplesTmp2[ 32 ], 16 );
+ SMS_ALIGN( int32_t lTmp        [ 32 ], 16 );
+ SMS_ALIGN( int16_t lSamplesTmp [ 32 ], 16 );
+ SMS_ALIGN( int16_t lSamplesTmp2[ 32 ], 16 );
 
- register SMS_MPA_INT* lpBuf, *lPtr;
- register SMS_MPA_INT* lpW;
+ register int16_t* lpBuf, *lPtr;
+ register int16_t* lpW;
 
- SMS_MPA_INT* lpTSamples = lSamplesTmp;
- int          j, lOffset, lV;
-#if FRAC_BITS <= 15
- int     lSum;
-#else
- int64_t lSum;
-#endif  /* FRAC_BITS */
- memset (  lSamplesTmp,  0, 32 * sizeof ( SMS_MPA_INT )  );
- memset (  lSamplesTmp2, 0, 32 * sizeof ( SMS_MPA_INT )  );
+ int16_t* lpTSamples = lSamplesTmp;
+ int      j, lOffset, lV;
+ int      lSum;
+
+ memset (  lSamplesTmp,  0, 32 * sizeof ( int16_t )  );
+ memset (  lSamplesTmp2, 0, 32 * sizeof ( int16_t )  );
 
  _dct32 ( lTmp, aSBSamples );
 
  lOffset = s_MP3Ctx.m_SynthBuffOffset[ aCh ];
- lpBuf   = s_MP3Ctx.m_SynthBuf[ aCh ] + lOffset;
+ lpBuf   = (  ( int16_t* )s_MP3Ctx.m_SynthBuf  ) + ( aCh << 10 ) + lOffset;
 
  for ( j = 0; j < 32; ++j ) {
 
   lV = lTmp[ j ];
 #if FRAC_BITS <= 15
   if ( lV > 32767 )
-
    lV = 32767;
-
   else if ( lV < -32768 ) lV = -32768;
 #endif  /* FRAC_BITS */
   lpBuf[ j ] = lV;
 
  }  /* end for */
 
- memcpy (  lpBuf + 512, lpBuf, 32 * sizeof ( SMS_MPA_INT )  );
+ _wmemcpy (  lpBuf + 512, lpBuf, 8 * sizeof ( int16_t )  );
 
- ps2_synth_sum8a ( s_Window, lpBuf, lSamplesTmp );
+ ps2_synth_sum8a (  ( int16_t* )s_Window, lpBuf, lSamplesTmp  );
 
- lpW  = s_Window;
+ lpW  = ( int16_t* )s_Window;
  lpW += 16;
 
  lPtr = lpBuf + 32;
@@ -3377,7 +3752,7 @@ static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSB
  OUT_SAMPLEt( lSum );
  ++lpW;
 
- ps2_synth_sum8b ( s_Window, lpBuf, lSamplesTmp2 );
+ ps2_synth_sum8b (  ( int16_t* )s_Window, lpBuf, lSamplesTmp2  );
 
  for ( j = 0; j < 17; ++j ) {
 
@@ -3397,6 +3772,323 @@ static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSB
  s_MP3Ctx.m_SynthBuffOffset[ aCh ] = lOffset;
 
 }  /* end _synth_filter */
+
+#define COS0_0_HP  FIXR_HP(  0.50060299823519630134 )
+#define COS0_1_HP  FIXR_HP(  0.50547095989754365998 )
+#define COS0_2_HP  FIXR_HP(  0.51544730992262454697 )
+#define COS0_3_HP  FIXR_HP(  0.53104259108978417447 )
+#define COS0_4_HP  FIXR_HP(  0.55310389603444452782 )
+#define COS0_5_HP  FIXR_HP(  0.58293496820613387367 )
+#define COS0_6_HP  FIXR_HP(  0.62250412303566481615 )
+#define COS0_7_HP  FIXR_HP(  0.67480834145500574602 )
+#define COS0_8_HP  FIXR_HP(  0.74453627100229844977 )
+#define COS0_9_HP  FIXR_HP(  0.83934964541552703873 )
+#define COS0_10_HP FIXR_HP(  0.97256823786196069369 )
+#define COS0_11_HP FIXR_HP(  1.16943993343288495515 )
+#define COS0_12_HP FIXR_HP(  1.48416461631416627724 )
+#define COS0_13_HP FIXR_HP(  2.05778100995341155085 )
+#define COS0_14_HP FIXR_HP(  3.40760841846871878570 )
+#define COS0_15_HP FIXR_HP( 10.19000812354805681150 )
+
+#define COS1_0_HP FIXR_HP( 0.50241928618815570551 )
+#define COS1_1_HP FIXR_HP( 0.52249861493968888062 )
+#define COS1_2_HP FIXR_HP( 0.56694403481635770368 )
+#define COS1_3_HP FIXR_HP( 0.64682178335999012954 )
+#define COS1_4_HP FIXR_HP( 0.78815462345125022473 )
+#define COS1_5_HP FIXR_HP( 1.06067768599034747134 )
+#define COS1_6_HP FIXR_HP( 1.72244709823833392782 )
+#define COS1_7_HP FIXR_HP( 5.10114861868916385802 )
+
+#define COS2_0_HP FIXR_HP( 0.50979557910415916894 )
+#define COS2_1_HP FIXR_HP( 0.60134488693504528054 )
+#define COS2_2_HP FIXR_HP( 0.89997622313641570463 )
+#define COS2_3_HP FIXR_HP( 2.56291544774150617881 )
+
+#define COS3_0_HP FIXR_HP( 0.54119610014619698439 )
+#define COS3_1_HP FIXR_HP( 1.30656296487637652785 )
+
+#define COS4_0_HP FIXR_HP( 0.70710678118654752439 )
+
+#define ADD_HP( a, b )    apTab[ a ] += apTab[ b ]
+#define MULS_HP( ra, rb ) MUL64( ra, rb )
+
+#define SUM8_HP( sum, op, w, p ) {                   \
+ sum op MULS_HP(  ( w )[ 0 * 64 ], p[ 0 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 1 * 64 ], p[ 1 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 2 * 64 ], p[ 2 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 3 * 64 ], p[ 3 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 4 * 64 ], p[ 4 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 5 * 64 ], p[ 5 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 6 * 64 ], p[ 6 * 64 ] ); \
+ sum op MULS_HP(  ( w )[ 7 * 64 ], p[ 7 * 64 ] ); \
+}
+
+static void SMS_INLINE BF ( uint32_t* apTab, int anA, int aB, int aC ) {
+ int     lTmp0 = apTab[ anA ] + apTab[ aB ];
+ int     lTmp1 = apTab[ anA ] - apTab[ aB ];
+ int64_t lTmp2 = lTmp1;
+ lTmp2       *= aC;
+ apTab[ anA ] = lTmp0;
+ apTab[  aB ] = ( int )( lTmp2 >> 23 );
+}  /* end BF */
+
+#define BF1( a, b, c, d ) {     \
+ BF( apTab, a, b,  COS4_0_HP ); \
+ BF( apTab, c, d, -COS4_0_HP ); \
+ apTab[ c ] += apTab[ d ];      \
+}
+
+#define BF2( a, b, c, d ) {     \
+ BF( apTab, a, b,  COS4_0_HP ); \
+ BF( apTab, c, d, -COS4_0_HP ); \
+ apTab[ c ] += apTab[ d ];      \
+ apTab[ a ] += apTab[ c ];      \
+ apTab[ c ] += apTab[ b ];      \
+ apTab[ b ] += apTab[ d ];      \
+}
+
+static void _dct32_hp ( int32_t* apOut, int32_t* apTab ) {
+
+ BF ( apTab,  0, 31, COS0_0_HP  );
+ BF ( apTab,  1, 30, COS0_1_HP  );
+ BF ( apTab,  2, 29, COS0_2_HP  );
+ BF ( apTab,  3, 28, COS0_3_HP  );
+ BF ( apTab,  4, 27, COS0_4_HP  );
+ BF ( apTab,  5, 26, COS0_5_HP  );
+ BF ( apTab,  6, 25, COS0_6_HP  );
+ BF ( apTab,  7, 24, COS0_7_HP  );
+ BF ( apTab,  8, 23, COS0_8_HP  );
+ BF ( apTab,  9, 22, COS0_9_HP  );
+ BF ( apTab, 10, 21, COS0_10_HP );
+ BF ( apTab, 11, 20, COS0_11_HP );
+ BF ( apTab, 12, 19, COS0_12_HP );
+ BF ( apTab, 13, 18, COS0_13_HP );
+ BF ( apTab, 14, 17, COS0_14_HP );
+ BF ( apTab, 15, 16, COS0_15_HP );
+
+ BF( apTab, 0, 15, COS1_0_HP );
+ BF( apTab, 1, 14, COS1_1_HP );
+ BF( apTab, 2, 13, COS1_2_HP );
+ BF( apTab, 3, 12, COS1_3_HP );
+ BF( apTab, 4, 11, COS1_4_HP );
+ BF( apTab, 5, 10, COS1_5_HP );
+ BF( apTab, 6,  9, COS1_6_HP );
+ BF( apTab, 7,  8, COS1_7_HP );
+
+ BF( apTab, 16, 31, -COS1_0_HP );
+ BF( apTab, 17, 30, -COS1_1_HP );
+ BF( apTab, 18, 29, -COS1_2_HP );
+ BF( apTab, 19, 28, -COS1_3_HP );
+ BF( apTab, 20, 27, -COS1_4_HP );
+ BF( apTab, 21, 26, -COS1_5_HP );
+ BF( apTab, 22, 25, -COS1_6_HP );
+ BF( apTab, 23, 24, -COS1_7_HP );
+    
+ BF( apTab, 0, 7, COS2_0_HP );
+ BF( apTab, 1, 6, COS2_1_HP );
+ BF( apTab, 2, 5, COS2_2_HP );
+ BF( apTab, 3, 4, COS2_3_HP );
+    
+ BF( apTab,  8, 15, -COS2_0_HP );
+ BF( apTab,  9, 14, -COS2_1_HP );
+ BF( apTab, 10, 13, -COS2_2_HP );
+ BF( apTab, 11, 12, -COS2_3_HP );
+    
+ BF( apTab, 16, 23, COS2_0_HP );
+ BF( apTab, 17, 22, COS2_1_HP );
+ BF( apTab, 18, 21, COS2_2_HP );
+ BF( apTab, 19, 20, COS2_3_HP );
+    
+ BF( apTab, 24, 31, -COS2_0_HP );
+ BF( apTab, 25, 30, -COS2_1_HP );
+ BF( apTab, 26, 29, -COS2_2_HP );
+ BF( apTab, 27, 28, -COS2_3_HP );
+
+ BF( apTab, 0, 3, COS3_0_HP );
+ BF( apTab, 1, 2, COS3_1_HP );
+
+ BF( apTab, 4, 7, -COS3_0_HP );
+ BF( apTab, 5, 6, -COS3_1_HP );
+    
+ BF( apTab, 8, 11, COS3_0_HP );
+ BF( apTab, 9, 10, COS3_1_HP );
+    
+ BF( apTab, 12, 15, -COS3_0_HP );
+ BF( apTab, 13, 14, -COS3_1_HP );
+    
+ BF( apTab, 16, 19, COS3_0_HP );
+ BF( apTab, 17, 18, COS3_1_HP );
+    
+ BF( apTab, 20, 23, -COS3_0_HP );
+ BF( apTab, 21, 22, -COS3_1_HP );
+    
+ BF( apTab, 24, 27, COS3_0_HP );
+ BF( apTab, 25, 26, COS3_1_HP );
+    
+ BF( apTab, 28, 31, -COS3_0_HP );
+ BF( apTab, 29, 30, -COS3_1_HP );
+
+ BF1(  0,  1,  2,  3 );
+ BF2(  4,  5,  6,  7 );
+ BF1(  8,  9, 10, 11 );
+ BF2( 12, 13, 14, 15 );
+ BF1( 16, 17, 18, 19 );
+ BF2( 20, 21, 22, 23 );
+ BF1( 24, 25, 26, 27 );
+ BF2( 28, 29, 30, 31 );
+
+ ADD_HP(  8, 12 );
+ ADD_HP( 12, 10 );
+ ADD_HP( 10, 14 );
+ ADD_HP( 14,  9 );
+ ADD_HP(  9, 13 );
+ ADD_HP( 13, 11 );
+ ADD_HP( 11, 15 );
+
+ apOut[  0 ] = apTab[  0 ];
+ apOut[ 16 ] = apTab[  1 ];
+ apOut[  8 ] = apTab[  2 ];
+ apOut[ 24 ] = apTab[  3 ];
+ apOut[  4 ] = apTab[  4 ];
+ apOut[ 20 ] = apTab[  5 ];
+ apOut[ 12 ] = apTab[  6 ];
+ apOut[ 28 ] = apTab[  7 ];
+ apOut[  2 ] = apTab[  8 ];
+ apOut[ 18 ] = apTab[  9 ];
+ apOut[ 10 ] = apTab[ 10 ];
+ apOut[ 26 ] = apTab[ 11 ];
+ apOut[  6 ] = apTab[ 12 ];
+ apOut[ 22 ] = apTab[ 13 ];
+ apOut[ 14 ] = apTab[ 14 ];
+ apOut[ 30 ] = apTab[ 15 ];
+    
+ ADD_HP( 24, 28 );
+ ADD_HP( 28, 26 );
+ ADD_HP( 26, 30 );
+ ADD_HP( 30, 25 );
+ ADD_HP( 25, 29 );
+ ADD_HP( 29, 27 );
+ ADD_HP( 27, 31 );
+
+ apOut[  1 ] = apTab[ 16 ] + apTab[ 24 ];
+ apOut[ 17 ] = apTab[ 17 ] + apTab[ 25 ];
+ apOut[  9 ] = apTab[ 18 ] + apTab[ 26 ];
+ apOut[ 25 ] = apTab[ 19 ] + apTab[ 27 ];
+ apOut[  5 ] = apTab[ 20 ] + apTab[ 28 ];
+ apOut[ 21 ] = apTab[ 21 ] + apTab[ 29 ];
+ apOut[ 13 ] = apTab[ 22 ] + apTab[ 30 ];
+ apOut[ 29 ] = apTab[ 23 ] + apTab[ 31 ];
+ apOut[  3 ] = apTab[ 24 ] + apTab[ 20 ];
+ apOut[ 19 ] = apTab[ 25 ] + apTab[ 21 ];
+ apOut[ 11 ] = apTab[ 26 ] + apTab[ 22 ];
+ apOut[ 27 ] = apTab[ 27 ] + apTab[ 23 ];
+ apOut[  7 ] = apTab[ 28 ] + apTab[ 18 ];
+ apOut[ 23 ] = apTab[ 29 ] + apTab[ 19 ];
+ apOut[ 15 ] = apTab[ 30 ] + apTab[ 17 ];
+ apOut[ 31 ] = apTab[ 31 ];
+
+}  /* end _dct32_hp */
+
+static SMS_INLINE int _round_sample ( int64_t aSum ) {
+ int lSum = ( int )(    (   aSum + (  SMS_INT64( 1 ) << 23  )   ) >> 24    );
+ if ( lSum < -32768 )
+  lSum = -32768;
+ else if ( lSum > 32767 ) lSum = 32767;
+ return lSum;
+}  /* end _round_sample */
+
+#define SUM8P2_HP( sum1, op1, sum2, op2, w1, w2, p ) { \
+ int lTmp;                                             \
+ lTmp = p[0 * 64];                                     \
+ sum1 op1 MULS_HP(  ( w1 )[ 0 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 0 * 64 ], lTmp  );         \
+ lTmp = p[ 1 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 1 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 1 * 64 ], lTmp  );         \
+ lTmp = p[ 2 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 2 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 2 * 64 ], lTmp  );         \
+ lTmp = p[ 3 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 3 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 3 * 64 ], lTmp  );         \
+ lTmp = p[ 4 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 4 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 4 * 64 ], lTmp  );         \
+ lTmp = p[ 5 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 5 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 5 * 64 ], lTmp  );         \
+ lTmp = p[ 6 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 6 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 6 * 64 ], lTmp  );         \
+ lTmp = p[ 7 * 64 ];                                   \
+ sum1 op1 MULS_HP(  ( w1 )[ 7 * 64 ], lTmp  );         \
+ sum2 op2 MULS_HP(  ( w2 )[ 7 * 64 ], lTmp  );         \
+}
+
+static void _synth_filter_hp ( int aCh, int16_t* apSamples, int anIncr, int32_t aSBSamples[ SMS_SBLIMIT ] ) {
+
+ const int32_t* lpW, *lpW2, *lPtr;
+
+ int32_t  lTmp[ 32 ];
+ int32_t* lpBuf;
+ int      j, lOffset;
+ int16_t* lpSamples;
+ int64_t  lSum, lSum2;
+
+ _dct32_hp ( lTmp, aSBSamples );
+    
+ lOffset = s_MP3Ctx.m_SynthBuffOffset[ aCh ];
+ lpBuf   = s_MP3Ctx.m_SynthBuf[ aCh ] + lOffset;
+
+ for ( j = 0; j < 32; ++j ) lpBuf[ j ] = lTmp[ j ];
+
+ _wmemcpy (  lpBuf + 512, lpBuf, 8 * sizeof ( int32_t )  );
+
+ lpSamples = apSamples + 31 * anIncr;
+ lpW       = s_Window;
+ lpW2      = s_Window + 31;
+ lSum      = 0;
+
+ lPtr      = lpBuf + 16;
+ SUM8_HP( lSum, +=, lpW, lPtr );
+
+ lPtr = lpBuf + 48;
+ SUM8_HP( lSum, -=, lpW + 32, lPtr );
+
+ *apSamples = _round_sample ( lSum );
+ apSamples += anIncr;
+ lpW++;
+
+ for ( j = 1; j < 16; ++j ) {
+
+  lSum  = 0;
+  lSum2 = 0;
+
+  lPtr = lpBuf + 16 + j;
+  SUM8P2_HP( lSum, +=, lSum2, -=, lpW, lpW2, lPtr );
+
+  lPtr = lpBuf + 48 - j;
+  SUM8P2_HP( lSum, -=, lSum2, -=, lpW + 32, lpW2 + 32, lPtr );
+
+  *apSamples = _round_sample ( lSum  );
+  apSamples += anIncr;
+  *lpSamples = _round_sample ( lSum2 );
+  lpSamples -= anIncr;
+
+  ++lpW;
+  --lpW2;
+
+ }  /* end for */
+    
+ lPtr = lpBuf + 32;
+ lSum = 0;
+ SUM8_HP( lSum, -=, lpW + 32, lPtr );
+ *apSamples = _round_sample ( lSum );
+
+ lOffset = ( lOffset - 32 ) & 511;
+ s_MP3Ctx.m_SynthBuffOffset[ aCh ] = lOffset;
+
+}  /* end _synth_filter_hp */
 
 static int32_t _mp3_decode_frame ( void ) {
 
@@ -3620,7 +4312,7 @@ static int32_t _mp3_decode_frame ( void ) {
 
        n = ( k == 0 ? 6 : 5 );
 
-       if (   (  lpGran ->m_SCFSI & ( 0x8 >> k )  ) == 0   ) {
+       if (   (  lpGran -> m_SCFSI & ( 0x8 >> k )  ) == 0   ) {
 
         lSLen = ( k < 2 ) ? lSLen1 : lSLen2;
 
@@ -3745,8 +4437,7 @@ static int32_t _mp3_decode_frame ( void ) {
     _reorder_block ( lpGran );
 
     s_MP3Ctx.ComputeAntiAlias ( lpGran );
-
-    _compute_imdct ( lpGran, &s_MP3Ctx.m_SBSamples[ lCh ][ 18 * lGr ][ 0 ], s_MP3Ctx.m_MDCTBuf[ lCh ] ); 
+    s_MP3Ctx.IMDCT ( lpGran, &s_MP3Ctx.m_SBSamples[ lCh ][ 18 * lGr ][ 0 ], s_MP3Ctx.m_MDCTBuf[ lCh ] ); 
 
    }  /* end for */
 
@@ -3763,7 +4454,7 @@ static int32_t _mp3_decode_frame ( void ) {
 
    for ( i = 0; i < lnFrames; ++i ) {
 
-    _synth_filter ( lCh, lpSamples, s_MP3Ctx.m_nChannels, s_MP3Ctx.m_SBSamples[ lCh ][ i ] );
+    s_MP3Ctx.SynthFilter ( lCh, lpSamples, s_MP3Ctx.m_nChannels, s_MP3Ctx.m_SBSamples[ lCh ][ i ] );
 
     lpSamples += 32 * s_MP3Ctx.m_nChannels;
 

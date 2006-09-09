@@ -67,12 +67,13 @@ extern GUIObject* g_pDevMenu;
 extern GUIObject* g_pFileMenu;
 extern void*      g_pActiveNode;
 
+extern int ( *GUI_ReadButtons  ) ( void );
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
 void          GUI_Initialize   ( int                      );
-int           GUI_ReadButtons  ( void                     );
 int           GUI_WaitButtons  ( int, unsigned*, int      );
 void          GUI_AddObject    ( const char*, GUIObject*  );
 void          GUI_Redraw       ( GUIRedrawMethod          );

@@ -146,7 +146,7 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
   unsigned long* lpDMAItem;
 
   GS_RenderRoundRect (
-   ( GSRoundRectPacket* )( lpDMA - 2 ), 0, 60, g_GSCtx.m_Width - 1, lHeight, -8,
+   ( GSRoundRectPacket* )( lpDMA - 2 ), 0, 60, g_GSCtx.m_Width - 1, lHeight, -12,
    g_Palette[ *lpMenu -> m_pColor - 1 ]
   );
   lpMenu -> m_pGSPacket = lpDMA;
@@ -204,17 +204,17 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
   if ( lpMenu -> m_pCurrent ) {
 
    unsigned long lColor = g_Palette[ g_Config.m_BrowserSCIdx - 1 ];
-   unsigned int  lW     = lWidth + 44;
+   unsigned int  lW     = lWidth + 40;
 
    if ( !lpMenu -> m_pSelRect ) lpMenu -> m_pSelRect = GSContext_NewList (  GS_RRT_PACKET_SIZE() << 1  );
 
    GS_RenderRoundRect (
     ( GSRoundRectPacket* )(  lpMenu -> m_pSelRect + GS_RRT_PACKET_SIZE() - 2  ),
-    2, lSelY, lW, 34, 8, ( lColor & 0x00FFFFFF ) | 0x10000000
+    4, lSelY, lW, 34, 12, ( lColor & 0x00FFFFFF ) | 0x10000000
    );
    GS_RenderRoundRect (
     ( GSRoundRectPacket* )( lpMenu -> m_pSelRect - 2 ),
-    2, lSelY, lW, 34, -8, lColor
+    4, lSelY, lW, 34, -12, lColor
    );
    lpMenu -> m_pSelRect[ -1 ] = VIF_DIRECT(  GS_RRT_PACKET_SIZE()  );
 

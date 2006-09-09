@@ -55,11 +55,11 @@ static void GUIDevMenu_RenderSelRect ( GUIDevMenu* apMenu, _DevMenuItem* apActiv
 
  GS_RenderRoundRect (
   ( GSRoundRectPacket* )( apMenu -> m_pActRect - 2 ),
-  apActive -> m_XOffset - 1, 4, 48, 48,  8, ( g_Palette[ g_Config.m_BrowserSCIdx - 1 ] & 0x00FFFFFF ) | 0x10000000
+  apActive -> m_XOffset - 1, 4, 48, 48, 12, ( g_Palette[ g_Config.m_BrowserSCIdx - 1 ] & 0x00FFFFFF ) | 0x10000000
  );
  GS_RenderRoundRect (
   ( GSRoundRectPacket* )( apMenu -> m_pSelRect - 2 ),
-  apSelected -> m_XOffset - 1, 4, 48, 48, -8, ( g_Palette[ g_Config.m_BrowserSCIdx - 1 ] & 0x00FFFFFF ) | 0x80000000
+  apSelected -> m_XOffset - 1, 4, 48, 48, -12, ( g_Palette[ g_Config.m_BrowserSCIdx - 1 ] & 0x00FFFFFF ) | 0x80000000
  );
 
 }  /* end GUIDevMenu_RenderSelRect */
@@ -83,7 +83,7 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
   lpDMA = GSContext_NewList ( lCumSize );
 
   GS_RenderRoundRect (
-   ( GSRoundRectPacket* )( lpDMA - 2 ), 0, 1, g_GSCtx.m_Width - 1, 54, -8,
+   ( GSRoundRectPacket* )( lpDMA - 2 ), 0, 1, g_GSCtx.m_Width - 1, 54, -12,
    g_Palette[ *lpMenu -> m_pColor - 1 ]
   );
   *( lpDMA - 1 ) = VIF_DIRECT( lCumSize >> 1 );

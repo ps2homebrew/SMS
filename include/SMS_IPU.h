@@ -68,7 +68,7 @@ typedef struct IPULoadImage {
 
 typedef struct IPUContext {
 
- unsigned long int      m_DMAGIFDraw[ 20 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAGIFDraw[ 28 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
@@ -115,22 +115,24 @@ typedef struct IPUContext {
  unsigned char*         m_pResult;
  unsigned long int*     m_pDMAPacket;
  struct SMS_MacroBlock* m_pMB;
+ unsigned long          m_BRGBAQ;
  
- void ( *Sync         ) ( void         );
- void ( *Display      ) ( void*        );
- void ( *Destroy      ) ( void         );
- void ( *SetTEX       ) ( void         );
- void ( *GIFHandler   ) ( void         );
- void ( *Reset        ) ( void         );
- void ( *QueuePacket  ) ( int, void*   );
- void ( *PQueuePacket ) ( int, void*   );
- void ( *iQueuePacket ) ( int, void*   );
- void ( *Suspend      ) ( void         );
- void ( *Resume       ) ( void         );
- void ( *Repaint      ) ( void         );
- void ( *ChangeMode   ) ( unsigned int );
- void ( *Pan          ) ( int          );
- void ( *Flush        ) ( void         );
+ void ( *Sync          ) ( void         );
+ void ( *Display       ) ( void*        );
+ void ( *Destroy       ) ( void         );
+ void ( *SetTEX        ) ( void         );
+ void ( *GIFHandler    ) ( void         );
+ void ( *Reset         ) ( void         );
+ void ( *QueuePacket   ) ( int, void*   );
+ void ( *PQueuePacket  ) ( int, void*   );
+ void ( *iQueuePacket  ) ( int, void*   );
+ void ( *Suspend       ) ( void         );
+ void ( *Resume        ) ( void         );
+ void ( *Repaint       ) ( void         );
+ void ( *ChangeMode    ) ( unsigned int );
+ void ( *Pan           ) ( int          );
+ void ( *Flush         ) ( void         );
+ void ( *SetBrightness ) ( unsigned int );
 
 } IPUContext;
 
@@ -144,9 +146,9 @@ IPUContext* IPU_InitContext ( int, int );
 unsigned int IPU_FDEC ( unsigned                                                   );
 unsigned int IPU_IDEC ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );
 
-void         IPU_InitLoadImage ( IPULoadImage*, int, int                       );
-void         IPU_LoadImage     ( IPULoadImage*, void*, int, int, int, int, int );
-unsigned int IPU_ImageInfo     ( void*, unsigned int*                          );
+void         IPU_InitLoadImage ( IPULoadImage*, int, int                            );
+void         IPU_LoadImage     ( IPULoadImage*, void*, int, int, int, int, int, int );
+unsigned int IPU_ImageInfo     ( void*, unsigned int*                               );
 
 # ifdef __cplusplus
 }

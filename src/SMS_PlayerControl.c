@@ -56,6 +56,55 @@ static SMS_ListNode* s_pCurLang;
 
 extern SMS_Player s_Player;
 
+static float s_Speaker[ 48 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   ) = {
+ 0.2380952F, 0.1904760F, 0.0000000F, 0.0476192F,
+ 0.0000000F, 0.0476192F, 0.2190476F, 0.2380952F,
+ 0.4571440F, 0.4285720F, 0.4761920F, 0.4285720F,
+ 0.4761920F, 0.4285720F, 0.4571440F, 0.2380952F,
+ 0.2000000F, 0.2380952F, 0.1904760F, 0.2380952F,
+ 0.1904760F, 0.0000000F, 0.0000000F, 0.0000000F,
+ 0.2380952F, 0.2857144F, 0.2380952F, 0.2857144F,
+ 0.7619040F, 0.7142840F, 0.7619040F, 0.7142840F,
+ 1.0000000F, 0.9047600F, 1.0000000F, 0.4761920F,
+ 0.0000000F, 0.0952380F, 0.0000000F, 0.2857144F,
+ 0.2571428F, 0.2857144F, 0.2857144F, 0.7619040F,
+ 0.7619040F, 0.0000000F, 0.0000000F, 0.0000000F
+};
+
+static float s_Sun[ 80 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   ) = {
+ 0.700000F, 0.650000F, 0.687938F, 0.640954F,
+ 0.653208F, 0.614906F, 0.599999F, 0.574999F,
+ 0.534729F, 0.526047F, 0.465270F, 0.473952F,
+ 0.399999F, 0.425000F, 0.346791F, 0.385093F,
+ 0.312061F, 0.359046F, 0.300000F, 0.350000F,
+ 0.312062F, 0.359046F, 0.346791F, 0.385094F,
+ 0.400000F, 0.425000F, 0.465271F, 0.473953F,
+ 0.534730F, 0.526047F, 0.600000F, 0.575000F,
+ 0.653209F, 0.614907F, 0.687939F, 0.640954F,
+ 0.700000F, 0.650000F, 0.700000F, 0.650000F,
+ 0.500000F, 0.500000F, 0.431595F, 0.448696F,
+ 0.371442F, 0.403581F, 0.326794F, 0.370096F,
+ 0.303038F, 0.352279F, 0.303039F, 0.352279F,
+ 0.326795F, 0.370096F, 0.371443F, 0.403582F,
+ 0.431597F, 0.448697F, 0.500000F, 0.500000F,
+ 0.568404F, 0.551303F, 0.628558F, 0.596418F,
+ 0.673205F, 0.629904F, 0.696962F, 0.647721F,
+ 0.696962F, 0.647721F, 0.673205F, 0.629904F,
+ 0.628557F, 0.596418F, 0.568404F, 0.551303F,
+ 0.500000F, 0.500000F, 0.500000F, 0.500000F
+};
+
+static float s_Rays[ 8 ][ 8 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   ) = {
+ { 1.000000F, 1.000000F, 0.750000F, 0.750000F, 0.475000F, 0.525000F, 0.475000F, 0.525000F },
+ { 0.871231F, 0.835876F, 0.694454F, 0.659099F, 0.835875F, 0.871231F, 0.659099F, 0.694454F },
+ { 0.525001F, 0.475001F, 0.525000F, 0.475000F, 1.000000F, 1.000000F, 0.750000F, 0.750000F },
+ { 0.164125F, 0.128770F, 0.340901F, 0.305546F, 0.871232F, 0.835876F, 0.694455F, 0.659099F },
+ { 0.000000F, 0.000000F, 0.250000F, 0.250000F, 0.525000F, 0.475000F, 0.525000F, 0.475001F },
+ { 0.128768F, 0.164123F, 0.305545F, 0.340900F, 0.164126F, 0.128770F, 0.340902F, 0.305546F },
+ { 0.475000F, 0.525000F, 0.475000F, 0.525000F, 0.000000F, 0.000000F, 0.250000F, 0.250000F },
+ { 0.835874F, 0.871230F, 0.659098F, 0.694454F, 0.128767F, 0.164123F, 0.305545F, 0.340900F }
+};
+
 static void _osd_timer_handler_incr ( void* apArg ) {
 
  PlayerControl_MkTime ( s_Player.m_AudioTime );
@@ -74,7 +123,7 @@ static void _osd_timer_handler_decr ( void* apArg ) {
 
 static void TimerHandler ( void* apArg ) {
 
- g_IPUCtx.iQueuePacket ( 8, g_VCErase );
+ g_IPUCtx.iQueuePacket ( 10, g_VCErase );
 
 }  /* end TimerHandler */
 
@@ -106,10 +155,11 @@ void PlayerControl_Init ( void ) {
  uint64_t* lpPaint = _U( g_VCPaint );
  uint64_t* lpErase = _U( g_VCErase );
 /* Initialize volume control display list */
- int lX = 20 << 4;
- int lY = ( g_GSCtx.m_Height - 288 ) >> 1;
- int lW = 30 << 4;
- int lH = 288;
+ int   lX = 20 << 4;
+ int   lY = ( g_GSCtx.m_Height - 288 ) >> 1;
+ int   lW = 30 << 4;
+ int   lH = 288;
+ float lScaleOffset[ 3 ] = { 52.0F, 60.0F };
 
  __asm__ __volatile__(
   ".set noreorder\n\t"
@@ -135,28 +185,62 @@ void PlayerControl_Init ( void ) {
  );
 
  lpPaint[  0 ] =                   lpErase[ 0 ] = 0;
- lpPaint[  1 ] = VIF_DIRECT( 32 ); lpErase[ 1 ] = VIF_DIRECT( 7 );
+ lpPaint[  1 ] = VIF_DIRECT( 34 ); lpErase[ 1 ] = VIF_DIRECT( 9 );
 
  lpPaint[  2 ] = lpErase[  2 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 );
  lpPaint[  3 ] = lpErase[  3 ] = GIFTAG_REGS_AD;
  lpPaint[  4 ] = lpErase[  4 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 1 );
  lpPaint[  5 ] = lpErase[  5 ] = GS_TEST_1;
 
- lpPaint[  6 ] = lpErase[  6 ] = GIF_TAG( 1, 0, 0, 0, 1, 4 );
+ lpPaint[  6 ] = lpErase[  6 ] = GIF_TAG( 2, 0, 0, 0, 1, 4 );
  lpPaint[  7 ] = lpErase[  7 ] = GS_RGBAQ | ( GS_PRIM << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 );
  lpPaint[  8 ] = lpErase[  8 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
  lpPaint[  9 ] = lpErase[  9 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
-
  lpPaint[ 10 ] = lpErase[ 10 ] = GS_SET_XYZ(       lX,      lY, 0  );
  lpPaint[ 11 ] = lpErase[ 11 ] = GS_SET_XYZ(  lX + lW, lY + lH, 0  );
 
- lpPaint[ 12 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 ); lpErase[ 12 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
- lpPaint[ 13 ] = lpErase[ 13 ] = GIFTAG_REGS_AD;
- lpPaint[ 14 ] = lpErase[ 14 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 2 );
- lpPaint[ 15 ] = lpErase[ 15 ] = GS_TEST_1;
+ lY = (  ( g_GSCtx.m_Height - 288 ) >> 1  ) + 226;
 
- lpPaint[ 16 ] = GIF_TAG( 24, 1, 0, 0, 1, 2  );
- lpPaint[ 17 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
+ lpPaint[ 12 ] = lpErase[ 12 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
+ lpPaint[ 13 ] = lpErase[ 13 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
+ lpPaint[ 14 ] = lpErase[ 14 ] = GS_XYZ (  60, lY,      0 );
+ lpPaint[ 15 ] = lpErase[ 15 ] = GS_XYZ ( 112, lY + 52, 0 );
+
+ lpPaint[ 16 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 ); lpErase[ 16 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
+ lpPaint[ 17 ] = lpErase[ 17 ] = GIFTAG_REGS_AD;
+ lpPaint[ 18 ] = lpErase[ 18 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 2 );
+ lpPaint[ 19 ] = lpErase[ 19 ] = GS_TEST_1;
+
+ lpPaint[ 20 ] = GIF_TAG( 24, 1, 0, 0, 1, 2 );
+ lpPaint[ 21 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
+
+ lScaleOffset[ 2 ] = ( float )lY;
+
+ lpPaint = _U( g_Speaker );
+ lpErase = _U( g_Sun     );
+
+ lpPaint[ 0 ] = lpErase[ 0 ] = 0L;
+ lpPaint[ 1 ] = VIF_DIRECT( 14 ); lpErase[ 1 ] = VIF_DIRECT( 48 );
+ lpPaint[ 2 ] = lpErase[ 2 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ lpPaint[ 3 ] = lpErase[ 3 ] = GS_RGBAQ | ( GS_PRIM << 4 );
+ lpPaint[ 4 ] = lpErase[ 4 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
+ lpPaint[ 5 ] = lpErase[ 5 ] = GS_SET_PRIM( GS_PRIM_PRIM_TRISTRIP, 0, 0, 0, 0, 0, 0, 0, 0 );
+ lpPaint[ 6 ] = GIF_TAG( 21, 1, 0, 0, 1, 1 ); lpErase[ 6 ] = GIF_TAG( 40, 0, 0, 0, 1, 1 );
+ lpPaint[ 7 ] = lpErase[ 7 ] = GS_XYZ2;
+ GS_XYZv ( &lpPaint[ 8 ], s_Speaker, 24, lScaleOffset, 1 );
+ GS_XYZv ( &lpErase[ 8 ], s_Sun,     40, lScaleOffset, 1 );
+
+ lpErase[ 48 ] = GIF_TAG( 8, 1, 0, 0, 1, 6 );
+ lpErase[ 49 ] = GS_PRIM | ( GS_RGBAQ << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 ) | ( GS_XYZ2 << 16 ) | ( GS_XYZ2 << 20 );
+ lpErase += 50;
+
+ for ( lX = 0; lX < 8; ++lX, lpErase += 6 ) {
+
+  lpErase[ 0 ] = GS_SET_PRIM( GS_PRIM_PRIM_TRISTRIP, 0, 0, 0, 0, 0, 0, 0, 0 );
+  lpErase[ 1 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
+  GS_XYZv ( &lpErase[ 2 ], s_Rays[ lX ], 4, lScaleOffset, 1 );
+
+ }  /* end for */
 /* Initialize display lists for OSD timer (status, current PTS, and total time) */
  g_GSCtx.m_TextColor = 0;
 
@@ -421,9 +505,9 @@ void PlayerControl_DisplayTime ( int anOp, int64_t aTime, int afDraw ) {
 
 }  /* end PlayerControl_DisplayTime */
 
-void PlayerControl_AdjustVolume ( int aDelta ) {
+static void _paint_slider ( int aPos ) {
 
- int i,    lVol    = g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume + aDelta, 0, 24 );
+ int       i;
  uint64_t* lpPaint = _U( g_VCPaint );
  uint64_t  lV      = lpPaint[ 10 ];
  uint64_t  lX      = ( lV & 0xFFFF ) + ( 12 << 4 );
@@ -431,9 +515,9 @@ void PlayerControl_AdjustVolume ( int aDelta ) {
  uint64_t  lDX     = 6 << 4;
  uint64_t  lDY     = s_VCDY;
 
- lVol = 24 - lVol;
+ aPos = 24 - aPos;
 
- for (  i = 18; i < 18 + ( lVol << 1 ); i += 2  ) {
+ for (  i = 22; i < 22 + ( aPos << 1 ); i += 2  ) {
 
   lpPaint[ i + 0 ] = GS_SET_XYZ( lX,       lY, 1LL );
   lY += lDY;
@@ -445,7 +529,7 @@ void PlayerControl_AdjustVolume ( int aDelta ) {
  lX  = lV & 0xFFFF;
  lDX = 30 << 4;
 
- for (  ; i < 18 + ( 24 << 1 ); i += 2  ) {
+ for (  ; i < 22 + ( 24 << 1 ); i += 2  ) {
 
   lpPaint[ i + 0 ] = GS_SET_XYZ( lX,       lY, 1LL );
   lY += lDY;
@@ -454,13 +538,34 @@ void PlayerControl_AdjustVolume ( int aDelta ) {
 
  }  /* end for */
 
- g_IPUCtx.QueuePacket ( 33, g_VCPaint );
-
+ g_IPUCtx.QueuePacket ( 35, g_VCPaint );
  SMS_TimerSet ( 1, 2000, TimerHandler, NULL );
+
+}  /* end _paint_slider */
+
+void PlayerControl_AdjustVolume ( int aDelta ) {
+
+ g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume + aDelta, 0, 24 );
+
+ g_IPUCtx.QueuePacket ( 15, g_Speaker );
+
+ _paint_slider ( g_Config.m_PlayerVolume );
 
  s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
 
 }  /* end PlayerControl_AdjustVolume */
+
+void PlayerControl_AdjustBrightness ( int aDelta ) {
+
+ g_Config.m_PlayerBrightness = SMS_clip ( g_Config.m_PlayerBrightness + aDelta, 0, 24 );
+
+ g_IPUCtx.QueuePacket ( 49, g_Sun );
+
+ _paint_slider ( g_Config.m_PlayerBrightness );
+
+ g_IPUCtx.SetBrightness (  ( unsigned int )( g_Config.m_PlayerBrightness * 10.625F )  );
+
+}  /* end PlayerControl_AdjustBrightness */
 
 static int PlayerControl_Scroll ( int aDir ) {
 
@@ -478,6 +583,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
  lpIPUCtx -> Sync    ();
  lpIPUCtx -> Suspend ();
+ GS_VSync ();
  lpIPUCtx -> Repaint ();
  lpIPUCtx -> Resume  ();
  PlayerControl_DisplayTime ( aDir, lTime, 1 );
@@ -530,13 +636,13 @@ static int PlayerControl_Scroll ( int aDir ) {
 
     if ( lButtons && g_Timer > lNextTime ) {
 
-     lNextTime = g_Timer + 200;
+     lNextTime = g_Timer + 300;
 
      if ( lButtons == SMS_PAD_TRIANGLE || lButtons == RC_RESET || lButtons == RC_RETURN || lButtons == RC_STOP ) {
 
       goto end;
 
-     } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT ) {
+     } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) {
 
       if ( aDir > 0 ) {
 
@@ -553,7 +659,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
       }  /* end else */
 
-     } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT ) {
+     } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT || lButtons == RC_LEFTX ) {
 
       if ( aDir > 0 ) {
 
@@ -1062,7 +1168,7 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
 
   if ( lButtons && g_Timer > lNextTime ) {
 
-   lNextTime = g_Timer + 100;
+   lNextTime = g_Timer + 200;
 
    if ( lButtons == SMS_PAD_START || lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
 
@@ -1072,14 +1178,14 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
     retVal = 1;
     break;
 
-   } else if (  ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT ) && lCurPos < g_Config.m_ScrollBarNum  ) {
+   } else if (  ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) && lCurPos < g_Config.m_ScrollBarNum  ) {
 
     lCurPos = SMS_clip ( ( lCurPos + 1 ) , 0, g_Config.m_ScrollBarNum );
     lResume = 0;
 
     PlayerControl_DisplayScrollBar ( lCurPos );
 
-   } else if (  ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_RIGHT ) && lCurPos > 0  ) {
+   } else if (  ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT || lButtons == RC_LEFTX ) && lCurPos > 0  ) {
 
     lCurPos = SMS_clip (  ( lCurPos - 1 ), 0, g_Config.m_ScrollBarNum  );
     lResume = 0;
@@ -1185,7 +1291,7 @@ void PlayerControl_UpdateDuration ( unsigned int anIdx, unsigned int aDuration )
 
  }  /* end else */
 
- lpPaint = _U( s_pPTS + anIdx * GS_TXT_PACKET_SIZE( 7 ) );
+ lpPaint = _U(  s_pPTS + anIdx * GS_TXT_PACKET_SIZE( 7 )  );
 
  GSFont_Render ( lBuff, 7, s_PTSX[ anIdx ], OSD_Y_POS, lpPaint );
 

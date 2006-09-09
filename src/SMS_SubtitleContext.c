@@ -114,10 +114,13 @@ static void _add_line ( SMS_List* apList, char* apLine, unsigned int aColorIdx )
 
  int lScrW = g_GSCtx.m_Width;
  int lDW   = g_Config.m_SubHIncr;
- int lTxtW = GSFont_WidthEx (  apLine, strlen ( apLine ), lDW  );
+ int lLen  = strlen ( apLine );
+ int lTxtW = GSFont_WidthEx ( apLine, lLen, lDW );
 
  if ( lTxtW < lScrW ) {
 addLine:
+  if ( g_Config.m_PlayerSAlign == 2 ) SMS_ReverseString ( apLine, lLen );
+
   SMS_ListPushBack ( apList, apLine );
   apList -> m_pTail -> m_Param = ( unsigned int )( void* )aColorIdx;
 
@@ -135,16 +138,41 @@ next:
 
     if ( lTxtW < lScrW ) {
 
-     *lpSpace++ = '\x00';
+     *lpSpace = '\x00';
+
+     if ( g_Config.m_PlayerSAlign == 2 ) {
+
+      int lX, lLen = strlen ( apLine );
+
+      SMS_ReverseString ( apLine, lpSpace - apLine );
+
+      while ( 1 ) {
+
+       lX = g_GSCtx.m_Width - GSFont_WidthEx ( apLine, lLen, g_Config.m_SubHIncr ) - 32;
+
+       if ( lX >= 0 ) break;
+
+       ++apLine;
+       --lLen;
+
+      }  /* end while */
+
+     }  /* end if */
+
      SMS_ListPushBack ( apList, apLine );
      apList -> m_pTail -> m_Param = ( unsigned int )( void* )aColorIdx;
 
-     apLine = lpSpace;
+     apLine = ++lpSpace;
      goto next;
 
     } else lpSpace = strrchrx ( apLine, lpSpace - 1, ' ' );
 
-   } else goto addLine;
+   } else {
+
+    lLen = strlen ( apLine );
+    goto addLine;
+
+   }  /* end else */
 
   }  /* end while */
 
@@ -467,15 +495,33 @@ static void _produce_packets ( void ) {
    unsigned int lX;
    unsigned int lY1, lY2;
    unsigned int lU, lV;
+   unsigned int lTxtWidth = GSFont_WidthEx ( lpSNode -> m_pString, lLen, g_Config.m_SubHIncr );
    int          lCurX;
 
-   if ( !g_Config.m_PlayerSAlign ) {
+   switch ( g_Config.m_PlayerSAlign ) {
 
-    lX = (  g_GSCtx.m_Width - GSFont_WidthEx ( lpSNode -> m_pString, lLen, g_Config.m_SubHIncr )  ) >> 1;
+    default:
+    case 0 :  /* center alignment */
 
-    if ( lX > g_GSCtx.m_Width ) lX = 0;
+     lX = ( g_GSCtx.m_Width - lTxtWidth ) >> 1;
 
-   } else lX = 32;
+     if ( lX > g_GSCtx.m_Width ) lX = 0;
+
+    break;
+
+    case 1:  /* left alignment */
+
+     lX = 32;
+
+    break;
+
+    case 2:  /* right alignment */
+
+     lX = g_GSCtx.m_Width - lTxtWidth - 32;
+
+    break;
+
+   }  /* end switch */
 
    __asm__ __volatile__ (
     ".set noreorder\n\t"
@@ -599,13 +645,30 @@ static void _produce_opackets ( void ) {
    int          lCurX;
    unsigned int lTxtWidth = GSFont_WidthEx ( lpSNode -> m_pString, lLen, g_Config.m_SubHIncr );
 
-   if ( !g_Config.m_PlayerSAlign ) {
+   switch ( g_Config.m_PlayerSAlign ) {
 
-    lX = (  g_GSCtx.m_Width - lTxtWidth  ) >> 1;
+    default:
+    case 0 :  /* center alignment */
 
-    if ( lX > g_GSCtx.m_Width ) lX = 0;
+     lX = (  g_GSCtx.m_Width - lTxtWidth  ) >> 1;
 
-   } else lX = 32;
+     if ( lX > g_GSCtx.m_Width ) lX = 0;
+
+    break;
+
+    case 1:  /* left alignment */
+
+     lX = 32;
+
+    break;
+
+    case 2:  /* right alignment */
+
+     lX = g_GSCtx.m_Width - lTxtWidth - 32;
+
+    break;
+
+   }  /* end switch */
 
    __asm__ __volatile__ (
     ".set noreorder\n\t"

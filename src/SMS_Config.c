@@ -92,25 +92,26 @@ int SMS_LoadConfig ( void  ) {
  int lUDFL  = g_Config.m_BrowserFlags & SMS_BF_UDFL;
  int lRes;
 
- g_Config.m_BrowserABCIdx   = 16;
- g_Config.m_BrowserIBCIdx   = 13;
- g_Config.m_BrowserTxtIdx   = 15;
- g_Config.m_NetworkFlags    = SMS_DF_AUTO_HDD;
- g_Config.m_PlayerVolume    = 12;
- g_Config.m_DisplayMode     = GSVideoMode_Default;
- g_Config.m_DisplayCharset  = GSCodePage_WinLatin1;
- g_Config.m_PlayerFlags     = SMS_PF_SUBS | SMS_PF_ANIM | SMS_PF_TIME;
- g_Config.m_PlayerSCNIdx    = 15;
- g_Config.m_PlayerSCBIdx    = 16;
- g_Config.m_PlayerSCIIdx    = 11;
- g_Config.m_PlayerSCUIdx    = 10;
- g_Config.m_BrowserSCIdx    = 16;
- g_Config.m_BrowserSBCIdx   = 16;
- g_Config.m_PlayerSubOffset = 32;
- g_Config.m_PlayerVBCIdx    = 11;
- g_Config.m_PlayerSBCIdx    = 11;
- g_Config.m_ScrollBarNum    = 32;
- g_Config.m_ScrollBarPos    = SMScrollBarPos_Bottom;
+ g_Config.m_BrowserABCIdx    = 16;
+ g_Config.m_BrowserIBCIdx    = 13;
+ g_Config.m_BrowserTxtIdx    = 15;
+ g_Config.m_NetworkFlags     = SMS_DF_AUTO_HDD;
+ g_Config.m_PlayerVolume     = 12;
+ g_Config.m_DisplayMode      = GSVideoMode_Default;
+ g_Config.m_DisplayCharset   = GSCodePage_WinLatin1;
+ g_Config.m_PlayerFlags      = SMS_PF_SUBS | SMS_PF_ANIM | SMS_PF_TIME;
+ g_Config.m_PlayerSCNIdx     = 15;
+ g_Config.m_PlayerSCBIdx     = 16;
+ g_Config.m_PlayerSCIIdx     = 11;
+ g_Config.m_PlayerSCUIdx     = 10;
+ g_Config.m_BrowserSCIdx     = 16;
+ g_Config.m_BrowserSBCIdx    = 16;
+ g_Config.m_PlayerSubOffset  = 32;
+ g_Config.m_PlayerVBCIdx     = 11;
+ g_Config.m_PlayerSBCIdx     = 11;
+ g_Config.m_ScrollBarNum     = 32;
+ g_Config.m_ScrollBarPos     = SMScrollBarPos_Bottom;
+ g_Config.m_PlayerBrightness = 12;
 
  *(  ( unsigned int* )&g_Config.m_PAR[ 0 ]  ) = 0x3F6EEEEF;
  *(  ( unsigned int* )&g_Config.m_PAR[ 1 ]  ) = 0x3F888889;
@@ -162,7 +163,17 @@ int SMS_LoadConfig ( void  ) {
 
             lLen = MC_ReadS ( lFD, g_Config.m_DXPALOther, 32 );
 
-            if ( lLen == 32 ) retVal = 1;
+            if ( lLen == 32 ) {
+
+             if ( g_Config.m_Version > 4 ) {
+
+              lLen = MC_ReadS ( lFD, &g_Config.m_PlayerBrightness, 4 );
+
+              if ( lLen == 4 ) retVal = 1;
+
+             } else retVal = 1;
+
+            }  /* end if */
 
            } else retVal = 1;
 
@@ -208,7 +219,7 @@ int SMS_LoadConfig ( void  ) {
 
  }  /* end if */
 
- g_Config.m_Version = 4;
+ g_Config.m_Version = 5;
 
  if ( !lUDFL ) g_Config.m_BrowserFlags &= ~SMS_BF_UDFL;
 

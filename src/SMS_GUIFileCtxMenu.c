@@ -95,7 +95,7 @@ static void _copy2hdd_handler ( GUIMenu* apMenu, int aDir ) {
     sprintf ( lSts, s_Fmt, STR_COPYING.m_pStr, lSpeed, STR_KBS.m_pStr );
     GUI_Progress (   lSts, ( int )(  ( float )lnCopied / ( float )lpFileCtx -> m_Size * 100.0F  ), 1   );
 
-    if (  GUI_ReadButtons () & SMS_PAD_TRIANGLE  ) {
+    if (  GUI_ReadButtons () == SMS_PAD_TRIANGLE  ) {
 
      GUI_Status ( STR_STOPPING.m_pStr );
 
@@ -121,6 +121,8 @@ static void _copy2hdd_handler ( GUIMenu* apMenu, int aDir ) {
  } else error: GUI_Error ( STR_ERROR.m_pStr );
 
  if (  CDDA_DiskType () != DiskType_None  ) CDVD_Stop ();
+
+ GUI_UpdateStatus ();
 
 }  /* end _copy2hdd_handler */
 

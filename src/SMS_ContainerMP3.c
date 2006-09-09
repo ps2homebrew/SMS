@@ -14,6 +14,7 @@
 #include "SMS_MP3.h"
 #include "SMS_List.h"
 #include "SMS_Locale.h"
+#include "SMS_Config.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -167,6 +168,8 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
   if ( lpDot ) *lpDot = '\x00';
    SMS_ListPushBack ( apCont -> m_pPlayList, lpSlash + 1 );
   if ( lpDot ) *lpDot = '.';
+
+  g_Config.m_PlayerFlags |= SMS_PF_AUDHP;
 
   retVal = 1;
 

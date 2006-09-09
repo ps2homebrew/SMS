@@ -30,6 +30,8 @@ typedef enum GSVideoMode {
  GSVideoMode_NTSC         = 0x02,
  GSVideoMode_PAL          = 0x03,
  GSVideoMode_DTV_720x480P = 0x50,
+ GSVideoMode_VESA_60Hz    = 0x1A,
+ GSVideoMode_VESA_75Hz    = 0x1C,
  GSVideoMode_Default      = 0xFF
 
 } GSVideoMode;
@@ -198,6 +200,7 @@ typedef union GIFTag {
 # define GS_XYZ2       0x05L
 # define GS_ZBUF_1     0x4E
 # define GS_ZBUF_2     0x4F
+# define GS_NOP        0x0FL
 
 # define GS_SET_ALPHA_1 GS_SET_ALPHA
 # define GS_SET_ALPHA_2 GS_SET_ALPHA
@@ -1179,6 +1182,7 @@ unsigned int  GS_InitGC          ( int, GSGC*, GSPixelFormat, int, int, GSZTest 
 void          GS_SetGC           ( GSGC*                                                                       );
 unsigned long GS_XYZ             ( int, int, int                                                               );
 unsigned long GS_XYZF            ( int, int, int, int                                                          );
+void          GS_XYZv            ( unsigned long*, float*, int, float*, int                                    );
 void          GS_InitClear       ( GSClearPacket*, int, int, int, int, unsigned long, GSZTest                  );
 void          GS_Clear           ( GSClearPacket*                                                              );
 void          GS_InitLoadImage   ( GSLoadImage*, unsigned int, unsigned int, GSPixelFormat, int, int, int, int );

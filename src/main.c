@@ -24,9 +24,10 @@ int main ( void ) {
  GUI_Initialize ( 1 );
  GUI_Status ( STR_INITIALIZING_SMS.m_pStr );
 
- CDDA_Init   ();
- CDVD_Init   ();
- SMS_IOPInit ();
+ CDDA_Init       ();
+ CDVD_Init       ();
+ SMS_IOPInit     ();
+ SMS_EEPort2Init ();
 
  GUI_Run ();
 

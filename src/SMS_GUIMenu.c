@@ -41,11 +41,11 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
 
   GS_RenderRoundRect (
    ( GSRoundRectPacket* )(  lpPkt +  GS_RRT_PACKET_SIZE() - 2  ),
-   lpMenu -> m_X, lpMenu -> m_Y, lpMenu -> m_Width, lpMenu -> m_Height, -8, 0x70008000UL
+   lpMenu -> m_X, lpMenu -> m_Y, lpMenu -> m_Width, lpMenu -> m_Height, -12, 0x70008000UL
   );
   GS_RenderRoundRect (
    ( GSRoundRectPacket* )( lpPkt - 2 ), lpMenu -> m_X, lpMenu -> m_Y,
-   lpMenu -> m_Width, lpMenu -> m_Height, 8, lpMenu -> m_Color
+   lpMenu -> m_Width, lpMenu -> m_Height, 12, lpMenu -> m_Color
   );
 
   lpDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, GIFTAG_FLG_REGLIST, 4 );
@@ -101,11 +101,11 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
 
    lpDMA = GSContext_NewPacket (  aCtx, GS_RRT_PACKET_SIZE(), GSPaintMethod_Continue  );
    GS_RenderRoundRect (
-    ( GSRoundRectPacket* )( lpDMA - 2 ), lX, lY, lpMenu -> m_Width - 8, 32, 8, ( lColor & 0x00FFFFFF ) | 0x10000000
+    ( GSRoundRectPacket* )( lpDMA - 2 ), lX, lY, lpMenu -> m_Width - 8, 32, 12, ( lColor & 0x00FFFFFF ) | 0x10000000
    );
    lpDMA = GSContext_NewPacket (  aCtx, GS_RRT_PACKET_SIZE(), GSPaintMethod_Continue  );
    GS_RenderRoundRect (
-    ( GSRoundRectPacket* )( lpDMA - 2 ), lX, lY, lpMenu -> m_Width - 8, 32, -8, lColor
+    ( GSRoundRectPacket* )( lpDMA - 2 ), lX, lY, lpMenu -> m_Width - 8, 32, -12, lColor
    );
 
   }  /* end if */

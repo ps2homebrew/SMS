@@ -1181,15 +1181,15 @@ resume:
 
     break;
 
-   } else if (  lBtn == SMS_PAD_UP && lfVolume && s_Player.m_pSPUCtx ) {
+   } else if (  ( lBtn == SMS_PAD_UP || lBtn == RC_TOPX ) && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( 1 );
 
-   } else if ( lBtn == SMS_PAD_DOWN && lfVolume && s_Player.m_pSPUCtx ) {
+   } else if (  ( lBtn == SMS_PAD_DOWN || lBtn == RC_BOTTOMX ) && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( -1 );
 
-   } else if (  ( lBtn == SMS_PAD_RIGHT || lBtn == RC_SCAN_RIGHT ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
+   } else if (  ( lBtn == SMS_PAD_RIGHT || lBtn == RC_SCAN_RIGHT || lBtn == RC_RIGHTX ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
 
     if (  !FFwdFunc ()  ) {
 
@@ -1200,7 +1200,7 @@ resume:
 
     lSize = 0;
 
-   } else if (  ( lBtn == SMS_PAD_LEFT || lBtn == RC_SCAN_LEFT ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
+   } else if (  ( lBtn == SMS_PAD_LEFT || lBtn == RC_SCAN_LEFT || lBtn == RC_LEFTX ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
 
     if (  !RewFunc ()  ) {
 
@@ -1242,7 +1242,11 @@ resume:
 
      PlayerControl_HandleOSD ( 1, -25 );
 
-    else if ( s_Player.m_OSD == 4 ) PlayerControl_HandleOSD ( 2, -25 );
+    else if ( s_Player.m_OSD == 4 )
+
+     PlayerControl_HandleOSD ( 2, -25 );
+
+    else PlayerControl_AdjustBrightness ( -1 );
 
    } else if ( lBtn == SMS_PAD_R2 && !lfNoVideo ) {
 
@@ -1250,7 +1254,11 @@ resume:
 
      PlayerControl_HandleOSD ( 1, 25 );
 
-    else if ( s_Player.m_OSD == 4 && !lfNoVideo ) PlayerControl_HandleOSD ( 2, 25 );
+    else if ( s_Player.m_OSD == 4 )
+
+     PlayerControl_HandleOSD ( 2, 25 );
+
+    else PlayerControl_AdjustBrightness ( 1 );
 
    } else if (  lBtn == ( SMS_PAD_L2 | SMS_PAD_R2 ) && !lfNoVideo  ) {
 

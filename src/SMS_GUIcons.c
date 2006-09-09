@@ -1209,7 +1209,7 @@ void GUI_LoadIcons ( void ) {
  for ( i = 0, j = 0; i < 7; ++i, j += 2, lTX += 32 ) {
 
   IPU_LoadImage (
-   &lLoadImage[ 1 ], lpBrowserIcons[ i ], lSizeBrowserIcons[ i ], lTX, 0, 0, 1
+   &lLoadImage[ 1 ], lpBrowserIcons[ i ], lSizeBrowserIcons[ i ], lTX, 0, 0, 1, 16
   );
 
   g_BrowserFileIcons[ j + 0 ].m_TX = lTX;
@@ -1218,34 +1218,34 @@ void GUI_LoadIcons ( void ) {
   g_BrowserFileIcons[ j + 1 ].m_TY =  32;
 
   IPU_LoadImage (
-   &lLoadImage[ 1 ], lpBrowserIcons[ i ], lSizeBrowserIcons[ i ], lTX, 32, 1, 1
+   &lLoadImage[ 1 ], lpBrowserIcons[ i ], lSizeBrowserIcons[ i ], lTX, 32, 1, 1, 16
   );
 
  }  /* end for */
 
  for ( i = 0; i < 12; i += 2, lTX += 32 ) {
 
-  IPU_LoadImage (  &lLoadImage[ 1 ], lpMiscIcons[ i ], lSizeMiscIcons[ i ], lTX, 0, 0, 1 );
+  IPU_LoadImage (  &lLoadImage[ 1 ], lpMiscIcons[ i ], lSizeMiscIcons[ i ], lTX, 0, 0, 1, 16 );
 
   g_MiscIcons[ i + 0 ].m_TX = lTX;
   g_MiscIcons[ i + 1 ].m_TX = lTX;
   g_MiscIcons[ i + 0 ].m_TY =   0;
   g_MiscIcons[ i + 1 ].m_TY =  32;
 
-  IPU_LoadImage (  &lLoadImage[ 1 ], lpMiscIcons[ i + 1 ], lSizeMiscIcons[ i + 1 ], lTX, 32, 0, 1 );
+  IPU_LoadImage (  &lLoadImage[ 1 ], lpMiscIcons[ i + 1 ], lSizeMiscIcons[ i + 1 ], lTX, 32, 0, 1, 16 );
 
  }  /* end for */
 
  for ( i = 0; i < 6; i += 2, lTX += 64 ) {
 
-  IPU_LoadImage ( &lLoadImage[ 0 ], lpBrowserDevIcons[ i ], lSizeBrowserDevIcons[ i ], lTX, 0, 0, 1 );
+  IPU_LoadImage ( &lLoadImage[ 0 ], lpBrowserDevIcons[ i ], lSizeBrowserDevIcons[ i ], lTX, 0, 0, 1, 16 );
 
   g_BrowserDeviceIcons[ i + 0 ].m_TX = lTX; lTX += 64;
   g_BrowserDeviceIcons[ i + 1 ].m_TX = lTX;
   g_BrowserDeviceIcons[ i + 0 ].m_TY =   0;
   g_BrowserDeviceIcons[ i + 1 ].m_TY =   0;
 
-  IPU_LoadImage ( &lLoadImage[ 0 ], lpBrowserDevIcons[ i + 1 ], lSizeBrowserDevIcons[ i + 1 ], lTX, 0, 0, 1 );
+  IPU_LoadImage ( &lLoadImage[ 0 ], lpBrowserDevIcons[ i + 1 ], lSizeBrowserDevIcons[ i + 1 ], lTX, 0, 0, 1, 16 );
 
  }  /* end for */
 

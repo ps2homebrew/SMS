@@ -202,6 +202,12 @@ typedef struct SMString {
 # define STR_COLOR_RESOLUTION     SMS_STRING( 179 )
 # define STR_32_BIT               SMS_STRING( 180 )
 # define STR_16_BIT               SMS_STRING( 181 )
+# define STR_DTV_480P             SMS_STRING( 182 )
+# define STR_CONTROLLER_SLOT2     SMS_STRING( 183 )
+# define STR_GAMEPAD              SMS_STRING( 184 )
+# define STR_REMOTE_CONTROL       SMS_STRING( 185 )
+# define STR_MP3_HP               SMS_STRING( 186 )
+# define STR_RIGHT                SMS_STRING( 187 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
