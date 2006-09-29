@@ -402,6 +402,8 @@ static void _action_folder ( GUIFileMenu* apMenu, int afPopup ) {
    lpParam[ 0 ] = ( void* )(  ( unsigned int )lpParam[ 0 ] | 0x80000000  );
    lEvent      |= (  ( unsigned long )( unsigned int )lpParam  ) << 28;
 
+   STIO_SetIOMode ( g_CMedia == 2 ? STIOMode_Extended : STIOMode_Ordinary );
+
    GUI_PostMessage ( lEvent );
 
   } else RestoreFileDir ( lpParam );

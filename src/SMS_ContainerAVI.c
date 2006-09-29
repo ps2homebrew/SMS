@@ -763,7 +763,7 @@ static void _UpdateStmTimings ( SMS_Container* apCont ) {
 
    if (  MYSTRM( lpStm ) -> m_StartTime < lStartTime  ) lStartTime = MYSTRM( lpStm ) -> m_StartTime;
 
-   if ( MYSTRM( lpStm ) -> m_Duration != SMS_NOPTS_VALUE ) {
+   if (  MYSTRM( lpStm ) -> m_Duration != SMS_NOPTS_VALUE  ) {
 
     lTmp = MYSTRM( lpStm ) -> m_StartTime + MYSTRM( lpStm ) -> m_Duration;
 

@@ -349,27 +349,37 @@ void DSP_GMCn_8 ( uint8_t* apDstCb, const SMS_MacroBlock* apSrc, int aX, int anY
 
 }  /* end DSP_GMCn_8 */
 
-void IDCT_ClrBlocks ( SMS_DCTELEM* apBlocks ) {
+void IDCT_ClrBlocks ( void ) {
 
  __asm__ __volatile__ (
   ".set noreorder\n\t"
   ".set volatile\n\t"
   ".set nomacro\n\t"
   ".set noat\n\t"
-  "addiu    $a1, $zero, 12\n\t"
+  "lui      $v1, 0x1001\n\t"
+  "lui      $a0, 0x7000\n\t"
+  "addiu    $a1, $zero, 6\n\t"
   "1:\n\t"
-  "sq       $zero,  0(%0)\n\t"
-  "sq       $zero, 16(%0)\n\t"
+  "lw       $at, -32768($v1)\n\t"
+  "andi     $at, $at, 0x100\n\t"
+  "bne      $at, $zero, 1b\n\t"
+  "nop\n\t"
+  "1:\n\t"
+  "sq       $zero, 0x0580($a0)\n\t"
+  "sq       $zero, 0x0590($a0)\n\t"
+  "sq       $zero, 0x05A0($a0)\n\t"
+  "sq       $zero, 0x05B0($a0)\n\t"
   "add      $a1, -1\n\t"
-  "sq       $zero, 32(%0)\n\t"
-  "sq       $zero, 48(%0)\n\t"
-  "bgtzl    $a1, 1b\n\t"
-  "addiu    %0, 64\n\t"
+  "sq       $zero, 0x05C0($a0)\n\t"
+  "sq       $zero, 0x05D0($a0)\n\t"
+  "sq       $zero, 0x05E0($a0)\n\t"
+  "addiu    $a0, 128\n\t"
+  "bgtz     $a1, 1b\n\t"
+  "sq       $zero, 0x0570($a0)\n\t"
   ".set at\n\t"
   ".set macro\n\t"
   ".set novolatile\n\t"
   ".set reorder\n\t"
-  :: "r"( apBlocks ) : "$5", "memory"
  );
 
 }  /* end IDCT_ClrBlocks */

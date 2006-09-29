@@ -43,23 +43,27 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
 
   case GSVideoMode_NTSC:
    g_GSCtx.m_PWidth  = 640;
+   g_GSCtx.m_Width   = 640;
    g_GSCtx.m_PHeight = g_Config.m_DispH[ 0 ];
   break;
 
   default             :
   case GSVideoMode_PAL:
    g_GSCtx.m_PWidth  = 640;
+   g_GSCtx.m_Width   = 640;
    g_GSCtx.m_PHeight = g_Config.m_DispH[ 1 ];
   break;
 
   case GSVideoMode_DTV_720x480P:
    g_GSCtx.m_PWidth  = 720;
+   g_GSCtx.m_Width   = 720;
    g_GSCtx.m_PHeight = 480;
   break;
 
   case GSVideoMode_VESA_60Hz:
   case GSVideoMode_VESA_75Hz:
    g_GSCtx.m_PWidth  = 640;
+   g_GSCtx.m_Width   = 640;
    g_GSCtx.m_PHeight = 480;
   break;
 

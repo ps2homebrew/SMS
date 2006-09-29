@@ -14,37 +14,59 @@
 #include "SMS_MPEG.h"
 #include "SMS_MPEG2.h"
 
-void SMS_MPEG2_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock, int aN, int aQScale ) {
+void SMS_MPEG2_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock ) {
 
  const uint16_t* lpQuantMatrix;
 
- int i, lLevel, lnCoeffs;
+ int i, j, lLevel, lnCoeffs, lQScale[ 6 ], lDCScale[ 6 ];
 
- lnCoeffs = g_MPEGCtx.m_AltScan ? 63 : g_MPEGCtx.m_BlockLastIdx[ aN ];
+ lQScale[ 0 ] = 
+ lQScale[ 1 ] = 
+ lQScale[ 2 ] = 
+ lQScale[ 3 ] = g_MPEGCtx.m_QScale;
+ lQScale[ 4 ] =
+ lQScale[ 5 ] = g_MPEGCtx.m_ChromaQScale;
 
- apBlock[ 0 ] *= aN < 4 ? g_MPEGCtx.m_Y_DCScale : g_MPEGCtx.m_C_DCScale;
+ lDCScale[ 0 ] = 
+ lDCScale[ 1 ] = 
+ lDCScale[ 2 ] = 
+ lDCScale[ 3 ] = g_MPEGCtx.m_Y_DCScale;
+ lDCScale[ 4 ] = 
+ lDCScale[ 5 ] = g_MPEGCtx.m_C_DCScale;
 
  lpQuantMatrix = g_MPEGCtx.m_IntraMatrix;
 
- for ( i = 1; i <= lnCoeffs; ++i ) {
+ for ( j = 0; j < 6; ++j ) {
 
-  int j = g_MPEGCtx.m_IntraScanTbl.m_pScantable[ i ];
+  const int lQS = lQScale[ j ];
 
-  lLevel = apBlock[ j ];
+  apBlock[ 0 ] *= lDCScale[ j ];
 
-  if ( lLevel ) {
+  lnCoeffs = g_MPEGCtx.m_AltScan ? 63 : g_MPEGCtx.m_BlockLastIdx[ j ];
 
-   if ( lLevel < 0 ) {
+  for ( i = 1; i <= lnCoeffs; ++i ) {
 
-    lLevel = -lLevel;
-    lLevel = ( int )( lLevel * aQScale * lpQuantMatrix[ j ] ) >> 3;
-    lLevel = -lLevel;
+   int j = g_MPEGCtx.m_IntraScanTbl.m_pScantable[ i ];
 
-   } else lLevel = ( int )( lLevel * aQScale * lpQuantMatrix[ j ] ) >> 3;
+   lLevel = apBlock[ j ];
 
-   apBlock[ j ] = lLevel;
+   if ( lLevel ) {
 
-  }  /* end if */
+    if ( lLevel < 0 ) {
+
+     lLevel = -lLevel;
+     lLevel = ( int )( lLevel * lQS * lpQuantMatrix[ j ] ) >> 3;
+     lLevel = -lLevel;
+
+    } else lLevel = ( int )( lLevel * lQS * lpQuantMatrix[ j ] ) >> 3;
+
+    apBlock[ j ] = lLevel;
+
+   }  /* end if */
+
+  }  /* end for */
+
+  apBlock += 64;
 
  }  /* end for */
 

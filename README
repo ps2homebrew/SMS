@@ -810,3 +810,16 @@ Update (01-SEP-2006)
 - updated USB drivers;
 - network drivers are slightly optimized resulting a bit faster network transactions
   (I've got ~690KB/s while transferring a video file to the hard disk);
+
+Update (20-SEP-2006)
+--------------------
+- fixed "image flicker" in DTV 480P video mode (thanks to "jacky401" for the
+  note);
+- hopefully fixed SMS crash if pause or menu is activated at the beginning of playback;
+- 2 VESA video modes (640x480@60Hz and 640x480@75Hz) are added;
+- changed logical screen width in DTV480p mode from 640 to 720 (I'm not sure if this is
+  correct or not);
+- this update uses VU0 unit to compute IDCT for intra macroblocks in micro mode, so,
+  there's some performance gain in video decoding (~6%);
+- there're also some experiments with thread priorities in the player, so there's no
+  warranty that this1 thing will not hang during playback :);

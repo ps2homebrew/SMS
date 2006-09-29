@@ -220,41 +220,96 @@ int SMS_H263_RoundChroma ( int aX ) {
 
 }  /* end SMS_H263_RoundChroma */
 
-void SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock, int aN, int aQScale ) {
+void SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock ) {
 
- const int lQMul    = aQScale << 1;
- const int lQAdd    = ( aQScale - 1 ) | 1;
- const int lnCoeffs = 63;
- const int lLevel   = aN < 4 ? apBlock[ 0 ] * g_MPEGCtx.m_Y_DCScale
-                             : apBlock[ 0 ] * g_MPEGCtx.m_C_DCScale;
+ int lQMul   = g_MPEGCtx.m_QScale << 1;
+ int lQAdd   = ( g_MPEGCtx.m_QScale - 1 ) | 1;
+ int lLevel0 = apBlock[   0 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel1 = apBlock[  64 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel2 = apBlock[ 128 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel3 = apBlock[ 192 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel4 = apBlock[ 256 ] * g_MPEGCtx.m_C_DCScale;
+ int lLevel5 = apBlock[ 320 ] * g_MPEGCtx.m_C_DCScale;
+
  __asm__ __volatile__ (
 
-  "add      $14, $0, %3\n\t"
-  "pcpyld   $8, %0, %0\n\t"	
-  "pcpyh    $8, $8\n\t"
-  "pcpyld   $9, %1, %1\n\t"
-  "pcpyh    $9, $9\n\t"
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "addiu    $v0, $zero, 32\n\t"
+  "addu     $t6, $zero, %2\n\t"
+  "pcpyld   $t0, %0, %0\n\t"	
+  "pcpyh    $t0, $t0\n\t"
+  "pcpyld   $t1, %1, %1\n\t"
+  "pcpyh    $t1, $t1\n\t"
   "1:\n\t"
-  "lq       $10, 0($14)\n\t"
-  "addi     $14, $14, 16\n\t"
-  "addi     %2, %2, -8\n\t"
-  "pcgth    $11, $0, $10\n\t"
-  "pcgth    $12, $10, $0\n\t"
-  "por      $12, $11, $12\n\t"
-  "pmulth   $10, $10, $8\n\t"	
-  "paddh    $13, $9, $11\n\t"
-  "pxor     $13, $13, $11\n\t"
-  "pmfhl.uw $11\n\t"
-  "pinteh   $10, $11, $10\n\t"
-  "paddh    $10, $10, $13\n\t"
-  "pand     $10, $10, $12\n\t"
-  "sq       $10, -16($14)\n\t"
-  "bgez     %2, 1b\n\t"
-  :: "r"( lQMul ), "r"( lQAdd ), "r"( lnCoeffs ), "r"( apBlock )
-   : "$8", "$9", "$10", "$11", "$12", "$13", "$14", "memory"
+  "lq       $t2, 0($t6)\n\t"
+  "addiu    $t6, $t6, 16\n\t"
+  "addiu    $v0, $v0, -1\n\t"
+  "pcgth    $t3, $0, $t2\n\t"
+  "pcgth    $t4, $t2, $0\n\t"
+  "por      $t4, $t3, $t4\n\t"
+  "pmulth   $t2, $t2, $t0\n\t"	
+  "paddh    $t5, $t1, $t3\n\t"
+  "pxor     $t5, $t5, $t3\n\t"
+  "pmfhl.uw $t3\n\t"
+  "pinteh   $t2, $t3, $t2\n\t"
+  "paddh    $t2, $t2, $t5\n\t"
+  "pand     $t2, $t2, $t4\n\t"
+  "bgtz     $v0, 1b\n\t"
+  "sq       $t2, -16($t6)\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "r"( lQMul ), "r"( lQAdd ), "r"( apBlock )
+   : "v0", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "memory"
  );
 
- apBlock[ 0 ] = lLevel;
+ apBlock[   0 ] = lLevel0;
+ apBlock[  64 ] = lLevel1;
+ apBlock[ 128 ] = lLevel2;
+ apBlock[ 192 ] = lLevel3;
+ apBlock       += 256;
+
+ lQMul = g_MPEGCtx.m_ChromaQScale << 1;
+ lQAdd = ( g_MPEGCtx.m_ChromaQScale - 1 ) | 1;
+
+ __asm__ __volatile__ (
+
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "addiu    $v0, $zero, 16\n\t"
+  "addu     $t6, $zero, %2\n\t"
+  "pcpyld   $t0, %0, %0\n\t"	
+  "pcpyh    $t0, $t0\n\t"
+  "pcpyld   $t1, %1, %1\n\t"
+  "pcpyh    $t1, $t1\n\t"
+  "1:\n\t"
+  "lq       $t2, 0($t6)\n\t"
+  "addiu    $t6, $t6, 16\n\t"
+  "addiu    $v0, $v0, -1\n\t"
+  "pcgth    $t3, $0, $t2\n\t"
+  "pcgth    $t4, $t2, $0\n\t"
+  "por      $t4, $t3, $t4\n\t"
+  "pmulth   $t2, $t2, $t0\n\t"	
+  "paddh    $t5, $t1, $t3\n\t"
+  "pxor     $t5, $t5, $t3\n\t"
+  "pmfhl.uw $t3\n\t"
+  "pinteh   $t2, $t3, $t2\n\t"
+  "paddh    $t2, $t2, $t5\n\t"
+  "pand     $t2, $t2, $t4\n\t"
+  "bgtz     $v0, 1b\n\t"
+  "sq       $t2, -16($t6)\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "r"( lQMul ), "r"( lQAdd ), "r"( apBlock )
+   : "v0", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "memory"
+ );
+
+ apBlock[  0 ] = lLevel4;
+ apBlock[ 64 ] = lLevel5;
 
 }  /* end SMS_H263_DCTUnquantizeIntra */
 

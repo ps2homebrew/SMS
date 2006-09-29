@@ -110,7 +110,8 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_MPEG_SPR_MB     (  ( SMS_MacroBlock* )0x70000280  )
 #  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )0x70000400  )
 #  define SMS_MPEG_SPR_BLOCKS (  ( SMS_DCTELEM*    )0x70000570  )
-#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70000870  )
+#  define SMS_VU0_SPR_BLOCKS  (  ( uint8_t*        )0x70000890  )
+#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70000E90  )
 
 static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
  uint32_t retVal;

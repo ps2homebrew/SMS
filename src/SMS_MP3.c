@@ -3212,8 +3212,8 @@ static void _compute_imdct ( SMS_GranuleDef* apGran, int32_t* apSamples, int32_t
  for ( j = 0; j < lMDCTLongEnd; ++j ) {
 
   _imdct36 ( lOut, lPtr );
-  lpOut = apSamples + j;
 
+  lpOut  = apSamples + j;
   lpWin1 = apGran -> m_SwitchPoint && j < 2 ? s_mdct_win[ 0                     ]
                                             : s_mdct_win[ apGran -> m_BlockType ];
   lpWin  = lpWin1 + (  ( 4 * 36 ) & -( j & 1 )  );
@@ -3728,11 +3728,9 @@ static void _synth_filter ( int aCh, int16_t* apSamples, int anIncr, int32_t aSB
  for ( j = 0; j < 32; ++j ) {
 
   lV = lTmp[ j ];
-#if FRAC_BITS <= 15
   if ( lV > 32767 )
    lV = 32767;
   else if ( lV < -32768 ) lV = -32768;
-#endif  /* FRAC_BITS */
   lpBuf[ j ] = lV;
 
  }  /* end for */
@@ -4042,7 +4040,7 @@ static void _synth_filter_hp ( int aCh, int16_t* apSamples, int anIncr, int32_t 
 
  for ( j = 0; j < 32; ++j ) lpBuf[ j ] = lTmp[ j ];
 
- _wmemcpy (  lpBuf + 512, lpBuf, 8 * sizeof ( int32_t )  );
+ _wmemcpy ( lpBuf + 512, lpBuf, 32 );
 
  lpSamples = apSamples + 31 * anIncr;
  lpW       = s_Window;

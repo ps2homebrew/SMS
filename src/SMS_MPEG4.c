@@ -16,6 +16,7 @@
 #include "SMS_H263.h"
 #include "SMS_FourCC.h"
 #include "SMS_VideoBuffer.h"
+#include "SMS_DMA.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -2026,6 +2027,8 @@ static int _mpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
  int16_t*        lpMotVal;
  SMS_BitContext* lpBitCtx = &g_MPEGCtx.m_BitCtx;
 
+ IDCT_ClrBlocks ();
+
  if ( g_MPEGCtx.m_PicType == SMS_FT_P_TYPE || g_MPEGCtx.m_PicType == SMS_FT_S_TYPE ) {
 
   do {
@@ -2427,6 +2430,8 @@ static int _mpeg4_decode_partitioned_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
  if ( g_MPEGCtx.m_CurPic.m_pQScaleTbl[ lXY ] != g_MPEGCtx.m_QScale )
 
   SMS_MPEG_SetQScale ( g_MPEGCtx.m_CurPic.m_pQScaleTbl[ lXY ] );
+
+ IDCT_ClrBlocks ();
 
  if ( g_MPEGCtx.m_PicType == SMS_FT_P_TYPE || g_MPEGCtx.m_PicType == SMS_FT_S_TYPE ) {
 
@@ -3096,7 +3101,7 @@ int _mpeg4_decode_partitions ( void ) {
 
 }  /* end _mpeg4_decode_partitions */
 
-static int32_t _mpeg4_decode_slice ( void ) {
+static void _mpeg4_decode_slice ( void ) {
 
  g_MPEGCtx.m_LastResyncBitCtx = g_MPEGCtx.m_BitCtx;
  g_MPEGCtx.m_FirstSliceLine   = 1;
@@ -3109,7 +3114,7 @@ static int32_t _mpeg4_decode_slice ( void ) {
 
   const int lQScale = g_MPEGCtx.m_QScale;
 
-  if (  _mpeg4_decode_partitions () < 0  ) return -1; 
+  if (  _mpeg4_decode_partitions () < 0  ) return; 
      
   g_MPEGCtx.m_FirstSliceLine = 1;
   g_MPEGCtx.m_MBX = g_MPEGCtx.m_ResyncMBX;
@@ -3118,6 +3123,8 @@ static int32_t _mpeg4_decode_slice ( void ) {
   SMS_MPEG_SetQScale ( lQScale );
 
  }  /* end if */
+
+ g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
  for ( ; g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH; ++g_MPEGCtx.m_MBY ) {
 
@@ -3132,8 +3139,6 @@ static int32_t _mpeg4_decode_slice ( void ) {
    if ( g_MPEGCtx.m_ResyncMBX     == g_MPEGCtx.m_MBX &&
         g_MPEGCtx.m_ResyncMBY + 1 == g_MPEGCtx.m_MBY
    ) g_MPEGCtx.m_FirstSliceLine = 0;
-
-   IDCT_ClrBlocks ( g_MPEGCtx.m_pBlock[ 0 ] );
             
    g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
    g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
@@ -3157,11 +3162,11 @@ static int32_t _mpeg4_decode_slice ( void ) {
 
      }  /* end if */
 
-     return 0; 
+     goto end; 
 
-    } else if ( lRet == SMS_SLICE_NOEND ) return -1;
+    } else if ( lRet == SMS_SLICE_NOEND ) goto end;
 
-    return -1;
+    goto end;
 
    }  /* end if */
 
@@ -3216,11 +3221,15 @@ static int32_t _mpeg4_decode_slice ( void ) {
 
   else lMaxExtra += 256 * 256 * 256 * 64;
         
-  if ( lLeft < lMaxExtra && lLeft > 0 ) return 0;
+  if ( lLeft < lMaxExtra && lLeft > 0 ) goto end;
 
  }  /* end if */
+end:
+ DMA_Wait ( DMAC_VIF0 );
 
- return -1;
+ while (   (  *( volatile unsigned int* )0x10003800  ) & 3   );
+
+ g_MPEGCtx.MBCallback ( g_MPEGCtx.m_pDestCB );
 
 }  /* end _mpeg4_decode_slice */
 

@@ -230,6 +230,8 @@ static unsigned char s_pGamepad        [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pRemoteControl  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "remote control";
 static unsigned char s_pMP3HP          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "High precision mode for .avi";
 static unsigned char s_pRight          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "right";
+static unsigned char s_pVESA60Hz       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "VESA (60Hz)";
+static unsigned char s_pVESA75Hz       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "VESA (75Hz)";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -419,7 +421,9 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pGamepad         ) - 1, s_pGamepad         },
  { sizeof ( s_pRemoteControl   ) - 1, s_pRemoteControl   },
  { sizeof ( s_pMP3HP           ) - 1, s_pMP3HP           },
- { sizeof ( s_pRight           ) - 1, s_pRight           }
+ { sizeof ( s_pRight           ) - 1, s_pRight           },
+ { sizeof ( s_pVESA60Hz        ) - 1, s_pVESA60Hz        },
+ { sizeof ( s_pVESA75Hz        ) - 1, s_pVESA75Hz        }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );

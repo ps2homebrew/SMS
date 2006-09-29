@@ -132,8 +132,9 @@ typedef struct SMS_MPEGContext {
  int               m_SpriteShift [ 2 ];
 
  int  ( *DecodeMB            ) ( SMS_DCTELEM[ 6 ][ 64 ] );
- void ( *DCT_UnquantizeIntra ) ( SMS_DCTELEM*, int, int );
+ void ( *DCT_UnquantizeIntra ) ( SMS_DCTELEM*           );
  void ( *DCT_UnquantizeInter ) ( SMS_DCTELEM*, int, int );
+ void ( *MBCallback          ) ( void*                  );
 
  SMS_DCTELEM       ( *m_pBlock  )     [ 64 ];
  SMS_DCTELEM       ( *m_pBlocks )[ 6 ][ 64 ];
@@ -143,6 +144,7 @@ typedef struct SMS_MPEGContext {
  SMS_Frame*        m_pLastPic;
  SMS_Frame*        m_pNextPic;
  SMS_MacroBlock*   m_pDest;
+ SMS_MacroBlock*   m_pDestCB;
  int*              m_pMBIdx2XY;
  int16_t*          m_pDCValBase;
  int16_t           ( *m_pACValBase  )[ 16 ];
@@ -281,6 +283,7 @@ void SMS_MPEG_FrameEnd             ( void                            );
 void SMS_MPEG_DecodeMB             ( SMS_DCTELEM[ 12 ][ 64 ]         );
 void SMS_MPEG_CleanIntraTblEntries ( void                            );
 int  SMS_MPEGContext_FindUnusedPic ( void                            );
+void SMS_MPEG_DummyCB              ( void*                           );
 
 # ifdef __cplusplus
 }

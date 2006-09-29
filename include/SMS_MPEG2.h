@@ -19,7 +19,7 @@
 extern "C" {
 # endif  /* __cplusplus */
 
-void SMS_MPEG2_DCTUnquantizeIntra ( SMS_DCTELEM*, int, int );
+void SMS_MPEG2_DCTUnquantizeIntra ( SMS_DCTELEM*           );
 void SMS_MPEG2_DCTUnquantizeInter ( SMS_DCTELEM*, int, int );
 
 # ifdef __cplusplus

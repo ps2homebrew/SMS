@@ -49,7 +49,7 @@ typedef struct SMS_AudioPacket {
 
 #define SMS_VPACKET_QSIZE    384
 #define SMS_APACKET_QSIZE    384
-#define SMS_VIDEO_QUEUE_SIZE  10
+#define SMS_VIDEO_QUEUE_SIZE   5
 #define SMS_AUDIO_QUEUE_SIZE  10
 
 #define SMS_FLAGS_STOP     0x00000001
@@ -86,17 +86,18 @@ static SMS_RB_CREATE( s_AudioQueue,   SMS_AudioPacket  );
 
 extern void* _gp;
 
-static int               s_Semas    [ 4 ];
-static int               s_ThreadIDs[ 4 ];
-static int               s_SemaPauseAudio;
-static int               s_SemaPauseVideo;
-static int               s_SemaAckPause;
-static int               s_MainThreadID;
-static SMS_FrameBuffer*  s_pFrame;
-static SMS_AudioBuffer*  s_AudioSamples;
-static int               s_nPackets;
-static int               s_Flags;
-static SMS_CodecContext* s_pAudioCodec;
+static int              s_Semas    [ 4 ];
+static int              s_ThreadIDs[ 4 ];
+static int              s_WSemas   [ 4 ];
+static int              s_SemaPauseAudio;
+static int              s_SemaPauseVideo;
+static int              s_SemaAckPause;
+static int              s_MainThreadID;
+static int              s_MainThreadPriority;
+static SMS_FrameBuffer* s_pFrame;
+static SMS_AudioBuffer* s_AudioSamples;
+static int              s_nPackets;
+static int              s_Flags;
 
 static void ( *ExitThreadFunc ) ( void );
 static int  ( *FFwdFunc       ) ( void );
@@ -201,14 +202,16 @@ static void _terminate_threads ( int afDelete ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  SignalSema ( s_Semas[ i ] );
-  WakeupThread ( s_ThreadIDs[ i ] );
+  SignalSema ( s_Semas [ i ] );
+  SignalSema ( s_WSemas[ i ] );
 
  }  /* end for */
 
+ ChangeThreadPriority ( s_MainThreadID, s_MainThreadPriority + 3 );
  for ( i = 0; i < 4; ++i ) SleepThread ();
+ ChangeThreadPriority ( s_MainThreadID, s_MainThreadPriority + 0 );
 
- if ( !afDelete ) for ( i = 0; i < 4; ++i ) CancelWakeupThread ( s_ThreadIDs[ i ] );
+ if ( !afDelete ) for ( i = 0; i < 4; ++i ) while (  PollSema ( s_WSemas[ i ] ) >= 0  );
 
 }  /* end _terminate_threads */
 
@@ -225,10 +228,8 @@ static void _init_queues ( int afCreate ) {
   s_AudioBuffer   = ( SMS_AudioPacket*  )calloc (  SMS_AUDIO_QUEUE_SIZE, sizeof ( SMS_AudioPacket  )  );
 
   lSema.init_count = 0;
-  lSema.max_count  = 1;
   s_SemaPauseAudio = CreateSema ( &lSema );
   s_SemaPauseVideo = CreateSema ( &lSema );
-  lSema.max_count  = 2;
   s_SemaAckPause   = CreateSema ( &lSema );
 
  } else {
@@ -253,23 +254,18 @@ static void _init_queues ( int afCreate ) {
  SMS_RB_INIT( s_VideoQueue,   s_VideoBuffer,   SMS_VIDEO_QUEUE_SIZE );
  SMS_RB_INIT( s_AudioQueue,   s_AudioBuffer,   SMS_AUDIO_QUEUE_SIZE );
 
- lSema.init_count =
- lSema.max_count  = SMS_VPACKET_QSIZE - 1;
+ lSema.init_count = SMS_VPACKET_QSIZE - 1;
  SEMA_D_PUT_VIDEO = CreateSema ( &lSema );
 
- lSema.init_count =
- lSema.max_count  = SMS_APACKET_QSIZE - 1;
+ lSema.init_count = SMS_APACKET_QSIZE - 1;
  SEMA_D_PUT_AUDIO = CreateSema ( &lSema );
 
- lSema.init_count = 
- lSema.max_count  = SMS_VIDEO_QUEUE_SIZE - 1;
+ lSema.init_count = SMS_VIDEO_QUEUE_SIZE - 1;
  SEMA_R_PUT_VIDEO = CreateSema ( &lSema );
 
- lSema.init_count =
- lSema.max_count  = SMS_AUDIO_QUEUE_SIZE - 1;
+ lSema.init_count = SMS_AUDIO_QUEUE_SIZE - 1;
  SEMA_R_PUT_AUDIO = CreateSema ( &lSema );
 #ifdef LOCK_QUEUES
- lSema.max_count  = 1;
  lSema.init_count = 1;
  s_SemaPALock = CreateSema ( &lSema );
  s_SemaPVLock = CreateSema ( &lSema );
@@ -288,7 +284,7 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
  short* lpSamples = NULL;
  int    i         = 0;
 
- SleepThread ();
+ WaitSema ( s_WSemas[ 0 ] );
 
  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 2 ], 1, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 2 ], 0  );
  lpDMA[ i++ ] = 0;
@@ -394,13 +390,15 @@ static void _sms_video_renderer ( void* apParam ) {
 
  while ( 1 ) {
 
-  SleepThread ();
+  WaitSema ( s_WSemas[ 0 ] );
 
   if (  SMS_RB_EMPTY( s_VideoQueue )  ) break;
 
   if ( s_Flags & SMS_FLAGS_PAUSE ) {
 
-   if (  !( s_Flags & SMS_FLAGS_MENU )  ) _draw_text ( STR_PAUSE.m_pStr );
+   if (  !( s_Flags & SMS_FLAGS_MENU )  )
+    _draw_text ( STR_PAUSE.m_pStr );
+   else s_Player.m_pIPUCtx -> Sync ();
 
    SignalSema ( s_SemaAckPause );
    WaitSema ( s_SemaPauseVideo );
@@ -460,7 +458,7 @@ static void _sms_video_decoder ( void* apParam ) {
 
  while ( 1 ) {
 
-  SleepThread ();
+  WaitSema ( s_WSemas[ 1 ] );
 
   if (  SMS_RB_EMPTY( s_VPacketQueue )  ) break;
 
@@ -499,7 +497,7 @@ static void _sms_video_decoder ( void* apParam ) {
     SMS_RB_PUSHADVANCE( s_VideoQueue );
    UNLOCK( s_SemaVLock );
 
-   WakeupThread ( THREAD_ID_VR );
+   SignalSema ( s_WSemas[ 0 ] );
 
   }  /* end if */
 
@@ -516,7 +514,7 @@ static void _sms_video_decoder ( void* apParam ) {
 
 static void _sms_audio_only_renderer ( void* apParam ) {
 
- SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ 0 ] -> m_pCodec;
+ SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
  uint32_t          lBPS       = lpCodecCtx -> m_BitsPerSample;
  float             lMult;
 
@@ -531,7 +529,7 @@ static void _sms_audio_only_renderer ( void* apParam ) {
   int              lLen;
   SMS_AudioPacket* lpFrame;
 
-  SleepThread ();
+  WaitSema ( s_WSemas[ 2 ] );
 
   if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
 
@@ -565,8 +563,6 @@ static void _sms_audio_only_renderer ( void* apParam ) {
    PlayerControl_UpdateDuration ( 1, s_Player.m_pCont -> m_Duration );
 
    s_Player.m_AudioTime = 0;
-
-   lpCodecCtx = s_pAudioCodec;
 
    if ( lpCodecCtx -> m_Channels   != s_Player.m_AudioChannels   ||
         lpCodecCtx -> m_SampleRate != s_Player.m_AudioSampleRate
@@ -646,17 +642,17 @@ static void _sms_audio_only_decoder ( void* apParam ) {
 
  static SMS_AudioBuffer s_DummyBuffer;
 
- SMS_AVPacket* lpPacket;
- int64_t       lPTS = 0;
+ SMS_AVPacket*     lpPacket;
+ int64_t           lPTS       = SMS_STPTS_VALUE;
+ SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
 
- s_pAudioCodec  = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
  s_AudioSamples = &s_DummyBuffer;
 
  while ( 1 ) {
 
   SMS_AudioPacket* lpFrame;
 
-  SleepThread ();
+  WaitSema ( s_WSemas[ 3 ] );
 
   if (  SMS_RB_EMPTY( s_APacketQueue )  ) break;
 
@@ -671,21 +667,12 @@ static void _sms_audio_only_decoder ( void* apParam ) {
 
    s_AudioSamples -> m_Len = 0;
 
-   if ( lPTS != SMS_STPTS_VALUE )
-
-    lPTS = lpPacket -> m_PTS;
-
-   else if ( s_pAudioCodec != s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec ) {
-
-    free ( s_pAudioCodec );
-    s_pAudioCodec = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
-
-   }  /* end else */
+   if ( lPTS != SMS_STPTS_VALUE ) lPTS = lpPacket -> m_PTS;
 
    do {
 
     if (  s_Player.m_pAudioCodec -> Decode (
-           s_pAudioCodec, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
+           lpCodecCtx, ( void** )&s_AudioSamples, lpPacket -> m_pData, lpPacket -> m_Size
           )
     ) {
 
@@ -701,11 +688,11 @@ static void _sms_audio_only_decoder ( void* apParam ) {
      LOCK( s_SemaALock );
       lpFrame = SMS_RB_PUSHSLOT( s_AudioQueue );
       lpFrame -> m_pBuf = s_AudioSamples -> m_pOut;
-      lpFrame -> m_PTS  = lPTS + s_Player.m_pSPUCtx -> m_BufTime;
+      lpFrame -> m_PTS  = lPTS;
       SMS_RB_PUSHADVANCE( s_AudioQueue );
      UNLOCK( s_SemaALock );
 
-     WakeupThread ( THREAD_ID_AR );
+     SignalSema ( s_WSemas[ 2 ] );
 
      lPTS = SMS_NOPTS_VALUE;
 
@@ -721,8 +708,6 @@ static void _sms_audio_only_decoder ( void* apParam ) {
 
  }  /* end while */
 end:
- if ( s_pAudioCodec != s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec ) free ( s_pAudioCodec );
-
  WakeupThread ( s_MainThreadID );
  ExitThreadFunc ();
 
@@ -752,7 +737,7 @@ static void _sms_audio_renderer ( void* apParam ) {
   int              lLen;
   SMS_AudioPacket* lpFrame;
 
-  SleepThread ();
+  WaitSema ( s_WSemas[ 2 ] );
 
   if (  SMS_RB_EMPTY( s_AudioQueue )  ) break;
 
@@ -820,7 +805,7 @@ static void _sms_audio_decoder ( void* apParam ) {
 
   SMS_AudioPacket* lpFrame;
 
-  SleepThread ();
+  WaitSema ( s_WSemas[ 3 ] );
 
   if (  SMS_RB_EMPTY( s_APacketQueue )  ) break;
 
@@ -859,7 +844,7 @@ static void _sms_audio_decoder ( void* apParam ) {
       SMS_RB_PUSHADVANCE( s_AudioQueue );
      UNLOCK( s_SemaALock );
 
-     WakeupThread ( THREAD_ID_AR );
+     SignalSema ( s_WSemas[ 2 ] );
 
     } else break;
 
@@ -920,7 +905,7 @@ static int _FFwd_A ( void ) {
    s_Player.m_OSDPLRes      = s_Player.m_OSDPLPos - 32;
 
    s_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL );
-   WakeupThread ( THREAD_ID_VR );
+   SignalSema ( s_WSemas[ 0 ] );
 
    retVal = lpCont -> Seek (  lpCont, 0, 0, ( uint32_t )s_Player.m_pPlayItem -> m_pNext  );
 
@@ -950,7 +935,7 @@ static int _Rew_A ( void ) {
    s_Player.m_OSDPLRes      = s_Player.m_OSDPLPos + 32;
 
    s_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_ABSCROLL );
-   WakeupThread ( THREAD_ID_VR );
+   SignalSema ( s_WSemas[ 0 ] );
 
    retVal = lpCont -> Seek (  lpCont, 0, 0, ( uint32_t )s_Player.m_pPlayItem -> m_pPrev  );
 
@@ -958,7 +943,7 @@ static int _Rew_A ( void ) {
 
   }  /* end if */
 
-  WakeupThread ( THREAD_ID_VR );
+  SignalSema ( s_WSemas[ 0 ] );
 
  }  /* end if */
 
@@ -981,7 +966,6 @@ static void _sms_play ( void ) {
  int           lfVolume   = !( s_Player.m_Flags & SMS_FLAGS_SPDIF );
 
  lSemaParam.init_count = 0;
- lSemaParam.max_count  = 1;
  lSema = CreateSema ( &lSemaParam );
 
  if ( !lfNoVideo ) {
@@ -1059,7 +1043,7 @@ static void _sms_play ( void ) {
   PlayerControl_HandleOSD ( 0, 0 );
   PlayerControl_UpdateDuration ( 0, s_Player.m_pCont -> m_Duration );
   PlayerControl_UpdateItemNr ();
-  WakeupThread ( THREAD_ID_VR );
+  SignalSema ( s_WSemas[ 0 ] );
 
  } else s_Player.m_OSDPackets[ 5 ] = NULL;
 repeat:
@@ -1075,7 +1059,7 @@ repeat:
 
    lNextTime = g_Timer + 300;
 
-   if ( lBtn == SMS_PAD_SELECT || lBtn == RC_PAUSE ) {
+   if (  ( lBtn == SMS_PAD_SELECT || lBtn == RC_PAUSE ) && *( int* )&s_Player.m_AudioTime  ) {
 
     if ( g_Config.m_ScrollBarPos == SMScrollBarPos_Inactive || lfNoVideo ) {
 
@@ -1140,7 +1124,7 @@ resume:
      ) {
 
       s_Flags |= SMS_FLAGS_STOP;
-      break;
+      goto exit;
 
      }  /* end if */
 
@@ -1148,7 +1132,7 @@ resume:
 
     }  /* end else */
 
-   } else if (  ( lBtn == SMS_PAD_START || lBtn == RC_MENU ) && !lfNoVideo  ) {
+   } else if (   ( lBtn == SMS_PAD_START || lBtn == RC_MENU ) && !lfNoVideo && *( int* )&s_Player.m_AudioTime  ) {
 
     s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
 
@@ -1174,7 +1158,7 @@ resume:
                lBtn == RC_RETURN        ||
                lBtn == RC_STOP
           ) {
-
+exit:
     _terminate_threads ( 1 );
     _clear_packet_queues ();
     _draw_text ( STR_STOPPING.m_pStr );
@@ -1194,7 +1178,7 @@ resume:
     if (  !FFwdFunc ()  ) {
 
      s_Flags |= SMS_FLAGS_STOP;
-     break;
+     goto exit;
 
     }  /* end if */
 
@@ -1205,7 +1189,7 @@ resume:
     if (  !RewFunc ()  ) {
 
      s_Flags |= SMS_FLAGS_STOP;
-     break;
+     goto exit;
 
     }  /* end if */
 
@@ -1337,7 +1321,7 @@ nextPacket:
 
    ++s_nPackets;
 
-   WakeupThread ( THREAD_ID_VD );
+   SignalSema ( s_WSemas[ 1 ] );
 
   } else if ( lpStms[ lpPacket -> m_StmIdx ] -> m_Flags & SMS_STRM_FLAGS_AUDIO ) {
 
@@ -1350,7 +1334,7 @@ nextPacket:
 
    ++s_nPackets;
 
-   WakeupThread ( THREAD_ID_AD );
+   SignalSema ( s_WSemas[ 3 ] );
 
   } else goto nextPacket;
 
@@ -1398,11 +1382,12 @@ nextPacket:
 
 static void _Destroy ( void ) {
 
+ int      i;
  DiskType lType;
 
  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
 
-  WakeupThread ( THREAD_ID_VD );
+  SignalSema ( s_WSemas[ 1 ] );
   SleepThread ();
 
  }  /* end if */
@@ -1412,7 +1397,7 @@ static void _Destroy ( void ) {
 
  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
 
-  WakeupThread ( THREAD_ID_VR );  
+  SignalSema ( s_WSemas[ 0 ] );
   SleepThread ();
 
  }  /* end if */
@@ -1427,7 +1412,7 @@ static void _Destroy ( void ) {
 #endif  /* LOCK_QUEUES */
  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
 
-  WakeupThread ( THREAD_ID_AD );
+  SignalSema ( s_WSemas[ 3 ] );
   SleepThread ();
 
  }  /* end if */
@@ -1437,7 +1422,7 @@ static void _Destroy ( void ) {
 
  if (  !( s_Flags & SMS_FLAGS_STOP )  ) {
 
-  WakeupThread ( THREAD_ID_AR );
+  SignalSema ( s_WSemas[ 2 ] );
   SleepThread ();
 
  }  /* end if */
@@ -1480,6 +1465,8 @@ static void _Destroy ( void ) {
 
  if (  g_Config.m_PowerOff < 0 && !( s_Flags & SMS_FLAGS_STOP )  ) hddPowerOff ();
 
+ for ( i = 0; i < 4; ++i ) DeleteSema ( s_WSemas[ i ] );
+
 }  /* end _Destroy */
 
 SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, unsigned int aSubFormat ) {
@@ -1508,6 +1495,13 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
   int         i;
   ee_thread_t lThread;
   ee_thread_t lCurrentThread;
+  ee_sema_t   lSema;
+
+  lSema.init_count = 0;
+  s_WSemas[ 0 ] = CreateSema ( &lSema );
+  s_WSemas[ 1 ] = CreateSema ( &lSema );
+  s_WSemas[ 2 ] = CreateSema ( &lSema );
+  s_WSemas[ 3 ] = CreateSema ( &lSema );
 
   s_Player.m_VideoIdx = 0xFFFFFFFF;
   s_Player.m_AudioIdx = 0xFFFFFFFF;
@@ -1583,33 +1577,34 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
   s_Player.Destroy       = _Destroy;
 
   ReferThreadStatus ( s_MainThreadID, &lCurrentThread );
+  s_MainThreadPriority = lCurrentThread.current_priority;
 
   s_Player.Play = _sms_play;
 
   lThread.stack_size       = 16384;
   lThread.stack            = g_VRStack;
-  lThread.initial_priority = lCurrentThread.current_priority;
+  lThread.initial_priority = lCurrentThread.current_priority + 1;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpVR;
   THREAD_ID_VR = CreateThread ( &lThread );
 
   lThread.stack_size       = 0x8000;
   lThread.stack            = VD_STACK;
-  lThread.initial_priority = lCurrentThread.current_priority;
+  lThread.initial_priority = lCurrentThread.current_priority + 1;
   lThread.gp_reg           = &_gp;
   lThread.func             = _sms_video_decoder;
   THREAD_ID_VD = CreateThread ( &lThread );
 
   lThread.stack_size       = 16384;
   lThread.stack            = g_ARStack;
-  lThread.initial_priority = lCurrentThread.current_priority;
+  lThread.initial_priority = lCurrentThread.current_priority + 1;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpAR;
   THREAD_ID_AR = CreateThread ( &lThread );
 
   lThread.stack_size       = 0x8000;
   lThread.stack            = AD_STACK;
-  lThread.initial_priority = lCurrentThread.current_priority;
+  lThread.initial_priority = lCurrentThread.current_priority + 1;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpAD;
   THREAD_ID_AD = CreateThread ( &lThread );

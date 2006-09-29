@@ -16,6 +16,7 @@
 #include "SMS_VLC.h"
 #include "SMS_H263.h"
 #include "SMS_VideoBuffer.h"
+#include "SMS_DMA.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -1996,6 +1997,8 @@ static int _msmpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
  ];
  SMS_BitContext* lpBitCtx = &g_MPEGCtx.m_BitCtx;
 
+ IDCT_ClrBlocks ();
+
  if ( g_MPEGCtx.m_PicType == SMS_FT_P_TYPE ) {
 
   if ( g_MPEGCtx.m_UseSkipMBCode ) {
@@ -2186,6 +2189,8 @@ static void _msmpeg4_decode_slice ( void ) {
 
  SMS_MPEG_SetQScale ( g_MPEGCtx.m_QScale );
 
+ g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
+
  for ( ; g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH; ++g_MPEGCtx.m_MBY ) {
 
   if ( g_MPEGCtx.m_ResyncMBY + g_MPEGCtx.m_SliceHeight == g_MPEGCtx.m_MBY ) return;
@@ -2201,8 +2206,6 @@ static void _msmpeg4_decode_slice ( void ) {
    if ( g_MPEGCtx.m_ResyncMBX     == g_MPEGCtx.m_MBX &&
         g_MPEGCtx.m_ResyncMBY + 1 == g_MPEGCtx.m_MBY
    ) g_MPEGCtx.m_FirstSliceLine = 0;
-
-   IDCT_ClrBlocks ( g_MPEGCtx.m_pBlock[ 0 ] );
 
    g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
    g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
@@ -2226,11 +2229,11 @@ static void _msmpeg4_decode_slice ( void ) {
 
      }  /* end if */
 
-     return;
+     goto end;
 
-    } else if ( lRet == SMS_SLICE_NOEND ) return;
+    } else if ( lRet == SMS_SLICE_NOEND ) goto end;
 
-    return;
+    goto end;
 
    }  /* end if */
 
@@ -2255,11 +2258,15 @@ static void _msmpeg4_decode_slice ( void ) {
 
   else lMaxExtra += 256 * 256 * 256 * 64;
         
-  if ( lLeft < lMaxExtra && lLeft > 0 ) return;
+  if ( lLeft < lMaxExtra && lLeft > 0 ) goto end;
 
  }  /* end if */
+end:
+ DMA_Wait ( DMAC_VIF0 );
 
- return;
+ while (   (  *( volatile unsigned int* )0x10003800  ) & 3   );
+
+ g_MPEGCtx.MBCallback ( g_MPEGCtx.m_pDestCB );
 
 }  /* end _msmpeg4_decode_slice */
 

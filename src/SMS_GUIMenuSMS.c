@@ -306,6 +306,20 @@ static GUIObject* _create_sample ( void ) {
 
 }  /* end _create_sample */
 
+static void _setup_dimensions ( GUIMenu* apMenu ) {
+
+ int lWidth  = g_GSCtx.m_Width  - ( g_GSCtx.m_Width  >> 2 );
+ int lHeight = g_GSCtx.m_Height - ( g_GSCtx.m_Height >> 2 );
+
+ lWidth += lWidth / 12;
+
+ apMenu -> m_X          = ( g_GSCtx.m_Width  - lWidth  ) >> 1;
+ apMenu -> m_Y          = (  ( g_GSCtx.m_Height - lHeight ) >> 1  ) + 8;
+ apMenu -> m_Width      = lWidth;
+ apMenu -> m_Height     = lHeight;
+
+}  /* end _setup_dimensions */
+
 static void _update_status ( GUIMenu* apMenu ) {
 
  int           lIdx;
@@ -395,11 +409,13 @@ static void _update_display_menu ( void ) {
 
  switch ( g_Config.m_DisplayMode ) {
 
-  case GSVideoMode_NTSC        : lpStr = &STR_NTSC;     break;
-  case GSVideoMode_PAL         : lpStr = &STR_PAL;      break;
-  case GSVideoMode_DTV_720x480P: lpStr = &STR_DTV_480P; break;
+  case GSVideoMode_NTSC        : lpStr = &STR_NTSC;       break;
+  case GSVideoMode_PAL         : lpStr = &STR_PAL;        break;
+  case GSVideoMode_DTV_720x480P: lpStr = &STR_DTV_480P;   break;
+  case GSVideoMode_VESA_60Hz   : lpStr = &STR_VESA_60_HZ; break;
+  case GSVideoMode_VESA_75Hz   : lpStr = &STR_VESA_75_HZ; break;
   default                      :
-  case GSVideoMode_Default     : lpStr = &STR_AUTO;     break;
+  case GSVideoMode_Default     : lpStr = &STR_AUTO;       break;
 
  }  /* end switch */
 
@@ -427,6 +443,11 @@ static void _display_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pCurr  = s_DispMenu;
  lpState -> m_pLast  = &s_DispMenu[ sizeof ( s_DispMenu ) / sizeof ( s_DispMenu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_DISPLAY_SETTINGS1;
+
+ if ( g_Config.m_DisplayMode == GSVideoMode_DTV_720x480P ||
+      g_Config.m_DisplayMode == GSVideoMode_VESA_60Hz    ||
+      g_Config.m_DisplayMode == GSVideoMode_VESA_75Hz
+ ) --lpState -> m_pLast;
 
  _update_status ( apMenu );
  apMenu -> Redraw ( apMenu );
@@ -721,12 +742,20 @@ static void _tvsys_handler ( GUIMenu* apMenu, int aDir ) {
  else if ( g_Config.m_DisplayMode == GSVideoMode_NTSC )
   g_Config.m_DisplayMode = GSVideoMode_DTV_720x480P;
  else if ( g_Config.m_DisplayMode == GSVideoMode_DTV_720x480P )
+  g_Config.m_DisplayMode = GSVideoMode_VESA_60Hz;
+ else if ( g_Config.m_DisplayMode == GSVideoMode_VESA_60Hz )
+  g_Config.m_DisplayMode = GSVideoMode_VESA_75Hz;
+ else if ( g_Config.m_DisplayMode == GSVideoMode_VESA_75Hz )
   g_Config.m_DisplayMode = GSVideoMode_Default;
  else g_Config.m_DisplayMode = GSVideoMode_PAL;
 
- _update_display_menu ();
+ GUI_MenuPopState ( apMenu );
+ _display_handler ( apMenu, 0 );
 
  GUI_Initialize ( 0 );
+ apMenu -> Cleanup (  ( GUIObject* )apMenu  );
+ _setup_dimensions ( apMenu );
+ apMenu -> Redraw ( apMenu );
  _update_status ( apMenu );
 
 }  /* end _tvsys_handler */
@@ -1765,19 +1794,11 @@ static void _mp3_hp_handler ( GUIMenu* apMenu, int aDir ) {
 GUIObject* GUI_CreateMenuSMS ( void ) {
 
  GUIMenu*      retVal  = ( GUIMenu* )GUI_CreateMenu ();
- int           lWidth  = g_GSCtx.m_Width  - ( g_GSCtx.m_Width  >> 2 );
- int           lHeight = g_GSCtx.m_Height - ( g_GSCtx.m_Height >> 2 );
  GUIMenuState* lpState;
-
- lWidth += lWidth / 12;
 
  HandleEventBase = retVal -> HandleEvent;
 
  retVal -> m_Color      = 0x78301010UL;
- retVal -> m_X          = ( g_GSCtx.m_Width  - lWidth  ) >> 1;
- retVal -> m_Y          = (  ( g_GSCtx.m_Height - lHeight ) >> 1  ) + 8;
- retVal -> m_Width      = lWidth;
- retVal -> m_Height     = lHeight;
  retVal -> HandleEvent  = GUIMenuSMS_HandleEvent;
  retVal -> Redraw       = GUIMenuSMS_Redraw;
  retVal -> m_pActiveObj = g_pActiveNode;
@@ -1791,6 +1812,7 @@ GUIObject* GUI_CreateMenuSMS ( void ) {
  lpState -> m_pTitle = &STR_SMS_MENU;
 
  _update_status ( retVal );
+ _setup_dimensions (  ( GUIMenu* )retVal  );
 
  s_fHDD = 0;
 

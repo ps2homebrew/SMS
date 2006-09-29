@@ -162,6 +162,8 @@ void SMS_EEInit ( void ) {
  g_pBXDATASYS[ 6 ] = lROMVer[ 4 ] == 'E' ? 'E' : ( lROMVer[ 4 ] == 'J' ? 'I' : 'A');
 
  memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
+ memcpy (  ( void* )0x11000000, &g_DataBuffer[ SMS_VU0_MPG_OFFSET  ], SMS_VU0_MPG_SIZE   );
+ memcpy (  ( void* )0x11004000, &g_DataBuffer[ SMS_VU0_DATA_OFFSET ], SMS_VU0_DATA_SIZE  );
 
 }  /* end SMS_EEInit */
 

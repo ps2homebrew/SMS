@@ -36,10 +36,8 @@ static void IPU_DestroyContext ( void ) {
  DisableDmac ( DMAC_I_GIF );
  RemoveDmacHandler ( DMAC_I_GIF, g_IPUCtx.m_DMAHandlerID_GIF );
 #ifdef VB_SYNC
- DisableIntc ( INTC_VB_ON  );
- DisableIntc ( INTC_VB_OFF );
- RemoveIntcHandler ( INTC_VB_ON,  g_IPUCtx.m_VBlankStartHandlerID );
- RemoveIntcHandler ( INTC_VB_OFF, g_IPUCtx.m_VBlankEndHandlerID   );
+ DisableIntc ( INTC_VB_ON );
+ RemoveIntcHandler ( INTC_VB_ON, g_IPUCtx.m_VBlankStartHandlerID );
 #endif  /* VB_SYNC */
  DeleteSema ( g_IPUCtx.m_SyncS );
 
@@ -153,36 +151,22 @@ static int IPU_VBlankStartHandler ( int aCause ) {
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
   DMA_SendA ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
 
- } else g_IPUCtx.m_fBlank = 1;
+ }  /* end if */
 
  return 0;
 
 }  /* end IPU_VBlankStartHandler */
-
-static int IPU_VBlankEndHandler ( int aCause ) {
-
- g_IPUCtx.m_fBlank = 0;
-
- return 0;
-
-}  /* end IPU_VBlankEndHandler */
 #endif  /* VB_SYNC */
 static void IPU_GIFHandlerSend ( void ) {
 
  if ( !--g_IPUCtx.m_Slice ) {
 #ifdef VB_SYNC
-  if ( !g_IPUCtx.m_fBlank )
+  g_IPUCtx.m_fDraw = 1;
+#else
+  IPU_Flush ();
 
-   g_IPUCtx.m_fDraw = 1;
-
-  else {
-#endif  /* VB_SYNC */
-   IPU_Flush ();
-
-   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
-   DMA_SendA ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
-#ifdef VB_SYNC
-  }  /* end else */
+  g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
+  DMA_SendA ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
 #endif  /* VB_SYNC */
   return;
 
@@ -424,8 +408,7 @@ static void IPU_Suspend ( void ) {
  DisableDmac ( DMAC_I_GIF      );
  DisableDmac ( DMAC_I_FROM_IPU );
 #ifdef VB_SYNC
- DisableIntc ( INTC_VB_ON  );
- DisableIntc ( INTC_VB_OFF );
+ DisableIntc ( INTC_VB_ON );
 #endif  /* VB_SYNC */
 }  /* end IPU_Suspend */
 
@@ -436,8 +419,7 @@ static void IPU_Resume ( void ) {
  EnableDmac ( DMAC_I_FROM_IPU );
  EnableDmac ( DMAC_I_GIF      );
 #ifdef VB_SYNC
- EnableIntc ( INTC_VB_ON  );
- EnableIntc ( INTC_VB_OFF );
+ EnableIntc ( INTC_VB_ON );
 #endif  /* VB_SYNC */
 }  /* end IPU_Resume */
 
@@ -498,7 +480,7 @@ static int IPU_DummyVBlankStartHandler ( int aCause ) {
   g_IPUCtx.m_fDraw = 0;
   DMA_SendChainA ( DMAC_GIF, g_IPUCtx.m_pDMAPacket );
 
- } else g_IPUCtx.m_fBlank = 1;
+ }  /* end if */
 
  return 0;
 
@@ -661,13 +643,10 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
   g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( INTC_VB_ON,  IPU_DummyVBlankStartHandler, 0 );
 #endif  /* VB_SYNC */
  }  /* end else */
-#ifdef VB_SYNC
- g_IPUCtx.m_VBlankEndHandlerID = AddIntcHandler ( INTC_VB_OFF, IPU_VBlankEndHandler, 0 );
-#endif  /* VB_SYNC */
+
  g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler ( DMAC_I_GIF, IPU_DMAHandlerToGIF, 0 );
 #ifdef VB_SYNC
- EnableIntc ( INTC_VB_ON  );
- EnableIntc ( INTC_VB_OFF );
+ EnableIntc ( INTC_VB_ON );
 #endif  /* VB_SYNC */
  g_IPUCtx.Resume ();
 

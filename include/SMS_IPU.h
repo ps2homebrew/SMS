@@ -95,9 +95,7 @@ typedef struct IPUContext {
  unsigned int           m_PixFmt;
 # ifdef VB_SYNC
  unsigned int           m_VBlankStartHandlerID;
- unsigned int           m_VBlankEndHandlerID;
  unsigned int           m_fDraw;
- unsigned int           m_fBlank;
 # endif  /* VB_SYNC */
  unsigned int           m_VRAM;
  unsigned int           m_TBW;

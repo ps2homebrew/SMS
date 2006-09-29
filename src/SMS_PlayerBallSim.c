@@ -21,6 +21,7 @@
 
 #define Z_MAX  100
 #define SPEED    2
+#define NBALLS 512
 
 extern unsigned char g_IconBall[ 316 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
 
@@ -64,10 +65,10 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
  lpUDMA[ 5 ] = GS_ALPHA_1;
  lpUDMA[ 6 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 );
  lpUDMA[ 7 ] = GS_PRIM;
- lpUDMA[ 8 ] = GIF_TAG( 512, 1, 0, 0, 1, 4 );
+ lpUDMA[ 8 ] = GIF_TAG( NBALLS, 1, 0, 0, 1, 4 );
  lpUDMA[ 9 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
 
- for ( i = 0; i < 512; ++i ) {
+ for ( i = 0; i < NBALLS; ++i ) {
 
   lpUDMA[ 10 + i * 4 ] = GS_SET_UV(   8,   8 );
   lpUDMA[ 12 + i * 4 ] = GS_SET_UV( 504, 504 );
@@ -76,7 +77,7 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
 
  }  /* end for */
 
- *apQWC = (  ( 10 + 512 * 4 ) * sizeof ( uint64_t )  ) >> 4;
+ *apQWC = (  ( 10 + NBALLS * 4 ) * sizeof ( uint64_t )  ) >> 4;
 
  return g_BallPkt;
 
@@ -87,7 +88,7 @@ void SMS_PlayerBallSim_Update ( uint64_t* apDMA ) {
  int  i, lW = ( int )( g_GSCtx.m_Width  >> 1   ),
          lH = ( int )( g_GSCtx.m_Height / 2.3F );
 
- for ( i = 0; i < 512; ++i ) {
+ for ( i = 0; i < NBALLS; ++i ) {
 
   int  lX, lY;
   u64* lpDMA = ( u64* )_U(  apDMA + 10 + ( i << 2 )  );

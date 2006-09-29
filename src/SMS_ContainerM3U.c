@@ -66,24 +66,15 @@ static int _check_name ( char* apName ) {
 
 }  /* end _check_name */
 
-extern uint64_t SMS_MP3_Probe ( FileContext* );
+static FileContext* _open_file ( SMS_Container* apCont, SMS_ListNode* apNode, FileContext* ( *apOpen ) ( const char*, void* ), void* apOpenParam  ) {
 
-static SMS_Container* _open_file ( SMS_Container* apCont, SMS_ListNode* apNode, FileContext* ( *apOpen ) ( const char*, void* ), void* apOpenParam  ) {
-
- char           lFileName[ 1024 ];
- SMS_Container* retVal = NULL;
- FileContext*   lpFileCtx;
+ char lFileName[ 1024 ];
 
  strcpy ( lFileName, g_CWD );
  SMS_Strcat (  lFileName, g_SlashStr                   );
  SMS_Strcat (  lFileName, MYENTR( apNode ) -> m_pPath  );
 
- lpFileCtx            = apOpen ( lFileName, apOpenParam );
- apCont -> m_pFileCtx = lpFileCtx;
-
- if ( lpFileCtx ) retVal = SMS_GetContainer ( lpFileCtx );
-
- return retVal;
+ return apOpen ( lFileName, apOpenParam );
 
 }  /* end _open_file */
 
@@ -127,40 +118,26 @@ static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
 
 static int _SelectFile ( SMS_Container* apCont, _M3UContainer* apMyCont ) {
 
- FileContext*   ( *lpOpen ) ( const char*, void* ) = apCont -> m_pFileCtx -> Open;
- void*             lpOpenParam                     = apCont -> m_pFileCtx -> m_pOpenParam;
- SMS_CodecContext* lpCodec = apCont -> m_pStm[ 0 ] -> m_pCodec;
- int               retVal = 0;
+ FileContext* ( *lpOpen ) ( const char*, void* ) = apCont -> m_pFileCtx -> Open;
+ void*           lpOpenParam                     = apCont -> m_pFileCtx -> m_pOpenParam;
+ int             retVal    = 0;
+ SMS_Container*  lpSubCont = apMyCont -> m_pMP3Cont;
 
- apCont -> m_pStm[ 0 ] -> m_pCodec = NULL;
+ lpSubCont -> m_pFileCtx -> Destroy ( lpSubCont -> m_pFileCtx );
+ lpSubCont -> m_pFileCtx = _open_file ( apCont, apCont -> m_pPlayItem, lpOpen, lpOpenParam );
 
- apMyCont -> m_pMP3Cont -> Destroy ( apMyCont -> m_pMP3Cont );
- apMyCont -> m_pMP3Cont = _open_file ( apCont, apCont -> m_pPlayItem, lpOpen, lpOpenParam );
+ if ( lpSubCont -> m_pFileCtx ) {
 
- if ( apMyCont -> m_pMP3Cont ) {
+  FileContext* lpFileCtx = lpSubCont -> m_pFileCtx;
 
-  SMS_Stream*  lpStm     = apMyCont -> m_pMP3Cont -> m_pStm[ 0 ];
-  FileContext* lpFileCtx = apMyCont -> m_pMP3Cont -> m_pFileCtx;
+  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize >> 3 );
 
-  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize );
-
-  apCont -> m_pStm[ 0 ] = lpStm;
-  apCont -> m_nStm      = 1;
-  apCont -> ReadPacket  = _ReadFirstPacket;
-
-  lpStm -> m_pCodec -> m_pCodec = lpCodec -> m_pCodec;
+  apCont -> ReadPacket = _ReadFirstPacket;
+  apCont -> m_pFileCtx = lpSubCont -> m_pFileCtx;
 
   retVal = 1;
 
- } else {
-
-  apCont -> m_pStm[ 0 ] = NULL;
-  lpCodec -> m_pCodec -> Destroy ( lpCodec );
-  free ( lpCodec -> m_pCodec );
-  SMS_CodecClose ( lpCodec );
-  free ( lpCodec );
-
- }  /* end else */
+ }  /* end if */
 
  return retVal;
 
@@ -207,6 +184,7 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
  int          lLen;
  char*        lpPtr;
  _M3UEntry*   lpEntry;
+ FileContext* lpSubFileCtx;
 
  if (  ( int )lpFileCtx < 0  ) {
 
@@ -406,23 +384,34 @@ start:
   apCont -> m_pPlayItem = lpList -> m_pHead;
   apCont -> Seek        = _Seek;
 
-  if (   !(  lpSubCont = _open_file ( apCont, lpList -> m_pHead, lpOpen, lpOpenParam )  )   ) {
+  lpSubFileCtx = _open_file ( apCont, lpList -> m_pHead, lpOpen, lpOpenParam );
+
+  if ( lpSubFileCtx ) {
+
+   lpSubCont = SMS_GetContainer ( lpSubFileCtx );
+
+   if ( lpSubCont ) {
+
+    apCont -> m_pFileCtx  = lpSubFileCtx;
+    lpCont -> m_pMP3Cont  = lpSubCont;
+    apCont -> m_pStm[ 0 ] = lpSubCont -> m_pStm[ 0 ];
+    apCont -> m_nStm      = 1;
+    apCont -> m_Duration  = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
+    apCont -> m_Flags    |= SMS_CONT_FLAGS_SEEKABLE;
+
+    retVal = 1;
+
+   } else lpSubFileCtx -> Destroy ( lpSubFileCtx );
+
+  }  /* end if */
+
+  if ( !retVal ) {
 
    free ( apCont -> m_pCtx );
    _m3u_destroy_list ( lpList );
    apCont -> m_pName = NULL;
 
-   retVal = 0;
-
-  } else {
-
-   lpCont -> m_pMP3Cont  = lpSubCont;
-   apCont -> m_pStm[ 0 ] = lpSubCont -> m_pStm[ 0 ];
-   apCont -> m_nStm      = 1;
-   apCont -> m_Duration  = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
-   apCont -> m_Flags    |= SMS_CONT_FLAGS_SEEKABLE;
-
-  }  /* end else */
+  }  /* end if */
 
  }  /* end else */
 

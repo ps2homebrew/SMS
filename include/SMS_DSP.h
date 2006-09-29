@@ -57,12 +57,13 @@ extern "C" {
 void  SMS_DSP_Init       ( void                             );
 void  SMS_DSPContextInit ( SMS_DSPContext*                  );
 void  IDCT               ( uint8_t*, int, SMS_DCTELEM*, int );
-void  IDCT_ClrBlocks     ( SMS_DCTELEM*                     );
+void  IDCT_ClrBlocks     ( void                             );
 void* DSP_FFTInit        ( short*, void*                    );
 void  DSP_FFTRun         ( void*                            );
 void  DSP_FFTGet         ( void*                            );
 
-void DSP_GetMB ( void* );
+void DSP_GetMB  ( void* );
+void DSP_PackMB ( void* );
 
 void DSP_GMC1_16 ( void*, void*, int, int, int, int, int, int );
 void DSP_GMC1_8  ( void*, void*, int, int, int, int, int, int );
