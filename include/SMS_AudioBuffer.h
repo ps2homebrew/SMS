@@ -21,10 +21,11 @@ typedef struct SMS_AudioBuffer {
  unsigned int   m_Len;
  unsigned int   m_fWait;
 
- unsigned char* ( *Alloc   ) ( int  );
- int            ( *Release ) ( void );
- void           ( *Destroy ) ( void );
- void           ( *Reset   ) ( void );
+ unsigned char* ( *Alloc   ) ( int, unsigned char** );
+ void           ( *Free    ) ( unsigned char*       );
+ int            ( *Release ) ( void                 );
+ void           ( *Destroy ) ( void                 );
+ void           ( *Reset   ) ( void                 );
 
 } SMS_AudioBuffer;
 

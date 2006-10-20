@@ -489,8 +489,9 @@ static int IPU_DummyVBlankStartHandler ( int aCause ) {
 static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
  unsigned long* lRGBAQ = UNCACHED_SEG( &g_IPUCtx.m_DMAGIFDraw[ 16 ] );
+ unsigned int   lAlpha = aBrightness == 255 ? 0x20 : 0x00;
 
- lRGBAQ[ 0 ] = g_IPUCtx.m_BRGBAQ = GS_SET_RGBAQ( aBrightness, aBrightness, aBrightness, 0x00, 0x00 );
+ lRGBAQ[ 0 ] = g_IPUCtx.m_BRGBAQ = GS_SET_RGBAQ( aBrightness, aBrightness, aBrightness, lAlpha, 0x00 );
 
 }  /* end IPU_SetBrightness */
 

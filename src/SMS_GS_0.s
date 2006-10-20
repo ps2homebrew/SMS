@@ -14,6 +14,7 @@ s_GSParams:
 .space 32
 s_PAR_NTSC: .word  0x3F6EEEEF
 s_PAR_PAL : .word  0x3F888889
+s_PAR_480P: .word  0x3F59999A
 s_PAR_VESA: .word  0x3F800000
 s_Half    : .word  0x3F000000
 s_OffsetX:  .word 636
@@ -88,7 +89,10 @@ GS_Reset:
     slti    $v0, $a1, 4
     bnel    $v0, $zero, 2f
     lw      $v1, s_PAR_PAL
+    slti    $v0, $a1, 0x50
+    bnel    $v0, $zero, 2f
     lw      $v1, s_PAR_VESA
+    lw      $v1, s_PAR_480P
 2:
     li      $t0, 1
     sll     $v0, $a2, 1

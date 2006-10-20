@@ -62,7 +62,8 @@ static int32_t DummyAudio_Init ( SMS_CodecContext* apCtx ) {
 static int32_t DummyAudio_Decode ( SMS_CodecContext* apCtx, void** appData, uint8_t* apBuf, int32_t aBufSize ) {
 
  SMS_AudioBuffer** lppBuffer = ( SMS_AudioBuffer** )appData;
- short*            lpSamples = ( short* )s_pAudioBuffer -> Alloc ( 16 );
+ unsigned char*    lpPtr;
+ short*            lpSamples = ( short* )s_pAudioBuffer -> Alloc ( 16, &lpPtr );
 
  __asm__ __volatile__ (  "sq $zero, 0(%0)\n\t" :: "r"( lpSamples )  );
 

@@ -37,11 +37,15 @@ unsigned char g_pHOST  [] __attribute__(   (  aligned( 4 ), section( ".data" )  
 unsigned char g_pDVD   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
 unsigned char g_pCDDAFS[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cddafs:/";
 
-static unsigned char s_pAVI[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".avi";
-static unsigned char s_pMP3[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mp3";
-static unsigned char s_pM3U[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".m3u";
-static unsigned char s_pELL[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host:elflist.txt";
-static unsigned char s_pHST[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host:";
+static unsigned char s_pAVI [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".avi";
+static unsigned char s_pDIVX[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".divx";
+static unsigned char s_pXVID[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".xvid";
+static unsigned char s_pMP3 [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mp3";
+static unsigned char s_pM3U [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".m3u";
+static unsigned char s_pMPA [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mpa";
+static unsigned char s_pMP2 [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mp2";
+static unsigned char s_pELL [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host:elflist.txt";
+static unsigned char s_pHST [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host:";
 
 unsigned char* g_pDevName[ 6 ] = {
  g_pUSB, g_pCDROM, g_pHDD0, g_pCDDA, g_pHOST, g_pDVD
@@ -63,10 +67,21 @@ int _set_id ( char* apName ) {
 
   if (       !stricmp ( lpExt, s_pAVI )  )
    retVal = GUICON_AVI;
-  else if (  !stricmp ( lpExt, s_pMP3 )  )
+  else if (  !stricmp ( lpExt, s_pMP3 ) ||
+             !stricmp ( lpExt, s_pMPA ) ||
+             !stricmp ( lpExt, s_pMP2 )
+       )
    retVal = GUICON_MP3;
   else if (  !stricmp ( lpExt, s_pM3U )  )
    retVal = GUICON_M3U;
+
+  if ( retVal == GUICON_FILE && lLen > 5 ) {
+
+   if (  !stricmp ( --lpExt, s_pDIVX ) ||
+         !stricmp (   lpExt, s_pXVID )
+   ) retVal = GUICON_AVI;
+
+  }  /* end if */
 
  }  /* end if */
 
@@ -338,7 +353,12 @@ doScan:
 
   if ( lpNode -> m_Param == GUICON_AVI ) {
 
-   int lPos = strlen ( lpNode -> m_pString ) - 3;
+   int lLen = strlen ( lpNode -> m_pString );
+   int lPos;
+
+   if ( lpNode -> m_pString[ lLen - 4 ] == '.'  )
+    lPos = lLen - 3;
+   else lPos = lLen - 4;
 
    strcpy ( lPath, lpNode -> m_pString );
    strcpy ( lPath + lPos, g_pSrtStr    );
@@ -351,6 +371,10 @@ setSub:
    }  /* end if */
 
    strcpy ( lPath + lPos, g_pSubStr );
+
+   if (  SMS_ListFindI ( lpFileList, lPath )  ) goto setSub;
+
+   strcpy ( lPath + lPos, g_pTxtStr );
 
    if (  SMS_ListFindI ( lpFileList, lPath )  ) goto setSub;
 

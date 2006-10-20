@@ -126,7 +126,6 @@ static void _mp3_handler        ( GUIMenu*, int );
 static void _mp3_rand_handler   ( GUIMenu*, int );
 static void _mp3_repeat_handler ( GUIMenu*, int );
 static void _mp3_asd_handler    ( GUIMenu*, int );
-static void _mp3_hp_handler     ( GUIMenu*, int );
 
 static GUIMenuItem s_SMSMenu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0, &STR_DISPLAY_SETTINGS,     GUICON_DISPLAY, 0, _display_handler,  0, 0 },
@@ -220,8 +219,7 @@ static GUIMenuItem s_MP3Menu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0, &STR_AUDIO_ANIM_DISPLAY, 0, 0, _aadsp_handler,      0, 0 },
  { 0, &STR_RANDOMIZE_PLAYLIST, 0, 0, _mp3_rand_handler,   0, 0 },
  { 0, &STR_REPEAT_MODE,        0, 0, _mp3_repeat_handler, 0, 0 },
- { 0, &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 },
- { 0, &STR_MP3_HP,             0, 0, _mp3_hp_handler,     0, 0 }
+ { 0, &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 }
 };
 
 static GUIMenuItem s_HelpMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -1754,7 +1752,6 @@ static void _mp3_handler ( GUIMenu* apMenu, int aDir ) {
  s_MP3Menu[ 1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_RAND  ? GUICON_ON : GUICON_OFF;
  s_MP3Menu[ 2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_REP   ? GUICON_ON : GUICON_OFF;
  s_MP3Menu[ 3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ASD   ? GUICON_ON : GUICON_OFF;
- s_MP3Menu[ 4 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_MP3HP ? GUICON_ON : GUICON_OFF;
 
  _update_status ( apMenu );
  apMenu -> Redraw ( apMenu );
@@ -1782,12 +1779,6 @@ static void _mp3_repeat_handler ( GUIMenu* apMenu, int aDir ) {
 static void _mp3_asd_handler ( GUIMenu* apMenu, int aDir ) {
 
  _switch_flag ( apMenu, 3, &g_Config.m_PlayerFlags, SMS_PF_ASD );
-
-}  /* end _mp3_asd_handler */
-
-static void _mp3_hp_handler ( GUIMenu* apMenu, int aDir ) {
-
- _switch_flag ( apMenu, 4, &g_Config.m_PlayerFlags, SMS_PF_MP3HP );
 
 }  /* end _mp3_asd_handler */
 

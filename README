@@ -823,3 +823,32 @@ Update (20-SEP-2006)
   there's some performance gain in video decoding (~6%);
 - there're also some experiments with thread priorities in the player, so there's no
   warranty that this1 thing will not hang during playback :);
+
+Update (16-OCT-2006)
+--------------------
+- new MPEG audio decoder code. Fast (~40% faster than low precision one in the previous
+  version), precise (uses floating point calculations) and supports MPEG 1.0 layers 1, 2
+  and 3. For calculations VU0 (macro and micro modes) and VU1 (micro mode) are used;
+  Note: layer 1 audio is not tested as I couldn't find any files encoded in this format.
+  Thanks to 'mpg123' project creators/maintainers for the source code;
+- 'ffgriever''s code (.txt subtitles) is integrated (thanks to him (her) for adding some
+  code into this maze :));
+- brighness control is updated a bit (if maximum is selected then a fixed value of 32 is
+  added to each color component to make the whole image "brighter");
+- some other internal changes (an attempt to eliminate "choppy playback" at the beginning
+  of the movie playback (this can result longer pause at movie startup and during scrolling);
+
+Update (20-OCT-2006)
+--------------------
+- fixed "bad sound from mp3 joint-stereo audio" bug
+  (thanks to lee99 for the sample clip);
+- fixed ".avi files with 'txts' chunk detected as mp3" bug
+  (thanks to 'Z-Saber' for the sample clip);
+- added possibility to playback .avi files with mp1/mp2 audio;
+  (thanks to 'vitaliyfx' for the sample clip);
+- added 'page-up/page-down' actions to the filebrowser (L1/L2 pad buttons);
+- added '.mpa/.mp2' media filter to the filebroser;
+- there's another guess about 480p mode;
+- fixed 'SMS hangs when resumed from pause' bug;
+  (thans to 'spkleader' for the note);
+- fixed incorrect integration 'ffgriever''s code (.txt subtitles);

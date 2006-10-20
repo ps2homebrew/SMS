@@ -28,12 +28,14 @@ static int s_SemaLock;
 # define UNLOCK()
 #endif  /* LOCK_QUEUES */
 
-static unsigned char* _sms_audio_buffer_alloc ( int aSize ) {
+static unsigned char* _sms_audio_buffer_alloc ( int aSize, unsigned char** appPtr ) {
 
  unsigned char* lpPtr;
  int            lSize;
 
  LOCK(); {
+
+  *appPtr = s_AudioBuffer.m_pInp;
 
   lSize = ( aSize + 71 ) & 0xFFFFFFC0;
   lpPtr = s_AudioBuffer.m_pInp + lSize;
@@ -80,7 +82,13 @@ ret:
 
 }  /* end _sms_audio_buffer_alloc */
 
-int _sms_audio_buffer_release ( void ) {
+static void _sms_audio_buffer_free ( unsigned char* apPtr ) {
+
+ s_AudioBuffer.m_pInp = apPtr;
+
+}  /* end _sms_audio_buffer_free */
+
+static int _sms_audio_buffer_release ( void ) {
 
  LOCK(); {
 
@@ -128,8 +136,8 @@ static void _sms_audio_buffer_reset ( void ) {
  s_AudioBuffer.m_pOut  =
  s_AudioBuffer.m_pBeg  = UNCACHED_SEG( AUD_BUFF                              );
  s_AudioBuffer.m_pEnd  = UNCACHED_SEG( &g_DataBuffer[ SMS_DATA_BUFFER_SIZE ] );
- s_AudioBuffer.m_Len   = 0;
  s_AudioBuffer.m_pPos  = NULL;
+ s_AudioBuffer.m_Len   = 0;
  s_AudioBuffer.m_fWait = 0;
 
 }  /* end _sms_audio_buffer_reset */
@@ -146,6 +154,7 @@ SMS_AudioBuffer* SMS_InitAudioBuffer ( void ) {
  s_SemaLock = CreateSema ( &lSema );
 # endif  /* LOCK_QUEUES */
  s_AudioBuffer.Alloc   = _sms_audio_buffer_alloc;
+ s_AudioBuffer.Free    = _sms_audio_buffer_free;
  s_AudioBuffer.Release = _sms_audio_buffer_release;
  s_AudioBuffer.Destroy = _sms_audio_buffer_destroy;
  s_AudioBuffer.Reset   = _sms_audio_buffer_reset;

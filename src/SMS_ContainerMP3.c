@@ -11,7 +11,7 @@
 # 
 */
 #include "SMS_ContainerMP3.h"
-#include "SMS_MP3.h"
+#include "SMS_MP123.h"
 #include "SMS_List.h"
 #include "SMS_Locale.h"
 #include "SMS_Config.h"
@@ -49,8 +49,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
 uint64_t SMS_MP3_Probe ( FileContext* apFileCtx ) {
 
- uint8_t  lBuf[ ID3_HEADER_SIZE ];
- SMS_ALIGN( uint8_t lHeader[ 4 ], 4  ) = { 0xFF, 0xFF, 0xFF, 0xFF };
+ SMS_ALIGN( uint8_t lBuf[ ID3_HEADER_SIZE ], 4 );
  unsigned int lMP3Pos = 16384;
  uint64_t     lVal    = 0;
 
@@ -66,19 +65,23 @@ uint64_t SMS_MP3_Probe ( FileContext* apFileCtx ) {
 
   } else apFileCtx -> Seek ( apFileCtx, 0 );
 
+  apFileCtx -> Read ( apFileCtx, lBuf, 4 );
+
   while (  lMP3Pos && !FILE_EOF( apFileCtx )  ) {
 
-   lHeader[ 0 ] = lHeader[ 1 ];
-   lHeader[ 1 ] = lHeader[ 2 ];
-   lHeader[ 2 ] = lHeader[ 3 ];
-   lHeader[ 3 ] = File_GetByte ( apFileCtx );
-
-   lVal  = SMS_bswap32 (  *( uint32_t* )lHeader  );
+   lVal  = SMS_bswap32 (  *( uint32_t* )lBuf  );
    lVal &= SMS_INT64( 0x00000000FFFFFFFF );
 
-   if (    MP3_CheckHeader (  ( uint32_t )lVal  ) && (   4 - (  ( lVal >> 17 ) & 3  )   ) == 3    ) break;
+   if (   MP123_CheckHeader (  ( uint32_t )lVal  )   ) break;
+
+   lVal = 0L;
 
    --lMP3Pos;
+
+   lBuf[ 0 ] = lBuf[ 1 ];
+   lBuf[ 1 ] = lBuf[ 2 ];
+   lBuf[ 2 ] = lBuf[ 3 ];
+   lBuf[ 3 ] = File_GetByte ( apFileCtx );
 
   }  /* end while */
 

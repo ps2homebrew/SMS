@@ -276,6 +276,64 @@ static void _init_queues ( int afCreate ) {
 
 }  /* end _init_queues */
 
+static int _fill_packet_queues ( void ) {
+
+ int           i;
+ int           lSize;
+ SMS_AVPacket* lpPacket;
+ ee_sema_t     lSema;
+
+ for ( i = 0; i < 4; ++i ) SuspendThread ( s_ThreadIDs[ i ] );
+
+ while ( 1 ) {
+
+  lpPacket = s_Player.m_pCont -> NewPacket ( s_Player.m_pCont );
+nextPacket:
+  lSize    = s_Player.m_pCont -> ReadPacket ( lpPacket );
+
+  if ( lSize <= 0 ) {
+   lpPacket -> Destroy ( lpPacket );
+   break;
+  }  /* end if */
+
+  if ( lpPacket -> m_StmIdx == s_Player.m_VideoIdx ) {
+
+   WaitSema ( SEMA_D_PUT_VIDEO );
+
+   *SMS_RB_PUSHSLOT( s_VPacketQueue ) = lpPacket;
+    SMS_RB_PUSHADVANCE( s_VPacketQueue );
+
+   ++s_nPackets;
+
+   SignalSema ( s_WSemas[ 1 ] );
+   ReferSemaStatus ( SEMA_D_PUT_VIDEO, &lSema );
+
+   if ( lSema.count == 0 ) break;
+
+  } else if ( lpPacket -> m_StmIdx == s_Player.m_AudioIdx ) {
+
+   WaitSema ( SEMA_D_PUT_AUDIO );
+
+   *SMS_RB_PUSHSLOT( s_APacketQueue ) = lpPacket;
+    SMS_RB_PUSHADVANCE( s_APacketQueue );
+
+   ++s_nPackets;
+
+   SignalSema ( s_WSemas[ 3 ] );
+   ReferSemaStatus ( SEMA_D_PUT_AUDIO, &lSema );
+
+   if ( lSema.count == 0 ) break;
+
+  } else goto nextPacket;
+
+ }  /* end while */
+
+ for ( i = 0; i < 4; ++i ) ResumeThread ( s_ThreadIDs[ i ] );
+
+ return lSize;
+
+}  /* end _fill_packet_queues */
+
 static void _sms_dummy_video_renderer ( void* apParam ) {
 
  static u64 s_lDMA[ 16 ] __attribute__(   (  aligned( 16 )  )   );
@@ -1024,7 +1082,7 @@ static void _sms_play ( void ) {
   sprintf ( lBuff, STR_BUFFERING_FILE.m_pStr, s_Player.m_pCont -> m_pName  );
 
   GUI_Status ( lBuff );
-  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, s_Player.m_pFileCtx -> m_StreamSize );
+  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, s_Player.m_pFileCtx -> m_StreamSize >> 2 );
 
  }  /* end if */
 
@@ -1045,7 +1103,12 @@ static void _sms_play ( void ) {
   PlayerControl_UpdateItemNr ();
   SignalSema ( s_WSemas[ 0 ] );
 
- } else s_Player.m_OSDPackets[ 5 ] = NULL;
+ } else {
+
+  s_Player.m_OSDPackets[ 5 ] = NULL;
+  lSize = _fill_packet_queues ();
+
+ }  /* end else */
 repeat:
  while ( 1 ) {
 
@@ -1106,6 +1169,8 @@ resume:
 
     } else {
 
+     int lSts;
+
      s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
 
      for ( lBtn = 0; lBtn < lnDec; ++lBtn ) {
@@ -1118,8 +1183,9 @@ resume:
 
      s_Flags &= ~( SMS_FLAGS_PAUSE | SMS_FLAGS_MENU );
 
-     if (  !PlayerControl_ScrollBar (
-             _init_queues, s_SemaPauseAudio, s_SemaPauseVideo
+     if (  !(  lSts = PlayerControl_ScrollBar (
+                _init_queues, s_SemaPauseAudio, s_SemaPauseVideo
+               )
             )
      ) {
 
@@ -1128,7 +1194,7 @@ resume:
 
      }  /* end if */
 
-     lSize = 0;
+     if ( lSts < 0 ) lSize = _fill_packet_queues ();
 
     }  /* end else */
 
@@ -1182,7 +1248,7 @@ exit:
 
     }  /* end if */
 
-    lSize = 0;
+    lSize = lfNoVideo ? 0 : _fill_packet_queues ();
 
    } else if (  ( lBtn == SMS_PAD_LEFT || lBtn == RC_SCAN_LEFT || lBtn == RC_LEFTX ) && ( s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE )  ) {
 
@@ -1193,7 +1259,7 @@ exit:
 
     }  /* end if */
 
-    lSize = 0;
+    lSize = lfNoVideo ? 0 : _fill_packet_queues ();
 
    } else if ( lBtn == SMS_PAD_SQUARE || lBtn == RC_DISPLAY ) {
 
@@ -1583,28 +1649,28 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
 
   lThread.stack_size       = 16384;
   lThread.stack            = g_VRStack;
-  lThread.initial_priority = lCurrentThread.current_priority + 1;
+  lThread.initial_priority = lCurrentThread.current_priority;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpVR;
   THREAD_ID_VR = CreateThread ( &lThread );
 
   lThread.stack_size       = 0x8000;
   lThread.stack            = VD_STACK;
-  lThread.initial_priority = lCurrentThread.current_priority + 1;
+  lThread.initial_priority = lCurrentThread.current_priority;
   lThread.gp_reg           = &_gp;
   lThread.func             = _sms_video_decoder;
   THREAD_ID_VD = CreateThread ( &lThread );
 
   lThread.stack_size       = 16384;
   lThread.stack            = g_ARStack;
-  lThread.initial_priority = lCurrentThread.current_priority + 1;
+  lThread.initial_priority = lCurrentThread.current_priority;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpAR;
   THREAD_ID_AR = CreateThread ( &lThread );
 
   lThread.stack_size       = 0x8000;
   lThread.stack            = AD_STACK;
-  lThread.initial_priority = lCurrentThread.current_priority + 1;
+  lThread.initial_priority = lCurrentThread.current_priority;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpAD;
   THREAD_ID_AD = CreateThread ( &lThread );

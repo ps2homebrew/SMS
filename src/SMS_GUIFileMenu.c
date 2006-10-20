@@ -112,7 +112,13 @@ static unsigned long* GUIFileMenu_RenderItem ( SMS_ListNode* apNode, int anY, in
           ( int )apNode -> m_Param == GUICON_M3U ||
           ( int )apNode -> m_Param == GUICON_AVIS
        )
- ) lLen -= 4;
+ ) {
+
+  if ( apNode -> m_pString[ lLen - 4 ] == '.' )
+   lLen -= 4;
+  else lLen -= 5;
+
+ }  /* end if */
 
  while (  GSFont_WidthEx ( apNode -> m_pString, lLen, -2 ) > aWidth  ) --lLen;
 
@@ -457,8 +463,8 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
    int            i;
    char*          lpDot;
    char           lName[ 1024 ];
-   char*          lExt[ 2 ] = { g_pSrtStr,          g_pSubStr          };
-   SubtitleFormat lFmt[ 2 ] = { SubtitleFormat_SRT, SubtitleFormat_SUB };
+   char*          lExt[ 3 ] = { g_pSrtStr,          g_pSubStr,          g_pTxtStr          };
+   SubtitleFormat lFmt[ 3 ] = { SubtitleFormat_SRT, SubtitleFormat_SUB, SubtitleFormat_SUB };
 
    strcpy ( lName, apMenu -> m_pCurrent -> m_pString );
    lpDot = strrchr ( lName, '.' );
@@ -600,6 +606,75 @@ static void ( *ContextAction[ 7 ] ) ( GUIFileMenu*, int ) = {
  _context_action_file
 };
 
+static int _step_down ( GUIFileMenu* apMenu ) {
+
+ int retVal = 0;
+
+ if ( apMenu -> m_pCurrent && apMenu -> m_pCurrent -> m_pNext ) {
+
+  apMenu -> m_pCurrent = apMenu -> m_pCurrent -> m_pNext;
+
+  if ( apMenu -> m_pCurrent == apMenu -> m_pLast && apMenu -> m_pCurrent -> m_pNext )
+   apMenu -> m_pFirst = apMenu -> m_pFirst -> m_pNext;
+  else ++apMenu -> m_YOffset;
+
+  retVal = 1;
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end _step_down */
+
+static int _step_up ( GUIFileMenu* apMenu ) {
+
+ int retVal = 0;
+
+ if ( apMenu -> m_pCurrent && apMenu -> m_pCurrent -> m_pPrev ) {
+
+  apMenu -> m_pCurrent = apMenu -> m_pCurrent -> m_pPrev;
+
+  if ( apMenu -> m_pCurrent == apMenu -> m_pFirst && apMenu -> m_pCurrent -> m_pPrev )
+   apMenu -> m_pFirst = apMenu -> m_pFirst -> m_pPrev;
+  else --apMenu -> m_YOffset;
+
+  retVal = 1;
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end _step_up */
+
+static void _page_scroll (  int ( *aFunc ) ( GUIFileMenu* ), GUIFileMenu* apMenu  ) {
+
+ int           i, j;
+ int           lHeight = g_GSCtx.m_Height - 101;
+ int           lnItems = ( lHeight - 2 ) / 34;
+ SMS_ListNode* lpNode;
+
+ for ( i = 0; i < 10; ++i ) {
+
+  j = lnItems;
+
+  if (  !aFunc ( apMenu )  ) break;
+
+  lpNode = apMenu -> m_pFirst;
+
+  while ( lpNode && j > 1 ) {
+
+   apMenu -> m_pLast = lpNode;
+   --j;
+   lpNode = lpNode -> m_pNext;
+
+  }  /* end while */
+
+  if ( lpNode ) apMenu -> m_pLast = lpNode;
+
+ }  /* end for */
+
+}  /* end _page_scroll */
+
 static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  int          retVal = GUIHResult_Void;
@@ -615,43 +690,33 @@ static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
   break;
 
-  case SMS_PAD_DOWN:
+  case SMS_PAD_L1:
 
-   if ( lpMenu -> m_pCurrent && lpMenu -> m_pCurrent -> m_pNext ) {
-
-    lpMenu -> m_pCurrent = lpMenu -> m_pCurrent -> m_pNext;
-
-    if ( lpMenu -> m_pCurrent == lpMenu -> m_pLast && lpMenu -> m_pCurrent -> m_pNext )
-
-     lpMenu -> m_pFirst = lpMenu -> m_pFirst -> m_pNext;
-
-    else ++lpMenu -> m_YOffset;
-
-    goto redraw;
-
-   }  /* end if */
+   _page_scroll (  _step_up, lpMenu );
 
   goto redraw;
 
-  case SMS_PAD_UP:
+  case SMS_PAD_L2:
 
-   if ( lpMenu -> m_pCurrent && lpMenu -> m_pCurrent -> m_pPrev ) {
+   _page_scroll (  _step_down, lpMenu );
 
-    lpMenu -> m_pCurrent = lpMenu -> m_pCurrent -> m_pPrev;
+  goto redraw;
 
-    if ( lpMenu -> m_pCurrent == lpMenu -> m_pFirst && lpMenu -> m_pCurrent -> m_pPrev )
+  case SMS_PAD_DOWN:
 
-     lpMenu -> m_pFirst = lpMenu -> m_pFirst -> m_pPrev;
+   _step_down ( lpMenu );
 
-    else --lpMenu -> m_YOffset;
+  goto redraw;
+
+  case SMS_PAD_UP: {
+
+   _step_up ( lpMenu );
 redraw:
-    _redraw ( lpMenu );
+   _redraw ( lpMenu );
 
-    retVal = GUIHResult_Handled;
+   retVal = GUIHResult_Handled;
 
-   }  /* end if */
-
-  break;
+  } break;
 
   case RC_ENTER     :
   case RC_PLAY      :

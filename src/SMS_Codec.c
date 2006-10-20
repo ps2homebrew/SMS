@@ -15,7 +15,7 @@
 #include "SMS_FourCC.h"
 #include "SMS_MPEG4.h"
 #include "SMS_MSMPEG4.h"
-#include "SMS_MP3.h"
+#include "SMS_MP123.h"
 #include "SMS_AC3.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_DummyAV.h"
@@ -60,6 +60,7 @@ static SMS_CodecTag s_CodecVideoTags[] = {
 };
 
 static SMS_CodecTag s_CodecAudioTags[] = {
+ { SMS_CodecID_MP2,  0x00000050 },
  { SMS_CodecID_MP3,  0x00000055 },
  { SMS_CodecID_AC3,  0x00002000 },
  { SMS_CodecID_NULL, 0x00000000 }
@@ -99,8 +100,9 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
   case SMS_CodecID_MPEG4    : SMS_Codec_MPEG4_Open   ( apCtx ); break;
   case SMS_CodecID_MSMPEG4V3: SMS_Codec_MSMPEG4_Open ( apCtx ); break;
 
-  case SMS_CodecID_MP3: SMS_Codec_MP3_Open ( apCtx ); break;
-  case SMS_CodecID_AC3: SMS_Codec_AC3_Open ( apCtx ); break;
+  case SMS_CodecID_MP2:
+  case SMS_CodecID_MP3: SMS_Codec_MP123_Open ( apCtx ); break;
+  case SMS_CodecID_AC3: SMS_Codec_AC3_Open   ( apCtx ); break;
 
   default: if ( apCtx -> m_Type == SMS_CodecTypeVideo )
             SMS_Codec_DMV_Open ( apCtx );

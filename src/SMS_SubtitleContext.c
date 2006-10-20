@@ -6,6 +6,7 @@
 # (c) 2005 BraveDog
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2006 Voldemar_u2
+# (c) 2006 ffgriever
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -27,6 +28,7 @@
 #define SUB_GSP_SIZE( n )  (  ( n << 2 ) + 8  )
 #define SUB_GSP_OSIZE( n ) (  ( n << 2 ) + 10  )
 #define SUB_MAXLEN         512
+#define SUB_DEF_LINE_LEN   4.0F
 
 typedef struct SubNode {
 
@@ -193,9 +195,13 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
   int64_t lTime [ 2 ];
   int     lFrame[ 2 ];
-  char    lBrace[ 4 ];
   int     i;
+  int     lHour   = 0;
+  int     lMinute = 0;
+  int     lSecond = 0;
   char*   lpPtr;
+
+  lFrame[ 1 ] = 0;
 
   sub_gets ( lLine, apFileCtx );
 
@@ -206,20 +212,41 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
   }  /* end if */
 
-  if (  sscanf (
-         lLine, "%c%d%c%c%d%c",
-         &lBrace[ 0 ], &lFrame[ 0 ], &lBrace[ 1 ],
-         &lBrace[ 2 ], &lFrame[ 1 ], &lBrace[ 3 ]
-        ) != 6 || lBrace[ 0 ] != '{' || lBrace[ 1 ] != '}'
-               || lBrace[ 2 ] != '{' || lBrace[ 3 ] != '}'
-  ) {
+  if (   (  sscanf ( lLine, "{%d}{%d}", &lFrame[ 0 ], &lFrame[ 1 ] ) == 2  )   ) {
+
+   if ( lFrame[ 0 ] == 0 ) continue;
+   if ( lFrame[ 1 ] == 0 ) lFrame[ 1 ] = lFrame[ 0 ] + ( int )(  ( SUB_DEF_LINE_LEN * aFPS ) + 0.5F  );
+
+   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( int64_t )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
+
+   lpPtr = strchr ( lLine, '}' ) + 1;
+   lpPtr = strchr ( lpPtr, '}' ) + 1;
+
+  } else if (   (  sscanf ( lLine, "[%d][%d]", &lFrame[ 0 ], &lFrame[ 1 ] ) == 2  )   ) {
+
+   if ( lFrame[ 0 ] == 0 ) continue;
+   if ( lFrame[ 1 ] == 0 ) lFrame[ 1 ] = lFrame[ 0 ] + ( int )( SUB_DEF_LINE_LEN * 10.0F );
+
+   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( int64_t )( lFrame[ i ] * 100  );
+
+   lpPtr = strchr ( lLine, ']' ) + 1;
+   lpPtr = strchr ( lpPtr, ']' ) + 1;
+
+  } else if (   (  sscanf ( lLine, "%d:%d:%d:", &lHour, &lMinute, &lSecond ) == 3  )   ) {
+
+   lTime[ 0 ] = ( int64_t )(   ( lSecond + ( lMinute * 60 ) + ( lHour * 3600 )  ) * 1000   );
+   lTime[ 1 ] = lTime[ 0 ] + ( int64_t )( SUB_DEF_LINE_LEN * 1000.0F );
+
+   lpPtr = strchr ( lLine, ':' ) + 1;
+   lpPtr = strchr ( lpPtr, ':' ) + 1;
+   lpPtr = strchr ( lpPtr, ':' ) + 1;
+
+  } else {
 
    s_SubCtx.m_ErrorCode = SubtitleError_Format;
    break;
 
-  }  /* end  if */
-
-  for ( i = 0; i < 2; ++i ) lTime[ i ] = ( int64_t )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
+  }  /* end else */
 
   lpNode = ( SubNode* )malloc (  sizeof ( SubNode )  );
   lpNode -> m_pList = SMS_ListInit ();
@@ -236,8 +263,6 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
   }  /* end else */
 
-  lpPtr = strchr ( lLine, '}' ) + 1;
-  lpPtr = strchr ( lpPtr, '}' ) + 1;
   lpPtr = strtok ( lpPtr, "|" );
 
   while ( lpPtr ) {
@@ -478,7 +503,7 @@ static void _produce_packets ( void ) {
   unsigned int    lCumLen  = lLen;
 
   lpPacket -> m_Begin = lpNode -> m_Begin;
-  lpPacket -> m_End   = lpNode -> m_End;
+  lpPacket -> m_End   = lpNode -> m_pNext ? ( lpNode -> m_End > lpNode -> m_pNext -> m_Begin ? lpNode -> m_pNext -> m_Begin - 1 : lpNode -> m_End ) : lpNode -> m_End;
   lpPacket -> m_pDMA  = lpDMA;
   lpPacket -> m_QWC   = SUB_GSP_SIZE( lLen ) >> 1;
 
@@ -625,7 +650,7 @@ static void _produce_opackets ( void ) {
   uint64_t*       lpVIF    = &lpDMA[ 1 ];
 
   lpPacket -> m_Begin = lpNode -> m_Begin;
-  lpPacket -> m_End   = lpNode -> m_End;
+  lpPacket -> m_End   = lpNode -> m_pNext ? ( lpNode -> m_End > lpNode -> m_pNext -> m_Begin ? lpNode -> m_pNext -> m_Begin - 1 : lpNode -> m_End ) : lpNode -> m_End;
   lpPacket -> m_pDMA  = lpDMA;
   lpPacket -> m_QWC   = (  6 + SUB_GSP_OSIZE( lLen )  ) >> 1;
 

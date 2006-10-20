@@ -45,6 +45,7 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
    g_GSCtx.m_PWidth  = 640;
    g_GSCtx.m_Width   = 640;
    g_GSCtx.m_PHeight = g_Config.m_DispH[ 0 ];
+   g_GSCtx.m_Height  = 480;
   break;
 
   default             :
@@ -52,12 +53,14 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
    g_GSCtx.m_PWidth  = 640;
    g_GSCtx.m_Width   = 640;
    g_GSCtx.m_PHeight = g_Config.m_DispH[ 1 ];
+   g_GSCtx.m_Height  = 480;
   break;
 
   case GSVideoMode_DTV_720x480P:
-   g_GSCtx.m_PWidth  = 720;
-   g_GSCtx.m_Width   = 720;
-   g_GSCtx.m_PHeight = 480;
+   g_GSCtx.m_PWidth  = 640;
+   g_GSCtx.m_Width   = 640;
+   g_GSCtx.m_PHeight = 512;
+   g_GSCtx.m_Height  = 512;
   break;
 
   case GSVideoMode_VESA_60Hz:
@@ -65,6 +68,7 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
    g_GSCtx.m_PWidth  = 640;
    g_GSCtx.m_Width   = 640;
    g_GSCtx.m_PHeight = 480;
+   g_GSCtx.m_Height  = 480;
   break;
 
  }  /* end switch */
@@ -73,7 +77,7 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
  GS_InitDC ( &g_GSCtx.m_DispCtx, GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, g_GSCtx.m_OffsetX, g_GSCtx.m_OffsetY );
  lSize = GS_InitGC ( 0, &g_GSCtx.m_DrawCtx[ 0 ], GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, aZTest );
          GS_InitGC ( 1, &g_GSCtx.m_DrawCtx[ 1 ], GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, aZTest );
- GS_InitClear ( &g_GSCtx.m_ClearPkt, 0, 0, g_GSCtx.m_Width, g_GSCtx.m_Height, g_GSCtx.m_BkColor, aZTest );
+ GS_InitClear ( &g_GSCtx.m_ClearPkt, 0, 0, g_GSCtx.m_Width, g_GSCtx.m_Height << 1, g_GSCtx.m_BkColor, aZTest );
 
  SyncDCache (   &g_GSCtx, (  ( unsigned char* )&g_GSCtx  ) + sizeof ( GSContext )   );
 

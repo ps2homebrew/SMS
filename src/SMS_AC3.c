@@ -2421,10 +2421,11 @@ static SMS_INLINE void _ac3_float_to_int ( sample_t* apSamples, int16_t* apOutpu
 
 static int _ac3_decode ( int anChannels, int aLen ) {
 
- int      lFlags = s_AC3Ctx.m_Flags;
- sample_t lLevel = 8 << 24;
- int      i, retVal;
- short*   lpOutBuf;
+ int            lFlags = s_AC3Ctx.m_Flags;
+ sample_t       lLevel = 8 << 24;
+ int            i, retVal;
+ short*         lpOutBuf;
+ unsigned char* lpPtr;
 
  if ( anChannels == 1 )
 
@@ -2446,7 +2447,7 @@ static int _ac3_decode ( int anChannels, int aLen ) {
  }  /* end if */
 
  retVal   = 6 * anChannels * 256 * sizeof ( short );
- lpOutBuf = ( short* )s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal );
+ lpOutBuf = ( short* )s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal, &lpPtr );
 
  for ( i = 0; i < 6; ++i ) {
 
@@ -2464,7 +2465,8 @@ static int _ac3_decode ( int anChannels, int aLen ) {
 static int _ac3_spdif ( int anChannels, int aLen ) {
 
  int            retVal   = 6144;
- unsigned char* lpOutBuf = s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal );
+ unsigned char* lpPtr;
+ unsigned char* lpOutBuf = s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal, &lpPtr );
 
  (  ( uint16_t* )lpOutBuf  )[ 0 ] = 0xF872;
  (  ( uint16_t* )lpOutBuf  )[ 1 ] = 0x4E1F;

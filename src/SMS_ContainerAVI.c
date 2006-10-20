@@ -404,6 +404,7 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
       case SMS_MKTAG( 't', 'x', 't', 's' ):
 
+       lCodecType = SMS_CodecTypeUnknown;
        lpFileCtx -> Seek ( lpFileCtx, lpFileCtx -> m_CurPos + lSize - 8 );
 
       break;

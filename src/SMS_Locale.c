@@ -41,6 +41,7 @@ char g_pMP3Str   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) 
 char g_pCmdPrcStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "CMDPROC";
 char g_pSubStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "sub";
 char g_pSrtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "srt";
+char g_pTxtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "txt";
 char g_pBXDATASYS[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/B?DATA-SYSTEM/";
 
 static unsigned char s_pAvailableMedia [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Available media:  ";

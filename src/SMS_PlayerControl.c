@@ -1256,6 +1256,8 @@ int PlayerControl_ScrollBar (  void ( *apInitQueues ) ( int ), int aSemaA, int a
    s_Player.m_VideoTime = lpPacket -> m_PTS;
    s_Player.m_AudioTime = lpPacket -> m_PTS;
 
+   retVal = -1;
+
   }  /* end if */
 
  }  /* end if */

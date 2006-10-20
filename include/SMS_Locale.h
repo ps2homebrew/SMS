@@ -236,6 +236,7 @@ extern char     g_pMP3Str   [] __attribute__(   (  aligned( 1 ), section( ".data
 extern char     g_pCmdPrcStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pSubStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pSrtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pTxtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pBXDATASYS[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 
 # ifdef __cplusplus
