@@ -47,7 +47,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
 }  /* end _ReadPacket */
 
-uint64_t SMS_MP3_Probe ( FileContext* apFileCtx ) {
+uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_MP3Info* apInfo ) {
 
  SMS_ALIGN( uint8_t lBuf[ ID3_HEADER_SIZE ], 4 );
  unsigned int lMP3Pos = 16384;
@@ -89,32 +89,12 @@ uint64_t SMS_MP3_Probe ( FileContext* apFileCtx ) {
 
  }  /* end if */
 
- return lVal;
-
-}  /* end SMS_MP3_Probe */
-
-int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
-
- int          retVal = 0;
- FileContext* lpFileCtx = apCont -> m_pFileCtx;
- uint64_t     lVal;
-
- if (  ( int )lpFileCtx < 0  ) return retVal;
-
- lVal = SMS_MP3_Probe ( lpFileCtx );
-
  if ( lVal ) {
 
-  int               lMPEG25;
-  int               lLSF;
-  int               lSampleRate;
-  int               lnChannels;
-  int               lBitRateIdx;
-  SMS_Stream*       lpStm;
-  SMS_CodecContext* lpCodecCtx;
-  char*             lpSlash;
-  char*             lpDot;
-  unsigned int      lMP3Pos = lpFileCtx -> m_CurPos - 4;
+  int          lMPEG25;
+  int          lLSF;
+  int          lBitRateIdx;
+  unsigned int lMP3Pos = apFileCtx -> m_CurPos - 4;
 
   if (  lVal & ( 1 << 20 )  ) {
 
@@ -128,9 +108,37 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
   }  /* end else */
 
-  lSampleRate = g_mpa_freq_tab[ ( lVal >> 10 ) & 3 ] >> ( lLSF + lMPEG25 );
-  lnChannels  = (  ( lVal >> 6 ) & 3  ) == SMS_MPA_MONO ? 1 : 2;
   lBitRateIdx = (  ( uint32_t )lVal >> 12  ) & 0xF;
+
+  apInfo -> m_SampleRate = g_mpa_freq_tab[ ( lVal >> 10 ) & 3 ] >> ( lLSF + lMPEG25 );
+  apInfo -> m_nChannels  = (  ( lVal >> 6 ) & 3  ) == SMS_MPA_MONO ? 1 : 2;
+  apInfo -> m_BitRate    = lBitRateIdx ? g_mpa_bitrate_tab[ lLSF ][ 2 ][ lBitRateIdx ] * 1000 : 0;
+
+  apFileCtx -> Seek ( apFileCtx, lMP3Pos );
+
+ }  /* end if */
+
+ return lVal;
+
+}  /* end SMS_MP3Probe */
+
+int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
+
+ int          retVal = 0;
+ FileContext* lpFileCtx = apCont -> m_pFileCtx;
+ uint64_t     lVal;
+ SMS_MP3Info  lInfo;
+
+ if (  ( int )lpFileCtx < 0  ) return retVal;
+
+ lVal = SMS_MP3Probe ( lpFileCtx, &lInfo );
+
+ if ( lVal ) {
+
+  SMS_Stream*       lpStm;
+  SMS_CodecContext* lpCodecCtx;
+  char*             lpSlash;
+  char*             lpDot;
 
   apCont -> m_pName    = g_pMP3Str;
   apCont -> ReadPacket = _ReadPacket;
@@ -141,20 +149,17 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
   lpStm -> m_pCodec = lpCodecCtx = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
 
   lpStm -> m_Flags     |= SMS_STRM_FLAGS_AUDIO;
-  lpStm -> m_SampleRate = lSampleRate;
+  lpStm -> m_SampleRate = lInfo.m_SampleRate;
 
   lpCodecCtx -> m_Type          = SMS_CodecTypeAudio;
   lpCodecCtx -> m_Tag           = 0x00000055;
   lpCodecCtx -> m_ID            = SMS_CodecID_MP3;
-  lpCodecCtx -> m_Channels      = lnChannels;
-  lpCodecCtx -> m_SampleRate    = lSampleRate;
+  lpCodecCtx -> m_Channels      = lInfo.m_nChannels;
+  lpCodecCtx -> m_SampleRate    = lInfo.m_SampleRate;
   lpCodecCtx -> m_BitsPerSample = 16;
-
-  if ( lBitRateIdx ) lpCodecCtx -> m_BitRate = g_mpa_bitrate_tab[ lLSF ][ 2 ][ lBitRateIdx ] * 1000;
+  lpCodecCtx -> m_BitRate       = lInfo.m_BitRate;
 
   apCont -> m_Duration = 0L;
-
-  lpFileCtx -> Seek ( lpFileCtx, lMP3Pos );
 
   apCont -> m_pPlayList = SMS_ListInit ();
   lpSlash = lpFileCtx -> m_pPath + strlen ( lpFileCtx -> m_pPath ) - 1;

@@ -15,11 +15,20 @@
 #  include "SMS_Container.h"
 # endif  /* __SMS_Container_H */
 
+typedef struct SMS_MP3Info {
+
+ int m_SampleRate;
+ int m_nChannels;
+ int m_BitRate;
+
+} SMS_MP3Info;
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
-int SMS_GetContainerMP3 ( SMS_Container* );
+int      SMS_GetContainerMP3 ( SMS_Container*             );
+uint64_t SMS_MP3Probe        ( FileContext*, SMS_MP3Info* );
 
 # ifdef __cplusplus
 }

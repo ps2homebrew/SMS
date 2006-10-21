@@ -102,15 +102,28 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
 static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
 
- int            retVal   = 0;
- SMS_Container* lpCont   = ( SMS_Container* )apPkt -> m_pCtx;
- _M3UContainer* lpMyCont = MYCONT( lpCont );
+ int               retVal     = 0;
+ SMS_Container*    lpCont     = ( SMS_Container* )apPkt -> m_pCtx;
+ _M3UContainer*    lpMyCont   = MYCONT( lpCont );
+ SMS_CodecContext* lpCodecCtx = lpCont -> m_pStm[ 0 ] -> m_pCodec;
+ FileContext*      lpFileCtx  = lpMyCont -> m_pMP3Cont -> m_pFileCtx;
+ SMS_MP3Info       lInfo;
 
- retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apPkt );
+ if (  SMS_MP3Probe ( lpFileCtx, &lInfo )  ) {
 
- apPkt -> m_PTS       = SMS_STPTS_VALUE;
- lpCont -> m_Duration = MYENTR( lpCont -> m_pPlayItem ) -> m_Duration;
- lpCont -> ReadPacket = _ReadPacket;
+  lpCodecCtx -> m_Channels   = lInfo.m_nChannels;
+  lpCodecCtx -> m_SampleRate = lInfo.m_SampleRate;
+  lpCodecCtx -> m_BitRate    = lInfo.m_BitRate;
+
+  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apPkt );
+
+  apPkt -> m_PTS       = SMS_STPTS_VALUE;
+  lpCont -> m_Duration = MYENTR( lpCont -> m_pPlayItem ) -> m_Duration;
+  lpCont -> ReadPacket = _ReadPacket;
+
+  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize >> 3 );
+
+ }  /* end if */
 
  return retVal;
 
@@ -127,10 +140,6 @@ static int _SelectFile ( SMS_Container* apCont, _M3UContainer* apMyCont ) {
  lpSubCont -> m_pFileCtx = _open_file ( apCont, apCont -> m_pPlayItem, lpOpen, lpOpenParam );
 
  if ( lpSubCont -> m_pFileCtx ) {
-
-  FileContext* lpFileCtx = lpSubCont -> m_pFileCtx;
-
-  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize >> 3 );
 
   apCont -> ReadPacket = _ReadFirstPacket;
   apCont -> m_pFileCtx = lpSubCont -> m_pFileCtx;
@@ -398,6 +407,8 @@ start:
     apCont -> m_nStm      = 1;
     apCont -> m_Duration  = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
     apCont -> m_Flags    |= SMS_CONT_FLAGS_SEEKABLE;
+
+    lpSubFileCtx -> Seek ( lpSubFileCtx, 0 );
 
     retVal = 1;
 
