@@ -33,6 +33,7 @@ typedef struct _M3UEntry {
 typedef struct _M3UContainer {
 
  SMS_Container* m_pMP3Cont;
+ int            m_fInit;
 
 } _M3UContainer;
 
@@ -102,26 +103,37 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
 static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
 
- int               retVal     = 0;
- SMS_Container*    lpCont     = ( SMS_Container* )apPkt -> m_pCtx;
- _M3UContainer*    lpMyCont   = MYCONT( lpCont );
- SMS_CodecContext* lpCodecCtx = lpCont -> m_pStm[ 0 ] -> m_pCodec;
- FileContext*      lpFileCtx  = lpMyCont -> m_pMP3Cont -> m_pFileCtx;
- SMS_MP3Info       lInfo;
+ int            retVal   = 1;
+ SMS_Container* lpCont   = ( SMS_Container* )apPkt -> m_pCtx;
+ _M3UContainer* lpMyCont = MYCONT( lpCont );
+ 
+ if (  !lpMyCont -> m_fInit ) {
 
- if (  SMS_MP3Probe ( lpFileCtx, &lInfo )  ) {
+  FileContext*      lpFileCtx  = lpMyCont -> m_pMP3Cont -> m_pFileCtx;
+  SMS_CodecContext* lpCodecCtx = lpCont -> m_pStm[ 0 ] -> m_pCodec;
+  SMS_MP3Info       lInfo;
 
-  lpCodecCtx -> m_Channels   = lInfo.m_nChannels;
-  lpCodecCtx -> m_SampleRate = lInfo.m_SampleRate;
-  lpCodecCtx -> m_BitRate    = lInfo.m_BitRate;
+  if (  SMS_MP3Probe ( lpFileCtx, &lInfo )  ) {
+
+   lpCodecCtx -> m_Channels   = lInfo.m_nChannels;
+   lpCodecCtx -> m_SampleRate = lInfo.m_SampleRate;
+   lpCodecCtx -> m_BitRate    = lInfo.m_BitRate;
+
+   lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize >> 3 );
+
+  } else retVal = 0;
+
+  lpMyCont -> m_fInit = 0;
+
+ }  /* end if */
+
+ if ( retVal ) {
 
   retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apPkt );
 
   apPkt -> m_PTS       = SMS_STPTS_VALUE;
   lpCont -> m_Duration = MYENTR( lpCont -> m_pPlayItem ) -> m_Duration;
   lpCont -> ReadPacket = _ReadPacket;
-
-  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize >> 3 );
 
  }  /* end if */
 
@@ -384,7 +396,6 @@ start:
   if (  ( int )apCont -> m_pFileCtx > 0  ) apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
 
   apCont -> m_pFileCtx = NULL;
-
   apCont -> m_pName    = g_pM3UStr;
   apCont -> ReadPacket = _ReadFirstPacket;
   apCont -> Destroy    = _Destroy;
@@ -408,7 +419,7 @@ start:
     apCont -> m_Duration  = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
     apCont -> m_Flags    |= SMS_CONT_FLAGS_SEEKABLE;
 
-    lpSubFileCtx -> Seek ( lpSubFileCtx, 0 );
+    lpCont -> m_fInit = 1;
 
     retVal = 1;
 
