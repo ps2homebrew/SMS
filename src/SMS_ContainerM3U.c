@@ -123,9 +123,7 @@ static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
 
   } else retVal = 0;
 
-  lpMyCont -> m_fInit = 0;
-
- }  /* end if */
+ } else lpMyCont -> m_fInit = 0;
 
  if ( retVal ) {
 

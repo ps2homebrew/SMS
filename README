@@ -852,3 +852,8 @@ Update (20-OCT-2006)
 - fixed 'SMS hangs when resumed from pause' bug;
   (thans to 'spkleader' for the note);
 - fixed incorrect integration 'ffgriever''s code (.txt subtitles);
+
+Update (24-OCT-2006)
+--------------------
+- fixed bugs related to mp3 sound glitches and m3u crashes;
+  (thanks to 'lee99' for notes, patience and music);

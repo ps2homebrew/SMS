@@ -253,23 +253,27 @@ GS_SetDC:
 
 .ent GS_XYZ
 GS_XYZ:
-    qmtc2       $a1, $vf1
+    .set noat
+    qmfc2       $at, $vf01
+    qmtc2       $a1, $vf01
     sll         $v0, $a0, 4
-    vitof0.xyzw $vf1, $vf1
+    vitof0.xyzw $vf01, $vf01
     mtsah       $zero, -1
     ori         $v1, $zero, 0xFFFF
-    vmul.xyzw   $vf1, $vf1, $vf31
+    vmul.xyzw   $vf01, $vf01, $vf31
     dsll32      $a2, $a2, 0
     dsll32      $v1, $v1, 16
     or          $v0, $v0, $a2
     dsrl32      $v1, $v1, 0
-    vftoi4.xyzw $vf1, $vf1
-    qmfc2       $a1, $vf1
+    vftoi4.xyzw $vf01, $vf01
+    qmfc2       $a1, $vf01
+    qmtc2       $at, $vf01
     qfsrv       $a1, $a1
     move        $a2, $a1
     and         $a2, $a2, $v1
     jr          $ra
     or          $v0, $v0, $a2
+    .set at
 .end GS_XYZ
 
 .ent GS_XYZF

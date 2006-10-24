@@ -52,6 +52,7 @@ typedef struct SMS_Player {
  int                     m_AudioChannels;
  int                     m_PlayItemNr;
  short*                  m_pAudioSamples;
+ unsigned int            m_StartPos;
 
  void ( *Play      ) ( void );
  void ( *Destroy   ) ( void );

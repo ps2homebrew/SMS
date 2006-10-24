@@ -1082,7 +1082,9 @@ static void _sms_play ( void ) {
   sprintf ( lBuff, STR_BUFFERING_FILE.m_pStr, s_Player.m_pCont -> m_pName  );
 
   GUI_Status ( lBuff );
-  s_Player.m_pFileCtx -> Stream ( s_Player.m_pFileCtx, s_Player.m_pFileCtx -> m_CurPos, s_Player.m_pFileCtx -> m_StreamSize >> 2 );
+  s_Player.m_pFileCtx -> Stream (
+   s_Player.m_pFileCtx, s_Player.m_StartPos = s_Player.m_pFileCtx -> m_CurPos, s_Player.m_pFileCtx -> m_StreamSize >> 3
+  );
 
  }  /* end if */
 
@@ -1412,7 +1414,7 @@ nextPacket:
 
   if ( lpCont -> m_pPlayList -> m_Size == 1 ) {
 
-   lpCont -> m_pFileCtx -> Seek ( lpCont -> m_pFileCtx, 0 );
+   lpCont -> m_pFileCtx -> Seek ( lpCont -> m_pFileCtx, s_Player.m_StartPos );
 
   } else {
 
