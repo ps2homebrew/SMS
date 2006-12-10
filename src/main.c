@@ -18,7 +18,7 @@
 
 int main ( void ) {
 
- SMS_IOPReset ();
+ SMS_IOPReset ( 0 );
  SMS_EEInit   ();
 
  GUI_Initialize ( 1 );

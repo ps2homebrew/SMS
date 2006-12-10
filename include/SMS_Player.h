@@ -37,10 +37,10 @@ typedef struct SMS_Player {
  unsigned int            m_PanScan;
  unsigned int            m_SubFormat;
  unsigned int            m_OSD;
- unsigned int            m_VideoIdx;
- unsigned int            m_AudioIdx;
- unsigned long int       m_VideoTime;
- unsigned long int       m_AudioTime;
+          int            m_VideoIdx;
+          int            m_AudioIdx;
+ long     int            m_VideoTime;
+ long     int            m_AudioTime;
  unsigned long int*      m_OSDPackets[ 8 ];
  unsigned int            m_OSDQWC    [ 8 ];
  int                     m_AVDelta;

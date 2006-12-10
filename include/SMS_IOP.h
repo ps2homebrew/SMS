@@ -25,7 +25,7 @@ extern "C" {
 # endif  /* __cplusplus */
 
 int  SMS_IOPExec             ( int, void*                             );
-void SMS_IOPReset            ( void                                   );
+void SMS_IOPReset            ( int                                    );
 void SMS_IOPInit             ( void                                   );
 void SMS_IOPSetSifCmdHandler (  void ( *apFunc ) ( void* ), int aCmd  );
 int  SMS_IOPStartNet         ( void                                   );

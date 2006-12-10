@@ -18,7 +18,6 @@
 #include "SMS_MP123.h"
 #include "SMS_AC3.h"
 #include "SMS_VideoBuffer.h"
-#include "SMS_DummyAV.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -104,10 +103,7 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
   case SMS_CodecID_MP3: SMS_Codec_MP123_Open ( apCtx ); break;
   case SMS_CodecID_AC3: SMS_Codec_AC3_Open   ( apCtx ); break;
 
-  default: if ( apCtx -> m_Type == SMS_CodecTypeVideo )
-            SMS_Codec_DMV_Open ( apCtx );
-           else if ( apCtx -> m_Type == SMS_CodecTypeAudio )
-            SMS_Codec_DMA_Open ( apCtx );
+  default: break;
 
  }  /* end switch */
 

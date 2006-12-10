@@ -129,7 +129,7 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
     } else {
 
      lWidth = lpMenu -> m_Width / 3;
-     lTxtW  = lWidth - 12;
+     lTxtW  = lWidth - 20;
 
     }  /* end else */
 

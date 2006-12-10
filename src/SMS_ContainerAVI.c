@@ -38,7 +38,6 @@ typedef struct _AVIStream {
 
  int64_t      m_StartTime;
  int64_t      m_Duration;
- int64_t      m_CurDTS;
  _AVIdxEntry* m_pIdx;
  uint32_t     m_IdxAllocSize;
  uint32_t     m_nIdx;
@@ -105,7 +104,7 @@ static SMS_Stream* _NewStream ( SMS_Container* apCont ) {
    MYSTRM( retVal ) -> m_Idx       = apCont -> m_nStm;
    MYSTRM( retVal ) -> m_StartTime =
    MYSTRM( retVal ) -> m_Duration  =
-   MYSTRM( retVal ) -> m_CurDTS    = SMS_NOPTS_VALUE;
+   retVal -> m_CurDTS              = SMS_NOPTS_VALUE;
 
    retVal -> Destroy = _DestroyStream;
 
@@ -467,7 +466,7 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
        lpStm -> m_pCodec -> m_Channels      = File_GetUShort ( lpFileCtx );
        lpStm -> m_pCodec -> m_SampleRate    = File_GetUInt ( lpFileCtx );
        lpStm -> m_pCodec -> m_BitRate       = File_GetUInt ( lpFileCtx ) * 8;
-       lpStm -> m_pCodec -> m_BlockAlign    = File_GetUShort ( lpFileCtx );
+       File_GetUShort ( lpFileCtx );
        lpStm -> m_pCodec -> m_BitsPerSample = lSize == 14 ? 8 : File_GetUShort ( lpFileCtx );
        lpStm -> m_pCodec -> m_ID            = SMS_CodecGetID ( SMS_CodecTypeAudio, lID );
 
@@ -546,74 +545,13 @@ error: retVal = 0;
 
 }  /* end _ReadHeader */
 
-static void _CalcPktFields ( SMS_Stream* apStm, SMS_AVPacket* apPkt ) {
+static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
 
- int               lNum, lDen;
- SMS_CodecContext* lpCodecCtx = apStm -> m_pCodec;
-
- if ( lpCodecCtx -> m_Type == SMS_CodecTypeVideo ) {
-
-  lNum = lpCodecCtx -> m_FrameRateBase;
-  lDen = lpCodecCtx -> m_FrameRate;
-
- } else if ( lpCodecCtx -> m_Type == SMS_CodecTypeAudio ) {
-
-  lNum = lpCodecCtx -> m_FrameSize <= 1 ? ( apPkt -> m_Size * 8 * lpCodecCtx -> m_SampleRate ) / lpCodecCtx -> m_BitRate
-                                        : lpCodecCtx -> m_FrameSize;
-  lDen = lpCodecCtx -> m_SampleRate;
-
- } else return;
-
- if ( lDen && lNum )
-
-  apPkt -> m_Duration = ( int )SMS_Rescale (
-   1, lNum * ( int64_t )apStm -> m_TimeBase.m_Den, lDen * ( int64_t )apStm -> m_TimeBase.m_Num
-  );
-
- if ( apPkt -> m_PTS == SMS_NOPTS_VALUE ) {
-
-  if ( apPkt -> m_DTS == SMS_NOPTS_VALUE ) {
-
-   apPkt -> m_PTS = MYSTRM( apStm ) -> m_CurDTS;
-   apPkt -> m_DTS = MYSTRM( apStm ) -> m_CurDTS;
-
-  } else {
-
-   MYSTRM( apStm ) -> m_CurDTS = apPkt -> m_DTS;
-   apPkt -> m_PTS              = apPkt -> m_DTS;
-
-  }  /* end else */
-
- } else {
-
-  MYSTRM( apStm ) -> m_CurDTS = apPkt -> m_PTS;
-  apPkt -> m_DTS              = apPkt -> m_PTS;
-
- }  /* end else */
-
- MYSTRM( apStm ) -> m_CurDTS += apPkt -> m_Duration;
-
- if ( apPkt -> m_PTS != SMS_NOPTS_VALUE )
-
-  apPkt -> m_PTS = SMS_Rescale (  apPkt -> m_PTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den  );
-
- if ( apPkt -> m_DTS != SMS_NOPTS_VALUE )
-
-  apPkt -> m_DTS = SMS_Rescale ( apPkt -> m_DTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den );
-
- apPkt -> m_Duration = ( int )SMS_Rescale (  apPkt -> m_Duration, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den  );
-
-}  /* end _CalcPktFields */
-
-static int _ReadPacket ( SMS_AVPacket* apPkt ) {
-
- SMS_Container* lpCont     = apPkt  -> m_pCtx;
- _AVIContainer* lpAVICont  = MYCONT( lpCont );
- FileContext*   lpBuf      = lpCont -> m_pFileCtx;
+ _AVIContainer* lpAVICont  = MYCONT( apCont );
+ FileContext*   lpBuf      = apCont -> m_pFileCtx;
  int32_t        lData[ 8 ] = { -1, -1, -1, -1, -1, -1, -1, -1 };
  int32_t        i          = lpBuf -> m_CurPos;
  int32_t        lCount, lSize;
- SMS_Stream*    lpStm;
  _AVIStream*    lpAVIStm;
 
  while ( lpBuf -> m_CurPos < lpBuf -> m_Size ) {
@@ -657,7 +595,7 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
   if ( lData[ 2 ] >= '0' && lData[ 2 ] <= '9' &&
        lData[ 3 ] >= '0' && lData[ 3 ] <= '9' &&
        lData[ 0 ] == 'i' && lData[ 1 ] == 'x' &&
-       lCount < ( int32_t )lpCont -> m_nStm   &&
+       lCount < ( int32_t )apCont -> m_nStm   &&
        i + lSize <= ( int32_t )lpAVICont -> m_MoviEnd
   ) File_Skip ( lpBuf, lSize );
             
@@ -670,51 +608,56 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
           ( lData[ 2 ] == 'd' && lData[ 3 ] == 'b' ) ||
           ( lData[ 2 ] == '_' && lData[ 3 ] == '_' )
        )                                        &&
-       lCount    <  ( int32_t )lpCont -> m_nStm &&
+       lCount    <  ( int32_t )apCont -> m_nStm &&
        i + lSize <= ( int32_t )lpAVICont -> m_MoviEnd
   ) {
-        
-   apPkt -> Alloc ( apPkt, lSize );
 
-   if ( apPkt -> m_pData == NULL ) return 0;
+   SMS_Stream* lpStm = apCont -> m_pStm[ lCount ];
 
-   lpBuf -> Read ( lpBuf, apPkt -> m_pData, lSize );
+   if ( lpStm -> m_pPktBuf ) {
 
-   if ( lSize & 1 ) {
+    SMS_AVPacket* lpPkt = apCont -> AllocPacket ( lpStm -> m_pPktBuf, lSize );
 
-    File_GetByte ( lpBuf );
-    ++lSize;
+    if ( !lpPkt ) return 0;
 
-   }  /* end if */
+    lpBuf -> Read ( lpBuf, lpPkt -> m_pData, lSize );
 
-   lpStm    = lpCont -> m_pStm[ lCount ];
-   lpAVIStm = MYSTRM( lpStm );
+    if ( lSize & 1 ) {
 
-   apPkt -> m_DTS = lpAVIStm -> m_FrameOffset;
+     File_GetByte ( lpBuf );
+     ++lSize;
 
-   if ( lpAVIStm -> m_SampleSize ) apPkt -> m_DTS /= lpAVIStm -> m_SampleSize;
+    }  /* end if */
 
-   apPkt -> m_StmIdx = lCount;
+    lpAVIStm = MYSTRM( lpStm );
 
-   if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
+    lpPkt -> m_DTS = lpAVIStm -> m_FrameOffset;
 
-    if (  lpAVIStm -> m_FrameOffset < lpAVIStm -> m_nIdx &&
-          lpAVIStm -> m_pIdx[ lpAVIStm -> m_FrameOffset ].m_Flags & AVIIF_INDEX
-    ) apPkt -> m_Flags |= SMS_PKT_FLAG_KEY;
+    if ( lpAVIStm -> m_SampleSize ) lpPkt -> m_DTS /= lpAVIStm -> m_SampleSize;
 
-   } else apPkt -> m_Flags |= SMS_PKT_FLAG_KEY;
+    lpPkt -> m_StmIdx = lCount;
 
-   if ( lpAVIStm -> m_SampleSize )
+    if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
 
-    lpAVIStm -> m_FrameOffset += apPkt -> m_Size;
+     if (  lpAVIStm -> m_FrameOffset < lpAVIStm -> m_nIdx &&
+           lpAVIStm -> m_pIdx[ lpAVIStm -> m_FrameOffset ].m_Flags & AVIIF_INDEX
+     ) lpPkt -> m_Flags |= SMS_PKT_FLAG_KEY;
 
-   else ++lpAVIStm -> m_FrameOffset;
+    } else lpPkt -> m_Flags |= SMS_PKT_FLAG_KEY;
 
-   _CalcPktFields ( lpStm, apPkt );
+    if ( lpAVIStm -> m_SampleSize )
+     lpAVIStm -> m_FrameOffset += lpPkt -> m_Size;
+    else ++lpAVIStm -> m_FrameOffset;
 
-   return lSize;
+    SMSContainer_CalcPktFields ( lpStm, lpPkt );
 
-  }  /* end if */
+    *apIdx = lCount;
+
+    return lSize;
+
+   } else File_Skip ( lpBuf, lSize );
+
+  }  /* end else */
 
  }  /* end while */
 
@@ -965,7 +908,7 @@ static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
 
     lpStm -> m_NewFrameOffset = j;
 
-   else lpStm -> m_NewFrameOffset = lpStm ->m_pIdx[ j ].m_CumLen;
+   else lpStm -> m_NewFrameOffset = lpStm -> m_pIdx[ j ].m_CumLen;
 
   }  /* end if */
 

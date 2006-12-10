@@ -4,6 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006 hjx (widescreen support)
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -20,6 +21,7 @@
 #include "SMS_GS.h"
 #include "SMS.h"
 #include "SMS_VideoBuffer.h"
+#include "SMS_Timer.h"
 
 IPUContext g_IPUCtx;
 
@@ -30,6 +32,19 @@ IPUContext g_IPUCtx;
 static unsigned long int* s_pVIFPacket;
 static unsigned long int* s_pViFPacket;
 static unsigned long int* s_pVIPPacket;
+
+static void IPU_Sync ( void ) {
+
+ WaitSema ( g_IPUCtx.m_SyncS );
+ SignalSema ( g_IPUCtx.m_SyncS );
+
+}  /* end IPU_Sync */
+
+static void IPU_StopSync ( int afStop ) {
+
+ g_IPUCtx.m_fStopSync = afStop;
+
+}  /* end IPU_Stop */
 
 static void IPU_DestroyContext ( void ) {
 
@@ -52,13 +67,6 @@ static void IPU_DestroyContext ( void ) {
  }  /* end if */
 
 }  /* end IPU_DestroyContext */
-
-static void IPU_Sync ( void ) {
-
- WaitSema ( g_IPUCtx.m_SyncS );
- SignalSema ( g_IPUCtx.m_SyncS );
-
-}  /* end IPU_Sync */
 
 static void IPU_Flush ( void ) {
 
@@ -145,6 +153,17 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
  if ( g_IPUCtx.m_fDraw ) {
 
+  if ( !g_IPUCtx.m_fStopSync && g_IPUCtx.m_pAudioPTS ) {
+
+   int64_t lAudioPTS = *g_IPUCtx.m_pAudioPTS;
+   int64_t lDiff     = g_IPUCtx.m_VideoPTS - lAudioPTS;
+
+   if ( lDiff > 80 || !lAudioPTS )
+    return -1;
+   else if (   lDiff > -200 && (  ( *GS_CSR >> 13 ) & 1  )   ) return -1;
+
+  }  /* end if */
+
   IPU_Flush ();
 
   g_IPUCtx.m_fDraw    = 0;
@@ -153,7 +172,7 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
  }  /* end if */
 
- return 0;
+ return -1;
 
 }  /* end IPU_VBlankStartHandler */
 #endif  /* VB_SYNC */
@@ -189,7 +208,7 @@ static int IPU_DMAHandlerToGIF ( int aChan ) {
 
 }  /* end IPU_DMAHandlerToGIF */
 
-static void IPU_Display ( void* apFB ) {
+static void IPU_Display ( void* apFB, long aVideoPTS ) {
 
  WaitSema ( g_IPUCtx.m_SyncS );
 
@@ -200,6 +219,7 @@ static void IPU_Display ( void* apFB ) {
  g_IPUCtx.m_fDraw = 0;
 #endif  /* VB_SYNC */
  g_IPUCtx.GIFHandler = IPU_GIFHandlerSend;
+ g_IPUCtx.m_VideoPTS = aVideoPTS;
 
  DMA_SendA (   DMAC_TO_IPU, (  ( SMS_FrameBuffer* )apFB  ) -> m_pData, g_IPUCtx.m_QWCToIPUSlice   );
  IPU -> m_CMD = g_IPUCtx.m_CSCmd;
@@ -209,7 +229,7 @@ static void IPU_Display ( void* apFB ) {
 
 static void IPU_ChangeMode ( unsigned int anIdx ) {
 
- if ( anIdx < 5 ) {
+ if ( anIdx < 8 ) {
 
   g_IPUCtx.m_ModeIdx = anIdx;
 
@@ -267,9 +287,15 @@ static void _ipu_compute_fields ( unsigned int anIdx, unsigned int aWidth ) {
 
  if ( g_GSCtx.m_Width < g_GSCtx.m_Height * lAR ) {
 
-  int lH      = ( int )( g_GSCtx.m_Width / lAR );
-  int lTop    = ( g_GSCtx.m_Height - lH ) >> 1;
-  int lBottom = lTop + lH;
+  int lH;
+  int lTop;
+  int lBottom;
+
+  if ( anIdx > 4 ) lAR *= 3.0F / 4.0F;
+
+  lH      = ( int )( g_GSCtx.m_Width / lAR );
+  lTop    = ( g_GSCtx.m_Height > lH ? g_GSCtx.m_Height - lH : lH - g_GSCtx.m_Height ) >> 1;
+  lBottom = lTop + lH;
 
   __asm__ __volatile__(
    ".set noreorder\n\t"
@@ -370,6 +396,20 @@ static void IPU_Reset ( void ) {
  g_IPUCtx.m_ImgRight [ 4 ] = g_GSCtx.m_PWidth  << 4;
  g_IPUCtx.m_ImgBottom[ 4 ] = g_GSCtx.m_PHeight << 4;
 
+ lAR    = 16.0f/9.0f;
+ lWP    = ( int )(  ( float )g_IPUCtx.m_Height * lAR  );
+ lDelta = (  ( int )g_IPUCtx.m_Width - lWP  ) / 2;
+
+ _ipu_compute_fields ( 5, g_IPUCtx.m_Width );  /* widescreen  */
+
+ if ( lDelta > 0 ) {
+  _ipu_compute_fields ( 6, g_IPUCtx.m_Width - lDelta );  /* widescreen pan-scan 1 */
+  _ipu_compute_fields ( 7, lWP                       );  /* widescreen pan-scan 2 */
+ } else {
+  _ipu_compute_fields ( 6, g_IPUCtx.m_Width );  /* widescreen pan-scan 3 */
+  _ipu_compute_fields ( 7, g_IPUCtx.m_Width );  /* widescreen pan-scan 3 */
+ }  /* end else */
+
  IPU_ChangeMode ( g_Config.m_PlayerFlags >> 28 );
 
 }  /* end IPU_Reset */
@@ -444,7 +484,7 @@ static void IPU_DummyResume ( void ) {
 
 }  /* end IPU_DummyResume */
 
-static void IPU_DummyDisplay ( void* apParam ) {
+static void IPU_DummyDisplay ( void* apParam, long aVideoPTS ) {
 
  WaitSema ( g_IPUCtx.m_SyncS );
 
@@ -473,7 +513,7 @@ static void IPU_DummyRepaint ( void ) {
 #ifdef VB_SYNC
 static int IPU_DummyVBlankStartHandler ( int aCause ) {
 
- if ( g_IPUCtx.m_fDraw ) {
+ if (  (  ( *GS_CSR >> 13 ) & 1  ) && g_IPUCtx.m_fDraw  ) {
 
   IPU_Flush ();
 
@@ -495,12 +535,11 @@ static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
 }  /* end IPU_SetBrightness */
 
-IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
+IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS ) {
 
  ee_sema_t lSema;
 
  lSema.init_count = 1;
- lSema.max_count  = 1;
  g_IPUCtx.m_SyncS = CreateSema ( &lSema );
 
  s_pVIFPacket = ( unsigned long int* )UNCACHED_SEG( &g_IPUCtx.m_DMAVIFDraw[ 0 ] );
@@ -518,6 +557,8 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight ) {
  g_IPUCtx.Sync          = IPU_Sync;
  g_IPUCtx.Flush         = IPU_Flush;
  g_IPUCtx.SetBrightness = IPU_SetBrightness;
+ g_IPUCtx.StopSync      = IPU_StopSync;
+ g_IPUCtx.m_pAudioPTS   = apAudioPTS;
 
  if ( aWidth && aHeight ) {
 

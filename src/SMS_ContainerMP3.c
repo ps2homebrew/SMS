@@ -31,19 +31,22 @@ static int SMS_INLINE _id3_match ( const uint8_t* apBuf ) {
 
 }  /* end _id3_match */
 
-static int _ReadPacket ( SMS_AVPacket* apPkt ) {
+static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
 
- FileContext* lpFileCtx = (  ( SMS_Container* )apPkt -> m_pCtx  ) -> m_pFileCtx;
-
- apPkt -> Alloc ( apPkt, MP3_PACKET_SIZE );
-
- if ( !apPkt -> m_pData ) return 0;
-
- apPkt -> m_Size = lpFileCtx -> Read (
-  lpFileCtx, apPkt -> m_pData, MP3_PACKET_SIZE
+ int           lSize;
+ FileContext*  lpFileCtx = apCont -> m_pFileCtx;
+ SMS_AVPacket* lpPkt     = apCont -> AllocPacket (
+  apCont -> m_pStm[ *apIdx = 0 ] -> m_pPktBuf, MP3_PACKET_SIZE
  );
 
- return apPkt -> m_Size ? apPkt -> m_Size : -1;
+ lSize = lpFileCtx -> Read ( lpFileCtx, lpPkt -> m_pData, MP3_PACKET_SIZE );
+
+ if ( !lSize )
+  SMS_RingBufferUnalloc ( apCont -> m_pStm[ 0 ] -> m_pPktBuf, MP3_PACKET_SIZE + 64 );
+ else if ( lSize < MP3_PACKET_SIZE )
+  memset ( lpPkt -> m_pData + lSize, 0, MP3_PACKET_SIZE - lSize );
+
+ return lSize ? lSize : -1;
 
 }  /* end _ReadPacket */
 

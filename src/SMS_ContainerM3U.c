@@ -79,19 +79,18 @@ static FileContext* _open_file ( SMS_Container* apCont, SMS_ListNode* apNode, Fi
 
 }  /* end _open_file */
 
-static int _ReadPacket ( SMS_AVPacket* apPkt ) {
+static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
 
  int            retVal   = -1;
- SMS_Container* lpCont   = ( SMS_Container* )apPkt -> m_pCtx;
- _M3UContainer* lpMyCont = MYCONT( lpCont );
+ _M3UContainer* lpMyCont = MYCONT( apCont );
 
- if (   (  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apPkt )  ) < 0   ) {
+ if (   (  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apCont, apIdx )  ) < 0   ) {
 
-  if ( lpCont -> m_pPlayItem -> m_pNext ) {
+  if ( apCont -> m_pPlayItem -> m_pNext ) {
 
-   lpCont -> m_pPlayItem = lpCont -> m_pPlayItem -> m_pNext;
+   apCont -> m_pPlayItem = apCont -> m_pPlayItem -> m_pNext;
 
-   if (  _SelectFile ( lpCont, lpMyCont )  ) retVal = lpCont -> ReadPacket ( apPkt );
+   if (  _SelectFile ( apCont, lpMyCont )  ) retVal = apCont -> ReadPacket ( apCont, apIdx );
 
   }  /* end if */
 
@@ -101,16 +100,15 @@ static int _ReadPacket ( SMS_AVPacket* apPkt ) {
 
 }  /* end _ReadPacket */
 
-static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
+static int _ReadFirstPacket ( SMS_Container* apCont, int* apIdx ) {
 
  int            retVal   = 1;
- SMS_Container* lpCont   = ( SMS_Container* )apPkt -> m_pCtx;
- _M3UContainer* lpMyCont = MYCONT( lpCont );
+ _M3UContainer* lpMyCont = MYCONT( apCont );
  
  if (  !lpMyCont -> m_fInit ) {
 
   FileContext*      lpFileCtx  = lpMyCont -> m_pMP3Cont -> m_pFileCtx;
-  SMS_CodecContext* lpCodecCtx = lpCont -> m_pStm[ 0 ] -> m_pCodec;
+  SMS_CodecContext* lpCodecCtx = apCont -> m_pStm[ 0 ] -> m_pCodec;
   SMS_MP3Info       lInfo;
 
   if (  SMS_MP3Probe ( lpFileCtx, &lInfo )  ) {
@@ -127,11 +125,12 @@ static int _ReadFirstPacket ( SMS_AVPacket* apPkt ) {
 
  if ( retVal ) {
 
-  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apPkt );
+  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apCont, apIdx );
 
-  apPkt -> m_PTS       = SMS_STPTS_VALUE;
-  lpCont -> m_Duration = MYENTR( lpCont -> m_pPlayItem ) -> m_Duration;
-  lpCont -> ReadPacket = _ReadPacket;
+  (  ( SMS_AVPacket* )( apCont -> m_pStm[ 0 ] -> m_pPktBuf -> m_pPtr )  ) -> m_PTS = SMS_STPTS_VALUE;
+
+  apCont -> m_Duration = MYENTR( apCont -> m_pPlayItem ) -> m_Duration;
+  apCont -> ReadPacket = _ReadPacket;
 
  }  /* end if */
 
@@ -353,6 +352,8 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
   FileContext* ( *lpOpen ) ( const char*, void* );
   void*           lpOpenParam;
 start:
+  retVal = 0;
+
   if ( g_Config.m_PlayerFlags & SMS_PF_RAND ) {
 
    SMS_List*    lpNewList = SMS_ListInit ();

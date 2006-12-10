@@ -857,3 +857,23 @@ Update (24-OCT-2006)
 --------------------
 - fixed bugs related to mp3 sound glitches and m3u crashes;
   (thanks to 'lee99' for notes, patience and music);
+
+Update (04-DEC-2006)
+--------------------
+- network driver is optimized further (host->hdd transfer rate is
+  about 860 KB/s here and raw download speed is about 900KB/s);
+- new data packet management -> the application might be unstable,
+  since it was not tested a lot;
+- sound driver is updated a bit;
+- widescreen code of 'hjx' is integrated;
+- added dynamic scrollbar scale (L1/R1 padd buttons during scroll);
+
+Update (09-DEC-2006)
+--------------------
+- fixed "dynamic scrollbar scale" issue (thanks to 'peterdcrees' for
+  the remark;
+- speed up network driver once again a tiny bit (almost 900KB/s
+  transfer speed to HDD here);
+- changed A/V synchronization algorithm (image motions should appear
+  smoother);
+

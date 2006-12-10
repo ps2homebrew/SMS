@@ -210,6 +210,9 @@ typedef struct SMString {
 # define STR_RIGHT                SMS_STRING( 187 )
 # define STR_VESA_60_HZ           SMS_STRING( 188 )
 # define STR_VESA_75_HZ           SMS_STRING( 189 )
+# define STR_WIDESCREEN           SMS_STRING( 190 )
+# define STR_WIDE_PAN_SCAN_1      SMS_STRING( 191 )
+# define STR_WIDE_PAN_SCAN_2      SMS_STRING( 192 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );

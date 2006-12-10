@@ -726,7 +726,7 @@ void _exit_handler ( GUIMenu* apMenu, int aDir ) {
 
  if ( !lIdx ) {
 
-  SMS_IOPReset ();
+  SMS_IOPReset ( 1 );
   Exit ( 0 );
 
  } else SMS_EExec ( s_ExitTo[ lIdx ] -> m_pStr );

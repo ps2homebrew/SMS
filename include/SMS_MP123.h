@@ -22,10 +22,6 @@
 #  include "SMS_Codec.h"
 # endif  /* __SMS_Codec_H */
 
-# ifndef __SMS_AudioBuffer_H
-#  include "SMS_AudioBuffer.h"
-# endif  /* __SMS_AudioBuffer_H */
-
 # define SMS_HEADER_SIZE                 4
 # define SMS_MPA_MAX_CODED_FRAME_SIZE 1792
 # define SMS_BACKSTEP_SIZE             512
@@ -108,9 +104,12 @@ typedef struct SMS_Codec_MPAContext {
  int                m_JSBound;
  unsigned char*     m_pInBufPtr;
  unsigned char*     m_pInBuf;
- SMS_AudioBuffer*   m_pOutBuffer;
+ unsigned char*     m_pPos;
+ int                m_Len;
 
 } SMS_Codec_MPAContext;
+
+extern SMS_Codec_MPAContext g_MPACtx;
 
 # ifdef __cplusplus
 extern "C" {
@@ -118,6 +117,7 @@ extern "C" {
 
 void SMS_Codec_MP123_Open ( SMS_CodecContext* );
 int  MP123_CheckHeader    ( uint32_t );
+int  MP123_DecodeHeader   ( uint32_t );
 
 # ifdef __cplusplus
 }

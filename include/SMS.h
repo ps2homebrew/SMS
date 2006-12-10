@@ -62,28 +62,6 @@ extern const uint32_t g_SMS_InvTbl[ 256 ];
 
 # define SMS_PKT_FLAG_KEY 0x00000001
 
-# define SMS_RB_CREATE( rb, type ) \
- struct {                          \
-  type* m_pBeg;                    \
-  type* m_pEnd;                    \
-  type* m_pInp;                    \
-  type* m_pOut;                    \
- } rb
-
-# define SMS_RB_INIT( rb, start, count )  \
- ( rb ).m_pInp  =                         \
- ( rb ).m_pOut  =                         \
- ( rb ).m_pBeg  = start;                  \
- ( rb ).m_pEnd  = &( rb ).m_pBeg[ count ]
-
-# define SMS_RB_SLOT( rb, slot )  (  ( slot ) == ( rb ).m_pEnd ? ( rb ).m_pBeg : ( slot )  )
-# define SMS_RB_EMPTY( rb )       (  ( rb ).m_pInp == ( rb ).m_pOut  )
-# define SMS_RB_FULL( rb )        (   SMS_RB_SLOT(  rb, ( rb ).m_pInp + 1  ) == ( rb ).m_pOut   )
-# define SMS_RB_PUSHSLOT( rb )    (  ( rb ).m_pInp  )
-# define SMS_RB_POPSLOT( rb )     (  ( rb ).m_pOut  )
-# define SMS_RB_PUSHADVANCE( rb ) (   ( rb ).m_pInp = SMS_RB_SLOT(  ( rb ), ( rb ).m_pInp + 1  )   )
-# define SMS_RB_POPADVANCE( rb )  (   ( rb ).m_pOut = SMS_RB_SLOT(  ( rb ), ( rb ).m_pOut + 1  )   )
-
 # ifndef NULL
 #  define NULL (  ( void* )0  )
 # endif  /* NULL */
@@ -215,8 +193,6 @@ typedef struct SMS_AVPacket {
  uint32_t m_Flags;
  int32_t  m_Duration;
  void*    m_pCtx;
- void     ( *Alloc   ) ( struct SMS_AVPacket*, int );
- void     ( *Destroy ) ( struct SMS_AVPacket*      );
 
 } SMS_AVPacket;
 

@@ -24,7 +24,7 @@ extern "C" {
 void SMS_Codec_MPEG4_Open ( SMS_CodecContext* );
 
 void MPEG4_PredAC        ( SMS_DCTELEM*, int, int );
-void MPEG4_CommonInit    ( void                   );
+void MPEG4_CommonInit    ( SMS_CodecContext*      );
 void MPEG4_CommonDestroy ( void                   );
 
 # ifdef __cplusplus

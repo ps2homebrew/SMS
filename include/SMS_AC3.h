@@ -20,10 +20,6 @@
 #  include "SMS_Codec.h"
 # endif  /* __SMS_Codec_H */
 
-# ifndef __SMS_AudioBuffer_H
-#  include "SMS_AudioBuffer.h"
-# endif  /* __SMS_AudioBuffer_H */
-
 # define AC3_CHANNEL       0
 # define AC3_MONO          1
 # define AC3_STEREO        2
@@ -106,10 +102,11 @@ typedef struct SMS_Codec_AC3Context {
  int              m_Downmixed;
  int              m_Output;
  int              m_DynRnge;
- SMS_AudioBuffer* m_pOutBuffer;
  sample_t*        m_pSamples;
  uint32_t*        m_pBufStart;
  uint8_t*         m_pInBuf;
+ uint8_t*         m_pPos;
+ int              m_Len;
  uint16_t         m_BAI;
  uint16_t         m_LFSRState;
  uint8_t          m_FSCod;
@@ -171,11 +168,15 @@ static int32_t __inline MUL_L ( int32_t a, int32_t b ) {
 # define MUL_C( a, b ) MUL_L(  a, LEVEL( b )  )
 # define DIV( a, b )   (    (   (  ( int64_t )LEVEL( a )  ) << 26   ) / ( b )    )
 
+extern const int g_AC3Channels[ 8 ];
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
 void SMS_Codec_AC3_Open ( SMS_CodecContext* );
+
+int AC3_SyncInfo ( uint8_t*, int*, int*, int* );
 
 # ifdef __cplusplus
 }

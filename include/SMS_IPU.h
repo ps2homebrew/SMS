@@ -4,6 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006 hjx (widescreen support)
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -73,14 +74,14 @@ typedef struct IPUContext {
  unsigned long int      m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned int           m_ImgLeft   [  5 ];
- unsigned int           m_ImgTop    [  5 ];
- unsigned int           m_ImgRight  [  5 ];
- unsigned int           m_ImgBottom [  5 ];
- unsigned int           m_TxtLeft   [  5 ];
- unsigned int           m_TxtTop    [  5 ];
- unsigned int           m_TxtRight  [  5 ];
- unsigned int           m_TxtBottom [  5 ];
+ unsigned int           m_ImgLeft   [  8 ];
+ unsigned int           m_ImgTop    [  8 ];
+ unsigned int           m_ImgRight  [  8 ];
+ unsigned int           m_ImgBottom [  8 ];
+ unsigned int           m_TxtLeft   [  8 ];
+ unsigned int           m_TxtTop    [  8 ];
+ unsigned int           m_TxtRight  [  8 ];
+ unsigned int           m_TxtBottom [  8 ];
  unsigned long int      m_DestY;
  unsigned int           m_Slice;
  unsigned int           m_MB;
@@ -114,9 +115,12 @@ typedef struct IPUContext {
  unsigned long int*     m_pDMAPacket;
  struct SMS_MacroBlock* m_pMB;
  unsigned long          m_BRGBAQ;
+ long*                  m_pAudioPTS;
+ long                   m_VideoPTS;
+ int                    m_fStopSync;
  
  void ( *Sync          ) ( void         );
- void ( *Display       ) ( void*        );
+ void ( *Display       ) ( void*, long  );
  void ( *Destroy       ) ( void         );
  void ( *SetTEX        ) ( void         );
  void ( *GIFHandler    ) ( void         );
@@ -131,6 +135,7 @@ typedef struct IPUContext {
  void ( *Pan           ) ( int          );
  void ( *Flush         ) ( void         );
  void ( *SetBrightness ) ( unsigned int );
+ void ( *StopSync      ) ( int          );
 
 } IPUContext;
 
@@ -139,7 +144,7 @@ extern IPUContext g_IPUCtx;
 extern "C" {
 # endif  /* __cplusplus */
 
-IPUContext* IPU_InitContext ( int, int );
+IPUContext* IPU_InitContext ( int, int, long* );
 
 unsigned int IPU_FDEC ( unsigned                                                   );
 unsigned int IPU_IDEC ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );

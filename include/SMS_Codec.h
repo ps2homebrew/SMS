@@ -16,6 +16,10 @@
 #  include "SMS.h"
 # endif  /* __SMS_H */
 
+# ifndef __SMS_RingBuffer_H
+#  include "SMS_RingBuffer.h"
+# endif  /* __SMS_RingBuffer_H */
+
 # define SMS_CODEC_FLAG_LOW_DELAY 0x00080000
 
 typedef enum SMS_CodecType {
@@ -23,8 +27,9 @@ typedef enum SMS_CodecType {
 } SMS_CodecType;
 
 typedef enum SMS_CodecID {
- SMS_CodecID_NULL, SMS_CodecID_MPEG4, SMS_CodecID_MSMPEG4V3,
- SMS_CodecID_MP2,  SMS_CodecID_MP3,   SMS_CodecID_AC3,
+ SMS_CodecID_NULL,  SMS_CodecID_MPEG4, SMS_CodecID_MSMPEG4V3,
+ SMS_CodecID_MPEG1, SMS_CodecID_MPEG2,
+ SMS_CodecID_MP2,   SMS_CodecID_MP3,   SMS_CodecID_AC3,
  SMS_CodecID_DMV
 } SMS_CodecID;
 
@@ -42,9 +47,9 @@ typedef struct SMS_Codec {
 
  const char* m_pName;
  void*       m_pCtx;
- int32_t     ( *Init    ) ( struct SMS_CodecContext*                            );
- int32_t     ( *Decode  ) ( struct SMS_CodecContext*, void**, uint8_t*, int32_t );
- void        ( *Destroy ) ( struct SMS_CodecContext*                            );
+ int32_t     ( *Init    ) ( struct SMS_CodecContext*                          );
+ int32_t     ( *Decode  ) ( struct SMS_CodecContext*, void**, SMS_RingBuffer* );
+ void        ( *Destroy ) ( struct SMS_CodecContext*                          );
 
 } SMS_Codec;
 
@@ -61,16 +66,11 @@ typedef struct SMS_CodecContext {
  int32_t       m_Channels;
  int32_t       m_SampleRate;
  int32_t       m_BitRate;
- int32_t       m_BlockAlign;
  SMS_CodecType m_Type;
  SMS_CodecID   m_ID;
  uint32_t      m_Tag;
  int           m_HasBFrames;
- int           m_HurryUp;
- int           m_ErrorResilience;
  int           m_IntBufCnt;
- int           m_SkipTop;
- int           m_SkipBottom;
  void*         m_pIntBuf;
  SMS_Codec*    m_pCodec;
 

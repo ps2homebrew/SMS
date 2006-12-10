@@ -14,6 +14,12 @@
 
 #define SMS_VIDEO_BUFFER_SIZE 15
 
+#define SMS_RB_SLOT( rb, slot )  (  ( slot ) == ( rb ).m_pEnd ? ( rb ).m_pBeg : ( slot )  )
+#define SMS_RB_PUSHSLOT( rb )    (  ( rb ).m_pInp  )
+#define SMS_RB_POPSLOT( rb )     (  ( rb ).m_pOut  )
+#define SMS_RB_PUSHADVANCE( rb ) (   ( rb ).m_pInp = SMS_RB_SLOT(  ( rb ), ( rb ).m_pInp + 1  )   )
+#define SMS_RB_POPADVANCE( rb )  (   ( rb ).m_pOut = SMS_RB_SLOT(  ( rb ), ( rb ).m_pOut + 1  )   )
+
 static SMS_FrameBuffer s_FrameBuffer[ SMS_VIDEO_BUFFER_SIZE ];
 static SMS_VideoBuffer s_VideoBuffer;
 

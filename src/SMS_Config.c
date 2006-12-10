@@ -19,7 +19,7 @@
 #include <string.h>
 
 extern void _check_dc_offset ( void );
-extern unsigned char g_IconSMS[ 33688 ] __attribute__(   (  section( ".data" )  )   );
+extern unsigned char g_IconSMS[ 2020 ] __attribute__(   (  section( ".data" )  )   );
 
 SMSConfig g_Config __attribute__(   (  section( ".data" )  )   );
 

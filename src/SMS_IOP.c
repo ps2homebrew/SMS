@@ -34,6 +34,7 @@
 
 unsigned int g_IOPFlags;
 
+static unsigned char s_pSIO2MAN[] __attribute__(   (  section( ".data" )  )   ) = "rom0:SIO2MAN";
 static unsigned char s_pPADMAN [] __attribute__(   (  section( ".data" )  )   ) = "rom0:PADMAN";
 static unsigned char s_pMCMAN  [] __attribute__(   (  section( ".data" )  )   ) = "rom0:MCMAN";
 static unsigned char s_pMCSERV [] __attribute__(   (  section( ".data" )  )   ) = "rom0:MCSERV";
@@ -210,9 +211,9 @@ int SMS_IOPExec ( int argc, void* argv ) {
 
 }  /* end SMS_IOPExec */
 
-void SMS_IOPReset ( void ) {
+void SMS_IOPReset ( int afExit ) {
 
- static const char* lpModules[ 3 ] = { s_pPADMAN, s_pMCMAN, s_pMCSERV };
+ static const char* lpModules[ 4 ] = { s_pSIO2MAN, s_pPADMAN, s_pMCMAN, s_pMCSERV };
 
  int i;
 #if 1
@@ -230,9 +231,9 @@ void SMS_IOPReset ( void ) {
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
 #endif
- SifExecModuleBuffer ( &g_DataBuffer[ SMS_SIO2MAN_OFFSET ], SMS_AUDSRV_SIZE, 0, NULL, &i );
+ if ( !afExit ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_SIO2MAN_OFFSET ], SMS_AUDSRV_SIZE, 0, NULL, &i );
 
- for ( i = 0; i < 3; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
+ for ( i = 1 - afExit; i < 4; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
 
 }  /* end SMS_IOPReset */
 

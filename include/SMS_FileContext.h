@@ -94,6 +94,12 @@ static INLINE unsigned int File_GetUShort ( FileContext* apCtx ) {
  return retVal | File_GetByte ( apCtx ) << 8;
 }  /* end File_GetShort */
 
+static INLINE int File_GetShortBE ( FileContext* apFileCtx ) {
+ int retVal = File_GetByte ( apFileCtx ) << 8;
+ retVal |= File_GetByte ( apFileCtx );
+ return retVal;
+}  /* end File_GetShortBE */
+
 static INLINE unsigned int File_GetUInt ( FileContext* apCtx ) {
  unsigned int retVal = File_GetByte ( apCtx );
  retVal |= File_GetByte ( apCtx ) <<  8;

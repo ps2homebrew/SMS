@@ -18,6 +18,7 @@
 */
 #include "SMS_AC3.h"
 #include "SMS_Config.h"
+#include "SMS_RingBuffer.h"
 
 #include <string.h>
 #include <malloc.h>
@@ -32,6 +33,8 @@ typedef struct quantizer_set_t {
  int         m_pQ4;
 
 } quantizer_set_t;
+
+const int g_AC3Channels[ 8 ] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
 #define Q( x ) SMS_ROUND ( 32768.0 * x )
 
@@ -312,16 +315,16 @@ static int8_t s_LATab[ 256 ] = {
 };
 
 static SMS_Codec_AC3Context s_AC3Ctx;
-static int ( *DecodeFrame ) ( int, int );
+static int ( *DecodeFrame ) ( SMS_RingBuffer*, int, int );
 
 #define MYCTX() (  ( SMS_Codec_AC3Context* )apCtx -> m_pCodec -> m_pCtx  )
 
-static int32_t AC3_Init    ( SMS_CodecContext*                            );
-static int32_t AC3_Decode  ( SMS_CodecContext*, void**, uint8_t*, int32_t );
-static void    AC3_Destroy ( SMS_CodecContext*                            );
+static int32_t AC3_Init    ( SMS_CodecContext*                          );
+static int32_t AC3_Decode  ( SMS_CodecContext*, void**, SMS_RingBuffer* );
+static void    AC3_Destroy ( SMS_CodecContext*                          );
 
-static int _ac3_decode ( int, int );
-static int _ac3_spdif  ( int, int );
+static int _ac3_decode ( SMS_RingBuffer*, int, int );
+static int _ac3_spdif  ( SMS_RingBuffer*, int, int );
 
 void SMS_Codec_AC3_Open ( SMS_CodecContext* apCtx ) {
 
@@ -346,10 +349,12 @@ static int32_t AC3_Init ( SMS_CodecContext* apCtx ) {
  s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
  s_AC3Ctx.m_FrameSize = 0;
 
- MYCTX() -> m_pOutBuffer = SMS_InitAudioBuffer ();
+ if (  MYCTX() -> m_pSamples  ) free (  MYCTX() -> m_pSamples  );
+
  MYCTX() -> m_pSamples   = ( sample_t* )calloc (  16, 256 * 12 * sizeof ( sample_t )  );
  MYCTX() -> m_Downmixed  = 1;
  MYCTX() -> m_LFSRState  = 1;
+ MYCTX() -> m_Len        = 0;
 
  return 0;
 
@@ -357,12 +362,11 @@ static int32_t AC3_Init ( SMS_CodecContext* apCtx ) {
 
 static void AC3_Destroy ( SMS_CodecContext* apCtx ) {
 
- MYCTX() -> m_pOutBuffer -> Destroy ();
  free (  MYCTX() -> m_pSamples  );
 
 }  /* end AC3_Destroy */
 
-static int _ac3_syncinfo ( uint8_t* apBuf, int* apFlags, int* apSampleRate, int* apBitRate ) {
+int AC3_SyncInfo ( uint8_t* apBuf, int* apFlags, int* apSampleRate, int* apBitRate ) {
 
  static int s_Rate[ 19 ] = {
    32,  40,  48,  56,  64,  80,  96, 112,
@@ -2419,13 +2423,12 @@ static SMS_INLINE void _ac3_float_to_int ( sample_t* apSamples, int16_t* apOutpu
 
 }  /* end _ac3_float_to_int */
 
-static int _ac3_decode ( int anChannels, int aLen ) {
+static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 
- int            lFlags = s_AC3Ctx.m_Flags;
- sample_t       lLevel = 8 << 24;
- int            i, retVal;
- short*         lpOutBuf;
- unsigned char* lpPtr;
+ int      lFlags = s_AC3Ctx.m_Flags;
+ sample_t lLevel = 8 << 24;
+ int      i, retVal;
+ short*   lpOutBuf;
 
  if ( anChannels == 1 )
 
@@ -2446,8 +2449,11 @@ static int _ac3_decode ( int anChannels, int aLen ) {
 
  }  /* end if */
 
- retVal   = 6 * anChannels * 256 * sizeof ( short );
- lpOutBuf = ( short* )s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal, &lpPtr );
+ retVal    = 6 * anChannels * 256 * sizeof ( short );
+ lpOutBuf  = ( short* )SMS_RingBufferAlloc ( apRB, retVal + 68 );
+ lpOutBuf += 32;
+ *( int* )lpOutBuf = retVal;
+ lpOutBuf += 2;
 
  for ( i = 0; i < 6; ++i ) {
 
@@ -2462,11 +2468,14 @@ static int _ac3_decode ( int anChannels, int aLen ) {
 
 }  /* end _ac3_decode */
 
-static int _ac3_spdif ( int anChannels, int aLen ) {
+static int _ac3_spdif ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 
  int            retVal   = 6144;
- unsigned char* lpPtr;
- unsigned char* lpOutBuf = s_AC3Ctx.m_pOutBuffer -> Alloc ( retVal, &lpPtr );
+ unsigned char* lpOutBuf = SMS_RingBufferAlloc ( apRB, retVal + 68 );
+
+ lpOutBuf += 64;
+ *( int* )lpOutBuf = retVal;
+ lpOutBuf += 4;
 
  (  ( uint16_t* )lpOutBuf  )[ 0 ] = 0xF872;
  (  ( uint16_t* )lpOutBuf  )[ 1 ] = 0x4E1F;
@@ -2516,31 +2525,29 @@ static int _ac3_spdif ( int anChannels, int aLen ) {
 
 }  /* end _ac3_spdif */
 
-static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apBuf, int32_t aBufSize ) {
+static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** appData, SMS_RingBuffer* apInput ) {
 
- static const int s_AC3Channels[ 8 ] = { 2, 1, 2, 3, 3, 4, 4, 5 };
+ SMS_AVPacket*   lpPkt = ( SMS_AVPacket* )apInput -> m_pOut;
+ int             lLen;
+ int             lSampleRate, lBitRate;
+ SMS_RingBuffer* lpRB     = ( SMS_RingBuffer* )appData;
+ uint8_t*        lpBuf    = lpPkt -> m_pData;
+ int32_t         lBufSize = lpPkt -> m_Size;
+ int             retVal   = 0;
 
- uint8_t*          lpBuf = apBuf;
- int               lLen;
- int               lSampleRate, lBitRate;
- SMS_AudioBuffer** lppBuffer = ( SMS_AudioBuffer** )apData;
- int               retVal = 0;
+ if ( s_AC3Ctx.m_Len ) {
 
- *lppBuffer = s_AC3Ctx.m_pOutBuffer;
-
- if ( s_AC3Ctx.m_pOutBuffer -> m_Len != 0 ) {
-
-  lpBuf    = apBuf = s_AC3Ctx.m_pOutBuffer -> m_pPos;
-  aBufSize = s_AC3Ctx.m_pOutBuffer -> m_Len;
+  lpBuf    = s_AC3Ctx.m_pPos;
+  lBufSize = s_AC3Ctx.m_Len;
 
  } else {
 
-  s_AC3Ctx.m_pOutBuffer -> m_pPos = lpBuf = apBuf;
-  s_AC3Ctx.m_pOutBuffer -> m_Len  = aBufSize;
+  s_AC3Ctx.m_pPos = lpBuf;
+  s_AC3Ctx.m_Len  = lBufSize;
 
  }  /* end else */
 
- while ( aBufSize > 0 ) {
+ while ( lBufSize > 0 ) {
 
   lLen = s_AC3Ctx.m_pInBuf - s_AC3Ctx.m_InBuf;
 
@@ -2548,17 +2555,17 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apB
 
    lLen = HEADER_SIZE - lLen;
 
-   if ( lLen > aBufSize ) lLen = aBufSize;
+   if ( lLen > lBufSize ) lLen = lBufSize;
 
    memcpy ( s_AC3Ctx.m_pInBuf, lpBuf, lLen );
 
    lpBuf             += lLen;
    s_AC3Ctx.m_pInBuf += lLen;
-   aBufSize          -= lLen;
+   lBufSize          -= lLen;
 
    if ( s_AC3Ctx.m_pInBuf - s_AC3Ctx.m_InBuf == HEADER_SIZE ) {
 
-    lLen = _ac3_syncinfo (
+    lLen = AC3_SyncInfo (
      s_AC3Ctx.m_InBuf, &s_AC3Ctx.m_Flags, &lSampleRate, &lBitRate
     );
 
@@ -2571,7 +2578,7 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apB
 
      s_AC3Ctx.m_FrameSize  = lLen;
      apCtx -> m_SampleRate = lSampleRate;
-     s_AC3Ctx.m_nChannels  = s_AC3Channels[ s_AC3Ctx.m_Flags & 7 ];
+     s_AC3Ctx.m_nChannels  = g_AC3Channels[ s_AC3Ctx.m_Flags & 7 ];
 
      if ( s_AC3Ctx.m_Flags & AC3_LFE ) ++s_AC3Ctx.m_nChannels;
 
@@ -2593,20 +2600,22 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apB
 
    lLen = s_AC3Ctx.m_FrameSize - lLen;
 
-   if ( lLen > aBufSize ) lLen = aBufSize;
+   if ( lLen > lBufSize ) lLen = lBufSize;
 
    memcpy ( s_AC3Ctx.m_pInBuf, lpBuf, lLen );
 
    lpBuf             += lLen;
    s_AC3Ctx.m_pInBuf += lLen;
-   aBufSize          -= lLen;
+   lBufSize          -= lLen;
 
   } else {
 
-   if (   !(  retVal = DecodeFrame ( apCtx -> m_Channels, lLen )  )   ) continue;
+   if (   !(  retVal = DecodeFrame ( lpRB, apCtx -> m_Channels, lLen )  )   ) continue;
 
    s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
    s_AC3Ctx.m_FrameSize = 0;
+
+   lpRB -> UserCB ( lpRB );
 
    break;
 
@@ -2614,11 +2623,11 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** apData, uint8_t* apB
 
  }  /* end while */
 
- lLen = lpBuf - s_AC3Ctx.m_pOutBuffer -> m_pPos;
+ lLen = lpBuf - s_AC3Ctx.m_pPos;
 
- s_AC3Ctx.m_pOutBuffer -> m_Len  -= lLen;
- s_AC3Ctx.m_pOutBuffer -> m_pPos += lLen;
+ s_AC3Ctx.m_Len  -= lLen;
+ s_AC3Ctx.m_pPos += lLen;
 
- return retVal;
+ return s_AC3Ctx.m_Len;
 
 }  /* end AC3_Decode */

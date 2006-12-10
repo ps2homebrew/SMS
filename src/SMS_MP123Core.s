@@ -12,6 +12,7 @@
 .set nomacro
 .set noat
 
+.globl MP123_CoreInit
 .globl MP123_IMDCT36
 .globl MP123_IMDCT12
 .globl MP123_Synth
@@ -179,6 +180,13 @@ s_SynthBuf: .space  4352
 s_Offset  : .space  4
 
 .text
+
+MP123_CoreInit:
+    sw      $zero, s_Offset
+    la      $a0, s_SynthBuf
+    addu    $a1, $zero, $zero
+    j       memset
+    addiu   $a2, $zero, 4352
 
 MP123_IMDCT36:
     pref    0, 0($a0)

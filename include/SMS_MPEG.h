@@ -260,6 +260,8 @@ typedef struct SMS_MPEGContext {
  int               m_SliceHeight;
  int               m_FlipFlopRnd;
  int               m_BitRate;
+ int               m_MSPerFrame;
+ int               m_LastPPTS;
  uint16_t          m_PPTime;
  uint16_t          m_PBTime;
  uint16_t          m_PPFieldTime;

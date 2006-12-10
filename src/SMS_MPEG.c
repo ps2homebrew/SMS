@@ -1011,8 +1011,6 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
     g_MPEGCtx.m_NextPic.m_pBuf -> m_pData, lOpPix, lOpQPel
    );
 
-  if ( g_MPEGCtx.m_pParentCtx -> m_HurryUp > 1 ) return;
-
   if ( g_MPEGCtx.m_MPEGQuant ) {
 
    _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 0 ], 0, lpDestY,       16, g_MPEGCtx.m_QScale );

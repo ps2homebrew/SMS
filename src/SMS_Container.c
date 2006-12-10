@@ -24,43 +24,27 @@ static ContainerCreator s_CCreator[] = {
  SMS_GetContainerM3U, NULL
 };
 
-static void _DestroyPacket ( SMS_AVPacket* apPkt ) {
+static SMS_AVPacket* _AllocPacket ( SMS_RingBuffer* apRB, int aSize ) {
 
- if ( apPkt ) {
+ static SMS_AVPacket s_EmptyPacket;
 
-  if ( apPkt -> m_pData ) free ( apPkt -> m_pData );
+ SMS_AVPacket* lpPkt = aSize ? SMS_RingBufferAlloc ( apRB, aSize + 64 ) : &s_EmptyPacket;
 
-  free ( apPkt );
+ if ( lpPkt ) {
+
+  lpPkt -> m_PTS      = SMS_NOPTS_VALUE;
+  lpPkt -> m_DTS      = SMS_NOPTS_VALUE;
+  lpPkt -> m_StmIdx   = 0;
+  lpPkt -> m_Flags    = 0;
+  lpPkt -> m_Duration = 0;
+  lpPkt -> m_pData    = (  ( unsigned char* )lpPkt  ) + 64;
+  lpPkt -> m_Size     = aSize;
 
  }  /* end if */
 
-}  /* end _DestroyPacket */
-
-static void _AllocPacket ( SMS_AVPacket* apPkt, int aSize ) {
-
- void* lpData = SMS_Realloc ( apPkt -> m_pData, &apPkt -> m_AllocSize, aSize + 8 );
-
- apPkt -> m_PTS      = SMS_NOPTS_VALUE;
- apPkt -> m_DTS      = SMS_NOPTS_VALUE;
- apPkt -> m_StmIdx   = 0;
- apPkt -> m_Flags    = 0;
- apPkt -> m_Duration = 0;
- apPkt -> m_pData    = lpData; 
- apPkt -> m_Size     = aSize;
+ return lpPkt;
 
 }  /* end _AllocPacket */
-
-static SMS_AVPacket* _NewPacket ( SMS_Container* apCont ) {
-
- SMS_AVPacket* retVal = calloc (  1, sizeof ( SMS_AVPacket )  );
-
- retVal -> m_pCtx  = apCont;
- retVal -> Destroy = _DestroyPacket;
- retVal -> Alloc   = _AllocPacket;
-
- return retVal;
-
-}  /* end _NewPacket */
 
 void SMS_DestroyContainer ( SMS_Container* apCont ) {
 
@@ -68,28 +52,31 @@ void SMS_DestroyContainer ( SMS_Container* apCont ) {
 
  for ( i = 0; i < apCont -> m_nStm; ++i ) {
 
-  if ( !apCont -> m_pStm[ i ] ) continue;
+  SMS_Stream* lpStm = apCont -> m_pStm[ i ];
 
-  if ( apCont -> m_pStm[ i ] -> Destroy ) apCont -> m_pStm[ i ] -> Destroy ( apCont -> m_pStm[ i ] );
+  if ( !lpStm ) continue;
 
-  if ( apCont -> m_pStm[ i ] -> m_pCodec ) {
+  if ( lpStm -> Destroy ) lpStm -> Destroy ( lpStm );
 
-   if ( apCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec ) {
+  if ( lpStm -> m_pCodec ) {
 
-    apCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec -> Destroy ( apCont -> m_pStm[ i ] -> m_pCodec );
-    free ( apCont -> m_pStm[ i ] -> m_pCodec -> m_pCodec );
+   if ( lpStm -> m_pCodec -> m_pCodec ) {
+
+    lpStm -> m_pCodec -> m_pCodec -> Destroy ( lpStm -> m_pCodec );
+    free ( lpStm -> m_pCodec -> m_pCodec );
 
    }  /* end if */
 
-   SMS_CodecClose ( apCont -> m_pStm[ i ] -> m_pCodec );
+   SMS_CodecClose ( lpStm -> m_pCodec );
 
-   free ( apCont -> m_pStm[ i ] -> m_pCodec );
+   free ( lpStm -> m_pCodec );
 
   }  /* end if */
 
-  if ( apCont -> m_pStm[ i ] -> m_pName ) free ( apCont -> m_pStm[ i ] -> m_pName );
+  if ( lpStm -> m_pName   ) free ( lpStm -> m_pName );
+  if ( lpStm -> m_pPktBuf ) SMS_RingBufferDestroy ( lpStm -> m_pPktBuf );
 
-  free ( apCont -> m_pStm[ i ] );
+  free ( lpStm );
 
  }  /* end for */
 
@@ -107,7 +94,8 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
  int            lSts   = 0;
  SMS_Container* retVal = ( SMS_Container* )calloc (  1, sizeof ( SMS_Container )  );
 
- retVal -> m_pFileCtx = apFileCtx;
+ retVal -> m_pFileCtx  = apFileCtx;
+ retVal -> AllocPacket = _AllocPacket;
 
  while ( s_CCreator[ i ] ) {
 
@@ -124,12 +112,7 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
   free ( retVal );
   retVal = NULL;
 
- } else {
-
-  if ( !retVal -> NewPacket ) retVal -> NewPacket = _NewPacket;
-  if ( !retVal -> Destroy   ) retVal -> Destroy   = SMS_DestroyContainer;
-
- }  /* end else */
+ } else if ( !retVal -> Destroy ) retVal -> Destroy = SMS_DestroyContainer;
 
  if ( retVal && lSts < 0 ) {
 
@@ -148,3 +131,60 @@ void SMSContainer_SetPTSInfo ( SMS_Stream* apStm, int aPTSNum, int aPTSDen ) {
  apStm -> m_TimeBase.m_Den = aPTSDen;
 
 }  /* end SMSContainer_SetPTSInfo */
+
+void SMSContainer_CalcPktFields ( SMS_Stream* apStm, SMS_AVPacket* apPkt ) {
+
+ int               lNum, lDen;
+ SMS_CodecContext* lpCodecCtx = apStm -> m_pCodec;
+
+ if ( lpCodecCtx -> m_Type == SMS_CodecTypeVideo ) {
+
+  lNum = lpCodecCtx -> m_FrameRateBase;
+  lDen = lpCodecCtx -> m_FrameRate;
+
+ } else if ( lpCodecCtx -> m_Type == SMS_CodecTypeAudio ) {
+
+  lNum = lpCodecCtx -> m_FrameSize <= 1 ? ( apPkt -> m_Size * 8 * lpCodecCtx -> m_SampleRate ) / lpCodecCtx -> m_BitRate
+                                        : lpCodecCtx -> m_FrameSize;
+  lDen = lpCodecCtx -> m_SampleRate;
+
+ } else return;
+
+ if ( lDen && lNum )
+
+  apPkt -> m_Duration = ( int )SMS_Rescale (
+   1, lNum * ( int64_t )apStm -> m_TimeBase.m_Den, lDen * ( int64_t )apStm -> m_TimeBase.m_Num
+  );
+
+ if ( apPkt -> m_PTS == SMS_NOPTS_VALUE ) {
+
+  if ( apPkt -> m_DTS == SMS_NOPTS_VALUE ) {
+
+   apPkt -> m_PTS = apStm -> m_CurDTS;
+   apPkt -> m_DTS = apStm -> m_CurDTS;
+
+  } else {
+
+   apStm -> m_CurDTS = apPkt -> m_DTS;
+   apPkt -> m_PTS    = apPkt -> m_DTS;
+
+  }  /* end else */
+
+ } else {
+
+  apStm -> m_CurDTS = apPkt -> m_PTS;
+  apPkt -> m_DTS    = apPkt -> m_PTS;
+
+ }  /* end else */
+
+ apStm -> m_CurDTS += apPkt -> m_Duration;
+
+ if ( apPkt -> m_PTS != SMS_NOPTS_VALUE )
+  apPkt -> m_PTS = SMS_Rescale (  apPkt -> m_PTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den  );
+
+ if ( apPkt -> m_DTS != SMS_NOPTS_VALUE )
+  apPkt -> m_DTS = SMS_Rescale ( apPkt -> m_DTS, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den );
+
+ apPkt -> m_Duration = ( int )SMS_Rescale (  apPkt -> m_Duration, SMS_TIME_BASE * ( int64_t )apStm -> m_TimeBase.m_Num, apStm -> m_TimeBase.m_Den  );
+
+}  /* end SMSContainer_CalcPktFields */

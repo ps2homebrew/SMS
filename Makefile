@@ -16,11 +16,11 @@ EE_OBJS  = main.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_Timer.o                  
            SMS_MP123.o SMS_SPU.o SMS_CDDA.o SMS_Codec.o SMS_Integer.o SMS_SIF.o   \
            SMS_Player.o SMS_AC3.o SMS_AC3_imdct.o SMS_MSMPEG4.o SMS_VideoBuffer.o \
            SMS_PlayerControl.o SMS_PlayerBallSim.o SMS_CDVD.o SMS_EE.o SMS_IOP.o  \
-           SMS_PAD.o SMS_MC.o SMS_AudioBuffer.o SMS_Container.o SMS_ContainerAVI.o\
+           SMS_PAD.o SMS_MC.o SMS_RingBuffer.o SMS_Container.o SMS_ContainerAVI.o \
            SMS_ContainerMP3.o SMS_ContainerM3U.o SMS_List.o SMS_Config.o About.o  \
            SMS_Data.o SMS_GSFont.o SMS_GUIcons.o SMS_ConfigIcon.o SMS_GUI.o       \
            SMS_GUIDesktop.o SMS_GUIDevMenu.o SMS_GUIFileMenu.o SMS_Locale.o       \
-           SMS_FileDir.o SMS_GUIMenu.o SMS_GUIMenuSMS.o SMS_DummyAV.o             \
+           SMS_FileDir.o SMS_GUIMenu.o SMS_GUIMenuSMS.o                           \
            SMS_SubtitleContext.o SMS_GUICmdProc.o SMS_PlayerMenu.o                \
            SMS_GUIMiniBrowser.o SMS_Sounds.o SMS_DSP_QPel.o SMS_Spectrum.o        \
            SMS_Utils.o SMS_DSP_FFT.o SMS_DMA_0.o SMS_IPU_0.o SMS_IPU_1.o          \

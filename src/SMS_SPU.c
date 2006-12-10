@@ -151,6 +151,8 @@ void SPU_Initialize ( void ) {
 
 SPUContext* SPU_InitContext ( int anChannels, int aFreq, int aVolume ) {
 
+ SPU_Destroy ();
+
  s_Buffer[ 0 ] = aFreq;
  s_Buffer[ 1 ] = 16;
  s_Buffer[ 2 ] = anChannels;

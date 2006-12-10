@@ -1387,9 +1387,9 @@ static SMS_VLC s_v1_inter_cbpc_vlc;
 static SMS_VLC s_inter_intra_vlc;
 static SMS_VLC s_mb_non_intra_vlc[ 4 ];
 
-static int32_t MSMPEG4_Init    ( SMS_CodecContext*                            );
-static int32_t MSMPEG4_Decode  ( SMS_CodecContext*, void**, uint8_t*, int32_t );
-static void    MSMPEG4_Destroy ( SMS_CodecContext*                            );
+static int32_t MSMPEG4_Init    ( SMS_CodecContext*                          );
+static int32_t MSMPEG4_Decode  ( SMS_CodecContext*, void**, SMS_RingBuffer* );
+static void    MSMPEG4_Destroy ( SMS_CodecContext*                          );
 
 static int _msmpeg4_decode_mb ( SMS_DCTELEM[ 6 ][ 64 ] );
 
@@ -1573,7 +1573,7 @@ static int32_t MSMPEG4_Init ( SMS_CodecContext* apCtx ) {
 
   SMS_MPEGContext_Init ( apCtx -> m_Width, apCtx -> m_Height );
 
-  MPEG4_CommonInit ();
+  MPEG4_CommonInit ( apCtx );
 
  }  /* end if */
 
@@ -2252,11 +2252,7 @@ static void _msmpeg4_decode_slice ( void ) {
 
   if ( g_MPEGCtx.m_PicType == SMS_FT_I_TYPE ) lMaxExtra += 17;
         
-  if (  ( g_MPEGCtx.m_Bugs & SMS_BUG_NO_PADDING ) && g_MPEGCtx.m_pParentCtx -> m_ErrorResilience >= 3  )
-
-   lMaxExtra += 48;
-
-  else lMaxExtra += 256 * 256 * 256 * 64;
+  lMaxExtra += 256 * 256 * 256 * 64;
         
   if ( lLeft < lMaxExtra && lLeft > 0 ) goto end;
 
@@ -2270,15 +2266,18 @@ end:
 
 }  /* end _msmpeg4_decode_slice */
 
-static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, void** appData, uint8_t* apBuf, int32_t aBufSize ) {
+static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, void** appData, SMS_RingBuffer* apInput ) {
 
  int               retVal;
+ SMS_AVPacket*     lpPkt    = ( SMS_AVPacket* )apInput -> m_pOut;
  SMS_FrameBuffer** lpFrame  = ( SMS_FrameBuffer** )appData;
  SMS_BitContext*   lpBitCtx = &g_MPEGCtx.m_BitCtx;
+ uint8_t*          lpBuf    = lpPkt -> m_pData;
+ int32_t           lBufSize = lpPkt -> m_Size;
 
  g_MPEGCtx.m_pParentCtx = apCtx;
 
- SMS_InitGetBits ( lpBitCtx, apBuf, aBufSize << 3 );
+ SMS_InitGetBits ( lpBitCtx, lpBuf, lBufSize << 3 );
  g_MPEGCtx.m_BSBufSize = 0;
 
  if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pBuf )
@@ -2313,7 +2312,7 @@ static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, void** appData, uint8_t
 
  }  /* end while */
 
- if ( g_MPEGCtx.m_PicType == SMS_FT_I_TYPE ) _msmpeg4_decode_ext_header ( aBufSize );
+ if ( g_MPEGCtx.m_PicType == SMS_FT_I_TYPE ) _msmpeg4_decode_ext_header ( lBufSize );
 
  SMS_MPEG_FrameEnd ();
 
@@ -2330,10 +2329,17 @@ static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, void** appData, uint8_t
  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
 
  if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
-
   ( *lpFrame ) -> m_FrameType = g_MPEGCtx.m_PicType;
-
  else *lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+
+ if ( apCtx -> m_HasBFrames && ( *lpFrame ) -> m_FrameType != SMS_FT_B_TYPE ) {
+
+  ( *lpFrame ) -> m_PTS  = g_MPEGCtx.m_LastPPTS + g_MPEGCtx.m_MSPerFrame;
+  g_MPEGCtx.m_LastPPTS = lpPkt -> m_PTS;
+
+ } else ( *lpFrame ) -> m_PTS = lpPkt -> m_PTS;
+
+ ( *lpFrame ) -> m_SPTS = lpPkt -> m_PTS;
 
  return retVal;
 

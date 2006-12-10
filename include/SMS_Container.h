@@ -23,6 +23,10 @@
 #  include "SMS_Codec.h"
 # endif  /* __SMS_Codec_H */
 
+# ifndef __SMS_RingBuffer_H
+#  include "SMS_RingBuffer.h"
+# endif  /* __SMS_RingBuffer_H */
+
 struct SMS_List;
 struct SMS_ListNode;
 
@@ -36,13 +40,16 @@ struct SMS_ListNode;
 typedef struct SMS_Stream {
 
  SMS_Rational      m_TimeBase;
+ int64_t           m_CurDTS;
  int32_t           m_SampleRate;
  uint32_t          m_RealFrameRate;
  uint32_t          m_RealFrameRateBase;
  uint32_t          m_Flags;
  SMS_CodecContext* m_pCodec;
  char*             m_pName;
+ uint32_t          m_ID;
  void*             m_pCtx;
+ SMS_RingBuffer*   m_pPktBuf;
 
  void ( *Destroy ) ( struct SMS_Stream* );
 
@@ -60,8 +67,8 @@ typedef struct SMS_Container {
  struct SMS_List*     m_pPlayList;
  struct SMS_ListNode* m_pPlayItem;
 
- SMS_AVPacket* ( *NewPacket   ) ( struct SMS_Container*                     );
- int           ( *ReadPacket  ) ( SMS_AVPacket*                             );
+ SMS_AVPacket* ( *AllocPacket ) ( SMS_RingBuffer*, int                      );
+ int           ( *ReadPacket  ) ( struct SMS_Container*, int*               );
  void          ( *Destroy     ) ( struct SMS_Container*                     );
  int           ( *Seek        ) ( struct SMS_Container*, int, int, uint32_t );
 
@@ -71,9 +78,10 @@ typedef struct SMS_Container {
 extern "C" {
 # endif  /* __cplusplus */
 
-SMS_Container* SMS_GetContainer        ( FileContext*          );
-void           SMS_DestroyContainer    ( SMS_Container*        );
-void           SMSContainer_SetPTSInfo ( SMS_Stream*, int, int );
+SMS_Container* SMS_GetContainer           ( FileContext*               );
+void           SMS_DestroyContainer       ( SMS_Container*             );
+void           SMSContainer_SetPTSInfo    ( SMS_Stream*, int, int      );
+void           SMSContainer_CalcPktFields ( SMS_Stream*, SMS_AVPacket* );
 
 # ifdef __cplusplus
 }

@@ -29,8 +29,9 @@ extern SMString   g_StrPlayer[ 6 ];
 static int ( *HandleEventBase ) ( GUIObject*, unsigned long );
 static GUIMenu* s_pMenu;
 
-static SMString* s_ModeNames[ 5 ] __attribute__(   (  section( ".data" )  )   ) = {
- &STR_LETTERBOX, &STR_PANSCAN1, &STR_PANSCAN2, &STR_PANSCAN3, &STR_FULLSCREEN
+static SMString* s_ModeNames[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
+ &STR_LETTERBOX, &STR_PANSCAN1, &STR_PANSCAN2, &STR_PANSCAN3, &STR_FULLSCREEN,
+ &STR_WIDESCREEN, &STR_WIDE_PAN_SCAN_1, &STR_WIDE_PAN_SCAN_2
 };
 
 static SMString s_Lang;
@@ -106,7 +107,7 @@ static void _lang_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _disp_handler ( GUIMenu* apMenu, int aDir ) {
 
- if ( ++s_Player.m_PanScan == 5 ) s_Player.m_PanScan = 0;
+ if ( ++s_Player.m_PanScan == 8 ) s_Player.m_PanScan = 0;
 
  g_Config.m_PlayerFlags &= 0x0FFFFFFF;
  g_Config.m_PlayerFlags |= ( s_Player.m_PanScan << 28 );

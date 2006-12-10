@@ -40,7 +40,7 @@ void                 PlayerControl_MkTime           ( int64_t                   
 void                 PlayerControl_HandleOSD        ( int, int                         );
 unsigned int         PlayerControl_GSPLen           ( struct SMS_List*, unsigned int   );
 unsigned int         PlayerControl_GSPacket         ( int, struct SMS_List*, uint64_t* );
-int                  PlayerControl_ScrollBar        ( void ( * ) ( int ), int, int     );
+int                  PlayerControl_ScrollBar        (  void ( * ) ( int )              );
 void                 PlayerControl_UpdateDuration   ( unsigned int, unsigned int       );
 void                 PlayerControl_UpdateItemNr     ( void                             );
 void                 PlayerControl_AdjustBrightness ( int                              );
