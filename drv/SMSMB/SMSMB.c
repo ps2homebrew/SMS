@@ -1,3 +1,19 @@
+/*
+#     ___  _ _      ___
+#    |    | | |    |
+# ___|    |   | ___|    PS2DEV Open Source Project.
+#----------------------------------------------------------
+# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+# Note: I've created this stuff using different sources (
+#       mainly specs, but also some source code (I don't
+#       remember which one anymore)). If someone feel abused
+#       with aforementioned copyright note then jus let me
+#       know ;)
+#
+*/
 #include <irx.h>
 #include <errno.h>
 #include <loadcore.h>
