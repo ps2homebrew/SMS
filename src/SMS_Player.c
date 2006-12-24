@@ -40,18 +40,19 @@
 #include <libhdd.h>
 #include <string.h>
 
-#define SMS_VP_BUFFER_SIZE ( 1024 * 1024 * 2 )
-#define SMS_AP_BUFFER_SIZE ( 1024 *  256     )
+#define SMS_VP_BUFFER_SIZE ( 1024 * 1024 * 3 )
+#define SMS_AP_BUFFER_SIZE ( 1024 *  512     )
 
-#define SMS_FLAGS_STOP     0x00000001
-#define SMS_FLAGS_PAUSE    0x00000002
-#define SMS_FLAGS_MENU     0x00000004
-#define SMS_FLAGS_EXIT     0x00000008
-#define SMS_FLAGS_VSCROLL  0x00000010
-#define SMS_FLAGS_ASCROLL  0x00000020
-#define SMS_FLAGS_AASCROLL 0x00000040
-#define SMS_FLAGS_ABSCROLL 0x00000080
-#define SMS_FLAGS_SPDIF    0x00000100
+#define SMS_FLAGS_STOP      0x00000001
+#define SMS_FLAGS_PAUSE     0x00000002
+#define SMS_FLAGS_MENU      0x00000004
+#define SMS_FLAGS_EXIT      0x00000008
+#define SMS_FLAGS_VSCROLL   0x00000010
+#define SMS_FLAGS_ASCROLL   0x00000020
+#define SMS_FLAGS_AASCROLL  0x00000040
+#define SMS_FLAGS_ABSCROLL  0x00000080
+#define SMS_FLAGS_SPDIF     0x00000100
+#define SMS_FLAGS_USER_STOP 0x00000200
 
 #define THREAD_ID_VR s_ThreadIDs[ 0 ]
 #define THREAD_ID_VD s_ThreadIDs[ 1 ]
@@ -979,7 +980,7 @@ resume:
      while (  GUI_ReadButtons ()  );
 
      if (   !(  lSts = PlayerControl_ScrollBar ( _init_queues )  )   ) {
-      s_Flags |= SMS_FLAGS_STOP;
+      s_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
       goto exit;
      }  /* end if */
 
@@ -1021,7 +1022,7 @@ resume:
                lBtn == RC_STOP
           ) {
 exit:
-    s_Flags |= SMS_FLAGS_EXIT;
+    s_Flags |= ( SMS_FLAGS_EXIT | SMS_FLAGS_USER_STOP );
     break;
 
    } else if (  ( lBtn == SMS_PAD_UP || lBtn == RC_TOPX ) && lfVolume && s_Player.m_pSPUCtx ) {
@@ -1036,7 +1037,7 @@ exit:
 
     if (  !FFwdFunc ()  ) {
 
-     s_Flags |= SMS_FLAGS_STOP;
+     s_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
      goto exit;
 
     }  /* end if */
@@ -1047,7 +1048,7 @@ exit:
 
     if (  !RewFunc ()  ) {
 
-     s_Flags |= SMS_FLAGS_STOP;
+     s_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
      goto exit;
 
     }  /* end if */
@@ -1244,7 +1245,7 @@ static void _Destroy ( void ) {
  SMS_TimerReset ( 2, NULL );
  PlayerControl_Destroy ();
 
- if (  g_Config.m_PowerOff < 0 && !( s_Flags & SMS_FLAGS_STOP )  ) hddPowerOff ();
+ if (  g_Config.m_PowerOff < 0 && !( s_Flags & SMS_FLAGS_USER_STOP )  ) hddPowerOff ();
 
  if ( s_pVPBufferArea ) free ( s_pVPBufferArea );
  if ( s_pAPBufferArea ) free ( s_pAPBufferArea );
@@ -1384,7 +1385,7 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
 
   lThread.stack_size       = 16384;
   lThread.stack            = g_VRStack;
-  lThread.initial_priority = lCurrentThread.current_priority;
+  lThread.initial_priority = lCurrentThread.current_priority - 1;
   lThread.gp_reg           = &_gp;
   lThread.func             = lpVR;
   THREAD_ID_VR = CreateThread ( &lThread );

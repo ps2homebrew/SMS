@@ -11,6 +11,10 @@
 #ifndef __SMS_Config_H
 # define __SMS_Config_H
 
+# ifndef __SMS_SMB_H
+#  include "SMS_SMB.h"
+#  endif  /* __SMS_SMB_H */
+
 # define SMS_BF_SKIN 0x00000001
 # define SMS_BF_SORT 0x00000002
 # define SMS_BF_AVIF 0x00000004
@@ -26,6 +30,7 @@
 # define SMS_DF_AUTO_HDD 0x00000004
 # define SMS_DF_GAMEPAD  0x00000008
 # define SMS_DF_REMOTE   0x00000010
+# define SMS_DF_SMB      0x00000020
 
 # define SMS_PF_SUBS  0x00000001
 # define SMS_PF_TIME  0x00000002
@@ -96,6 +101,7 @@ typedef struct SMSConfig {
 
 extern SMSConfig    g_Config        __attribute__(   (  section( ".data" )  )   );
 extern unsigned int g_Palette[ 16 ] __attribute__(   (  section( ".data" )  )   );
+extern SMBLoginInfo g_SMBLoginInfo  __attribute__(   (  section( ".data" )  )   );
 
 # ifdef __cplusplus
 extern "C" {

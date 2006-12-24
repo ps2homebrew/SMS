@@ -5673,6 +5673,8 @@ static int _mp3_dequantize_sample (
  short*          lpME;
  short*          lpVal;
 
+ if ( lRegion1 > lRegion2 ) return 0;
+
  lPart2Remain -= lNum;
  lL3           = ( 288 - lBV ) >> 1;   
 

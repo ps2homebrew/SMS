@@ -23,9 +23,13 @@
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
 #include "SMS_RC.h"
+#include "SMS_IOP.h"
 
 #include <kernel.h>
 #include <malloc.h>
+#include <fileio.h>
+#include <stdio.h>
+#include <string.h>
 
 typedef struct _DevMenuItem {
 
@@ -162,7 +166,37 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
  if (  aMount & ( GUI_MSG_MOUNT_BIT >> 16 )  ) {
 
-  _DevMenuItem* lpItem = ( _DevMenuItem* )malloc (  sizeof ( _DevMenuItem )  );
+  _DevMenuItem* lpItem;
+
+  if ( lDevID == 6 ) {
+
+   if ( g_SMBUnit < 0 ) {
+
+    char lBuff[ 512 ];
+
+    switch ( g_SMBError )  {
+
+     case SMB_ERROR_NEGOTIATE:
+      sprintf ( lBuff, STR_PROT_NEG_ERROR.m_pStr, g_SMBServerError );
+     break;
+
+     case SMB_ERROR_LOGIN:
+      sprintf ( lBuff, STR_LOGIN_ERROR.m_pStr, g_SMBServerError );
+     break;
+
+     default: strcpy ( lBuff, STR_COMM_ERROR.m_pStr );
+
+    }  /* end switch */
+
+    GUI_Error ( lBuff );
+
+    return GUIHResult_Handled;
+
+   } else g_IOPFlags |= SMS_IOPF_SMBLOGIN;
+
+  }  /* end if */
+
+  lpItem = ( _DevMenuItem* )malloc (  sizeof ( _DevMenuItem )  );
 
   if ( lDevID == 3 ) {
 
@@ -200,7 +234,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
   }  /* end else */
 
-  if ( lDevID == 0 || lDevID == 4 ) SPU_PlaySound ( SMSound_Mount, g_Config.m_PlayerVolume );
+  if ( lDevID == 0 || lDevID == 4 || lDevID == 6 ) SPU_PlaySound ( SMSound_Mount, g_Config.m_PlayerVolume );
 
  } else {
 
@@ -263,7 +297,9 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
     GUI_PostMessage ( lMsg );
 
-    if ( lDevID == 0 || lDevID == 4 ) SPU_PlaySound ( SMSound_UMount, g_Config.m_PlayerVolume );
+    if ( lDevID == 0 || lDevID == 4 || lDevID == 6 ) SPU_PlaySound ( SMSound_UMount, g_Config.m_PlayerVolume );
+
+    if ( lDevID == 6 ) GUI_PostMessage ( GUI_MSG_MOUNT_BIT | GUI_MSG_LOGIN );
 
     break;
 
@@ -358,11 +394,27 @@ static int GUIDevMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
  int         retVal = GUIHResult_Void;
  GUIDevMenu* lpMenu = ( GUIDevMenu* )apObj;
 
- if ( anEvent & GUI_MSG_MOUNT_MASK )
+ if ( anEvent & GUI_MSG_MOUNT_MASK ) {
 
-  retVal = GUIDevMenu_HandleMount (  lpMenu, ( anEvent >> 16 ) & 0xFF  );
+  int lDevID = ( anEvent >> 16 ) & 0xFF;
 
- else if ( anEvent & GUI_MSG_PAD_MASK )
+  if ( lDevID == 0x18 ) {
+
+   int lFD = fioDopen ( g_pSMBS );
+
+   if ( lFD >= 0 ) {
+
+    g_SMBLoginInfo.m_fAsync = 1;
+    fioIoctl ( lFD, SMB_IOCTL_LOGIN, &g_SMBLoginInfo );
+    fioDclose ( lFD );
+
+   }  /* end if */
+
+   retVal = GUIHResult_Handled;
+
+  } else retVal = GUIDevMenu_HandleMount ( lpMenu, lDevID );
+
+ } else if ( anEvent & GUI_MSG_PAD_MASK )
 
   retVal = GUIDevMenu_HandlePad ( lpMenu, anEvent & 0xFFFF );
 

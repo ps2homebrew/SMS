@@ -213,12 +213,19 @@ typedef struct SMString {
 # define STR_WIDESCREEN           SMS_STRING( 190 )
 # define STR_WIDE_PAN_SCAN_1      SMS_STRING( 191 )
 # define STR_WIDE_PAN_SCAN_2      SMS_STRING( 192 )
+# define STR_NETWORK_PROTOCOL     SMS_STRING( 193 )
+# define STR_PS2DEV_HOST          SMS_STRING( 194 )
+# define STR_SMB_CIFS             SMS_STRING( 195 )
+# define STR_COMM_ERROR           SMS_STRING( 196 )
+# define STR_PROT_NEG_ERROR       SMS_STRING( 197 )
+# define STR_LOGIN_ERROR          SMS_STRING( 198 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_SlashStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_BSlashStr [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_ColonStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_ColonSStr [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_DesktopStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_StatuslStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_DevMenuStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );

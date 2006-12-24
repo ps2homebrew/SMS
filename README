@@ -877,3 +877,58 @@ Update (09-DEC-2006)
 - changed A/V synchronization algorithm (image motions should appear
   smoother);
 
+Update (24-DEC-2006)
+--------------------
+- added SMB/CIFS network protocol. Tested only on Windows XP Pro (SP2)
+  and Linux/Debian with recent Samba distribution. Only one server
+  connection is supported (though driver allows two). Network transfer
+  speed is comparable to host: protocol (if the server supports raw data
+  transfer (both XP and Linux do), otherwise it will be ~30% slower).
+  To use this feature perform following steps:
+  - create SMS.smb text file in a text editor. This file must contain
+    exactly 5 lines in the following order:
+    - IP address of the SMB server (ex. 192.168.0.3);
+    - name of the SMB server       (ex. MyServer);
+    - name of the PS2 (arbitrary)  (ex. MyPS2);
+      Note: I'm not 100% sure about it, maybe this name
+            must be listed in 'hosts'/'lmhosts' file;
+    - user name used for authentication (ex. eugene);
+    - user password used for authentication (ex. myPassword);
+      Note 1: blank password is not allowed;
+      Note 2: - "for individuals that think that harm is occurring, or
+                 is going to occur, to him or her"
+              - "for individuals that think the persecutor has the
+                 intention to cause harm"
+              PASSWORD IS ONE WAY ENCRYPTED BEFORE ITS TRANSMISSION TO
+              THE SMB SERVER ONLY IF THE SERVER SUPPORTS SUCH A FEATURE
+              (at least Windows XP Pro(SP2) and Samba on Libux/Debian do
+              support this (please, don't consider this as advertisement));
+  - make sure that IP address is correct;
+  - make sure that SMB server name is correct;
+  - make sure that SMB server allows connections (i.e. review firewall/router
+    settings);
+  - make sure that user whose credentials supplied in SMS.smb has appropriate
+    access rights to connect to the SMB server;
+  - copy this file to mc0:/SMS folder;
+  - start SMS; If 'autostart network' option is active, then
+    deactivate it, save settings and restart SMS;
+  - goto SMS menu -> Device settings;
+  - select SMB/CIFS network protocol;
+  - start network support;
+  New device icon shall appear as soon as connection to the server is
+  established (or error message if there's a problem with authentication
+  etc.). Normally this should occur in 0-10 seconds. There's no need to
+  start SMB server before SMS, as connection is made automatically (SMS tries
+  to establish connection to the server approximately each 5-10 seconds).
+  It's possible to shut down SMB server while SMS browser is active. In this
+  case SMB device icon will disappear and connection attempts are resumed again.
+  This can however cause hang, so use this functionaliy at your own risk; 
+  In case of problems use 'ethereal'/'wireshark' software to trace activity on
+  the server's TCP port 139. New SMB device is browseable starting from share
+  level (note that shares with '$' suffix in their name (like 'C$', 'ADMIN$'
+  etc.) are explicitly disabled, so they won't ever appear in the file browser);
+- increased packet buffer size in attempt to avoid audio.video 'stutter'
+  (this results longer delays at startup and during scrolling);
+- changed '-' and '_' character indentation to prevent overlapping
+  (thanks to 'shassino' for the remark);
+- added UTF8 subtitles support (thank to 'Npl' for the implementation);

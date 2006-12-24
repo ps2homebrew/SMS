@@ -49,7 +49,7 @@ _init_ups:
     beq     $v1, $t0, 3b
     nop
     addiu   $a3, $a3, 1
-    j       3b
+    beq     $zero, $zero, 3b
     addiu   $a2, $a2, 3840
 .end _init_ups
 
@@ -73,15 +73,15 @@ _ups_stereo:
     sra	     $v1, $v1, 16
     mult     $v1, $a3
     subu     $t5, $t4, $a3
-    addiu    $t1, $t1, -1
     sll	     $t0, $t0, 16
-    sra	     $t0, $t0, 16
     mflo     $v1
+    sra	     $t0, $t0, 16
     mult     $t0, $t5
+    addiu    $t1, $t1, -1
     mflo     $t0
     addu     $v1, $v1, $t0
-    sra      $t0, $v1, 31
     mult     $v1, $t2
+    sra      $t0, $v1, 31
     mfhi     $v0
     addu     $v0, $v0, $v1
     sra	     $v1, $t7, 16
@@ -90,20 +90,22 @@ _ups_stereo:
     sh       $v0, 0($a2)
     mult     $v1, $a3
     subu     $a3, $a3, $t3
-    sra	     $t0, $t8, 16
     mflo     $v1
+    sra	     $t0, $t8, 16
     mult     $t0, $t5
     mflo     $t0
     addu     $v1, $v1, $t0
     sra      $t0, $v1, 31
     mult     $v1, $t2
+    addiu    $a2, $a2, 2
     mfhi     $v0
     addu     $v0, $v0, $v1
     sra      $v0, $v0, 11
     subu     $v0, $v0, $t0
-    sh       $v0, 512($a2)
-    bltz     $a3, 4f
-    addiu    $a2, $a2, 2
+    bgez     $a3, 3f
+    sh       $v0, 510($a2)
+    addiu    $a0, $a0, 4
+    addiu    $a3, $a3, 0x0F00
 3:
     bgez     $t1, 2b
     nop
@@ -112,11 +114,6 @@ _ups_stereo:
     bne      $v0, $zero, 1b
     addiu    $a1, $a1, 1024
     jr       $ra
-    nop
-4:
-    addiu    $a0, $a0, 4
-    j        3b
-    addiu    $a3, $a3, 0x0F00
 .end _ups_stereo
 
 .ent _ups_mono
@@ -150,8 +147,10 @@ _ups_mono:
     subu    $v0, $v0, $a0
     sh	    $v0, 0($a2)
     sh	    $v0, 512($a2)
-    bltz    $a3, 4f
+    bgez    $a3, 3f
     addiu   $a2, $a2, 2
+    addiu   $t0, $t0, 2
+    addiu   $a3, $a3, 0x0F00
 3:
     bgez    $t1, 2b
     nop
@@ -161,8 +160,4 @@ _ups_mono:
     addiu   $a1, $a1, 1024
     jr	    $ra
     nop
-4:
-    addiu   $t0, $t0,2
-    j	    3b
-    addiu   $a3, $a3, 0x0F00
  .end	_ups_mono

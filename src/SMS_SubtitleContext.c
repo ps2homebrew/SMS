@@ -7,6 +7,7 @@
 # (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2006 Voldemar_u2
 # (c) 2006 ffgriever
+# (c) 2006 Npl
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -29,6 +30,8 @@
 #define SUB_GSP_OSIZE( n ) (  ( n << 2 ) + 10  )
 #define SUB_MAXLEN         512
 #define SUB_DEF_LINE_LEN   4.0F
+
+extern int TranslateUTF8 ( int, char*, int, const char* );
 
 typedef struct SubNode {
 
@@ -187,7 +190,18 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
  char     lLine[ SUB_MAXLEN ];
  float    lMSPerFrame = 1000.0F / aFPS;
  int      retVal      = 0;
+ int      lfUTF8      = 0;
+ unsigned lPos        = apFileCtx -> m_CurPos;
  SubNode* lpNode;
+
+ if (  File_GetByte ( apFileCtx ) == 0xEF &&
+       File_GetByte ( apFileCtx ) == 0xBB &&
+       File_GetByte ( apFileCtx ) == 0xBF
+ )
+
+  lfUTF8 = 1;
+
+ else apFileCtx -> Seek ( apFileCtx, lPos );
 
  s_SubCtx.m_Cnt = 0;
 
@@ -275,7 +289,11 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
    }  /* end if */
 
-   _add_line ( lpNode -> m_pList, lpPtr, 0 );
+   if ( lfUTF8 ) {
+    char lBuff[ SUB_MAXLEN ];
+    TranslateUTF8 ( g_GSCtx.m_CodePage, lBuff, SUB_MAXLEN, lpPtr );
+    _add_line ( lpNode -> m_pList, lBuff, 0 );
+   } else _add_line ( lpNode -> m_pList, lpPtr, 0 );
 
    lpPtr = strtok ( NULL, "|" );
 
@@ -309,9 +327,20 @@ static int _blank_line ( char* apStr ) {
 
 static int _load_srt ( FileContext* apFileCtx ) {
 
- char lLine[ SUB_MAXLEN ];
- int  lTotSerial;
- int  retVal = 0;
+ char     lLine[ SUB_MAXLEN ];
+ int      lTotSerial;
+ int      retVal = 0;
+ unsigned lPos   = apFileCtx -> m_CurPos;
+ int      lfUTF8 = 0;
+
+ if (  File_GetByte ( apFileCtx ) == 0xEF &&
+       File_GetByte ( apFileCtx ) == 0xBB &&
+       File_GetByte ( apFileCtx ) == 0xBF
+ )
+
+  lfUTF8 = 1;
+
+ else apFileCtx -> Seek ( apFileCtx, lPos );
 
  sub_gets ( lLine, apFileCtx );
 
@@ -437,6 +466,10 @@ static int _load_srt ( FileContext* apFileCtx ) {
      }  /* end if */
 
     }  /* end if */
+
+    if ( lfUTF8 ) TranslateUTF8 (
+                   g_GSCtx.m_CodePage, lpPtr, lLine + SUB_MAXLEN - lpPtr, lpPtr
+                  );
 
     _add_line ( lpNode -> m_pList, lpPtr, lColorIdx );
 

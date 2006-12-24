@@ -13,6 +13,8 @@
 #include "SMS_GS.h"
 #include "SMS_MC.h"
 #include "SMS_Locale.h"
+#include "SMS_FileContext.h"
+#include "SMS_IOP.h"
 
 #include <malloc.h>
 #include <fileio.h>
@@ -21,7 +23,8 @@
 extern void _check_dc_offset ( void );
 extern unsigned char g_IconSMS[ 2020 ] __attribute__(   (  section( ".data" )  )   );
 
-SMSConfig g_Config __attribute__(   (  section( ".data" )  )   );
+SMSConfig    g_Config       __attribute__(   (  section( ".data" )  )   );
+SMBLoginInfo g_SMBLoginInfo __attribute__(   (  section( ".data" )  )   );
 
 unsigned int g_Palette[ 16 ] __attribute__(   (  section( ".data" )  )   ) = {
  GS_SET_RGBAQ( 0x00, 0x00, 0x00, 0x80, 0x00 ),
@@ -42,20 +45,21 @@ unsigned int g_Palette[ 16 ] __attribute__(   (  section( ".data" )  )   ) = {
  GS_SET_RGBAQ( 0xFF, 0xFF, 0xFF, 0x80, 0x00 )
 };
 
-static char s_pASCII [] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS/ascii.mtf";
-static char s_pLatin2[] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS/latin2.mtf";
-static char s_pCyrill[] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS/cyrillic.mtf";
-static char s_pLatin1[] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS/latin1.mtf";
-static char s_pGreek [] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS/greek.mft";
-static char s_pSMS   [] __attribute__(   (  section( ".data" )  )   ) = "/SMS";
-static char s_pSMSCfg[] __attribute__(   (  section( ".data" )  )   ) = "/SMS/SMS.cfg";
-static char s_pSMSPal[] __attribute__(   (  section( ".data" )  )   ) = "/SMS/SMS.pal";
-static char s_pIcoSys[] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS/icon.sys";
-static char s_pMC0SMS[] __attribute__(   (  section( ".data" )  )   ) = "mc0:SMS";
-static char s_pSMSIcn[] __attribute__(   (  section( ".data" )  )   ) = "mc0:/SMS/SMS.icn";
-static char s_pMC0SMC[] __attribute__(   (  section( ".data" )  )   ) = "mc0:/SMS/SMS.cfg";
-static char s_pPS2D  [] __attribute__(   (  section( ".data" )  )   ) = "PS2D";
-static char s_pSMSICN[] __attribute__(   (  section( ".data" )  )   ) = "SMS.icn";
+static char s_pASCII [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/ascii.mtf";
+static char s_pLatin2[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/latin2.mtf";
+static char s_pCyrill[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/cyrillic.mtf";
+static char s_pLatin1[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/latin1.mtf";
+static char s_pGreek [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/greek.mft";
+static char s_pSMS   [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "/SMS";
+static char s_pSMSCfg[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "/SMS/SMS.cfg";
+static char s_pSMSPal[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "/SMS/SMS.pal";
+static char s_pIcoSys[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS/icon.sys";
+static char s_pMC0SMS[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:SMS";
+static char s_pSMSIcn[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SMS/SMS.icn";
+static char s_pMC0SMC[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SMS/SMS.cfg";
+static char s_pPS2D  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "PS2D";
+static char s_pSMSICN[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "SMS.icn";
+static char s_pSMSSMB[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SMS/SMS.smb";
 
 static const char* s_pFontNames[ 5 ] __attribute__(   (  section( ".data" )  )   ) = {
  s_pASCII, s_pLatin2, s_pCyrill, s_pLatin1, s_pGreek
@@ -225,6 +229,33 @@ int SMS_LoadConfig ( void  ) {
 
  SMS_clip ( g_Config.m_DX, -160, 160 );
  SMS_clip ( g_Config.m_DY,  -64,  64 );
+
+ STIO_SetIOMode ( STIOMode_Ordinary );
+
+ {  /* begin block */
+
+  FileContext* lpFileCtx = STIO_InitFileContext ( s_pSMSSMB, NULL );
+
+  if ( lpFileCtx ) {
+
+   File_GetString (  lpFileCtx, g_SMBLoginInfo.m_ServerIP,   sizeof ( g_SMBLoginInfo.m_ServerIP   )  );
+   File_GetString (  lpFileCtx, g_SMBLoginInfo.m_ServerName, sizeof ( g_SMBLoginInfo.m_ServerName )  );
+   File_GetString (  lpFileCtx, g_SMBLoginInfo.m_ClientName, sizeof ( g_SMBLoginInfo.m_ClientName )  );
+   File_GetString (  lpFileCtx, g_SMBLoginInfo.m_UserName,   sizeof ( g_SMBLoginInfo.m_UserName   )  );
+   File_GetString (  lpFileCtx, g_SMBLoginInfo.m_Password,   sizeof ( g_SMBLoginInfo.m_Password   )  );
+
+   if ( g_SMBLoginInfo.m_ServerIP  [ 0 ] &&
+        g_SMBLoginInfo.m_ServerName[ 0 ] &&
+        g_SMBLoginInfo.m_ClientName[ 0 ] &&
+        g_SMBLoginInfo.m_UserName  [ 0 ] &&
+        g_SMBLoginInfo.m_Password  [ 0 ]
+   ) g_IOPFlags |= SMS_IOPF_SMBINFO;
+
+   lpFileCtx -> Destroy ( lpFileCtx );
+
+  }  /* end if */
+
+ }  /* end block */
 
  return retVal;
 

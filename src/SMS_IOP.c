@@ -34,10 +34,10 @@
 
 unsigned int g_IOPFlags;
 
-static unsigned char s_pSIO2MAN[] __attribute__(   (  section( ".data" )  )   ) = "rom0:SIO2MAN";
-static unsigned char s_pPADMAN [] __attribute__(   (  section( ".data" )  )   ) = "rom0:PADMAN";
-static unsigned char s_pMCMAN  [] __attribute__(   (  section( ".data" )  )   ) = "rom0:MCMAN";
-static unsigned char s_pMCSERV [] __attribute__(   (  section( ".data" )  )   ) = "rom0:MCSERV";
+static unsigned char s_pSIO2MAN[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:SIO2MAN";
+static unsigned char s_pPADMAN [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:PADMAN";
+static unsigned char s_pMCMAN  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:MCMAN";
+static unsigned char s_pMCSERV [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:MCSERV";
 
 static unsigned char s_ExecIOP[] __attribute__(   (  aligned( 16 ), section( ".data" )  )   ) = {
 	0x7f, 0x45, 0x4c, 0x46, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -227,10 +227,12 @@ void SMS_IOPReset ( int afExit ) {
  while (  !SIF_SyncIOP ()  );
 
  SifInitRpc ( 0 );
-
+#else
+ afExit = 1;
+#endif
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
-#endif
+
  if ( !afExit ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_SIO2MAN_OFFSET ], SMS_AUDSRV_SIZE, 0, NULL, &i );
 
  for ( i = 1 - afExit; i < 4; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
@@ -262,15 +264,29 @@ int SMS_IOPStartNet ( void ) {
 
   if ( i >= 0 ) {
 
-   SifExecModuleBuffer ( &g_DataBuffer[ SMS_PS2HOST_OFFSET ], SMS_PS2HOST_SIZE, 0, NULL, &i );
+   void* lpModule;
+   int   lSize;
+   int   lFlags;
 
-   if ( i >= 0 ) g_IOPFlags |= SMS_IOPF_NET;
+   if ( g_Config.m_NetworkFlags & SMS_DF_SMB ) {
+    lpModule = &g_DataBuffer[ SMS_SMB_OFFSET ];
+    lSize    = SMS_SMB_SIZE;
+    lFlags   = SMS_IOPF_SMB;
+   } else {
+    lpModule = &g_DataBuffer[ SMS_PS2HOST_OFFSET ];
+    lSize    = SMS_PS2HOST_SIZE;
+    lFlags   = SMS_IOPF_NET;
+   }  /* end else */
+
+   SifExecModuleBuffer ( lpModule, lSize, 0, NULL, &i );
+
+   if ( i >= 0 ) g_IOPFlags |= lFlags;
 
   }  /* end if */
 
  }  /* end if */
 
- return g_IOPFlags & SMS_IOPF_NET;
+ return g_IOPFlags & ( SMS_IOPF_NET | SMS_IOPF_SMB );
 
 }  /* end SMS_IOPStartNet */
 

@@ -1,4 +1,4 @@
-IOP_BIN = SMSUSBM.IRX
+IOP_BIN = SMSUSBM.irx
 IOP_OBJS = mass_stor.o fat_driver.o scache.o usb_mass.o imports.o
 IOP_LDFLAGS = -Wl,-s
 IOP_CFLAGS = -D_PS2_
@@ -19,12 +19,9 @@ IOP_CFLAGS += -DCOMPILE_DUMPS
 endif
 
 all: $(IOP_BIN)
-	cp $(IOP_BIN) D:/Eugene/MYDOCU~1/Projects/SMS/SM72A1~1/bin
 
 clean:
 	rm -f *.elf *.o *.a *.irx
-
-
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.iopglobal

@@ -294,6 +294,8 @@ void GSFont_Init ( void ) {
  _set_indent ( &g_GSCharIndent[ ' ' - ' ' ], 0x0B0B );
  _set_indent ( &g_GSCharIndent[ '.' - ' ' ], 0x0018 );
  _set_indent ( &g_GSCharIndent[ ',' - ' ' ], 0x0018 );
+ _set_indent ( &g_GSCharIndent[ '-' - ' ' ], 0xFD14 );
+ _set_indent ( &g_GSCharIndent[ '_' - ' ' ], 0x0010 );
 
  g_GSCtx.m_VRAMPtr += 496;
 
@@ -537,9 +539,7 @@ void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, unsigned
 void GSFont_Set ( unsigned int anIndex, void* apData ) {
 
  if ( !anIndex-- )
-
   s_pASCII = ( _MTKFontHeader* )apData;
-
  else s_Fonts[ anIndex ] = ( _MTKFontHeader* )apData;
 
 }  /* end GSFont_Set */

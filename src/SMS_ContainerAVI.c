@@ -618,9 +618,7 @@ static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
 
     SMS_AVPacket* lpPkt = apCont -> AllocPacket ( lpStm -> m_pPktBuf, lSize );
 
-    if ( !lpPkt ) return 0;
-
-    lpBuf -> Read ( lpBuf, lpPkt -> m_pData, lSize );
+    if (  !lpPkt || lpBuf -> Read ( lpBuf, lpPkt -> m_pData, lSize ) != lSize  ) return 0;
 
     if ( lSize & 1 ) {
 

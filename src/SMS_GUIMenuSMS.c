@@ -67,6 +67,7 @@ static void _startnet_handler ( GUIMenu*, int );
 static void _startusb_handler ( GUIMenu*, int );
 static void _starthdd_handler ( GUIMenu*, int );
 static void _editipc_handler  ( GUIMenu*, int );
+static void _netprot_handler  ( GUIMenu*, int );
 
 static void _ip1_handler     ( GUIMenu*, int );
 static void _ip2_handler     ( GUIMenu*, int );
@@ -154,7 +155,7 @@ static GUIMenuItem s_AdvDispMenu[] __attribute__(   (  section( ".data" )  )   )
  {                   0, &STR_APPLY_SETTINGS,     0, 0, _apply_handler, 0, 0 }
 };
 
-static GUIMenuItem s_DevMenu[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
+static GUIMenuItem s_DevMenu[ 9 ] __attribute__(   (  section( ".data" )  )   ) = {
  { MENU_ITEM_TYPE_TEXT, &STR_CONTROLLER_SLOT2,  0, 0, _cntslot_handler, 0, 0 },
  {                   0, &STR_AUTOSTART_NETWORK, 0, 0, _autonet_handler, 0, 0 },
  {                   0, &STR_AUTOSTART_USB,     0, 0, _autousb_handler, 0, 0 },
@@ -469,7 +470,7 @@ static void _device_handler ( GUIMenu* apMenu, int aDir ) {
 
  if ( g_IOPFlags & SMS_IOPF_DEV9 ) {
 
-  if (  !( g_IOPFlags & SMS_IOPF_NET )  ) {
+  if (   !(  g_IOPFlags & ( SMS_IOPF_NET | SMS_IOPF_SMB )  )   ) {
 
    s_DevMenu[ ++lSize ].m_pOptionName = &STR_START_NETWORK_NOW;
    s_DevMenu[   lSize ].Handler       = _startnet_handler;
@@ -494,6 +495,17 @@ static void _device_handler ( GUIMenu* apMenu, int aDir ) {
 
  s_DevMenu[ ++lSize ].m_pOptionName = &STR_EDIT_IPCONFIG;
  s_DevMenu[   lSize ].Handler       = _editipc_handler;
+
+ if (  (  g_IOPFlags & SMS_IOPF_SMBINFO                 ) &&
+      !(  g_IOPFlags & ( SMS_IOPF_NET | SMS_IOPF_SMB )  )
+ ) {
+
+  s_DevMenu[ ++lSize ].m_pOptionName = &STR_NETWORK_PROTOCOL;
+  s_DevMenu[   lSize ].Handler       = _netprot_handler;
+  s_DevMenu[   lSize ].m_Type        = MENU_ITEM_TYPE_TEXT;
+  s_DevMenu[   lSize ].m_IconRight   = ( unsigned int )(  ( g_Config.m_NetworkFlags & SMS_DF_SMB ) ? &STR_SMB_CIFS : &STR_PS2DEV_HOST );
+
+ }  /* end if */
 
  lpState -> m_pItems =
  lpState -> m_pFirst =
@@ -975,9 +987,11 @@ static void _autohdd_handler ( GUIMenu* apMenu, int aDir ) {
 
 }  /* end _autohdd_handler */
 
-static void _start_device (  GUIMenu* apMenu, int ( *Start ) ( void )  ) {
+static int _start_device (  GUIMenu* apMenu, int ( *Start ) ( void )  ) {
 
- if (  !Start ()  ) {
+ int retVal;
+
+ if (   !(  retVal = Start ()  )   ) {
 
   GUI_Error ( STR_ERROR.m_pStr );
   _update_status ( apMenu );
@@ -989,11 +1003,14 @@ static void _start_device (  GUIMenu* apMenu, int ( *Start ) ( void )  ) {
 
  }  /* end else */
 
+ return retVal;
+
 }  /* end _start_device */
 
 static void _startnet_handler ( GUIMenu* apMenu, int aDir ) {
 
- _start_device ( apMenu, SMS_IOPStartNet );
+ if (  _start_device ( apMenu, SMS_IOPStartNet ) && ( g_IOPFlags & SMS_IOPF_SMB )  )
+  GUI_PostMessage ( GUI_MSG_MOUNT_BIT | GUI_MSG_LOGIN );
 
 }  /* end _startnet_handler */
 
@@ -1078,6 +1095,20 @@ static void _editipc_handler ( GUIMenu* apMenu, int aDir ) {
  apMenu -> Redraw ( apMenu );
 
 }  /* end _editipc_handler */
+
+static void _netprot_handler ( GUIMenu* apMenu, int aDir ) {
+
+ SMS_ListNode* lpNode = apMenu -> m_pState -> m_pTail;
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpNode -> m_Param;
+
+ if ( g_Config.m_NetworkFlags & SMS_DF_SMB )
+  g_Config.m_NetworkFlags &= ~SMS_DF_SMB;
+ else g_Config.m_NetworkFlags |= SMS_DF_SMB;
+
+ lpState -> m_pCurr -> m_IconRight = ( unsigned int )(  ( g_Config.m_NetworkFlags & SMS_DF_SMB ) ? &STR_SMB_CIFS : &STR_PS2DEV_HOST );
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _netprot_handler */
 
 static void _roll_ip_number ( GUIMenu* apMenu, char* apStr, int aDir ) {
 

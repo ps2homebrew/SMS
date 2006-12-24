@@ -116,23 +116,18 @@ static void _PlaybackThread ( void* apParam ) {
 
  while ( 1 ) {
 
-  int lState;
   int lBlock;
   u8* lpBuf;
 
   WaitSema (  *( int* )apParam  );
 
-  CpuSuspendIntr ( &lState );
+  lBlock = 1 - (  sceSdBlockTransStatus ( s_Core, 0 ) >> 24  );
+  lpBuf  = s_SPUBuf + ( lBlock << 11 );
 
-   lBlock = 1 - (  sceSdBlockTransStatus ( s_Core, 0 ) >> 24  );
-   lpBuf  = s_SPUBuf + ( lBlock << 11 );
+  s_Upsampler ( &s_RingBuf[ s_ReadPos ], lpBuf );
+  s_ReadPos += s_Advance;
 
-   s_Upsampler ( &s_RingBuf[ s_ReadPos ], lpBuf );
-   s_ReadPos += s_Advance;
-
-   if ( s_ReadPos >= s_BufSize ) s_ReadPos = 0;
-
-  CpuResumeIntr  ( lState );
+  if ( s_ReadPos >= s_BufSize ) s_ReadPos = 0;
 
   if (  _InAvail () > ( s_BufSize >> 3 )  ) SignalSema ( s_SemaQueue );
 
@@ -199,10 +194,10 @@ static void* _StartAudio ( void* apData, int aSize ) {
 
  sceSdSetCoreAttr ( SD_CORE_SPDIF_MODE, lFreq );
 
- EnableIntr ( lBS );
-
  sceSdSetTransCallback ( s_Core, SDTransCallback );
  sceSdBlockTrans (  s_Core, SD_TRANS_LOOP, s_SPUBuf, sizeof ( s_SPUBuf )  );
+
+ EnableIntr ( lBS );
 
  *( int* )apData = s_BufSize;
 
@@ -217,8 +212,8 @@ static void* _StopAudio ( void* apData, int aSize ) {
  _SetVolume ( 1, 0 );
  _Mute1     ( 0    );
 
- sceSdSetTransCallback ( s_Core, NULL );
  DisableIntr ( SPU_DMA_CHN1_IRQ, &lRes );
+ sceSdSetTransCallback ( s_Core, NULL );
  sceSdSetCoreAttr ( SD_CORE_SPDIF_MODE, 0 );
 
  return NULL;

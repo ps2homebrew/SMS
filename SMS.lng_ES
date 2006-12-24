@@ -188,6 +188,12 @@ Modo Alta precisión .avi
 Derecha
 VESA (60Hz)
 VESA (75Hz)
-?widescreen
-?wide pan-scan 1
-?wide pan-scan 2
+Pantalla Ancha
+Pantalla Ancha Zoom 1
+Pantalla Ancha Zoom 2
+Protocolo de Red
+ps2dev/host
+SMB/CIFS
+Error de Comunicación (presione \ X \ para continuar)...
+Error de Negociación de Protocolo (%d) (presione \ X \ para continuar)...
+Error de Logueo (%d) (presione \ X \ para continuar)...

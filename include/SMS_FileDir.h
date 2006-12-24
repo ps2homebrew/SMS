@@ -23,12 +23,15 @@ extern unsigned char g_pHDD0 [] __attribute__(   (  aligned( 4 ), section( ".dat
 extern unsigned char g_pCDDA [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
 extern unsigned char g_pHOST [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
 extern unsigned char g_pDVD  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern unsigned char g_pSMB  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern unsigned char g_pSMBS [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
 
-extern unsigned char* g_pDevName[ 6 ];
+extern unsigned char* g_pDevName[ 7 ];
 
 extern SMS_List*           g_pFileList;
 extern int                 g_CMedia;
 extern int                 g_PD;
+extern int                 g_SMBU;
 extern struct CDDAContext* g_pCDDACtx;
 
 # ifdef __cplusplus

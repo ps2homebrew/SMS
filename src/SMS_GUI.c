@@ -35,6 +35,7 @@
 #include <libhdd.h>
 #include <fileio.h>
 #include <malloc.h>
+#include <sifrpc.h>
 
 #define GUIF_DEV_CHECK 0x00000001
 
@@ -47,6 +48,7 @@
 #define DEVF_CDVD_UNKNOWN   0x00000040
 #define DEVF_CDVD_MASK      0x0000007C
 #define DEVF_HOST           0x00000080
+#define DEFV_SMB            0x00000100
 
 GUIObject* g_pStatusLine;
 GUIObject* g_pDesktop;
@@ -66,6 +68,9 @@ static volatile long  s_Event;
 static unsigned long  s_PowerOffTimer;
 static unsigned int   s_DevFlags;
 static GSBitBltPacket s_BitBlt;
+       int            g_SMBUnit;
+       int            g_SMBError;
+       int            g_SMBServerError;
 
 static unsigned char s_pMsgStr [] __attribute__(   (  section( ".data" )  )   ) = "_POSTED_MESSAGE";
 
@@ -180,6 +185,19 @@ static void TimerHandler ( void* apArg ) {
 
 }  /* end TimerHandler */
 
+static void _smb_handler_connect ( void* apHdr ) {
+
+ int* lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> unknown;
+
+ g_SMBUnit        = lpParam[ 1 ];
+ g_SMBError       = lpParam[ 2 ];
+ g_SMBServerError = lpParam[ 3 ];
+
+ s_DevFlags |= DEFV_SMB;
+ iWakeupThread ( s_GUIThreadID );
+
+}  /* end _smb_handler_connect */
+
 static void _usb_handler_connect ( void* apHdr ) {
 
  if ( s_DevFlags & DEVF_USB_DISCONNECT )
@@ -262,6 +280,8 @@ void GUI_UpdateStatus ( void ) {
 
 static int _gui_thread ( void* apParam ) {
 
+ static int s_lCntr;
+
  while ( 1 ) {
 
   SleepThread ();
@@ -281,6 +301,13 @@ static int _gui_thread ( void* apParam ) {
 
     s_Event    |= GUI_MSG_USB;
     s_DevFlags &= ~DEVF_USB_DISCONNECT;
+
+    goto raiseEvent;
+
+   } else if ( s_DevFlags & DEFV_SMB ) {
+
+    s_Event    |= ( GUI_MSG_MOUNT_BIT | GUI_MSG_SMB );
+    s_DevFlags &= ~DEFV_SMB;
 
     goto raiseEvent;
 
@@ -369,8 +396,6 @@ static int _gui_thread ( void* apParam ) {
 
    if ( g_IOPFlags & SMS_IOPF_NET ) {
 
-    static int s_lCntr;
-
     if (  !( s_lCntr++ & 0xF )  ) {
 
      int lFD = fioDopen ( "host:" );
@@ -394,6 +419,34 @@ static int _gui_thread ( void* apParam ) {
        s_DevFlags &= ~DEVF_HOST;
 
        goto raiseEvent;
+
+     }  /* end if */
+
+    }  /* end if */
+
+   } else if ( g_IOPFlags & SMS_IOPF_SMBLOGIN ) {
+
+    if (  !( s_lCntr++ & 0x3F )  ) {
+
+     int lStat, lSD = fioDopen ( g_pSMBS );
+
+     if ( lSD >= 0 ) {
+
+      lStat = fioIoctl ( lSD, SMB_IOCTL_ECHO, s_Stack );
+
+      if ( lStat < 0 ) fioIoctl ( lSD, SMB_IOCTL_LOGOUT, &g_SMBUnit );
+
+      fioDclose ( lSD );
+
+     }  /* end if */
+
+     if ( lSD < 0 || lStat < 0 ) {
+
+      g_SMBU      = 0x80000000;
+      g_IOPFlags &= ~SMS_IOPF_SMBLOGIN;
+      s_Event    |=  GUI_MSG_SMB;
+
+      goto raiseEvent;
 
      }  /* end if */
 
@@ -682,12 +735,14 @@ void GUI_Run ( void ) {
   s_GUIFlags |= GUIF_DEV_CHECK;
   g_CMedia    = -1;
 
+  SMS_IOPSetSifCmdHandler ( _smb_handler_connect,    0 );
   SMS_IOPSetSifCmdHandler ( _usb_handler_connect,    1 );
   SMS_IOPSetSifCmdHandler ( _usb_handler_disconnect, 2 );
 
   GUI_UpdateStatus ();
 
-  if ( g_IOPFlags & SMS_IOPF_HDD ) GUI_PostMessage ( GUI_MSG_MOUNT_BIT | GUI_MSG_HDD );
+  if ( g_IOPFlags & SMS_IOPF_HDD ) GUI_PostMessage ( GUI_MSG_MOUNT_BIT | GUI_MSG_HDD   );
+  if ( g_IOPFlags & SMS_IOPF_SMB ) GUI_PostMessage ( GUI_MSG_MOUNT_BIT | GUI_MSG_LOGIN );
 
  } else s_GUIFlags &= ~GUIF_DEV_CHECK;
 

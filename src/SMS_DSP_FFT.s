@@ -330,6 +330,23 @@ DSP_FFTRun:
     nop
 
 DSP_FFTGet:
+    addiu       $sp, $sp, -256
+    sqc2        $vf01,   0($sp)
+    sqc2        $vf02,  16($sp)
+    sqc2        $vf03,  32($sp)
+    sqc2        $vf04,  48($sp)
+    sqc2        $vf05,  64($sp)
+    sqc2        $vf06,  80($sp)
+    sqc2        $vf07,  96($sp)
+    sqc2        $vf08, 112($sp)
+    sqc2        $vf09, 128($sp)
+    sqc2        $vf10, 144($sp)
+    sqc2        $vf11, 160($sp)
+    sqc2        $vf12, 176($sp)
+    sqc2        $vf13, 192($sp)
+    sqc2        $vf14, 208($sp)
+    sqc2        $vf15, 224($sp)
+    sqc2        $vf16, 240($sp)
     lui         $a1, 0x7000
     addiu       $v0, $v0, 32
 1:
@@ -497,7 +514,24 @@ DSP_FFTGet:
     sqc2        $vf07, 0x3800($a1)
     sqc2        $vf08, 0x3810($a1)
     sqc2        $vf09, 0x3820($a1)
-    jr          $ra
     sqc2        $vf10, 0x3830($a1)
+    lqc2        $vf01,   0($sp)
+    lqc2        $vf02,  16($sp)
+    lqc2        $vf03,  32($sp)
+    lqc2        $vf04,  48($sp)
+    lqc2        $vf05,  64($sp)
+    lqc2        $vf06,  80($sp)
+    lqc2        $vf07,  96($sp)
+    lqc2        $vf08, 112($sp)
+    lqc2        $vf09, 128($sp)
+    lqc2        $vf10, 144($sp)
+    lqc2        $vf11, 160($sp)
+    lqc2        $vf12, 176($sp)
+    lqc2        $vf13, 192($sp)
+    lqc2        $vf14, 208($sp)
+    lqc2        $vf15, 224($sp)
+    lqc2        $vf16, 240($sp)
+    jr          $ra
+    addiu       $sp, $sp, 256
     
 

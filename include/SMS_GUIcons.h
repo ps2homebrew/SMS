@@ -22,6 +22,7 @@
 # define GUICON_FILE       8
 # define GUICON_PARTITION 10
 # define GUICON_AVIS      12
+# define GUICON_SHARE     14
 
 # define GUICON_USB   (  ( GUI_MSG_USB   >> 16 ) - 1  )
 # define GUICON_CDROM (  ( GUI_MSG_CDROM >> 16 ) - 1  )
@@ -29,6 +30,7 @@
 # define GUICON_CDDA  (  ( GUI_MSG_CDDA  >> 16 ) - 1  )
 # define GUICON_HOST  (  ( GUI_MSG_HOST  >> 16 ) - 1  )
 # define GUICON_DVD   (  ( GUI_MSG_DVD   >> 16 ) - 1  )
+# define GUICON_SMB   (  ( GUI_MSG_SMB   >> 16 ) - 1  )
 
 # define GUICON_ERROR    0
 # define GUICON_DISPLAY  1

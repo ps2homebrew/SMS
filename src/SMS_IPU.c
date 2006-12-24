@@ -159,8 +159,8 @@ static int IPU_VBlankStartHandler ( int aCause ) {
    int64_t lDiff     = g_IPUCtx.m_VideoPTS - lAudioPTS;
 
    if ( lDiff > 80 || !lAudioPTS )
-    return -1;
-   else if (   lDiff > -200 && (  ( *GS_CSR >> 13 ) & 1  )   ) return -1;
+    goto end;
+   else if (   lDiff > -200 && (  ( *GS_CSR >> 13 ) & 1  )   ) goto end;
 
   }  /* end if */
 
@@ -171,7 +171,7 @@ static int IPU_VBlankStartHandler ( int aCause ) {
   DMA_SendA ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
 
  }  /* end if */
-
+end:
  return -1;
 
 }  /* end IPU_VBlankStartHandler */
@@ -522,7 +522,7 @@ static int IPU_DummyVBlankStartHandler ( int aCause ) {
 
  }  /* end if */
 
- return 0;
+ return -1;
 
 }  /* end IPU_DummyVBlankStartHandler */
 #endif  /* VB_SYNC */

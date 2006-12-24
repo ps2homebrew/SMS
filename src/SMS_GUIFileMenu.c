@@ -29,6 +29,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <fileXio_rpc.h>
+#include <fileio.h>
 #include <fcntl.h>
 
 #define FA_FLAGS_AVI 0x00000001
@@ -84,7 +85,7 @@ static int _filter_item ( SMS_ListNode* apNode ) {
        )
  ) return 1;
 
- if ( lType == GUICON_PARTITION || lType == GUICON_FOLDER ) return 0;
+ if ( lType == GUICON_PARTITION || lType == GUICON_FOLDER || lType == GUICON_SHARE ) return 0;
 
  if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) &&
        !(  lType == GUICON_AVI ||
@@ -549,7 +550,7 @@ static void _action_partition ( GUIFileMenu* apMenu, int afPopup ) {
  if ( g_PD >= 0 ) {
 
   fileXioUmount ( g_CWD );
-  g_PD = -1;
+  g_PD = 0x80000000;
 
  }  /* end if */
 
@@ -594,16 +595,62 @@ static void _context_action_file ( GUIFileMenu* apMenu, int afPopup ) {
 
 }  /* end _context_action_file */
 
-static void ( *Action[ 7 ] ) ( GUIFileMenu*, int ) = {
+static void _action_share ( GUIFileMenu* apMenu, int afPopup ) {
+
+ int          lSD;
+ SMBMountInfo lMountInfo;
+ char         lPath[ 2 ] __attribute__(   (  aligned( 4 )  )   );
+ char*        lpPath = apMenu -> m_pCurrent -> m_pString;
+
+ lSD = fioDopen ( g_pSMBS );
+
+ if ( lSD >= 0 ) {
+
+  if ( g_SMBU >= 0 ) {
+
+   fioIoctl ( lSD, SMB_IOCTL_UMOUNT, &g_SMBU );
+   g_SMBU = 0x80000000;
+
+  }  /* end if */
+
+  lMountInfo.m_Unit = g_SMBUnit;
+  strcpy ( lMountInfo.m_Path, lpPath );
+  *strchr ( lMountInfo.m_Path, ':' ) = '\x00';
+
+  g_SMBU = fioIoctl ( lSD, SMB_IOCTL_MOUNT, &lMountInfo );
+  fioDclose ( lSD );
+
+  if ( g_SMBU > 0 ) {
+
+   *( unsigned int* )g_CWD       = *( int* )g_pSMB;
+   g_CWD[ 3 ]                    = '0' + g_SMBU;
+   *( unsigned int* )&g_CWD[ 4 ] = 0x0000003A;
+   *( unsigned short* )lPath     = 0x002F;
+
+   _push_state ( apMenu );
+   _fill ( apMenu, lPath );
+   _redraw ( apMenu );
+
+  }  /* end if */
+
+ }  /* end if */
+
+}  /* end _action_share */
+
+static void _context_action_share ( GUIFileMenu* apMenu, int afPopup ) {
+
+}  /* end _context_action_share */
+
+static void ( *Action[ 8 ] ) ( GUIFileMenu*, int ) = {
  _action_folder, _action_avi,  _action_file,
  _action_file,   _action_file, _action_partition,
- _action_avi
+ _action_avi,    _action_share
 };
 
-static void ( *ContextAction[ 7 ] ) ( GUIFileMenu*, int ) = {
- _context_action_fold, _context_action_file,  _context_action_file,
+static void ( *ContextAction[ 8 ] ) ( GUIFileMenu*, int ) = {
+ _context_action_fold, _context_action_file, _context_action_file,
  _context_action_file, _context_action_file, _context_action_part,
- _context_action_file
+ _context_action_file, _context_action_share
 };
 
 static int _step_down ( GUIFileMenu* apMenu ) {
@@ -833,9 +880,7 @@ redraw:
       lpMenu -> m_pCurrent = lpMenu -> m_pCurrent -> m_pNext;
 
       if ( lpMenu -> m_pCurrent == lpMenu -> m_pLast && lpMenu -> m_pCurrent -> m_pNext )
-
        lpMenu -> m_pFirst = lpMenu -> m_pFirst -> m_pNext;
-
       else ++lpMenu -> m_YOffset;
 
      }  /* end while */
@@ -909,7 +954,8 @@ GUIObject* GUI_CreateFileMenu ( void ) {
  retVal -> m_pColor    = &g_Config.m_BrowserIBCIdx;
  retVal -> m_YOffset   = 0;
 
- g_PD = 0x80000000;
+ g_PD   = 0x80000000;
+ g_SMBU = 0x80000000;
 
  return ( GUIObject* )retVal;
 

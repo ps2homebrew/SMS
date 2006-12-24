@@ -575,6 +575,7 @@ static int PlayerControl_Scroll ( int aDir ) {
  SMS_RingBuffer* lpBuff    = NULL;
  int             lPktIdx;
 
+ s_Player.m_pIPUCtx -> StopSync ( 1 );
  lpIPUCtx -> Suspend ();
  GS_VSync ();
  lpIPUCtx -> Repaint ();
@@ -601,6 +602,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
    s_Player.m_VideoTime = 0;
    s_Player.m_AudioTime = 0;
+   lpPacket             = NULL;
 
    retVal = 1;
    break;
@@ -747,6 +749,8 @@ end:
  if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> m_Idx = 0;
 
  SMS_TimerSet ( 2, 1000, lpHandler, NULL );
+
+ s_Player.m_pIPUCtx -> StopSync ( 0 );
 
  return retVal;
 

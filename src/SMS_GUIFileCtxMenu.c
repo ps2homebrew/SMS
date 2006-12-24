@@ -67,14 +67,14 @@ static void _copy2hdd_handler ( GUIMenu* apMenu, int aDir ) {
   if ( lFD >= 0 ) {
 
    char         lSts[ 128 ];
-   unsigned int lSize    = 262144;
+   unsigned int lSize    = 131072;
    unsigned int lnCopied = 0;
    float        lSpeed   = 0.0F;
    char*        lpBuff   = ( char* )malloc ( lSize );
    int          lfError  = 0;
    unsigned int lStart   = g_Timer;
 
-   lpFileCtx -> Stream ( lpFileCtx, 0, 128 );
+   lpFileCtx -> Stream ( lpFileCtx, 0, 96 );
 
    while ( 1 ) {
 

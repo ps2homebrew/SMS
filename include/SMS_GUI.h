@@ -22,6 +22,8 @@
 # define GUI_MSG_CDDA   0x0000000000040000L
 # define GUI_MSG_HOST   0x0000000000050000L
 # define GUI_MSG_DVD    0x0000000000060000L
+# define GUI_MSG_SMB    0x0000000000070000L
+# define GUI_MSG_LOGIN  0x0000000000080000L
 
 # define GUI_MSG_MEDIA_SELECTED 0x8000000000000000L
 # define GUI_MSG_MEDIA_REMOVED  0x7000000000000000L
@@ -66,6 +68,9 @@ extern GUIObject* g_pStatusLine;
 extern GUIObject* g_pDevMenu;
 extern GUIObject* g_pFileMenu;
 extern void*      g_pActiveNode;
+extern int        g_SMBUnit;
+extern int        g_SMBError;
+extern int        g_SMBServerError;
 
 extern int ( *GUI_ReadButtons  ) ( void );
 

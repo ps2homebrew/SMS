@@ -214,17 +214,18 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
-void     SMS_Initialize       ( void*                                );
-uint32_t SMS_Linesize         ( unsigned int, unsigned int*          );
-void*    SMS_Realloc          ( void*, unsigned int*, unsigned int   );
-uint32_t SMS_Align            ( unsigned int, unsigned int           );
-void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int            );
-int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t            );
-void     SMS_StartNetwork     ( void*                                );
-void     SMS_ResetIOP         ( void                                 );
-void     SMS_Strcat           ( char*, const char*                   );
-int      SMS_rand             ( void                                 );
-char*    SMS_ReverseString    ( char*, int                           );
+void     SMS_Initialize       ( void*                              );
+uint32_t SMS_Linesize         ( unsigned int, unsigned int*        );
+void*    SMS_Realloc          ( void*, unsigned int*, unsigned int );
+uint32_t SMS_Align            ( unsigned int, unsigned int         );
+void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int          );
+int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t          );
+void     SMS_StartNetwork     ( void*                              );
+void     SMS_ResetIOP         ( void                               );
+void     SMS_Strcat           ( char*, const char*                 );
+int      SMS_rand             ( void                               );
+char*    SMS_ReverseString    ( char*, int                         );
+
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

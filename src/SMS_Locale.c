@@ -22,6 +22,7 @@ char g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) 
 char g_SlashStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "/";
 char g_BSlashStr [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "\\";
 char g_ColonStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ":";
+char g_ColonSStr [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ": ";
 char g_DesktopStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DESKTOP";
 char g_StatuslStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "STATUSL";
 char g_DevMenuStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DEVMENU";
@@ -236,7 +237,12 @@ static unsigned char s_pVESA75Hz       [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pWidescreen     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "widescreen";
 static unsigned char s_pWidePanScan1   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "wide pan-scan 1";
 static unsigned char s_pWidePanScan2   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "wide pan-scan 2";
-
+static unsigned char s_pNetProtocol    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Network protocol";
+static unsigned char s_pPS2DevHost     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "ps2dev/host";
+static unsigned char s_pSMB_CIFS       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMB/CIFS";
+static unsigned char s_pCommError      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Communication error (press \"cross\" to continue)...";
+static unsigned char s_pProtNegError   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Protocol negotiation error (%d) (press \"cross\" to continue)...";
+static unsigned char s_pLoginError     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Login error (%d) (press \"cross\" to continue)...";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -431,7 +437,13 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pVESA75Hz        ) - 1, s_pVESA75Hz        },
  { sizeof ( s_pWidescreen      ) - 1, s_pWidescreen      },
  { sizeof ( s_pWidePanScan1    ) - 1, s_pWidePanScan1    },
- { sizeof ( s_pWidePanScan2    ) - 1, s_pWidePanScan2    }
+ { sizeof ( s_pWidePanScan2    ) - 1, s_pWidePanScan2    },
+ { sizeof ( s_pNetProtocol     ) - 1, s_pNetProtocol     },
+ { sizeof ( s_pPS2DevHost      ) - 1, s_pPS2DevHost      },
+ { sizeof ( s_pSMB_CIFS        ) - 1, s_pSMB_CIFS        },
+ { sizeof ( s_pCommError       ) - 1, s_pCommError       },
+ { sizeof ( s_pProtNegError    ) - 1, s_pProtNegError    },
+ { sizeof ( s_pLoginError      ) - 1, s_pLoginError      }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );

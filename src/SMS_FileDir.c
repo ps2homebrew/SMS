@@ -21,13 +21,14 @@
 #include "SMS_FileContext.h"
 #include "SMS_Sounds.h"
 
-#include <tamtypes.h>
+#include <kernel.h>
 #include <string.h>
 #include <fileXio.h>
 #include <fileXio_rpc.h>
 #include <fileio.h>
 #include <fcntl.h>
 #include <libhdd.h>
+#include <malloc.h>
 
 unsigned char g_pUSB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "mass";
 unsigned char g_pCDROM [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
@@ -36,24 +37,27 @@ unsigned char g_pCDDA  [] __attribute__(   (  aligned( 4 ), section( ".data" )  
 unsigned char g_pHOST  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host";
 unsigned char g_pDVD   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
 unsigned char g_pCDDAFS[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cddafs:/";
+unsigned char g_pSMB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb0";
+unsigned char g_pSMBS  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb:";
 
-static unsigned char s_pAVI [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".avi";
-static unsigned char s_pDIVX[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".divx";
-static unsigned char s_pXVID[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".xvid";
-static unsigned char s_pMP3 [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mp3";
-static unsigned char s_pM3U [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".m3u";
-static unsigned char s_pMPA [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mpa";
-static unsigned char s_pMP2 [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = ".mp2";
-static unsigned char s_pELL [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host:elflist.txt";
-static unsigned char s_pHST [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host:";
+static unsigned char s_pAVI  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".avi";
+static unsigned char s_pDIVX [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".divx";
+static unsigned char s_pXVID [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".xvid";
+static unsigned char s_pMP3  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp3";
+static unsigned char s_pM3U  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m3u";
+static unsigned char s_pMPA  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpa";
+static unsigned char s_pMP2  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp2";
+static unsigned char s_pELL  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:elflist.txt";
+static unsigned char s_pHST  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:";
 
-unsigned char* g_pDevName[ 6 ] = {
- g_pUSB, g_pCDROM, g_pHDD0, g_pCDDA, g_pHOST, g_pDVD
+unsigned char* g_pDevName[ 7 ] = {
+ g_pUSB, g_pCDROM, g_pHDD0, g_pCDDA, g_pHOST, g_pDVD, g_pSMB
 };
 
 SMS_List*    g_pFileList;
 int          g_CMedia;
 int          g_PD;
+int          g_SMBU;
 CDDAContext* g_pCDDACtx;
 
 int _set_id ( char* apName ) {
@@ -104,9 +108,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
  GUI_Status ( STR_READING_MEDIA.m_pStr );
 
  if ( !g_pFileList )
-
   g_pFileList = SMS_ListInit ();
-
  else SMS_ListDestroy ( g_pFileList, 0 );
 
  if ( apPath[ 0 ] == '\x00' ) {
@@ -133,6 +135,56 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
     }  /* end while */
 
     fileXioDclose ( lFD );
+
+    if ( lfSort ) SMS_ListSort ( g_pFileList );
+
+   }  /* end if */
+
+   goto end;
+
+  } else if ( g_CMedia == 6 ) {
+
+   lFD = fioDopen ( g_pSMBS );
+
+   if ( lFD >= 0 ) {
+
+    SMBShareInfo* lpShareInfo = ( SMBShareInfo* )malloc ( SMB_SENUM_SIZE );
+
+    if ( lpShareInfo ) {
+
+     int          i, lnShares;
+     SMBSEnumInfo lInfo;
+
+     lInfo.m_Unit  = g_SMBUnit;
+     lInfo.m_pInfo = lpShareInfo;
+
+     SyncDCache (  lpShareInfo, ( char* )lpShareInfo + SMB_SENUM_SIZE  );
+
+     lnShares = fioIoctl ( lFD, SMB_IOCTL_SENUM, &lInfo );
+
+     for ( i = 0; i < lnShares; ++i ) if (  !lpShareInfo[ i ].m_Type && lpShareInfo[ i ].m_Name[ strlen ( lpShareInfo[ i ].m_Name ) - 1 ] != '$'  ) {
+
+      char* lpName = ( char* )malloc (  strlen ( lpShareInfo[ i ].m_Name ) + strlen ( lpShareInfo[ i ].m_pRemark ) + 4  );
+
+      if ( lpName ) {
+
+       strcpy ( lpName, lpShareInfo[ i ].m_Name    );
+       SMS_Strcat ( lpName, g_ColonSStr );
+       SMS_Strcat ( lpName, lpShareInfo[ i ].m_pRemark );
+
+       SMS_ListPushBack ( g_pFileList, lpName ) -> m_Param = GUICON_SHARE;
+
+       free ( lpName );
+
+      }  /* end if */
+
+     }  /* end for */
+
+     free ( lpShareInfo );
+
+    }  /* end if */
+
+    fioDclose ( lFD );
 
     if ( lfSort ) SMS_ListSort ( g_pFileList );
 
@@ -272,9 +324,11 @@ doScan:
 
    if ( lFD >= 0 ) {
 
+    int lIdx = strlen ( g_CWD ) - 1;
+
     strcpy ( lPath, g_CWD );
 
-    if (  lPath[ strlen ( lPath ) - 1 ] != '\\'  ) SMS_Strcat ( lPath, g_BSlashStr );
+    if ( lPath[ lIdx ] != '\\' && lPath[ lIdx ] != '/' ) SMS_Strcat ( lPath, g_BSlashStr );
 
     lpPtr = lPath + strlen ( lPath );
 
