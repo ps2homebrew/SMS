@@ -1165,11 +1165,6 @@ extern GSCharIndent g_GSCharIndent[ 224 ];
 # define GS_TSP_PACKET_SIZE()    ( 14               )
 # define GS_VGR_PACKET_SIZE()    ( 12               )
 
-static int inline GS_PowerOf2 ( int aVal ) {
- int i;
- for ( i = 0; ( 1 << i ) < aVal; ++i );
- return i;
-}  /* end GS_PowerOf2 */
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
@@ -1190,6 +1185,7 @@ void          GS_LoadImage       ( GSLoadImage*, void*                          
 void          GS_RRV             ( unsigned long*, int, int, int, int, int                                     );
 void          GS_RenderRoundRect ( GSRoundRectPacket*, int, int, int, int, int, long                           );
 void          GS_VSync           ( void                                                                        );
+void          GS_TWTH            ( int, int, void*, void*                                                      );
 
 void           GSContext_Init            ( GSVideoMode, GSZTest, GSDoubleBuffer                                      );
 unsigned long* GSContext_NewPacket       ( int, int, GSPaintMethod                                                   );

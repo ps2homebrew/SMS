@@ -15,20 +15,21 @@
 # define SMS_PS2ATAD_SIZE    11805
 # define SMS_PS2HDD_SIZE     26169
 # define SMS_PS2FS_SIZE      54785
-# define SMS_USB_MASS_SIZE   22701
+# define SMS_USB_MASS_SIZE   27693
 # define SMS_USBD_SIZE       26065
-# define SMS_PS2IP_SIZE      76557
+# define SMS_PS2IP_SIZE      70781
 # define SMS_PS2SMAP_SIZE    11425
 # define SMS_PS2HOST_SIZE    16349
 # define SMS_VU0_MPG_SIZE     3248
 # define SMS_VU0_DATA_SIZE     512
-# define SMS_SMB_SIZE        18497
+# define SMS_SMB_SIZE        18921
+# define SMS_SMSUTILS_SIZE    1305
 # define SMS_AUDSRV_SIZE      6677
 # define SMS_IOMANX_SIZE      7417
 # define SMS_FILEXIO_SIZE     8089
 # define SMS_PS2DEV9_SIZE     8005
 # define SMS_POWEROFF_SIZE    2925
-# define SMS_CDVD_SIZE       20145
+# define SMS_CDVD_SIZE       20169
 # define SMS_SIO2MAN_SIZE     5817
 
 # define SMS_IDCT_CONST_OFFSET 0
@@ -43,7 +44,8 @@
 # define SMS_VU0_MPG_OFFSET    (  ( SMS_PS2HOST_OFFSET    + SMS_PS2HOST_SIZE    + 15 ) & 0xFFFFFFF0  )
 # define SMS_VU0_DATA_OFFSET   (  ( SMS_VU0_MPG_OFFSET    + SMS_VU0_MPG_SIZE    + 15 ) & 0xFFFFFFF0  )
 # define SMS_SMB_OFFSET        (  ( SMS_VU0_DATA_OFFSET   + SMS_VU0_DATA_SIZE   + 15 ) & 0xFFFFFFF0  )
-# define SMS_AUDSRV_OFFSET     (  ( SMS_SMB_OFFSET        + SMS_SMB_SIZE        + 15 ) & 0xFFFFFFF0  )
+# define SMS_SMSUTILS_OFFSET   (  ( SMS_SMB_OFFSET        + SMS_SMB_SIZE        + 15 ) & 0xFFFFFFF0  )
+# define SMS_AUDSRV_OFFSET     (  ( SMS_SMSUTILS_OFFSET   + SMS_SMSUTILS_SIZE   + 15 ) & 0xFFFFFFF0  )
 # define SMS_IOMANX_OFFSET     (  ( SMS_AUDSRV_OFFSET     + SMS_AUDSRV_SIZE     + 15 ) & 0xFFFFFFF0  )
 # define SMS_FILEXIO_OFFSET    (  ( SMS_IOMANX_OFFSET     + SMS_IOMANX_SIZE     + 15 ) & 0xFFFFFFF0  )
 # define SMS_PS2DEV9_OFFSET    (  ( SMS_FILEXIO_OFFSET    + SMS_FILEXIO_SIZE    + 15 ) & 0xFFFFFFF0  )
@@ -54,6 +56,6 @@
 
 extern unsigned char g_DataBuffer[ SMS_DATA_BUFFER_SIZE ] __attribute__(   (  aligned( 64 )  )   );
 
-# define SMS_AUDIO_BUFFER        &g_DataBuffer[ SMS_AUDSRV_OFFSET ]
+# define SMS_AUDIO_BUFFER        &g_DataBuffer[ SMS_SMSUTILS_OFFSET ]
 # define SMS_AUDIO_BUFFER_SIZE ( &g_DataBuffer[ SMS_DATA_BUFFER_SIZE ] - SMS_AUDIO_BUFFER )
 #endif  /* __SMS_Data_H */

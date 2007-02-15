@@ -64,7 +64,7 @@ struct sys_timeout {u8_t dummy;};
 #include "arch/sys_arch.h"
 
 /** Return code for timeouts from sys_arch_mbox_fetch and sys_arch_sem_wait */
-#define SYS_ARCH_TIMEOUT 0xffffffff
+#define SYS_ARCH_TIMEOUT -418
 
 typedef void (* sys_timeout_handler)(void *arg);
 
@@ -78,23 +78,6 @@ struct sys_timeout {
 struct sys_timeouts {
   struct sys_timeout *next;
 };
-
-/* sys_init() must be called before anthing else. */
-void sys_init(void);
-
-/*
- * sys_timeout():
- *
- * Schedule a timeout a specified amount of milliseconds in the
- * future. When the timeout occurs, the specified timeout handler will
- * be called. The handler will be passed the "arg" argument when
- * called.
- *
- */
-void sys_timeout(u32_t msecs, sys_timeout_handler h, void *arg);
-void sys_untimeout(sys_timeout_handler h, void *arg);
-struct sys_timeouts *sys_arch_timeouts(void);
-
 /* Semaphore functions. */
 sys_sem_t sys_sem_new(u8_t count);
 //void sys_sem_signal(sys_sem_t sem);
@@ -103,23 +86,15 @@ sys_sem_t sys_sem_new(u8_t count);
 u32_t sys_arch_sem_wait(sys_sem_t sem, u32_t timeout);
 
 void sys_sem_free(sys_sem_t sem);
-void sys_sem_wait(sys_sem_t sem);
-int sys_sem_wait_timeout(sys_sem_t sem, u32_t timeout);
-
-/* Time functions. */
-#ifndef sys_msleep
-void sys_msleep(u32_t ms); /* only has a (close to) 1 jiffy resolution. */
-#endif
-#ifndef sys_jiffies
-u32_t sys_jiffies(void); /* since power up. */
-#endif
+#define sys_sem_wait( s ) WaitSema ( s )
+#define sys_sem_wait_timeout( s, t ) (  sys_arch_sem_wait ( s, t ) != SYS_ARCH_TIMEOUT  )
 
 /* Mailbox functions. */
 sys_mbox_t sys_mbox_new(void);
 void sys_mbox_post(sys_mbox_t mbox, void *msg);
 u32_t sys_arch_mbox_fetch(sys_mbox_t mbox, void **msg, u32_t timeout);
 void sys_mbox_free(sys_mbox_t mbox);
-void sys_mbox_fetch(sys_mbox_t mbox, void **msg);
+#define sys_mbox_fetch( mb, msg ) sys_arch_mbox_fetch (  ( mb ), ( msg ), 0  );
 
 
 /* Thread functions. */

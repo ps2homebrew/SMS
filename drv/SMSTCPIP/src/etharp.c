@@ -100,8 +100,8 @@ RFC 3220 4.6          IP Mobility Support for IPv4          January 2002
 #define HWTYPE_ETHERNET 1
 
 /** ARP message types */
-#define ARP_REQUEST 1
-#define ARP_REPLY 2
+#define ARP_REQUEST 0x0100
+#define ARP_REPLY   0x0200
 
 #define ARPH_HWLEN(hdr) (ntohs((hdr)->_hwlen_protolen) >> 8)
 #define ARPH_PROTOLEN(hdr) (ntohs((hdr)->_hwlen_protolen) & 0xff)
@@ -154,49 +154,32 @@ etharp_init(void)
     arp_table[i].ctime = 0;
   }
 }
-
 /**
  * Clears expired entries in the ARP table.
  *
  * This function should be called every ETHARP_TMR_INTERVAL microseconds (10 seconds),
  * in order to expire entries in the ARP table.
  */
-void
-etharp_tmr(void)
-{
-  s8_t i;
+void etharp_tmr ( void ) {
 
-  LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_timer\n"));
-  /* remove expired entries from the ARP table */
-  for (i = 0; i < ARP_TABLE_SIZE; ++i) {
-    arp_table[i].ctime++;
-    /* a resolved/stable entry? */
-    if ((arp_table[i].state == ETHARP_STATE_STABLE) &&
-         /* entry has become old? */
-        (arp_table[i].ctime >= ARP_MAXAGE)) {
-      LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_timer: expired stable entry %u.\n", i));
-      goto empty;
-    /* an unresolved/pending entry? */
-    } else if ((arp_table[i].state == ETHARP_STATE_PENDING) &&
-         /* entry unresolved/pending for too long? */
-        (arp_table[i].ctime >= ARP_MAXPENDING)) {
-      LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_timer: expired pending entry %u.\n", i));
-  empty:
-      /* empty old entry */      
-      arp_table[i].state = ETHARP_STATE_EMPTY;
+ s8_t i;
+
+ for ( i = 0; i < ARP_TABLE_SIZE; ++i ) {
+  ++arp_table[ i ].ctime;
+  if (  arp_table[ i ].state == ETHARP_STATE_STABLE && arp_table[ i ].ctime >= ARP_MAXAGE ) {
+   goto empty;
+  } else if ( arp_table[ i ].state == ETHARP_STATE_PENDING && arp_table[ i ].ctime >= ARP_MAXPENDING ) {
+empty:
+   arp_table[ i ].state = ETHARP_STATE_EMPTY;
 #if ARP_QUEUEING
-      /* and empty packet queue */
-      if (arp_table[i].p != NULL) {
-        /* remove any queued packet */
-        LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_timer: freeing entry %u, packet queue %p.\n", i, (void *)(arp_table[i].p)));
-        pbuf_free(arp_table[i].p);
-        arp_table[i].p = NULL;
-      }
+   if ( arp_table[ i ].p ) {
+    pbuf_free ( arp_table[ i ].p );
+    arp_table[ i ].p = NULL;
+   }  /* end if */
 #endif
-    }
-  }
-}
-
+  }  /* end if */
+ }  /* end for */
+}  /* end etharp_tmr */
 /**
  * Return an empty ARP entry (possibly recycling the oldest stable entry).
  *
@@ -461,26 +444,17 @@ update_arp_entry(struct netif *netif, struct ip_addr *ipaddr, struct eth_addr *e
  *
  * @see pbuf_free()
  */
-struct pbuf *
-etharp_ip_input(struct netif *netif, struct pbuf *p)
-{
+void
+etharp_ip_input(struct netif *netif, struct pbuf *p) {
   struct ethip_hdr *hdr;
 
   /* Only insert an entry if the source IP address of the
      incoming IP packet comes from a host on the local network. */
   hdr = p->payload;
   /* source is on local network? */
-  if (!ip_addr_maskcmp(&(hdr->ip.src), &(netif->ip_addr), &(netif->netmask))) {
-    /* do nothing */
-    return NULL;
-  }
-
-  LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("etharp_ip_input: updating ETHARP table.\n"));
-  /* update ARP table, ask to insert entry */
-  update_arp_entry(netif, &(hdr->ip.src), &(hdr->eth.src), ARP_INSERT_FLAG);
-  return NULL;
+  if (ip_addr_maskcmp(&(hdr->ip.src), &(netif->ip_addr), &(netif->netmask)))
+   update_arp_entry(netif, &(hdr->ip.src), &(hdr->eth.src), ARP_INSERT_FLAG);
 }
-
 
 /**
  * Responds to ARP requests to us. Upon ARP replies to us, add entry to cache  
@@ -497,19 +471,14 @@ etharp_ip_input(struct netif *netif, struct pbuf *p)
  *
  * @see pbuf_free()
  */
-struct pbuf *
-etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
+void etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
 {
   struct etharp_hdr *hdr;
   u8_t i;
   u8_t for_us;
 
   /* drop short ARP packets */
-  if (p->tot_len < sizeof(struct etharp_hdr)) {
-    LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE | 1, ("etharp_arp_input: packet dropped, too short (%d/%d)\n", p->tot_len, sizeof(struct etharp_hdr)));
-    pbuf_free(p);
-    return NULL;
-  }
+  if (p->tot_len < sizeof(struct etharp_hdr)) return;
 
   hdr = p->payload;
  
@@ -532,7 +501,7 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
     update_arp_entry(netif, &(hdr->sipaddr), &(hdr->shwaddr), 0);
   }
 
-  switch (htons(hdr->opcode)) {
+  switch (hdr->opcode) {
   /* ARP request? */
   case ARP_REQUEST:
     /* ARP request. If it asked for our address, we send out a
@@ -541,17 +510,13 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
 
     LWIP_DEBUGF (ETHARP_DEBUG | DBG_TRACE, ("etharp_arp_input: incoming ARP request\n"));
     /* we are not configured? */
-    if (netif->ip_addr.addr == 0) {
-      LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("etharp_arp_input: we are unconfigured, ARP request ignored.\n"));
-      pbuf_free(p);
-      return NULL;
-    }
+    if (netif->ip_addr.addr == 0) return;
     /* ARP request for our address? */
     if (for_us) {
 
       LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("etharp_arp_input: replying to ARP request for our IP address\n"));
       /* re-use pbuf to send ARP reply */
-      hdr->opcode = htons(ARP_REPLY);
+      hdr->opcode = ARP_REPLY;
 
       ip_addr_set(&(hdr->dipaddr), &(hdr->sipaddr));
       ip_addr_set(&(hdr->sipaddr), &(netif->ip_addr));
@@ -590,11 +555,6 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
     LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("etharp_arp_input: ARP unknown opcode type %d\n", htons(hdr->opcode)));
     break;
   }
-  /* free ARP packet */
-  pbuf_free(p);
-  p = NULL;
-  /* nothing to send, we did it! */
-  return NULL;
 }
 
 /**
@@ -807,7 +767,7 @@ err_t etharp_query(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q)
       u8_t j;
       LWIP_DEBUGF(ETHARP_DEBUG | DBG_TRACE, ("etharp_query: sending ARP request.\n"));
       hdr = p->payload;
-      hdr->opcode = htons(ARP_REQUEST);
+      hdr->opcode = ARP_REQUEST;
       for (j = 0; j < netif->hwaddr_len; ++j)
       {
         hdr->shwaddr.addr[j] = srcaddr->addr[j];

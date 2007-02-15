@@ -54,7 +54,6 @@
 
 #include "lwip/stats.h"
 
-#include "arch/perf.h"
 #include "lwip/snmp.h"
 
 #include "sysclib.h"
@@ -88,7 +87,6 @@ udp_lookup(struct ip_hdr *iphdr, struct netif *inp)
   struct udp_hdr *udphdr;
   u16_t src, dest;
 
-    PERF_START;
   (void)inp;
 
     udphdr = (struct udp_hdr *)(u8_t *)iphdr + IPH_HL(iphdr) * 4;
@@ -133,7 +131,6 @@ udp_lookup(struct ip_hdr *iphdr, struct netif *inp)
     }
   }
 
-  PERF_STOP("udp_lookup");
 
   if (pcb != NULL) {
     return 1;
@@ -168,8 +165,6 @@ udp_input(struct pbuf *p, struct netif *inp)
   int reuse_port_2 = 0;
 #endif /* SO_REUSE */
   
-  PERF_START;
-
   UDP_STATS_INC(udp.recv);
 
   iphdr = p->payload;
@@ -396,7 +391,6 @@ udp_input(struct pbuf *p, struct netif *inp)
   }
   end:
 
-  PERF_STOP("udp_input");
 }
 /**
  * Send data using UDP.
@@ -773,7 +767,7 @@ udp_new(void) {
   /* could allocate UDP PCB? */
   if (pcb != NULL) {
     /* initialize PCB to all zeroes */
-    memset(pcb, 0, sizeof(struct udp_pcb));
+    mips_memset(pcb, 0, sizeof(struct udp_pcb));
     pcb->ttl = UDP_TTL;
   }
   

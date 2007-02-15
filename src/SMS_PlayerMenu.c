@@ -201,7 +201,6 @@ void SMS_PlayerMenu ( void ) {
  s_pMenu = lpMenu;
 
  g_GSCtx.m_VRAMPtr = g_GSCtx.m_VRAMPtr2 << 5;
-
  GUI_LoadIcons ();
  GUI_SetColors ();
  GUI_AddObject (  STR_PLAYER_MENU.m_pStr, ( GUIObject* )lpMenu  );

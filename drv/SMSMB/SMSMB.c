@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -27,6 +27,7 @@
 #include <ioman_mod.h>
 
 #include "../../include/SMS_SMB.h"
+#include "../SMSUTILS/smsutils.h"
 
 #define SMB_MAX_SERVERS 2
 #define SMB_MAX_MOUNT   2
@@ -47,6 +48,7 @@
 #define SMB_SESSSETUPX             0x73
 
 #define SMB_TREE_CONNECT           0x70
+#define SMB_TREE_CONNECTX          0x75
 #define SMB_TREE_DISCONNECT        0x71
 
 #define SMB_TRANSACT               0x25
@@ -89,19 +91,19 @@
 
 typedef struct SMBFileInfo {
 
- short         m_CreaDate;
- short         m_CreaTime;
- short         m_LastAccDate;
- short         m_LastAccTime;
- short         m_LastModDate;
- short         m_LastModTime;
- unsigned int  m_Size;
- unsigned int  m_AllocSize;
- short         m_Attr;
- unsigned char m_NameLen;
- char          m_Name[ 1 ];
+ short         m_CreaDate    __attribute__(  ( packed )  );
+ short         m_CreaTime    __attribute__(  ( packed )  );
+ short         m_LastAccDate __attribute__(  ( packed )  );
+ short         m_LastAccTime __attribute__(  ( packed )  );
+ short         m_LastModDate __attribute__(  ( packed )  );
+ short         m_LastModTime __attribute__(  ( packed )  );
+ unsigned int  m_Size        __attribute__(  ( packed )  );
+ unsigned int  m_AllocSize   __attribute__(  ( packed )  );
+ short         m_Attr        __attribute__(  ( packed )  );
+ unsigned char m_NameLen     __attribute__(  ( packed )  );
+ char          m_Name[ 1 ]   __attribute__(  ( packed )  );
 
-} SMBFileInfo;
+} SMBFileInfo __attribute__(  ( packed )  );
 
 typedef struct SMBFindContext {
 
@@ -115,31 +117,31 @@ typedef struct SMBFindContext {
 
 typedef struct SMBFindFirstParam {
 
- short m_Handle;
- short m_Count;
- short m_EOS;
- short m_ErrOffset;
- short m_NameOffset;
+ short m_Handle     __attribute__(  ( packed )  );
+ short m_Count      __attribute__(  ( packed )  );
+ short m_EOS        __attribute__(  ( packed )  );
+ short m_ErrOffset  __attribute__(  ( packed )  );
+ short m_NameOffset __attribute__(  ( packed )  );
 
-} SMBFindFirstParam;
+} SMBFindFirstParam __attribute__(  ( packed )  );
 
 typedef struct SMBFindNextParam {
 
- short m_Count;
- short m_EOS;
- short m_ErrOffset;
- short m_NameOffset;
+ short m_Count      __attribute__(  ( packed )  );
+ short m_EOS        __attribute__(  ( packed )  );
+ short m_ErrOffset  __attribute__(  ( packed )  );
+ short m_NameOffset __attribute__(  ( packed )  );
 
-} SMBFindNextParam;
+} SMBFindNextParam __attribute__(  ( packed )  );
 
 typedef struct SMBNetShareEnumParam {
 
- unsigned short m_ErrorCode;
- unsigned short m_Converter;
- unsigned short m_EntryCount;
- unsigned short m_TotalEntries;
+ unsigned short m_ErrorCode    __attribute__(   ( packed )  );
+ unsigned short m_Converter    __attribute__(   ( packed )  );
+ unsigned short m_EntryCount   __attribute__(   ( packed )  );
+ unsigned short m_TotalEntries __attribute__(   ( packed )  );
 
-} SMBNetShareEnumParam;
+} SMBNetShareEnumParam __attribute__(   ( packed )  );
 
 typedef struct SMBFileContext {
 
@@ -152,6 +154,7 @@ typedef struct SMBFileContext {
 
  int          m_SD;
  unsigned int m_Pos;
+ unsigned int m_Size;
  short        m_FD;
 
 } SMBFileContext;
@@ -254,13 +257,17 @@ sifman_IMPORTS_start
  I_sceSifDmaStat
 sifman_IMPORTS_end
 
+smsutils_IMPORTS_start
+ I_mips_memcpy
+ I_mips_memset
+smsutils_IMPORTS_end
+
 sysclib_IMPORTS_start
- I_toupper
+ I_strcat
  I_strcpy
  I_strlen
  I_strncpy
- I_memcpy
- I_memset
+ I_toupper
 sysclib_IMPORTS_end
 
 thsemap_IMPORTS_start
@@ -634,6 +641,8 @@ static void _smb_date_dos2ps2 ( short aDate, short aTime, unsigned char* apBuff 
 
 static void _smb_file_info_dos2ps2 ( io_dirent_t* apPS2Info, SMBFileInfo* apDOSInfo ) {
 
+ int lLen = apDOSInfo -> m_NameLen;
+
  apPS2Info -> stat.mode = apDOSInfo -> m_Attr & SMB_ATTR_DIR ? FIO_SO_IFDIR : FIO_SO_IFREG;
  apPS2Info -> stat.attr = 0;
  apPS2Info -> stat.size = apDOSInfo -> m_Size;
@@ -642,8 +651,8 @@ static void _smb_file_info_dos2ps2 ( io_dirent_t* apPS2Info, SMBFileInfo* apDOSI
  _smb_date_dos2ps2 ( apDOSInfo -> m_LastModDate, apDOSInfo -> m_LastModTime, apPS2Info -> stat.mtime );
  apPS2Info -> stat.hisize = 0;
 
- apPS2Info -> name[ 255 ] = '\x00';
- strncpy ( apPS2Info -> name, apDOSInfo -> m_Name, 255 );
+ strncpy ( apPS2Info -> name, apDOSInfo -> m_Name, lLen );
+ apPS2Info -> name[ lLen ] = '\x00';
 
 }  /* end _smb_file_info_dos2ps2 */
 
@@ -708,8 +717,8 @@ static void SMB_Encrypt (
  unsigned char lP14[ 15 ];
  unsigned char lP21[ 21 ];
 
- memset ( lP14, '\x00', 15 );
- memset ( lP21, '\x00', 21 );
+ mips_memset ( lP14, '\x00', 15 );
+ mips_memset ( lP21, '\x00', 21 );
 
  strncpy ( lP14, apPasswd, 14 );
  strupper ( lP14 );
@@ -743,7 +752,7 @@ static int SMB_Negotiate ( SMBServerContext* apCtx ) {
   char*         lpPtr = &lBuff[ 39 ];
   int           lSD   = apCtx -> m_Socket;
 
-  memset ( lBuff, 0, 39 );
+  mips_memset ( lBuff, 0, 39 );
   lBuff[ 8 ]        = SMB_NEGOTIATE_PROTOCOL;
   SVAL( lBuff, 37 ) = lProtLen;
 
@@ -781,7 +790,7 @@ static int SMB_Negotiate ( SMBServerContext* apCtx ) {
        apCtx -> m_SessionKey = IVAL( lBuff, 49 );
        apCtx -> m_SrvTZ      = SVAL( lBuff, 57 );
        apCtx -> m_EncrKeyLen = SVAL( lBuff, 59 );
-       memcpy ( apCtx -> m_EncrKey, &lBuff[ 65 ], 8 );
+       mips_memcpy ( apCtx -> m_EncrKey, &lBuff[ 65 ], 8 );
        strncpy (  apCtx -> m_PDom, &lBuff[ 65 + apCtx -> m_EncrKeyLen ], sizeof ( apCtx -> m_PDom )  );
 
        retVal = 1;
@@ -802,7 +811,7 @@ static int SMB_Negotiate ( SMBServerContext* apCtx ) {
        apCtx -> m_RawSupp    = IVAL( lBuff, 56 ) & CAP_RAW_MODE;
        apCtx -> m_SrvTZ      = SVAL( lBuff, 68 );
        apCtx -> m_EncrKeyLen = CVAL( lBuff, 70 );
-       memcpy ( apCtx -> m_EncrKey, &lBuff[ 73 ], 8 );
+       mips_memcpy ( apCtx -> m_EncrKey, &lBuff[ 73 ], 8 );
        _nb_uni2ascii (
         apCtx -> m_PDom, &lBuff[ 73 + apCtx -> m_EncrKeyLen ], sizeof ( apCtx -> m_PDom )
        );
@@ -924,7 +933,7 @@ static int SMB_Login ( SMBServerContext* apCtx ) {
  char  lPwd[ 128 ];
  char  lPkt[ 256 ] __attribute__(   (  aligned( 4 )  )   );
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  if ( apCtx -> m_fEncrPwd ) {
   lPwdLen = 24;
@@ -949,7 +958,7 @@ static int SMB_Login ( SMBServerContext* apCtx ) {
   SVAL( lPkt, 51 ) = lPwdLen + 1;
   SVAL( lPkt, 57 ) = lParLen;
 
-  memcpy ( lpPtr = &lPkt[ 59 ], lPwd, lPwdLen );
+  mips_memcpy ( lpPtr = &lPkt[ 59 ], lPwd, lPwdLen );
   strcpy ( lpPtr += lPwdLen + 1, apCtx -> m_LoginInfo.m_UserName );
   strcpy ( lpPtr += lUsrLen + 1, apCtx -> m_PDom );
   strcpy ( lpPtr +  lDomLen + 1, "PS2OS" );
@@ -963,7 +972,7 @@ static int SMB_Login ( SMBServerContext* apCtx ) {
   SVAL( lPkt, 51 ) = lPwdLen;
   SVAL( lPkt, 63 ) = lParLen;
 
-  memcpy ( lpPtr = &lPkt[ 65 ], lPwd, lPwdLen );
+  mips_memcpy ( lpPtr = &lPkt[ 65 ], lPwd, lPwdLen );
   strcpy ( lpPtr += lPwdLen, apCtx -> m_LoginInfo.m_UserName );
   strcpy ( lpPtr += lUsrLen + 1, apCtx -> m_PDom );
   strcpy ( lpPtr += lDomLen + 1, "PS2OS" );
@@ -998,37 +1007,33 @@ static int SMB_Login ( SMBServerContext* apCtx ) {
 
 static int SMB_Mount ( SMBServerContext* apServerCtx, SMBMountContext* apMountCtx, const char* apShare ) {
 
- int            retVal  = 0;
- int            lShrLen = strlen ( apShare );
- int            lParLen;
- int            lPktLen;
- unsigned char  lPkt[ 768 ] __attribute__(   (  aligned( 4 )  )   );
- unsigned char* lpPtr;
+ unsigned char lPkt[ 768 ] __attribute__(   (  aligned( 4 )  )   );
+ int           lLen, lSD, retVal = 0;
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
- lParLen = lShrLen + 11;
- lPktLen = lParLen + 35;
-
- lPkt[  8 ]             = SMB_TREE_CONNECT;
+ lPkt[  8 ]             = SMB_TREE_CONNECTX;
  *( short* )&lPkt[ 32 ] = apServerCtx -> m_UID;
- SVAL( lPkt, 37 )       = lParLen;
- lPkt[ 39 ]             = 4;
- strcpy ( lpPtr = &lPkt[ 40 ], apShare );
- *( lpPtr += lShrLen + 1 ) = 4;
- lpPtr[ 2 ]                = 4;
- strcpy ( lpPtr + 3, "?????" );
+ lPkt[ 36 ]             =    4;
+ lPkt[ 37 ]             = 0xFF;
+ SVAL( lPkt, 43 )       =    1;
+ strcpy ( &lPkt[ 48 ], "\\\\"  );
+ strcat ( &lPkt[ 48 ], apServerCtx -> m_LoginInfo.m_ServerName  );
+ strcat ( &lPkt[ 48 ], "\\"    );
+ strcat ( &lPkt[ 48 ], apShare );
+ SVAL( lPkt, 45 )       = (  lLen = strlen ( &lPkt[ 48 ] )  ) + 8;
+ strcpy (  &lPkt[ 49 + lLen ], "?????" );
+ lLen += 51;
 
- if (  _nb_send_packet ( lParLen = apServerCtx -> m_Socket, lPkt, lPktLen )  ) {
+ if (  _nb_send_packet ( lSD = apServerCtx -> m_Socket, lPkt, lLen )  ) {
 
-  lPktLen = _nb_read_packet ( lParLen, lPkt, 256 );
+  lLen = _nb_read_packet ( lSD, lPkt, 768 );
 
-  if ( lPktLen && !lPkt[ 9 ] ) {
+  if ( lLen && !lPkt[ 9 ] ) {
 
-   apMountCtx -> m_pCtx   = apServerCtx;
-   apMountCtx -> m_MaXMit = SVAL( lPkt, 37 );
-   apMountCtx -> m_ID     = SVAL( lPkt, 39 );
-   retVal                 = 1;
+   apMountCtx -> m_pCtx = apServerCtx;
+   apMountCtx -> m_ID   = *( unsigned short* )&lPkt[ 28 ];
+   retVal               = 1;
 
   } else s_LastError = SVAL( lPkt, 11 );
 
@@ -1044,7 +1049,7 @@ static void SMB_UMount ( SMBMountContext* apCtx ) {
  int           lPktLen = 40;
  int           lSD;
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  lPkt[ 8 ]              = SMB_TREE_DISCONNECT;
  *( short* )&lPkt[ 28 ] = apCtx -> m_ID;
@@ -1066,7 +1071,7 @@ static int SMB_FindFirst ( SMBMountContext* apMountCtx, const char* apPath ) {
  int           lPktLen     = lBCC        + 69;
  int           retVal      = 0;
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  lPkt[  8 ]             = SMB_TRANSACT2;
  lPkt[ 14 ]             = 1;
@@ -1086,7 +1091,7 @@ static int SMB_FindFirst ( SMBMountContext* apMountCtx, const char* apPath ) {
  lPkt[ 71 ]             = ' ';
  *( short* )&lPkt[ 72 ] = SMB_ATTR_SYSTEM | SMB_ATTR_HIDDEN | SMB_ATTR_DIR;
  *( short* )&lPkt[ 74 ] = 1;
- *( short* )&lPkt[ 76 ] = SMB_FFF_CLOSE_IF_END;
+ *( short* )&lPkt[ 76 ] = SMB_FFF_CLOSE_IF_END | SMB_FFF_REQUIRE_RESUME_KEY;
  *( short* )&lPkt[ 78 ] = 1;
  strcpy ( &lPkt[ 84 ], apPath );
 
@@ -1097,19 +1102,24 @@ static int SMB_FindFirst ( SMBMountContext* apMountCtx, const char* apPath ) {
   if ( lPktLen && !lPkt[ 9 ] ) {
 
    SMBFindFirstParam* lpParam = ( SMBFindFirstParam* )&lPkt[ SVAL( lPkt, 45 ) + 4 ];
-   SMBFileInfo*       lpData  = ( SMBFileInfo*       )&lPkt[ SVAL( lPkt, 51 ) + 4 ];
 
-   if ( lpParam -> m_NameOffset ) apPath = (  ( char* )lpData  ) + lpParam -> m_NameOffset + 1;
+   if ( lpParam -> m_Count ) {
 
-   s_FindCtx.m_pCtx      = apMountCtx;
-   s_FindCtx.m_DirHandle = lpParam -> m_Handle;
-   s_FindCtx.m_MaskLen   = strlen ( apPath );
-   strncpy (  s_FindCtx.m_Mask, apPath, sizeof ( s_FindCtx.m_Mask ) - 1  );
-   s_FindCtx.m_Mask[ sizeof ( s_FindCtx.m_Mask ) - 1 ] = '\x00';
+    SMBFileInfo* lpData  = ( SMBFileInfo* )&lPkt[ SVAL( lPkt, 51 ) + 8 ];
 
-   _smb_file_info_dos2ps2 ( &s_FileInfo, lpData );
+    if ( lpParam -> m_NameOffset ) apPath = (  ( char* )lpData  ) + lpParam -> m_NameOffset + 1;
 
-   retVal = 1;
+    s_FindCtx.m_pCtx      = apMountCtx;
+    s_FindCtx.m_DirHandle = lpParam -> m_Handle;
+    s_FindCtx.m_MaskLen   = strlen ( apPath );
+    strncpy (  s_FindCtx.m_Mask, apPath, sizeof ( s_FindCtx.m_Mask ) - 1  );
+    s_FindCtx.m_Mask[ sizeof ( s_FindCtx.m_Mask ) - 1 ] = '\x00';
+
+    _smb_file_info_dos2ps2 ( &s_FileInfo, lpData );
+
+    retVal = 1;
+
+   } else s_LastError = -ENOENT;
 
   } else s_LastError = SVAL( lPkt, 11 );
 
@@ -1128,7 +1138,7 @@ static int SMB_FindNext ( short afClose, io_dirent_t* apDirEnt ) {
  int           lPktLen     = lBCC        + 69;
  int           retVal      = 0;
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  lPkt[  8 ]             = SMB_TRANSACT2;
  lPkt[ 14 ]             = 1;
@@ -1148,7 +1158,7 @@ static int SMB_FindNext ( short afClose, io_dirent_t* apDirEnt ) {
  *( short* )&lPkt[ 72 ] = s_FindCtx.m_DirHandle;
  *( short* )&lPkt[ 74 ] = 1;
  *( short* )&lPkt[ 76 ] = 1;
- *( short* )&lPkt[ 82 ] = SMB_FFF_CONTINUE_BIT | SMB_FFF_CLOSE_IF_END | afClose;
+ *( short* )&lPkt[ 82 ] = SMB_FFF_CONTINUE_BIT | SMB_FFF_CLOSE_IF_END | SMB_FFF_REQUIRE_RESUME_KEY | afClose;
  strcpy ( &lPkt[ 84 ], s_FindCtx.m_Mask );
 
  if (  _nb_send_packet ( lParamLen = s_FindCtx.m_pCtx -> m_pCtx -> m_Socket, lPkt, lPktLen )  ) {
@@ -1158,7 +1168,7 @@ static int SMB_FindNext ( short afClose, io_dirent_t* apDirEnt ) {
   if ( lPktLen && !lPkt[ 9 ] ) {
 
    SMBFindNextParam* lpParam = ( SMBFindNextParam* )&lPkt[ SVAL( lPkt, 45 ) + 4 ];
-   SMBFileInfo*      lpData  = ( SMBFileInfo*      )&lPkt[ SVAL( lPkt, 51 ) + 4 ];
+   SMBFileInfo*      lpData  = ( SMBFileInfo*      )&lPkt[ SVAL( lPkt, 51 ) + 8 ];
 
    retVal = lpParam -> m_Count;
 
@@ -1188,7 +1198,7 @@ static int SMB_Open ( SMBMountContext* apMountCtx, const char* apFileName, short
  int            lPktLen  = lNameLen + 46;
  unsigned char  lPkt[ 512 ] __attribute__(   (  aligned( 4 )  )   );
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  lPkt[  8 ]             = SMB_OPEN;
  *( short* )&lPkt[ 28 ] = apMountCtx -> m_ID;
@@ -1220,7 +1230,7 @@ static void SMB_Close ( SMBFileContext* apFileCtx ) {
  int              lPktLen    = 44;
  int              lSD;
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  lPkt[  8 ]             = SMB_CLOSE;
  *( short* )&lPkt[ 28 ] = lpMountCtx -> m_ID;
@@ -1242,7 +1252,7 @@ static int SMB_ShareEnum ( SMBServerContext* apCtx, SMBShareInfo** appShareInfo,
 
  if (  SMB_Mount ( apCtx, &lIPCTree, "IPC$" )  ) {
 
-  memset (  s_SEnumBuff, 0, sizeof ( s_SEnumBuff )  );
+  mips_memset (  s_SEnumBuff, 0, sizeof ( s_SEnumBuff )  );
 
   s_SEnumBuff[  8 ]             = SMB_TRANSACT;
   *( short* )&s_SEnumBuff[ 28 ] = lIPCTree.m_ID;
@@ -1296,7 +1306,7 @@ static int SMB_Echo ( SMBServerContext* apCtx ) {
  int           lSD;
  unsigned char lPkt[ 64 ] __attribute__(   ( aligned( 4 )  )   );
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ mips_memset (  lPkt, 0, sizeof ( lPkt )  );
 
  lPkt[  8 ]             = SMB_ECHO;
  *( short* )&lPkt[ 32 ] = apCtx -> m_UID;
@@ -1457,13 +1467,15 @@ static int _DrvOpen ( iop_io_file_t* apFile, const char* apName, int aMode, ... 
 
    if (  SMB_Open ( lpMountCtx, apName, &lpFileCtx -> m_FD )  ) {
 
-    unsigned char* lpPkt = lpFileCtx -> m_ReadPkt;
+    unsigned char  lPkt[ 256 ] __attribute__(   (  aligned( 4 )  )   );
+    int            lSD, lPktLen = 46;
+    unsigned char* lpPkt        = lpFileCtx -> m_ReadPkt;
 
     lpFileCtx -> m_pCtx = lpMountCtx;
     lpFileCtx -> m_SD   = lpMountCtx -> m_pCtx -> m_Socket;
     lpFileCtx -> m_Pos  = 0;
 
-    memset (  lpPkt, 0, sizeof ( lpFileCtx -> m_ReadPkt )  );
+    mips_memset (  lpPkt, 0, sizeof ( lpFileCtx -> m_ReadPkt )  );
 
     *( short* )&lpPkt[ 28 ] = lpMountCtx -> m_ID;
     *( short* )&lpPkt[ 32 ] = lpMountCtx -> m_pCtx -> m_UID;
@@ -1480,6 +1492,22 @@ static int _DrvOpen ( iop_io_file_t* apFile, const char* apName, int aMode, ... 
      lpPkt[ 36 ] = 5;
 
     }  /* end else */
+
+    mips_memset (  lPkt, 0, sizeof ( lPkt )  );
+
+    lPkt[  8 ]             = SMB_LSEEK;
+    *( short* )&lPkt[ 28 ] = lpMountCtx -> m_ID;
+    *( short* )&lPkt[ 32 ] = lpMountCtx -> m_pCtx -> m_UID;
+    lPkt[ 36 ]             = 4;
+    SVAL( lPkt, 37 )       = lpFileCtx -> m_FD;
+    SVAL( lPkt, 39 )       = 2;
+
+    if (  _nb_send_packet ( lSD = lpFileCtx -> m_SD, lPkt, lPktLen )  ) {
+
+     lPktLen             = _nb_read_packet ( lSD, lPkt, 256 );
+     lpFileCtx -> m_Size = ( lPktLen && !lPkt[ 9 ] ) ? IVAL( lPkt, 37 ) : 0;
+
+    }  /* end if */
 
     apFile -> privdata = lpFileCtx;
     retVal             = 0;
@@ -1512,31 +1540,18 @@ static int _DrvRead ( iop_io_file_t* apFile, void* apBuffer, int anBytes ) {
 
 static int _DrvLSeek ( iop_io_file_t* apFile, unsigned long aPos, int aDisp ) {
 
- unsigned char    lPkt[ 256 ] __attribute__(   (  aligned( 4 )  )   );
- int              retVal     = 0;
- SMBFileContext*  lpFileCtx  = ( SMBFileContext* )apFile -> privdata;
- SMBMountContext* lpMountCtx = lpFileCtx -> m_pCtx;
- int              lPktLen    = 46;
+ SMBFileContext* lpFileCtx = ( SMBFileContext* )apFile -> privdata;
+ unsigned int    lSize     = lpFileCtx -> m_Size;
 
- memset (  lPkt, 0, sizeof ( lPkt )  );
+ if ( aDisp == 1 )
+  aPos += lpFileCtx -> m_Pos;
+ else if ( aDisp == 2 ) aPos = lSize;
 
- lPkt[  8 ]             = SMB_LSEEK;
- *( short* )&lPkt[ 28 ] = lpMountCtx -> m_ID;
- *( short* )&lPkt[ 32 ] = lpMountCtx -> m_pCtx -> m_UID;
- lPkt[ 36 ]             = 4;
- SVAL( lPkt, 37 )       = lpFileCtx -> m_FD;
- SVAL( lPkt, 39 )       = aDisp;
- IVAL( lPkt, 41 )       = aPos;
+ if ( aPos > lSize ) aPos = lSize;
 
- if (  _nb_send_packet ( aDisp = lpFileCtx -> m_SD, lPkt, lPktLen )  ) {
+ lpFileCtx -> m_Pos = aPos;
 
-  lPktLen = _nb_read_packet ( aDisp, lPkt, 256 );
-
-  if ( lPktLen && !lPkt[ 9 ] ) retVal = lpFileCtx -> m_Pos = IVAL( lPkt, 37 );
-
- }  /* end if */
-
- return retVal;
+ return aPos;
 
 }  /* end _DrvLSeek */
 
@@ -1561,7 +1576,7 @@ retry:
 
    unsigned char lBuff[ 72 ] __attribute__(   (  aligned( 4 )  )   );
 
-   memset (  lBuff, 0, sizeof ( lBuff )  );
+   mips_memset (  lBuff, 0, sizeof ( lBuff )  );
 
    lBuff[  0 ] = NB_SESSION_REQ;
    NB_SET_PKT_LEN( lBuff, 68 );

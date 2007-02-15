@@ -1,54 +1,58 @@
-
 #ifndef __LWIPOPTS_H__
-#define __LWIPOPTS_H__
+# define __LWIPOPTS_H__
 
-#define LWIP_CALLBACK_API 1
-
+# define LWIP_CALLBACK_API 1
 /* ---------- Memory options ---------- */
 /* MEM_ALIGNMENT: should be set to the alignment of the CPU for which
    lwIP is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
    byte alignment -> define MEM_ALIGNMENT to 2. */
-#define MEM_ALIGNMENT           4
+# define MEM_ALIGNMENT 4
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE                0x3000
+#define MEM_SIZE 0x3000
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
    should be set high. */
-#define MEMP_NUM_PBUF          40
+#define MEMP_NUM_PBUF 40
+
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-#define MEMP_NUM_UDP_PCB        15
+#define MEMP_NUM_UDP_PCB 15
+
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
-#define MEMP_NUM_TCP_PCB        15 
+#define MEMP_NUM_TCP_PCB 15 
+
 /* MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP
    connections. */
 #define MEMP_NUM_TCP_PCB_LISTEN 15
+
 /* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
    segments. */
-#define MEMP_NUM_TCP_SEG        40
+#define MEMP_NUM_TCP_SEG 40
 /* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
    timeouts. */
-#define MEMP_NUM_SYS_TIMEOUT    5
-
+#define MEMP_NUM_SYS_TIMEOUT 5
 
 /* The following four are used only with the sequential API and can be
    set to 0 if the application only will use the raw API. */
 /* MEMP_NUM_NETBUF: the number of struct netbufs. */
-#define MEMP_NUM_NETBUF         15
+#define MEMP_NUM_NETBUF 15
+
 /* MEMP_NUM_NETCONN: the number of struct netconns. */
-#define MEMP_NUM_NETCONN        15
+#define MEMP_NUM_NETCONN 15
+
 /* MEMP_NUM_APIMSG: the number of struct api_msg, used for
    communication between the TCP/IP stack and the sequential
    programs. */
-#define MEMP_NUM_API_MSG        40
+#define MEMP_NUM_API_MSG 40
+
 /* MEMP_NUM_TCPIPMSG: the number of struct tcpip_msg, which is used
    for sequential API communication and incoming packets. Used in
    src/api/tcpip.c. */
-#define MEMP_NUM_TCPIP_MSG      40
+#define MEMP_NUM_TCPIP_MSG 40
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
@@ -215,5 +219,4 @@ a lot of data that needs to be copied, this should be set high. */
 //	One should check performance penalty or improvement by activating any combination
 //	of these three options. The only one which is standard is TCP_NODELAY.
 //	By default, everything is not active.
-
 #endif /* __LWIPOPTS_H__ */

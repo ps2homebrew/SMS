@@ -17,8 +17,8 @@
 # include <libsd.h>
 # include <loadcore.h>
 # include <sifcmd.h>
-# include <sysclib.h>
 # include <thbase.h>
 # include <thsemap.h>
+# include "../SMSUTILS/smsutils.h"
 
 #endif  /* IOP_IRX_IMPORTS_H */

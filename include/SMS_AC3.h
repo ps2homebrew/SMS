@@ -102,7 +102,6 @@ typedef struct SMS_Codec_AC3Context {
  int              m_Downmixed;
  int              m_Output;
  int              m_DynRnge;
- sample_t*        m_pSamples;
  uint32_t*        m_pBufStart;
  uint8_t*         m_pInBuf;
  uint8_t*         m_pPos;

@@ -47,6 +47,7 @@ s_SinCos:   .word   0x00000000
 .globl GS_RRV
 .globl GS_RenderRoundRect
 .globl GS_VSync
+.globl GS_TWTH
 
 .ent GS_Params
 GS_Params:
@@ -252,7 +253,8 @@ GS_SetDC:
 .end GS_SetDC
 
 .ent GS_XYZ
-GS_XYZ:
+GS_XYZ :
+_gs_xyz:
     .set noat
     qmfc2       $at, $vf01
     qmtc2       $a1, $vf01
@@ -279,7 +281,7 @@ GS_XYZ:
 .ent GS_XYZF
 GS_XYZF:
     move    $t0, $ra
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     dsll32  $a3, $a3, 24
     move    $ra, $t0
     jr      $ra
@@ -503,13 +505,13 @@ GS_InitClear:
     move    $a0, $a1
     sd      $v0, 72($t5)
     move    $a1, $a2
-    jal     GS_XYZ  
+    bgezal  $zero, _gs_xyz  
     move    $a2, $zero
     sd      $v0, 80($t5)
     li      $t6, 0x0005
     move    $a0, $a3
     sd      $t6, 88($t5)
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a1, $t0
     sd      $v0, 96($t5)
     sd      $t6, 104($t5)
@@ -628,7 +630,8 @@ GS_LoadImage:
 .end GS_LoadImage
 
 .ent GS_RRV
-GS_RRV:
+GS_RRV :
+_gs_rrv:
     sub     $sp, $sp, 24
     mtc1    $t1, $f0
     mtc1    $a1, $f1
@@ -661,12 +664,12 @@ GS_RRV:
     sra     $a1, $t0, 1
     addu    $a0, $a0, $t3
     addu    $a1, $a1, $t4
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 0($t2)
     move    $a0, $t3
     addu    $a1, $t4, $t1
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 8($t2)
     addu    $t2, $t2, 16
@@ -691,7 +694,7 @@ GS_RRV:
     cvt.w.s $f9, $f9
     mfc1    $a0, $f8
     mfc1    $a1, $f9
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 0($t2)
     bgtz    $t8, 2b
@@ -701,7 +704,7 @@ GS_RRV:
     move    $a1, $t4
     move    $a2, $zero
     subu    $a0, $a0, $t1
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     sub.s   $f5, $f5, $f0
     sd      $v0, 0($t2)
     addu    $t2, $t2, 8
@@ -723,7 +726,7 @@ GS_RRV:
     cvt.w.s $f9, $f9
     mfc1    $a0, $f8
     mfc1    $a1, $f9
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 0($t2)
     bgtz    $t8, 3b
@@ -733,7 +736,7 @@ GS_RRV:
     addu    $a1, $t4, $t0
     sub.s   $f6, $f6, $f0
     move    $a2, $zero
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     subu    $a1, $a1, $t1
     sd      $v0, 0($t2)
     addu    $t2, $t2, 8
@@ -754,7 +757,7 @@ GS_RRV:
     cvt.w.s $f9, $f9
     mfc1    $a0, $f8
     mfc1    $a1, $f9
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 0($t2)
     bgtz    $t8, 4b
@@ -762,7 +765,7 @@ GS_RRV:
     add.s   $f5, $f1, $f0
     addu    $a0, $t3, $t1
     addu    $a1, $t4, $t0
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 0($t2)
     addu    $t2, $t2, 8
@@ -784,14 +787,14 @@ GS_RRV:
     cvt.w.s $f8, $f8
     mfc1    $a1, $f9
     mfc1    $a0, $f8
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     sd      $v0, 0($t2)
     bgtz    $t8, 5b
     addu    $t2, $t2, 8
     addu    $a1, $t4, $t1
     move    $a0, $t3
-    jal     GS_XYZ
+    bgezal  $zero, _gs_xyz
     move    $a2, $zero
     move    $ra, $t9
     sd      $v0, 0($t2)
@@ -836,7 +839,7 @@ GS_RenderRoundRect:
     lw      $a3,  80($sp)
     lw      $a2,  96($sp)
     lw      $a1, 112($sp)
-    jal     GS_RRV
+    bgezal  $zero, _gs_rrv
     move    $t1, $s2
     move    $ra, $t7
     sd      $zero, 0($s1)
@@ -892,3 +895,19 @@ GS_VSync:
     jr      $ra
     nop
 .end GS_VSync
+
+.ent GS_TWTH
+GS_TWTH:
+    pnor    $v1, $zero, $zero
+    dsll32  $a1, $a1, 0
+    psrlw   $v1, $v1, 31
+    or      $a0, $a0, $a1
+    psllw   $v0, $v1, 5
+    psubw   $a0, $a0, $v1
+    psubw   $v0, $v0, $v1
+    plzcw   $a0, $a0
+    psubw   $v0, $v0, $a0
+    sw      $v0, 0($a2)
+    dsrl32  $v0, $v0, 0
+    jr      $ra
+    sw      $v0, 0($a3)

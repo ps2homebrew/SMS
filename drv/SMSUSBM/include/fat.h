@@ -1,33 +1,41 @@
 /*
  * fat.h - USB Mass storage driver for PS2
+ *
  * (C) 2004, Marek Olejnik (ole00@post.cz)
+ *
  * FAT helper structures
+ *
  * See the file LICENSE included with this distribution for licensing terms.
+ */
+
+/*
    FAT References: http://www.igd.fhg.de/~aschaefe/fips/distrib/techinfo.txt
                  : http://home.freeuk.net/foxy2k/disk/disk1.htm
 */
+
 #ifndef _FAT_H
-# define _FAT_H
+#define _FAT_H 1
 
-# define FAT12 0x0C
-# define FAT16 0x10
-# define FAT32 0x20
 
-# define FAT_MAX_PATH 1024
-# define FAT_MAX_NAME  128
-# define DIR_CHAIN_SIZE 32
+#define FAT12 0x0C
+#define FAT16 0x10
+#define FAT32 0x20
+
+
+#define FAT_MAX_PATH 1024
+#define FAT_MAX_NAME 128
+
+#define DIR_CHAIN_SIZE 32
 
 typedef struct _part_raw_record {
-
- unsigned char active;		  /* Set to 80h if this partition is active / bootable */
- unsigned char startH;		  /* Partition's starting head.                        */
- unsigned char startST[ 2 ];  /* Partition's starting sector and track.            */
- unsigned char sid;           /* Partition's system ID number.                     */
- unsigned char endH;          /* Partition's ending head.                          */
- unsigned char endST[ 2 ];    /* Partition's ending sector and track.              */
- unsigned char startLBA[ 4 ]; /* Starting LBA (sector)                             */
- unsigned char size[ 4 ];     /* Partition size in sectors.                        */
-
+	unsigned char	active;		//Set to 80h if this partition is active / bootable
+	unsigned char	startH;		//Partition's starting head.
+	unsigned char   startST[2];	//Partition's starting sector and track.
+	unsigned char   sid;		//Partition's system ID number.
+	unsigned char   endH;		//Partition's ending head.
+	unsigned char   endST[2];	//Partition's ending sector and track.
+	unsigned char   startLBA[4];	//Starting LBA (sector)
+	unsigned char	size[4];	//Partition size in sectors.
 } part_raw_record;
 
 typedef struct _part_record {
@@ -189,8 +197,12 @@ typedef struct _fat_dir_chain_record {
 typedef struct _fat_dir {
 	unsigned char attr;		//attributes (bits:5-Archive 4-Directory 3-Volume Label 2-System 1-Hidden 0-Read Only)
 	unsigned char name[FAT_MAX_NAME];
-	unsigned char date[4];	//D:M:Yl:Yh
-	unsigned char time[3];  //H:M:S
+	unsigned char cdate[4];	//D:M:Yl:Yh
+	unsigned char ctime[3]; //H:M:S
+	unsigned char adate[4];	//D:M:Yl:Yh
+	unsigned char atime[3]; //H:M:S
+	unsigned char mdate[4];	//D:M:Yl:Yh
+	unsigned char mtime[3]; //H:M:S
 	unsigned int  size;		//file size, 0 for directory
 	unsigned int  lastCluster;
 	fat_dir_chain_record  chain[DIR_CHAIN_SIZE];  //cluser/offset cache - for seeking purpose

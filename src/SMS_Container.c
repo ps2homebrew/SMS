@@ -10,16 +10,19 @@
 */
 #include "SMS_Container.h"
 #include "SMS_ContainerAVI.h"
+#include "SMS_ContainerMPEG_PS.h"
 #include "SMS_ContainerMP3.h"
 #include "SMS_ContainerM3U.h"
 #include "SMS_List.h"
 
 #include <malloc.h>
+#include <string.h>
 
 typedef int ( *ContainerCreator ) ( SMS_Container* );
 
 static ContainerCreator s_CCreator[] = {
  SMS_GetContainerAVI,
+ SMS_GetContainerMPEG_PS,
  SMS_GetContainerMP3,
  SMS_GetContainerM3U, NULL
 };
@@ -46,7 +49,7 @@ static SMS_AVPacket* _AllocPacket ( SMS_RingBuffer* apRB, int aSize ) {
 
 }  /* end _AllocPacket */
 
-void SMS_DestroyContainer ( SMS_Container* apCont ) {
+void SMS_DestroyContainer ( SMS_Container* apCont, int afAll ) {
 
  uint32_t i;
 
@@ -55,6 +58,8 @@ void SMS_DestroyContainer ( SMS_Container* apCont ) {
   SMS_Stream* lpStm = apCont -> m_pStm[ i ];
 
   if ( !lpStm ) continue;
+
+  apCont -> m_pStm[ i ] = NULL;
 
   if ( lpStm -> Destroy ) lpStm -> Destroy ( lpStm );
 
@@ -80,15 +85,27 @@ void SMS_DestroyContainer ( SMS_Container* apCont ) {
 
  }  /* end for */
 
- if ( apCont -> m_pFileCtx  ) apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
- if ( apCont -> m_pCtx      ) free ( apCont -> m_pCtx );
- if ( apCont -> m_pPlayList ) SMS_ListDestroy ( apCont -> m_pPlayList, 1 );
+ if ( apCont -> m_pCtx ) {
+  free ( apCont -> m_pCtx );
+  apCont -> m_pCtx = NULL;
+ }  /* end if */
 
- free ( apCont );
+ if ( apCont -> m_pPlayList ) {
+  SMS_ListDestroy ( apCont -> m_pPlayList, 1 );
+  apCont -> m_pPlayList = NULL;
+ }  /* end if */
 
-}  /* end _Destroy */
+ if ( afAll ) {
 
-SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
+  if ( apCont -> m_pFileCtx  ) apCont -> m_pFileCtx -> Destroy ( apCont -> m_pFileCtx );
+
+  free ( apCont );
+
+ }  /* end if */
+
+}  /* end SMS_DestroyContainer */
+
+SMS_Container* SMS_GetContainer ( FileContext* apFileCtx, int aPrefCont ) {
 
  int            i      = 0;
  int            lSts   = 0;
@@ -97,13 +114,17 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
  retVal -> m_pFileCtx  = apFileCtx;
  retVal -> AllocPacket = _AllocPacket;
 
- while ( s_CCreator[ i ] ) {
+ if ( aPrefCont < 0 )
 
-  if (   (  lSts = s_CCreator[ i++ ] ( retVal )  )   ) break;
+  while ( s_CCreator[ i ] ) {
 
-  if (  ( int )apFileCtx > 0  ) apFileCtx -> Seek ( apFileCtx, 0 );
+   if (   (  lSts = s_CCreator[ i++ ] ( retVal )  )   ) break;
 
- }  /* end while */
+   if (  ( int )apFileCtx > 0  ) apFileCtx -> Seek ( apFileCtx, 0 );
+
+  }  /* end while */
+
+ else s_CCreator[ aPrefCont ] ( retVal );
 
  if ( retVal -> m_pName == NULL ) {
 
@@ -116,7 +137,7 @@ SMS_Container* SMS_GetContainer ( FileContext* apFileCtx ) {
 
  if ( retVal && lSts < 0 ) {
 
-  retVal -> Destroy ( retVal );
+  retVal -> Destroy ( retVal, 1 );
   retVal = NULL;
 
  }  /* end if */

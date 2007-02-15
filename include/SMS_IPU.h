@@ -94,10 +94,8 @@ typedef struct IPUContext {
  unsigned int           m_DMAHandlerID_GIF;
  unsigned int           m_CSCmd;
  unsigned int           m_PixFmt;
-# ifdef VB_SYNC
  unsigned int           m_VBlankStartHandlerID;
  unsigned int           m_fDraw;
-# endif  /* VB_SYNC */
  unsigned int           m_VRAM;
  unsigned int           m_TBW;
  unsigned int           m_TW;
@@ -144,10 +142,11 @@ extern IPUContext g_IPUCtx;
 extern "C" {
 # endif  /* __cplusplus */
 
-IPUContext* IPU_InitContext ( int, int, long* );
+IPUContext* IPU_InitContext ( int, int, long*, int );
 
-unsigned int IPU_FDEC ( unsigned                                                   );
-unsigned int IPU_IDEC ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );
+unsigned int IPU_FDEC    ( unsigned                                                   );
+unsigned int IPU_IDEC    ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );
+void         IPU_FRST    ( void                                                       );
 
 void         IPU_InitLoadImage ( IPULoadImage*, int, int                            );
 void         IPU_LoadImage     ( IPULoadImage*, void*, int, int, int, int, int, int );

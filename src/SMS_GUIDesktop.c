@@ -67,8 +67,7 @@ static int DrawSkin ( void ) {
 
     g_GSCtx.m_VRAMTexPtr = g_GSCtx.m_VRAMPtr2 << 5;
     g_GSCtx.m_TBW        = ( lWidth + 63 ) >> 6;
-    g_GSCtx.m_TW         = GS_PowerOf2 ( lWidth  );
-    g_GSCtx.m_TH         = GS_PowerOf2 ( lHeight );
+    GS_TWTH ( lWidth, lHeight, &g_GSCtx.m_TW, &g_GSCtx.m_TH );
 
     IPU_InitLoadImage ( &lLoadImg, lWidth, lHeight );
     IPU_LoadImage ( &lLoadImg, lpData, lSize, 0, 0, 0, 0, 0 );

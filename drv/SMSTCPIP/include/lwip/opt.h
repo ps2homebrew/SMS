@@ -301,7 +301,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* Support loop interface (127.0.0.1) */
 #ifndef LWIP_HAVE_LOOPIF
-#define LWIP_HAVE_LOOPIF		1
+#define LWIP_HAVE_LOOPIF		0
 #endif
 
 #ifndef LWIP_EVENT_API

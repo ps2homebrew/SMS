@@ -246,7 +246,7 @@ static int ReadSect ( u32 aStartSector, u32 anSectors, void* apBuf, cd_read_mode
 
    if ( lRetry == 31 ) {
 
-    memset ( apBuf, 0, anSectors << 11 );
+    mips_memset ( apBuf, 0, anSectors << 11 );
     return FALSE;
 
    }  /* end if */
@@ -269,7 +269,7 @@ static int ReadSect ( u32 aStartSector, u32 anSectors, void* apBuf, cd_read_mode
 
  if ( !lResult ) return TRUE;
 
- memset ( apBuf, 0, anSectors << 11 );
+ mips_memset ( apBuf, 0, anSectors << 11 );
 
  return FALSE;
 
@@ -302,8 +302,8 @@ int CDVD_init ( iop_io_device_t* apDriver ) {
 
  CdInit ( 1 );
 
- memset (  s_FDTable, 0, sizeof ( s_FDTable )  );
- memset (  s_FDUsed,  0, 16 * 4                );
+ mips_memset (  s_FDTable, 0, sizeof ( s_FDTable )  );
+ mips_memset (  s_FDUsed,  0, 16 * 4                );
 
  s_DVDVSupport             =  1;
  s_DVDReadMode.trycount    =  5;
@@ -438,7 +438,7 @@ static int ISO_Read (  iop_io_file_t* apFile, void* buffer, int size ) {
 
   read = 1;
 
-  if ( s_LastBk > 0 ) memcpy ( s_Buffer, s_Buffer + 2048 * s_LastBk, 2048 );
+  if ( s_LastBk > 0 ) mips_memcpy ( s_Buffer, s_Buffer + 2048 * s_LastBk, 2048 );
 
   s_LastBk = 0;
 
@@ -457,7 +457,7 @@ static int ISO_Read (  iop_io_file_t* apFile, void* buffer, int size ) {
 
  }  // end if
 
- memcpy ( buffer, s_Buffer + off_sector, size );
+ mips_memcpy ( buffer, s_Buffer + off_sector, size );
 
  s_FDTable[ i ].m_FilePos += size;
 
@@ -508,7 +508,7 @@ void CDVD_GetVolumeDescriptor ( void ) {
 
    if ( localVolDesc.m_FSType == 1 ||
         localVolDesc.m_FSType == 2
-   ) memcpy (  &CDVolDesc, &localVolDesc, sizeof ( cdVolDesc )  );
+   ) mips_memcpy (  &CDVolDesc, &localVolDesc, sizeof ( cdVolDesc )  );
 
   } else break;
 

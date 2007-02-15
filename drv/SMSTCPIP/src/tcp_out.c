@@ -160,7 +160,7 @@ err_t tcp_enqueue (
       }
       ++queuelen;
       if (arg != NULL) {
-        memcpy(seg->p->payload, ptr, seglen);
+        mips_memcpy(seg->p->payload, ptr, seglen);
       }
       seg->dataptr = seg->p->payload;
     }
@@ -228,7 +228,7 @@ err_t tcp_enqueue (
       /* Copy options into data portion of segment.
        Options can thus only be sent in non data carrying
        segments such as SYN|ACK. */
-      memcpy(seg->dataptr, optdata, optlen);
+      mips_memcpy(seg->dataptr, optdata, optlen);
     }
 
     left -= seglen;
@@ -260,10 +260,8 @@ err_t tcp_enqueue (
     useg->len += queue->len;
     useg->next = queue->next;
 
-    LWIP_DEBUGF(TCP_OUTPUT_DEBUG | DBG_TRACE | DBG_STATE, ("tcp_enqueue: chaining, new len %u\n", useg->len));
-    if (seg == queue) {
-      seg = NULL;
-    }
+    if (seg == queue) seg = NULL;
+
     memp_free(MEMP_TCP_SEG, queue);
   }
   else {
@@ -381,34 +379,8 @@ tcp_output(struct tcp_pcb *pcb)
     return ERR_OK;
   }
 
-#if TCP_OUTPUT_DEBUG
-  if (seg == NULL) {
-    LWIP_DEBUGF(TCP_OUTPUT_DEBUG, ("tcp_output: nothing to send (%p)\n", pcb->unsent));
-  }
-#endif /* TCP_OUTPUT_DEBUG */
-#if TCP_CWND_DEBUG
-  if (seg == NULL) {
-    LWIP_DEBUGF(TCP_CWND_DEBUG, ("tcp_output: snd_wnd %lu, cwnd %lu, wnd %lu, seg == NULL, ack %lu\n",
-                            pcb->snd_wnd, pcb->cwnd, wnd,
-                            pcb->lastack));
-  } else {
-    LWIP_DEBUGF(TCP_CWND_DEBUG, ("tcp_output: snd_wnd %lu, cwnd %lu, wnd %lu, effwnd %lu, seq %lu, ack %lu\n",
-                            pcb->snd_wnd, pcb->cwnd, wnd,
-                            ntohl(seg->tcphdr->seqno) - pcb->lastack + seg->len,
-                            ntohl(seg->tcphdr->seqno), pcb->lastack));
-  }
-#endif /* TCP_CWND_DEBUG */
-
   while (seg != NULL &&
   ntohl(seg->tcphdr->seqno) - pcb->lastack + seg->len <= wnd) {
-#if TCP_CWND_DEBUG
-    LWIP_DEBUGF(TCP_CWND_DEBUG, ("tcp_output: snd_wnd %lu, cwnd %lu, wnd %lu, effwnd %lu, seq %lu, ack %lu, i%d\n",
-                            pcb->snd_wnd, pcb->cwnd, wnd,
-                            ntohl(seg->tcphdr->seqno) + seg->len -
-                            pcb->lastack,
-                            ntohl(seg->tcphdr->seqno), pcb->lastack, i));
-    ++i;
-#endif /* TCP_CWND_DEBUG */
 
     pcb->unsent = seg->next;
 

@@ -70,8 +70,6 @@
 
 #include "lwip/sys.h"
 
-#include "arch/perf.h"
-
 #include "sysclib.h"
 
 static u8_t pbuf_pool_memory[(PBUF_POOL_SIZE * MEM_ALIGN_SIZE(PBUF_POOL_BUFSIZE + sizeof(struct pbuf)))];
@@ -401,11 +399,6 @@ pbuf_realloc(struct pbuf *p, u16_t new_len)
   u16_t rem_len; /* remaining length */
   s16_t grow;
 
-  LWIP_ASSERT("pbuf_realloc: sane p->flags", p->flags == PBUF_FLAG_POOL ||
-              p->flags == PBUF_FLAG_ROM ||
-              p->flags == PBUF_FLAG_RAM ||
-              p->flags == PBUF_FLAG_REF);
-
   /* desired length larger than current length? */
   if (new_len >= p->tot_len) {
     /* enlarging not yet supported */
@@ -557,8 +550,6 @@ pbuf_free(struct pbuf *p)
   }
   LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_free(%p)\n", (void *)p));
 
-  PERF_START;
-
   LWIP_ASSERT("pbuf_free: sane flags",
     p->flags == PBUF_FLAG_RAM || p->flags == PBUF_FLAG_ROM ||
     p->flags == PBUF_FLAG_REF || p->flags == PBUF_FLAG_POOL);
@@ -604,7 +595,6 @@ pbuf_free(struct pbuf *p)
     }
   }
   SYS_ARCH_UNPROTECT(old_level);
-  PERF_STOP("pbuf_free");
   /* return number of de-allocated pbufs */
   return count;
 }
@@ -704,77 +694,6 @@ pbuf_chain(struct pbuf *h, struct pbuf *t)
   LWIP_DEBUGF(PBUF_DEBUG | DBG_FRESH | 2, ("pbuf_chain: %p references %p\n", (void *)h, (void *)t));
 }
 
-/* For packet queueing. Note that queued packets must be dequeued first
- * before calling any pbuf functions. */
-#if ARP_QUEUEING
-/**
- * Add a packet to the end of a queue.
- *
- * @param q pointer to first packet on the queue
- * @param n packet to be queued
- *
- */
-void
-pbuf_queue(struct pbuf *p, struct pbuf *n)
-{
-  LWIP_ASSERT("p != NULL", p != NULL);
-  LWIP_ASSERT("n != NULL", n != NULL);
-
-  if ((p == NULL) || (n == NULL))
-    return;
-
-  /* iterate through all packets on queue */
-  while (p->next != NULL) {
-/* be very picky about pbuf chain correctness */
-#if PBUF_DEBUG
-    /* iterate through all pbufs in packet */
-    while (p->tot_len != p->len) {
-      /* make sure each packet is complete */
-      LWIP_ASSERT("p->next != NULL", p->next != NULL);
-      p = p->next;
-    }
-#endif
-    /* now p->tot_len == p->len */
-    /* proceed to next packet on queue */
-    p = p->next;
-  }
-  /* chain last pbuf of queue with n */
-  p->next = n;
-  /* n is now referenced to one more time */
-  pbuf_ref(n);
-  LWIP_DEBUGF(PBUF_DEBUG | DBG_FRESH | 2, ("pbuf_queue: referencing queued packet %p\n", (void *)n));
-}
-
-/**
- * Remove a packet from the head of a queue.
- *
- * @param p pointer to first packet on the queue which will be dequeued.
- * @return first packet on the remaining queue (NULL if no further packets).
- *
- */
-struct pbuf *
-pbuf_dequeue(struct pbuf *p)
-{
-  struct pbuf *q;
-  LWIP_ASSERT("p != NULL", p != NULL);
-
-  /* iterate through all pbufs in packet */
-  while (p->tot_len != p->len) {
-    /* make sure each packet is complete */
-    LWIP_ASSERT("p->next != NULL", p->next != NULL);
-    p = p->next;
-  }
-  /* remember next packet on queue */
-  q = p->next;
-  /* dequeue p from queue */
-  p->next = NULL;
-  /* q is now referenced to one less time */
-  pbuf_free(q);
-  LWIP_DEBUGF(PBUF_DEBUG | DBG_FRESH | 2, ("pbuf_dequeue: dereferencing remaining queue %p\n", (void *)q));
-  return q;
-}
-#endif
-
 /**
  *
  * Create PBUF_POOL (or PBUF_RAM) copies of PBUF_REF pbufs.
@@ -846,7 +765,7 @@ pbuf_take(struct pbuf *p)
           head = q;
         }
         /* copy pbuf payload */
-        memcpy(q->payload, p->payload, p->len);
+        mips_memcpy(q->payload, p->payload, p->len);
         q->tot_len = p->tot_len;
         q->len = p->len;
         /* in case p was the first pbuf, it is no longer refered to by
@@ -878,41 +797,4 @@ pbuf_take(struct pbuf *p)
   LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 1, ("pbuf_take: end of chain reached.\n"));
 
   return head;
-}
-
-/**
- * Dechains the first pbuf from its succeeding pbufs in the chain.
- *
- * Makes p->tot_len field equal to p->len.
- * @param p pbuf to dechain
- * @return remainder of the pbuf chain, or NULL if it was de-allocated.
- * @note May not be called on a packet queue.
- */
-struct pbuf *
-pbuf_dechain(struct pbuf *p)
-{
-  struct pbuf *q;
-  u8_t tail_gone = 1;
-  /* tail */
-  q = p->next;
-  /* pbuf has successor in chain? */
-  if (q != NULL) {
-    /* assert tot_len invariant: (p->tot_len == p->len + (p->next? p->next->tot_len: 0) */
-    LWIP_ASSERT("p->tot_len == p->len + q->tot_len", q->tot_len == p->tot_len - p->len);
-    /* enforce invariant if assertion is disabled */
-    q->tot_len = p->tot_len - p->len;
-    /* decouple pbuf from remainder */
-    p->next = NULL;
-    /* total length of pbuf p is its own length only */
-    p->tot_len = p->len;
-    /* q is no longer referenced by p, free it */
-    LWIP_DEBUGF(PBUF_DEBUG | DBG_STATE, ("pbuf_dechain: unreferencing %p\n", (void *)q));
-    tail_gone = pbuf_free(q);
-    if (tail_gone > 0) LWIP_DEBUGF(PBUF_DEBUG | DBG_STATE,
-      ("pbuf_dechain: deallocated %p (as it is no longer referenced)\n", (void *)q));
-    /* return remaining tail or NULL if deallocated */
-  }
-  /* assert tot_len invariant: (p->tot_len == p->len + (p->next? p->next->tot_len: 0) */
-  LWIP_ASSERT("p->tot_len == p->len", p->tot_len == p->len);
-  return (tail_gone > 0? NULL: q);
 }

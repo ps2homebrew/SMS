@@ -432,7 +432,7 @@ static int _gui_thread ( void* apParam ) {
 
      if ( lSD >= 0 ) {
 
-      lStat = fioIoctl ( lSD, SMB_IOCTL_ECHO, s_Stack );
+      lStat = fioIoctl ( lSD, SMB_IOCTL_ECHO, &g_SMBUnit );
 
       if ( lStat < 0 ) fioIoctl ( lSD, SMB_IOCTL_LOGOUT, &g_SMBUnit );
 

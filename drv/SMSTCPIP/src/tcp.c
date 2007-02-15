@@ -746,10 +746,9 @@ tcp_fasttmr(void)
 {
   struct tcp_pcb *pcb;
 
-  /* send delayed ACKs */  
+  /* send delayed ACKs */
   for(pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
     if (pcb->flags & TF_ACK_DELAY) {
-      LWIP_DEBUGF(TCP_DEBUG, ("tcp_fasttmr: delayed ACK\n"));
 		tcp_ack_now(pcb);
       pcb->flags &= ~(TF_ACK_DELAY | TF_ACK_NOW);
     }
@@ -799,19 +798,6 @@ tcp_seg_free(struct tcp_seg *seg)
   }
   return count;
 }
-
-/*
- * tcp_setprio():
- *
- * Sets the priority of a connection.
- *
- */
-
-void
-tcp_setprio(struct tcp_pcb *pcb, u8_t prio)
-{
-  pcb->prio = prio;
-}
 #if TCP_QUEUE_OOSEQ
 
 /*
@@ -830,7 +816,7 @@ tcp_seg_copy(struct tcp_seg *seg)
   if (cseg == NULL) {
     return NULL;
   }
-  memcpy((char *)cseg, (const char *)seg, sizeof(struct tcp_seg)); 
+  mips_memcpy((char *)cseg, (const char *)seg, sizeof(struct tcp_seg)); 
   pbuf_ref(cseg->p);
   return cseg;
 }
@@ -922,7 +908,7 @@ tcp_alloc(u8_t prio)
     }
   }
   if (pcb != NULL) {
-    memset(pcb, 0, sizeof(struct tcp_pcb));
+    mips_memset(pcb, 0, sizeof(struct tcp_pcb));
     pcb->prio = TCP_PRIO_NORMAL;
     pcb->snd_buf = TCP_SND_BUF;
     pcb->snd_queuelen = 0;
@@ -954,34 +940,6 @@ tcp_alloc(u8_t prio)
     pcb->keep_cnt = 0;
   }
   return pcb;
-}
-
-/*
- * tcp_new():
- *
- * Creates a new TCP protocol control block but doesn't place it on
- * any of the TCP PCB lists.
- *
- */
-
-struct tcp_pcb *
-tcp_new(void)
-{
-  return tcp_alloc(TCP_PRIO_NORMAL);
-}
-
-/*
- * tcp_arg():
- *
- * Used to specify the argument that should be passed callback
- * functions.
- *
- */ 
-
-void
-tcp_arg(struct tcp_pcb *pcb, void *arg)
-{  
-  pcb->callback_arg = arg;
 }
 #if LWIP_CALLBACK_API
 
@@ -1029,15 +987,6 @@ tcp_err(struct tcp_pcb *pcb,
 {
   pcb->errf = errf;
 }
-
-/*
- * tcp_accept():
- *
- * Used for specifying the function that should be called when a
- * LISTENing connection has been connected to another host.
- *
- */ 
-
 void
 tcp_accept(struct tcp_pcb *pcb,
      err_t (* accept)(void *arg, struct tcp_pcb *newpcb, err_t err))
@@ -1144,158 +1093,4 @@ tcp_next_iss(void)
   return iss;
 }
 
-#if TCP_DEBUG || TCP_INPUT_DEBUG || TCP_OUTPUT_DEBUG
-void
-tcp_debug_print(struct tcp_hdr *tcphdr)
-{
-  LWIP_DEBUGF(TCP_DEBUG, ("TCP header:\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("+-------------------------------+\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("|    %5u      |    %5u      | (src port, dest port)\n",
-         ntohs(tcphdr->src), ntohs(tcphdr->dest)));
-  LWIP_DEBUGF(TCP_DEBUG, ("+-------------------------------+\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("|           %010lu          | (seq no)\n",
-          ntohl(tcphdr->seqno)));
-  LWIP_DEBUGF(TCP_DEBUG, ("+-------------------------------+\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("|           %010lu          | (ack no)\n",
-         ntohl(tcphdr->ackno)));
-  LWIP_DEBUGF(TCP_DEBUG, ("+-------------------------------+\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("| %2u |   |%u%u%u%u%u%u|     %5u     | (hdrlen, flags (",
-       TCPH_HDRLEN(tcphdr),
-         TCPH_FLAGS(tcphdr) >> 5 & 1,
-         TCPH_FLAGS(tcphdr) >> 4 & 1,
-         TCPH_FLAGS(tcphdr) >> 3 & 1,
-         TCPH_FLAGS(tcphdr) >> 2 & 1,
-         TCPH_FLAGS(tcphdr) >> 1 & 1,
-         TCPH_FLAGS(tcphdr) & 1,
-         ntohs(tcphdr->wnd)));
-  tcp_debug_print_flags(TCPH_FLAGS(tcphdr));
-  LWIP_DEBUGF(TCP_DEBUG, ("), win)\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("+-------------------------------+\n"));
-  LWIP_DEBUGF(TCP_DEBUG, ("|    0x%04x     |     %5u     | (chksum, urgp)\n",
-         ntohs(tcphdr->chksum), ntohs(tcphdr->urgp)));
-  LWIP_DEBUGF(TCP_DEBUG, ("+-------------------------------+\n"));
-}
-
-void
-tcp_debug_print_state(enum tcp_state s)
-{
-  LWIP_DEBUGF(TCP_DEBUG, ("State: "));
-  switch (s) {
-  case CLOSED:
-    LWIP_DEBUGF(TCP_DEBUG, ("CLOSED\n"));
-    break;
- case LISTEN:
-   LWIP_DEBUGF(TCP_DEBUG, ("LISTEN\n"));
-   break;
-  case SYN_SENT:
-    LWIP_DEBUGF(TCP_DEBUG, ("SYN_SENT\n"));
-    break;
-  case SYN_RCVD:
-    LWIP_DEBUGF(TCP_DEBUG, ("SYN_RCVD\n"));
-    break;
-  case ESTABLISHED:
-    LWIP_DEBUGF(TCP_DEBUG, ("ESTABLISHED\n"));
-    break;
-  case FIN_WAIT_1:
-    LWIP_DEBUGF(TCP_DEBUG, ("FIN_WAIT_1\n"));
-    break;
-  case FIN_WAIT_2:
-    LWIP_DEBUGF(TCP_DEBUG, ("FIN_WAIT_2\n"));
-    break;
-  case CLOSE_WAIT:
-    LWIP_DEBUGF(TCP_DEBUG, ("CLOSE_WAIT\n"));
-    break;
-  case CLOSING:
-    LWIP_DEBUGF(TCP_DEBUG, ("CLOSING\n"));
-    break;
-  case LAST_ACK:
-    LWIP_DEBUGF(TCP_DEBUG, ("LAST_ACK\n"));
-    break;
-  case TIME_WAIT:
-    LWIP_DEBUGF(TCP_DEBUG, ("TIME_WAIT\n"));
-   break;
-  }
-}
-
-void
-tcp_debug_print_flags(u8_t flags)
-{
-  if (flags & TCP_FIN) {
-    LWIP_DEBUGF(TCP_DEBUG, ("FIN "));
-  }
-  if (flags & TCP_SYN) {
-    LWIP_DEBUGF(TCP_DEBUG, ("SYN "));
-  }
-  if (flags & TCP_RST) {
-    LWIP_DEBUGF(TCP_DEBUG, ("RST "));
-  }
-  if (flags & TCP_PSH) {
-    LWIP_DEBUGF(TCP_DEBUG, ("PSH "));
-  }
-  if (flags & TCP_ACK) {
-    LWIP_DEBUGF(TCP_DEBUG, ("ACK "));
-  }
-  if (flags & TCP_URG) {
-    LWIP_DEBUGF(TCP_DEBUG, ("URG "));
-  }
-  if (flags & TCP_ECE) {
-    LWIP_DEBUGF(TCP_DEBUG, ("ECE "));
-  }
-  if (flags & TCP_CWR) {
-    LWIP_DEBUGF(TCP_DEBUG, ("CWR "));
-  }
-}
-
-void
-tcp_debug_print_pcbs(void)
-{
-  struct tcp_pcb *pcb;
-  LWIP_DEBUGF(TCP_DEBUG, ("Active PCB states:\n"));
-  for(pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
-    LWIP_DEBUGF(TCP_DEBUG, ("Local port %u, foreign port %u snd_nxt %lu rcv_nxt %lu ",
-                       pcb->local_port, pcb->remote_port,
-                       pcb->snd_nxt, pcb->rcv_nxt));
-    tcp_debug_print_state(pcb->state);
-  }    
-  LWIP_DEBUGF(TCP_DEBUG, ("Listen PCB states:\n"));
-  for(pcb = (struct tcp_pcb *)tcp_listen_pcbs; pcb != NULL; pcb = pcb->next) {
-    LWIP_DEBUGF(TCP_DEBUG, ("Local port %u, foreign port %u snd_nxt %lu rcv_nxt %lu ",
-                       pcb->local_port, pcb->remote_port,
-                       pcb->snd_nxt, pcb->rcv_nxt));
-    tcp_debug_print_state(pcb->state);
-  }    
-  LWIP_DEBUGF(TCP_DEBUG, ("TIME-WAIT PCB states:\n"));
-  for(pcb = tcp_tw_pcbs; pcb != NULL; pcb = pcb->next) {
-    LWIP_DEBUGF(TCP_DEBUG, ("Local port %u, foreign port %u snd_nxt %lu rcv_nxt %lu ",
-                       pcb->local_port, pcb->remote_port,
-                       pcb->snd_nxt, pcb->rcv_nxt));
-    tcp_debug_print_state(pcb->state);
-  }    
-}
-
-int
-tcp_pcbs_sane(void)
-{
-  struct tcp_pcb *pcb;
-  for(pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
-    LWIP_ASSERT("tcp_pcbs_sane: active pcb->state != CLOSED", pcb->state != CLOSED);
-    LWIP_ASSERT("tcp_pcbs_sane: active pcb->state != LISTEN", pcb->state != LISTEN);
-    LWIP_ASSERT("tcp_pcbs_sane: active pcb->state != TIME-WAIT", pcb->state != TIME_WAIT);
-  }
-  for(pcb = tcp_tw_pcbs; pcb != NULL; pcb = pcb->next) {
-    LWIP_ASSERT("tcp_pcbs_sane: tw pcb->state == TIME-WAIT", pcb->state == TIME_WAIT);
-  }
-  return 1;
-}
-#endif /* TCP_DEBUG */
 #endif /* LWIP_TCP */
-
-
-
-
-
-
-
-
-
-

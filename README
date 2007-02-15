@@ -932,3 +932,45 @@ Update (24-DEC-2006)
 - changed '-' and '_' character indentation to prevent overlapping
   (thanks to 'shassino' for the remark);
 - added UTF8 subtitles support (thank to 'Npl' for the implementation);
+
+Update (05-JAN-2007)
+--------------------
+- fixed crash issue with QPel-encoded clips. Thanks to 'darkangel84' for
+  the sample clip;
+- improved performance of the network driver (data transfer rate reached
+  about 1.6MB/s here);
+
+Update (11-02-2007)
+--------------------
+- fixed directory listing bug for DVD-Video disks. Thanks to 'phillyrider807'
+  for the remarks;
+- AC3 decoder is optimized a bit with "famous" R5900 assembler :) and a bug
+  in (random crash) it fixed;
+- an attempt to fix scrollbar issues;
+- fixed network driver bug (random data corruption). Thanks to 'user112' for
+  the report/research;
+- updated USB driver;
+- fixed incorrect subtitle line splitting. Thank to 'rainrix' for the note
+  and sample subtitle file;
+- first attempt to support MPEG1/2 video (program streams only). Not scrollable,
+  so only 'pause'/'resume' actions are available (in future it can be implemented).
+  Programmers can find it interesting as it fully uses PS2 hardware (IPU, MMI,
+  scratchpad RAM with doublebuffering) for decoding. Interlaced MPEG2 video is
+  supported (both frame/field encoding). CSS decryption is not supported. There might
+  be bigger delays while loading individual mp3 files as program tries to detect
+  file format automatically and mpeg1/2 and mp3 streams have no real headers to judge
+  with 100% accuracy about the format. MPEG program streams without (or unsupported)
+  video or/and audio might be incorrectly treated as mp3 (with a lot of noise), so
+  don't damage your ears :). There's no "official" support of VCD as I don't have any
+  (and no modchip here). Playback of .VOB files is not really supported either as
+  they don't contain proper information about clip boundaries (I think that one comes
+  from .IFO files). I've tested this stuff here only with some mpeg1 files downloaded
+  via eMule and mpeg2 files recorded by Hauppauge WinTV PVR-350 PCI card on PC;
+- updated SMB/CIFS driver in attempt to get it working with "cheap" NAS devices.
+  Syntax of 'SMS.smb' file is relaxed, so username and password can be omitted.
+  I've tested it here with Conceptronic CHD3LAN network HDD (DON'T EVER THINK TO BUY
+  THIS ONE UNLESS YOU FEEL OK TO UPDATE ITS FIRMWARE as it shipped here with crappiest
+  one I've ever seen (though after update (quite a process I must admit) it performs quite
+  OK (to say nothing of the jet sound from its fan which I've just cut off (invalidating
+  warranty thus) :D))). Note that password protected shares are not supported;
+- presumably fixed a bug in GMC calculations;

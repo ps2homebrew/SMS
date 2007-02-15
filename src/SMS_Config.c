@@ -246,9 +246,7 @@ int SMS_LoadConfig ( void  ) {
 
    if ( g_SMBLoginInfo.m_ServerIP  [ 0 ] &&
         g_SMBLoginInfo.m_ServerName[ 0 ] &&
-        g_SMBLoginInfo.m_ClientName[ 0 ] &&
-        g_SMBLoginInfo.m_UserName  [ 0 ] &&
-        g_SMBLoginInfo.m_Password  [ 0 ]
+        g_SMBLoginInfo.m_ClientName[ 0 ]
    ) g_IOPFlags |= SMS_IOPF_SMBINFO;
 
    lpFileCtx -> Destroy ( lpFileCtx );

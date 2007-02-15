@@ -38,7 +38,7 @@
 void tcpip_init(void (* tcpip_init_done)(void *), void *arg);
 void tcpip_apimsg(struct api_msg *apimsg);
 err_t tcpip_input(struct pbuf *p, struct netif *inp);
-err_t tcpip_callback(void (*f)(void *ctx), void *ctx);
+err_t tcpip_callback(void (*f)(void));
 
 void tcpip_tcp_timer_needed(void);
 

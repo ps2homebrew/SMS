@@ -63,7 +63,7 @@ typedef struct DMATag {
 
 } DMATag __attribute__(   (  aligned( 16 )  )   );
 
-# define DMA_TAG( QWC, PCE, ID, IRQ, ADDR, SPR ) (                              \
+# define DMA_TAG( QWC, PCE, ID, IRQ, ADDR, SPR ) (                                                \
  (  ( unsigned long )(                  QWC   ) <<  0  ) | (  ( unsigned long )( PCE ) << 26  ) | \
  (  ( unsigned long )(                  ID    ) << 28  ) | (  ( unsigned long )( IRQ ) << 31  ) | \
  (  ( unsigned long )(  ( unsigned int )ADDR  ) << 32  ) | (  ( unsigned long )( SPR ) << 63  )   \
@@ -99,6 +99,28 @@ typedef struct DMATag {
 # define D_CTRL_RCYC_128 4
 # define D_CTRL_RCYC_256 5
 
+# define D_PCR_CPC_VIF0         0x00000001
+# define D_PCR_CPC_VIF1         0x00000002
+# define D_PCR_CPC_GIF          0x00000004
+# define D_PCR_CPC_FROM_IPU     0x00000008
+# define D_PCR_CPC_TO_IPU       0x00000010
+# define D_PCR_CPC_FROM_SIF0    0x00000020
+# define D_PCR_CPC_TO_SIF1      0x00000040
+# define D_PCR_CPC_SIF2         0x00000080
+# define D_PCR_CPC_FROM_SPR     0x00000100
+# define D_PCR_CPC_TO_SPR       0x00000200
+
+# define D_PCR_CDE_VIF0         0x80010000
+# define D_PCR_CDE_VIF1         0x80020000
+# define D_PCR_CDE_GIF          0x80040000
+# define D_PCR_CDE_FROM_IPU     0x80080000
+# define D_PCR_CDE_TO_IPU       0x80100000
+# define D_PCR_CDE_FROM_SIF0    0x80200000
+# define D_PCR_CDE_TO_SIF1      0x80400000
+# define D_PCR_CDE_SIF2         0x80800000
+# define D_PCR_CDE_FROM_SPR     0x81000000
+# define D_PCR_CDE_TO_SPR       0x82000000
+
 # define DMAC_VIF0      (  ( volatile DMAChannel* )0x10008000  )
 # define DMAC_VIF1      (  ( volatile DMAChannel* )0x10009000  )
 # define DMAC_GIF       (  ( volatile DMAChannel* )0x1000A000  )
@@ -127,7 +149,7 @@ extern "C" {
 
 static void inline DMA_Wait ( volatile DMAChannel* apChan ) {
  while ( apChan -> m_CHCR & 0x00000100 );
-}  /* end DMA_WaitGIF */
+}  /* end DMA_Wait */
 
 static void inline DMA_Send ( volatile DMAChannel* apChan, void* apAddr, unsigned int aQWC ) {
  __asm__ __volatile__(

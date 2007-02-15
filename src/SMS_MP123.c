@@ -40,9 +40,9 @@ typedef struct _Huff {
 
 typedef float ( *CTabArray64 )[ 64 ];
 
-static int32_t MP123_Init    ( SMS_CodecContext*                          );
-static int32_t MP123_Decode  ( SMS_CodecContext*, void**, SMS_RingBuffer* );
-static void    MP123_Destroy ( SMS_CodecContext*                          );
+static int32_t MP123_Init    ( SMS_CodecContext*                                   );
+static int32_t MP123_Decode  ( SMS_CodecContext*, SMS_RingBuffer*, SMS_RingBuffer* );
+static void    MP123_Destroy ( SMS_CodecContext*                                   );
 
 SMS_Codec_MPAContext g_MPACtx;
 
@@ -6508,7 +6508,7 @@ error:
 
 }  /* end _mp3_decode_frame */
 
-int32_t MP123_Decode ( SMS_CodecContext* apCtx, void** appData, SMS_RingBuffer* apInput ) {
+int32_t MP123_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
  static void ( *mpa_decode_frame[ 4 ] ) ( SMS_RingBuffer* ) = {
   _mp1_decode_frame,
@@ -6517,12 +6517,12 @@ int32_t MP123_Decode ( SMS_CodecContext* apCtx, void** appData, SMS_RingBuffer* 
   _mp3_decode_frame
  };
 
- SMS_AVPacket*   lpPck = ( SMS_AVPacket*   )apInput -> m_pOut;
- SMS_RingBuffer* lpRB  = ( SMS_RingBuffer* )appData;
- uint8_t*        lpBuf;
- uint32_t        lHdr;
- int             lLen;
- int             lBufSize;
+ SMS_AVPacket* lpPck = ( SMS_AVPacket*   )apInput -> m_pOut;
+ uint8_t*      lpBuf;
+ uint32_t      lHdr;
+ int           lLen;
+ int           lBufSize;
+ int           lnFrames = 0;
 
  if ( g_MPACtx.m_Len ) {
 
@@ -6703,9 +6703,10 @@ nextData:
 
    if ( g_MPACtx.m_ErrorProtection ) SMS_GetBits ( &g_MPACtx.m_BitCtx, 16 );
 
-   mpa_decode_frame[ g_MPACtx.m_Layer ] ( lpRB );
+   mpa_decode_frame[ g_MPACtx.m_Layer ] ( apOutput );
+   apOutput -> UserCB ( apOutput );
 
-   lpRB -> UserCB ( lpRB );
+   if (  !( ++lnFrames & 1 )  ) RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
 
    g_MPACtx.m_pInBufPtr = g_MPACtx.m_pInBuf;
    g_MPACtx.m_FrameSize = 0;
@@ -6724,3 +6725,4 @@ nextData:
  return g_MPACtx.m_Len;
 
 }  /* end MP123_Decode */
+

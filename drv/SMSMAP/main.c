@@ -5,7 +5,6 @@
  */
 
 #include <stdio.h>
-#include <sysclib.h>
 #include <loadcore.h>
 #include <thbase.h>
 #include <thevent.h>
@@ -17,6 +16,7 @@
 #include "smap.h"
 #include "dev9.h"
 
+#include "../SMSUTILS/smsutils.h"
 
 #define	UNKN_1464   *(u16 volatile*)0xbf801464
 
@@ -207,7 +207,7 @@ static err_t SMapIFInit ( NetIF* pNetIF ) {
  pNetIF -> hwaddr_len = 6;
  pNetIF -> mtu        = 1500;
 
- memcpy (  pNetIF -> hwaddr, SMap_GetMACAddress (), 6  );
+ mips_memcpy (  pNetIF -> hwaddr, SMap_GetMACAddress (), 6  );
 
  SMap_Start ();
 

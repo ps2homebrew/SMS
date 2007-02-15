@@ -6,3 +6,4 @@ This folder contains IOP drivers for SMS:
 - SMSMAP   : tweaked version of smap from ps2sdk;
 - SMSTCPIP : tweaked version of ps2ip from ps2sdk;
 - SMSMB    : minimal readonly SMB/CIFS client;
+- SMSUTILS : some MIPS optimized standard routines;

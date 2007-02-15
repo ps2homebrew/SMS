@@ -15,6 +15,7 @@
 #include "SMS_FourCC.h"
 #include "SMS_MPEG4.h"
 #include "SMS_MSMPEG4.h"
+#include "SMS_MPEG12.h"
 #include "SMS_MP123.h"
 #include "SMS_AC3.h"
 #include "SMS_VideoBuffer.h"
@@ -87,17 +88,21 @@ SMS_CodecID SMS_CodecGetID ( SMS_CodecType aType, uint32_t aTag ) {
 
 int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
- if ( apCtx -> m_Type == SMS_CodecTypeVideo ) {
+ int lID = apCtx -> m_ID;
+
+ if (  apCtx -> m_Type == SMS_CodecTypeVideo && !( lID == SMS_CodecID_MPEG1 || lID == SMS_CodecID_MPEG2 )  ) {
 
   s_pVideoBuffer     = ( SMS_VideoBuffer* )SMS_InitVideoBuffer ( apCtx -> m_Width, apCtx -> m_Height );
   apCtx -> m_pIntBuf = calloc (  SMS_INTERNAL_BUFFER_SIZE, sizeof ( SMS_InternalBuffer )  );
 
  }  /* end if */
 
- switch ( apCtx -> m_ID ) {
+ switch ( lID ) {
 
   case SMS_CodecID_MPEG4    : SMS_Codec_MPEG4_Open   ( apCtx ); break;
   case SMS_CodecID_MSMPEG4V3: SMS_Codec_MSMPEG4_Open ( apCtx ); break;
+  case SMS_CodecID_MPEG1    :
+  case SMS_CodecID_MPEG2    : SMS_Codec_MPEG12_Open  ( apCtx ); break;
 
   case SMS_CodecID_MP2:
   case SMS_CodecID_MP3: SMS_Codec_MP123_Open ( apCtx ); break;
@@ -113,7 +118,11 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
 void SMS_CodecClose ( SMS_CodecContext* apCtx ) {
 
- if ( apCtx -> m_pIntBuf && apCtx -> m_Type == SMS_CodecTypeVideo ) {
+ int lID = apCtx -> m_ID;
+
+ if ( apCtx -> m_pIntBuf && apCtx -> m_Type == SMS_CodecTypeVideo &&
+      !( lID == SMS_CodecID_MPEG1 || lID == SMS_CodecID_MPEG2 )
+ ) {
 
   s_pVideoBuffer -> Destroy ();
   free ( apCtx -> m_pIntBuf );

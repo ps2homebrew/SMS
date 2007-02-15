@@ -84,8 +84,6 @@ sysclib_IMPORTS_start
  I_strncmp
  I_strrchr
  I_strtok
- I_memcpy
- I_memset
  I_tolower
 sysclib_IMPORTS_end
 
@@ -99,3 +97,8 @@ thbase_IMPORTS_start
  I_SleepThread
  I_StartThread
 thbase_IMPORTS_end
+
+smsutils_IMPORTS_start
+ I_mips_memcpy
+ I_mips_memset
+smsutils_IMPORTS_end

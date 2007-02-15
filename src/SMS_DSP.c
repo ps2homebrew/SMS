@@ -73,19 +73,18 @@ void DSP_GMCn_16 ( uint8_t* apDst, const SMS_MacroBlock* apSrc, int aX, int anY,
  int lUo = g_GMCData.m_Uo + 16 * ( lDUy * anY + lDUx * aX );
  int lVo = g_GMCData.m_Vo + 16 * ( lDVy * anY + lDVx * aX );
 
- int i, j;
+ int i, j = 16;
 
- apDst += 16;
-
- for ( j = 16; j > 0; --j ) {
+ while ( j-- ) {
 
   int lU = lUo;
   int lV = lVo;
 
+  i    =   16;
   lUo += lDUy;
   lVo += lDVy;
 
-  for ( i = -16; i < 0; ++i ) {
+  while ( i-- ) {
 
    unsigned int          lF0, lF1, lRi = 16, lRj = 16;
    int                   lMBX, lMBY;
@@ -99,35 +98,25 @@ void DSP_GMCn_16 ( uint8_t* apDst, const SMS_MacroBlock* apSrc, int aX, int anY,
    lU += lDUx;
    lV += lDVx;
 
-   if ( lu > 0 && lu <= lW ) {
+   if ( lu < 0 )
+    lu = 0;
+   else if ( lu > lW ) lu = lW & ~15;
 
-    lRi = s_MTab[ lu & 15 ];
-    lX  = lu >> 4;
+   if ( lv < 0 )
+    lv = 0;
+   else if ( lv > lH ) lv = lH & ~15;
 
-   } else {
+   lX  = lu >> 4;
+   lY  = lv >> 4;
+   lu &= 15;
+   lv &= 15;
 
-    lX  = lu > lW ? ( lW >> 4 ) : 0;
-    lRi = s_MTab[ 0 ];
-
-   }  /* end else */
-
+   lRi  = s_MTab[ lu ];
+   lRj  = s_MTab[ lv ];
    lMBX = lX >> 4;
-   lX  &= 0xF;
-
-   if ( lv > 0 && lv <= lH ) {
-
-    lRj = s_MTab[ lv & 15 ];
-    lY  = lv >> 4;
-
-   } else {
-
-    lY  = lv > lH ? ( lH >> 4 ) : 0;
-    lRj = s_MTab[ 0 ];
-
-   }  /* end else */
-
    lMBY = lY >> 4;
-   lY  &= 0xF;
+   lX  &= 15;
+   lY  &= 15;
 
    lpMB  = apSrc + lMBX;
    lpMB += lMBY * aStride;
@@ -152,38 +141,32 @@ void DSP_GMCn_16 ( uint8_t* apDst, const SMS_MacroBlock* apSrc, int aX, int anY,
 
    } else {
 
-    lpMB += 1;
-    lSrcX = lpMB -> m_Y[ lY ][ 0 ];
+    lSrcX = lpMB[ 1 ].m_Y[ lY ][ 0 ];
 
     if ( lY != 15 ) {
 
-     lSrcY  = lpMB -> m_Y[ lY + 1 ][ 0 ];
-     lSrcXY = lpMB -> m_Y[ lY + 1 ][ 1 ];
+     lSrcY  = lpMB[ 0 ].m_Y[ lY + 1 ][ lX ];
+     lSrcXY = lpMB[ 1 ].m_Y[ lY + 1 ][  0 ];
 
     } else {
 
-     lSrcY  = lpMB[ aStride ].m_Y[ 0 ][ 0 ];
-     lSrcXY = lpMB[ aStride ].m_Y[ 0 ][ 1 ];
+     lSrcY  = lpMB[ aStride + 0 ].m_Y[ 0 ][ lX ];
+     lSrcXY = lpMB[ aStride + 1 ].m_Y[ 0 ][  0 ];
 
     }  /* end else */
 
    }  /* end else */
 
-   lF0  = lSrc;
-   lF0 |= lSrcX << 16;
-   lF1  = lSrcY;
-   lF1 |= lSrcXY << 16;
-
+   lF0  = lSrc  | ( lSrcX  << 16 );
+   lF1  = lSrcY | ( lSrcXY << 16 );
    lF0  = ( lRi * lF0 ) >> 16;
    lF1  = ( lRi * lF1 ) & 0x0FFF0000;
    lF0 |= lF1;
    lF0  = ( lRj * lF0 + lRounder ) >> 24;
 
-   apDst[ i ] = ( uint8_t )lF0;
+   *apDst++ = ( uint8_t )lF0;
 
   }  /* end for */
-
-  apDst += 16;
 
  }  /* end for */
 
@@ -204,24 +187,22 @@ void DSP_GMCn_8 ( uint8_t* apDstCb, const SMS_MacroBlock* apSrc, int aX, int anY
  int lUo = g_GMCData.m_UCo + 8 * ( lDUy * anY + lDUx * aX );
  int lVo = g_GMCData.m_VCo + 8 * ( lDVy * anY + lDVx * aX );
 
- int i, j;
+ int i, j = 8;
 
  uint8_t* lpDstCr = apDstCb + 64;
 
- apDstCb += 8;
- lpDstCr += 8;
-
- for ( j = 8; j > 0; --j ) {
+ while ( j-- ) {
 
   int lU = lUo;
   int lV = lVo;
 
+  i    =    8;
   lUo += lDUy;
   lVo += lDVy;
 
-  for ( i = -8; i < 0; ++i ) {
+  while ( i-- ) {
 
-   unsigned int          lF0, lF1, lRi, lRj;
+   unsigned int          lF0Cb, lF1Cb, lRi, lRj, lF0Cr, lF1Cr;
    int                   lMBX, lMBY;
    int                   lX,   lY;
    int                   lu,   lv;
@@ -237,34 +218,24 @@ void DSP_GMCn_8 ( uint8_t* apDstCb, const SMS_MacroBlock* apSrc, int aX, int anY
    lU += lDUx;
    lV += lDVx;
 
-   if ( lu > 0 && lu <= lW ) {
+   if ( lu < 0 )
+    lu = 0;
+   else if ( lu > lW ) lu = lW & ~15;
 
-    lRi = s_MTab[ lu & 15 ];
-    lX  = lu >> 4;
+   if ( lv < 0 )
+    lv = 0;
+   else if ( lv > lH ) lv = lH & ~15;
 
-   } else {
+   lX  = lu >> 4;
+   lY  = lv >> 4;
+   lu &= 15;
+   lv &= 15;
 
-    lX  = lu > lW ? ( lW >> 4 ) : 0;
-    lRi = s_MTab[ 0 ];
-
-   }  /* end else */
-
+   lRi  = s_MTab[ lu ];
+   lRj  = s_MTab[ lv ];
    lMBX = lX >> 3;
-   lX  &= 7;
-
-   if ( lv > 0 && lv <= lH ) {
-
-    lRj = s_MTab[ lv & 15 ];
-    lY  = lv >> 4;
-
-   } else {
-
-    lY  = lv > lH ? ( lH >> 4 ) : 0;
-    lRj = s_MTab[ 0 ];
-
-   }  /* end else */
-
    lMBY = lY >> 3;
+   lX  &= 7;
    lY  &= 7;
 
    lpMB  = apSrc + lMBX;
@@ -296,54 +267,44 @@ void DSP_GMCn_8 ( uint8_t* apDstCb, const SMS_MacroBlock* apSrc, int aX, int anY
 
    } else {
 
-    lpMB += 1;
-    lSrcCbX = lpMB -> m_Cb[ lY ][ 0 ];
-    lSrcCrX = lpMB -> m_Cr[ lY ][ 0 ];
+    lSrcCbX = lpMB[ 1 ].m_Cb[ lY ][ 0 ];
+    lSrcCrX = lpMB[ 1 ].m_Cr[ lY ][ 0 ];
 
     if ( lY != 7 ) {
 
-     lSrcCbY  = lpMB -> m_Cb[ lY + 1 ][ 0 ];
-     lSrcCrY  = lpMB -> m_Cr[ lY + 1 ][ 0 ];
-     lSrcCbXY = lpMB -> m_Cb[ lY + 1 ][ 1 ];
-     lSrcCrXY = lpMB -> m_Cr[ lY + 1 ][ 1 ];
+     lSrcCbY  = lpMB[ 0 ].m_Cb[ lY + 1 ][ lX ];
+     lSrcCrY  = lpMB[ 0 ].m_Cr[ lY + 1 ][ lY ];
+     lSrcCbXY = lpMB[ 1 ].m_Cb[ lY + 1 ][  0 ];
+     lSrcCrXY = lpMB[ 1 ].m_Cr[ lY + 1 ][  0 ];
 
     } else {
 
-     lSrcCbY  = lpMB[ aStride ].m_Cb[ 0 ][ 0 ];
-     lSrcCrY  = lpMB[ aStride ].m_Cr[ 0 ][ 0 ];
-     lSrcCbXY = lpMB[ aStride ].m_Cb[ 0 ][ 1 ];
-     lSrcCrXY = lpMB[ aStride ].m_Cr[ 0 ][ 1 ];
+     lSrcCbY  = lpMB[ aStride + 0 ].m_Cb[ 0 ][ lX ];
+     lSrcCrY  = lpMB[ aStride + 0 ].m_Cr[ 0 ][ lX ];
+     lSrcCbXY = lpMB[ aStride + 1 ].m_Cb[ 0 ][  0 ];
+     lSrcCrXY = lpMB[ aStride + 1 ].m_Cr[ 0 ][  0 ];
 
     }  /* end else */
 
    }  /* end else */
 
-   lF0  = lSrcCb;
-   lF0 |= lSrcCbX << 16;
-   lF1  = lSrcCbY;
-   lF1 |= lSrcCbXY << 16;
-   lF0  = ( lRi * lF0 ) >> 16;
-   lF1  = ( lRi * lF1 ) & 0x0FFF0000;
-   lF0 |= lF1;
-   lF0 = ( lRj * lF0 + lRounder ) >> 24;
+   lF0Cb  = lSrcCb  | ( lSrcCbX  << 16 );
+   lF0Cr  = lSrcCr  | ( lSrcCrX  << 16 );
+   lF1Cb  = lSrcCbY | ( lSrcCbXY << 16 );
+   lF1Cr  = lSrcCrY | ( lSrcCrXY << 16 );
+   lF0Cb  = ( lRi * lF0Cb ) >> 16;
+   lF0Cr  = ( lRi * lF0Cr ) >> 16;
+   lF1Cb  = ( lRi * lF1Cb ) & 0x0FFF0000;
+   lF1Cr  = ( lRi * lF1Cr ) & 0x0FFF0000;
+   lF0Cb |= lF1Cb;
+   lF0Cr |= lF1Cr;
+   lF0Cb  = ( lRj * lF0Cb + lRounder ) >> 24;
+   lF0Cr  = ( lRj * lF0Cr + lRounder ) >> 24;
 
-   apDstCb[ i ] = ( uint8_t )lF0;
-
-   lF0  = lSrcCr;
-   lF0 |= lSrcCrX << 16;
-   lF1  = lSrcCrY;
-   lF1 |= lSrcCrXY << 16;
-   lF0  = ( lRi * lF0 ) >> 16;
-   lF1  = ( lRi * lF1 ) & 0x0FFF0000;
-   lF0 |= lF1;
-   lF0 = ( lRj * lF0 + lRounder ) >> 24;
-
-   lpDstCr[ i ] = ( uint8_t )lF0;
+   *apDstCb++ = ( uint8_t )lF0Cb;
+   *lpDstCr++ = ( uint8_t )lF0Cr;
 
   }  /* end for */
-
-  apDstCb += 8;
-  lpDstCr += 8;
 
  }  /* end for */
 

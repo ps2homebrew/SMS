@@ -41,6 +41,5 @@ DECLARE_EXPORT_TABLE(ps2ip,1,3)
 	DECLARE_EXPORT(pbuf_free)
 	DECLARE_EXPORT(pbuf_clen)
 	DECLARE_EXPORT(pbuf_chain)			//40
-	DECLARE_EXPORT(pbuf_dechain)
 	DECLARE_EXPORT(pbuf_take)
 END_EXPORT_TABLE

@@ -1,44 +1,60 @@
-#ifndef _FAT_DRIVER_H
-#define _FAT_DRIVER_H 1
+#ifndef _USBHD_COMMON_H
+#define _USBHD_COMMON_H
 
-#ifdef _PS2_
 #include <io_common.h>
 #include <ioman.h>
-#else
-#include <fcntl.h>
-#
-
-#define FIO_SO_IFREG		0x0010		// Regular file
-#define FIO_SO_IFDIR		0x0020		// Directory
-/* fake struct for non ps2 systems */
-typedef struct _iop_file {
-	void	*privdata;
-} iop_file_t;
-typedef void iop_device_t;
-
-typedef struct {
-	unsigned int mode;
-	unsigned int attr;
-	unsigned int size;
-	unsigned char ctime[8];
-	unsigned char atime[8];
-	unsigned char mtime[8];
-	unsigned int hisize;
-} fio_stat_t;
-
-typedef struct {
-	fio_stat_t stat;
-	char name[256];
-	unsigned int unknown;
-} fio_dirent_t;
-
-
-#endif /* _PS2_ */
-
 #include "fat.h"
 
+#define USB_SUBCLASS_MASS_RBC		0x01
+#define USB_SUBCLASS_MASS_ATAPI		0x02
+#define USB_SUBCLASS_MASS_QIC		0x03
+#define USB_SUBCLASS_MASS_UFI		0x04
+#define USB_SUBCLASS_MASS_SFF_8070I 	0x05
+#define USB_SUBCLASS_MASS_SCSI		0x06
+
+#define USB_PROTOCOL_MASS_CBI		0x00
+#define USB_PROTOCOL_MASS_CBI_NO_CCI	0x01
+#define USB_PROTOCOL_MASS_BULK_ONLY	0x50
+
+#define TAG_TEST_UNIT_READY     0
+#define TAG_REQUEST_SENSE	3
+#define TAG_INQUIRY		18
+#define TAG_READ_CAPACITY       37
+#define TAG_READ		40
+#define TAG_START_STOP_UNIT	33
+#define TAG_WRITE		42
+
+#define DEVICE_DETECTED		1
+#define DEVICE_CONFIGURED	2
+#define DEVICE_DISCONNECTED 4
+
+#define MASS_CONNECT_CALLBACK    0x0012
+#define MASS_DISCONNECT_CALLBACK 0x0013
+
+#define getBI32(__buf) ((((u8 *) (__buf))[3] << 0) | (((u8 *) (__buf))[2] << 8) | (((u8 *) (__buf))[1] << 16) | (((u8 *) (__buf))[0] << 24))
+
+typedef struct _mass_dev
+{
+	int controlEp;		//config endpoint id
+	int bulkEpI;		//in endpoint id
+	unsigned char bulkEpIAddr; // in endpoint address
+	int bulkEpO;		//out endpoint id
+	unsigned char bulkEpOAddr; // out endpoint address
+	int packetSzI;		//packet size in
+	int packetSzO;		//packet size out
+	int devId;		//device id
+	int configId;	//configuration id
+	int status;
+	int interfaceNumber;	//interface number
+	int interfaceAlt;	//interface alternate setting
+} mass_dev;
+
 typedef struct _fs_rec {
-	int fd;
+	int           file_flag;
+  //This flag is always 1 for a file, and always 0 for a folder (different typedef)
+  //Routines that handle both must test it, and then typecast the privdata pointer
+  //to the type that is appropriate for the given case. (see also D_PRIVATE typedef)
+	int           fd;
 	unsigned int  filePos;
 	int           mode;	//file open mode
 	unsigned int  sfnSector; //short filename sector  - write support
@@ -52,17 +68,7 @@ typedef struct _fs_rec {
 #define MAX_DIR_CLUSTER 512
 
 
-int  mass_stor_getStatus();
-void mass_stor_reset();
-
-/*
-int fs_open( int fd, char *name, int mode);
-int fs_lseek(int fd, int offset, int whence);
-int fs_read( int fd, char * buffer, int size );
-int fs_write( int fd, char * buffer, int size );
-int fs_close( int fd);
-int fs_dummy(void);
-*/
+int mass_stor_getStatus();
 
 int fs_init   (iop_device_t *driver); 
 int fs_open   (iop_file_t* , const char *name, int mode, ...);
@@ -104,18 +110,4 @@ int      fat_getClusterChain(fat_bpb* bpb, unsigned int cluster, unsigned int* b
 void     fat_invalidateLastChainResult();
 void     fat_getClusterAtFilePos(fat_bpb* bpb, fat_dir* fatDir, unsigned int filePos, unsigned int* cluster, unsigned int* clusterPos);
 
-
-
-//void fat_dumpFile(fat_bpb* bpb, int fileCluster, int size, char* fname);
-void fat_dumpDirectory(fat_bpb* bpb, int dirCluster);
-void fat_dumpPartitionBootSector();
-void fat_dumpPartitionTable();
-void fat_dumpClusterChain(unsigned int* buf, int maxBuf, int clusterSkip);
-int  fat_dumpSystemInfo();
-void fat_dumpSectorHex(unsigned char* buf, int bufSize);
-
-
-int fat_getFirstDirentry(char * dirName, fat_dir* fatDir);
-int fat_getNextDirentry(fat_dir* fatDir);
-#endif
-
+#endif // _USBHD_COMMON_H

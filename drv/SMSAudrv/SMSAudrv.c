@@ -16,6 +16,7 @@
 #include <sysclib.h>
 #include <thbase.h>
 #include <thsemap.h>
+#include "../SMSUTILS/smsutils.h"
 
 #include "SMSAudrv_US.h"
 
@@ -139,8 +140,8 @@ typedef void* ( *RPCHandler ) ( void*, int );
 
 static void _Silence ( void ) {
 
- memset (  s_SPUBuf,  0, sizeof ( s_SPUBuf  )  );
- memset (  s_RingBuf, 0, sizeof ( s_RingBuf )  );
+ mips_memset (  s_SPUBuf,  0, sizeof ( s_SPUBuf  )  );
+ mips_memset (  s_RingBuf, 0, sizeof ( s_RingBuf )  );
 
 }  /* end _Silence */
 
@@ -236,7 +237,7 @@ static void* _PlayPCM ( void* apData, int aSize ) {
 
   if ( s_WritePos >= s_ReadPos ) lCopy = MIN( s_BufSize - s_WritePos, aSize );
 
-  memcpy ( s_RingBuf + s_WritePos, lpData, lCopy );
+  mips_memcpy ( s_RingBuf + s_WritePos, lpData, lCopy );
 
   lpData   += lCopy;
   aSize    -= lCopy;

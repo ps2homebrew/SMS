@@ -37,105 +37,46 @@
 #include "lwip/api.h"
 #include "lwip/api_msg.h"
 #include "lwip/memp.h"
-#include <sysclib.h>
 
-struct
-netbuf *netbuf_new(void)
-{
-  struct netbuf *buf;
+#include "../../SMSUTILS/smsutils.h"
 
-  buf = memp_malloc(MEMP_NETBUF);
-  if (buf != NULL) {
-    buf->p = NULL;
-    buf->ptr = NULL;
-    return buf;
-  } else {
-    return NULL;
-  }
-}
+struct netbuf* netbuf_new ( void ) {
+ struct netbuf *buf = memp_malloc ( MEMP_NETBUF );
 
-void
-netbuf_delete(struct netbuf *buf)
-{
-  if (buf != NULL) {
-    if (buf->p != NULL) {
-      pbuf_free(buf->p);
-      buf->p = buf->ptr = NULL;
-    }
-    memp_free(MEMP_NETBUF, buf);
-  }
-}
+ if ( buf ) {
+  buf -> p   = NULL;
+  buf -> ptr = NULL;
+ }  /* end if */
 
-void *
-netbuf_alloc(struct netbuf *buf, u16_t size)
-{
-  /* Deallocate any previously allocated memory. */
-  if (buf->p != NULL) {
-    pbuf_free(buf->p);
-  }
-  buf->p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);
-  if (buf->p == NULL) {
-     return NULL;
-  }
-  buf->ptr = buf->p;
-  return buf->p->payload;
-}
+ return buf;
 
-void
-netbuf_free(struct netbuf *buf)
-{
-  if (buf->p != NULL) {
-    pbuf_free(buf->p);
-  }
-  buf->p = buf->ptr = NULL;
-}
+}  /* end netbuf_new */
 
-void
-netbuf_ref(struct netbuf *buf, void *dataptr, u16_t size)
-{
-  if (buf->p != NULL) {
-    pbuf_free(buf->p);
-  }
-  buf->p = pbuf_alloc(PBUF_TRANSPORT, 0, PBUF_REF);
-  buf->p->payload = dataptr;
-  buf->p->len = buf->p->tot_len = size;
-  buf->ptr = buf->p;
-}
+void netbuf_delete ( struct netbuf* buf ) {
 
-void
-netbuf_chain(struct netbuf *head, struct netbuf *tail)
-{
-  pbuf_chain(head->p, tail->p);
-  head->ptr = head->p;
-  memp_free(MEMP_NETBUF, tail);
-}
+ if ( buf ) {
+  if ( buf -> p != NULL ) {
+   pbuf_free ( buf -> p );
+   buf -> p = buf -> ptr = NULL;
+  }  /* end if */
+  memp_free ( MEMP_NETBUF, buf );
+ }  /* end if */
 
-err_t
-netbuf_data(struct netbuf *buf, void **dataptr, u16_t *len)
-{
-  if (buf->ptr == NULL) {
-    return ERR_BUF;
-  }
-  *dataptr = buf->ptr->payload;
-  *len = buf->ptr->len;
-  return ERR_OK;
-}
+}  /* end netbuf_delete */
 
-s8_t
-netbuf_next(struct netbuf *buf)
-{
-  if (buf->ptr->next == NULL) {
-    return -1;
-  }
-  buf->ptr = buf->ptr->next;
-  if (buf->ptr->next == NULL) {
-    return 1;
-  }
-  return 0;
-}
+void netbuf_ref ( struct netbuf* buf, void* dataptr, u16_t size ) {
+
+ if ( buf -> p ) pbuf_free ( buf -> p );
+
+ buf -> p = pbuf_alloc ( PBUF_TRANSPORT, 0, PBUF_REF );
+ buf -> p -> payload = dataptr;
+ buf -> p -> len     = buf -> p -> tot_len = size;
+ buf -> ptr          = buf -> p;
+
+}  /* end netbuf_ref */
 
 void netbuf_copy_partial (
-      struct netbuf*buf, void* dataptr, u16_t len, u16_t offset
+      struct netbuf* buf, void* dataptr, u16_t len, u16_t offset
      ) {
 
  struct pbuf* p;
@@ -156,7 +97,7 @@ void netbuf_copy_partial (
 
    lDiff = buf_copy_len > lDiff ? lDiff : buf_copy_len;
 
-   memcpy (
+   mips_memcpy (
     &(  ( char* )dataptr      )[ left   ],
     &(  ( char* )p -> payload )[ offset ],
     lDiff
@@ -165,9 +106,9 @@ void netbuf_copy_partial (
 
    if ( left >= len ) return;
 
-  }  /* end else */
+   offset = 0;
 
-  offset = 0;
+  }  /* end else */
 
  }  /* end for */
 
@@ -253,7 +194,6 @@ netconn_delete(struct netconn *conn)
     sys_mbox_free(conn->recvmbox);
     conn->recvmbox = SYS_MBOX_NULL;
   }
- 
 
   /* Drain the acceptmbox. */
   if (conn->acceptmbox != SYS_MBOX_NULL) {
@@ -538,12 +478,6 @@ netconn_recv(struct netconn *conn)
         (*conn->callback)(conn, NETCONN_EVT_RCVMINUS, buf->p->tot_len);
   }
 
-  
-
-    
-  LWIP_DEBUGF(API_LIB_DEBUG, ("netconn_recv: received %p (err %d)\n", (void *)buf, conn->err));
-
-
   return buf;
 }
 
@@ -577,109 +511,66 @@ netconn_send(struct netconn *conn, struct netbuf *buf)
 err_t
 netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
 {
-	struct api_msg*	msg;
-	u16_t					len;
+  struct api_msg *msg;
+  u16_t len;
+  
+  if (conn == NULL) {
+    return ERR_VAL;
+  }
 
-	if	(conn==NULL)
-	{
-		return	ERR_VAL;
-	}
+  if (conn->err != ERR_OK) {
+    return conn->err;
+  }
 
-	if	(conn->err != ERR_OK)
-	{
-		return	conn->err;
-	}
+  if ((msg = memp_malloc(MEMP_API_MSG)) == NULL) {
+    return (conn->err = ERR_MEM);
+  }
+  msg->type = API_MSG_WRITE;
+  msg->msg.conn = conn;
+        
 
-	if	(conn->sem == SYS_SEM_NULL)
-	{
-		conn->sem = sys_sem_new(0);
-		if	(conn->sem == SYS_SEM_NULL)
-		{
-			return	ERR_MEM;
-		}
-	}
-
-	if	((msg = memp_malloc(MEMP_API_MSG)) == NULL)
-	{
-		return	(conn->err = ERR_MEM);
-	}
-	msg->type = API_MSG_WRITE;
-	msg->msg.conn = conn;
-
-	conn->state = NETCONN_WRITE;
-	while (conn->err == ERR_OK && size > 0)
-	{
-		msg->msg.msg.w.dataptr = dataptr;
-		msg->msg.msg.w.copy = copy;
-
-		if (conn->type == NETCONN_TCP)
-		{
-
-			//Boman666: If we're going to send more than half the sendbuffer-size, wait for atleast half of the sendbuffer to be
-			//available and only send half of the sendbuffer-size at a time. This is to prevent a large send-size to be split up in
-			//unnecessary small sub-transmissions.
-
-			len=(size>TCP_SND_BUF/2) ? TCP_SND_BUF/2:size;
-
-			while	(tcp_sndbuf(conn->pcb.tcp) < len)
-			{
-				sys_sem_wait(conn->sem);
-				if (conn->err != ERR_OK)
-				{
-					goto	ret;
-				}
-			}
-/*			if (tcp_sndbuf(conn->pcb.tcp) == 0)
-			{
-				sys_sem_wait(conn->sem);
-				if (conn->err != ERR_OK)
-				{
-					goto	ret;
-				}
-			}
-			if (size > tcp_sndbuf(conn->pcb.tcp))
-			{
-				// We cannot send more than one send buffer's worth of data at a time.
-				len = tcp_sndbuf(conn->pcb.tcp);
-			}
-			else
-			{
-				len = size;
-			}*/
-		}
-		else
-		{
-			len = size;
-		}
-
-		LWIP_DEBUGF(API_LIB_DEBUG, ("netconn_write: writing %d bytes (%d)\n", len, copy));
-		msg->msg.msg.w.len = len;
-		api_msg_post(msg);
-		sys_mbox_fetch(conn->mbox, NULL);    
-		if	(conn->err == ERR_OK)
-		{
-			dataptr = (void *)((char *)dataptr + len);
-			size -= len;
-		}
-		else if (conn->err == ERR_MEM)
-		{
-			conn->err = ERR_OK;
-			sys_sem_wait(conn->sem);
-		}
-		else
-		{
-			goto ret;
-		}
-	}
-ret:
-	memp_free(MEMP_API_MSG, msg);
-	conn->state = NETCONN_NONE;
-	if	(conn->sem != SYS_SEM_NULL)
-	{
-		sys_sem_free(conn->sem);
-		conn->sem = SYS_SEM_NULL;
-	}
-	return	conn->err;
+  conn->state = NETCONN_WRITE;
+  while (conn->err == ERR_OK && size > 0) {
+    msg->msg.msg.w.dataptr = dataptr;
+    msg->msg.msg.w.copy = copy;
+    
+    if (conn->type == NETCONN_TCP) {
+      if (tcp_sndbuf(conn->pcb.tcp) == 0) {
+  sys_sem_wait(conn->sem);
+  if (conn->err != ERR_OK) {
+    goto ret;
+  }
+      }
+      if (size > tcp_sndbuf(conn->pcb.tcp)) {
+  /* We cannot send more than one send buffer's worth of data at a
+     time. */
+  len = tcp_sndbuf(conn->pcb.tcp);
+      } else {
+  len = size;
+      }
+    } else {
+      len = size;
+    }
+    
+    LWIP_DEBUGF(API_LIB_DEBUG, ("netconn_write: writing %d bytes (%d)\n", len, copy));
+    msg->msg.msg.w.len = len;
+    api_msg_post(msg);
+    sys_mbox_fetch(conn->mbox, NULL);    
+    if (conn->err == ERR_OK) {
+      dataptr = (void *)((u8_t *)dataptr + len);
+      size -= len;
+    } else if (conn->err == ERR_MEM) {
+      conn->err = ERR_OK;
+      sys_sem_wait(conn->sem);
+    } else {
+      goto ret;
+    }
+  }
+ ret:
+  memp_free(MEMP_API_MSG, msg);
+  conn->state = NETCONN_NONE;
+  
+  return conn->err;
 }
 
 err_t
@@ -709,10 +600,3 @@ netconn_close(struct netconn *conn)
   memp_free(MEMP_API_MSG, msg);
   return conn->err;
 }
-
-err_t
-netconn_err(struct netconn *conn)
-{
-  return conn->err;
-}
-

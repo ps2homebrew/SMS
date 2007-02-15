@@ -17,6 +17,7 @@
 #include "SMS_FourCC.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_DMA.h"
+#include "SMS_Data.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -537,9 +538,9 @@ const uint16_t s_mpeg4_resync_prefix[ 8 ] = {
  0x7F00, 0x7E00, 0x7C00, 0x7800, 0x7000, 0x6000, 0x4000, 0x0000
 };
 
-static int32_t MPEG4_Init    ( SMS_CodecContext*                          );
-static int32_t MPEG4_Decode  ( SMS_CodecContext*, void**, SMS_RingBuffer* );
-static void    MPEG4_Destroy ( SMS_CodecContext*                          );
+static int32_t MPEG4_Init    ( SMS_CodecContext*                                   );
+static int32_t MPEG4_Decode  ( SMS_CodecContext*, SMS_RingBuffer*, SMS_RingBuffer* );
+static void    MPEG4_Destroy ( SMS_CodecContext*                                   );
 
 void SMS_Codec_MPEG4_Open ( SMS_CodecContext* apCtx ) {
 
@@ -575,10 +576,15 @@ void MPEG4_CommonInit ( SMS_CodecContext* apCtx ) {
  BASECTX().DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
  BASECTX().m_pChromaQScaleTbl  = g_chroma_qscale_table;
 
+ g_MPEGCtx.m_LastPPTS   = 0;
  g_MPEGCtx.m_MSPerFrame = ( int )(
   ( float )apCtx -> m_FrameRate /
   ( float )apCtx -> m_FrameRateBase + 0.5F
  );
+
+ memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
+ memcpy (  ( void* )0x11000000, &g_DataBuffer[ SMS_VU0_MPG_OFFSET  ], SMS_VU0_MPG_SIZE   );
+ memcpy (  ( void* )0x11004000, &g_DataBuffer[ SMS_VU0_DATA_OFFSET ], SMS_VU0_DATA_SIZE  );
 
 }  /* end MPEG4_CommonInit */
 
@@ -3219,14 +3225,14 @@ end:
 
 }  /* end _mpeg4_decode_slice */
 
-static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, SMS_RingBuffer* apInput ) {
+static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
- SMS_FrameBuffer** lpFrame  = ( SMS_FrameBuffer** )apData;
- SMS_BitContext*   lpBitCtx = &g_MPEGCtx.m_BitCtx;
- SMS_AVPacket*     lpPck    = ( SMS_AVPacket* )apInput -> m_pOut;
- uint8_t*          lpBuf    = lpPck -> m_pData;
- int32_t           lBufSize = lpPck -> m_Size;
- int32_t           retVal;
+ SMS_FrameBuffer* lpFrame;
+ SMS_BitContext*  lpBitCtx = &g_MPEGCtx.m_BitCtx;
+ SMS_AVPacket*    lpPck    = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
+ uint8_t*         lpBuf    = lpPck -> m_pData;
+ int32_t          lBufSize = lpPck -> m_Size;
+ int32_t          retVal;
 
  g_MPEGCtx.m_pParentCtx = apCtx;
 
@@ -3244,7 +3250,7 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, SMS_RingBu
 
  retVal = Codec_MPEG4_DecodeHeader ();
 
- if ( retVal == SMS_FRAME_SKIPED || retVal < 0 ) return 0;
+ if ( retVal == SMS_FRAME_SKIPED || retVal < 0 ) goto end;
 
  apCtx -> m_HasBFrames = !g_MPEGCtx.m_LowDelay;
 
@@ -3291,19 +3297,17 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, SMS_RingBu
  g_MPEGCtx.m_CurPic.m_Type     = g_MPEGCtx.m_PicType;
  g_MPEGCtx.m_CurPic.m_KeyFrame = g_MPEGCtx.m_PicType == SMS_FT_I_TYPE;
 
- if (  g_MPEGCtx.m_pLastPic == NULL && ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_Dropable )  ) return 0;
+ if (  g_MPEGCtx.m_pLastPic == NULL && ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_Dropable )  ) goto end;
 
  if ( g_MPEGCtx.m_NextPFrameDamaged ) {
 
   if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE )
-
-   return 0;
-
+   goto end;
   else g_MPEGCtx.m_NextPFrameDamaged = 0;
 
  }  /* end if */
 
- if (  SMS_MPEG_FrameStart () < 0  ) return 0;
+ if (  SMS_MPEG_FrameStart () < 0  ) goto end;
 
  g_MPEGCtx.m_MBX = 0; 
  g_MPEGCtx.m_MBY = 0;
@@ -3364,21 +3368,33 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, void** apData, SMS_RingBu
  SMS_MPEG_FrameEnd ();
 
  if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_LowDelay )
-  *lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
- else *lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
+  lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+ else lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
 
  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
 
  if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
-  ( *lpFrame ) -> m_FrameType = g_MPEGCtx.m_PicType;
- else *lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+  lpFrame -> m_FrameType = g_MPEGCtx.m_PicType;
+ else lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
 
- if ( apCtx -> m_HasBFrames && ( *lpFrame ) -> m_FrameType != SMS_FT_B_TYPE ) {
-  ( *lpFrame ) -> m_PTS  = g_MPEGCtx.m_LastPPTS;
+ if ( apCtx -> m_HasBFrames && lpFrame -> m_FrameType != SMS_FT_B_TYPE ) {
+  lpFrame -> m_PTS  = g_MPEGCtx.m_LastPPTS;
   g_MPEGCtx.m_LastPPTS = lpPck -> m_PTS;
- } else ( *lpFrame ) -> m_PTS = lpPck -> m_PTS;
+ } else lpFrame -> m_PTS = lpPck -> m_PTS;
 
- ( *lpFrame ) -> m_SPTS = lpPck -> m_PTS;
+ lpFrame -> m_SPTS = lpPck -> m_PTS;
+
+ if ( retVal ) {
+
+  SMS_FrameBuffer** lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
+
+  *lppFrame = lpFrame;
+
+  SMS_RingBufferPost ( apOutput );
+
+ }  /* end if */
+end:
+ SMS_RingBufferFree ( apInput, lpPck -> m_Size + 64 );
 
  return retVal;
 

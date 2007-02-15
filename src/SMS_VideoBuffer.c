@@ -43,7 +43,7 @@ static void _sms_video_buffer_release ( SMS_FrameBuffer* apBuf ) {
 
 static void _sms_video_buffer_destroy ( void ) {
 
- int i;
+ unsigned int i;
 
  for ( i = 0; i < SMS_VIDEO_BUFFER_SIZE; ++i ) free ( s_FrameBuffer[ i ].m_pBase );
 

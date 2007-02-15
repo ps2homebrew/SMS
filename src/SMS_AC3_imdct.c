@@ -12,7 +12,7 @@
 # This file WAS part of a52dec, a free ATSC A-52 stream decoder.
 # See http://liba52.sourceforge.net/ for updates.
 #
-# Adopted for SMS by Eugene Plotnikov
+# Adopted for SMS and optimized for R5900 by Eugene Plotnikov
 # Licensed (like the original ffmpeg source code) under the terms of the
 # GNU Lesser General Public License as published by the Free Software Foundation;
 # either version 2 of the License, or (at your option) any later version.
@@ -281,113 +281,194 @@ static uint32_t s_FFTOrder[ 128 ] = {
    6, 134, 70, 198, 38, 166, 230, 102, 246, 118, 54, 182,  22, 150, 214,  86
 };
 
-static SMS_INLINE void _ifft2 ( sample_t* apBuf ) {
+static void SMS_INLINE _ifft2 ( sample_t* apBuf ) {
 
- sample_t lR, lI;
-
- lR = apBuf[ 0 ];
- lI = apBuf[ 1 ];
-
- apBuf[ 0 ] += apBuf[ 2 ];
- apBuf[ 1 ] += apBuf[ 3 ];
-
- apBuf[ 2 ] = lR - apBuf[ 2 ];
- apBuf[ 3 ] = lI - apBuf[ 3 ];
+ __asm__ __volatile__ (
+  ".set noat\n\t"
+  "ld        $t0,  0(%0)\n\t"
+  "ld        $t1,  8(%0)\n\t"
+  "pcpyld    $t0, $t0, $t0\n\t"
+  "ld        $t0, 16(%0)\n\t"
+  "pcpyld    $t1, $t1, $t1\n\t"
+  "ld        $t1, 24(%0)\n\t"
+  "paddw     $at, $t0, $t1\n\t"
+  "psubw     $t0, $t0, $t1\n\t"
+  "sd        $at, 16(%0)\n\t"
+  "pcpyud    $at, $at, $at\n\t"
+  "sd        $t0, 24(%0)\n\t"
+  "pcpyud    $t0, $t0, $t0\n\t"
+  "sd        $at,  0(%0)\n\t"
+  "sd        $t0,  8(%0)\n\t"
+  ".set at\n\t"
+  :: "r"( apBuf ) : "t0", "t1", "at", "memory"
+ );
 
 }  /* end _ifft2 */
 
-static SMS_INLINE void _ifft4 ( sample_t* apBuf ) {
+static void SMS_INLINE _ifft4 ( int* apBuf ) {
 
- sample_t lTmp1, lTmp2, lTmp3, lTmp4;
- sample_t lTmp5, lTmp6, lTmp7, lTmp8;
-
- lTmp1 = apBuf[ 0 ] + apBuf[ 2 ];
- lTmp2 = apBuf[ 6 ] + apBuf[ 4 ];
- lTmp3 = apBuf[ 1 ] + apBuf[ 3 ];
- lTmp4 = apBuf[ 5 ] + apBuf[ 7 ];
- lTmp5 = apBuf[ 0 ] - apBuf[ 2 ];
- lTmp6 = apBuf[ 1 ] - apBuf[ 3 ];
- lTmp7 = apBuf[ 5 ] - apBuf[ 7 ];
- lTmp8 = apBuf[ 6 ] - apBuf[ 4 ];
-
- apBuf[ 0 ] = lTmp1 + lTmp2;
- apBuf[ 1 ] = lTmp3 + lTmp4;
- apBuf[ 2 ] = lTmp5 + lTmp7;
- apBuf[ 3 ] = lTmp6 + lTmp8;
- apBuf[ 4 ] = lTmp1 - lTmp2;
- apBuf[ 5 ] = lTmp3 - lTmp4;
- apBuf[ 6 ] = lTmp5 - lTmp7;
- apBuf[ 7 ] = lTmp6 - lTmp8;
+ __asm__ __volatile__(
+  ".set noat\n\t"
+  "lq        $t0,  0(%0)\n\t"
+  "lq        $t1, 16(%0)\n\t"
+  "mtsah     $zero, -2\n\t"
+  "pexcw     $t1, $t1\n\t"
+  "prot3w    $t1, $t1\n\t"
+  "pcpyld    $at, $t1, $t0\n\t"
+  "pcpyud    $t0, $t0, $t1\n\t"
+  "paddw     $t1, $at, $t0\n\t"
+  "psubw     $t0, $at, $t0\n\t"
+  "prot3w    $t0, $t0\n\t"
+  "pexcw     $t0, $t0\n\t"
+  "pcpyld    $at, $t0, $t1\n\t"
+  "pcpyud    $t1, $t1, $t0\n\t"
+  "paddw     $t0, $at, $t1\n\t"
+  "psubw     $t1, $at, $t1\n\t"
+  "qfsrv     $t0, $t0, $t0\n\t"
+  "qfsrv     $t1, $t1, $t1\n\t"
+  "prot3w    $t0, $t0\n\t"
+  "prot3w    $t1, $t1\n\t"
+  "sq        $t0,  0(%0)\n\t"
+  "sq        $t1, 16(%0)\n\t"
+  ".set at\n\t"
+  :: "r"( apBuf ) : "t0", "t1", "at", "memory"
+ );
 
 }  /* end _ifft4 */
 
-#define BUTTERFLY_0( t0, t1, W0, W1, d0, d1 ) \
- t0 = MUL ( W1, d1 ) + MUL ( W0, d0 );        \
- t1 = MUL ( W0, d1 ) - MUL ( W1, d0 );
+extern void BUTTERFLY_0 ( sample_t, sample_t, sample_t, sample_t, sample_t*, sample_t* );
+__asm__(
+ ".set noreorder\n\t"
+ "BUTTERFLY_0:\n\t"
+ "pextlw    $a0, $a1, $a0\n\t"
+ "pextlw    $a2, $a3, $a2\n\t"
+ "pcpyld    $a0, $a0, $a0\n\t"
+ "pcpyld    $a2, $a2, $a2\n\t"
+ "pexcw     $a2, $a2\n\t"
+ "pexew     $a2, $a2\n\t"
+ "prevh     $a2, $a2\n\t"
+ "phmaddh   $a1, $a0, $a2\n\t"
+ "psrlw     $a0, $a0, 16\n\t"
+ "pmulth    $a0, $a0, $a2\n\t"
+ "mtsah     $zero, 2\n\t"
+ "psraw     $a1, $a1, 14\n\t"
+ "psllw     $a0, $a0, 2\n\t"
+ "paddw     $v0, $a0, $a1\n\t"
+ "qfsrv     $v1, $v0, $v0\n\t"
+ "paddw     $a0, $v0, $v1\n\t"
+ "psubw     $a1, $v0, $v1\n\t"
+ "psravw    $v0, $a0, $zero\n\t"
+ "psravw    $v1, $a1, $zero\n\t"
+ "sw        $v0, 0($t0)\n\t"
+ "pcpyud    $v1, $v1, $zero\n\t"
+ "jr        $ra\n\t"
+ "sw        $v1, 0($t1)\n\t"
+ ".set reorder\n\t"
+);
 
-#define BUTTERFLY_B( t0, t1, W0, W1, d0, d1 ) \
- t0 = MUL ( d1, W1 ) + MUL ( d0, W0 );        \
- t1 = MUL ( d1, W0 ) - MUL ( d0, W1 );
+extern void BUTTERFLY_ZERO ( sample_t*, sample_t*, sample_t*, sample_t* );
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ "BUTTERFLY_ZERO:\n\t"
+ "ld        $t0, 0($a2)\n\t"
+ "ld        $t1, 0($a3)\n\t"
+ "pxor      $at, $at, $at\n\t"
+ "nor       $at, $zero, $zero\n\t"
+ "pexew     $at, $at\n\t"
+ "psrlw     $t2, $at, 31\n\t"
+ "pextlw    $v0, $t1, $t0\n\t"
+ "pextlw    $v1, $t0, $t1\n\t"
+ "mtsah     $zero, 4\n\t"
+ "pxor      $at, $v1, $at\n\t"
+ "paddw     $at, $at, $t2\n\t"
+ "paddw     $at, $v0, $at\n\t"
+ "ld        $t0, 0($a0)\n\t"
+ "pexew     $at, $at\n\t"
+ "ld        $t1, 0($a1)\n\t"
+ "qfsrv     $at, $at, $at\n\t"
+ "pcpyld    $t0, $t1, $t0\n\t"
+ "psubw     $t1, $t0, $at\n\t"
+ "paddw     $t0, $t0, $at\n\t"
+ "sd        $t1, 0($a2)\n\t"
+ "pcpyud    $t1, $t1, $t1\n\t"
+ "sd        $t0, 0($a0)\n\t"
+ "pcpyud    $t0, $t0, $t0\n\t"
+ "sd        $t1, 0($a3)\n\t"
+ "jr        $ra\n\t"
+ "sd        $t0, 0($a1)\n\t"
+ ".set at\n\t"
+ ".set macro\n\t"
+ ".set reorder\n\t"
+);
 
-#define BUTTERFLY( a0, a1, a2, a3, wr, wi )                     \
- BUTTERFLY_0( lTmp5, lTmp6, wr, wi, ( a2 )[ 0 ], ( a2 )[ 1 ] ); \
- BUTTERFLY_0( lTmp8, lTmp7, wr, wi, ( a3 )[ 1 ], ( a3 )[ 0 ] ); \
- lTmp1 = lTmp5 + lTmp7;                                         \
- lTmp2 = lTmp6 + lTmp8;                                         \
- lTmp3 = lTmp6 - lTmp8;                                         \
- lTmp4 = lTmp7 - lTmp5;                                         \
- ( a2 )[ 0 ] = ( a0 )[ 0 ] - lTmp1;                             \
- ( a2 )[ 1 ] = ( a0 )[ 1 ] - lTmp2;                             \
- ( a3 )[ 0 ] = ( a1 )[ 0 ] - lTmp3;                             \
- ( a3 )[ 1 ] = ( a1 )[ 1 ] - lTmp4;                             \
- ( a0 )[ 0 ] += lTmp1;                                          \
- ( a0 )[ 1 ] += lTmp2;                                          \
- ( a1 )[ 0 ] += lTmp3;                                          \
- ( a1 )[ 1 ] += lTmp4;
+extern void BUTTERFLY_HALF ( sample_t*, sample_t*, sample_t*, sample_t*, sample_t );
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ "BUTTERFLY_HALF:\n\t"
+ "lw      $t1, 0($a2)\n\t"
+ "lw      $t2, 4($a2)\n\t"
+ "lw      $t3, 0($a3)\n\t"
+ "lw      $t4, 4($a3)\n\t"
+ "addu    $v0, $t1, $t2\n\t"
+ "subu    $v1, $t2, $t1\n\t"
+ "pextlw  $v0, $v1, $v0\n\t"
+ "subu    $v1, $t3, $t4\n\t"
+ "addu    $at, $t3, $t4\n\t"
+ "pextlw  $v1, $at, $v1\n\t"
+ "pcpyld  $v0, $v1, $v0\n\t"
+ "pextlw  $t0, $t0, $t0\n\t"
+ "pcpyld  $t0, $t0, $t0\n\t"
+ "prevh   $t0, $t0\n\t"
+ "phmadh  $at, $v0, $t0\n\t"
+ "psraw   $v0, $v0, 16\n\t"
+ "pmulth  $v0, $v0, $t0\n\t"
+ "mtsah   $zero, 2\n\t"
+ "psraw   $at, $at, 14\n\t"
+ "psllw   $v0, $v0, 2\n\t"
+ "paddw   $v0, $v0, $at\n\t"
+ "qfsrv   $v0, $v0, $v0\n\t"
+ "pcpyud  $at, $v0, $v0\n\t"
+ "paddw   $v1, $v0, $at\n\t"
+ "psubw   $v0, $v0, $at\n\t"
+ "pcpyld  $v0, $v0, $v1\n\t"
+ "prot3w  $v0, $v0\n\t"
+ "pexcw   $v0, $v0\n\t"
+ "ld      $t0, 0($a0)\n\t"
+ "ld      $t1, 0($a1)\n\t"
+ "pcpyld  $t0, $t1, $t0\n\t"
+ "psubw   $t1, $t0, $v0\n\t"
+ "paddw   $t0, $t0, $v0\n\t"
+ "pcpyud  $v0, $t1, $t1\n\t"
+ "pcpyud  $v1, $t0, $t0\n\t"
+ "sd      $t0, 0($a0)\n\t"
+ "sd      $v1, 0($a1)\n\t"
+ "sd      $t1, 0($a2)\n\t"
+ "jr      $ra\n\t"
+ "sd      $v0, 0($a3)\n\t"
+ ".set reorder\n\t"
+ ".set macro\n\t"
+ ".set at\n\t"
+);
 
-#define BUTTERFLY_ZERO( a0, a1, a2, a3 ) \
- lTmp1 = ( a2 )[ 0 ] + ( a3 )[ 0 ];      \
- lTmp2 = ( a2 )[ 1 ] + ( a3 )[ 1 ];      \
- lTmp3 = ( a2 )[ 1 ] - ( a3 )[ 1 ];      \
- lTmp4 = ( a3 )[ 0 ] - ( a2 )[ 0 ];      \
- ( a2 )[ 0 ] = ( a0 )[ 0 ] - lTmp1;      \
- ( a2 )[ 1 ] = ( a0 )[ 1 ] - lTmp2;      \
- ( a3 )[ 0 ] = ( a1 )[ 0 ] - lTmp3;      \
- ( a3 )[ 1 ] = ( a1 )[ 1 ] - lTmp4;      \
- ( a0 )[ 0 ] += lTmp1;                   \
- ( a0 )[ 1 ] += lTmp2;                   \
- ( a1 )[ 0 ] += lTmp3;                   \
- ( a1 )[ 1 ] += lTmp4;
+static void BUTTERFLY ( sample_t* a0, sample_t* a1, sample_t* a2, sample_t* a3, sample_t wr, sample_t wi ) {
 
-#define BUTTERFLY_HALF( a0, a1, a2, a3, w )     \
- lTmp5 = MUL(  ( a2 )[ 0 ] + ( a2 )[ 1 ], w  ); \
- lTmp6 = MUL(  ( a2 )[ 1 ] - ( a2 )[ 0 ], w  ); \
- lTmp7 = MUL(  ( a3 )[ 0 ] - ( a3 )[ 1 ], w  ); \
- lTmp8 = MUL(  ( a3 )[ 1 ] + ( a3 )[ 0 ], w  ); \
- lTmp1 = lTmp5 + lTmp7;                         \
- lTmp2 = lTmp6 + lTmp8;                         \
- lTmp3 = lTmp6 - lTmp8;                         \
- lTmp4 = lTmp7 - lTmp5;                         \
- ( a2 )[ 0 ] = ( a0 )[ 0 ] - lTmp1;             \
- ( a2 )[ 1 ] = ( a0 )[ 1 ] - lTmp2;             \
- ( a3 )[ 0 ] = ( a1 )[ 0 ] - lTmp3;             \
- ( a3 )[ 1 ] = ( a1 )[ 1 ] - lTmp4;             \
- ( a0 )[ 0 ] += lTmp1;                          \
- ( a0 )[ 1 ] += lTmp2;                          \
- ( a1 )[ 0 ] += lTmp3;                          \
- ( a1 )[ 1 ] += lTmp4;
+ BUTTERFLY_0 (  wr, wi, a2[ 0 ], a2[ 1 ], a2, a2 + 1  );
+ BUTTERFLY_0 (  wr, wi, a3[ 1 ], a3[ 0 ], a3 + 1, a3  );
+ BUTTERFLY_ZERO ( a0, a1, a2, a3 );
+
+}  /* end BUTTERFLY */
 
 static SMS_INLINE void _ifft8 ( sample_t* apBuf ) {
 
- sample_t lTmp1, lTmp2, lTmp3, lTmp4;
- sample_t lTmp5, lTmp6, lTmp7, lTmp8;
-
  _ifft4 ( apBuf      );
  _ifft2 ( apBuf +  8 );
- _ifft2 ( apBuf + 12 );
 
- BUTTERFLY_ZERO( apBuf + 0, apBuf + 4, apBuf +  8, apBuf + 12 );
- BUTTERFLY_HALF( apBuf + 2, apBuf + 6, apBuf + 10, apBuf + 14, s_Roots16[ 1 ] );
+ BUTTERFLY_ZERO ( apBuf + 0, apBuf + 4, apBuf +  8, apBuf + 12 );
+ BUTTERFLY_HALF ( apBuf + 2, apBuf + 6, apBuf + 10, apBuf + 14, s_Roots16[ 1 ] );
 
 }  /* end _ifft8 */
 
@@ -396,8 +477,6 @@ static void _ifft_pass ( sample_t* apBuf, sample_t* apWeight, int aN ) {
  sample_t* lpBuf1;
  sample_t* lpBuf2;
  sample_t* lpBuf3;
- sample_t  lTmp1, lTmp2, lTmp3, lTmp4;
- sample_t  lTmp5, lTmp6, lTmp7, lTmp8;
  int       i;
 
  apBuf += 2;
@@ -466,9 +545,9 @@ void _ac3_imdct_512 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
 
  const sample_t* lpWindow = s_IMDCTWindow;
 
- int      i, j, k;
- sample_t t_r, t_i, a_r, a_i, b_r, b_i, w_1, w_2;
- sample_t lBuf[ 256 ];
+ int       i, j, k;
+ sample_t  t_r, t_i, a_r, a_i, b_r, b_i, w_1, w_2;
+ sample_t* lBuf = ( sample_t* )0x70000000;
 	
  for ( i = 0, j = 0; i < 128; ++i, j += 2 ) {
 
@@ -476,7 +555,7 @@ void _ac3_imdct_512 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
   t_r = s_Pre1[ j + 0 ];
   t_i = s_Pre1[ j + 1 ];
 
-  BUTTERFLY_0( lBuf[ j ], lBuf[ j + 1 ], t_r, t_i, apData[ k ], apData[ 255 - k ] );
+  BUTTERFLY_0 ( t_r, t_i, apData[ k ], apData[ 255 - k ], &lBuf[ j ], &lBuf[ j + 1 ] );
 
  }  /* end for */
 
@@ -487,20 +566,20 @@ void _ac3_imdct_512 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
   t_r = s_Post1[ j + 0 ];
   t_i = s_Post1[ j + 1 ];
 
-  BUTTERFLY_0( a_r, a_i, t_i, t_r, lBuf[ j + 1 ], lBuf[ j ] );
-  BUTTERFLY_0( b_r, b_i, t_r, t_i, lBuf[ 254 - j + 1 ], lBuf[ 254 - j ] );
+  BUTTERFLY_0 ( t_i, t_r, lBuf[ j + 1 ], lBuf[ j ], &a_r, &a_i );
+  BUTTERFLY_0 ( t_r, t_i, lBuf[ 254 - j + 1 ], lBuf[ 254 - j ], &b_r, &b_i );
 
   w_1 = lpWindow[       j ];
   w_2 = lpWindow[ 255 - j ];
 
-  BUTTERFLY_B( apData[ 255 - j ], apData[ j ], w_2, w_1, a_r, apDelay[ j ] );
+  BUTTERFLY_0 ( w_2, w_1, a_r, apDelay[ j ], &apData[ 255 - j ], &apData[ j ] );
 
   apDelay[ j ] = a_i;
 
   w_1 = lpWindow[ j + 1   ];
   w_2 = lpWindow[ 254 - j ];
 
-  BUTTERFLY_B( apData[ j + 1 ], apData[ 254 - j ], w_1, w_2, b_r, apDelay[ j + 1 ] );
+  BUTTERFLY_0 ( w_1, w_2, b_r, apDelay[ j + 1 ], &apData[ j + 1 ], &apData[ 254 - j ] );
 
   apDelay[ j + 1 ] = b_i;
 
@@ -512,9 +591,10 @@ void _ac3_imdct_256 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
 
  const sample_t* lpWindow = s_IMDCTWindow;
 
- int      i, j, k;
- sample_t t_r, t_i, a_r, a_i, b_r, b_i, c_r, c_i, d_r, d_i, w_1, w_2;
- sample_t lBuf1[ 128 ], lBuf2[ 128 ];
+ int       i, j, k;
+ sample_t  t_r, t_i, a_r, a_i, b_r, b_i, c_r, c_i, d_r, d_i, w_1, w_2;
+ sample_t* lBuf1 = ( sample_t* )0x70000000;
+ sample_t* lBuf2 = ( sample_t* )0x70000200;
 
  for ( i = 0, j = 0; i < 64; ++i, j += 2 ) {
 
@@ -522,8 +602,8 @@ void _ac3_imdct_256 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
   t_r = s_Pre2[ j + 0 ];
   t_i = s_Pre2[ j + 1 ];
 
-  BUTTERFLY_0( lBuf1[ j ], lBuf1[ j + 1 ], t_r, t_i, apData[ k + 0 ], apData[ 254 - k ] );
-  BUTTERFLY_0( lBuf2[ j ], lBuf2[ j + 1 ], t_r, t_i, apData[ k + 1 ], apData[ 255 - k ] );
+  BUTTERFLY_0 ( t_r, t_i, apData[ k + 0 ], apData[ 254 - k ], &lBuf1[ j ], &lBuf1[ j + 1 ] );
+  BUTTERFLY_0 ( t_r, t_i, apData[ k + 1 ], apData[ 255 - k ], &lBuf2[ j ], &lBuf2[ j + 1 ] );
 
  }  /* end for */
 
@@ -535,36 +615,36 @@ void _ac3_imdct_256 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
   t_r = s_Post2[ j + 0 ];
   t_i = s_Post2[ j + 1 ];
 
-  BUTTERFLY_0( a_r, a_i, t_i, t_r, lBuf1[       j + 1 ], lBuf1[       j ] );
-  BUTTERFLY_0( b_r, b_i, t_r, t_i, lBuf1[ 126 - j + 1 ], lBuf1[ 126 - j ] );
-  BUTTERFLY_0( c_r, c_i, t_i, t_r, lBuf2[       j + 1 ], lBuf2[       j ] );
-  BUTTERFLY_0( d_r, d_i, t_r, t_i, lBuf2[ 126 - j + 1 ], lBuf2[ 126 - j ] );
+  BUTTERFLY_0 ( t_i, t_r, lBuf1[       j + 1 ], lBuf1[       j ], &a_r, &a_i );
+  BUTTERFLY_0 ( t_r, t_i, lBuf1[ 126 - j + 1 ], lBuf1[ 126 - j ], &b_r, &b_i );
+  BUTTERFLY_0 ( t_i, t_r, lBuf2[       j + 1 ], lBuf2[       j ], &c_r, &c_i );
+  BUTTERFLY_0 ( t_r, t_i, lBuf2[ 126 - j + 1 ], lBuf2[ 126 - j ], &d_r, &d_i );
 
   w_1 = lpWindow[       j ];
   w_2 = lpWindow[ 255 - j ];
 
-  BUTTERFLY_B( apData[ 255 - j ], apData[ j ], w_2, w_1, a_r, apDelay[ j ] );
+  BUTTERFLY_0 ( w_2, w_1, a_r, apDelay[ j ], &apData[ 255 - j ], &apData[ j ] );
 
   apDelay[ j ] = c_i;
 
   w_1 = lpWindow[ 128 + j ];
   w_2 = lpWindow[ 127 - j ];
 
-  BUTTERFLY_B( apData[ 128 + j ], apData[ 127 - j ], w_1, w_2, a_i, apDelay[ 127 - j ] );
+  BUTTERFLY_0 ( w_1, w_2, a_i, apDelay[ 127 - j ], &apData[ 128 + j ], &apData[ 127 - j ] );
 
   apDelay[ 127 - j ] = c_r;
 
   w_1 = lpWindow[ j + 1   ];
   w_2 = lpWindow[ 254 - j ];
 
-  BUTTERFLY_B( apData[ 254 - j ], apData[ j + 1 ], w_2, w_1, b_i, apDelay[ j + 1 ] );
+  BUTTERFLY_0 ( w_2, w_1, b_i, apDelay[ j + 1 ], &apData[ 254 - j ], &apData[ j + 1 ] );
 
   apDelay[ j + 1 ] = d_r;
 
   w_1 = lpWindow[ 129 + j ];
   w_2 = lpWindow[ 126 - j ];
 
-  BUTTERFLY_B( apData[ 129 + j ], apData[ 126 - j ], w_1, w_2, b_r, apDelay[ 126 - j ] );
+  BUTTERFLY_0 ( w_1, w_2, b_r, apDelay[ 126 - j ], &apData[ 129 + j ], &apData[ 126 - j ] );
 
   apDelay[ 126 - j ] = d_i;
 

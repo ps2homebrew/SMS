@@ -21,6 +21,9 @@
 # endif  /* __SMS_RingBuffer_H */
 
 # define SMS_CODEC_FLAG_LOW_DELAY 0x00080000
+# define SMS_CODEC_FLAG_NOCSC     0x00000001
+# define SMS_CODEC_FLAG_UNCACHED  0x20000000
+# define SMS_CODEC_FLAG_IPU       0x00000002
 
 typedef enum SMS_CodecType {
  SMS_CodecTypeUnknown = -1, SMS_CodecTypeVideo, SMS_CodecTypeAudio
@@ -47,9 +50,9 @@ typedef struct SMS_Codec {
 
  const char* m_pName;
  void*       m_pCtx;
- int32_t     ( *Init    ) ( struct SMS_CodecContext*                          );
- int32_t     ( *Decode  ) ( struct SMS_CodecContext*, void**, SMS_RingBuffer* );
- void        ( *Destroy ) ( struct SMS_CodecContext*                          );
+ int32_t     ( *Init    ) ( struct SMS_CodecContext*                                   );
+ int32_t     ( *Decode  ) ( struct SMS_CodecContext*, SMS_RingBuffer*, SMS_RingBuffer* );
+ void        ( *Destroy ) ( struct SMS_CodecContext*                                   );
 
 } SMS_Codec;
 
@@ -69,6 +72,7 @@ typedef struct SMS_CodecContext {
  SMS_CodecType m_Type;
  SMS_CodecID   m_ID;
  uint32_t      m_Tag;
+ uint32_t      m_Flags;
  int           m_HasBFrames;
  int           m_IntBufCnt;
  void*         m_pIntBuf;

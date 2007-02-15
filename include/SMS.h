@@ -25,7 +25,7 @@ typedef unsigned int uint32_t;
 
 typedef short SMS_DCTELEM;
 
-extern const uint32_t g_SMS_InvTbl[ 256 ];
+# define SMS_THREAD_PRIORITY 64
 
 # define SMS_FT_I_TYPE 1
 # define SMS_FT_P_TYPE 2
@@ -34,7 +34,7 @@ extern const uint32_t g_SMS_InvTbl[ 256 ];
 
 # define SMS_ROUND( v ) (    ( int )(  ( v ) + (  ( v ) > 0 ? 0.5F : -0.5F  )   )    )
 
-# define SMS_FASTDIV( a, b ) (     ( uint32_t )(    (   (  ( uint64_t )a  ) * g_SMS_InvTbl[ b ]   ) >> 32    )     )
+# define SMS_FASTDIV( a, b ) (  ( a ) / ( b )  )
 
 # define SMS_MAX( a, b ) (  ( a ) > ( b ) ? ( a ) : ( b )  )
 # define SMS_MIN( a, b ) (  ( a ) > ( b ) ? ( b ) : ( a )  )

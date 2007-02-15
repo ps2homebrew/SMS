@@ -26,6 +26,7 @@
 #include "SMS_Locale.h"
 #include "SMS_Sounds.h"
 #include "SMS_RC.h"
+#include "SMS_MPEG.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -121,6 +122,10 @@ static void _osd_timer_handler_decr ( void* apArg ) {
 
 }  /* end _osd_timer_handler_decr */
 
+static void* s_pTimerOSDHandlers[ 3 ] = {
+ NULL, _osd_timer_handler_incr
+};
+
 static void TimerHandler ( void* apArg ) {
 
  g_IPUCtx.iQueuePacket ( 10, g_VCErase );
@@ -211,6 +216,7 @@ void PlayerControl_Init ( void ) {
 
  uint64_t* lpPaint = _U( g_VCPaint );
  uint64_t* lpErase = _U( g_VCErase );
+ int64_t   lDuration;
 /* Initialize volume control display list */
  int   lX = 20 << 4;
  int   lY = ( g_GSCtx.m_Height - 288 ) >> 1;
@@ -305,8 +311,16 @@ void PlayerControl_Init ( void ) {
  s_pPTS = GSContext_NewList (  GS_TXT_PACKET_SIZE( 7 ) << 1  );
  SyncDCache (   s_pPTS - 2, s_pPTS + (  GS_TXT_PACKET_SIZE( 7 ) << 1  )   );
 
+ if ( s_Player.m_pCont -> m_Duration == 0x7FFFFFFFFFFFFFFFLL ) {
+  lDuration                = 0;
+  s_pTimerOSDHandlers[ 2 ] = NULL;
+ } else {
+  lDuration                = s_Player.m_pCont -> m_Duration / SMS_TIME_BASE;
+  s_pTimerOSDHandlers[ 2 ] = _osd_timer_handler_decr;
+ }  /* end else */
+
  s_PTSX[ 1 ] = g_GSCtx.m_Width - lX;
- PlayerControl_UpdateDuration ( 1, s_Player.m_pCont -> m_Duration / SMS_TIME_BASE );
+ PlayerControl_UpdateDuration ( 1, lDuration );
 
  s_PTSX[ 0 ] = s_PTSX[ 1 ] - lX;
  PlayerControl_UpdateDuration ( 0, 0 );
@@ -558,22 +572,25 @@ void PlayerControl_AdjustBrightness ( int aDelta ) {
 
 }  /* end PlayerControl_AdjustBrightness */
 
+static unsigned char s_DispBuff[ 64 ] __attribute__(   (  aligned( 64 )  )   );
+
 static int PlayerControl_Scroll ( int aDir ) {
 
- SMS_Container*  lpCont    = s_Player.m_pCont;
- SMS_Stream**    lpStms    = lpCont -> m_pStm;
- SMS_Stream*     lpStm     = lpStms[ s_Player.m_VideoIdx ];
- FileContext*    lpFileCtx = lpCont -> m_pFileCtx;
- IPUContext*     lpIPUCtx  = s_Player.m_pIPUCtx;
- int64_t         lTime     = s_Player.m_VideoTime;
- int             retVal    = 0;
- int64_t         lIncr     = 3000LL * aDir;
- uint64_t        lNextTime = 0LL;
- uint32_t        lFilePos  = 0U;
- void*           lpHandler = SMS_TimerReset ( 2, NULL );
- SMS_AVPacket*   lpPacket  = NULL;
- SMS_RingBuffer* lpBuff    = NULL;
- int             lPktIdx;
+ SMS_Container*   lpCont     = s_Player.m_pCont;
+ SMS_Stream**     lpStms     = lpCont -> m_pStm;
+ SMS_Stream*      lpStm      = lpStms[ s_Player.m_VideoIdx ];
+ FileContext*     lpFileCtx  = lpCont -> m_pFileCtx;
+ IPUContext*      lpIPUCtx   = s_Player.m_pIPUCtx;
+ int64_t          lTime      = s_Player.m_VideoTime;
+ int              retVal     = 0;
+ int64_t          lIncr      = 3000LL * aDir;
+ uint64_t         lNextTime  = 0LL;
+ uint32_t         lFilePos   = 0U;
+ void*            lpHandler  = SMS_TimerReset ( 2, NULL );
+ SMS_FrameBuffer* lpFrame    = NULL;
+ SMS_RingBuffer*  lpBuff     = NULL;
+ SMS_RingBuffer*  lpDispBuff = SMS_RingBufferInit (  s_DispBuff, sizeof ( s_DispBuff )  );
+ int              lPktIdx;
 
  s_Player.m_pIPUCtx -> StopSync ( 1 );
  lpIPUCtx -> Suspend ();
@@ -588,10 +605,9 @@ static int PlayerControl_Scroll ( int aDir ) {
 
  while ( 1 ) {
 
-  uint64_t         lDisplayTime = g_Timer;
-  int64_t          lPos         = SMS_Rescale (  lTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
-  int              lSize        = lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, aDir, lPos );
-  SMS_FrameBuffer* lpFrame;
+  uint64_t lDisplayTime = g_Timer;
+  int64_t  lPos         = SMS_Rescale (  lTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
+  int      lSize        = lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, aDir, lPos );
 
   if ( !lSize ) {
 
@@ -602,7 +618,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
    s_Player.m_VideoTime = 0;
    s_Player.m_AudioTime = 0;
-   lpPacket             = NULL;
+   lpFrame              = NULL;
 
    retVal = 1;
    break;
@@ -626,20 +642,21 @@ static int PlayerControl_Scroll ( int aDir ) {
    lpBuff = lpStms[ lPktIdx ] -> m_pPktBuf;
 
    SMS_RingBufferPost ( lpBuff );
-   lpPacket = ( SMS_AVPacket* )SMS_RingBufferWait ( lpBuff );
 
    if ( lPktIdx == s_Player.m_VideoIdx ) {
 
-    lpFrame = NULL;
+    if (  s_Player.m_pVideoCodec -> Decode (
+           lpStm -> m_pCodec, lpDispBuff, lpBuff
+          )
+    ) {
 
-    s_Player.m_pVideoCodec -> Decode (  lpStm -> m_pCodec, ( void** )&lpFrame, lpBuff  );
-
-    if ( lpFrame ) {
-
+     lpFrame = *( SMS_FrameBuffer** )SMS_RingBufferWait ( lpDispBuff );
      int64_t lDiff;
 
-     s_Player.m_VideoTime = lpPacket -> m_PTS;
-     s_Player.m_AudioTime = lpPacket -> m_PTS;
+     SMS_RingBufferFree ( lpDispBuff, 4 );
+
+     s_Player.m_VideoTime = lpFrame -> m_PTS;
+     s_Player.m_AudioTime = lpFrame -> m_PTS;
 
      do {
 
@@ -690,9 +707,8 @@ static int PlayerControl_Scroll ( int aDir ) {
        } else if ( lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
 
         lpIPUCtx -> Sync ();
-        PlayerControl_DisplayTime ( 0, lpPacket -> m_PTS, 0 );
+        PlayerControl_DisplayTime ( 0, lpFrame -> m_PTS, 0 );
         lpIPUCtx -> Display ( lpFrame, -1 );
-        lpPacket = NULL;
 
         retVal = 1;
         goto end;
@@ -706,12 +722,12 @@ static int PlayerControl_Scroll ( int aDir ) {
      } while ( lDiff > 0 );
 
      lpIPUCtx -> Sync ();
-     PlayerControl_DisplayTime ( aDir, lpPacket -> m_PTS, 0 );
+     PlayerControl_DisplayTime ( aDir, lpFrame -> m_PTS, 0 );
 
      if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) {
 
       s_Player.m_pSubCtx -> m_Idx = 0;
-      s_Player.m_pSubCtx -> Display ( lpPacket -> m_PTS );
+      s_Player.m_pSubCtx -> Display ( lpFrame -> m_PTS );
 
      }  /* end if */
 
@@ -723,10 +739,12 @@ static int PlayerControl_Scroll ( int aDir ) {
 
     if ( lTime < 0 ) lTime = 0;
 
-   }  /* end if */
+   } else {
 
-   SMS_RingBufferFree ( lpBuff, lpPacket -> m_Size + 64 );
-   lpPacket = NULL;
+    SMS_AVPacket* lpPacket = ( SMS_AVPacket* )SMS_RingBufferWait ( lpBuff );
+    SMS_RingBufferFree ( lpBuff, lpPacket -> m_Size + 64 );
+
+   }  /* end else */
 
   }  /* end else */
 
@@ -734,9 +752,9 @@ static int PlayerControl_Scroll ( int aDir ) {
 end:
  if ( lpBuff ) SMS_RingBufferReset ( lpBuff );
 
- if ( lpPacket ) {
-  s_Player.m_VideoTime = lpPacket -> m_PTS;
-  s_Player.m_AudioTime = lpPacket -> m_PTS;
+ if ( lpFrame ) {
+  s_Player.m_VideoTime = lpFrame -> m_PTS;
+  s_Player.m_AudioTime = lpFrame -> m_PTS;
  }  /* end if */
 
  if ( retVal ) {
@@ -751,6 +769,8 @@ end:
  SMS_TimerSet ( 2, 1000, lpHandler, NULL );
 
  s_Player.m_pIPUCtx -> StopSync ( 0 );
+
+ SMS_RingBufferDestroy ( lpDispBuff );
 
  return retVal;
 
@@ -796,17 +816,13 @@ void PlayerControl_SwitchSubs ( void ) {
 
 }  /* end PlayerControl_SwitchSubs */
 
-static void* s_pTimerOSDHandlers[ 3 ] = {
- NULL, _osd_timer_handler_incr, _osd_timer_handler_decr
-};
-
 static void _handle_timer_osd ( int aDir ) {
 
  unsigned int lOSD = s_Player.m_OSD;
 
  if ( lOSD > 2 ) lOSD = 0;
 
- if ( ++lOSD == 3 )
+ if ( ++lOSD == 3 || !s_pTimerOSDHandlers[ lOSD ] )
 
   lOSD = 0;
 
@@ -1288,6 +1304,7 @@ redo:
     lpFileCtx -> Stream ( lpFileCtx, lFilePos, lpFileCtx -> m_StreamSize );
 
     s_Player.m_VideoTime = lpPacket -> m_PTS;
+    g_MPEGCtx.m_LastPPTS = lpPacket -> m_PTS;
     s_Player.m_AudioTime = lpPacket -> m_PTS;
 
     retVal = -1;
@@ -1308,7 +1325,7 @@ redo:
 
 }  /* end PlayerControl_ScrollBar */
 
-void PlayerControl_UpdateDuration ( unsigned int anIdx, unsigned int aDuration ) {
+void PlayerControl_UpdateDuration ( unsigned int anIdx, int64_t aDuration ) {
 
  char      lBuff[ 8 ];
  uint64_t* lpPaint;
@@ -1321,7 +1338,7 @@ void PlayerControl_UpdateDuration ( unsigned int anIdx, unsigned int aDuration )
   aDuration %= 60;
   lM        %= 60;
 
-  sprintf ( lBuff, "%1d:%02d:%02d", lH, lM, aDuration );
+  sprintf ( lBuff, "%1d:%02d:%02ld", lH, lM, aDuration );
 
  } else {
 
@@ -1342,7 +1359,7 @@ void PlayerControl_UpdateItemNr ( void ) {
  int       lLen;
  uint64_t* lpDMA;
 
- sprintf ( lBuff, "% 3d /% 3d", s_Player.m_PlayItemNr, s_Player.m_pCont -> m_pPlayList -> m_Size );
+ sprintf ( lBuff, "% 3d /% 3d", s_Player.m_PlayItemNr, s_Player.m_pCont -> m_pPlayList ? s_Player.m_pCont -> m_pPlayList -> m_Size : 1 );
 
  lpDMA = _U( g_OSDNR );
  lLen  = strlen ( lBuff );

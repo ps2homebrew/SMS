@@ -60,7 +60,6 @@
 
 #include "lwip/stats.h"
 
-#include "arch/perf.h"
 #if LWIP_TCP
 /* These variables are global to all functions involved in the input
    processing of TCP segments. They are set by the tcp_input()
@@ -108,8 +107,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
   int reuse = 0;
   int reuse_port = 0;
 #endif /* SO_REUSE */
-
-  PERF_START;
 
   TCP_STATS_INC(tcp.recv);
 
@@ -280,21 +277,8 @@ tcp_input(struct pbuf *p, struct netif *inp)
     }
   }
 
-#if TCP_INPUT_DEBUG
-  LWIP_DEBUGF(TCP_INPUT_DEBUG, ("+-+-+-+-+-+-+-+-+-+-+-+-+-+- tcp_input: flags "));
-  tcp_debug_print_flags(TCPH_FLAGS(tcphdr));
-  LWIP_DEBUGF(TCP_INPUT_DEBUG, ("-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n"));
-#endif /* TCP_INPUT_DEBUG */
-
-
   if (pcb != NULL) {
     /* The incoming segment belongs to a connection. */
-#if TCP_INPUT_DEBUG
-#if TCP_DEBUG
-    tcp_debug_print_state(pcb->state);
-#endif /* TCP_DEBUG */
-#endif /* TCP_INPUT_DEBUG */
-
     /* Set up a tcp_seg structure. */
     inseg.next = NULL;
     inseg.len = p->tot_len;
@@ -397,7 +381,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
  end:
 #endif /* SO_REUSE */
   LWIP_ASSERT("tcp_input: tcp_pcbs_sane()", tcp_pcbs_sane());
-  PERF_STOP("tcp_input");
 }
 
 /* tcp_listen_input():
@@ -665,6 +648,13 @@ tcp_process(struct tcp_pcb *pcb)
  * estimation, the RTT is estimated here as well.
  */
 
+#undef TCP_TCPLEN
+
+static int inline TCP_TCPLEN ( struct tcp_seg* apSeg ){
+ int lFlags = TCPH_FLAGS( apSeg -> tcphdr );
+ return apSeg -> len + (  ( lFlags & TCP_FIN || lFlags & TCP_SYN ) ? 1 : 0  );
+}  /* end TCP_TCPLEN */
+
 static void
 tcp_receive(struct tcp_pcb *pcb)
 {
@@ -677,6 +667,7 @@ tcp_receive(struct tcp_pcb *pcb)
 	s32_t					off;
 	int					m;
 	u32_t					right_wnd_edge;
+    int    lLen;
 
 	if (flags & TCP_ACK)
 	{
@@ -689,17 +680,6 @@ tcp_receive(struct tcp_pcb *pcb)
 			pcb->snd_wnd = tcphdr->wnd;
 			pcb->snd_wl1 = seqno;
 			pcb->snd_wl2 = ackno;
-			LWIP_DEBUGF(TCP_WND_DEBUG, ("tcp_receive: window update %lu\n", pcb->snd_wnd));
-#if		TCP_WND_DEBUG
-		}
-		else
-		{
-			if	(pcb->snd_wnd != tcphdr->wnd)
-			{
-	        LWIP_DEBUGF(TCP_WND_DEBUG, ("tcp_receive: no window update lastack %lu snd_max %lu ackno %lu wl1 %lu seqno %lu wl2 %lu\n",
-								pcb->lastack, pcb->snd_max, ackno, pcb->snd_wl1, seqno, pcb->snd_wl2));
-			}
-#endif	/* TCP_WND_DEBUG */
 		}
 
 		if (pcb->lastack == ackno)
@@ -714,8 +694,6 @@ tcp_receive(struct tcp_pcb *pcb)
 					if (!(pcb->flags & TF_INFR))
 					{
 						/* This is fast retransmit. Retransmit the first unacked segment. */
-						LWIP_DEBUGF(TCP_FR_DEBUG, ("tcp_receive: dupacks %u (%lu), fast retransmit %lu\n",(unsigned int)pcb->dupacks,
-										pcb->lastack,ntohl(pcb->unacked->tcphdr->seqno)));
 						tcp_rexmit(pcb);
 						/* Set ssthresh to max (FlightSize / 2, 2*SMSS) */
 						pcb->ssthresh = LWIP_MAX((pcb->snd_max - pcb->lastack) / 2, 2 * pcb->mss);
@@ -732,10 +710,6 @@ tcp_receive(struct tcp_pcb *pcb)
 						}
 					}
 				}
-			}
-			else
-			{
-				LWIP_DEBUGF(TCP_FR_DEBUG, ("tcp_receive: dupack averted %lu %lu\n",pcb->snd_wl1 + pcb->snd_wnd, right_wnd_edge));
 			}
 		}
 		else if (TCP_SEQ_LT(pcb->lastack, ackno) && TCP_SEQ_LEQ(ackno, pcb->snd_max))
@@ -774,7 +748,6 @@ tcp_receive(struct tcp_pcb *pcb)
 					{
 						pcb->cwnd += pcb->mss;
 					}
-					LWIP_DEBUGF(TCP_CWND_DEBUG, ("tcp_receive: slow start cwnd %u\n", pcb->cwnd));
 				}
 				else
 				{
@@ -783,32 +756,17 @@ tcp_receive(struct tcp_pcb *pcb)
 					{
 						pcb->cwnd = new_cwnd;
 					}
-					LWIP_DEBUGF(TCP_CWND_DEBUG, ("tcp_receive: congestion avoidance cwnd %u\n", pcb->cwnd));
 				}
 			}
-			LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: ACK for %lu, unacked->seqno %lu:%lu\n",ackno,
-							pcb->unacked != NULL ? ntohl(pcb->unacked->tcphdr->seqno):0,
-							pcb->unacked != NULL ? ntohl(pcb->unacked->tcphdr->seqno) + TCP_TCPLEN(pcb->unacked):0));
-
 			/* Remove segment from the unacknowledged list if the incoming ACK acknowlegdes them. */
 			while (pcb->unacked != NULL && TCP_SEQ_LEQ(ntohl(pcb->unacked->tcphdr->seqno) + TCP_TCPLEN(pcb->unacked), ackno))
 			{
-				LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: removing %lu:%lu from pcb->unacked\n",ntohl(pcb->unacked->tcphdr->seqno),
-	         ntohl(pcb->unacked->tcphdr->seqno) + TCP_TCPLEN(pcb->unacked)));
-
 				next = pcb->unacked;
 				pcb->unacked = pcb->unacked->next;
-
-				LWIP_DEBUGF(TCP_QLEN_DEBUG, ("tcp_receive: queuelen %u ... ", (unsigned int)pcb->snd_queuelen));
 				pcb->snd_queuelen -= pbuf_clen(next->p);
 
 				tcp_seg_free(next);
 
-				LWIP_DEBUGF(TCP_QLEN_DEBUG, ("%u (after freeing unacked)\n", (unsigned int)pcb->snd_queuelen));
-				if (pcb->snd_queuelen != 0)
-				{
-					LWIP_ASSERT("tcp_receive: valid queue length", pcb->unacked != NULL || pcb->unsent != NULL);
-				}
 			}
 			pcb->polltmr = 0;
 		}
@@ -819,42 +777,26 @@ tcp_receive(struct tcp_pcb *pcb)
 	      rationale is that lwIP puts all outstanding segments on the
 	      ->unsent list after a retransmission, so these segments may
 	      in fact have been sent once. */
-		while	(pcb->unsent != NULL && TCP_SEQ_LEQ(ntohl(pcb->unsent->tcphdr->seqno) + TCP_TCPLEN(pcb->unsent),ackno) && 
+		while	(pcb->unsent != NULL && TCP_SEQ_LEQ((lLen=ntohl(pcb->unsent->tcphdr->seqno)) + TCP_TCPLEN(pcb->unsent),ackno) && 
 				 TCP_SEQ_LEQ(ackno, pcb->snd_max))
 		{
-			LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: removing %lu:%lu from pcb->unsent\n",
-							ntohl(pcb->unsent->tcphdr->seqno),ntohl(pcb->unsent->tcphdr->seqno) + TCP_TCPLEN(pcb->unsent)));
-
 			next = pcb->unsent;
 			pcb->unsent = pcb->unsent->next;
 
-			LWIP_DEBUGF(TCP_QLEN_DEBUG, ("tcp_receive: queuelen %u ... ", (unsigned int)pcb->snd_queuelen));
 			pcb->snd_queuelen -= pbuf_clen(next->p);
 			tcp_seg_free(next);
-			LWIP_DEBUGF(TCP_QLEN_DEBUG, ("%u (after freeing unsent)\n", (unsigned int)pcb->snd_queuelen));
-			if (pcb->snd_queuelen != 0)
-			{
-				LWIP_ASSERT("tcp_receive: valid queue length", pcb->unacked != NULL || pcb->unsent != NULL);
-			}
 
-			if (pcb->unsent != NULL)
-			{
-	          pcb->snd_nxt = htonl(pcb->unsent->tcphdr->seqno);
-			}
+			if (pcb->unsent != NULL) pcb->snd_nxt = lLen;
+
 		}
 
 		/* End of ACK for new data processing. */
-
-		LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_receive: pcb->rttest %u rtseq %lu ackno %lu\n",
-		pcb->rttest, pcb->rtseq, ackno));
 
 		/* RTT estimation calculations. This is done by checking if the incoming segment acknowledges the segment we use to take a
 			round-trip time measurement. */
 		if (pcb->rttest && TCP_SEQ_LT(pcb->rtseq, ackno))
 		{
 			m = tcp_ticks - pcb->rttest;
-
-	      LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_receive: experienced rtt %u ticks (%u msec).\n",m, m * TCP_SLOW_INTERVAL));
 
 	      /* This is taken directly from VJs original code in his paper */
 	      m = m - (pcb->sa >> 3);
@@ -866,8 +808,6 @@ tcp_receive(struct tcp_pcb *pcb)
 	      m = m - (pcb->sv >> 2);
 	      pcb->sv += m;
 	      pcb->rto = (pcb->sa >> 3) + pcb->sv;
-
-	      LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_receive: RTO %u (%u miliseconds)\n",pcb->rto, pcb->rto * TCP_SLOW_INTERVAL));
 
 	      pcb->rttest = 0;
 		}
@@ -965,6 +905,7 @@ tcp_receive(struct tcp_pcb *pcb)
 		{
 			if (pcb->rcv_nxt == seqno)
 			{
+              int tcpflags;
 				/* The incoming segment is the next in sequence. We check if
 					we have to trim the end of the segment and update rcv_nxt
 					and pass the data to the application. */
@@ -977,8 +918,8 @@ tcp_receive(struct tcp_pcb *pcb)
 				}
 #endif /* TCP_QUEUE_OOSEQ */
 
-				tcplen = TCP_TCPLEN(&inseg);
-
+                tcpflags = TCPH_FLAGS( inseg.tcphdr );
+				tcplen   = inseg.len + ((tcpflags & TCP_FIN || tcpflags & TCP_SYN)? 1: 0);
 				pcb->rcv_nxt += tcplen;
 
 				/* Update the receiver's (our) window. */
@@ -1008,7 +949,7 @@ tcp_receive(struct tcp_pcb *pcb)
 						(mistakingly) deallocate it. */
 					inseg.p = NULL;
 				}
-				if (TCPH_FLAGS(inseg.tcphdr) & TCP_FIN)
+				if (tcpflags & TCP_FIN)
 				{
 					LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: received FIN.\n"));
 					recv_flags = TF_GOT_FIN;
@@ -1018,18 +959,21 @@ tcp_receive(struct tcp_pcb *pcb)
 				/* We now check if we have segments on the ->ooseq queue that is now in sequence. */
 				while (pcb->ooseq != NULL && pcb->ooseq->tcphdr->seqno == pcb->rcv_nxt)
 				{
+                    int lLen;
+                    int lFlags;
 
-					cseg = pcb->ooseq;
+                    cseg = pcb->ooseq;
 					seqno = pcb->ooseq->tcphdr->seqno;
-
-					pcb->rcv_nxt += TCP_TCPLEN(cseg);
-					if (pcb->rcv_wnd < TCP_TCPLEN(cseg))
+                    lFlags = TCPH_FLAGS( cseg -> tcphdr );
+                    lLen   = cseg->len + ((lFlags & TCP_FIN || lFlags & TCP_SYN)? 1: 0);
+					pcb->rcv_nxt += lLen;
+					if (pcb->rcv_wnd < lLen)
 					{
 						pcb->rcv_wnd = 0;
 					}
 					else
 					{
-						pcb->rcv_wnd -= TCP_TCPLEN(cseg);
+						pcb->rcv_wnd -= lLen;
 					}
 					if (cseg->p->tot_len > 0)
 					{
@@ -1044,12 +988,7 @@ tcp_receive(struct tcp_pcb *pcb)
 						}
 						cseg->p = NULL;
 					}
-					if (TCPH_FLAGS(cseg->tcphdr) & TCP_FIN)
-					{
-						LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: dequeued FIN.\n"));
-						recv_flags = TF_GOT_FIN;
-					}
-
+					if (lFlags & TCP_FIN) recv_flags = TF_GOT_FIN;
 
 					pcb->ooseq = cseg->next;
 					tcp_seg_free(cseg);
@@ -1225,12 +1164,13 @@ tcp_parseopt(struct tcp_pcb *pcb)
   u8_t c;
   u8_t *opts, opt;
   u16_t mss;
+  int   lLen = TCPH_HDRLEN(tcphdr);
 
   opts = (u8_t *)tcphdr + TCP_HLEN;
 
   /* Parse the TCP MSS option, if present. */
-  if(TCPH_HDRLEN(tcphdr) > 0x5) {
-    for(c = 0; c < (TCPH_HDRLEN(tcphdr) - 5) << 2 ;) {
+  if(lLen > 0x5) {
+    for(c = 0; c < (lLen - 5) << 2 ;) {
       opt = opts[c];
       if (opt == 0x00) {
         /* End of options. */

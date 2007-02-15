@@ -233,7 +233,9 @@ void SMS_IOPReset ( int afExit ) {
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
 
- if ( !afExit ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_SIO2MAN_OFFSET ], SMS_AUDSRV_SIZE, 0, NULL, &i );
+ SifExecModuleBuffer ( &g_DataBuffer[ SMS_SMSUTILS_OFFSET ], SMS_SMSUTILS_SIZE, 0, NULL, &i );
+
+ if ( !afExit ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_SIO2MAN_OFFSET  ], SMS_SIO2MAN_SIZE,  0, NULL, &i );
 
  for ( i = 1 - afExit; i < 4; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
 

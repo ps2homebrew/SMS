@@ -2216,14 +2216,14 @@ DSP_PackMB:
     andi    $t0, $t0, 0x0100
     bne     $t0, $zero, 1b
     nop
-    jal     _dsp_pack16x8
+    bgezal  $zero, _dsp_pack16x8
     addu    $t8, $a1, 256
     addu    $a1, $a1, 256
-    jal     _dsp_pack16x8
+    bgezal  $zero, _dsp_pack16x8
     addu    $t8, $a1, 256
     addiu   $at, $at, 32
     addu    $a1, $a1, 256
-    jal     _dsp_pack16x8
+    bgezal  $zero, _dsp_pack16x8
     addu    $t8, $a1, 32
     addu    $ra, $zero, $t9
     jr      $ra

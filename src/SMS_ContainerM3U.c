@@ -161,13 +161,13 @@ static int _SelectFile ( SMS_Container* apCont, _M3UContainer* apMyCont ) {
 
 }  /* end _SelectFile */
 
-static void _Destroy ( SMS_Container* apCont ) {
+static void _Destroy ( SMS_Container* apCont, int afAll ) {
 
  _M3UContainer* lpCont = MYCONT( apCont );
 
  if ( lpCont -> m_pMP3Cont ) {
 
-  lpCont -> m_pMP3Cont -> Destroy ( lpCont -> m_pMP3Cont );
+  lpCont -> m_pMP3Cont -> Destroy ( lpCont -> m_pMP3Cont, 1 );
   apCont -> m_pStm[ 0 ] = NULL;
   apCont -> m_pFileCtx  = NULL;
 
@@ -176,7 +176,7 @@ static void _Destroy ( SMS_Container* apCont ) {
  _m3u_destroy_list ( apCont -> m_pPlayList );
  apCont -> m_pPlayList = NULL;
 
- SMS_DestroyContainer ( apCont );
+ SMS_DestroyContainer ( apCont, 1 );
 
 }  /* end _Destroy */
 
@@ -407,7 +407,7 @@ start:
 
   if ( lpSubFileCtx ) {
 
-   lpSubCont = SMS_GetContainer ( lpSubFileCtx );
+   lpSubCont = SMS_GetContainer ( lpSubFileCtx, SMS_CONTAINER_MP3 );
 
    if ( lpSubCont ) {
 

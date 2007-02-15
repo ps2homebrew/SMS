@@ -848,9 +848,9 @@ _put_qpel16_v_lowpass:
     addiu   $v0, $v0, 8
 
 _avg_qpel16:
-    ADDIU   $v1, $zero, 8
-    PNOR    $t9, $zero, $zero
-    PSRLH   $t9, $t9, 15
+    addiu   $v1, $zero, 8
+    pnor    $t9, $zero, $zero
+    psrlh   $t9, $t9, 15
 1:
     lq      $t0,  0($a1)
     lq      $t1, 16($a1)
@@ -2338,7 +2338,7 @@ _put_no_rnd_qpel8_16:
     nop
 
 DSP_PutQPel16MC10:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2348,36 +2348,36 @@ DSP_PutQPel16MC10:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s1, $zero, $zero
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -256
     addiu   $a2, $s2, -256
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC20:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
     lui     $v1, 0x7000
     addu    $s1, $zero, $zero
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($v1)
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC30:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2387,41 +2387,41 @@ DSP_PutQPel16MC30:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addu    $s1, $zero, $zero
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($s2)
     addiu   $a1, $a0, -256
     addiu   $a2, $s2, -256
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC01:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addiu   $a2, $v0, -16
     addiu   $a1, $a0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC11:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2431,32 +2431,32 @@ DSP_PutQPel16MC11:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $a2, -256
     lq      $t6, 0x220($v0)
     lq      $t7, 0x230($v0)
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addiu   $a1, $v0, -16
     addiu   $a2, $a0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC21:
     addiu   $sp, $sp, -16
@@ -2466,18 +2466,18 @@ DSP_PutQPel16MC21:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero,  1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -272
     lui     $a0,  0x7000
     ori     $a0,  $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $v0, -16
     addiu   $a2, $a0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -2485,7 +2485,7 @@ DSP_PutQPel16MC21:
     addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC31:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2495,46 +2495,46 @@ DSP_PutQPel16MC31:
     lui     $s2, 0x7000
     ori     $a0, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero,  1
     addiu   $v0, $a0, -256
     addiu   $a0, $s2, -272
     lq      $t6, 0x220($a0)
     lq      $t7, 0x230($a0)
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero,  $zero
     addiu   $a1, $a0, -16
     addiu   $a2, $v0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC02:
-    addiu   $sp, $sp, -4
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     nop
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     nop
     lw      $ra, 0($sp)
     j       _put_qpel16_v_lowpass
-    addiu   $sp, $sp, 4
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC12:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2544,12 +2544,12 @@ DSP_PutQPel16MC12:
     lui     $s2, 0x7000
     ori     $a0, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     lui     $v0, 0x7000
     lq      $t6, 0x220($v0)
@@ -2557,15 +2557,15 @@ DSP_PutQPel16MC12:
     lq      $t5, 0x260($v0)
     ori     $v0, $v0, 0x0110
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC22:
     addiu   $sp, $sp, -16
@@ -2575,13 +2575,13 @@ DSP_PutQPel16MC22:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -272
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -2589,7 +2589,7 @@ DSP_PutQPel16MC22:
     addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC32:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2599,50 +2599,50 @@ DSP_PutQPel16MC32:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     lui     $v0, 0x7000
     lq      $t6, 0x220($v0)
     lq      $t7, 0x230($v0)
     lq      $t5, 0x260($v0)
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC03:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal      _copy16
+    bgezal  $zero,  _copy16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $v0
     addiu   $a1, $a0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC13:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2652,32 +2652,32 @@ DSP_PutQPel16MC13:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $a2, -256
     lq      $t6, 0x220($v0)
     lq      $t7, 0x230($v0)
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addu    $a1, $zero, $v0
     addiu   $a2, $a0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel16MC23:
     addiu   $sp, $sp, -16
@@ -2687,18 +2687,18 @@ DSP_PutQPel16MC23:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -272
     lui     $a0,  0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0,  $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addu    $a1, $zero, $v0
     addiu   $a2, $a0, -16
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -2706,7 +2706,7 @@ DSP_PutQPel16MC23:
     addiu   $sp, $sp, 16
 
 DSP_PutQPel16MC33:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2716,35 +2716,35 @@ DSP_PutQPel16MC33:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero,  1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero,  1
     addiu   $v0, $a0, -256
     addiu   $a0, $s2, -272
     lq      $t6, 0x220($a0)
     lq      $t7, 0x230($a0)
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addiu   $a1, $a0, -16
     addu    $a2, $zero, $v0
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC10:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2754,36 +2754,36 @@ DSP_PutNoRndQPel16MC10:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s1, $zero, $zero
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a1, $a0, -256
     addiu   $a2, $s2, -256
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC20:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
     addiu   $s1, $zero, 0
     lui     $v1, 0x7000
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x240($v1)
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC30:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2793,43 +2793,43 @@ DSP_PutNoRndQPel16MC30:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero,  0
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x240($s2)
     addiu   $a1, $a0, -256
     addiu   $a2, $s2, -256
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC01:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
     psubh   $t7, $zero, $t7
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t7, $t7, 12
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addiu   $a2, $v0, -16
     addiu   $a1, $a0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC11:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2839,32 +2839,32 @@ DSP_PutNoRndQPel16MC11:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $a2, -256
     lq      $t6, 0x220($v0)
     lq      $t7, 0x240($v0)
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addiu   $a1, $v0, -16
     addiu   $a2, $a0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC21:
     addiu   $sp, $sp, -16
@@ -2874,18 +2874,18 @@ DSP_PutNoRndQPel16MC21:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x240($a0)
     addiu   $v0, $a0, -272
     lui     $a0, 0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0,  $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $v0, -16
     addiu   $a2, $a0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -2893,7 +2893,7 @@ DSP_PutNoRndQPel16MC21:
     addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC31:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2903,47 +2903,47 @@ DSP_PutNoRndQPel16MC31:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x240($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $s2, -272
     lq      $t6, 0x220($a0)
     lq      $t7, 0x240($a0)
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero,  $zero
     addiu   $a1, $a0, -16
     addiu   $a2, $v0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC02:
-    addiu   $sp, $sp, -4
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     nop
     psubh   $t7, $zero, $t7
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t7, $t7, 12
     lw      $ra, 0($sp)
     j       _put_qpel16_v_lowpass
-    addiu   $sp, $sp, 4
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC12:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -2953,12 +2953,12 @@ DSP_PutNoRndQPel16MC12:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x240($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     addiu   $s1, $zero, 1
     lui     $v0, 0x7000
     lq      $t6, 0x220($v0)
@@ -2966,15 +2966,15 @@ DSP_PutNoRndQPel16MC12:
     lq      $t5, 0x260($v0)
     ori     $v0, $v0, 0x0110
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC22:
     addiu   $sp, $sp, -16
@@ -2984,13 +2984,13 @@ DSP_PutNoRndQPel16MC22:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x240($a0)
     addiu   $v0, $a0, -272
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -2998,7 +2998,7 @@ DSP_PutNoRndQPel16MC22:
     addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC32:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3008,52 +3008,52 @@ DSP_PutNoRndQPel16MC32:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     addiu   $s1, $zero, 1
     lui     $v0, 0x7000
     lq      $t6, 0x220($v0)
     lq      $t7, 0x240($v0)
     lq      $t5, 0x260($v0)
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC03:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
     psubh   $t7, $zero, $t7
     ori     $a0,  $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t7, $t7, 12
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $v0
     addiu   $a1, $a0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC13:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3063,32 +3063,32 @@ DSP_PutNoRndQPel16MC13:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $a2, -256
     lq      $t6, 0x220($v0)
     lq      $t7, 0x240($v0)
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addu    $a1, $zero, $v0
     addiu   $a2, $a0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel16MC23:
     addiu   $sp, $sp, -16
@@ -3098,18 +3098,18 @@ DSP_PutNoRndQPel16MC23:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x240($a0)
     addiu   $v0, $a0, -272
     lui     $a0, 0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addu    $a1, $zero, $v0
     addiu   $a2, $a0, -16
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -3117,7 +3117,7 @@ DSP_PutNoRndQPel16MC23:
     addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel16MC33:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3127,35 +3127,35 @@ DSP_PutNoRndQPel16MC33:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero,  1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x240($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $s2, -272
     lq      $t6, 0x220($a0)
     lq      $t7, 0x240($a0)
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     addu    $s1, $zero, $zero
     addiu   $a1, $a0, -16
     addu    $a2, $zero, $v0
-    jal     _put_no_rnd_qpel16
+    bgezal  $zero, _put_no_rnd_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC10:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3165,37 +3165,37 @@ DSP_PutQPel816MC10:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -112
     addiu   $a2, $s2, -128
     addu    $s1, $zero, $zero
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC20:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
     lui     $v1, 0x7000
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x230($v1)
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel816MC30:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3205,34 +3205,34 @@ DSP_PutQPel816MC30:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -112
     addiu   $a2, $s2, -128
     addu    $s1, $zero, $zero
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC01:
     addiu   $sp, $sp, -16
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addu    $a1, $zero, $a0
     addu    $a2, $zero, $v0
     addu    $s1, $zero, $zero
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s0, 8($sp)
@@ -3241,7 +3241,7 @@ DSP_PutQPel816MC01:
     addiu   $sp, $sp, 16
 
 DSP_PutQPel816MC11:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3251,31 +3251,31 @@ DSP_PutQPel816MC11:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     psrlh   $t9, $t8, 1
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC21:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3285,26 +3285,26 @@ DSP_PutQPel816MC21:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -128
     addiu   $a0, $s2, -144
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC31:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3314,40 +3314,40 @@ DSP_PutQPel816MC31:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC02:
-    addiu   $sp, $sp, -4
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     nop
     lw      $ra, 0($sp)
     j       _put_qpel8_16_v_lowpass
-    addiu   $sp, $sp, 4
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel816MC12:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3357,23 +3357,23 @@ DSP_PutQPel816MC12:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     lq      $t5, 0x260($v0)
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC22:
     addiu   $sp, $sp, -16
@@ -3383,11 +3383,11 @@ DSP_PutQPel816MC22:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -128
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -3396,7 +3396,7 @@ DSP_PutQPel816MC22:
     addiu   $sp, $sp, 16
 
 DSP_PutQPel816MC32:
-    addiu   $sp, $sp, -24
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3407,17 +3407,17 @@ DSP_PutQPel816MC32:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     paddh   $s3, $zero, $t9
     lq      $t5, 0x260($v0)
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s0, 8($sp)
@@ -3425,29 +3425,29 @@ DSP_PutQPel816MC32:
     lw      $s2, 16($sp)
     lw      $s3, 20($sp)
     jr      $ra
-    addiu   $sp, $sp, 24
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC03:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addu    $a1, $zero, $a0
     addiu   $a2, $v0, 16
     addu    $s1, $zero, $zero
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutQPel816MC13:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3457,28 +3457,28 @@ DSP_PutQPel816MC13:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     psrlh   $t9, $t8, 1
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addiu   $a1, $v0, 16
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutQPel816MC23:
     addiu   $sp, $sp, -16
@@ -3488,17 +3488,17 @@ DSP_PutQPel816MC23:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -128
     lui     $a0, 0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addiu   $a1, $v0, 16
     addu    $a2, $zero, $a0
     addu    $s1, $zero, $zero
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -3507,7 +3507,7 @@ DSP_PutQPel816MC23:
     addiu   $sp, $sp, 16
 
 DSP_PutQPel816MC33:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3517,31 +3517,31 @@ DSP_PutQPel816MC33:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addu    $a1, $zero, $a0
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addiu   $a2, $s2, -144
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     psrlh   $t9, $t8, 1
     addiu   $a1, $v0, 16
     addu    $a2, $zero, $a0
     addu    $s1, $zero, $zero
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC10:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3551,37 +3551,37 @@ DSP_PutNoRndQPel816MC10:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a1, $a0, -112
     addiu   $a2, $s2, -128
     addu    $s1, $zero, $zero
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC20:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
     lui     $v1, 0x7000
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x240($v1)
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel816MC30:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3591,36 +3591,36 @@ DSP_PutNoRndQPel816MC30:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x240($a0)
     addiu   $a1, $a0, -112
     addiu   $a2, $s2, -128
     addu    $s1, $zero, $zero
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC01:
     addiu   $sp, $sp, -16
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     ori     $a0, $a0, 0x0110
     psubh   $t7, $zero, $t7
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     psrlh   $t7, $t7, 12
     addu    $a1, $zero, $a0
     addu    $a2, $zero, $v0
     addu    $s1, $zero, $zero
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -3629,7 +3629,7 @@ DSP_PutNoRndQPel816MC01:
     addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel816MC11:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3639,31 +3639,31 @@ DSP_PutNoRndQPel816MC11:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC21:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3673,26 +3673,26 @@ DSP_PutNoRndQPel816MC21:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $v0, $a0, -128
     addiu   $a0, $s2, -144
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC31:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3702,42 +3702,42 @@ DSP_PutNoRndQPel816MC31:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC02:
-    addiu   $sp, $sp, -4
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     nop
     psubh   $t7, $zero, $t7
     psrlh   $t7, $t7, 12
     lw      $ra, 0($sp)
     j       _put_qpel8_16_v_lowpass
-    addiu   $sp, $sp, 4
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel816MC12:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3747,23 +3747,23 @@ DSP_PutNoRndQPel816MC12:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     psrlh   $t9, $t8, 1
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC22:
     addiu   $sp, $sp,  -16
@@ -3773,11 +3773,11 @@ DSP_PutNoRndQPel816MC22:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x240($a0)
     addiu   $v0, $a0, -128
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -3786,7 +3786,7 @@ DSP_PutNoRndQPel816MC22:
     addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel816MC32:
-    addiu   $sp, $sp, -24
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3797,17 +3797,17 @@ DSP_PutNoRndQPel816MC32:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     paddh   $s3, $zero, $t9
     psrlh   $t9, $t8, 1
     lq      $t5, 0x260($v0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -3815,31 +3815,31 @@ DSP_PutNoRndQPel816MC32:
     lw      $s2, 16($sp)
     lw      $s3, 20($sp)
     jr      $ra
-    addiu   $sp, $sp, 24
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC03:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
     ori     $a0, $a0, 0x0110
     psubh   $t7, $zero, $t7
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     psrlh   $t7, $t7, 12
     addu    $a1, $zero, $a0
     addiu   $a2, $v0, 16
     addu    $s1, $zero, $zero
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel816MC13:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3849,28 +3849,28 @@ DSP_PutNoRndQPel816MC13:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addiu   $a1, $v0, 16
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_PutNoRndQPel816MC23:
     addiu   $sp, $sp, -16
@@ -3880,16 +3880,16 @@ DSP_PutNoRndQPel816MC23:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x240($a0)
     addiu   $v0, $a0, -128
     lui     $a0, 0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addiu   $a1, $v0, 16
     addu    $a2, $zero, $a0
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -3898,7 +3898,7 @@ DSP_PutNoRndQPel816MC23:
     addiu   $sp, $sp, 16
 
 DSP_PutNoRndQPel816MC33:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3908,31 +3908,31 @@ DSP_PutNoRndQPel816MC33:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x240($a0)
     addiu   $a0, $a0, -128
     addu    $a1, $zero, $a0
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     addiu   $a2, $s2, -144
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addiu   $a1, $v0, 16
     addu    $a2, $zero, $a0
     addu    $s1, $zero, $zero
-    jal     _put_no_rnd_qpel8_16
+    bgezal  $zero, _put_no_rnd_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC10:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3942,34 +3942,34 @@ DSP_AvgQPel16MC10:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addu    $s1, $zero, $zero
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -256
     addiu   $a2, $s2, -256
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC20:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
-    jal     _avg_qpel16_h_lowpass
+    bgezal  $zero, _avg_qpel16_h_lowpass
     addiu   $s1, $zero, 0
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC30:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -3979,40 +3979,40 @@ DSP_AvgQPel16MC30:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s1, $zero, $zero
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -256
     addiu   $a2, $s2, -256
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC01:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     sw      $s1, 8($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s1, 8($sp)
     addiu   $a2, $v0, -16
     addiu   $a1, $a0, -16
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC11:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4022,31 +4022,31 @@ DSP_AvgQPel16MC11:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $a2, -256
     lq      $t6, 0x220($v0)
     lq      $t7, 0x230($v0)
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $v0, -16
     addiu   $a2, $a0, -16
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC21:
     addiu   $sp, $sp, -16
@@ -4056,18 +4056,18 @@ DSP_AvgQPel16MC21:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero,  1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -272
     lui     $a0, 0x7000
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $v0, -16
     addiu   $a2, $a0, -16
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -4075,7 +4075,7 @@ DSP_AvgQPel16MC21:
     addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC31:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4085,50 +4085,50 @@ DSP_AvgQPel16MC31:
     lui     $s2, 0x7000
     ori     $a0, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $s2, -272
     lq      $t6, 0x220($a0)
     lq      $t7, 0x230($a0)
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $a0, -16
     addiu   $a2, $v0, -16
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC02:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     sw      $s1, 8($sp)
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     psrlh   $s0, $t5, 7
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     nop
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC12:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4138,12 +4138,12 @@ DSP_AvgQPel16MC12:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     lui     $v0, 0x7000
     lq      $t6, 0x220($v0)
@@ -4151,16 +4151,16 @@ DSP_AvgQPel16MC12:
     lq      $t5, 0x260($v0)
     ori     $v0, $v0, 0x0110
     psrlh   $t9, $t8, 1
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     nop
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC22:
     addiu   $sp, $sp, -16
@@ -4170,13 +4170,13 @@ DSP_AvgQPel16MC22:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -272
     lq      $t5, 0x260($v0)
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     nop
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -4185,7 +4185,7 @@ DSP_AvgQPel16MC22:
     addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC32:
-    addiu   $sp, $sp, -24
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4196,12 +4196,12 @@ DSP_AvgQPel16MC32:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     lui     $v0, 0x7000
     lq      $t6, 0x220($v0)
@@ -4209,9 +4209,9 @@ DSP_AvgQPel16MC32:
     lq      $t5, 0x260($v0)
     psrlh   $t9, $t8, 1
     por     $s3, $zero, $s0
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     lw      $a0, 4($sp)
-    jal     _avg_qpel16_v_lowpass
+    bgezal  $zero, _avg_qpel16_v_lowpass
     nop
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -4219,28 +4219,28 @@ DSP_AvgQPel16MC32:
     lw      $s2, 16($sp)
     lw      $s3, 20($sp)
     jr      $ra
-    addiu   $sp, $sp, 24
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC03:
-    addiu   $sp, $sp, -8
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy16
+    bgezal  $zero, _copy16
     sw      $a0, 4($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     nop
     addu    $a2, $zero, $v0
     addiu   $a1, $a0, -16
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     jr      $ra
-    addiu   $sp, $sp, 8
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC13:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4250,31 +4250,31 @@ DSP_AvgQPel16MC13:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass_copy
+    bgezal  $zero, _put_qpel16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $a2, -256
     lq      $t6, 0x220($v0)
     lq      $t7, 0x230($v0)
     lq      $t5, 0x260($v0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     psrlh   $t9, $t8, 1
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addu    $a1, $zero, $v0
     addiu   $a2, $a0, -16
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel16MC23:
     addiu   $sp, $sp, -16
@@ -4284,18 +4284,18 @@ DSP_AvgQPel16MC23:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s1, $zero, 1
-    jal     _put_qpel16_h_lowpass
+    bgezal  $zero, _put_qpel16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -272
     lui     $a0, 0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     ori     $a0, $a0, 0x0110
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $a0, -16
     addu    $a2, $zero, $v0
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
@@ -4303,7 +4303,7 @@ DSP_AvgQPel16MC23:
     addiu   $sp, $sp, 16
 
 DSP_AvgQPel16MC33:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4313,34 +4313,34 @@ DSP_AvgQPel16MC33:
     lui     $s2, 0x7000
     ori     $a0, $a0, 0x0110
     addiu   $s1, $zero,  1
-    jal     _put_qpel16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel16_h_lowpass_copy_x
     lq      $t7, 0x230($s2)
     addiu   $a0, $a0, -272
     addu    $a1, $zero, $a0
     addiu   $a2, $s2, -272
-    jal     _put_qpel16
+    bgezal  $zero, _put_qpel16
     addiu   $s1, $zero, 1
     addiu   $v0, $a0, -256
     addiu   $a0, $s2, -272
     psrlh   $t9, $t8, 1
     lq      $t6, 0x220($a0)
     lq      $t7, 0x230($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lq      $t5, 0x260($a0)
-    jal     _put_qpel16_v_lowpass
+    bgezal  $zero, _put_qpel16_v_lowpass
     lw      $s0,  8($sp)
     addiu   $a1, $a0, -16
     addu    $a2, $zero, $v0
-    jal     _avg_qpel16
+    bgezal  $zero, _avg_qpel16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC10:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4350,33 +4350,33 @@ DSP_AvgQPel816MC10:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -112
     addiu   $a2, $s2, -128
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC20:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $s0, 4($sp)
-    jal     _avg_qpel8_16_h_lowpass
+    bgezal  $zero, _avg_qpel8_16_h_lowpass
     sw      $s1, 8($sp)
     lw      $ra, 0($sp)
     lw      $s0, 4($sp)
     lw      $s1, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel816MC30:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4386,39 +4386,39 @@ DSP_AvgQPel816MC30:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addu    $s0, $zero, $zero
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a1, $a0, -112
     addiu   $a2, $s2, -128
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC01:
-    addiu   $sp, $sp, -12
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     sw      $a0, 4($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $s0, 8($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addu    $a1, $zero, $a0
     addu    $a2, $zero, $v0
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     lw      $s0, 8($sp)
     jr      $ra
-    addiu   $sp, $sp, 12
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel816MC11:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4428,31 +4428,31 @@ DSP_AvgQPel816MC11:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC21:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4462,26 +4462,26 @@ DSP_AvgQPel816MC21:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -128
     addiu   $a0, $s2, -144
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC31:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4491,44 +4491,44 @@ DSP_AvgQPel816MC31:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addu    $a1, $zero, $v0
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC02:
-    addiu   $sp, $sp, -8
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $s3, 4($sp)
     pnor    $s3, $zero, $zero
-    jal     _avg_qpel8_16_v_lowpass
+    bgezal  $zero, _avg_qpel8_16_v_lowpass
     psrlh   $s3, $s3, 15
     lw      $ra, 0($sp)
     lw      $s3, 4($sp)
     jr      $ra
-    addiu   $sp, $sp, 8
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel816MC12:
-    addiu   $sp, $sp, -24
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4539,17 +4539,17 @@ DSP_AvgQPel816MC12:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     paddh   $s3, $zero, $t9
     psrlh   $t9, $t8, 1
     lq      $t5, 0x260($v0)
-    jal     _avg_qpel8_16_v_lowpass
+    bgezal  $zero, _avg_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -4557,10 +4557,10 @@ DSP_AvgQPel816MC12:
     lw      $s2, 16($sp)
     lw      $s3, 20($sp)
     jr      $ra
-    addiu   $sp, $sp, 24
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC22:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4568,22 +4568,22 @@ DSP_AvgQPel816MC22:
     sw      $s3, 16($sp)
     lui     $a0, 0x7000
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -128
     psrlh   $s3, $t7, 4
     lq      $t5, 0x260($v0)
-    jal     _avg_qpel8_16_v_lowpass
+    bgezal  $zero, _avg_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s3, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC32:
-    addiu   $sp, $sp, -24
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4594,17 +4594,17 @@ DSP_AvgQPel816MC32:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     paddh   $s3, $zero, $t9
     psrlh   $t9, $t8, 1
     lq      $t5, 0x260($v0)
-    jal     _avg_qpel8_16_v_lowpass
+    bgezal  $zero, _avg_qpel8_16_v_lowpass
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -4612,26 +4612,26 @@ DSP_AvgQPel816MC32:
     lw      $s2, 16($sp)
     lw      $s3, 20($sp)
     jr      $ra
-    addiu   $sp, $sp, 24
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC03:
-    addiu   $sp, $sp, -8
+    addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
-    jal     _copy8_16
+    bgezal  $zero, _copy8_16
     sw      $a0, 4($sp)
     lui     $a0, 0x7000
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addu    $a1, $zero, $a0
     addiu   $a2, $v0, 16
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0, 4($sp)
     lw      $ra, 0($sp)
     jr      $ra
-    addiu   $sp, $sp, 8
+    addiu   $sp, $sp, 16
 
 DSP_AvgQPel816MC13:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4641,28 +4641,28 @@ DSP_AvgQPel816MC13:
     lui     $a0, 0x7000
     ori     $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addiu   $a2, $s2, -144
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addu    $a1, $zero, $a0
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addu    $s1, $zero, $zero
     addu    $a2, $zero, $a0
     addiu   $a1, $v0, 16
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32
 
 DSP_AvgQPel816MC23:
     addiu   $sp, $sp, -16
@@ -4672,16 +4672,16 @@ DSP_AvgQPel816MC23:
     sw      $s1, 12($sp)
     lui     $a0, 0x7000
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass
+    bgezal  $zero, _put_qpel8_16_h_lowpass
     lq      $t7, 0x230($a0)
     addiu   $v0, $a0, -128
     lui     $a0, 0x7000
     lq      $t5, 0x260($a0)
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     ori     $a0, $a0, 0x0110
     addiu   $a1, $v0, 16
     addu    $a2, $zero, $a0
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
@@ -4690,7 +4690,7 @@ DSP_AvgQPel816MC23:
     addiu   $sp, $sp, 16
 
 DSP_AvgQPel816MC33:
-    addiu   $sp, $sp, -20
+    addiu   $sp, $sp, -32
     sw      $ra,  0($sp)
     sw      $a0,  4($sp)
     sw      $s0,  8($sp)
@@ -4700,24 +4700,24 @@ DSP_AvgQPel816MC33:
     lui     $a0, 0x7000
     ori     $s2, $s2, 0x0110
     addiu   $s0, $zero, 1
-    jal     _put_qpel8_16_h_lowpass_copy_x
+    bgezal  $zero, _put_qpel8_16_h_lowpass_copy_x
     lq      $t7, 0x230($a0)
     addiu   $a0, $a0, -128
     addu    $a1, $zero, $a0
-    jal     _put_qpel8_16
+    bgezal  $zero, _put_qpel8_16
     addiu   $a2, $s2, -144
     addiu   $v0, $a0, -128
     addiu   $a0, $a2, -128
     psrlh   $t9, $t8, 1
-    jal     _put_qpel8_16_v_lowpass
+    bgezal  $zero, _put_qpel8_16_v_lowpass
     lq      $t5, 0x260($v0)
     addiu   $a1, $v0, 16
     addu    $a2, $zero, $a0
-    jal     _avg_qpel8_16
+    bgezal  $zero, _avg_qpel8_16
     lw      $a0,  4($sp)
     lw      $ra,  0($sp)
     lw      $s0,  8($sp)
     lw      $s1, 12($sp)
     lw      $s2, 16($sp)
     jr      $ra
-    addiu   $sp, $sp, 20
+    addiu   $sp, $sp, 32

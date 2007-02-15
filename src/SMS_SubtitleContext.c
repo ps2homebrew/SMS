@@ -119,11 +119,14 @@ static void _add_line ( SMS_List* apList, char* apLine, unsigned int aColorIdx )
 
  int lScrW = g_GSCtx.m_Width;
  int lDW   = g_Config.m_SubHIncr;
- int lLen  = strlen ( apLine );
- int lTxtW = GSFont_WidthEx ( apLine, lLen, lDW );
+ int lLen;
+ int lTxtW;
+next:
+ lLen  = strlen ( apLine );
+ lTxtW = GSFont_WidthEx ( apLine, lLen, lDW );
 
  if ( lTxtW < lScrW ) {
-addLine:
+
   if ( g_Config.m_PlayerSAlign == 2 ) SMS_ReverseString ( apLine, lLen );
 
   SMS_ListPushBack ( apList, apLine );
@@ -132,7 +135,7 @@ addLine:
  } else {
 
   char* lpSpace;
-next:
+
   lpSpace = strrchr ( apLine, ' ' );
 
   while ( 1 ) {
@@ -172,12 +175,7 @@ next:
 
     } else lpSpace = strrchrx ( apLine, lpSpace - 1, ' ' );
 
-   } else {
-
-    lLen = strlen ( apLine );
-    goto addLine;
-
-   }  /* end else */
+   } else goto next;
 
   }  /* end while */
 

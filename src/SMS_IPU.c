@@ -50,10 +50,9 @@ static void IPU_DestroyContext ( void ) {
 
  DisableDmac ( DMAC_I_GIF );
  RemoveDmacHandler ( DMAC_I_GIF, g_IPUCtx.m_DMAHandlerID_GIF );
-#ifdef VB_SYNC
  DisableIntc ( INTC_VB_ON );
  RemoveIntcHandler ( INTC_VB_ON, g_IPUCtx.m_VBlankStartHandlerID );
-#endif  /* VB_SYNC */
+
  DeleteSema ( g_IPUCtx.m_SyncS );
 
  if ( g_IPUCtx.m_pResult ) {
@@ -66,18 +65,20 @@ static void IPU_DestroyContext ( void ) {
 
  }  /* end if */
 
+ IPU_RESET();
+
 }  /* end IPU_DestroyContext */
 
 static void IPU_Flush ( void ) {
 
  if ( g_IPUCtx.m_VIFQueueSize != VIF_PIDX + 2 ) {
 
-  DMA_SendChainA ( DMAC_VIF1, &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
+  DMA_SendChain ( DMAC_VIF1, &g_IPUCtx.m_DMAVIFDraw[ g_IPUCtx.m_VIFQueueSize ] );
   g_IPUCtx.m_VIFQueueSize = VIF_PIDX + 2;
 
  } else if ( g_IPUCtx.m_ViFQueueSize != ViF_PIDX + 2 ) {
 
-  DMA_SendChainA ( DMAC_VIF1, &g_IPUCtx.m_DMAViFDraw[ g_IPUCtx.m_ViFQueueSize ] );
+  DMA_SendChain ( DMAC_VIF1, &g_IPUCtx.m_DMAViFDraw[ g_IPUCtx.m_ViFQueueSize ] );
   g_IPUCtx.m_ViFQueueSize = ViF_PIDX + 2;
 
  }  /* end if */
@@ -139,8 +140,7 @@ static void IPU_GIFHandlerDraw ( void ) {
 
  if (  g_IPUCtx.m_VIPQueueSize != VIP_PIDX + 2  ) {
 
-  DMA_Wait ( DMAC_VIF1 );
-  DMA_SendChainA ( DMAC_VIF1, &g_IPUCtx.m_DMAVIPDraw[ g_IPUCtx.m_VIPQueueSize ] );
+  DMA_SendChain ( DMAC_VIF1, &g_IPUCtx.m_DMAVIPDraw[ g_IPUCtx.m_VIPQueueSize ] );
   g_IPUCtx.m_VIPQueueSize = VIP_PIDX + 2;
 
  }  /* end if */
@@ -148,7 +148,7 @@ static void IPU_GIFHandlerDraw ( void ) {
  iSignalSema ( g_IPUCtx.m_SyncS );
 
 }  /* end IPU_GIFHandlerDraw */
-#ifdef VB_SYNC
+
 static int IPU_VBlankStartHandler ( int aCause ) {
 
  if ( g_IPUCtx.m_fDraw ) {
@@ -168,37 +168,38 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
   g_IPUCtx.m_fDraw    = 0;
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
-  DMA_SendA ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
+  DMA_Send ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
 
  }  /* end if */
 end:
  return -1;
 
 }  /* end IPU_VBlankStartHandler */
-#endif  /* VB_SYNC */
+
 static void IPU_GIFHandlerSend ( void ) {
 
- if ( !--g_IPUCtx.m_Slice ) {
-#ifdef VB_SYNC
+ if ( !--g_IPUCtx.m_Slice )
+
   g_IPUCtx.m_fDraw = 1;
-#else
-  IPU_Flush ();
 
-  g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
-  DMA_SendA ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
-#endif  /* VB_SYNC */
-  return;
+ else {
 
- }  /* end if */
+  g_IPUCtx.m_DestY += 0x0010000000000000L;
+  g_IPUCtx.m_pMB   += g_IPUCtx.m_MBStride;
 
- g_IPUCtx.m_DestY += 0x0010000000000000L;
- g_IPUCtx.m_pMB   += g_IPUCtx.m_MBStride;
+  DMA_SendA ( DMAC_TO_IPU, g_IPUCtx.m_pMB, g_IPUCtx.m_QWCToIPUSlice );
+  IPU -> m_CMD = g_IPUCtx.m_CSCmd;
+  DMA_RecvA ( DMAC_FROM_IPU, g_IPUCtx.m_pResult, g_IPUCtx.m_QWCFromIPUSlice );
 
- DMA_SendA ( DMAC_TO_IPU, g_IPUCtx.m_pMB, g_IPUCtx.m_QWCToIPUSlice );
- IPU -> m_CMD = g_IPUCtx.m_CSCmd;
- DMA_RecvA ( DMAC_FROM_IPU, g_IPUCtx.m_pResult, g_IPUCtx.m_QWCFromIPUSlice );
+ }  /* end else */
 
 }  /* end IPU_GIFHandlerSend */
+
+static void IPU_GIFHandlerSendNoCSC ( void ) {
+
+ g_IPUCtx.m_fDraw = 1;
+
+}  /* end IPU_GIFHandlerSendNoCSC */
 
 static int IPU_DMAHandlerToGIF ( int aChan ) {
 
@@ -215,9 +216,8 @@ static void IPU_Display ( void* apFB, long aVideoPTS ) {
  g_IPUCtx.m_DestY = 0;
  g_IPUCtx.m_Slice = g_IPUCtx.m_nMBSlices;
  g_IPUCtx.m_pMB   = (  ( SMS_FrameBuffer* )apFB  ) -> m_pData;
-#ifdef VB_SYNC
  g_IPUCtx.m_fDraw = 0;
-#endif  /* VB_SYNC */
+
  g_IPUCtx.GIFHandler = IPU_GIFHandlerSend;
  g_IPUCtx.m_VideoPTS = aVideoPTS;
 
@@ -226,6 +226,18 @@ static void IPU_Display ( void* apFB, long aVideoPTS ) {
  DMA_RecvA ( DMAC_FROM_IPU, g_IPUCtx.m_pResult, g_IPUCtx.m_QWCFromIPUSlice );
 
 }  /* end IPU_Display */
+
+static void IPU_DisplayNoCSC ( void* apFB, long aVideoPTS ) {
+
+ WaitSema ( g_IPUCtx.m_SyncS );
+
+ g_IPUCtx.m_fDraw    = 0;
+ g_IPUCtx.GIFHandler = IPU_GIFHandlerSendNoCSC;
+ g_IPUCtx.m_VideoPTS = aVideoPTS;
+
+ DMA_SendChainA (  DMAC_GIF, (  ( SMS_FrameBuffer* )apFB  ) -> m_pData  );
+
+}  /* end IPU_DisplayNoCSC */
 
 static void IPU_ChangeMode ( unsigned int anIdx ) {
 
@@ -445,12 +457,18 @@ static void IPU_PQueuePacket ( int aQWC, void* apData ) {
 
 static void IPU_Suspend ( void ) {
 
- DisableDmac ( DMAC_I_GIF      );
+ DisableDmac ( DMAC_I_GIF );
  DisableDmac ( DMAC_I_FROM_IPU );
-#ifdef VB_SYNC
  DisableIntc ( INTC_VB_ON );
-#endif  /* VB_SYNC */
+
 }  /* end IPU_Suspend */
+
+static void IPU_SuspendNoCSC ( void ) {
+
+ DisableDmac ( DMAC_I_GIF );
+ DisableIntc ( INTC_VB_ON );
+
+}  /* end IPU_SuspendNoCSC */
 
 static void IPU_Resume ( void ) {
 
@@ -458,10 +476,18 @@ static void IPU_Resume ( void ) {
 
  EnableDmac ( DMAC_I_FROM_IPU );
  EnableDmac ( DMAC_I_GIF      );
-#ifdef VB_SYNC
  EnableIntc ( INTC_VB_ON );
-#endif  /* VB_SYNC */
+
 }  /* end IPU_Resume */
+
+static void IPU_ResumeNoCSC ( void ) {
+
+ DMAC -> m_STAT = 4;
+
+ EnableDmac ( DMAC_I_GIF );
+ EnableIntc ( INTC_VB_ON );
+
+}  /* end IPU_ResumeNoCSC */
 
 static void IPU_Repaint ( void ) {
 
@@ -478,7 +504,7 @@ static void IPU_DummySuspend ( void ) {
 
 static void IPU_DummyResume ( void ) {
 
- DMAC -> m_STAT = 8;
+ DMAC -> m_STAT = 4;
 
  EnableDmac ( DMAC_I_GIF );
 
@@ -510,7 +536,7 @@ static void IPU_DummyRepaint ( void ) {
  DMA_SendChain ( DMAC_GIF, g_IPUCtx.m_pDMAPacket );
 
 }  /* end IPU_DummyRepaint */
-#ifdef VB_SYNC
+
 static int IPU_DummyVBlankStartHandler ( int aCause ) {
 
  if (  (  ( *GS_CSR >> 13 ) & 1  ) && g_IPUCtx.m_fDraw  ) {
@@ -525,7 +551,7 @@ static int IPU_DummyVBlankStartHandler ( int aCause ) {
  return -1;
 
 }  /* end IPU_DummyVBlankStartHandler */
-#endif  /* VB_SYNC */
+
 static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
  unsigned long* lRGBAQ = UNCACHED_SEG( &g_IPUCtx.m_DMAGIFDraw[ 16 ] );
@@ -535,7 +561,7 @@ static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
 }  /* end IPU_SetBrightness */
 
-IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS ) {
+IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afNoCSC ) {
 
  ee_sema_t lSema;
 
@@ -562,68 +588,112 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS ) {
 
  if ( aWidth && aHeight ) {
 
-  unsigned int lTW   = GS_PowerOf2 ( aWidth  );
-  unsigned int lTH   = GS_PowerOf2 ( aHeight );
   unsigned int lTBW  = ( aWidth + 63 ) >> 6;
   unsigned int lVRAM = g_GSCtx.m_VRAMPtr;
-  unsigned int lMBSz;
-  unsigned int lMBQWC;
-  uint8_t*     lpRes;
-  uint64_t*    lpBuf;
 
-  SMS_Linesize ( aWidth, &g_IPUCtx.m_MBStride );
+  g_IPUCtx.m_Width     = aWidth;
+  g_IPUCtx.m_Height    = aHeight;
+  g_IPUCtx.m_ScrRight  = g_GSCtx.m_PWidth  << 4;
+  g_IPUCtx.m_ScrBottom = g_GSCtx.m_PHeight << 4;
+  g_IPUCtx.m_VRAM      = lVRAM;
+  g_IPUCtx.m_TBW       = lTBW;
+  g_IPUCtx.m_ModeIdx   = 0;
+  GS_TWTH ( aWidth, aHeight, &g_IPUCtx.m_TW, &g_IPUCtx.m_TH );
 
-  g_IPUCtx.m_nMBSlice      = ( aWidth  + 15 ) >> 4;
-  g_IPUCtx.m_nMBSlices     = ( aHeight + 15 ) >> 4;
-  g_IPUCtx.m_QWCToIPUSlice = g_IPUCtx.m_nMBSlice * 24;
-  g_IPUCtx.m_Width         = aWidth;
-  g_IPUCtx.m_Height        = aHeight;
-  g_IPUCtx.m_ScrRight      = g_GSCtx.m_PWidth  << 4;
-  g_IPUCtx.m_ScrBottom     = g_GSCtx.m_PHeight << 4;
-
-  if (     (    (   lVRAM + (  ( aWidth * aHeight ) >> 6  ) > 0x4000   ) ||
-                ( g_Config.m_PlayerFlags & SMS_PF_C16 )
-           ) && !( g_Config.m_PlayerFlags & SMS_PF_C32 )
-  ) {
-
-   lMBSz  = 512;
-   lMBQWC =  32;
-   g_IPUCtx.m_CSCmd  = 0x7C000000 | g_IPUCtx.m_nMBSlice;
-   g_IPUCtx.m_PixFmt = GSPixelFormat_PSMCT16;
-
-  } else {
-
-   lMBSz  = 1024;
-   lMBQWC =   64;
-   g_IPUCtx.m_CSCmd  = 0x70000000 | g_IPUCtx.m_nMBSlice;
-   g_IPUCtx.m_PixFmt = GSPixelFormat_PSMCT32;
-
-  }  /* end else */
-
-  g_IPUCtx.m_QWCFromIPUSlice = g_IPUCtx.m_nMBSlice * lMBQWC;
-  g_IPUCtx.m_pResult         = ( unsigned char* )malloc ( lMBSz * g_IPUCtx.m_nMBSlice );
-
-  g_IPUCtx.m_pDMAPacket = ( uint64_t* )g_pSPRTop;
-  FlushCache ( 0 );
-
-  g_pSPRTop += ( g_IPUCtx.m_nMBSlice * 12 + 8 ) * 8;
-  lpRes      = g_IPUCtx.m_pResult;
-  lpBuf      = g_IPUCtx.m_pDMAPacket;
-
-  g_IPUCtx.m_VRAM    = lVRAM;
-  g_IPUCtx.m_TBW     = lTBW;
-  g_IPUCtx.m_TW      = lTW;
-  g_IPUCtx.m_TH      = lTH;
-  g_IPUCtx.m_ModeIdx = 0;
-
-  g_IPUCtx.Display    = IPU_Display;
   g_IPUCtx.SetTEX     = IPU_SetTEX;
   g_IPUCtx.Reset      = IPU_Reset;
-  g_IPUCtx.Suspend    = IPU_Suspend;
-  g_IPUCtx.Resume     = IPU_Resume;
   g_IPUCtx.ChangeMode = IPU_ChangeMode;
   g_IPUCtx.Pan        = IPU_Pan;
   g_IPUCtx.Repaint    = IPU_Repaint;
+
+  if ( !afNoCSC ) {
+
+   unsigned int i;
+   unsigned int lMBSz;
+   unsigned int lMBQWC;
+   uint8_t*     lpRes;
+   uint64_t*    lpBuf;
+
+   IPU_RESET();
+
+   SMS_Linesize ( aWidth, &g_IPUCtx.m_MBStride );
+
+   g_IPUCtx.m_nMBSlice      = ( aWidth  + 15 ) >> 4;
+   g_IPUCtx.m_nMBSlices     = ( aHeight + 15 ) >> 4;
+   g_IPUCtx.m_QWCToIPUSlice = g_IPUCtx.m_nMBSlice * 24;
+
+   if (     (    (   lVRAM + (  ( aWidth * aHeight ) >> 6  ) > 0x4000   ) ||
+                 ( g_Config.m_PlayerFlags & SMS_PF_C16 )
+            ) && !( g_Config.m_PlayerFlags & SMS_PF_C32 )
+   ) {
+
+    lMBSz  = 512;
+    lMBQWC =  32;
+    g_IPUCtx.m_CSCmd  = 0x7C000000 | g_IPUCtx.m_nMBSlice;
+    g_IPUCtx.m_PixFmt = GSPixelFormat_PSMCT16;
+
+   } else {
+
+    lMBSz  = 1024;
+    lMBQWC =   64;
+    g_IPUCtx.m_CSCmd  = 0x70000000 | g_IPUCtx.m_nMBSlice;
+    g_IPUCtx.m_PixFmt = GSPixelFormat_PSMCT32;
+
+   }  /* end else */
+
+   g_IPUCtx.m_QWCFromIPUSlice = g_IPUCtx.m_nMBSlice * lMBQWC;
+   g_IPUCtx.m_pResult         = ( unsigned char* )malloc ( lMBSz * g_IPUCtx.m_nMBSlice );
+   g_IPUCtx.m_pDMAPacket      = ( uint64_t* )g_pSPRTop;
+   FlushCache ( 0 );
+
+   g_pSPRTop += ( g_IPUCtx.m_nMBSlice * 12 + 8 ) * 8;
+   lpRes      = g_IPUCtx.m_pResult;
+   lpBuf      = g_IPUCtx.m_pDMAPacket;
+
+   g_IPUCtx.Display = IPU_Display;
+   g_IPUCtx.Suspend = IPU_Suspend;
+   g_IPUCtx.Resume  = IPU_Resume;
+
+   lpBuf[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
+   lpBuf[ 1 ] = 0;
+   lpBuf[ 2 ] = GIF_TAG( 2, 0, 0, 0, 0, 1 );
+   lpBuf[ 3 ] = GIFTAG_REGS_AD;
+   lpBuf[ 4 ] = GS_SET_TRXREG( 16, 16 );
+   lpBuf[ 5 ] = GS_TRXREG;
+   lpBuf[ 6 ] = GS_SET_BITBLTBUF( 0, 0, g_IPUCtx.m_PixFmt, lVRAM, lTBW, g_IPUCtx.m_PixFmt );
+   lpBuf[ 7 ] = GS_BITBLTBUF;
+   lpBuf += 8;
+
+   for ( i = 0; i < g_IPUCtx.m_nMBSlice; ++i, lpRes += lMBSz, lpBuf += 12 ) {
+
+    lpBuf[ 0 ] = DMA_TAG( 4, 0, DMATAG_ID_CNT, 0, 0, 0 );
+    lpBuf[ 1 ] = 0;
+     lpBuf[ 2 ] = GIF_TAG( 2, 0, 0, 0, 0, 1 );
+     lpBuf[ 3 ] = GIFTAG_REGS_AD;
+      lpBuf[ 5 ] = GS_TRXPOS;
+      lpBuf[ 6 ] = GS_SET_TRXDIR( 0 );
+      lpBuf[ 7 ] = GS_TRXDIR;
+     lpBuf[ 8 ] = GIF_TAG( lMBQWC, 1, 0, 0, 2, 1 );
+     lpBuf[ 9 ] = 0;
+    lpBuf[ 10 ] = DMA_TAG( lMBQWC, 1, DMATAG_ID_REF, 0, ( u32 )lpRes, 0  );
+    lpBuf[ 11 ] = 0;
+
+   }  /* end for */
+
+   lpBuf[ -2 ] = DMA_TAG(  lMBQWC, 1, DMATAG_ID_REFE, 0, ( u32 )( lpRes - lMBSz ), 0  );
+   lpBuf[ -1 ] = 0;
+
+   g_IPUCtx.m_DMAHandlerID_IPU = AddDmacHandler ( DMAC_I_FROM_IPU, IPU_DMAHandlerFromIPU, 0 );
+
+  } else {
+
+   g_IPUCtx.m_PixFmt  = GSPixelFormat_PSMCT32;
+   g_IPUCtx.m_pResult = NULL;
+   g_IPUCtx.Suspend   = IPU_SuspendNoCSC;
+   g_IPUCtx.Resume    = IPU_ResumeNoCSC;
+   g_IPUCtx.Display   = IPU_DisplayNoCSC;
+
+  }  /* end else */
 
   g_IPUCtx.SetTEX ();
   DMA_Wait ( DMAC_GIF );
@@ -631,47 +701,11 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS ) {
   IPU_SetBrightness ( 0x80 );
   IPU_Reset ();
 
-  lpBuf[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
-  lpBuf[ 1 ] = 0;
-  lpBuf[ 2 ] = GIF_TAG( 2, 0, 0, 0, 0, 1 );
-  lpBuf[ 3 ] = GIFTAG_REGS_AD;
-  lpBuf[ 4 ] = GS_SET_TRXREG( 16, 16 );
-  lpBuf[ 5 ] = GS_TRXREG;
-  lpBuf[ 6 ] = GS_SET_BITBLTBUF( 0, 0, g_IPUCtx.m_PixFmt, lVRAM, lTBW, g_IPUCtx.m_PixFmt );
-  lpBuf[ 7 ] = GS_BITBLTBUF;
-  lpBuf += 8;
-
-  for ( lTW = 0; lTW < g_IPUCtx.m_nMBSlice; ++lTW, lpRes += lMBSz, lpBuf += 12 ) {
-
-   lpBuf[ 0 ] = DMA_TAG( 4, 0, DMATAG_ID_CNT, 0, 0, 0 );
-   lpBuf[ 1 ] = 0;
-    lpBuf[ 2 ] = GIF_TAG( 2, 0, 0, 0, 0, 1 );
-    lpBuf[ 3 ] = GIFTAG_REGS_AD;
-     lpBuf[ 5 ] = GS_TRXPOS;
-     lpBuf[ 6 ] = GS_SET_TRXDIR( 0 );
-     lpBuf[ 7 ] = GS_TRXDIR;
-    lpBuf[ 8 ] = GIF_TAG( lMBQWC, 1, 0, 0, 2, 1 );
-    lpBuf[ 9 ] = 0;
-   lpBuf[ 10 ] = DMA_TAG( lMBQWC, 1, DMATAG_ID_REF, 0, ( u32 )lpRes, 0  );
-   lpBuf[ 11 ] = 0;
-
-  }  /* end for */
-
-  lpBuf[ -2 ] = DMA_TAG(  lMBQWC, 1, DMATAG_ID_REFE, 0, ( u32 )( lpRes - lMBSz ), 0  );
-  lpBuf[ -1 ] = 0;
-
-  IPU_RESET();
-  IPU_CMD_SETTH( 0, 0 );
-  IPU_WAIT();
-
-  g_IPUCtx.m_DMAHandlerID_IPU = AddDmacHandler ( DMAC_I_FROM_IPU, IPU_DMAHandlerFromIPU, 0 );
-#ifdef VB_SYNC
   g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( INTC_VB_ON,  IPU_VBlankStartHandler, 0 );
-#endif  /* VB_SYNC */
+
  } else {
 
-  g_IPUCtx.m_pResult = NULL;
-
+  g_IPUCtx.m_pResult  = NULL;
   g_IPUCtx.Display    = IPU_DummyDisplay;
   g_IPUCtx.SetTEX     = IPU_Dummy;
   g_IPUCtx.Reset      = IPU_Dummy;
@@ -681,15 +715,14 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS ) {
   g_IPUCtx.Pan        = IPU_DummyPan;
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
   g_IPUCtx.Repaint    = IPU_DummyRepaint;
-#ifdef VB_SYNC
+
   g_IPUCtx.m_VBlankStartHandlerID = AddIntcHandler ( INTC_VB_ON,  IPU_DummyVBlankStartHandler, 0 );
-#endif  /* VB_SYNC */
+
  }  /* end else */
 
  g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler ( DMAC_I_GIF, IPU_DMAHandlerToGIF, 0 );
-#ifdef VB_SYNC
+
  EnableIntc ( INTC_VB_ON );
-#endif  /* VB_SYNC */
  g_IPUCtx.Resume ();
 
  return &g_IPUCtx;

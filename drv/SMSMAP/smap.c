@@ -20,13 +20,12 @@
 #include "smap.h"
 #include "stddef.h"
 #include "stdio.h"
-#include "sysclib.h"
 #include "intrman.h"
 #include "loadcore.h"
 #include "thbase.h"
 #include "dev9.h"
 #include "ps2ip.h"
-
+#include "../SMSUTILS/smsutils.h"
 
 #define	SET			1
 #define	CLEAR			0
@@ -1248,7 +1247,7 @@ GetNodeAddr(SMap* pSMap)
 	}
 	if	(u16Sum!=u16CHKSum)
 	{
-		memset(pSMap->au8HWAddr,0,6);
+		mips_memset(pSMap->au8HWAddr,0,6);
 		return	-1;
 	}
 	return	0;
@@ -1295,7 +1294,7 @@ SMap_Init(void)
 {
 	SMap*		pSMap=&SMap0;
 
-	memset(pSMap,0,sizeof(*pSMap));
+	mips_memset(pSMap,0,sizeof(*pSMap));
 
 	BaseInit(pSMap);
 	if	(GetNodeAddr(pSMap)<0)
@@ -1377,7 +1376,7 @@ CopyToTXBuffer(SMap* pSMap,struct pbuf* pSrc)
 
 	while	(pSrc!=NULL)
 	{
-		memcpy(pu8Dest,pSrc->payload,pSrc->len);
+		mips_memcpy(pu8Dest,pSrc->payload,pSrc->len);
 		pu8Dest+=pSrc->len;
 		pSrc=pSrc->next;
 	}

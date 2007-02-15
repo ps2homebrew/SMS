@@ -4,7 +4,7 @@
 #ifdef DEBUG
 #define XPRINTF printf
 #else
-#define XPRINTF //
+#define XPRINTF while(0) printf
 #endif
 
 #endif  /* _MASS_DEBUG_H */

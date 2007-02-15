@@ -46,128 +46,89 @@
 static void (* tcpip_init_done)(void *arg) = NULL;
 static void *tcpip_init_done_arg;
 sys_mbox_t g_TCPIPMBox;
+
+static void tcpip_thread ( void* arg ) {
+
+ struct tcpip_msg* msg;
+
+ ip_init  ();
+#if LWIP_UDP
+ udp_init ();
+#endif  /* LWIP_UDP */
 #if LWIP_TCP
-static int tcpip_tcp_timer_active = 0;
+ tcp_init ();
+#endif  /* LWIP_TCP */
+ tcpip_init_done ( tcpip_init_done_arg );
 
+ while ( 1 ) {
 
+  sys_mbox_fetch (  g_TCPIPMBox, ( void* )&msg  );
 
-static void
-tcpip_tcp_timer(void *arg)
-{
-  (void)arg;
+  switch ( msg -> type ) {
 
-  tcp_tmr();
-  if (tcp_active_pcbs || tcp_tw_pcbs) {
-    sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
-  } else {
-  tcpip_tcp_timer_active = 0;
-  }
-}
+   case TCPIP_MSG_API:
+    api_msg_input ( msg -> msg.apimsg );
+   break;
 
-void
-tcp_timer_needed(void)
-{
-  if (!tcpip_tcp_timer_active && (tcp_active_pcbs || tcp_tw_pcbs)) {
-  tcpip_tcp_timer_active = 1;
-    sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
-  }
-}
-#endif /* LWIP_TCP */
+   case TCPIP_MSG_INPUT:
+    ip_input ( msg -> msg.inp.p, msg -> msg.inp.netif );
+   break;
 
-static void
-tcpip_thread(void *arg)
-{
-  struct tcpip_msg *msg;
+   case TCPIP_MSG_CALLBACK:
+    msg -> msg.cb.f ( msg -> msg.cb.ctx );
+   break;
 
-  (void)arg;
+  }  /* end switch */
 
-  ip_init();
-#if LWIP_UDP  
-  udp_init();
-#endif
-#if LWIP_TCP
-  tcp_init();
-#endif
-  if (tcpip_init_done != NULL) {
-    tcpip_init_done(tcpip_init_done_arg);
-  }
+  memp_free ( MEMP_TCPIP_MSG, msg );
 
-  while (1) {                          /* MAIN Loop */
-    sys_mbox_fetch(g_TCPIPMBox, (void *)&msg);
-    switch (msg->type) {
-    case TCPIP_MSG_API:
-      LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: API message %p\n", (void *)msg));
-      api_msg_input(msg->msg.apimsg);
-      break;
-    case TCPIP_MSG_INPUT:
-      LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: IP packet %p\n", (void *)msg));
-      ip_input(msg->msg.inp.p, msg->msg.inp.netif);
-      break;
-    case TCPIP_MSG_CALLBACK:
-      LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: CALLBACK %p\n", (void *)msg));
-      msg->msg.cb.f(msg->msg.cb.ctx);
-      break;
-    default:
-      break;
-    }
-    memp_free(MEMP_TCPIP_MSG, msg);
-  }
-}
+ }  /* end while */
 
-err_t
-tcpip_input(struct pbuf *p, struct netif *inp)
-{
-  struct tcpip_msg *msg;
+}  /* end tcpip_thread */
+
+err_t tcpip_input ( struct pbuf* p, struct netif* inp ) {
+
+ struct tcpip_msg *msg = memp_malloc ( MEMP_TCPIP_MSG );
   
-  msg = memp_malloc(MEMP_TCPIP_MSG);
-  if (msg == NULL) {
-    pbuf_free(p);    
-    return ERR_MEM;  
-  }
-  
-  msg->type = TCPIP_MSG_INPUT;
-  msg->msg.inp.p = p;
-  msg->msg.inp.netif = inp;
-  sys_mbox_post(g_TCPIPMBox, msg);
+ if ( msg ) {
+
+  msg -> type          = TCPIP_MSG_INPUT;
+  msg -> msg.inp.p     = p;
+  msg -> msg.inp.netif = inp;
+  sys_mbox_post ( g_TCPIPMBox, msg );
+
   return ERR_OK;
-}
 
-err_t
-tcpip_callback(void (*f)(void *ctx), void *ctx)
-{
-  struct tcpip_msg *msg;
-  
-  msg = memp_malloc(MEMP_TCPIP_MSG);
-  if (msg == NULL) {
-    return ERR_MEM;  
-  }
-  
-  msg->type = TCPIP_MSG_CALLBACK;
-  msg->msg.cb.f = f;
-  msg->msg.cb.ctx = ctx;
-  sys_mbox_post(g_TCPIPMBox, msg);
-  return ERR_OK;
-}
+ } else {
 
-void
-tcpip_apimsg(struct api_msg *apimsg)
-{
-  struct tcpip_msg *msg;
-  msg = memp_malloc(MEMP_TCPIP_MSG);
-  if (msg == NULL) {
-    memp_free(MEMP_API_MSG, apimsg);
-    return;
-  }
-  msg->type = TCPIP_MSG_API;
-  msg->msg.apimsg = apimsg;
-  sys_mbox_post(g_TCPIPMBox, msg);
-}
+  pbuf_free ( p );
+  return ERR_MEM;  
 
-void
-tcpip_init(void (* initfunc)(void *), void *arg)
-{
-  tcpip_init_done = initfunc;
-  tcpip_init_done_arg = arg;
-  g_TCPIPMBox = sys_mbox_new();
-  sys_thread_new(tcpip_thread, NULL, TCPIP_THREAD_PRIO);
-}
+ }  /* end else */
+
+}  /* end tcpip_input */
+
+void tcpip_apimsg ( struct api_msg* apimsg ) {
+
+ struct tcpip_msg* msg = memp_malloc ( MEMP_TCPIP_MSG );
+
+ if ( msg ) {
+
+  msg -> type       = TCPIP_MSG_API;
+  msg -> msg.apimsg = apimsg;
+  sys_mbox_post ( g_TCPIPMBox, msg );
+
+ } else memp_free ( MEMP_API_MSG, apimsg );
+
+}  /* end tcpip_apimsg */
+
+void tcpip_init (  void ( *initfunc ) ( void* ), void* arg  ) {
+
+ tcpip_init_done     = initfunc;
+ tcpip_init_done_arg = arg;
+
+ g_TCPIPMBox = sys_mbox_new ();
+
+ sys_thread_new ( tcpip_thread, NULL, TCPIP_THREAD_PRIO );
+
+}  /* end tcpip_init */

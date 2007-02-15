@@ -124,7 +124,7 @@ static err_t recv_tcp ( void* arg, struct tcp_pcb* pcb, struct pbuf* p, err_t er
 
    if ( callback ) callback ( conn, NETCONN_EVT_RCVPLUS, len );
 
-   sys_mbox_post(recvmbox, p);
+   sys_mbox_post ( recvmbox, p );
 
   }  /* end if */
 

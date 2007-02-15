@@ -30,6 +30,11 @@
 struct SMS_List;
 struct SMS_ListNode;
 
+# define SMS_CONTAINER_AVI     0
+# define SMS_CONTAINER_MPEG_PS 1
+# define SMS_CONTAINER_MP3     2
+# define SMS_CONTAINER_M3U     3
+
 # define SMS_CONT_FLAGS_SEEKABLE 0x00000001
 
 # define SMS_STRM_FLAGS_AUDIO 0x00000001
@@ -69,7 +74,7 @@ typedef struct SMS_Container {
 
  SMS_AVPacket* ( *AllocPacket ) ( SMS_RingBuffer*, int                      );
  int           ( *ReadPacket  ) ( struct SMS_Container*, int*               );
- void          ( *Destroy     ) ( struct SMS_Container*                     );
+ void          ( *Destroy     ) ( struct SMS_Container*, int                );
  int           ( *Seek        ) ( struct SMS_Container*, int, int, uint32_t );
 
 } SMS_Container;
@@ -78,8 +83,8 @@ typedef struct SMS_Container {
 extern "C" {
 # endif  /* __cplusplus */
 
-SMS_Container* SMS_GetContainer           ( FileContext*               );
-void           SMS_DestroyContainer       ( SMS_Container*             );
+SMS_Container* SMS_GetContainer           ( FileContext*, int          );
+void           SMS_DestroyContainer       ( SMS_Container*, int        );
 void           SMSContainer_SetPTSInfo    ( SMS_Stream*, int, int      );
 void           SMSContainer_CalcPktFields ( SMS_Stream*, SMS_AVPacket* );
 

@@ -44,7 +44,7 @@
 
 #include "lwip/snmp.h"
 
-#include "sysclib.h"
+#include "../../SMSUTILS/smsutils.h"
 
 void
 icmp_input(struct pbuf *p, struct netif *inp)
@@ -142,7 +142,7 @@ icmp_dest_unreach(struct pbuf *p, enum icmp_dur_type t)
   ICMPH_TYPE_SET(idur, ICMP_DUR);
   ICMPH_CODE_SET(idur, t);
 
-  memcpy((char *)q->payload + 8, p->payload, IP_HLEN + 8);
+  mips_memcpy((char *)q->payload + 8, p->payload, IP_HLEN + 8);
 
   /* calculate checksum */
   idur->chksum = 0;
@@ -180,7 +180,7 @@ icmp_time_exceeded(struct pbuf *p, enum icmp_te_type t)
   ICMPH_CODE_SET(tehdr, t);
 
   /* copy fields from original packet */
-  memcpy((char *)q->payload + 8, (char *)p->payload, IP_HLEN + 8);
+  mips_memcpy((char *)q->payload + 8, (char *)p->payload, IP_HLEN + 8);
 
   /* calculate checksum */
   tehdr->chksum = 0;

@@ -10,7 +10,7 @@
 # This file WAS part of a52dec, a free ATSC A-52 stream decoder.
 # See http://liba52.sourceforge.net/ for updates.
 #
-# Adopted for SMS by Eugene Plotnikov
+# Adopted for SMS and optimized for R5900 CPU by Eugene Plotnikov
 # Licensed (like the original ffmpeg source code) under the terms of the
 # GNU Lesser General Public License as published by the Free Software Foundation;
 # either version 2 of the License, or (at your option) any later version.
@@ -314,14 +314,16 @@ static int8_t s_LATab[ 256 ] = {
    0,   0,   0,   0
 };
 
+static sample_t s_Samples[ 16 * 256 * 12 ] __attribute__(   (  section( ".bss" )  )   );
+
 static SMS_Codec_AC3Context s_AC3Ctx;
 static int ( *DecodeFrame ) ( SMS_RingBuffer*, int, int );
 
 #define MYCTX() (  ( SMS_Codec_AC3Context* )apCtx -> m_pCodec -> m_pCtx  )
 
-static int32_t AC3_Init    ( SMS_CodecContext*                          );
-static int32_t AC3_Decode  ( SMS_CodecContext*, void**, SMS_RingBuffer* );
-static void    AC3_Destroy ( SMS_CodecContext*                          );
+static int32_t AC3_Init    ( SMS_CodecContext*                                   );
+static int32_t AC3_Decode  ( SMS_CodecContext*, SMS_RingBuffer*, SMS_RingBuffer* );
+static void    AC3_Destroy ( SMS_CodecContext*                                   );
 
 static int _ac3_decode ( SMS_RingBuffer*, int, int );
 static int _ac3_spdif  ( SMS_RingBuffer*, int, int );
@@ -349,9 +351,8 @@ static int32_t AC3_Init ( SMS_CodecContext* apCtx ) {
  s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
  s_AC3Ctx.m_FrameSize = 0;
 
- if (  MYCTX() -> m_pSamples  ) free (  MYCTX() -> m_pSamples  );
+ memset (  s_Samples, 0, sizeof ( s_Samples )  );
 
- MYCTX() -> m_pSamples   = ( sample_t* )calloc (  16, 256 * 12 * sizeof ( sample_t )  );
  MYCTX() -> m_Downmixed  = 1;
  MYCTX() -> m_LFSRState  = 1;
  MYCTX() -> m_Len        = 0;
@@ -361,8 +362,6 @@ static int32_t AC3_Init ( SMS_CodecContext* apCtx ) {
 }  /* end AC3_Init */
 
 static void AC3_Destroy ( SMS_CodecContext* apCtx ) {
-
- free (  MYCTX() -> m_pSamples  );
 
 }  /* end AC3_Destroy */
 
@@ -2216,7 +2215,7 @@ static int _ac3_block ( void ) {
 
  }  /* end if */
 
- lpSamples = s_AC3Ctx.m_pSamples;
+ lpSamples = s_Samples;
 
  if ( s_AC3Ctx.m_Output & AC3_LFE ) lpSamples += 256;
 
@@ -2399,45 +2398,114 @@ static int _ac3_block ( void ) {
 
 }  /* end _ac3_block */
 
-static SMS_INLINE int _ac3_blah ( int32_t i ) {
+void _ac3_float_to_int_1 ( sample_t*, int16_t* );
+void _ac3_float_to_int_2 ( sample_t*, int16_t* );
 
- i >>= 15;
-
- return i > 32767 ? 32767 : i < -32768 ? -32768 : i;
-
-}  /* end _ac3_blah */
-
-static SMS_INLINE void _ac3_float_to_int ( sample_t* apSamples, int16_t* apOutput, int anChannels ) {
-
- int      i, j, c;
- int32_t* lpSamples = ( int32_t* )apSamples;
-
- j           =   0;
- anChannels *= 256;
-
- for ( i = 0; i < 256; ++i )
-
-  for ( c = 0; c < anChannels; c += 256 )
-
-   apOutput[ j++ ] = _ac3_blah ( lpSamples[ i + c ] );
-
-}  /* end _ac3_float_to_int */
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ "_ac3_float_to_int_1:\n\t"
+ "pnor      $v1, $zero, $zero\n\t"
+ "psllw     $v0, $v1, 31\n\t"
+ "psrlw     $v1, $v1, 17\n\t"
+ "psraw     $v0, $v0, 16\n\t"
+ "addiu     $at, $zero, 16\n\t"
+ "1:\n\t"
+ "lq        $t0,  0($a0)\n\t"
+ "lq        $t1, 16($a0)\n\t"
+ "lq        $t2, 32($a0)\n\t"
+ "lq        $t3, 48($a0)\n\t"
+ "addiu     $a0, $a0, 64\n\t"
+ "addiu     $at, $at, -1\n\t"
+ "psraw     $t0, $t0, 15\n\t"
+ "psraw     $t1, $t1, 15\n\t"
+ "psraw     $t2, $t2, 15\n\t"
+ "psraw     $t3, $t3, 15\n\t"
+ "pmaxw     $t0, $t0, $v0\n\t"
+ "pmaxw     $t1, $t1, $v0\n\t"
+ "pmaxw     $t2, $t2, $v0\n\t"
+ "pmaxw     $t3, $t3, $v0\n\t"
+ "pminw     $t0, $t0, $v1\n\t"
+ "pminw     $t1, $t1, $v1\n\t"
+ "pminw     $t2, $t2, $v1\n\t"
+ "pminw     $t3, $t3, $v1\n\t"
+ "ppach     $t0, $t1, $t0\n\t"
+ "ppach     $t2, $t3, $t2\n\t"
+ "sdr       $t0,  0($a1)\n\t"
+ "sdl       $t0,  7($a1)\n\t"
+ "sdr       $t1,  8($a1)\n\t"
+ "sdl       $t1, 15($a1)\n\t"
+ "sdr       $t2, 16($a1)\n\t"
+ "sdl       $t2, 23($a1)\n\t"
+ "sdr       $t3, 24($a1)\n\t"
+ "sdl       $t3, 31($a1)\n\t"
+ "bgtz      $at, 1b\n\t"
+ "addiu     $a1, $a1, 32\n\t"
+ "jr        $ra\n\t"
+ "_ac3_float_to_int_2:\n\t"
+ "pnor      $v1, $zero, $zero\n\t"
+ "psllw     $v0, $v1, 31\n\t"
+ "psrlw     $v1, $v1, 17\n\t"
+ "psraw     $v0, $v0, 16\n\t"
+ "addiu     $at, $zero, 32\n\t"
+ "1:\n\t"
+ "lq        $t0,    0($a0)\n\t"
+ "lq        $t1, 1024($a0)\n\t"
+ "lq        $t2,   16($a0)\n\t"
+ "lq        $t3, 1040($a0)\n\t"
+ "addiu     $a0, $a0, 32\n\t"
+ "addiu     $at, $at, -1\n\t"
+ "psraw     $t0, $t0, 15\n\t"
+ "psraw     $t1, $t1, 15\n\t"
+ "psraw     $t2, $t2, 15\n\t"
+ "psraw     $t3, $t3, 15\n\t"
+ "pmaxw     $t0, $t0, $v0\n\t"
+ "pmaxw     $t1, $t1, $v0\n\t"
+ "pmaxw     $t2, $t2, $v0\n\t"
+ "pmaxw     $t3, $t3, $v0\n\t"
+ "pminw     $t0, $t0, $v1\n\t"
+ "pminw     $t1, $t1, $v1\n\t"
+ "pminw     $t2, $t2, $v1\n\t"
+ "pminw     $t3, $t3, $v1\n\t"
+ "pinteh    $t0, $t1, $t0\n\t"
+ "pinteh    $t2, $t3, $t2\n\t"
+ "pcpyud    $t1, $t0, $t0\n\t"
+ "pcpyud    $t3, $t2, $t2\n\t"
+ "sdr       $t0,  0($a1)\n\t"
+ "sdl       $t0,  7($a1)\n\t"
+ "sdr       $t1,  8($a1)\n\t"
+ "sdl       $t1, 15($a1)\n\t"
+ "sdr       $t2, 16($a1)\n\t"
+ "sdl       $t2, 23($a1)\n\t"
+ "sdr       $t3, 24($a1)\n\t"
+ "sdl       $t3, 31($a1)\n\t"
+ "bgtz      $at, 1b\n\t"
+ "addiu     $a1, $a1, 32\n\t"
+ "jr        $ra\n\t"
+ "nop\n\t"
+ ".set at\n\t"
+ ".set macro\n\t"
+ ".set reorder\n\t"
+);
 
 static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
+
+ static void ( *s_FloatToInt[ 2 ] ) ( sample_t*, int16_t* ) = {
+  _ac3_float_to_int_1, _ac3_float_to_int_2
+ };
 
  int      lFlags = s_AC3Ctx.m_Flags;
  sample_t lLevel = 8 << 24;
  int      i, retVal;
  short*   lpOutBuf;
 
+ void ( *_ac3_float_to_int ) ( sample_t*, int16_t* ) = s_FloatToInt[ anChannels - 1 ];
+
  if ( anChannels == 1 )
-
   lFlags = AC3_MONO;
-
  else if ( anChannels == 2 )
-
   lFlags = AC3_STEREO;
-
  else lFlags |= AC3_ADJUST_LEVEL;
 
  if (  _ac3_frame ( s_AC3Ctx.m_InBuf, &lFlags, &lLevel, 384 )  ) {
@@ -2449,18 +2517,17 @@ static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 
  }  /* end if */
 
- retVal    = 6 * anChannels * 256 * sizeof ( short );
- lpOutBuf  = ( short* )SMS_RingBufferAlloc ( apRB, retVal + 68 );
- lpOutBuf += 32;
+ anChannels += 7;
+ retVal      = 6 << ( anChannels + 1 );
+ lpOutBuf    = ( short* )SMS_RingBufferAlloc ( apRB, retVal + 68 );
+ lpOutBuf   += 32;
  *( int* )lpOutBuf = retVal;
- lpOutBuf += 2;
+ lpOutBuf   += 2;
 
  for ( i = 0; i < 6; ++i ) {
 
   _ac3_block ();
-  _ac3_float_to_int (
-   s_AC3Ctx.m_pSamples, lpOutBuf + i * 256 * anChannels, anChannels
-  );
+  _ac3_float_to_int (  s_Samples, lpOutBuf + ( i << anChannels )  );
 
  }  /* end for */
 
@@ -2498,18 +2565,14 @@ static int _ac3_spdif ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
   "por      $t7, $t9, $t7\n\t"
   "pcpyud   $v1, $t8, $zero\n\t"
   "pcpyud   $t9, $t7, $zero\n\t"
-  "sw       $t8,  0(%0)\n\t"
-  "dsrl32   $t8, $t8, 0\n\t"
-  "sw       $t8,  4(%0)\n\t"
-  "sw       $v1,  8(%0)\n\t"
-  "dsrl32   $v1, $v1, 0\n\t"
-  "sw       $v1, 12(%0)\n\t"
-  "sw       $t7, 16(%0)\n\t"
-  "dsrl32   $t7, $t7, 0\n\t"
-  "sw       $t7, 20(%0)\n\t"
-  "sw       $t9, 24(%0)\n\t"
-  "dsrl32   $t9, $t9, 0\n\t"
-  "sw       $t9, 28(%0)\n\t"
+  "sdr      $t8,  0(%0)\n\t"
+  "sdl      $t8,  7(%0)\n\t"
+  "sdr      $v1,  8(%0)\n\t"
+  "sdl      $v1, 15(%0)\n\t"
+  "sdr      $t7, 16(%0)\n\t"
+  "sdl      $t7, 23(%0)\n\t"
+  "sdr      $t9, 24(%0)\n\t"
+  "sdl      $t9, 31(%0)\n\t"
   "addiu    $t6, $t6, -1\n\t"
   "addiu    %1, %1, 32\n\t"
   "bgtz     $t6, 1b\n\t"
@@ -2525,15 +2588,14 @@ static int _ac3_spdif ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 
 }  /* end _ac3_spdif */
 
-static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** appData, SMS_RingBuffer* apInput ) {
+static int32_t AC3_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
- SMS_AVPacket*   lpPkt = ( SMS_AVPacket* )apInput -> m_pOut;
- int             lLen;
- int             lSampleRate, lBitRate;
- SMS_RingBuffer* lpRB     = ( SMS_RingBuffer* )appData;
- uint8_t*        lpBuf    = lpPkt -> m_pData;
- int32_t         lBufSize = lpPkt -> m_Size;
- int             retVal   = 0;
+ SMS_AVPacket* lpPkt = ( SMS_AVPacket* )apInput -> m_pOut;
+ int           lLen;
+ int           lSampleRate, lBitRate;
+ uint8_t*      lpBuf    = lpPkt -> m_pData;
+ int32_t       lBufSize = lpPkt -> m_Size;
+ int           retVal   = 0;
 
  if ( s_AC3Ctx.m_Len ) {
 
@@ -2610,12 +2672,11 @@ static int32_t AC3_Decode ( SMS_CodecContext* apCtx, void** appData, SMS_RingBuf
 
   } else {
 
-   if (   !(  retVal = DecodeFrame ( lpRB, apCtx -> m_Channels, lLen )  )   ) continue;
+   if (   !(  retVal = DecodeFrame ( apOutput, apCtx -> m_Channels, lLen )  )   ) continue;
 
    s_AC3Ctx.m_pInBuf    = s_AC3Ctx.m_InBuf;
    s_AC3Ctx.m_FrameSize = 0;
-
-   lpRB -> UserCB ( lpRB );
+   apOutput -> UserCB ( apOutput );
 
    break;
 

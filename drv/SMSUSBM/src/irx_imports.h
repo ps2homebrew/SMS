@@ -28,5 +28,6 @@
 #include "thsemap.h"
 #include "usbd.h"
 #include "vblank.h"
+#include "smsutils.h"
 
 #endif /* IOP_IRX_IMPORTS_H */

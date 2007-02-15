@@ -34,56 +34,43 @@
 
 #include "ps2ip_internal.h"
 #include "arch/sys_arch.h"
+#include "../../SMSUTILS/smsutils.h"
 
+#define	SYS_MBOX_SIZE 64
 
-#if		defined(DEBUG)
-#define	dbgprintf(args...)	printf(args)
-#else
-#define	dbgprintf(args...)	((void)0)
-#endif
-
-#define	SYS_MBOX_SIZE				64
-
-struct sys_mbox_msg
-{
-	struct sys_mbox_msg*		pNext;
-	void*							pvMSG;
+struct sys_mbox_msg {
+ struct sys_mbox_msg* pNext;
+ void*                pvMSG;
 };
 
-struct sys_mbox
-{
-	u16_t			u16First;
-	u16_t			u16Last;
-	void*			apvMSG[SYS_MBOX_SIZE];
-	sys_sem_t	Mail;
-	sys_sem_t	Mutex;
-	int			iWaitPost;
-	int			iWaitFetch;
+struct sys_mbox {
+ u16_t     u16First;
+ u16_t     u16Last;
+ void*     apvMSG[ SYS_MBOX_SIZE ];
+ sys_sem_t Mail;
+ sys_sem_t Mutex;
+ int       iWaitPost;
+ int       iWaitFetch;
 };
 
-typedef struct pbuf		PBuf;
-typedef struct netif		NetIF;
-typedef struct ip_addr	IPAddr;
+typedef struct ip_addr IPAddr;
 
 #define MODNAME	"TCP/IP Stack"
-IRX_ID(MODNAME,1,3);
+IRX_ID( MODNAME, 1, 3 );
 
-extern struct irx_export_table	_exp_ps2ip;
+extern struct irx_export_table _exp_ps2ip;
 
+#ifdef PS2IP_DHCP
+static int iTimerDHCP = 0;
+#endif  /* PS2IP_DHCP */
 
-static int		iTimerARP=0;
-#if		defined(PS2IP_DHCP)
-static int		iTimerDHCP=0;
-#endif	//defined(PS2IP_DHCP)
-static NetIF	LoopIF;
+#if LWIP_HAVE_LOOPIF
+static NetIF LoopIF;
+#endif /* LWIP_HAVE_LOOPIF */
 
-
-static u16_t inline
-GenNextMBoxIndex(u16_t u16Index)
-{
-	return	(u16Index+1)%SYS_MBOX_SIZE;
-}
-
+static u16_t inline GenNextMBoxIndex ( u16_t u16Index ) {
+ return ( u16Index + 1 ) % SYS_MBOX_SIZE;
+}  /* end GenNextMBoxIndex */
 
 static int inline IsMessageBoxFull ( sys_mbox_t apMBox ) {
  return GenNextMBoxIndex ( apMBox -> u16Last ) == apMBox -> u16First;
@@ -102,213 +89,145 @@ void PostInputMSG ( sys_mbox_t pMBox, void* pvMSG ) {
 
 }  /* end PostInputMSG */
 
-int
-ps2ip_getconfig(char* pszName,t_ip_info* pInfo)
-{
-	NetIF*	pNetIF=netif_find(pszName);
+int ps2ip_getconfig ( char* pszName, t_ip_info* pInfo ) {
 
-	if (pNetIF==NULL)
-	{
+ struct netif* pNetIF = netif_find ( pszName );
 
-		//Net interface not found.
+ if ( pNetIF == NULL ) {
+  mips_memset (  pInfo, 0, sizeof ( *pInfo )  );
+  return 0;
+ }  /* end if */
 
-		memset(pInfo,0,sizeof(*pInfo));
-		return	0;
-	}
-	strcpy(pInfo->netif_name,pszName);
-	pInfo->ipaddr.s_addr=pNetIF->ip_addr.addr;
-	pInfo->netmask.s_addr=pNetIF->netmask.addr;
-	pInfo->gw.s_addr=pNetIF->gw.addr;
+ strcpy ( pInfo -> netif_name, pszName );
 
-	memcpy(pInfo->hw_addr,pNetIF->hwaddr,sizeof(pInfo->hw_addr));
-
-#if		LWIP_DHCP
-
-	if (pNetIF->dhcp)
-	{
-		pInfo->dhcp_enabled=1;
-		pInfo->dhcp_status=pNetIF->dhcp->state;
-	}
-	else
-	{
-		pInfo->dhcp_enabled=0;
-		pInfo->dhcp_status=0;
-	}
-
+ pInfo -> ipaddr.s_addr  = pNetIF -> ip_addr.addr;
+ pInfo -> netmask.s_addr = pNetIF -> netmask.addr;
+ pInfo -> gw.s_addr      = pNetIF -> gw.addr;
+ mips_memcpy(  pInfo -> hw_addr,pNetIF -> hwaddr, sizeof ( pInfo -> hw_addr )  );
+#if LWIP_DHCP
+ if ( pNetIF -> dhcp ) {
+  pInfo -> dhcp_enabled = 1;
+  pInfo -> dhcp_status  = pNetIF -> dhcp->state;
+ } else {
+  pInfo -> dhcp_enabled = 0;
+  pInfo -> dhcp_status  = 0;
+ }  /* end else */
 #else
+ pInfo -> dhcp_enabled = 0;
+#endif  /* LWIP_DHCP */
+ return 1;
 
-	pInfo->dhcp_enabled=0;
+}  /* end ps2ip_getconfig */
 
-#endif
+int ps2ip_setconfig ( t_ip_info* pInfo ) {
 
-	return	1;
-}
+ struct netif* pNetIF = netif_find ( pInfo -> netif_name );
 
+ if	( !pNetIF ) return	0;
 
-int
-ps2ip_setconfig(t_ip_info* pInfo)
-{
-	NetIF*	pNetIF=netif_find(pInfo->netif_name);
-
-	if	(pNetIF==NULL)
-	{
-		return	0;
-	}
-	netif_set_ipaddr(pNetIF,(IPAddr*)&pInfo->ipaddr);
-	netif_set_netmask(pNetIF,(IPAddr*)&pInfo->netmask);
-	netif_set_gw(pNetIF,(IPAddr*)&pInfo->gw);
-
+ netif_set_ipaddr  (  pNetIF, ( IPAddr* )&pInfo -> ipaddr  );
+ netif_set_netmask (  pNetIF, ( IPAddr* )&pInfo -> netmask );
+ netif_set_gw      (  pNetIF, ( IPAddr* )&pInfo -> gw      );
 #if	LWIP_DHCP
+ if ( pInfo -> dhcp_enabled ) {
+  if ( !pNetIF -> dhcp ) dhcp_start ( pNetIF );
+ } else {
+  if ( pNetIF -> dhcp ) dhcp_stop ( pNetIF );
+ }  /* end else */
+#endif  /* LWIP_DHCP */
+ return 1;
 
-	//Enable dhcp here
+}  /* end ps2ip_setconfig */
 
-	if (pInfo->dhcp_enabled)
-	{
-		if (!pNetIF->dhcp)
-		{
+#define ALARM_TCP 0x00000001
+#define ALARM_ARP 0x00000002
+#define ALARM_MSK ( ALARM_TCP | ALARM_ARP )
 
-			//Start dhcp client
+typedef struct AlarmData {
 
-			dhcp_start(pNetIF);
-		}
-	}
-	else
-	{
-		if (pNetIF->dhcp)
-		{
+ int             m_EventFlag;
+ unsigned long   m_EventMask;
+ iop_sys_clock_t m_Clock;
 
-			//Stop dhcp client
+} AlarmData;
 
-			dhcp_stop(pNetIF);
-		}
-	}
+unsigned int _alarm ( void* apArg ) {
 
-#endif
+ AlarmData* lpData = ( AlarmData* )apArg;
 
-	return	1;
-}
+ iSetEventFlag ( lpData -> m_EventFlag, lpData -> m_EventMask );
 
+ return lpData -> m_Clock.lo;
 
-static void
-InitDone(void* pvArg)
-{
-	sys_sem_t*	pSem=(sys_sem_t*)pvArg;
+}  /* end _alarm */
 
-	sys_sem_signal(*pSem);
-}
+static void TimerThread ( void* apArg ) {
 
+ AlarmData   lTCPData;
+ AlarmData   lARPData;
+ iop_event_t lEvent;
 
-static void
-Timer(void* pvArg)
-{
+ lEvent.attr = 0;
+ lEvent.bits = 0;
+ lTCPData.m_EventFlag =
+ lARPData.m_EventFlag = CreateEventFlag ( &lEvent );
+ lTCPData.m_EventMask = ALARM_TCP;
+ lARPData.m_EventMask = ALARM_ARP;
+ USec2SysClock ( TCP_TMR_INTERVAL * 1024, &lTCPData.m_Clock );
+ USec2SysClock ( ARP_TMR_INTERVAL * 1024, &lARPData.m_Clock );
 
-	//TCP timer.
+ SetAlarm ( &lTCPData.m_Clock, _alarm, &lTCPData );
+ SetAlarm ( &lARPData.m_Clock, _alarm, &lARPData );
 
-	tcp_tmr();
+ while ( 1 ) {
 
-	//ARP timer.
+  unsigned long lRes;
 
-	iTimerARP+=TCP_TMR_INTERVAL;
-	if	(iTimerARP>=ARP_TMR_INTERVAL)
-	{
-		iTimerARP-=ARP_TMR_INTERVAL;
-		etharp_tmr();
-	}
-	
-#if		defined(PS2IP_DHCP)
+  WaitEventFlag ( lTCPData.m_EventFlag, ALARM_MSK, WEF_CLEAR | WEF_OR, &lRes );
 
-	//DHCP timer.
+  if ( lRes & ALARM_TCP ) tcp_tmr    ();
+  if ( lRes & ALARM_ARP ) etharp_tmr ();
 
-	iTimerDHCP+=TCP_TMR_INTERVAL;
-	if ((iTimerDHCP-TCP_TMR_INTERVAL)/DHCP_FINE_TIMER_MSECS!=iTimerDHCP/DHCP_FINE_TIMER_MSECS)
-	{
-		dhcp_fine_tmr();
-	}
+ }  /* end while */
 
-	if (iTimerDHCP>=DHCP_COARSE_TIMER_SECS*1000)
-	{
-		iTimerDHCP-=DHCP_COARSE_TIMER_SECS*1000;
-		dhcp_coarse_tmr();
-	}
-#endif
-}
+}  /* end TimerThread */
 
+static void InitTimer ( void ) {
 
-static void
-TimerThread(void* pvArg)
-{
-	while (1)
-	{
-		tcpip_callback(Timer,NULL);
-		DelayThread(TCP_TMR_INTERVAL*1000);
-	}
-}
+ iop_thread_t lThread = { TH_C, 0, TimerThread, 0x800, 0x22 };
+ int          lTID    = CreateThread ( &lThread );
 
+ if ( lTID < 0 ) ExitDeleteThread ();
 
-static void
-InitTimer(void)
-{
-	iop_thread_t	Thread={TH_C,0,TimerThread,0x800,0x22};
-	int				iTimerThreadID=CreateThread(&Thread);
+ StartThread ( lTID, NULL );
 
-	if (iTimerThreadID<0)
-	{
-		printf("InitTimer: Fatal error - Failed to create tcpip timer-thread!\n");
-		ExitDeleteThread();
-	}
+}  /* end InitTimer */
 
-	StartThread(iTimerThreadID,NULL);
-}
-
-
-static void
-SendARPReply(NetIF* pNetIF,PBuf* pBuf)
-{
-
-	//Send out the ARP reply or ARP queued packet.
-
-	if	(pBuf!=NULL)
-	{
-		pNetIF->linkoutput(pNetIF,pBuf);
-		pbuf_free(pBuf);
-	}
-}
-
-
-typedef struct InputMSG
-{
-	PBuf*		pInput;
-	NetIF*	pNetIF;
+typedef struct InputMSG {
+ struct pbuf*  pInput;
+ struct netif* pNetIF;
 } InputMSG;
 
-#define	MSG_QUEUE_SIZE		16
+#define	MSG_QUEUE_SIZE 16
 
-static InputMSG	aMSGs[MSG_QUEUE_SIZE];
-static u8_t			u8FirstMSG=0;
-static u8_t			u8LastMSG=0;
+static InputMSG	aMSGs[ MSG_QUEUE_SIZE ];
+static u8_t     u8FirstMSG = 0;
+static u8_t     u8LastMSG  = 0;
 
+static u8_t inline GetNextMSGQueueIndex ( u8_t u8Index ) {
+ return	( u8Index + 1 ) % MSG_QUEUE_SIZE;
+}  /* end GetNextMSGQueueIndex */
 
-static u8_t inline
-GetNextMSGQueueIndex(u8_t u8Index)
-{
-	return	(u8Index+1)%MSG_QUEUE_SIZE;
-}
-
-
-static int inline
-IsMSGQueueFull(void)
-{
-	return	GetNextMSGQueueIndex(u8LastMSG)==u8FirstMSG;
-}
-
+static int inline IsMSGQueueFull ( void ) {
+ return	GetNextMSGQueueIndex ( u8LastMSG ) == u8FirstMSG;
+}  /* end IsMSGQueueFull */
 
 static void InputCB ( void* pvArg ) {
 
- InputMSG* pMSG   = ( InputMSG* )pvArg;
- PBuf*     pInput = pMSG -> pInput;
- NetIF*    pNetIF = pMSG -> pNetIF;
- PBuf*     pARP;
- int       iFlags;
+ InputMSG*     pMSG   = ( InputMSG* )pvArg;
+ struct pbuf*  pInput = pMSG -> pInput;
+ struct netif* pNetIF = pMSG -> pNetIF;
+ int           iFlags;
 
  CpuSuspendIntr ( &iFlags );
   u8FirstMSG = GetNextMSGQueueIndex ( u8FirstMSG );
@@ -317,23 +236,15 @@ static void InputCB ( void* pvArg ) {
  switch (   (  ( struct eth_hdr* )( pInput -> payload )  ) -> type   ) {
 
   case ETHTYPE_IP:
-
-   pARP = etharp_ip_input ( pNetIF, pInput );
+   etharp_ip_input ( pNetIF, pInput );
    pbuf_header ( pInput, -14 );
    ip_input ( pInput, pNetIF );
-   SendARPReply ( pNetIF, pARP );
-
   break;
 
   case ETHTYPE_ARP:
-
-   pARP = etharp_arp_input (
+   etharp_arp_input (
     pNetIF, ( struct eth_addr* )&pNetIF -> hwaddr, pInput
    );
-   SendARPReply ( pNetIF, pARP );
-
-  break;
-
   default: pbuf_free ( pInput );
 
  }  /* end switch */
@@ -342,127 +253,89 @@ static void InputCB ( void* pvArg ) {
 
 extern sys_mbox_t g_TCPIPMBox;
 
-err_t
-ps2ip_input(PBuf* pInput,NetIF* pNetIF)
-{
+err_t ps2ip_input ( struct pbuf* pInput, struct netif* pNetIF ) {
+//When ps2smap receive data, it invokes this function. It'll be called directly by the interrupthandler, which means we are
+//running in an interrupt-context. We'll pass on the data to the tcpip message-thread by adding a callback message. If the
+//messagebox is full, we can't wait for the tcpip-thread to process a message to make room for our message, since we're
+//in interrupt-context. If the messagebox or messagequeue is full, drop the packet.
+ InputMSG*         pIMSG;
+ struct tcpip_msg* pMSG;
 
-	//When ps2smap receive data, it invokes this function. It'll be called directly by the interrupthandler, which means we are
-	//running in an interrupt-context. We'll pass on the data to the tcpip message-thread by adding a callback message. If the
-	//messagebox is full, we can't wait for the tcpip-thread to process a message to make room for our message, since we're in an
-	//interrupt-context. If the messagebox or messagequeue is full, drop the packet.
+ if (  IsMessageBoxFull ( g_TCPIPMBox ) || IsMSGQueueFull ()  ) {
+  pbuf_free ( pInput );
+  return ERR_OK;
+ }  /* end if */
+//Allocate messagequeue entry.
+ pIMSG     = &aMSGs[ u8LastMSG ];
+ u8LastMSG = GetNextMSGQueueIndex  ( u8LastMSG );
+//Initialize the InputMSG.
+ pIMSG -> pInput = pInput;
+ pIMSG -> pNetIF = pNetIF;
+ pMSG = ( struct tcpip_msg* )memp_malloc ( MEMP_TCPIP_MSG );
 
-	InputMSG*				pIMSG;
-	struct tcpip_msg*		pMSG;
+ if	( !pMSG ) {
+  pbuf_free ( pInput );
+  return ERR_MEM;  
+ }  /* end if */
 
-	//Is the messagebox or the messagequeue full?
+ pMSG -> type       = TCPIP_MSG_CALLBACK;
+ pMSG -> msg.cb.f   = InputCB;
+ pMSG -> msg.cb.ctx = pIMSG;
+ PostInputMSG ( g_TCPIPMBox, pMSG );
 
-	if	(IsMessageBoxFull(g_TCPIPMBox)||IsMSGQueueFull())
-	{
+ return ERR_OK;
 
-		pbuf_free(pInput);
-		return	ERR_OK;
-	}
+}  /* end ps2ip_input */
 
-	//Allocate messagequeue entry.
+void ps2ip_Stub ( void ) {
 
-	pIMSG=&aMSGs[u8LastMSG];
-	u8LastMSG=GetNextMSGQueueIndex(u8LastMSG);
+}  /* end ps2ip_Stub */
 
-	//Initialize the InputMSG.
+int ps2ip_ShutDown ( void ) {
 
-	pIMSG->pInput=pInput;
-	pIMSG->pNetIF=pNetIF;
+ return 1;
 
-	pMSG=(struct tcpip_msg*)memp_malloc(MEMP_TCPIP_MSG);
-	if	(!pMSG)
-	{
+}  /* end ps2ip_ShutDown */
+#if LWIP_HAVE_LOOPIF
+static void AddLoopIF ( void ) {
 
-		pbuf_free(pInput);
-		return	ERR_MEM;  
-	}
-	pMSG->type=TCPIP_MSG_CALLBACK;
-	pMSG->msg.cb.f=InputCB;
-	pMSG->msg.cb.ctx=pIMSG;
+ IPAddr IP;
+ IPAddr NM;
+ IPAddr GW;
 
-	PostInputMSG(g_TCPIPMBox,pMSG);
-	return	ERR_OK;
-}
+ IP4_ADDR( &IP, 127, 0, 0, 1 );
+ IP4_ADDR( &NM, 255, 0, 0, 0 );
+ IP4_ADDR( &GW, 127, 0, 0, 1 );
 
+ netif_add ( &LoopIF, &IP, &NM, &GW, NULL, loopif_init, tcpip_input );
 
-void
-ps2ip_Stub(void)
-{
-}
+}  /* end AddLoopIF */
+#endif  /* LWIP_HAVE_LOOPIF */
+int _start ( int argc,char** argv ) {
 
+ sys_sem_t lSema;
 
-int
-ps2ip_ShutDown(void)
-{
-	return	1;
-}
+ RegisterLibraryEntries ( &_exp_ps2ip );
 
+ mem_init   ();
+ memp_init  ();
+ pbuf_init  ();
+ netif_init ();
 
-static void
-AddLoopIF(void)
-{
-	IPAddr	IP;
-	IPAddr	NM;
-	IPAddr	GW;
+ lSema = sys_sem_new ( 0 );
+ tcpip_init (   (  void ( * )( void* )  )SignalSema, ( void* )lSema   );
+ WaitSema ( lSema );
+ sys_sem_free ( lSema );
+#if LWIP_HAVE_LOOPIF
+ AddLoopIF ();
+#endif  /* LWIP_HAVE_LOOPIF */
+ InitTimer ();
 
-	IP4_ADDR(&IP,127,0,0,1);
-	IP4_ADDR(&NM,255,0,0,0);
-	IP4_ADDR(&GW,127,0,0,1);
+ return MODULE_RESIDENT_END; 
 
-	netif_add(&LoopIF,&IP,&NM,&GW,NULL,loopif_init,tcpip_input);
-}
+}  /* end _start */
 
-
-int
-_start(int argc,char** argv)
-{
-	sys_sem_t	Sema;
-
-	RegisterLibraryEntries(&_exp_ps2ip);
-
-	sys_init();
-	mem_init();
-	memp_init();
-	pbuf_init();
-
-	netif_init();
-
-
-	Sema=sys_sem_new(0);
-	tcpip_init(InitDone,&Sema);
-
-	sys_arch_sem_wait(Sema,0);
-	sys_sem_free(Sema);
-
-
-	AddLoopIF();
-	InitTimer();
-
-	return	MODULE_RESIDENT_END; 
-}
-
-#define	SYS_THREAD_PRIO_BASE		0x22
-
-typedef struct Timeout	Timeout;
-
-struct Timeout
-{
-	struct sys_timeouts	Timeouts;
-	int						iTID;
-	Timeout*					pNext;
-};
-
-
-#define	SYS_TIMEOUT_MAX	10
-
-
-static Timeout		aTimeouts[SYS_TIMEOUT_MAX];
-static Timeout*	pFreeTimeouts;
-static Timeout*	pActiveTimeouts;
+#define	SYS_THREAD_PRIO_BASE 0x22
 
 sys_thread_t sys_thread_new (
               void ( *pFunction )(  void* ),void* pvArg,int iPrio
@@ -504,7 +377,7 @@ void sys_mbox_free ( sys_mbox_t pMBox ) {
 
  if	( !pMBox ) return;
 
- sys_arch_sem_wait ( pMBox -> Mutex, 0 );
+ WaitSema ( pMBox -> Mutex );
 
  sys_sem_free ( pMBox -> Mail  );
  sys_sem_free ( pMBox -> Mutex );
@@ -523,24 +396,13 @@ void sys_mbox_post ( sys_mbox_t pMBox, void* pvMSG ) {
 
  while (  IsMessageBoxFull ( pMBox )  ) {
 
-  u32_t u32WaitTime;
-
   ++pMBox -> iWaitPost;
 
   CpuResumeIntr ( Flags );
-
-  u32WaitTime = sys_arch_sem_wait ( pMBox -> Mail, 0 );
-
+   WaitSema ( pMBox -> Mail );
   CpuSuspendIntr ( &Flags );
 
   --pMBox -> iWaitPost;
-
-  if ( u32WaitTime == SYS_ARCH_TIMEOUT )  {
-
-   CpuResumeIntr ( Flags );
-   return;
-
-  }  /* end if */
 
  }  /* end while */
 
@@ -553,293 +415,84 @@ void sys_mbox_post ( sys_mbox_t pMBox, void* pvMSG ) {
 
 }  /* end sys_mbox_post */
 
+u32_t sys_arch_mbox_fetch ( sys_mbox_t pMBox, void** ppvMSG, u32_t u32Timeout ) {
 
-u32_t
-sys_arch_mbox_fetch(sys_mbox_t pMBox,void** ppvMSG,u32_t u32Timeout)
-{
+ sys_prot_t	Flags;
+ u32_t      u32Time = 0;
 
-	sys_prot_t	Flags;
-	u32_t			u32Time=0;
+ CpuSuspendIntr ( &Flags );
 
-	if	(pMBox==NULL)
-	{
-		if	(ppvMSG!=NULL)
-		{
-			*ppvMSG=NULL;
-		}
-		return	SYS_ARCH_TIMEOUT;
-	}
+ while (  IsMessageBoxEmpty ( pMBox )  ) {
 
-	dbgprintf("sys_arch_mbox_fetch: MBox fetch (TID: %d, MTX: %x)\n",GetThreadId(),pMBox->Mutex);
+  u32_t u32WaitTime;
 
-	CpuSuspendIntr(&Flags);
+  ++pMBox -> iWaitFetch;
 
-	while	(IsMessageBoxEmpty(pMBox))
-	{
-		u32_t		u32WaitTime;
+  CpuResumeIntr ( Flags );
+   u32WaitTime = sys_arch_sem_wait ( pMBox -> Mail, u32Timeout );
+  CpuSuspendIntr ( &Flags );
 
-		++pMBox->iWaitFetch;
-		CpuResumeIntr(Flags);
+  --pMBox -> iWaitFetch;
 
-		u32WaitTime=sys_arch_sem_wait(pMBox->Mail,u32Timeout);
+  if ( u32WaitTime == SYS_ARCH_TIMEOUT )  {
+   u32Time = u32WaitTime;
+   goto end;
+  }  /* end if */
 
-		CpuSuspendIntr(&Flags);
-		--pMBox->iWaitFetch;
+  u32Time    += u32WaitTime;
+  u32Timeout -= u32WaitTime;
 
-		if	(u32WaitTime==SYS_ARCH_TIMEOUT) 
-		{
+ }  /* end while */
 
-			CpuResumeIntr(Flags);
-			return	SYS_ARCH_TIMEOUT;
-		}
+ *ppvMSG = pMBox -> apvMSG[ pMBox -> u16First ];
+  pMBox -> u16First = GenNextMBoxIndex ( pMBox -> u16First );
 
-		u32Time+=u32WaitTime;
+ if	( pMBox -> iWaitPost > 0 ) SignalSema ( pMBox -> Mail );
+end:
+ CpuResumeIntr ( Flags );
 
-		u32Timeout-=u32WaitTime;
-	}
+ return u32Time;
 
-	if	(ppvMSG!=NULL)
-	{
-		*ppvMSG=pMBox->apvMSG[pMBox->u16First];
-	}
-	pMBox->u16First=GenNextMBoxIndex(pMBox->u16First);
+}  /* end sys_arch_mbox_fetch */
 
-	//Is there a thread waiting for the mbox to become non-full?
+sys_sem_t sys_sem_new ( u8_t aCount ) {
 
-	if	(pMBox->iWaitPost>0)
-	{
+ iop_sema_t lSema = { 1, 1, aCount,1 };
+ int        retVal;
 
-		SignalSema(pMBox->Mail);
-	}    
+ retVal = CreateSema ( &lSema );
 
-	CpuResumeIntr(Flags);
+ if ( retVal <= 0 ) retVal = SYS_SEM_NULL;
 
-	return	u32Time;
-}     
+ return	retVal;
 
+}  /* end sys_sem_new */
 
-sys_sem_t
-sys_sem_new(u8_t u8Count)
-{
+u32_t sys_arch_sem_wait ( sys_sem_t aSema, u32_t aTimeout ) {
 
-	//Create a new semaphore.
+ if	( !aTimeout )
+  return WaitSema ( aSema );
+ else {
 
-	iop_sema_t	Sema={1,1,u8Count,1};
-	int			iSema;
+  iop_sys_clock_t lTimeout;
+  int             lTID = GetThreadId ();
 
-	iSema=CreateSema(&Sema);
-	if	(iSema<=0)
-	{
-		return	SYS_SEM_NULL;
-	}
+  USec2SysClock ( aTimeout * 1024, &lTimeout );
+  SetAlarm (   &lTimeout, (  unsigned ( * ) ( void* )  )iReleaseWaitThread, ( void* )lTID   );
 
-	return	iSema;
-}
+  if (  !WaitSema ( aSema )  ) {
+   CancelAlarm (   (  unsigned ( * ) ( void* )  )iReleaseWaitThread, ( void* )lTID   );
+   --aTimeout;
+  } else aTimeout = SYS_ARCH_TIMEOUT;
 
+ }  /* end else */
 
-static unsigned int TimeoutHandler ( void* pvArg ) {
+ return aTimeout;
 
- iReleaseWaitThread (  ( int )pvArg  );
- return 0;
+}  /* end sys_arch_sem_wait */
 
-}  /* end TimeoutHandler */
+void sys_sem_free ( sys_sem_t aSema ) {
 
+ if	( aSema != SYS_SEM_NULL ) DeleteSema ( aSema );
 
-static u32_t
-ComputeTimeDiff(iop_sys_clock_t* pStart,iop_sys_clock_t* pEnd)
-{
-	iop_sys_clock_t	Diff;
-	int					iSec;
-	int					iUSec;
-	int					iDiff;
-
-	Diff.lo=pEnd->lo-pStart->lo;
-	Diff.hi=pEnd->hi-pStart->hi;
-
-	SysClock2USec(&Diff, (u32 *)&iSec, (u32 *)&iUSec);
-	iDiff=(iSec*1000)+(iUSec/1000);
-
-	return	iDiff!=0 ? iDiff:1;
-}
-
-
-u32_t
-sys_arch_sem_wait(sys_sem_t Sema,u32_t u32Timeout)
-{
-
-	//Wait u32Timeout msec for the Sema to receive a signal.
-
-	dbgprintf("sys_arch_sem_wait: Sema: %d, Timeout: %x (TID: %d)\n",Sema,u32Timeout,GetThreadId());
-
-	if	(u32Timeout==0)
-	{ 
-
-		//Wait with no timeouts.
-
-		return	WaitSema(Sema)==0 ? 0:SYS_ARCH_TIMEOUT;
-	}
-	else if	(u32Timeout==1)
-	{
-
-		//Poll.
-
-		return	PollSema(Sema)==0 ? 0:SYS_ARCH_TIMEOUT;
-	}
-	else
-	{
-
-		//Use alarm to timeout.
-
-		iop_sys_clock_t	ClockTicks;
-		iop_sys_clock_t	Start;
-		iop_sys_clock_t	End;
-		int					iPID=GetThreadId();
-		u32_t					u32WaitTime;
-
-		GetSystemTime(&Start);
-		USec2SysClock(u32Timeout*1000,&ClockTicks);
-		SetAlarm(&ClockTicks,TimeoutHandler,(void*)iPID);
-
-		if	(WaitSema(Sema)!=0)
-		{
-			return	SYS_ARCH_TIMEOUT;
-		}
-		CancelAlarm(TimeoutHandler,(void*)iPID);
-		GetSystemTime(&End);
-
-		u32WaitTime=ComputeTimeDiff(&Start,&End);
-		return	u32WaitTime<=u32Timeout ? u32WaitTime:u32Timeout;
-	}
-}
-
-
-void
-sys_sem_free(sys_sem_t Sema)
-{
-	if	(Sema==SYS_SEM_NULL)
-	{
-		return;
-	}
-	DeleteSema(Sema);
-}
-
-
-void
-sys_init(void)
-{
-	int			iA;
-	Timeout**	ppTimeout=&pFreeTimeouts;
-
-	for	(iA=0;iA<SYS_TIMEOUT_MAX;++iA)
-	{
-		Timeout*		pTimeout=&aTimeouts[iA];
-		
-		*ppTimeout=pTimeout;
-		ppTimeout=&pTimeout->pNext;
-	}
-	*ppTimeout=NULL;
-}
-
-
-static Timeout**
-FindTimeout(int iThreadID)
-{
-
-	//Find the Timeout for the thread-id, iThreadID.
-
-	Timeout**	ppTimeout=&pActiveTimeouts;
-
-	while	(*ppTimeout!=NULL)
-	{
-		if	((*ppTimeout)->iTID==iThreadID)
-		{
-
-			//Found it.
-
-			return	ppTimeout;
-		}
-		ppTimeout=&(*ppTimeout)->pNext;
-	}
-
-	//Didn't find it.
-
-	return	ppTimeout;
-}
-
-
-static Timeout**
-AllocTimeout(void)
-{
-
-	//Allocate a Timeout-struct. Is there any left in the free-list?
-
-	Timeout**	ppTimeout;
-
-	if	(pFreeTimeouts!=NULL)
-	{
-
-		//Yes, use the first entry in the free-list.
-
-		return	&pFreeTimeouts;
-	}
-
-	//There are no free entries. Then we'll return the LRU-entry, which is the last entry in the active-list.
-
-	ppTimeout=&pActiveTimeouts;
-	while	((*ppTimeout)->pNext!=NULL)
-	{
-		ppTimeout=&(*ppTimeout)->pNext;
-	}
-
-	//Before we return the LRU-entry, remove/free the timeout-list.
-
-	while	((*ppTimeout)->Timeouts.next!=NULL)
-	{
-		struct sys_timeout*	pTimeout=(*ppTimeout)->Timeouts.next;
-
-		(*ppTimeout)->Timeouts.next=pTimeout->next;
-		memp_free(MEMP_SYS_TIMEOUT,pTimeout);
-	}
-	return	ppTimeout;
-}
-
-
-struct sys_timeouts*
-sys_arch_timeouts(void)
-{
-
-	//Return the timeout-list for this thread.
-
-	int			iThreadID=GetThreadId();
-	Timeout**	ppTimeout;
-	Timeout*		pTimeout;
-	sys_prot_t	Flags;
-
-    CpuSuspendIntr(&Flags);
-
-	//Does it exist an entry for this thread?
-
-	ppTimeout=FindTimeout(iThreadID);
-	if	(*ppTimeout==NULL)
-	{
-
-		//No, allocate an entry for this thread.
-
-		ppTimeout=AllocTimeout();
-		(*ppTimeout)->iTID=iThreadID;
-	}
-
-	//The active entries are listed in MRU order. The entry for this thread is the MRU and therefore should be first in the
-	//active-list.
-
-	pTimeout=*ppTimeout;
-	*ppTimeout=pTimeout->pNext;
-	pTimeout->pNext=pActiveTimeouts;
-	pActiveTimeouts=pTimeout;
-
-	CpuResumeIntr(Flags);
-
-	//Return the timeout-list.
-
-	return	&pTimeout->Timeouts;
-}
+}  /* end sys_sem_free */

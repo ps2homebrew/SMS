@@ -43,6 +43,8 @@ unsigned char g_pSMBS  [] __attribute__(   (  aligned( 4 ), section( ".data" )  
 static unsigned char s_pAVI  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".avi";
 static unsigned char s_pDIVX [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".divx";
 static unsigned char s_pXVID [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".xvid";
+static unsigned char s_pMPG  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpg";
+static unsigned char s_pMPEG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpeg";
 static unsigned char s_pMP3  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp3";
 static unsigned char s_pM3U  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m3u";
 static unsigned char s_pMPA  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpa";
@@ -69,7 +71,9 @@ int _set_id ( char* apName ) {
 
   char* lpExt = apName + lLen - 4;
 
-  if (       !stricmp ( lpExt, s_pAVI )  )
+  if (       !stricmp ( lpExt, s_pAVI  ) ||
+             !stricmp ( lpExt, s_pMPG  )
+  )
    retVal = GUICON_AVI;
   else if (  !stricmp ( lpExt, s_pMP3 ) ||
              !stricmp ( lpExt, s_pMPA ) ||
@@ -82,7 +86,8 @@ int _set_id ( char* apName ) {
   if ( retVal == GUICON_FILE && lLen > 5 ) {
 
    if (  !stricmp ( --lpExt, s_pDIVX ) ||
-         !stricmp (   lpExt, s_pXVID )
+         !stricmp (   lpExt, s_pXVID ) ||
+         !stricmp (   lpExt, s_pMPEG )
    ) retVal = GUICON_AVI;
 
   }  /* end if */

@@ -9,10 +9,10 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include "SMS.h"
 #include "SMS_EE.h"
 #include "SMS_IOP.h"
 #include "SMS_DMA.h"
-#include "SMS_Integer.h"
 #include "SMS_Locale.h"
 #include "SMS_GUI.h"
 #include "SMS_Data.h"
@@ -34,41 +34,6 @@ static char s_pROMVER[] __attribute__(   (  section( ".data" ), aligned( 1 )  ) 
 
 #define ALIGN( x, a ) (   (  ( x ) + ( a ) - 1  ) & ~(  ( a ) - 1  )   )
 
-const unsigned int g_SMS_InvTbl[ 256 ] = {
-         0U, 4294967295U, 2147483648U, 1431655766U, 1073741824U,  858993460U,  715827883U,  613566757U,
- 536870912U,  477218589U,  429496730U,  390451573U,  357913942U,  330382100U,  306783379U,  286331154U,
- 268435456U,  252645136U,  238609295U,  226050911U,  214748365U,  204522253U,  195225787U,  186737709U,
- 178956971U,  171798692U,  165191050U,  159072863U,  153391690U,  148102321U,  143165577U,  138547333U,
- 134217728U,  130150525U,  126322568U,  122713352U,  119304648U,  116080198U,  113025456U,  110127367U,
- 107374183U,  104755300U,  102261127U,   99882961U,   97612894U,   95443718U,   93368855U,   91382283U,
-  89478486U,   87652394U,   85899346U,   84215046U,   82595525U,   81037119U,   79536432U,   78090315U,
-  76695845U,   75350304U,   74051161U,   72796056U,   71582789U,   70409300U,   69273667U,   68174085U,
-  67108864U,   66076420U,   65075263U,   64103990U,   63161284U,   62245903U,   61356676U,   60492498U,
-  59652324U,   58835169U,   58040099U,   57266231U,   56512728U,   55778797U,   55063684U,   54366675U,
-  53687092U,   53024288U,   52377650U,   51746594U,   51130564U,   50529028U,   49941481U,   49367441U,
-  48806447U,   48258060U,   47721859U,   47197443U,   46684428U,   46182445U,   45691142U,   45210183U,
-  44739243U,   44278014U,   43826197U,   43383509U,   42949673U,   42524429U,   42107523U,   41698712U,
-  41297763U,   40904451U,   40518560U,   40139882U,   39768216U,   39403370U,   39045158U,   38693400U,
-  38347923U,   38008561U,   37675152U,   37347542U,   37025581U,   36709123U,   36398028U,   36092163U,
-  35791395U,   35495598U,   35204650U,   34918434U,   34636834U,   34359739U,   34087043U,   33818641U,
-  33554432U,   33294321U,   33038210U,   32786010U,   32537632U,   32292988U,   32051995U,   31814573U,
-  31580642U,   31350127U,   31122952U,   30899046U,   30678338U,   30460761U,   30246249U,   30034737U,
-  29826162U,   29620465U,   29417585U,   29217465U,   29020050U,   28825284U,   28633116U,   28443493U,
-  28256364U,   28071682U,   27889399U,   27709467U,   27531842U,   27356480U,   27183338U,   27012373U,
-  26843546U,   26676816U,   26512144U,   26349493U,   26188825U,   26030105U,   25873297U,   25718368U,
-  25565282U,   25414008U,   25264514U,   25116768U,   24970741U,   24826401U,   24683721U,   24542671U,
-  24403224U,   24265352U,   24129030U,   23994231U,   23860930U,   23729102U,   23598722U,   23469767U,
-  23342214U,   23216040U,   23091223U,   22967740U,   22845571U,   22724695U,   22605092U,   22486740U,
-  22369622U,   22253717U,   22139007U,   22025474U,   21913099U,   21801865U,   21691755U,   21582751U,
-  21474837U,   21367997U,   21262215U,   21157475U,   21053762U,   20951060U,   20849356U,   20748635U,
-  20648882U,   20550083U,   20452226U,   20355296U,   20259280U,   20164166U,   20069941U,   19976593U,
-  19884108U,   19792477U,   19701685U,   19611723U,   19522579U,   19434242U,   19346700U,   19259944U,
-  19173962U,   19088744U,   19004281U,   18920561U,   18837576U,   18755316U,   18673771U,   18592933U,
-  18512791U,   18433337U,   18354562U,   18276457U,   18199014U,   18122225U,   18046082U,   17970575U,
-  17895698U,   17821442U,   17747799U,   17674763U,   17602325U,   17530479U,   17459217U,   17388532U,
-  17318417U,   17248865U,   17179870U,   17111424U,   17043522U,   16976156U,   16909321U,   16843010
-};
-
 unsigned int SMS_Linesize ( unsigned int aWidth, unsigned int* apLinesize ) {
 
  const int lYWidth = aWidth + 32;
@@ -89,22 +54,48 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
 
 }  /* SMS_Realloc */
 
-long SMS_Rescale ( long anA, long aB, long aC ) {
+extern long MUL64 ( long, long );
 
- SMS_Integer lAi, lCi;
-    
+long SMS_Rescale ( long anA, long aB, long aC ){
+
+ int           i;
+ unsigned long lA0, lA1, lB0, lB1, lT1, lT1a;
+ long          lR;
+
  if ( anA < 0 ) return -SMS_Rescale ( -anA, aB, aC );
-    
- if ( aB <= INT_MAX && aC <= INT_MAX )
 
-  return anA <= INT_MAX ? ( anA * aB + aC / 2 ) / aC
-                        : anA / aC * aB + ( anA % aC * aB + aC / 2 ) / aC;
-    
- lAi = SMS_Integer_mul_i (  SMS_Integer_int2i ( anA ), SMS_Integer_int2i ( aB )  );
- lCi = SMS_Integer_int2i ( aC );
- lAi = SMS_Integer_add_i (  lAi, SMS_Integer_shr_i ( lCi, 1 )  );
-    
- return SMS_Integer_i2int (  SMS_Integer_div_i ( lAi, lCi )  );
+ lR = aC >> 1;
+
+ if ( aB <= INT_MAX && aC <= INT_MAX ) {
+  if ( anA <= INT_MAX )
+   return ( anA * aB + lR ) / aC;
+  else return anA / aC * aB + ( anA % aC * aB + lR ) / aC;
+ }  /* end if */
+
+ lA0  = anA & 0xFFFFFFFF;
+ lA1  = anA >> 32;
+ lB0  = aB  & 0xFFFFFFFF;
+ lB1  = aB  >> 32;
+ lT1  = MUL64 ( lA0, lB1 ) + MUL64 ( lA1, lB0 );
+ lT1a = lT1 << 32;
+ lA0  = MUL64 ( lA0, lB0 ) + lT1a;
+ lA1  = MUL64 ( lA1, lB1 ) + ( lT1 >> 32 ) + ( lA0 < lT1a );
+ lA0 += lR;
+ lA1 += lA0 < lR;
+
+ for ( i = 63; i >= 0; --i ) {
+
+  lA1 += lA1 + (  ( lA0 >> i ) & 1  );
+  lT1 += lT1;
+
+  if ( aC <= lA1 ){
+   lA1 -= aC;
+   ++lT1;
+  }  /* end if */
+
+ }  /* end for */
+
+ return lT1;
 
 }  /* end SMS_Rescale */
 
@@ -153,17 +144,13 @@ void SMS_EEInit ( void ) {
  lpDMAC -> m_RBSR = 0;
  lpDMAC -> m_RBOR = 0;
 
- ChangeThreadPriority (  GetThreadId (), 64  );
+ ChangeThreadPriority (  GetThreadId (), SMS_THREAD_PRIORITY  );
 
  lFD = fioOpen ( s_pROMVER, O_RDONLY );
  fioRead (  lFD, lROMVer, sizeof ( lROMVer )  );
  fioClose ( lFD );
 
  g_pBXDATASYS[ 6 ] = lROMVer[ 4 ] == 'E' ? 'E' : ( lROMVer[ 4 ] == 'J' ? 'I' : 'A');
-
- memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
- memcpy (  ( void* )0x11000000, &g_DataBuffer[ SMS_VU0_MPG_OFFSET  ], SMS_VU0_MPG_SIZE   );
- memcpy (  ( void* )0x11004000, &g_DataBuffer[ SMS_VU0_DATA_OFFSET ], SMS_VU0_DATA_SIZE  );
 
 }  /* end SMS_EEInit */
 
