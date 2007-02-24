@@ -87,7 +87,6 @@ IPU_FRST:
     ei
     lw      $a0, 0x2010($v1)
     sll     $v0, $v0, 14
-    or      $a0, $a0, $v0
     sw      $v0, 0x2010($v1)
 1:
     lw      $v0, 0x2010($v1)
@@ -99,4 +98,4 @@ IPU_FRST:
     bltz    $v0, 1b
     nop
     jr      $ra
-    nop
+    sw      $a0, 0x2010($v1)

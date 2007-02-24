@@ -27,6 +27,7 @@
 #include "SMS_Sounds.h"
 #include "SMS_RC.h"
 #include "SMS_MPEG.h"
+#include "SMS_MPEG12.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -574,6 +575,34 @@ void PlayerControl_AdjustBrightness ( int aDelta ) {
 
 static unsigned char s_DispBuff[ 64 ] __attribute__(   (  aligned( 64 )  )   );
 
+static void SeekCB ( SMS_RingBuffer* apRB ) {
+
+ SMS_Container*  lpCont = ( SMS_Container* )apRB -> m_pWaitCBParam;
+ SMS_RingBuffer* lpVB   = lpCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_pPktBuf;
+ SMS_Stream**    lppStm = lpCont -> m_pStm;
+
+ while ( 1 ) {
+
+  int lPktIdx, lSize = lpCont -> ReadPacket ( lpCont, &lPktIdx );
+
+  if ( lSize <= 0 ) {
+   lpVB -> m_pOut = NULL;
+   SMS_RingBufferPost ( lpVB );
+   return;
+  } else if ( lPktIdx == s_Player.m_VideoIdx ) {
+   SMS_RingBufferPost ( lpVB );
+   return;
+  } else {
+   SMS_AVPacket* lpPkt;
+   SMS_RingBufferPost ( lppStm[ lPktIdx ] -> m_pPktBuf );
+   lpPkt = ( SMS_AVPacket* )SMS_RingBufferWait ( lppStm[ lPktIdx ] -> m_pPktBuf );
+   SMS_RingBufferFree ( lppStm[ lPktIdx ] -> m_pPktBuf, lpPkt -> m_Size + 64 );
+  }  /* end else */
+
+ }  /* end while */
+
+}  /* end SeekCB */
+
 static int PlayerControl_Scroll ( int aDir ) {
 
  SMS_Container*   lpCont     = s_Player.m_pCont;
@@ -588,9 +617,8 @@ static int PlayerControl_Scroll ( int aDir ) {
  uint32_t         lFilePos   = 0U;
  void*            lpHandler  = SMS_TimerReset ( 2, NULL );
  SMS_FrameBuffer* lpFrame    = NULL;
- SMS_RingBuffer*  lpBuff     = NULL;
+ SMS_RingBuffer*  lpBuff     = lpStms[ s_Player.m_VideoIdx ] -> m_pPktBuf;
  SMS_RingBuffer*  lpDispBuff = SMS_RingBufferInit (  s_DispBuff, sizeof ( s_DispBuff )  );
- int              lPktIdx;
 
  s_Player.m_pIPUCtx -> StopSync ( 1 );
  lpIPUCtx -> Suspend ();
@@ -600,8 +628,21 @@ static int PlayerControl_Scroll ( int aDir ) {
  lpIPUCtx -> Sync    ();
  PlayerControl_DisplayTime ( aDir, lTime, 1 );
 
+ if ( lpStm -> m_pCodec -> m_ID == SMS_CodecID_MPEG1 ||
+      lpStm -> m_pCodec -> m_ID == SMS_CodecID_MPEG2
+ ) lIncr <<= 3;
+
+ lTime += lIncr;
+
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos,  0 );
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 10 );
+
+ lpBuff -> WaitCB         = SeekCB;
+ lpBuff -> m_pWaitCBParam = lpCont;
+
+ SMS_Codec_MPEG12_Reset (
+  SMS_MPEG12_RESET_QUEUE | SMS_MPEG12_RESET_DECODER
+ );
 
  while ( 1 ) {
 
@@ -618,6 +659,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
    s_Player.m_VideoTime = 0;
    s_Player.m_AudioTime = 0;
+   g_MPEGCtx.m_LastPPTS = 0;
    lpFrame              = NULL;
 
    retVal = 1;
@@ -626,135 +668,124 @@ static int PlayerControl_Scroll ( int aDir ) {
   }  /* end if */
 
   lFilePos = lpFileCtx -> m_CurPos;
-  lSize    = lpCont -> ReadPacket ( lpCont, &lPktIdx );
 
-  if ( lSize < 0 ) {
+  if (  s_Player.m_pVideoCodec -> Decode (
+         lpStm -> m_pCodec, lpDispBuff, lpBuff
+        )
+  ) {
+
+   int64_t lDiff;
+
+   lpFrame = *( SMS_FrameBuffer** )SMS_RingBufferWait ( lpDispBuff );
+
+   SMS_RingBufferFree ( lpDispBuff, 4 );
+
+   s_Player.m_VideoTime = lpFrame -> m_PTS;
+   s_Player.m_AudioTime = lpFrame -> m_PTS;
+
+   do {
+
+    uint32_t lButtons = GUI_ReadButtons ();
+
+    if ( lButtons && g_Timer > lNextTime ) {
+
+     lNextTime = g_Timer + 300;
+
+     if ( lButtons == SMS_PAD_TRIANGLE || lButtons == RC_RESET || lButtons == RC_RETURN || lButtons == RC_STOP ) {
+
+      goto end;
+
+     } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) {
+
+      if ( aDir > 0 ) {
+
+       if ( lIncr < 60000LL ) lIncr += 3000LL;
+
+      } else if ( lIncr < -3000LL ) {
+
+       lIncr += 3000LL;
+
+      } else {
+
+       lIncr = 3000LL;
+       aDir  = 1;
+
+      }  /* end else */
+
+     } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT || lButtons == RC_LEFTX ) {
+
+      if ( aDir > 0 ) {
+
+       if ( lIncr > 3000LL )
+
+        lIncr -= 3000LL;
+
+       else {
+
+        lIncr = -3000LL;
+        aDir  = -1;
+
+       }  /* end else */
+
+      } else if ( lIncr > -60000LL ) lIncr -= 3000LL;
+
+     } else if ( lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
+
+      PlayerControl_DisplayTime ( 0, lpFrame -> m_PTS, 0 );
+      lpIPUCtx -> Display ( lpFrame, -1 );
+      lpIPUCtx -> Sync ();
+
+      retVal = 1;
+      goto end;
+
+     }  /* end if */
+
+    }  /* end if */
+
+    lDiff = 300LL - ( g_Timer - lDisplayTime );
+
+   } while ( lDiff > 0 );
+
+   PlayerControl_DisplayTime ( aDir, lpFrame -> m_PTS, 0 );
+
+   if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) {
+
+    s_Player.m_pSubCtx -> m_Idx = 0;
+    s_Player.m_pSubCtx -> Display ( lpFrame -> m_PTS );
+
+   }  /* end if */
+
+   lpIPUCtx -> Display ( lpFrame, -1 );
+   lpIPUCtx -> Sync ();
+
+  } else if (  FILE_EOF( lpCont -> m_pFileCtx )  ) {
 
    retVal = 0;
    break;
 
-  } else if ( lSize == 0 )
+  }  /* end if */
 
-   continue;
+  lTime += lIncr;
 
-  else {
+  if ( lTime < 0 ) lTime = 0;
 
-   lpBuff = lpStms[ lPktIdx ] -> m_pPktBuf;
-
-   SMS_RingBufferPost ( lpBuff );
-
-   if ( lPktIdx == s_Player.m_VideoIdx ) {
-
-    if (  s_Player.m_pVideoCodec -> Decode (
-           lpStm -> m_pCodec, lpDispBuff, lpBuff
-          )
-    ) {
-
-     lpFrame = *( SMS_FrameBuffer** )SMS_RingBufferWait ( lpDispBuff );
-     int64_t lDiff;
-
-     SMS_RingBufferFree ( lpDispBuff, 4 );
-
-     s_Player.m_VideoTime = lpFrame -> m_PTS;
-     s_Player.m_AudioTime = lpFrame -> m_PTS;
-
-     do {
-
-      uint32_t lButtons = GUI_ReadButtons ();
-
-      if ( lButtons && g_Timer > lNextTime ) {
-
-       lNextTime = g_Timer + 300;
-
-       if ( lButtons == SMS_PAD_TRIANGLE || lButtons == RC_RESET || lButtons == RC_RETURN || lButtons == RC_STOP ) {
-
-        goto end;
-
-       } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) {
-
-        if ( aDir > 0 ) {
-
-         if ( lIncr < 60000LL ) lIncr += 3000LL;
-
-        } else if ( lIncr < -3000LL ) {
-
-         lIncr += 3000LL;
-
-        } else {
-
-         lIncr = 3000LL;
-         aDir  = 1;
-
-        }  /* end else */
-
-       } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT || lButtons == RC_LEFTX ) {
-
-        if ( aDir > 0 ) {
-
-         if ( lIncr > 3000LL )
-
-          lIncr -= 3000LL;
-
-         else {
-
-          lIncr = -3000LL;
-          aDir  = -1;
-
-         }  /* end else */
-
-        } else if ( lIncr > -60000LL ) lIncr -= 3000LL;
-
-       } else if ( lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
-
-        lpIPUCtx -> Sync ();
-        PlayerControl_DisplayTime ( 0, lpFrame -> m_PTS, 0 );
-        lpIPUCtx -> Display ( lpFrame, -1 );
-
-        retVal = 1;
-        goto end;
-
-       }  /* end if */
-
-      }  /* end if */
-
-      lDiff = 300LL - ( g_Timer - lDisplayTime );
-
-     } while ( lDiff > 0 );
-
-     lpIPUCtx -> Sync ();
-     PlayerControl_DisplayTime ( aDir, lpFrame -> m_PTS, 0 );
-
-     if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) {
-
-      s_Player.m_pSubCtx -> m_Idx = 0;
-      s_Player.m_pSubCtx -> Display ( lpFrame -> m_PTS );
-
-     }  /* end if */
-
-     lpIPUCtx -> Display ( lpFrame, -1 );
-
-    }  /* end if */
-
-    lTime += lIncr;
-
-    if ( lTime < 0 ) lTime = 0;
-
-   } else {
-
-    SMS_AVPacket* lpPacket = ( SMS_AVPacket* )SMS_RingBufferWait ( lpBuff );
-    SMS_RingBufferFree ( lpBuff, lpPacket -> m_Size + 64 );
-
-   }  /* end else */
-
-  }  /* end else */
+  SMS_Codec_MPEG12_Reset ( SMS_MPEG12_RESET_DECODER );
 
  }  /* end while */
 end:
- if ( lpBuff ) SMS_RingBufferReset ( lpBuff );
+ SMS_Codec_MPEG12_Reset (
+  SMS_MPEG12_RESET_QUEUE   |
+  SMS_MPEG12_RESET_DECODER |
+  SMS_MPEG12_RESET_RECOVER
+ );
+ SMS_RingBufferReset ( lpBuff );
+
+ lpBuff -> WaitCB = NULL;
 
  if ( lpFrame ) {
   s_Player.m_VideoTime = lpFrame -> m_PTS;
   s_Player.m_AudioTime = lpFrame -> m_PTS;
+  g_MPEGCtx.m_LastPPTS = lpFrame -> m_PTS;
  }  /* end if */
 
  if ( retVal ) {
@@ -1279,6 +1310,13 @@ redo:
  lpIPUCtx -> Resume ();
 
  if ( !lResume ) {
+
+  SMS_Codec_MPEG12_Reset (
+   SMS_MPEG12_RESET_QUEUE   |
+   SMS_MPEG12_RESET_DECODER |
+   SMS_MPEG12_RESET_TIME    |
+   SMS_MPEG12_RESET_RECOVER
+  );
 
   InitQueues ( 0 );
 

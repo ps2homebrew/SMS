@@ -32,10 +32,12 @@ typedef struct SMS_RingBuffer {
  int            m_Size;
  int            m_Capacity;
  int            m_fWait;
+ void ( *WaitCB ) ( struct SMS_RingBuffer* );
  int            m_Sema[ SMS_RB_NSEMAS ];
  int            m_nRef;
  void*          m_pBlockCBParam;
  void*          m_pUserCBParam;
+ void*          m_pWaitCBParam;
 
  void ( *BlockCB ) ( struct SMS_RingBuffer* );
  void ( *UserCB  ) ( struct SMS_RingBuffer* );

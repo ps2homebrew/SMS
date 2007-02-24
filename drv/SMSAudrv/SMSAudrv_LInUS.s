@@ -41,8 +41,7 @@ _init_ups:
     slti    $v0, $v1, 512
     bnez    $v0, 2b
     subu    $a2, $a2, $a0
-    addu    $a2, $a2, $a0
-    addiu   $a3, $a3, 2
+    addu    $a3, $a3, $a1
     jr      $ra
     sllv    $v0, $a3, $a1
 1:

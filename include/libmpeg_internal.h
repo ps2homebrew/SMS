@@ -131,6 +131,7 @@ typedef struct _MPEGContext {
  int               m_fSecField;
  int               m_fError;
  int               m_fDCRst;
+ int               m_fRecover;
  int               m_QScale;
  int               m_PictStruct;
  int               m_PictCodingType;
@@ -147,6 +148,7 @@ typedef struct _MPEGContext {
 
 void         _MPEG_Initialize     (  _MPEGContext*, int ( * ) ( void* ), void*, int*  );
 void         _MPEG_Destroy        ( void                                              );
+void         _MPEG_Flush          ( void                                              );
 int          _MPEG_CSCImage       ( void*, void*, int                                 );
 void         _MPEG_SetDefQM       ( int                                               );
 void         _MPEG_SetQM          ( int                                               );

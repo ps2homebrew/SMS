@@ -15,11 +15,17 @@
 #  include "SMS_Codec.h"
 # endif  /* __SMS_Codec_H */
 
+# define SMS_MPEG12_RESET_DECODER 0x00000001
+# define SMS_MPEG12_RESET_QUEUE   0x00000002
+# define SMS_MPEG12_RESET_TIME    0x00000004
+# define SMS_MPEG12_RESET_RECOVER 0x00000008
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
-void SMS_Codec_MPEG12_Open ( SMS_CodecContext* );
+void SMS_Codec_MPEG12_Open  ( SMS_CodecContext* );
+void SMS_Codec_MPEG12_Reset ( unsigned int      );
 
 # ifdef __cplusplus
 }

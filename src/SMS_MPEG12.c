@@ -69,6 +69,21 @@ static int32_t MPEG12_Init ( SMS_CodecContext* apCtx ) {
 
 }  /* end MPEG12_Init */
 
+void SMS_Codec_MPEG12_Reset ( unsigned int aFlags ) {
+
+ if ( aFlags & SMS_MPEG12_RESET_DECODER ) {
+
+  IPU_FRST ();
+  s_MPEGState.m_PTS     = SMS_NOPTS_VALUE;
+  s_MPEGState.m_PrevPTS = SMS_NOPTS_VALUE;
+  MPEG_Reset ( aFlags );
+
+ }  /* end if */
+
+ if ( aFlags & SMS_MPEG12_RESET_QUEUE ) s_MPEGState.m_pPacket = NULL;
+ 
+}  /* end SMS_Codec_MPEG12_Reset */
+
 static void _delete_frames ( void ) {
 
  int i;
@@ -168,6 +183,8 @@ static int _set_dma ( void* apParam ) {
   if ( lpState -> m_pPacket ) SMS_RingBufferFree ( lpState -> m_pInput, lpState -> m_pPacket -> m_Size + 64 );
 
   lpPkt = lpState -> m_pPacket = SMS_RingBufferWait ( lpState -> m_pInput );
+
+  if ( !lpPkt ) return 0;
 
  } while ( !lpPkt -> m_Size );
 

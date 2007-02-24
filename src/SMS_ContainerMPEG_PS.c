@@ -75,10 +75,11 @@ static int _next_start_code ( FileContext* apFileCtx ) {
   lByte = File_GetByte ( apFileCtx );
   --lN;
 
-  if ( lState == 0x00000001 ) {
+  if ( lState == 1 ) {
 
    lState = (  ( lState << 8 ) | lByte ) & 0x00FFFFFF;
    lVal   = lState;
+
    goto found;
 
   }  /* end if */
@@ -303,10 +304,13 @@ static int _fill_video_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, i
 
 static int _fill_audio_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, int aLen ) {
 
- int   retVal = 0;
- int   lPos   = apFileCtx -> m_Pos;
- char  lBuf[ aLen ];
- char* lpPtr  = lBuf;
+ int         retVal = 0;
+ int         lPos   = apFileCtx -> m_Pos;
+ char        lBuf[ aLen ];
+ char*       lpPtr  = lBuf;
+ SMS_MPAInfo lInfo;
+
+ lInfo.m_FreeFmtFrameSize = 0;
 
  apFileCtx -> Read ( apFileCtx, lBuf, aLen );
 
@@ -322,14 +326,14 @@ static int _fill_audio_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, i
     uint64_t lHeader = SMS_bswap32 (  SMS_unaligned32 ( lpPtr )  );
     lHeader &= SMS_INT64( 0x00000000FFFFFFFF );
 
-    if (   MP123_CheckHeader  (  ( uint32_t )lHeader  ) &&
-          !MP123_DecodeHeader (  ( uint32_t )lHeader  )
+    if (   MP123_CheckHeader  (  ( uint32_t )lHeader          ) &&
+          !MP123_DecodeHeader (  ( uint32_t )lHeader, &lInfo  )
     ) {
 
      apStm -> m_SampleRate             =
-     apStm -> m_pCodec -> m_SampleRate = g_MPACtx.m_SampleRate;
-     apStm -> m_pCodec -> m_BitRate    = g_MPACtx.m_BitRate;
-     apStm -> m_pCodec -> m_Channels   = g_MPACtx.m_nChannels;
+     apStm -> m_pCodec -> m_SampleRate = lInfo.m_SampleRate;
+     apStm -> m_pCodec -> m_BitRate    = lInfo.m_BitRate;
+     apStm -> m_pCodec -> m_Channels   = lInfo.m_nChannels;
 
      retVal = 1;
      goto end;
@@ -491,6 +495,54 @@ next:
 
 }  /* end _get_stm_pts */
 
+static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
+
+ uint64_t          lPTS, lDTS;
+ _MPEGPSContainer* lpMyCont  = MYCONT( apCont );
+ FileContext*      lpFileCtx = apCont -> m_pFileCtx;
+ SMS_Stream**      lIt, **lppStm = apCont -> m_pStm;
+ SMS_Stream*       lpStm;
+ int64_t           lBasePos;
+ int               lStartCode;
+ int               retVal;
+
+ aPos    /= 90;
+ lBasePos = ( int64_t )( unsigned int )(
+  ( float )lpFileCtx -> m_Size * (  ( float )aPos / ( float )apCont -> m_Duration  )
+ );
+
+ lpMyCont  -> m_BufLen = 0;
+ lpFileCtx -> Seek (  lpFileCtx, ( unsigned int )lBasePos  );
+
+ while ( 1 ) {
+
+  unsigned int lCurPos = lpFileCtx -> m_CurPos;
+
+  if (   !(  retVal = _read_header ( apCont, &lStartCode, &lPTS, &lDTS )  )   ) break;
+
+  for (  lIt = lppStm; ( lpStm = *lIt ); ++lIt  ) if (  ( int )lpStm -> m_ID == lStartCode  ) break;
+
+  if ( lpStm && lpStm -> m_pPktBuf && lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
+
+   int lCode = _next_start_code ( lpFileCtx );
+
+   if ( lCode == 0x000001B8 || lCode == 0x000001B3 ) {
+
+    lpFileCtx -> Seek ( lpFileCtx, lCurPos );
+    break;
+
+   } else continue;
+
+  }  /* end if */
+
+  File_Skip ( lpFileCtx, retVal );
+
+ }  /* end while */
+
+ return retVal;
+
+}  /* end _Seek */
+
 int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
 
  uint64_t          lPTS, lDTS;
@@ -624,7 +676,9 @@ error:
 
   apCont -> m_pName    = "MPEG";
   apCont -> ReadPacket = _ReadPacket;
+  apCont -> Seek       = _Seek;
   apCont -> m_Duration = 0x7FFFFFFFFFFFFFFFLL;
+  apCont -> m_Flags   |= SMS_CONT_FLAGS_SEEKABLE;
 
   lpFileCtx -> Seek ( lpFileCtx, 0 );
 

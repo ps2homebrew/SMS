@@ -51,6 +51,7 @@ typedef struct SMS_Player {
  int                     m_AudioSampleRate;
  int                     m_AudioChannels;
  int                     m_PlayItemNr;
+ int                     m_EOF;
  short*                  m_pAudioSamples;
  unsigned int            m_StartPos;
 

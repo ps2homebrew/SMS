@@ -12,6 +12,7 @@
 
 .globl _MPEG_Initialize
 .globl _MPEG_Destroy
+.globl _MPEG_Flush
 .globl _MPEG_GetBits
 .globl _MPEG_ShowBits
 .globl _MPEG_AlignBits
@@ -121,9 +122,9 @@ _MPEG_Initialize:
     sd      $zero, s_DataBuf
 
 _MPEG_Destroy:
-1:
-    lb      $v1, s_CSCFlag
-    bne     $v1, $zero, 1b
+    addiu   $v1, $zero, 29
+    addiu   $a0, $zero, 3
+    syscall
     lw      $a1, s_CSCID
     addiu   $a0, $zero, 3
     addiu   $v1, $zero, 19
@@ -132,6 +133,12 @@ _MPEG_Destroy:
     lw      $a0, s_Sema
     syscall
     jr      $ra
+    nop
+
+_MPEG_Flush:
+    sb      $zero, s_CSCFlag
+    jr      $ra
+    sd      $zero, s_DataBuf
 
 _MPEG_Suspend:
 1:

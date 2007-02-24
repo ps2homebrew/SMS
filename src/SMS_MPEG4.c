@@ -3227,13 +3227,18 @@ end:
 
 static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
+ uint8_t*         lpBuf;
+ int32_t          lBufSize;
  SMS_FrameBuffer* lpFrame;
- SMS_BitContext*  lpBitCtx = &g_MPEGCtx.m_BitCtx;
- SMS_AVPacket*    lpPck    = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
- uint8_t*         lpBuf    = lpPck -> m_pData;
- int32_t          lBufSize = lpPck -> m_Size;
- int32_t          retVal;
+ SMS_BitContext*  lpBitCtx;
+ int32_t          retVal = 0;
+ SMS_AVPacket*    lpPck  = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
 
+ if ( !lpPck ) return retVal;
+
+ lpBitCtx = &g_MPEGCtx.m_BitCtx;
+ lpBuf    = lpPck -> m_pData;
+ lBufSize = lpPck -> m_Size;
  g_MPEGCtx.m_pParentCtx = apCtx;
 
  if (  g_MPEGCtx.m_BSBufSize && ( g_MPEGCtx.m_DivXPack || lBufSize < 20 )  )

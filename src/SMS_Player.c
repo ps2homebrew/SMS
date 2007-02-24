@@ -428,10 +428,9 @@ static void _sms_video_decoder ( void* apParam ) {
 
  if ( !lpBuff ) return;
 
- while ( 1 ) {
-  s_Player.m_pVideoCodec -> Decode ( lpCtx, s_pVideoBuffer, lpBuff );
+ while ( 1 ) if (   s_Player.m_pVideoCodec -> Decode ( lpCtx, s_pVideoBuffer, lpBuff )   ) {
   RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
- }  /* end while */
+ }  /* end if */
 
 }  /* end _sms_video_decoder */
 
@@ -590,17 +589,13 @@ static void _sms_audio_only_decoder ( void* apParam ) {
 
 static void _sms_audio_renderer ( void* apParam ) {
 
- uint32_t lBPS     = 0;
- int64_t  lEndTime = 0;
- float    lMult    = 0.0F;
+ uint32_t lBPS  = 0;
+ float    lMult = 0.0F;
 
  if ( s_Player.m_AudioIdx >= 0 ) {
 
-  lBPS     = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec -> m_BitsPerSample;
-  lEndTime = s_Player.m_pCont -> m_Duration - 200LL;
-
+  lBPS  = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec -> m_BitsPerSample;
   if ( !lBPS ) lBPS = 16;
-
   lMult = (  1000.0F / ( lBPS * s_Player.m_AudioChannels / 8 )  ) / ( float )s_Player.m_AudioSampleRate;
 
  }  /* end if */
@@ -635,11 +630,10 @@ static void _sms_audio_renderer ( void* apParam ) {
   s_Player.m_AudioTime += s_Player.m_AVDelta;
   s_Player.m_pSPUCtx -> PlayPCM ( lpPacket + 64 );
 
-  if ( s_Player.m_AudioTime >= lEndTime ) {
+  if ( s_Player.m_EOF && !SMS_RingBufferCount ( s_pAudioBuffer )  ) {
 
    s_Player.m_pIPUCtx -> StopSync ( 1 );
    s_Player.m_pSPUCtx -> SetVolume ( 0 );
-   lEndTime = 0x7FFFFFFFFFFFFFFFL;
 
   }  /* end if */
 
@@ -1055,6 +1049,7 @@ exit:
     }  /* end if */
 
     lSize = lfNoVideo ? 0 : _fill_packet_queues ();
+    s_Player.m_EOF = 0;
 
    } else if ( lBtn == SMS_PAD_SQUARE || lBtn == RC_DISPLAY ) {
 
@@ -1148,6 +1143,8 @@ skip:
 
    int i, lnPackets = 0;
 
+   s_Player.m_EOF = 1;
+
    for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i ) {
 
     SMS_RingBuffer* lpBuff = s_Player.m_pCont -> m_pStm[ i ] -> m_pPktBuf;
@@ -1156,8 +1153,8 @@ skip:
 
    }  /* end if */
 
-   lnPackets += SMS_RingBufferCount ( s_pVideoBuffer );
    lnPackets += SMS_RingBufferCount ( s_pAudioBuffer );
+   lnPackets += SMS_RingBufferCount ( s_pVideoBuffer );
 
    if ( !lnPackets ) break;
 
@@ -1273,6 +1270,7 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
  s_Flags              =   0;
  s_Player.m_AudioTime = 0LL;
  s_Player.m_VideoTime = 0LL;
+ s_Player.m_EOF       = 0;
 
  g_pSPRTop = SMS_SPR_FREE;
 

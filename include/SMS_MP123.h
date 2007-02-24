@@ -80,24 +80,30 @@ typedef struct SMS_MP3SideInfo {
 
 } SMS_MP3SideInfo;
 
+typedef struct SMS_MPAInfo {
+
+ int m_LSF;
+ int m_Layer;
+ int m_SampleRateIdx;
+ int m_ErrorProtection;
+ int m_SampleRate;
+ int m_Mode;
+ int m_ModeExt;
+ int m_nChannels;
+ int m_BitRateIdx;
+ int m_BitRate;
+ int m_FrameSize;
+ int m_FreeFmtFrameSize;
+
+} SMS_MPAInfo;
+
 typedef struct SMS_Codec_MPAContext {
 
  uint8_t            m_InBuf[ 2 ][ SMS_MPA_MAX_CODED_FRAME_SIZE + SMS_BACKSTEP_SIZE ];
  SMS_BitContext     m_BitCtx;
  unsigned int       m_FreeFmtNextHdr;
  int                m_InBufIdx;
- int                m_FrameSize;
- int                m_LSF;
- int                m_Layer;
- int                m_SampleRateIdx;
- int                m_ErrorProtection;
- int                m_SampleRate;
- int                m_Mode;
- int                m_ModeExt;
- int                m_nChannels;
- int                m_BitRate;
- int                m_BitRateIdx;
- int                m_FreeFmtFrameSize;
+ SMS_MPAInfo        m_Info;
  int                m_OldFrameSize;
  SMS_MP2AllocTable* m_pAlloc;
  int                m_2SBLinit;
@@ -115,9 +121,9 @@ extern SMS_Codec_MPAContext g_MPACtx;
 extern "C" {
 # endif  /* __cplusplus */
 
-void SMS_Codec_MP123_Open ( SMS_CodecContext* );
-int  MP123_CheckHeader    ( uint32_t );
-int  MP123_DecodeHeader   ( uint32_t );
+void SMS_Codec_MP123_Open ( SMS_CodecContext*      );
+int  MP123_CheckHeader    ( uint32_t               );
+int  MP123_DecodeHeader   ( uint32_t, SMS_MPAInfo* );
 
 # ifdef __cplusplus
 }

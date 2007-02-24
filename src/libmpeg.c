@@ -111,8 +111,20 @@ void MPEG_Initialize (
  s_MPEG12Ctx.m_MC[ 1 ].m_pSPRMC  = ( void* )0x70002400;
 
  MPEG_Picture = _get_first_picture;
+ MPEG_Reset ( 1 );
 
 }  /* end MPEG_Initialize */
+
+void MPEG_Reset ( int aFlags ) {
+
+ if ( aFlags & MPEG_RESET_TIME ) s_MPEG12Ctx.m_FwdPTS =
+                                 s_MPEG12Ctx.m_BckPTS =
+                                 s_MPEG12Ctx.m_AuxPTS = 0;
+ if ( aFlags & MPEG_RESET_RECOVER ) s_MPEG12Ctx.m_fRecover = 1;
+
+ _MPEG_Flush ();
+
+}  /* end MPEG_Reset */
 
 void MPEG_Destroy ( void ) {
 
@@ -602,6 +614,15 @@ static int _get_next_picture ( void* apData, long* apPTS ) {
    int lfPic = 0;
 
    _mpeg12_picture_data ();
+
+   if ( s_MPEG12Ctx.m_fRecover ) {
+
+    if ( s_MPEG12Ctx.m_PictStruct     != _MPEG_PS_FRAME ) s_MPEG12Ctx.m_fSecField ^= 1;
+    if ( s_MPEG12Ctx.m_PictCodingType != _MPEG_PT_P     ) continue;
+
+    s_MPEG12Ctx.m_fRecover = 0;
+
+   }  /* end if */
 
    if (  ( s_MPEG12Ctx.m_PictStruct == _MPEG_PS_FRAME || s_MPEG12Ctx.m_fSecField ) && s_MPEG12Ctx.m_SI.m_FrameCnt  ) {
 

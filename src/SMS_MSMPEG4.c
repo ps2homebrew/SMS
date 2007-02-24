@@ -2268,13 +2268,18 @@ end:
 
 static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
+ uint8_t*         lpBuf;
+ int32_t          lBufSize;
  SMS_FrameBuffer* lpFrame;
+ SMS_BitContext*  lpBitCtx;
  int              retVal   = 0;
  SMS_AVPacket*    lpPkt    = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
- SMS_BitContext*  lpBitCtx = &g_MPEGCtx.m_BitCtx;
- uint8_t*         lpBuf    = lpPkt -> m_pData;
- int32_t          lBufSize = lpPkt -> m_Size;
 
+ if ( !lpPkt ) return retVal;
+
+ lpBitCtx = &g_MPEGCtx.m_BitCtx;
+ lpBuf    = lpPkt -> m_pData;
+ lBufSize = lpPkt -> m_Size;
  g_MPEGCtx.m_pParentCtx = apCtx;
 
  SMS_InitGetBits ( lpBitCtx, lpBuf, lBufSize << 3 );

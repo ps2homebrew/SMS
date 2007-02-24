@@ -35,6 +35,9 @@
 # define MPEG_VIDEO_FORMAT_MAC       4
 # define MPEG_VIDEO_FORMAT_UNSPEC    5
 
+# define MPEG_RESET_TIME    0x00000004
+# define MPEG_RESET_RECOVER 0x00000008
+
 typedef struct MPEGSequenceInfo {
 
  int m_Width;
@@ -55,6 +58,7 @@ extern "C" {
 
 void MPEG_Initialize (  int ( * ) ( void* ), void*, void* ( * ) ( void*, MPEGSequenceInfo* ), void*, long*  );
 void MPEG_Destroy    ( void );
+void MPEG_Reset      ( int  );
 int  ( *MPEG_Picture ) ( void*, long* );
 
 # ifdef __cplusplus

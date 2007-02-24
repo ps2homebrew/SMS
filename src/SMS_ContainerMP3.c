@@ -55,6 +55,9 @@ uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_MP3Info* apInfo ) {
  SMS_ALIGN( uint8_t lBuf[ ID3_HEADER_SIZE ], 4 );
  unsigned int lMP3Pos = 16384;
  uint64_t     lVal    = 0;
+ SMS_MPAInfo  lInfo;
+
+ lInfo.m_FreeFmtFrameSize = 0;
 
  if (  apFileCtx -> Read ( apFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
 
@@ -75,7 +78,19 @@ uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_MP3Info* apInfo ) {
    lVal  = SMS_bswap32 (  *( uint32_t* )lBuf  );
    lVal &= SMS_INT64( 0x00000000FFFFFFFF );
 
-   if (   MP123_CheckHeader (  ( uint32_t )lVal  )   ) break;
+   if (   MP123_CheckHeader  (  ( uint32_t )lVal          ) &&
+         !MP123_DecodeHeader (  ( uint32_t )lVal, &lInfo  )
+   ) {
+
+    apInfo -> m_SampleRate = lInfo.m_SampleRate;
+    apInfo -> m_nChannels  = lInfo.m_nChannels;
+    apInfo -> m_BitRate    = lInfo.m_BitRate;
+
+    apFileCtx -> Seek ( apFileCtx, apFileCtx -> m_CurPos - 4 );
+
+    break;
+
+   }  /* end if */
 
    lVal = 0L;
 
@@ -88,19 +103,7 @@ uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_MP3Info* apInfo ) {
 
   }  /* end while */
 
-  if (  !lMP3Pos || FILE_EOF( apFileCtx )  ) lVal = 0;
-
  }  /* end if */
-
- if (   lVal && !MP123_DecodeHeader (  ( uint32_t )lVal  )   ) {
-
-  apInfo -> m_SampleRate = g_MPACtx.m_SampleRate;
-  apInfo -> m_nChannels  = g_MPACtx.m_nChannels;
-  apInfo -> m_BitRate    = g_MPACtx.m_BitRate;
-
-  apFileCtx -> Seek ( apFileCtx, apFileCtx -> m_CurPos - 4 );
-
- } else lVal = 0;
 
  return lVal;
 

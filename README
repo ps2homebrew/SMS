@@ -974,3 +974,13 @@ Update (11-02-2007)
   OK (to say nothing of the jet sound from its fan which I've just cut off (invalidating
   warranty thus) :D))). Note that password protected shares are not supported;
 - presumably fixed a bug in GMC calculations;
+
+Update (16-02-2007)
+--------------------
+- presumably fixed screwed MP3 code (random 'blips' while playing playlists)
+  (thanks to 'lee99' and 'gukid' for the notes);
+
+Update (23-02-2007)
+--------------------
+- implemented "scrolling" functionality for mpeg1/2 clips;
+- fixed "freeze on video clip end" issue. Thanks to 'lee99' for the sample clip;

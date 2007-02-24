@@ -4773,11 +4773,11 @@ static int32_t MP123_Init ( SMS_CodecContext* apCtx ) {
 
  MP123_CoreInit ();
 
- MYCTX() -> m_InBufIdx  = 0;
- MYCTX() -> m_pInBuf    = &MYCTX() -> m_InBuf[ 0 ][ SMS_BACKSTEP_SIZE ];
- MYCTX() -> m_pInBufPtr = MYCTX() -> m_pInBuf;
- MYCTX() -> m_FrameSize = 0;
- MYCTX() -> m_Len       = 0;
+ MYCTX() -> m_InBufIdx         = 0;
+ MYCTX() -> m_pInBuf           = &MYCTX() -> m_InBuf[ 0 ][ SMS_BACKSTEP_SIZE ];
+ MYCTX() -> m_pInBufPtr        = MYCTX() -> m_pInBuf;
+ MYCTX() -> m_Info.m_FrameSize = 0;
+ MYCTX() -> m_Len              = 0;
 
  return 0;
 
@@ -4805,7 +4805,7 @@ static void _mp1_step_one ( unsigned int* apBAlloc, unsigned int aScaleIdx[ 2 ][
  unsigned int*   lpSCA    = ( unsigned int* )aScaleIdx;
  SMS_BitContext* lpBitCtx = &g_MPACtx.m_BitCtx;
 
- if ( g_MPACtx.m_nChannels == 2 ) {
+ if ( g_MPACtx.m_Info.m_nChannels == 2 ) {
 
   int lJSBound = g_MPACtx.m_JSBound;
 
@@ -4864,7 +4864,7 @@ static void _mp1_step_two (
  unsigned int*   lpSCA    = ( unsigned int*)aScaleIdx;
  SMS_BitContext* lpBitCtx = &g_MPACtx.m_BitCtx;
 
- if ( g_MPACtx.m_nChannels == 2 ) {
+ if ( g_MPACtx.m_Info.m_nChannels == 2 ) {
 
   int    lJSBound = g_MPACtx.m_JSBound;
   float* lpF0     = aFraction[ 0 ];
@@ -4933,7 +4933,7 @@ static void _mp1_decode_frame ( SMS_RingBuffer* apRB ) {
 
  SMS_ALIGN( float lFraction[ 2 ][ 32 ], 16 );
 
- int          i, lStereo = g_MPACtx.m_nChannels;
+ int          i, lStereo = g_MPACtx.m_Info.m_nChannels;
  unsigned int lBAlloc[ 64 ];
  unsigned int lScaleIdx[ 2 ][ 32 ];
  int          lnAlloc   = lStereo * 768;
@@ -4943,12 +4943,12 @@ static void _mp1_decode_frame ( SMS_RingBuffer* apRB ) {
  *( int* )lpSamples = lnAlloc;
  lpSamples += 2;
 
- g_MPACtx.m_JSBound = g_MPACtx.m_Mode == SMS_MPA_JSTEREO ?
-  ( g_MPACtx.m_ModeExt << 2 ) + 4 : 32;
+ g_MPACtx.m_JSBound = g_MPACtx.m_Info.m_Mode == SMS_MPA_JSTEREO ?
+  ( g_MPACtx.m_Info.m_ModeExt << 2 ) + 4 : 32;
 
  _mp1_step_one ( lBAlloc, lScaleIdx );
 
- if ( g_MPACtx.m_nChannels == 2 ) for ( i = 0; i < 12; ++i ) {
+ if ( g_MPACtx.m_Info.m_nChannels == 2 ) for ( i = 0; i < 12; ++i ) {
 
   _mp1_step_two ( lFraction, lBAlloc, lScaleIdx );
 
@@ -4988,9 +4988,9 @@ static void _mp2_select_table ( void ) {
 
  int lTable;
 
- if ( g_MPACtx.m_SampleRateIdx >= 3 )
+ if ( g_MPACtx.m_Info.m_SampleRateIdx >= 3 )
   lTable= 4;
- else lTable = sl_Translate[ g_MPACtx.m_SampleRateIdx][ 2 - g_MPACtx.m_nChannels ][ g_MPACtx.m_BitRateIdx ];
+ else lTable = sl_Translate[ g_MPACtx.m_Info.m_SampleRateIdx ][ 2 - g_MPACtx.m_Info.m_nChannels ][ g_MPACtx.m_Info.m_BitRateIdx ];
 
  g_MPACtx.m_pAlloc   = sl_pTables[ lTable ];
  g_MPACtx.m_2SBLinit = sl_SBLims [ lTable ];
@@ -5001,7 +5001,7 @@ static void _mp2_step_one ( unsigned int* apBitAlloc, int* apScale ) {
 
  static unsigned int sl_SCFSI[ 64 ];
 
- int                lStereo   = g_MPACtx.m_nChannels - 1;
+ int                lStereo   = g_MPACtx.m_Info.m_nChannels - 1;
  int                lSBLimit  = g_MPACtx.m_2SBLinit;
  int                lJSBbound = g_MPACtx.m_JSBound;
  int                lSBLimit2 = lSBLimit << lStereo;
@@ -5107,7 +5107,7 @@ static void _mp2_step_two ( unsigned int* apBitAlloc, float aFraction[ 2 ][ 4 ][
  };
 
  int                i, j, k, lBA;
- int                lStereo   = g_MPACtx.m_nChannels;
+ int                lStereo   = g_MPACtx.m_Info.m_nChannels;
  int                lSBLimit  = g_MPACtx.m_2SBLinit;
  int                lJSBbound = g_MPACtx.m_JSBound;
  unsigned int*      lpBitA    = apBitAlloc;
@@ -5228,7 +5228,7 @@ static void _mp2_decode_frame ( SMS_RingBuffer* apRB ) {
  int            i, j;
  unsigned int   lBitAlloc[ 64 ];
  int            lScale   [ 192 ];
- int            lnAlloc   = g_MPACtx.m_nChannels * 2304;
+ int            lnAlloc   = g_MPACtx.m_Info.m_nChannels * 2304;
  short*         lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 68 );
 
  lpSamples += 32;
@@ -5237,14 +5237,14 @@ static void _mp2_decode_frame ( SMS_RingBuffer* apRB ) {
 
  _mp2_select_table ();
 
- g_MPACtx.m_JSBound = g_MPACtx.m_Mode == SMS_MPA_JSTEREO ?
-  ( g_MPACtx.m_ModeExt << 2 ) + 4 : g_MPACtx.m_2SBLinit;
+ g_MPACtx.m_JSBound = g_MPACtx.m_Info.m_Mode == SMS_MPA_JSTEREO ?
+  ( g_MPACtx.m_Info.m_ModeExt << 2 ) + 4 : g_MPACtx.m_2SBLinit;
 
  if ( g_MPACtx.m_JSBound > g_MPACtx.m_2SBLinit ) g_MPACtx.m_JSBound = g_MPACtx.m_2SBLinit;
 
  _mp2_step_one ( lBitAlloc, lScale );
 
- if ( g_MPACtx.m_nChannels == 2 ) for ( i = 0; i < 12; ++i ) {
+ if ( g_MPACtx.m_Info.m_nChannels == 2 ) for ( i = 0; i < 12; ++i ) {
 
   _mp2_step_two ( lBitAlloc, lFraction, lScale, i >> 2 );
 
@@ -5267,7 +5267,7 @@ static void _mp2_decode_frame ( SMS_RingBuffer* apRB ) {
  
 }  /* end _mp2_decode_frame */
 
-int MP123_DecodeHeader ( uint32_t aHdr ) {
+int MP123_DecodeHeader ( uint32_t aHdr, SMS_MPAInfo* apInfo ) {
 
  int lSampleRate;
  int lFrameSize;
@@ -5278,41 +5278,41 @@ int MP123_DecodeHeader ( uint32_t aHdr ) {
 
  if (  aHdr & ( 1 << 20 )  ) {
 
-  g_MPACtx.m_LSF = (  aHdr & ( 1 << 19 )  ) ? 0 : 1;
+  apInfo -> m_LSF = (  aHdr & ( 1 << 19 )  ) ? 0 : 1;
   lMPEG25        = 0;
 
  } else {
 
-  g_MPACtx.m_LSF = 1;
-  lMPEG25        = 1;
+  apInfo -> m_LSF = 1;
+  lMPEG25         = 1;
 
  }  /* end else */
 
- g_MPACtx.m_Layer = 3 - (  ( aHdr >> 17 ) & 3  );
+ apInfo -> m_Layer = 3 - (  ( aHdr >> 17 ) & 3  );
 
  lSampleRateIdx  = ( aHdr >> 10 ) & 3;
- lSampleRate     = g_mpa_freq_tab[ lSampleRateIdx ] >> ( g_MPACtx.m_LSF + lMPEG25 );
- lSampleRateIdx += 3 * ( g_MPACtx.m_LSF + lMPEG25 );
+ lSampleRate     = g_mpa_freq_tab[ lSampleRateIdx ] >> ( apInfo -> m_LSF + lMPEG25 );
+ lSampleRateIdx += 3 * ( apInfo -> m_LSF + lMPEG25 );
 
- g_MPACtx.m_SampleRateIdx   = lSampleRateIdx;
- g_MPACtx.m_ErrorProtection = (  ( aHdr >> 16 ) & 1  ) ^ 1;
- g_MPACtx.m_SampleRate      = lSampleRate;
+ apInfo -> m_SampleRateIdx   = lSampleRateIdx;
+ apInfo -> m_ErrorProtection = (  ( aHdr >> 16 ) & 1  ) ^ 1;
+ apInfo -> m_SampleRate      = lSampleRate;
 
  lBitrateIdx = ( aHdr >> 12 ) & 0xF;
  lPadding    = ( aHdr >>  9 ) & 0x1;
 
- g_MPACtx.m_Mode       = ( aHdr >> 6 ) & 3;
- g_MPACtx.m_ModeExt    = ( aHdr >> 4 ) & 3;
- g_MPACtx.m_nChannels  = g_MPACtx.m_Mode == SMS_MPA_MONO ? 1 : 2;
- g_MPACtx.m_BitRateIdx = lBitrateIdx;
+ apInfo -> m_Mode       = ( aHdr >> 6 ) & 3;
+ apInfo -> m_ModeExt    = ( aHdr >> 4 ) & 3;
+ apInfo -> m_nChannels  = apInfo -> m_Mode == SMS_MPA_MONO ? 1 : 2;
+ apInfo -> m_BitRateIdx = lBitrateIdx;
 
  if ( lBitrateIdx != 0 ) {
 
-  lFrameSize = g_mpa_bitrate_tab[ g_MPACtx.m_LSF ][ g_MPACtx.m_Layer ][ lBitrateIdx ];
+  lFrameSize = g_mpa_bitrate_tab[ apInfo -> m_LSF ][ apInfo -> m_Layer ][ lBitrateIdx ];
 
-  g_MPACtx.m_BitRate = lFrameSize * 1000;
+  apInfo -> m_BitRate = lFrameSize * 1000;
 
-  switch ( g_MPACtx.m_Layer ) {
+  switch ( apInfo -> m_Layer ) {
 
    case 0:
     lFrameSize = ( lFrameSize * 12000 ) / lSampleRate;
@@ -5326,36 +5326,36 @@ int MP123_DecodeHeader ( uint32_t aHdr ) {
 
    case 2 :
    default:
-    lFrameSize  = ( lFrameSize * 144000 ) / ( lSampleRate << g_MPACtx.m_LSF );
+    lFrameSize  = ( lFrameSize * 144000 ) / ( lSampleRate << apInfo -> m_LSF );
     lFrameSize += lPadding;
    break;
 
   }  /* end switch */
 
-  g_MPACtx.m_FrameSize = lFrameSize;
+  apInfo -> m_FrameSize = lFrameSize;
 
  } else {
 
-  if ( !g_MPACtx.m_FreeFmtFrameSize ) return 1;
+  if ( !apInfo -> m_FreeFmtFrameSize ) return 1;
 
-  g_MPACtx.m_FrameSize = g_MPACtx.m_FreeFmtFrameSize;
+  apInfo -> m_FrameSize = apInfo -> m_FreeFmtFrameSize;
 
-  switch ( g_MPACtx.m_Layer ) {
+  switch ( apInfo -> m_Layer ) {
 
    case 0:
-    g_MPACtx.m_FrameSize += lPadding  * 4;
-    g_MPACtx.m_BitRate    = ( g_MPACtx.m_FrameSize * lSampleRate ) / 48000;
+    apInfo -> m_FrameSize += lPadding  * 4;
+    apInfo -> m_BitRate    = ( apInfo -> m_FrameSize * lSampleRate ) / 48000;
    break;
 
    case 1:
-    g_MPACtx.m_FrameSize += lPadding;
-    g_MPACtx.m_BitRate    = ( g_MPACtx.m_FrameSize * lSampleRate ) / 144000;
+    apInfo -> m_FrameSize += lPadding;
+    apInfo -> m_BitRate    = ( apInfo -> m_FrameSize * lSampleRate ) / 144000;
    break;
 
    case 2 :
    default:
-    g_MPACtx.m_FrameSize += lPadding;
-    g_MPACtx.m_BitRate    = (  g_MPACtx.m_FrameSize * ( lSampleRate << g_MPACtx.m_LSF )  ) / 144000;
+    apInfo -> m_FrameSize += lPadding;
+    apInfo -> m_BitRate    = (  apInfo -> m_FrameSize * ( lSampleRate << apInfo -> m_LSF )  ) / 144000;
    break;
 
   }  /* end switch */
@@ -5378,12 +5378,12 @@ static void _seek_to_main_data ( unsigned int aBackStep ) {
  );
 
  SMS_InitGetBits (
-  &g_MPACtx.m_BitCtx, lPtr, ( g_MPACtx.m_FrameSize + aBackStep ) * 8
+  &g_MPACtx.m_BitCtx, lPtr, ( g_MPACtx.m_Info.m_FrameSize + aBackStep ) * 8
  );
 
  g_MPACtx.m_InBufIdx    ^= 1;
  g_MPACtx.m_pInBuf       = &g_MPACtx.m_InBuf [ g_MPACtx.m_InBufIdx ][ SMS_BACKSTEP_SIZE ];
- g_MPACtx.m_OldFrameSize = g_MPACtx.m_FrameSize;
+ g_MPACtx.m_OldFrameSize = g_MPACtx.m_Info.m_FrameSize;
 
 }  /* end _seek_to_main_data */
 
@@ -6393,18 +6393,18 @@ static void _mp3_decode_frame ( SMS_RingBuffer* apRB ) {
  int             lIStereo;
  int             lnGran;
  int             lGr;
- int             lSFreqIdx = g_MPACtx.m_SampleRateIdx;
+ int             lSFreqIdx = g_MPACtx.m_Info.m_SampleRateIdx;
  int             lnAlloc;
  int             lSS;
  short*          lpSamples;
 
- if ( g_MPACtx.m_Mode == SMS_MPA_JSTEREO ) {
-  lMStereo = ( g_MPACtx.m_ModeExt & 0x2 ) >> 1;
-  lIStereo =   g_MPACtx.m_ModeExt & 0x1;
+ if ( g_MPACtx.m_Info.m_Mode == SMS_MPA_JSTEREO ) {
+  lMStereo = ( g_MPACtx.m_Info.m_ModeExt & 0x2 ) >> 1;
+  lIStereo =   g_MPACtx.m_Info.m_ModeExt & 0x1;
  } else lMStereo = lIStereo = 0;
 
- lnGran    = g_MPACtx.m_LSF ? 1 : 2;
- lnAlloc   = lnGran * g_MPACtx.m_nChannels * 1152;
+ lnGran    = g_MPACtx.m_Info.m_LSF ? 1 : 2;
+ lnAlloc   = lnGran * g_MPACtx.m_Info.m_nChannels * 1152;
  lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 68 );
 
  lpSamples += 32;
@@ -6412,7 +6412,8 @@ static void _mp3_decode_frame ( SMS_RingBuffer* apRB ) {
  lpSamples += 2;
 
  if (  !_mp3_get_side_info (
-         &lSI, g_MPACtx.m_nChannels, lMStereo, g_MPACtx.m_SampleRateIdx, g_MPACtx.m_LSF
+         &lSI, g_MPACtx.m_Info.m_nChannels, lMStereo,
+         g_MPACtx.m_Info.m_SampleRateIdx, g_MPACtx.m_Info.m_LSF
         )
  ) {
 error:
@@ -6429,17 +6430,17 @@ error:
   SMS_ALIGN(  float sl_HybridOut[ 2 ][ 18 ][ 32 ], 16  );
 
   SMS_MP3GranInfo* lpGI       = &lSI.m_Ch[ 0 ].m_GI[ lGr ];
-  int              lPart2Bits = _mp3_get_scale_factors[ g_MPACtx.m_LSF ] ( lScaleFacs[ 0 ], lpGI, 0 );
+  int              lPart2Bits = _mp3_get_scale_factors[ g_MPACtx.m_Info.m_LSF ] ( lScaleFacs[ 0 ], lpGI, 0 );
 
   if (  !_mp3_dequantize_sample (
           sl_HybridIn[ 0 ], lScaleFacs[ 0 ], lpGI, lSFreqIdx, lPart2Bits
          )
   ) goto error;
 
-  if ( g_MPACtx.m_nChannels == 2 ) {
+  if ( g_MPACtx.m_Info.m_nChannels == 2 ) {
 
    lpGI       = &lSI.m_Ch[ 1 ].m_GI[ lGr ];
-   lPart2Bits = _mp3_get_scale_factors[ g_MPACtx.m_LSF ] ( lScaleFacs[ 1 ], lpGI, lIStereo );
+   lPart2Bits = _mp3_get_scale_factors[ g_MPACtx.m_Info.m_LSF ] ( lScaleFacs[ 1 ], lpGI, lIStereo );
 
    if (  !_mp3_dequantize_sample (
            sl_HybridIn[ 1 ], lScaleFacs[ 1 ], lpGI, lSFreqIdx, lPart2Bits
@@ -6468,14 +6469,14 @@ error:
 
    if ( lIStereo ) _mp3_i_stereo (
                     sl_HybridIn, lScaleFacs[ 1 ],
-                    lpGI, lSFreqIdx, lMStereo, g_MPACtx.m_LSF
+                    lpGI, lSFreqIdx, lMStereo, g_MPACtx.m_Info.m_LSF
                    );
 
    if ( lMStereo || lIStereo ) {
 
-    if ( lpGI ->m_MaxB > lSI.m_Ch[ 0 ].m_GI[ lGr].m_MaxB ) 
+    if ( lpGI -> m_MaxB > lSI.m_Ch[ 0 ].m_GI[ lGr ].m_MaxB ) 
      lSI.m_Ch[ 0 ].m_GI[ lGr ].m_MaxB = lpGI -> m_MaxB;
-    else lpGI ->m_MaxB = lSI.m_Ch[ 0 ].m_GI[ lGr ].m_MaxB;
+    else lpGI -> m_MaxB = lSI.m_Ch[ 0 ].m_GI[ lGr ].m_MaxB;
 
    }  /* end if */
 
@@ -6486,7 +6487,7 @@ error:
   _mp3_antialias ( sl_HybridIn[ 0 ], lpGI );
   _mp3_hybrid    ( sl_HybridIn[ 0 ], sl_HybridOut[ 0 ], 0, lpGI );
 
-  if ( g_MPACtx.m_nChannels > 1 ) {
+  if ( g_MPACtx.m_Info.m_nChannels > 1 ) {
 
    lpGI = &lSI.m_Ch[ 1 ].m_GI[ lGr ];
 
@@ -6540,7 +6541,7 @@ int32_t MP123_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_Ri
 
   lLen = g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf;
 
-  if ( g_MPACtx.m_FrameSize == 0 ) {
+  if ( g_MPACtx.m_Info.m_FrameSize == 0 ) {
 
    if ( g_MPACtx.m_FreeFmtNextHdr ) {
 
@@ -6582,17 +6583,17 @@ gotHeader:
 
      memmove ( g_MPACtx.m_pInBuf, g_MPACtx.m_pInBuf + 1, g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf - 1 );
      --g_MPACtx.m_pInBufPtr;
-     g_MPACtx.m_FreeFmtFrameSize = 0;
+     g_MPACtx.m_Info.m_FreeFmtFrameSize = 0;
 
     } else {
 
-     if (  MP123_DecodeHeader ( lHdr ) == 1  ) g_MPACtx.m_FrameSize = -1;
+     if (  MP123_DecodeHeader ( lHdr, &g_MPACtx.m_Info ) == 1  ) g_MPACtx.m_Info.m_FrameSize = -1;
 
-     apCtx -> m_SampleRate = g_MPACtx.m_SampleRate;
-     apCtx -> m_Channels   = g_MPACtx.m_nChannels;
-     apCtx -> m_BitRate    = g_MPACtx.m_BitRate;
+     apCtx -> m_SampleRate = g_MPACtx.m_Info.m_SampleRate;
+     apCtx -> m_Channels   = g_MPACtx.m_Info.m_nChannels;
+     apCtx -> m_BitRate    = g_MPACtx.m_Info.m_BitRate;
 
-     switch ( g_MPACtx.m_Layer ) {
+     switch ( g_MPACtx.m_Info.m_Layer ) {
 
       case 0:
        apCtx -> m_FrameSize = 384;
@@ -6603,7 +6604,7 @@ gotHeader:
       break;
 
       case 2:
-       apCtx -> m_FrameSize = g_MPACtx.m_LSF ? 576 : 1152;
+       apCtx -> m_FrameSize = g_MPACtx.m_Info.m_LSF ? 576 : 1152;
       break;
 
      }  /* end switch */
@@ -6612,7 +6613,7 @@ gotHeader:
 
    }  /* end if */
 
-  } else if ( g_MPACtx.m_FrameSize == -1 ) {
+  } else if ( g_MPACtx.m_Info.m_FrameSize == -1 ) {
 
    lLen = SMS_MPA_MAX_CODED_FRAME_SIZE - lLen;
 
@@ -6620,7 +6621,7 @@ gotHeader:
 
    if ( lLen == 0 ) {
 
-    g_MPACtx.m_FrameSize = 0;
+    g_MPACtx.m_Info.m_FrameSize = 0;
     memmove ( g_MPACtx.m_pInBuf, g_MPACtx.m_pInBuf + 1, g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf - 1 );
     --g_MPACtx.m_pInBufPtr;
 
@@ -6652,17 +6653,17 @@ gotHeader:
       lpBuf    += lLen;
       lBufSize -= lLen;
 
-      g_MPACtx.m_pInBufPtr        = lPtr;
-      g_MPACtx.m_FreeFmtNextHdr   = lHdr;
-      g_MPACtx.m_FreeFmtFrameSize = g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf;
+      g_MPACtx.m_pInBufPtr               = lPtr;
+      g_MPACtx.m_FreeFmtNextHdr          = lHdr;
+      g_MPACtx.m_Info.m_FreeFmtFrameSize = g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf;
 
       lPadding = ( lHdr1 >> 9 ) & 1;
 
-      if ( !g_MPACtx.m_Layer )
-       g_MPACtx.m_FreeFmtFrameSize -= lPadding * 4;
-      else g_MPACtx.m_FreeFmtFrameSize -= lPadding;
+      if ( !g_MPACtx.m_Info.m_Layer )
+       g_MPACtx.m_Info.m_FreeFmtFrameSize -= lPadding * 4;
+      else g_MPACtx.m_Info.m_FreeFmtFrameSize -= lPadding;
 
-      MP123_DecodeHeader ( lHdr1 );
+      MP123_DecodeHeader ( lHdr1, &g_MPACtx.m_Info );
 
       goto nextData;
 
@@ -6678,11 +6679,11 @@ gotHeader:
 
    }  /* end else */
 
-  } else if ( lLen < g_MPACtx.m_FrameSize ) {
+  } else if ( lLen < g_MPACtx.m_Info.m_FrameSize ) {
 
-   if ( g_MPACtx.m_FrameSize > SMS_MPA_MAX_CODED_FRAME_SIZE ) g_MPACtx.m_FrameSize = SMS_MPA_MAX_CODED_FRAME_SIZE;
+   if ( g_MPACtx.m_Info.m_FrameSize > SMS_MPA_MAX_CODED_FRAME_SIZE ) g_MPACtx.m_Info.m_FrameSize = SMS_MPA_MAX_CODED_FRAME_SIZE;
 
-   lLen = g_MPACtx.m_FrameSize - lLen;
+   lLen = g_MPACtx.m_Info.m_FrameSize - lLen;
 
    if ( lLen > lBufSize ) lLen = lBufSize;
 
@@ -6694,22 +6695,22 @@ gotHeader:
 
   }  // end if
 nextData:
-  if (  g_MPACtx.m_FrameSize > 0 && ( g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf ) >= g_MPACtx.m_FrameSize  ) {
+  if (  g_MPACtx.m_Info.m_FrameSize > 0 && ( g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf ) >= g_MPACtx.m_Info.m_FrameSize  ) {
 
    SMS_InitGetBits (
     &g_MPACtx.m_BitCtx, g_MPACtx.m_pInBuf + SMS_HEADER_SIZE, 
     ( g_MPACtx.m_pInBufPtr - g_MPACtx.m_pInBuf - SMS_HEADER_SIZE ) * 8
    );
 
-   if ( g_MPACtx.m_ErrorProtection ) SMS_GetBits ( &g_MPACtx.m_BitCtx, 16 );
+   if ( g_MPACtx.m_Info.m_ErrorProtection ) SMS_GetBits ( &g_MPACtx.m_BitCtx, 16 );
 
-   mpa_decode_frame[ g_MPACtx.m_Layer ] ( apOutput );
+   mpa_decode_frame[ g_MPACtx.m_Info.m_Layer ] ( apOutput );
    apOutput -> UserCB ( apOutput );
 
    if (  !( ++lnFrames & 1 )  ) RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
 
-   g_MPACtx.m_pInBufPtr = g_MPACtx.m_pInBuf;
-   g_MPACtx.m_FrameSize = 0;
+   g_MPACtx.m_pInBufPtr        = g_MPACtx.m_pInBuf;
+   g_MPACtx.m_Info.m_FrameSize = 0;
 
    break;
 
