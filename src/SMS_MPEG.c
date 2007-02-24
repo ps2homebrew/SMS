@@ -401,6 +401,11 @@ void SMS_MPEGContext_Init ( int aWidth, int aHeight ) {
  g_MPEGCtx.m_BlockWrap[ 4 ] =
  g_MPEGCtx.m_BlockWrap[ 5 ] = g_MPEGCtx.m_MBStride;
  g_MPEGCtx.m_PicStruct      = SMS_PICT_FRAME;
+ g_MPEGCtx.m_ProgSeq        = 
+ g_MPEGCtx.m_ProgFrm        =
+ g_MPEGCtx.m_FCode          =
+ g_MPEGCtx.m_BCode          = 1;
+ g_MPEGCtx.m_QuantPrec      = 5;
  g_MPEGCtx.m_pMBIdx2XY      = calloc (  1, ( g_MPEGCtx.m_MBNum + 1 ) * sizeof ( int )  );
 
  for ( lY = 0; lY < g_MPEGCtx.m_MBH; ++lY )

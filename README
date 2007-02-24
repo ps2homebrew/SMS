@@ -984,3 +984,7 @@ Update (23-02-2007)
 --------------------
 - implemented "scrolling" functionality for mpeg1/2 clips;
 - fixed "freeze on video clip end" issue. Thanks to 'lee99' for the sample clip;
+- fixed quite serious bug related to mpeg-4 code (crash in flames). Big thanks
+  to 'user112' for the research and sample clip;
+
+
