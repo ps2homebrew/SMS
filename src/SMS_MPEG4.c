@@ -3236,168 +3236,176 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput,
 
  if ( !lpPck ) return retVal;
 
- lpBitCtx = &g_MPEGCtx.m_BitCtx;
- lpBuf    = lpPck -> m_pData;
- lBufSize = lpPck -> m_Size;
- g_MPEGCtx.m_pParentCtx = apCtx;
+ if (  !( lpPck -> m_Flags & SMS_PKT_FLAG_SUB )  ) {
 
- if (  g_MPEGCtx.m_BSBufSize && ( g_MPEGCtx.m_DivXPack || lBufSize < 20 )  )
+  lpBitCtx = &g_MPEGCtx.m_BitCtx;
+  lpBuf    = lpPck -> m_pData;
+  lBufSize = lpPck -> m_Size;
+  g_MPEGCtx.m_pParentCtx = apCtx;
 
-  SMS_InitGetBits ( lpBitCtx, g_MPEGCtx.m_pBSBuf, g_MPEGCtx.m_BSBufSize << 3 );
+  if (  g_MPEGCtx.m_BSBufSize && ( g_MPEGCtx.m_DivXPack || lBufSize < 20 )  )
 
- else SMS_InitGetBits ( lpBitCtx, lpBuf, lBufSize << 3 );
+   SMS_InitGetBits ( lpBitCtx, g_MPEGCtx.m_pBSBuf, g_MPEGCtx.m_BSBufSize << 3 );
 
- g_MPEGCtx.m_BSBufSize = 0;
+  else SMS_InitGetBits ( lpBitCtx, lpBuf, lBufSize << 3 );
 
- if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pBuf )
+  g_MPEGCtx.m_BSBufSize = 0;
 
-  g_MPEGCtx.m_pCurPic = &g_MPEGCtx.m_pPic[ SMS_MPEGContext_FindUnusedPic () ];
+  if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pBuf )
 
- retVal = Codec_MPEG4_DecodeHeader ();
+   g_MPEGCtx.m_pCurPic = &g_MPEGCtx.m_pPic[ SMS_MPEGContext_FindUnusedPic () ];
 
- if ( retVal == SMS_FRAME_SKIPED || retVal < 0 ) goto end;
+  retVal = Codec_MPEG4_DecodeHeader ();
 
- apCtx -> m_HasBFrames = !g_MPEGCtx.m_LowDelay;
+  if ( retVal == SMS_FRAME_SKIPED || retVal < 0 ) goto end;
 
- if ( g_MPEGCtx.m_XviDBuild == 0 && g_MPEGCtx.m_DivXVer == 0 )
+  apCtx -> m_HasBFrames = !g_MPEGCtx.m_LowDelay;
 
-  if ( apCtx -> m_Tag == SMS_FourCC_XVID || 
-       apCtx -> m_Tag == SMS_FourCC_XVIX
-  ) g_MPEGCtx.m_XviDBuild = -1;
+  if ( g_MPEGCtx.m_XviDBuild == 0 && g_MPEGCtx.m_DivXVer == 0 )
 
- if ( g_MPEGCtx.m_XviDBuild == 0 && g_MPEGCtx.m_DivXVer == 0 )
+   if ( apCtx -> m_Tag == SMS_FourCC_XVID || 
+        apCtx -> m_Tag == SMS_FourCC_XVIX
+   ) g_MPEGCtx.m_XviDBuild = -1;
 
-  if ( apCtx -> m_Tag == SMS_FourCC_DIVX &&
-       g_MPEGCtx.m_VoType    == 0        &&
-       g_MPEGCtx.m_VolCtlPar == 0
-  ) g_MPEGCtx.m_DivXVer = 400;
+  if ( g_MPEGCtx.m_XviDBuild == 0 && g_MPEGCtx.m_DivXVer == 0 )
 
- if ( g_MPEGCtx.m_Bugs & SMS_BUG_AUTODETECT ) {
+   if ( apCtx -> m_Tag == SMS_FourCC_DIVX &&
+        g_MPEGCtx.m_VoType    == 0        &&
+        g_MPEGCtx.m_VolCtlPar == 0
+   ) g_MPEGCtx.m_DivXVer = 400;
 
-  g_MPEGCtx.m_Bugs &= ~SMS_BUG_NO_PADDING;
+  if ( g_MPEGCtx.m_Bugs & SMS_BUG_AUTODETECT ) {
+
+   g_MPEGCtx.m_Bugs &= ~SMS_BUG_NO_PADDING;
         
-  if (  g_MPEGCtx.m_PaddingBugScore > -2 &&
-       !g_MPEGCtx.m_DataPartitioning     &&
-        ( g_MPEGCtx.m_DivXVer || !g_MPEGCtx.m_ResyncMarker )
-  ) g_MPEGCtx.m_Bugs |=  SMS_BUG_NO_PADDING;
+   if (  g_MPEGCtx.m_PaddingBugScore > -2 &&
+        !g_MPEGCtx.m_DataPartitioning     &&
+         ( g_MPEGCtx.m_DivXVer || !g_MPEGCtx.m_ResyncMarker )
+   ) g_MPEGCtx.m_Bugs |=  SMS_BUG_NO_PADDING;
 
-  if (  apCtx -> m_Tag == SMS_FourCC_XVIX  ) g_MPEGCtx.m_Bugs |= SMS_BUG_XVID_ILACE;
-  if (  apCtx -> m_Tag == SMS_FourCC_UMP4  ) g_MPEGCtx.m_Bugs |= SMS_BUG_UMP4;
+   if (  apCtx -> m_Tag == SMS_FourCC_XVIX  )
+    g_MPEGCtx.m_Bugs |= SMS_BUG_XVID_ILACE;
+   else if (  apCtx -> m_Tag == SMS_FourCC_UMP4  ) g_MPEGCtx.m_Bugs |= SMS_BUG_UMP4;
 
-  if (  g_MPEGCtx.m_DivXVer >= 500 ) g_MPEGCtx.m_Bugs |= SMS_BUG_QPEL_CHROMA;
-  if (  g_MPEGCtx.m_DivXVer  > 502 ) g_MPEGCtx.m_Bugs |= SMS_BUG_QPEL_CHROMA2;
+   if (  g_MPEGCtx.m_DivXVer >= 500 ) g_MPEGCtx.m_Bugs |= SMS_BUG_QPEL_CHROMA;
+   if (  g_MPEGCtx.m_DivXVer  > 502 ) g_MPEGCtx.m_Bugs |= SMS_BUG_QPEL_CHROMA2;
 
-  if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <= 3 ) g_MPEGCtx.m_PaddingBugScore = 256 * 256 * 256 * 64;
-  if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <= 1 ) g_MPEGCtx.m_Bugs           |= SMS_BUG_QPEL_CHROMA;
-  if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <=12 ) g_MPEGCtx.m_Bugs           |= SMS_BUG_EDGE;
-  if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <=32 ) g_MPEGCtx.m_Bugs           |= SMS_BUG_DC_CLIP;
+   if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <= 3 ) g_MPEGCtx.m_PaddingBugScore = 256 * 256 * 256 * 64;
+   if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <= 1 ) g_MPEGCtx.m_Bugs           |= SMS_BUG_QPEL_CHROMA;
+   if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <=12 ) g_MPEGCtx.m_Bugs           |= SMS_BUG_EDGE;
+   if ( g_MPEGCtx.m_XviDBuild && g_MPEGCtx.m_XviDBuild <=32 ) g_MPEGCtx.m_Bugs           |= SMS_BUG_DC_CLIP;
 
-  if ( g_MPEGCtx.m_DivXVer                                             ) g_MPEGCtx.m_Bugs           |= SMS_BUG_DIRECT_BLOCKSIZE;
-  if ( g_MPEGCtx.m_DivXVer == 501 && g_MPEGCtx.m_DivXBuild == 20020416 ) g_MPEGCtx.m_PaddingBugScore = 256 * 256 * 256 * 64;
-  if ( g_MPEGCtx.m_DivXVer && g_MPEGCtx.m_DivXVer < 500                ) g_MPEGCtx.m_Bugs           |= SMS_BUG_EDGE;
-  if ( g_MPEGCtx.m_DivXVer                                             ) g_MPEGCtx.m_Bugs           |= SMS_BUG_HPEL_CHROMA;
+   if ( g_MPEGCtx.m_DivXVer                                             ) g_MPEGCtx.m_Bugs           |= SMS_BUG_DIRECT_BLOCKSIZE;
+   if ( g_MPEGCtx.m_DivXVer == 501 && g_MPEGCtx.m_DivXBuild == 20020416 ) g_MPEGCtx.m_PaddingBugScore = 256 * 256 * 256 * 64;
+   if ( g_MPEGCtx.m_DivXVer && g_MPEGCtx.m_DivXVer < 500                ) g_MPEGCtx.m_Bugs           |= SMS_BUG_EDGE;
+   if ( g_MPEGCtx.m_DivXVer                                             ) g_MPEGCtx.m_Bugs           |= SMS_BUG_HPEL_CHROMA;
 
- }  /* end if */
+  }  /* end if */
 
- g_MPEGCtx.m_CurPic.m_Type     = g_MPEGCtx.m_PicType;
- g_MPEGCtx.m_CurPic.m_KeyFrame = g_MPEGCtx.m_PicType == SMS_FT_I_TYPE;
+  g_MPEGCtx.m_CurPic.m_Type     = g_MPEGCtx.m_PicType;
+  g_MPEGCtx.m_CurPic.m_KeyFrame = g_MPEGCtx.m_PicType == SMS_FT_I_TYPE;
 
- if (  g_MPEGCtx.m_pLastPic == NULL && ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_Dropable )  ) goto end;
+  if (  g_MPEGCtx.m_pLastPic == NULL && ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_Dropable )  ) goto end;
 
- if ( g_MPEGCtx.m_NextPFrameDamaged ) {
+  if ( g_MPEGCtx.m_NextPFrameDamaged ) {
 
-  if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE )
-   goto end;
-  else g_MPEGCtx.m_NextPFrameDamaged = 0;
+   if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE )
+    goto end;
+   else g_MPEGCtx.m_NextPFrameDamaged = 0;
 
- }  /* end if */
+  }  /* end if */
 
- if (  SMS_MPEG_FrameStart () < 0  ) goto end;
+  if (  SMS_MPEG_FrameStart () < 0  ) goto end;
 
- g_MPEGCtx.m_MBX = 0; 
- g_MPEGCtx.m_MBY = 0;
-
- _mpeg4_decode_slice ();
-
- while ( g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH ) {
-
-  if (  _mpeg4_resync () < 0  ) break;
+  g_MPEGCtx.m_MBX = 0; 
+  g_MPEGCtx.m_MBY = 0;
 
   _mpeg4_decode_slice ();
 
- }  /* end while */
+  while ( g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH ) {
 
- if ( g_MPEGCtx.m_BSBufSize == 0 && g_MPEGCtx.m_DivXPack ) {
+   if (  _mpeg4_resync () < 0  ) break;
 
-  int lCurPos         = SMS_BitCount ( lpBitCtx ) >> 3;
-  int lStartCodeFound = 0;
+   _mpeg4_decode_slice ();
 
-  if ( lBufSize - lCurPos > 5 && lBufSize - lCurPos < BITSTREAM_BUFFER_SIZE ) {
+  }  /* end while */
 
-   int i;
+  if ( g_MPEGCtx.m_BSBufSize == 0 && g_MPEGCtx.m_DivXPack ) {
 
-   for ( i = lCurPos; i < lBufSize - 3; ++i ) {
+   int lCurPos         = SMS_BitCount ( lpBitCtx ) >> 3;
+   int lStartCodeFound = 0;
 
-    if (  lpBuf[ i     ] == 0 &&
-          lpBuf[ i + 1 ] == 0 &&
-          lpBuf[ i + 2 ] == 1 &&
-          lpBuf[ i + 3 ] == 0xB6
-    ) {
+   if ( lBufSize - lCurPos > 5 && lBufSize - lCurPos < BITSTREAM_BUFFER_SIZE ) {
 
-     lStartCodeFound = 1;
-     break;
+    int i;
 
-    }  /* end if */
+    for ( i = lCurPos; i < lBufSize - 3; ++i ) {
 
-   }  /* end for */
+     if (  lpBuf[ i     ] == 0 &&
+           lpBuf[ i + 1 ] == 0 &&
+           lpBuf[ i + 2 ] == 1 &&
+           lpBuf[ i + 3 ] == 0xB6
+     ) {
+
+      lStartCodeFound = 1;
+      break;
+
+     }  /* end if */
+
+    }  /* end for */
+
+   }  /* end if */
+
+   if ( lpBitCtx -> m_pBuf == g_MPEGCtx.m_pBSBuf && lBufSize > 20 ) {
+
+    lStartCodeFound = 1;
+    lCurPos         = 0;
+
+   }  /* end if */
+
+   if ( lStartCodeFound ) {
+
+    g_MPEGCtx.m_pBSBuf = realloc ( g_MPEGCtx.m_pBSBuf, lBufSize - lCurPos + 8 );
+    memcpy ( g_MPEGCtx.m_pBSBuf, lpBuf + lCurPos, lBufSize - lCurPos );
+    g_MPEGCtx.m_BSBufSize = lBufSize - lCurPos;
+
+   }  /* end if */
 
   }  /* end if */
 
-  if ( lpBitCtx -> m_pBuf == g_MPEGCtx.m_pBSBuf && lBufSize > 20 ) {
+  SMS_MPEG_FrameEnd ();
 
-   lStartCodeFound = 1;
-   lCurPos         = 0;
+  if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_LowDelay )
+   lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+  else lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
+
+  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
+
+  if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
+   lpFrame -> m_FrameType = g_MPEGCtx.m_PicType;
+  else lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
+
+  if ( apCtx -> m_HasBFrames && lpFrame -> m_FrameType != SMS_FT_B_TYPE ) {
+   lpFrame -> m_PTS  = g_MPEGCtx.m_LastPPTS;
+   g_MPEGCtx.m_LastPPTS = lpPck -> m_PTS;
+  } else lpFrame -> m_PTS = lpPck -> m_PTS;
+
+  lpFrame -> m_SPTS = lpPck -> m_PTS;
+
+  if ( retVal ) {
+
+   SMS_FrameBuffer** lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
+
+   *lppFrame = lpFrame;
+
+   SMS_RingBufferPost ( apOutput );
 
   }  /* end if */
 
-  if ( lStartCodeFound ) {
+ } else {
 
-   g_MPEGCtx.m_pBSBuf = realloc ( g_MPEGCtx.m_pBSBuf, lBufSize - lCurPos + 8 );
-   memcpy ( g_MPEGCtx.m_pBSBuf, lpBuf + lCurPos, lBufSize - lCurPos );
-   g_MPEGCtx.m_BSBufSize = lBufSize - lCurPos;
 
-  }  /* end if */
-
- }  /* end if */
-
- SMS_MPEG_FrameEnd ();
-
- if ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_LowDelay )
-  lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
- else lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
-
- apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
-
- if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
-  lpFrame -> m_FrameType = g_MPEGCtx.m_PicType;
- else lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
-
- if ( apCtx -> m_HasBFrames && lpFrame -> m_FrameType != SMS_FT_B_TYPE ) {
-  lpFrame -> m_PTS  = g_MPEGCtx.m_LastPPTS;
-  g_MPEGCtx.m_LastPPTS = lpPck -> m_PTS;
- } else lpFrame -> m_PTS = lpPck -> m_PTS;
-
- lpFrame -> m_SPTS = lpPck -> m_PTS;
-
- if ( retVal ) {
-
-  SMS_FrameBuffer** lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
-
-  *lppFrame = lpFrame;
-
-  SMS_RingBufferPost ( apOutput );
-
- }  /* end if */
+ }  /* end else */
 end:
  SMS_RingBufferFree ( apInput, lpPck -> m_Size + 64 );
 

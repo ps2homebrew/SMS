@@ -281,6 +281,8 @@ static uint32_t s_FFTOrder[ 128 ] = {
    6, 134, 70, 198, 38, 166, 230, 102, 246, 118, 54, 182,  22, 150, 214,  86
 };
 
+extern SMS_Codec_AC3Context s_AC3Ctx;
+
 static void SMS_INLINE _ifft2 ( sample_t* apBuf ) {
 
  __asm__ __volatile__ (
@@ -547,7 +549,7 @@ void _ac3_imdct_512 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
 
  int       i, j, k;
  sample_t  t_r, t_i, a_r, a_i, b_r, b_i, w_1, w_2;
- sample_t* lBuf = ( sample_t* )0x70000000;
+ sample_t* lBuf = s_AC3Ctx.m_pWorkarea;
 	
  for ( i = 0, j = 0; i < 128; ++i, j += 2 ) {
 
@@ -593,8 +595,8 @@ void _ac3_imdct_256 ( sample_t* apData, sample_t* apDelay, sample_t aBias ) {
 
  int       i, j, k;
  sample_t  t_r, t_i, a_r, a_i, b_r, b_i, c_r, c_i, d_r, d_i, w_1, w_2;
- sample_t* lBuf1 = ( sample_t* )0x70000000;
- sample_t* lBuf2 = ( sample_t* )0x70000200;
+ sample_t* lBuf1 = s_AC3Ctx.m_pWorkarea;
+ sample_t* lBuf2 = s_AC3Ctx.m_pWorkarea + 128;
 
  for ( i = 0, j = 0; i < 64; ++i, j += 2 ) {
 

@@ -56,6 +56,7 @@ static SMS_CodecTag s_CodecVideoTags[] = {
  { SMS_CodecID_MSMPEG4V3, SMS_MKTAG(  'A',  'P',  '4',  '1' ) }, 
  { SMS_CodecID_MSMPEG4V3, SMS_MKTAG(  'C',  'O',  'L',  '1' ) }, 
  { SMS_CodecID_MSMPEG4V3, SMS_MKTAG(  'C',  'O',  'L',  '0' ) },
+ { SMS_CodecID_DXSB,      SMS_MKTAG(  'D',  'X',  'S',  'B' ) },
  { SMS_CodecID_NULL,      SMS_MKTAG( '\0', '\0', '\0', '\0' ) }
 };
 
@@ -90,7 +91,11 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
  int lID = apCtx -> m_ID;
 
- if (  apCtx -> m_Type == SMS_CodecTypeVideo && !( lID == SMS_CodecID_MPEG1 || lID == SMS_CodecID_MPEG2 )  ) {
+ if (  apCtx -> m_Type == SMS_CodecTypeVideo && !(
+        lID == SMS_CodecID_MPEG1 || lID == SMS_CodecID_MPEG2 ||
+        lID == SMS_CodecID_DXSB
+       )
+ ) {
 
   s_pVideoBuffer     = ( SMS_VideoBuffer* )SMS_InitVideoBuffer ( apCtx -> m_Width, apCtx -> m_Height );
   apCtx -> m_pIntBuf = calloc (  SMS_INTERNAL_BUFFER_SIZE, sizeof ( SMS_InternalBuffer )  );
@@ -103,6 +108,8 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
   case SMS_CodecID_MSMPEG4V3: SMS_Codec_MSMPEG4_Open ( apCtx ); break;
   case SMS_CodecID_MPEG1    :
   case SMS_CodecID_MPEG2    : SMS_Codec_MPEG12_Open  ( apCtx ); break;
+
+  case SMS_CodecID_DXSB: return 1;
 
   case SMS_CodecID_MP2:
   case SMS_CodecID_MP3: SMS_Codec_MP123_Open ( apCtx ); break;

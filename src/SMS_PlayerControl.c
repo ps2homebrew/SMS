@@ -782,11 +782,9 @@ end:
 
  lpBuff -> WaitCB = NULL;
 
- if ( lpFrame ) {
-  s_Player.m_VideoTime = lpFrame -> m_PTS;
-  s_Player.m_AudioTime = lpFrame -> m_PTS;
-  g_MPEGCtx.m_LastPPTS = lpFrame -> m_PTS;
- }  /* end if */
+ s_Player.m_VideoTime = 0;
+ s_Player.m_AudioTime = 0;
+ g_MPEGCtx.m_LastPPTS = 0;
 
  if ( retVal ) {
 
@@ -1159,14 +1157,11 @@ int PlayerControl_ScrollBar (  void ( *InitQueues ) ( int )  ) {
  int            retVal     = 0;
  uint64_t       lNextTime  = 0LL;
  uint64_t       lNextTime1 = 0LL;
- uint32_t       lFilePos   = 0U;
  int64_t        lTotalTime = lpCont -> m_Duration;
  int64_t        lPassTime  = s_Player.m_VideoTime;
  int            lResume    = 1;
  int64_t        lScale;
  float          lCurPos1;
- SMS_AVPacket*  lpPacket;
- int            lPktIdx;
  float          j;
 
  lpIPUCtx -> Suspend ();
@@ -1189,7 +1184,6 @@ begin:
  int     lDir        = 0;
  int64_t lTime;
  int64_t lPos;
- int     lSize;
 
  lScale = (  lTotalTime / ( g_Config.m_ScrollBarNum + 1 )  );
 
@@ -1335,15 +1329,11 @@ redo:
 
    if (  lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, lDir, lPos )  ) {
 
-    lFilePos = lpFileCtx -> m_CurPos;
-    lSize    = lpCont -> ReadPacket ( lpCont, &lPktIdx );
+    lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize );
 
-    lpPacket = ( SMS_AVPacket* )lpCont -> m_pStm[ lPktIdx ] -> m_pPktBuf -> m_pOut;
-    lpFileCtx -> Stream ( lpFileCtx, lFilePos, lpFileCtx -> m_StreamSize );
-
-    s_Player.m_VideoTime = lpPacket -> m_PTS;
-    g_MPEGCtx.m_LastPPTS = lpPacket -> m_PTS;
-    s_Player.m_AudioTime = lpPacket -> m_PTS;
+    s_Player.m_VideoTime = 0;
+    g_MPEGCtx.m_LastPPTS = 0;
+    s_Player.m_AudioTime = 0;
 
     retVal = -1;
 

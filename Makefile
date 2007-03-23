@@ -58,4 +58,4 @@ clean:
 
 include $(PS2SDK)/Defs.make
 
-EE_CFLAGS := -Dmemcpy=mips_memcpy -DVB_SYNC -D_EE -O2 -G8192 -mgpopt -Wall -mno-check-zero-division
+EE_CFLAGS := -Dmemcpy=mips_memcpy -Dmemset=mips_memset -DVB_SYNC -D_EE -O2 -G8192 -mgpopt -Wall -mno-check-zero-division

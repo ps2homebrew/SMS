@@ -233,6 +233,9 @@ void GSContext_SetTextColor ( unsigned int aColorIdx, unsigned long aColor ) {
  lpCLUT[ 0 ] = 0;
  lpCLUT[ 1 ] = GS_SET_RGBAQ( 0, 0, 0, aColor >> 24, 0 );
  lpCLUT[ 2 ] = aColor;
+ lpCLUT[ 3 ] = 0;
+ lpCLUT[ 4 ] = aColor;
+ lpCLUT[ 5 ] = GS_SET_RGBAQ( 0, 0, 0, aColor >> 24, 0 );
 
  lpLoadImg -> m_BitBltBufReg.DBP = g_GSCtx.m_CLUT[ aColorIdx ];
  GS_LoadImage ( &s_CLUTLoadImage, s_CLUT );

@@ -258,7 +258,10 @@ int GUIMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  }  /* end switch */
 
- return anEvent & GUI_MSG_MOUNT_MASK ? GUIHResult_Void : GUIHResult_Handled;
+ if (  anEvent & GUI_MSG_MEDIA_SELECTED && !( anEvent & GUI_MSG_MENU_BIT )  ) GUI_PostMessage ( GUI_MSG_MEDIA_SELECTED | GUI_MSG_MENU_BIT );
+ if (  anEvent & GUI_MSG_MEDIA_REMOVED  && !( anEvent & GUI_MSG_MENU_BIT )  ) GUI_PostMessage ( GUI_MSG_MEDIA_REMOVED  | GUI_MSG_MENU_BIT );
+
+ return anEvent & ( GUI_MSG_MOUNT_MASK | GUI_MSG_MENU_BIT ) ? GUIHResult_Void : GUIHResult_Handled;
 
 }  /* end GUIMenu_HandleEvent */
 

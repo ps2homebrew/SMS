@@ -269,14 +269,19 @@ static void GUIFileMenu_Cleanup ( GUIObject* apObj ) {
 
 }  /* end GUIFileMenu_Cleanup */
 
-static void _redraw ( GUIFileMenu* apMenu ) {
+static void _redraw ( GUIFileMenu* apMenu, int afAll ) {
 
  GUIFileMenu_Cleanup (  ( GUIObject* )apMenu  );
- GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
- GUIFileMenu_Render (  ( GUIObject* )apMenu, 1  );
- GS_VSync ();
- GSContext_BitBlt ( &s_BitBlt );
- GSContext_Flush ( 1, GSFlushMethod_KeepLists );
+
+ if ( !afAll ) {
+
+  GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
+  GUIFileMenu_Render (  ( GUIObject* )apMenu, 1  );
+  GS_VSync ();
+  GSContext_BitBlt ( &s_BitBlt );
+  GSContext_Flush ( 1, GSFlushMethod_KeepLists );
+
+ } else GUI_Redraw ( GUIRedrawMethod_Redraw );
 
 }  /* end _redraw */
 
@@ -287,18 +292,18 @@ static void GUIFileMenu_SetFocus ( GUIObject* apObj, int afSet ) {
  lpMenu -> m_Active = afSet;
  lpMenu -> m_pColor = &( afSet ? g_Config.m_BrowserABCIdx : g_Config.m_BrowserIBCIdx );
 
- _redraw ( lpMenu );
+ _redraw ( lpMenu, 0 );
 
 }  /* end GUIFileMenu_SetFocus */
 
-static void _reset ( GUIFileMenu* apMenu ) {
+static void _reset ( GUIFileMenu* apMenu, int afAll ) {
 
  apMenu -> m_pFirst   = NULL;
  apMenu -> m_pLast    = NULL;
  apMenu -> m_pCurrent = NULL;
  apMenu -> m_YOffset  = 0;
 
- _redraw ( apMenu );
+ _redraw ( apMenu, afAll );
 
 }  /* end _reset */
 
@@ -329,11 +334,11 @@ static void _pop_state ( GUIFileMenu* apMenu ) {
 
 }  /* end _pop_state */
 
-static void _fill ( GUIFileMenu* apMenu, char* apPath ) {
+static void _fill ( GUIFileMenu* apMenu, char* apPath, int afAll ) {
 
  SMS_ListNode* lpNode;
 
- _reset ( apMenu );
+ _reset ( apMenu, afAll );
 
  SMS_FileDirInit ( apPath );
 
@@ -371,8 +376,8 @@ static void _action_folder ( GUIFileMenu* apMenu, int afPopup ) {
  if ( !afPopup ) {
 
   _push_state ( apMenu );
-  _fill ( apMenu, apMenu -> m_pCurrent -> m_pString );
-  _redraw ( apMenu );
+  _fill ( apMenu, apMenu -> m_pCurrent -> m_pString, 0 );
+  _redraw ( apMenu, 0 );
 
  } else {
 
@@ -562,8 +567,8 @@ static void _action_partition ( GUIFileMenu* apMenu, int afPopup ) {
 
   *( unsigned short* )&lPath[ 0 ] = 0x002F;
   _push_state ( apMenu );
-  _fill ( apMenu, lPath );
-  _redraw ( apMenu );
+  _fill ( apMenu, lPath, 0 );
+  _redraw ( apMenu, 0 );
 
   g_PD = lPD;
 
@@ -628,8 +633,8 @@ static void _action_share ( GUIFileMenu* apMenu, int afPopup ) {
    *( unsigned short* )lPath     = 0x002F;
 
    _push_state ( apMenu );
-   _fill ( apMenu, lPath );
-   _redraw ( apMenu );
+   _fill ( apMenu, lPath, 0 );
+   _redraw ( apMenu, 0 );
 
   }  /* end if */
 
@@ -759,7 +764,7 @@ static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
    _step_up ( lpMenu );
 redraw:
-   _redraw ( lpMenu );
+   _redraw ( lpMenu, 0 );
 
    retVal = GUIHResult_Handled;
 
@@ -830,7 +835,7 @@ redraw:
 
     } else lpPtr = g_EmptyStr;
 
-    _fill ( lpMenu, lpPtr );
+    _fill ( lpMenu, lpPtr, 0 );
 
     lpNode = SMS_ListFind ( lpMenu -> m_pFiltList, lpState -> m_pString );
 
@@ -849,7 +854,7 @@ redraw:
     }  /* end else */
 
     _pop_state ( lpMenu );
-    _redraw    ( lpMenu );
+    _redraw ( lpMenu, 0 );
 
     if ( g_CMedia == 2 && !lpMenu -> m_pLevels -> m_Size ) g_Config.m_Partition[ 0 ] = '\x00';
 
@@ -857,7 +862,7 @@ redraw:
 
   } break;
 
- } else switch ( anEvent ) {
+ } else switch ( anEvent & GUI_MSG_USER_MASK ) {
 
   case GUI_MSG_MEDIA_SELECTED: {
 
@@ -867,7 +872,7 @@ redraw:
 
    if ( g_CMedia == 1 || g_CMedia == 5 ) CDVD_FlushCache ();
 
-   _fill ( lpMenu, g_EmptyStr );
+   _fill ( lpMenu, g_EmptyStr, anEvent & GUI_MSG_MENU_BIT );
 
    if ( g_CMedia == 2 && !s_fHDDInit && g_Config.m_Partition[ 0 ] ) {
 
@@ -894,7 +899,7 @@ redraw:
 
    }  /* end if */
 
-   _redraw ( lpMenu );
+   _redraw ( lpMenu, anEvent & GUI_MSG_MENU_BIT );
 
    retVal = GUIHResult_Handled;
 
@@ -904,7 +909,7 @@ redraw:
 
   case GUI_MSG_MEDIA_REMOVED: {
 
-   _reset ( lpMenu );
+   _reset ( lpMenu, anEvent & GUI_MSG_MENU_BIT );
 
    retVal = GUIHResult_Handled;
 

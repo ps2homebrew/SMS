@@ -189,13 +189,12 @@ MP123_CoreInit:
     addiu   $a2, $zero, 4352
 
 MP123_IMDCT36:
+    addiu   $sp, $sp, -16
+    sd      $s0, 0($sp)
+    sd      $s1, 8($sp)
     pref    0, 0($a0)
     la      $at, s_Cos36
     pref    0, 0($at)
-    addiu   $v0, $zero, 0x401
-    addiu   $v1, $zero, 0x41A
-    ctc2    $v0, $vi01
-    ctc2    $v1, $vi02
     ld      $t1,  0($a0)
     ld      $t2,  8($a0)
     ld      $t3, 16($a0)
@@ -221,117 +220,88 @@ MP123_IMDCT36:
     lqc2    $vf27, 48($at)
     lqc2    $vf28, 64($at)
     qmtc2   $t1, $vf05
-    vsqi.xyzw   $vf01, ($vi01++)
-    vsqi.xyzw   $vf02, ($vi01++)
-    vsqi.xyzw   $vf03, ($vi01++)
-    vsqi.xyzw   $vf04, ($vi01++)
-    vsqi.xyzw   $vf05, ($vi01++)
-    vsqi.xyzw   $vf26, ($vi02++)
-    vsqi.xyzw   $vf27, ($vi02++)
-    vsqi.xyzw   $vf28, ($vi02++)
-    vsqi.xyzw   $vf29, ($vi02++)
-    vsqi.xyzw   $vf30, ($vi02++)
-    ctc2    $zero, $vi31
-    addiu   $v0, $zero, 0x040A
-    addiu   $v1, $zero, 0x0415
-    ctc2    $v0, $vi01
-    ctc2    $v1, $vi02
-    ldl     $t1,  7($a3)
-    ldr     $t1,  0($a3)
-    ldl     $t2, 15($a3)
-    ldr     $t2,  8($a3)
-    ldl     $t3, 23($a3)
-    ldr     $t3, 16($a3)
-    ldl     $t4, 31($a3)
-    ldr     $t4, 24($a3)
+    .word   0x4A004938
+    ldl     $t1,   7($a3)
+    ldr     $t1,   0($a3)
+    ldl     $t2,  15($a3)
+    ldr     $t2,   8($a3)
+    ldl     $t3,  23($a3)
+    ldr     $t3,  16($a3)
+    ldl     $t4,  31($a3)
+    ldr     $t4,  24($a3)
     pcpyld  $t1, $t2, $t1
     pcpyld  $t3, $t4, $t3
-    ldl     $t2, 39($a3)
-    ldr     $t2, 32($a3)
-    ldl     $t4, 47($a3)
-    ldr     $t4, 40($a3)
-    ldl     $t5, 55($a3)
-    ldr     $t5, 48($a3)
-    ldl     $t6, 63($a3)
-    ldr     $t6, 56($a3)
+    ldl     $t2,  39($a3)
+    ldr     $t2,  32($a3)
+    ldl     $t4,  47($a3)
+    ldr     $t4,  40($a3)
+    ldl     $t5,  55($a3)
+    ldr     $t5,  48($a3)
+    ldl     $t6,  63($a3)
+    ldr     $t6,  56($a3)
     pcpyld  $t2, $t4, $t2
     pcpyld  $t5, $t6, $t5
-    ldl     $t4, 71($a3)
-    ldr     $t4, 64($a3)
+    ldl     $t4,  71($a3)
+    ldr     $t4,  64($a3)
+    ldl     $t6,  79($a3)
+    ldr     $t6,  72($a3)
+    ldl     $t7,  87($a3)
+    ldr     $t7,  80($a3)
+    ldl     $t8,  95($a3)
+    ldr     $t8,  88($a3)
+    ldl     $t9, 103($a3)
+    ldr     $t9,  96($a3)
+    pcpyld  $t6, $t7, $t6
+    pcpyld  $t8, $t9, $t8
+    ldl     $t7, 111($a3)
+    ldr     $t7, 104($a3)
+    ldl     $t9, 119($a3)
+    ldr     $t9, 112($a3)
+    ldl     $v0, 127($a3)
+    ldr     $v0, 120($a3)
+    ldl     $v1, 135($a3)
+    ldr     $v1, 128($a3)
+    pcpyld  $t7, $t9, $t7
+    pcpyld  $v0, $v1, $v0
+    ldl     $t9, 143($a3)
+    ldr     $t9, 136($a3)
+    ldl     $v1,  7($a1)
+    ldr     $v1,  0($a1)
+    ldl     $at, 15($a1)
+    ldr     $at,  8($a1)
+    ldl     $a3, 23($a1)
+    ldr     $a3, 16($a1)
+    ldl     $a0, 31($a1)
+    ldr     $a0, 24($a1)
+    pcpyld  $v1, $at, $v1
+    pcpyld  $a3, $a0, $a3
+    ldl     $at, 39($a1)
+    ldr     $at, 32($a1)
+    ldl     $a0, 47($a1)
+    ldr     $a0, 40($a1)
+    ldl     $s0, 55($a1)
+    ldr     $s0, 48($a1)
+    ldl     $s1, 63($a1)
+    ldr     $s1, 56($a1)
+    pcpyld  $at, $a0, $at
+    pcpyld  $s0, $s1, $s0
+    ldl     $a0, 71($a1)
+    ldr     $a0, 64($a1)
+    qmtc2.i $t6, $vf15
+    qmtc2   $t8, $vf16
+    qmtc2   $t7, $vf17
+    qmtc2   $v0, $vf18
     qmtc2   $t1, $vf01
     qmtc2   $t3, $vf02
     qmtc2   $t2, $vf03
     qmtc2   $t5, $vf04
     qmtc2   $t4, $vf05
-    ldl     $t1,  79($a3)
-    ldr     $t1,  72($a3)
-    ldl     $t2,  87($a3)
-    ldr     $t2,  80($a3)
-    ldl     $t3,  95($a3)
-    ldr     $t3,  88($a3)
-    ldl     $t4, 103($a3)
-    ldr     $t4,  96($a3)
-    pcpyld  $t1, $t2, $t1
-    pcpyld  $t3, $t4, $t3
-    ldl     $t2, 111($a3)
-    ldr     $t2, 104($a3)
-    ldl     $t4, 119($a3)
-    ldr     $t4, 112($a3)
-    ldl     $t5, 127($a3)
-    ldr     $t5, 120($a3)
-    ldl     $t6, 135($a3)
-    ldr     $t6, 128($a3)
-    pcpyld  $t2, $t4, $t2
-    pcpyld  $t5, $t6, $t5
-    ldl     $t4, 143($a3)
-    ldr     $t4, 136($a3)
-    qmtc2   $t1, $vf15
-    qmtc2   $t3, $vf16
-    qmtc2   $t2, $vf17
-    qmtc2   $t5, $vf18
-    qmtc2   $t4, $vf19
-    ldl     $t1,  7($a1)
-    ldr     $t1,  0($a1)
-    ldl     $t2, 15($a1)
-    ldr     $t2,  8($a1)
-    ldl     $t3, 23($a1)
-    ldr     $t3, 16($a1)
-    ldl     $t4, 31($a1)
-    ldr     $t4, 24($a1)
-    pcpyld  $t1, $t2, $t1
-    pcpyld  $t3, $t4, $t3
-    ldl     $t2, 39($a1)
-    ldr     $t2, 32($a1)
-    ldl     $t4, 47($a1)
-    ldr     $t4, 40($a1)
-    ldl     $t5, 55($a1)
-    ldr     $t5, 48($a1)
-    ldl     $t6, 63($a1)
-    ldr     $t6, 56($a1)
-    pcpyld  $t2, $t4, $t2
-    pcpyld  $t5, $t6, $t5
-    ldl     $t4, 71($a1)
-    ldr     $t4, 64($a1)
-    qmtc2   $t1, $vf26
-    qmtc2   $t3, $vf27
-    qmtc2   $t2, $vf28
-    qmtc2   $t5, $vf29
-    qmtc2   $t4, $vf30
-1:
-    bc2fl   2f
-    vlqi.xyzw   $vf10, ($vi01++)
-    beq     $zero, $zero, 1b
-    nop
-2:
-    vlqi.xyzw   $vf11, ($vi01++)
-    vlqi.xyzw   $vf12, ($vi01++)
-    vlqi.xyzw   $vf13, ($vi01++)
-    vlqi.xyzw   $vf14, ($vi01++)
-    vlqi.xyzw   $vf21, ($vi02++)
-    vlqi.xyzw   $vf22, ($vi02++)
-    vlqi.xyzw   $vf23, ($vi02++)
-    vlqi.xyzw   $vf24, ($vi02++)
-    vlqi.xyzw   $vf25, ($vi02++)
+    qmtc2   $t9, $vf19
+    qmtc2   $v1, $vf26
+    qmtc2   $a3, $vf27
+    qmtc2   $at, $vf28
+    qmtc2   $s0, $vf29
+    qmtc2   $a0, $vf30
     vmul.xyzw   $vf10, $vf10, $vf15
     vmul.xyzw   $vf11, $vf11, $vf16
     vmul.xyzw   $vf12, $vf12, $vf17
@@ -409,14 +379,14 @@ MP123_IMDCT36:
     sw      $t7, 1664($t0)
     sw      $t8, 1920($t0)
     sw      $t1, 2048($t0)
-    jr      $ra
     sw      $t2, 2176($t0)
+    ld      $s0, 0($sp)
+    ld      $s1, 8($sp)
+    jr      $ra
+    addiu   $sp, $sp, 16
 
 MP123_IMDCT12:
     la      $at, s_Cos12
-    addiu   $v0, $zero, 0x0401
-    addiu   $v1, $zero, 0x00AB
-    ctc2    $v0, $vi01
     pref    0, 0($at)
     ldl     $t1,  7($a0)
     ldr     $t1,  0($a0)
@@ -493,30 +463,7 @@ MP123_IMDCT12:
     qmtc2   $t3, $vf17
     qmtc2   $t5, $vf18
     qmtc2   $t7, $vf19
-    vsqi.xyz    $vf01, ($vi01++)
-    vsqi.xyz    $vf02, ($vi01++)
-    vsqi.xyz    $vf03, ($vi01++)
-    vsqi.xyz    $vf04, ($vi01++)
-    vsqi.xyz    $vf05, ($vi01++)
-    vsqi.xyz    $vf06, ($vi01++)
-    vsqi.xyz    $vf07, ($vi01++)
-    vsqi.xyz    $vf08, ($vi01++)
-    vsqi.xyz    $vf09, ($vi01++)
-    vsqi.xyz    $vf10, ($vi01++)
-    vsqi.xyz    $vf11, ($vi01++)
-    vsqi.xyz    $vf12, ($vi01++)
-    vsqi.xyz    $vf13, ($vi01++)
-    vsqi.xyz    $vf14, ($vi01++)
-    vsqi.xyz    $vf15, ($vi01++)
-    vsqi.xyz    $vf16, ($vi01++)
-    vsqi.xyz    $vf17, ($vi01++)
-    vsqi.xyz    $vf18, ($vi01++)
-    vsqi.xyz    $vf19, ($vi01++)
-    ctc2    $v1, $vi31
-    addiu   $v0, $zero, 0x0410
-    addiu   $v1, $zero, 0x0417
-    ctc2    $v0, $vi01
-    ctc2    $v1, $vi02
+    .word   0x4A003438
     lw      $t1,  0($a1)
     lw      $t2,  4($a1)
     lw      $t3,  8($a1)
@@ -535,20 +482,7 @@ MP123_IMDCT12:
     sw      $zero, 60($a2)
     sw      $zero, 64($a2)
     sw      $zero, 68($a2)
-1:
-    bc2fl   2f
-    vlqi.xyz    $vf16, ($vi01++)
-    beq     $zero, $zero, 1b
-    nop
-2:
-    vlqi.xyz $vf17, ($vi01++)
-    vlqi.xyz $vf18, ($vi01++)
-    vlqi.xyz $vf19, ($vi01++)
-    vlqi.xyz $vf23, ($vi02++)
-    vlqi.xyz $vf24, ($vi02++)
-    vlqi.xyz $vf25, ($vi02++)
-    vlqi.xyz $vf26, ($vi02++)
-    qmfc2   $t1, $vf16
+    qmfc2.i $t1, $vf16
     qmfc2   $t3, $vf17
     qmfc2   $t5, $vf18
     qmfc2   $t7, $vf19
@@ -821,7 +755,7 @@ MP123_Synth:
     pcpyud  $t0, $t2, $t0
     qmtc2   $t0, $vf20
     qmtc2   $t1, $vf19
-    .word   0x4A0065B8
+    .word   0x4A002938
     la      $v1, s_DecWin
     subu    $v1, $v1, $t6
     lui     $t7, 0x46FF

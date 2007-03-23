@@ -61,6 +61,7 @@ typedef short SMS_DCTELEM;
 # define SMS_BUG_DC_CLIP          0x00001000
 
 # define SMS_PKT_FLAG_KEY 0x00000001
+# define SMS_PKT_FLAG_SUB 0x00000002
 
 # ifndef NULL
 #  define NULL (  ( void* )0  )
@@ -88,8 +89,7 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_MPEG_SPR_MB     (  ( SMS_MacroBlock* )0x70000280  )
 #  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )0x70000400  )
 #  define SMS_MPEG_SPR_BLOCKS (  ( SMS_DCTELEM*    )0x70000570  )
-#  define SMS_VU0_SPR_BLOCKS  (  ( uint8_t*        )0x70000890  )
-#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70000E90  )
+#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70000890  )
 
 static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
  uint32_t retVal;

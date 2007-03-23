@@ -987,4 +987,25 @@ Update (23-02-2007)
 - fixed quite serious bug related to mpeg-4 code (crash in flames). Big thanks
   to 'user112' for the research and sample clip;
 
+Update (18-03-2007)
+--------------------
+- fixed "short freeze" issue during back scrolling;
+- fixed confusing GUI behavior during device hotplugging while in SMS menu;
+- fixed corrupted video in some .avi files (QPel+AC3);
+- presumably fixed freeze issue with .avi files while loading index;
+- new VU IDCT microprogram (smaller and faster, so all VU microprograms are
+  squeezed now in 4KB VU0 micro memory, leaving VU1 free for possible future
+  usage (high quality colorspace conversion, for example :));
+- fixed crash due to incorrectly formatted subtitles (error message
+  is displayed instead) (Thanks to 'gogydm' for the sample file);
+- fixed crash (in fact is "infinite loop") due to very long lines in
+  subtitles (such lines are just truncated now). Thanks to 'rami1' for the
+  research/note;
 
+Update (23-03-2007) - SVN synchronization
+-------------------
+- fixed crash issue for .avi files with multiple AC3 audio streams
+  (thanks to 'Tirabol' for the sample clip);
+- fixed incorrect clip duration calculations for DivX6 files with
+  subtitles (thanks to 'Tirabol' for the sample clip);
+- changes due to upcoming implementation of DivX6 subtitles support;

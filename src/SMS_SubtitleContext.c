@@ -175,7 +175,15 @@ next:
 
     } else lpSpace = strrchrx ( apLine, lpSpace - 1, ' ' );
 
-   } else goto next;
+   } else {
+
+    if ( g_Config.m_PlayerSAlign == 2 )
+     ++apLine;
+    else apLine[ lLen - 1 ] = '\x00';
+
+    goto next;
+
+   }  /* end else */
 
   }  /* end while */
 
@@ -281,9 +289,11 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 // skip tag (I didn't find any clear specs about them)
    if ( *lpPtr == '{' ) {
 
-    while ( *lpPtr != '}' ) ++lpPtr;
+    while ( *lpPtr && *lpPtr != '}' ) ++lpPtr;
 
-    ++lpPtr;
+    if ( *lpPtr )
+     ++lpPtr;
+    else break;
 
    }  /* end if */
 

@@ -122,6 +122,7 @@ typedef struct SMS_Codec_AC3Context {
  uint8_t          m_CSNROffst;
  uint8_t          m_CplFLeak;
  uint8_t          m_CplSLeak;
+ sample_t*        m_pWorkarea;
 
 } SMS_Codec_AC3Context;
 

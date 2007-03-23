@@ -65,9 +65,13 @@
 .globl DSP_PackMB
 
 .equ IDCT_CONST_OFFSET, 0x0400
-.equ IDCT_VU0SPR_DATA,  0x0890
-.equ IDCT_VU0MEM_DATA,  0x4200
-.equ IDCT_MCMSPR_DATA,  0x0280
+
+.sdata
+.align  4
+s_pVUData:  .half   0x0004, 0x0008, 0x000C, 0x0020
+            .half   0x0024, 0x0028, 0x002C, 0x0040
+            .half   0x0044, 0x0048, 0x004C, 0x0000
+            .half   0x0000, 0x0000, 0x0000, 0x0000
 
 IDCT:
     lui     $t8, 0x7000
@@ -2193,41 +2197,6 @@ DSP_AvgPixels8XY_16:
 3:
     jr      $ra
 
-DSP_PackMB:
-    lui     $a2, 0x1000
-    lui     $v1, 0x1100
-    ori     $a2, $a2, 0xD400
-    ori     $v1, $v1, IDCT_VU0MEM_DATA
-    addiu   $a3, $zero, 96
-    addiu   $v0, $zero, IDCT_VU0SPR_DATA
-    addiu   $at, $zero, 0x0101
-    sw      $v1,  16($a2)
-    sw      $a3,  32($a2)
-    sw      $v0, 128($a2)
-    lui     $t8, 0x3000
-    lui     $a1, 0x7000
-    addu    $t9, $zero, $ra
-    or      $a0, $a0, $t8
-    qmfc2.i $zero, $vf00
-    sw      $at,   0($a2)
-    addu    $at, $zero, 32
-1:
-    lw      $t0, 0($a2)
-    andi    $t0, $t0, 0x0100
-    bne     $t0, $zero, 1b
-    nop
-    bgezal  $zero, _dsp_pack16x8
-    addu    $t8, $a1, 256
-    addu    $a1, $a1, 256
-    bgezal  $zero, _dsp_pack16x8
-    addu    $t8, $a1, 256
-    addiu   $at, $at, 32
-    addu    $a1, $a1, 256
-    bgezal  $zero, _dsp_pack16x8
-    addu    $t8, $a1, 32
-    addu    $ra, $zero, $t9
-    jr      $ra
-
 DSP_GetMB:
     lui     $a1, 0x7000
     lui     $v1, 0x3000
@@ -2257,86 +2226,65 @@ DSP_GetMB:
     addiu   $a1, $a1, 128
     jr      $ra
 
-_dsp_pack16x8:
-    lq      $v0, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $v1, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    lq      $a2, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $a3, IDCT_VU0SPR_DATA + 16($t8)
-    addu    $t8, $t8, $at
-    ppach   $v0, $v1, $v0
-    ppach   $a2, $a3, $a2
-    lq      $v1, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $a3, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $a2, $v0
-    lq      $v0, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $a2, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 0($a0)
-    addu    $t8, $t8, $at
-    ppach   $v1, $a3, $v1
-    ppach   $v0, $a2, $v0
-    lq      $a3, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $a2, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $v0, $v1
-    lq      $v1, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $v0, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 16($a0)
-    addu    $t8, $t8, $at
-    ppach   $a3, $a2, $a3
-    ppach   $v1, $v0, $v1
-    lq      $a2, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $v0, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $v1, $a3
-    lq      $a3, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $v1, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 32($a0)
-    addu    $t8, $t8, $at
-    ppach   $a2, $v0, $a2
-    ppach   $a3, $v1, $a3
-    lq      $v0, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $v1, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $a3, $a2
-    lq      $a2, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $a3, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 48($a0)
-    addu    $t8, $t8, $at
-    ppach   $v0, $v1, $v0
-    ppach   $a2, $a3, $a2
-    lq      $v1, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $a3, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $a2, $v0
-    lq      $v0, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $a2, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 64($a0)
-    addu    $t8, $t8, $at
-    ppach   $v1, $a3, $v1
-    ppach   $v0, $a2, $v0
-    lq      $a3, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $a2, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $v0, $v1
-    lq      $v1, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $v0, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 80($a0)
-    addu    $t8, $t8, $at
-    ppach   $a3, $a2, $a3
-    ppach   $v1, $v0, $v1
-    lq      $a2, IDCT_VU0SPR_DATA +  0($a1)
-    lq      $v0, IDCT_VU0SPR_DATA + 16($a1)
-    addu    $a1, $a1, $at
-    ppacb   $t0, $v1, $a3
-    lq      $a3, IDCT_VU0SPR_DATA +  0($t8)
-    lq      $v1, IDCT_VU0SPR_DATA + 16($t8)
-    sq      $t0, 96($a0)
-    addu    $t8, $t8, $at
-    ppach   $a2, $v0, $a2
-    ppach   $a3, $v1, $a3
-    addiu   $a0, $a0, 128
-    ppacb   $t0, $a3, $a2
+DSP_PackMB:
+    lui     $t0, 0x3000
+    la      $a1, s_pVUData
+    mtsah   $zero, 1
+    lq      $v1, 0($a1)
+    addiu   $at, $zero, 2
+    or      $a0, $a0, $t0
+2:
+    addiu   $at, $at, -1
+    addiu   $v0, $zero, 4
+1:
+    qmfc2.i $t0, $vf01
+    ctc2    $v1, $vi06
+    qfsrv   $v1, $v1, $v1
+    qmfc2   $t1, $vf02
+    qmfc2   $t2, $vf03
+    qmfc2   $t3, $vf04
+    qmfc2   $t4, $vf05
+    qmfc2   $t5, $vf06
+    qmfc2   $t6, $vf07
+    qmfc2   $t7, $vf08
+    .word   0x4A0026F8
+    ppach   $t0, $t1, $t0
+    ppach   $t2, $t3, $t2
+    ppach   $t4, $t5, $t4
+    ppach   $t6, $t7, $t6
+    ppacb   $t0, $t2, $t0
+    ppacb   $t4, $t6, $t4
+    addiu   $v0, $v0, -1
+    sq      $t0,  0($a0)
+    sq      $t4, 16($a0)
+    bgtz    $v0, 1b
+    addiu   $a0, $a0, 32
+    bgtzl   $at, 2b
+    nop
+    lq      $v1, 16($a1)
+    addiu   $v0, $zero, 4
+1:
+    qmfc2.i $t0, vf01
+    ctc2    $v1, $vi06
+    qfsrv   $v1, $v1, $v1
+    qmfc2   $t1, vf02
+    qmfc2   $t2, vf03
+    qmfc2   $t3, vf04
+    qmfc2   $t4, vf05
+    qmfc2   $t5, vf06
+    qmfc2   $t6, vf07
+    qmfc2   $t7, vf08
+    .word   0x4A0026F8
+    ppach   $t0, $t1, $t0
+    ppach   $t2, $t3, $t2
+    ppach   $t4, $t5, $t4
+    ppach   $t6, $t7, $t6
+    ppacb   $t0, $t4, $t0
+    ppacb   $t2, $t6, $t2
+    addiu   $v0, $v0, -1
+    sq      $t0,  0($a0)
+    sq      $t2, 64($a0)
+    bgtzl   $v0, 1b
+    addiu   $a0, $a0, 16
     jr      $ra
-    sq      $t0, -16($a0)
+    nop

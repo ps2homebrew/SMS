@@ -13,6 +13,7 @@
 
 .globl MUL64
 .globl mips_memcpy
+.globl mips_memset
 
 .text
 
@@ -134,4 +135,68 @@ mips_memcpy:
     sb      $v1, -1($a0)
 1:
     jr      $ra
+    nop
+
+mips_memset:
+    beqz    $a2, 1f
+    sltiu   $at, $a2, 16
+    bnez    $at, 2f
+    andi    $a1, $a1, 0xFF
+    dsll    $at, $a1, 0x8
+    or      $a1, $a1, $at
+    dsll    $at, $a1, 0x10
+    or      $a1, $a1, $at
+    dsll32  $at, $a1, 0x0
+    or      $a1, $a1, $at
+    andi    $v1, $a0, 0x7
+    beqz    $v1, 3f
+    li      $a3, 8
+    subu    $a3, $a3, $v1
+    subu    $a2, $a2, $a3
+    sdr     $a1, 0($a0)
+    addu    $a0, $a0, $a3
+3:
+    andi    $v1, $a2, 0x1f
+    subu    $a3, $a2, $v1
+    beqz    $a3, 4f
+    move    $a2, $v1
+    addu    $a3, $a3, $a0
+5:
+    sd      $a1,  0($a0)
+    sd      $a1,  8($a0)
+    sd      $a1, 16($a0)
+    addiu   $a0, $a0, 32
+    sd      $a1, -8($a0)
+    bne     $a0, $a3, 5b
+4:
+    andi    $v1, $a2, 0x7
+    subu    $a3, $a2, $v1
+    beqz    $a3, 2f
+    move    $a2, $v1
+    addu    $a3, $a3, $a0
+6:
+    addiu   $a0, $a0, 8
+    beq     $a0, $a3, 2f
+    sd      $a1, -8($a0)
+    addiu   $a0, $a0, 8
+    beq     $a0, $a3, 2f
+    sd      $a1, -8($a0)
+    addiu   $a0, $a0, 8
+    bne     $a0, $a3, 6b
+    sd      $a1, -8($a0)
+2:
+    beqz    $a2, 1f
+    addu    $a3, $a2, $a0
+7:
+    addiu   $a0, $a0, 1
+    beq     $a0, $a3, 1f
+    sb      $a1, -1($a0)
+    addiu   $a0, $a0, 1
+    beq     $a0, $a3, 1f
+    sb      $a1, -1($a0)
+    addiu   $a0, $a0, 1
+    bne     $a0, $a3, 7b
+    sb      $a1, -1($a0)
+1:
+    jr  $ra
     nop

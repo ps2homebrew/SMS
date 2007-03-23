@@ -435,11 +435,11 @@ void SMS_MPEGContext_Init ( int aWidth, int aHeight ) {
  (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   0 ] = 0x00000000;
  (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   1 ] = 0x00000000;
  (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   2 ] = 0x01000404;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   3 ] = 0x6D600020;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 196 ] = 0x14000000;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 197 ] = 0;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 198 ] = 0;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 199 ] = 0;
+ (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   3 ] = 0x6D600010;
+ (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 196 ] = 0x00000000;
+ (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 197 ] = 0x00000000;
+ (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 198 ] = 0x00000000;
+ (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 199 ] = 0x14000000;
 
 }  /* end SMS_MPEGContext_Init */
 

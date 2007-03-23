@@ -316,7 +316,7 @@ static int8_t s_LATab[ 256 ] = {
 
 static sample_t s_Samples[ 16 * 256 * 12 ] __attribute__(   (  section( ".bss" )  )   );
 
-static SMS_Codec_AC3Context s_AC3Ctx;
+SMS_Codec_AC3Context s_AC3Ctx;
 static int ( *DecodeFrame ) ( SMS_RingBuffer*, int, int );
 
 #define MYCTX() (  ( SMS_Codec_AC3Context* )apCtx -> m_pCodec -> m_pCtx  )
@@ -343,6 +343,9 @@ void SMS_Codec_AC3_Open ( SMS_CodecContext* apCtx ) {
   DecodeFrame = _ac3_decode;
 
  else DecodeFrame = _ac3_spdif;
+
+ s_AC3Ctx.m_pWorkarea = ( sample_t* )g_pSPRTop;
+ g_pSPRTop += 1024;
 
 }  /* end SMS_Codec_AC3_Open */
 
