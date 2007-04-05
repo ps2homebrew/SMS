@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -34,27 +34,35 @@ static SMString* s_ModeNames[ 8 ] __attribute__(   (  section( ".data" )  )   ) 
  &STR_WIDESCREEN, &STR_WIDE_PAN_SCAN_1, &STR_WIDE_PAN_SCAN_2
 };
 
-static SMString s_Lang;
+static SMString s_Lang    __attribute__(   (  section( ".bss" )  )   );
+static SMString s_SubLang __attribute__(   (  section( ".bss" )  )   );
 
 static void _lang_handler    ( GUIMenu*, int );
 static void _disp_handler    ( GUIMenu*, int );
 static void _poff_handler    ( GUIMenu*, int );
 static void _dsub_handler    ( GUIMenu*, int );
+static void _rlvl_handler    ( GUIMenu*, int );
+static void _subs_handler    ( GUIMenu*, int );
 extern void _subclr_handler  ( GUIMenu*, int );
 extern void _subbclr_handler ( GUIMenu*, int );
 extern void _subiclr_handler ( GUIMenu*, int );
 extern void _subu_handler    ( GUIMenu*, int );
 extern void _update_poff     ( int           );
 
-static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) = {
- { MENU_ITEM_TYPE_TEXT,   &STR_LANGUAGE,            0, 0, _lang_handler,    0, 0 },
- { MENU_ITEM_TYPE_TEXT,   &STR_DISPLAY,             0, 0, _disp_handler,    0, 0 },
- { MENU_ITEM_TYPE_TEXT,   &STR_AUTO_POWER_OFF,      0, 0, _poff_handler,    0, 0 },
+static GUIMenuItem s_OptItems[] __attribute__(   (  section( ".data" )  )   ) = {
+ { MENU_ITEM_TYPE_TEXT,   &STR_AC3_RANGE_LEVEL,     0, 0, _rlvl_handler,    0, 0 },
  { 0,                     &STR_DISPLAY_SUBTITLES,   0, 0, _dsub_handler,    0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_COLOR,      0, 0, _subclr_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_BOLD_COLOR, 0, 0, _subbclr_handler, 0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_ITL_COLOR,  0, 0, _subiclr_handler, 0, 0 },
- { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_UND_COLOR,  0, 0, _subu_handler,    0, 0 }
+ { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_UND_COLOR,  0, 0, _subu_handler,    0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_SUBTITLES,           0, 0, _subs_handler,    0, 0 },
+};
+
+static GUIMenuItem s_PlayerMenu[ 10 ] __attribute__(   (  section( ".data" )  )   ) = {
+ { MENU_ITEM_TYPE_TEXT,   &STR_LANGUAGE,            0, 0, _lang_handler,    0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_DISPLAY,             0, 0, _disp_handler,    0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_AUTO_POWER_OFF,      0, 0, _poff_handler,    0, 0 }
 };
 
 static void GUIMenuPlayer_Redraw ( GUIMenu* apMenu ) {
@@ -92,6 +100,15 @@ static void _update_lang ( void ) {
  s_Lang.m_Len  = strlen ( lpLang );
 
 }  /* end _update_lang */
+
+static void _update_sublang ( void ) {
+
+ char* lpSubLang = PlayerControl_GetSubLang () -> m_pString;
+
+ s_SubLang.m_pStr = lpSubLang;
+ s_SubLang.m_Len  = strlen ( lpSubLang );
+
+}  /* end _update_sublang */
 
 static void _lang_handler ( GUIMenu* apMenu, int aDir ) {
 
@@ -132,15 +149,18 @@ static void _poff_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _dsub_handler ( GUIMenu* apMenu, int aDir ) {
 
+ SMS_ListNode* lpNode = apMenu -> m_pState -> m_pTail;
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpNode -> m_Param;
+
  if ( s_Player.m_Flags & SMS_PF_SUBS ) {
 
-  s_Player.m_Flags             &= ~SMS_PF_SUBS;
-  s_PlayerMenu[ 3 ].m_IconRight = GUICON_OFF;
+  s_Player.m_Flags                 &= ~SMS_PF_SUBS;
+  lpState -> m_pCurr -> m_IconRight = GUICON_OFF;
 
  } else {
 
-  s_Player.m_Flags             |= SMS_PF_SUBS;
-  s_PlayerMenu[ 3 ].m_IconRight = GUICON_ON;
+  s_Player.m_Flags                 |= SMS_PF_SUBS;
+  lpState -> m_pCurr -> m_IconRight = GUICON_ON;
 
  }  /* end else */
 
@@ -148,12 +168,42 @@ static void _dsub_handler ( GUIMenu* apMenu, int aDir ) {
 
 }  /* end _dsub_handler */
 
+static char     s_RLVLBuffer[ 2 ] __attribute__(   (  section( ".bss"  )  )   );
+static SMString s_StrRLVL         __attribute__(   (  section( ".data" )  )   ) = {
+ 1, s_RLVLBuffer
+};
+
+static void _rlvl_handler ( GUIMenu* apMenu, int aDir ) {
+
+ unsigned short lLvl = g_Config.m_PlayerAC3RL + aDir;
+
+ g_Config.m_PlayerAC3RL = lLvl = SMS_clip ( lLvl, 1, 9 );
+ s_RLVLBuffer[ 0 ] = lLvl + '0';
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _rlvl_handler */
+
+static void _subs_handler ( GUIMenu* apMenu, int aDir ) {
+
+ SMS_ListNode* lpNode = PlayerControl_ChangeSubLang ();
+
+ _update_sublang ();
+
+ s_Player.m_SubIdx = ( unsigned int )lpNode -> m_Param;
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _subs_handler */
+
 void SMS_PlayerMenu ( void ) {
 
  GUIMenu*      lpMenu   = ( GUIMenu* )GUI_CreateMenu ();
  int           lWidth   = g_GSCtx.m_Width  - ( g_GSCtx.m_Width  >> 2 );
  int           lHeight  = g_GSCtx.m_Height - ( g_GSCtx.m_Height >> 2 );
  unsigned int  lVRAMPtr = g_GSCtx.m_VRAMPtr;
+ int           lIdx     = 2;
+ int           lfDXSB   = s_Player.m_Flags & SMS_FLAGS_DXSB;
  GUIMenuState* lpState;
  unsigned long lDMA[ 6 ] __attribute__(   (  aligned( 16 )  )   );
 
@@ -184,19 +234,46 @@ void SMS_PlayerMenu ( void ) {
  lpState -> m_pItems =
  lpState -> m_pFirst =
  lpState -> m_pCurr  = s_PlayerMenu;
- lpState -> m_pLast  = &s_PlayerMenu[ s_Player.m_pSubCtx ? 7 : 2 ];
 
  _update_poff ( 0 );
- _update_lang ();
+ _update_lang    ();
+
+ if ( lfDXSB ) _update_sublang ();
 
  s_PlayerMenu[ 0 ].m_IconRight = ( unsigned int )&s_Lang;
  s_PlayerMenu[ 1 ].m_IconRight = ( unsigned int )s_ModeNames[ s_Player.m_PanScan ];
  s_PlayerMenu[ 2 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
- s_PlayerMenu[ 3 ].m_IconRight = s_Player.m_Flags & SMS_PF_SUBS ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[ 4 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
- s_PlayerMenu[ 5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
- s_PlayerMenu[ 6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
- s_PlayerMenu[ 7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
+
+ if ( s_Player.m_Flags & SMS_FLAGS_AC3 ) {
+
+  s_PlayerMenu[ ++lIdx ] = s_OptItems[ 0 ];
+  s_RLVLBuffer[ 0      ] = g_Config.m_PlayerAC3RL + '0';
+  s_RLVLBuffer[ 1      ] = '\x00';
+  s_PlayerMenu[ lIdx   ].m_IconRight = ( unsigned int )&s_StrRLVL;
+
+ }  /* end if */
+
+ if ( lfDXSB ) {
+
+  s_PlayerMenu[ ++lIdx ] = s_OptItems[ 6 ];
+  s_PlayerMenu[ lIdx   ].m_IconRight = ( unsigned int )&s_SubLang;
+
+ }  /* end if */
+
+ s_PlayerMenu[ lIdx + 1 ] = s_OptItems[ 1 ];
+ s_PlayerMenu[ lIdx + 1 ].m_IconRight = s_Player.m_Flags & SMS_PF_SUBS ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[ lIdx + 2 ] = s_OptItems[ 2 ];
+ s_PlayerMenu[ lIdx + 2 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
+ s_PlayerMenu[ lIdx + 3 ] = s_OptItems[ 3 ];
+ s_PlayerMenu[ lIdx + 3 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
+ s_PlayerMenu[ lIdx + 4 ] = s_OptItems[ 4 ];
+ s_PlayerMenu[ lIdx + 4 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
+ s_PlayerMenu[ lIdx + 5 ] = s_OptItems[ 5 ];
+ s_PlayerMenu[ lIdx + 5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
+
+ lpState -> m_pLast = &s_PlayerMenu[
+  ( s_Player.m_pSubCtx || lfDXSB ) ? lIdx + 5: lIdx
+ ];
 
  s_pMenu = lpMenu;
 

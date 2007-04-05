@@ -507,8 +507,9 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
 
       if ( lpStm -> m_pName ) free ( lpStm -> m_pName );
 
-      lpStm -> m_pName = ( char* )malloc ( lSize += lSize & 1 );
+      lpStm -> m_pName = ( char* )malloc (  ( lSize += lSize & 1 ) + 1  );
       lpFileCtx -> Read ( lpFileCtx, lpStm -> m_pName, lSize );
+      lpStm -> m_pName[ lSize ] = '\x00';
 
      }  /* end else */
 
@@ -524,10 +525,11 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
     case SMS_MKTAG( 'I', 'A', 'S', '8' ):
     case SMS_MKTAG( 'I', 'A', 'S', '9' ): {
 
-     char* lpBuf = ( char* )malloc ( lSize += lSize & 1 );
+     char* lpBuf = ( char* )malloc (  ( lSize += lSize & 1 ) + 1  );
      int   lfSet = 0;
 
      lpFileCtx -> Read ( lpFileCtx, lpBuf, lSize );
+     lpBuf[ lSize ] = '\x00';
 
      lSubTag = (  ( char* )&lTag  )[ 3 ] - '1';
      lLen    = 0;

@@ -101,6 +101,7 @@ int SMS_LoadConfig ( void  ) {
  g_Config.m_BrowserTxtIdx    = 15;
  g_Config.m_NetworkFlags     = SMS_DF_AUTO_HDD;
  g_Config.m_PlayerVolume     = 12;
+ g_Config.m_PlayerAC3RL      =  6;
  g_Config.m_DisplayMode      = GSVideoMode_Default;
  g_Config.m_DisplayCharset   = GSCodePage_WinLatin1;
  g_Config.m_PlayerFlags      = SMS_PF_SUBS | SMS_PF_ANIM | SMS_PF_TIME;
@@ -229,6 +230,8 @@ int SMS_LoadConfig ( void  ) {
 
  SMS_clip ( g_Config.m_DX, -160, 160 );
  SMS_clip ( g_Config.m_DY,  -64,  64 );
+
+ if ( g_Config.m_PlayerAC3RL < 1 ) g_Config.m_PlayerAC3RL = 6;
 
  STIO_SetIOMode ( STIOMode_Ordinary );
 

@@ -74,6 +74,7 @@ typedef struct IPUContext {
  unsigned long int      m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned long int      m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAGIFPack[  6 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned int           m_ImgLeft   [  8 ];
  unsigned int           m_ImgTop    [  8 ];
  unsigned int           m_ImgRight  [  8 ];
@@ -94,13 +95,14 @@ typedef struct IPUContext {
  unsigned int           m_DMAHandlerID_GIF;
  unsigned int           m_CSCmd;
  unsigned int           m_PixFmt;
+ unsigned int           m_TexFmt;
  unsigned int           m_VBlankStartHandlerID;
  unsigned int           m_fDraw;
  unsigned int           m_VRAM;
+ unsigned int           m_SVRAM;
  unsigned int           m_TBW;
  unsigned int           m_TW;
  unsigned int           m_TH;
- unsigned int           m_SyncS;
  unsigned int           m_Width;
  unsigned int           m_Height;
  unsigned int           m_ScrRight;
@@ -108,6 +110,7 @@ typedef struct IPUContext {
  unsigned int           m_VIFQueueSize;
  unsigned int           m_ViFQueueSize;
  unsigned int           m_VIPQueueSize;
+ unsigned int           m_GIFQueueSize;
  unsigned int           m_ModeIdx;
  unsigned char*         m_pResult;
  unsigned long int*     m_pDMAPacket;
@@ -115,7 +118,6 @@ typedef struct IPUContext {
  unsigned long          m_BRGBAQ;
  long*                  m_pAudioPTS;
  long                   m_VideoPTS;
- int                    m_fStopSync;
  
  void ( *Sync          ) ( void         );
  void ( *Display       ) ( void*, long  );
@@ -134,6 +136,7 @@ typedef struct IPUContext {
  void ( *Flush         ) ( void         );
  void ( *SetBrightness ) ( unsigned int );
  void ( *StopSync      ) ( int          );
+ void ( *QueueSubtitle ) ( void*        );
 
 } IPUContext;
 

@@ -31,6 +31,7 @@ typedef short SMS_DCTELEM;
 # define SMS_FT_P_TYPE 2
 # define SMS_FT_B_TYPE 3
 # define SMS_FT_S_TYPE 4
+# define SMS_FT_T_TYPE 0x80000000
 
 # define SMS_ROUND( v ) (    ( int )(  ( v ) + (  ( v ) > 0 ? 0.5F : -0.5F  )   )    )
 

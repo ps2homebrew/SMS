@@ -34,6 +34,8 @@ int                  PlayerControl_FastForward      ( void                      
 int                  PlayerControl_Rewind           ( void                             );
 struct SMS_ListNode* PlayerControl_ChangeLang       ( void                             );
 struct SMS_ListNode* PlayerControl_GetLang          ( void                             );
+struct SMS_ListNode* PlayerControl_ChangeSubLang    ( void                             );
+struct SMS_ListNode* PlayerControl_GetSubLang       ( void                             );
 void                 PlayerControl_SwitchSubs       ( void                             );
 void                 PlayerControl_DisplayTime      ( int, int64_t, int                );
 void                 PlayerControl_MkTime           ( int64_t                          );

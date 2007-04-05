@@ -22,6 +22,7 @@
 #include "SMS.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_Timer.h"
+#include "SMS_DXSB.h"
 
 IPUContext g_IPUCtx;
 
@@ -33,18 +34,157 @@ static unsigned long int* s_pVIFPacket;
 static unsigned long int* s_pViFPacket;
 static unsigned long int* s_pVIPPacket;
 
-static void IPU_Sync ( void ) {
+static SMS_DXSBFrame* s_pDXSBDFrm;
+static SMS_DXSBFrame* s_pDXSBAFrm;
+static SMS_DXSBFrame* s_pDXSBRFrm;
+static int            s_SyncS;
+static int            s_fStopSync;
 
- WaitSema ( g_IPUCtx.m_SyncS );
- SignalSema ( g_IPUCtx.m_SyncS );
+static SMS_DXSBErasePack s_DXSBEPack = {
+ .m_GIFTag.m_HiLo.m_Lo = GIF_TAG( 6, 1, 0, 0, GIFTAG_FLG_PACKED, 1 ),
+ .m_GIFTag.m_HiLo.m_Hi = GIFTAG_REGS_AD,
+ .m_TestOff.m_Value    = GS_SET_TEST(
+                          GS_TEST_ATE_OFF,
+                          GS_TEST_ATST_NEVER,
+                          0,
+                          GS_TEST_AFAIL_KEEP,
+                          GS_TEST_DATE_OFF,
+                          GS_TEST_DATM_0PASS,
+                          GS_TEST_ZTE_ON,
+                          GS_TEST_ZTST_ALWAYS
+                         ),
+ .m_TestOffID          = GS_TEST_1,
+ .m_Prim.m_Value       = GS_SET_PRIM(
+                          GS_PRIM_PRIM_SPRITE,
+                          GS_PRIM_IIP_FLAT,
+                          GS_PRIM_TME_OFF,
+                          GS_PRIM_FGE_OFF,
+                          GS_PRIM_ABE_OFF,
+                          GS_PRIM_AA1_OFF,
+                          GS_PRIM_FST_UV,
+                          GS_PRIM_CTXT_1,
+                          GS_PRIM_FIX_UNFIXED
+                         ),
+ .m_PrimID             = GS_PRIM,
+ .m_RGBAQ.m_Value      = GS_SET_RGBAQ( 0x00, 0x00, 0x00, 0x00, 0x00 ),
+ .m_RGBAQID            = GS_RGBAQ,
+ .m_XYZLeftTopID       = GS_XYZ2,
+ .m_XYZRightBottomID   = GS_XYZ2,
+ .m_TestOn.m_Value     = GS_SET_TEST(
+                          GS_TEST_ATE_OFF,
+                          GS_TEST_ATST_NEVER,
+                          0,
+                          GS_TEST_AFAIL_KEEP,
+                          GS_TEST_DATE_OFF,
+                          GS_TEST_DATM_0PASS,
+                          GS_TEST_ZTE_ON,
+                          GS_TEST_ZTST_GEQUAL
+                         ),
+ .m_TestOnID           = GS_TEST_1
+};
 
-}  /* end IPU_Sync */
+static SMS_DXSBDrawPack s_DXSBDPack = {
+ .m_DMATagUpload.m_Value     = DMA_TAG( 6, 0, DMATAG_ID_CNT, 0, 0, 0 ),
+ .m_Pad0                     = 0,
+ .m_GIFTagUpload.m_HiLo.m_Lo = GIF_TAG( 4, 0, 0, 0, GIFTAG_FLG_PACKED, 1 ),
+ .m_GIFTagUpload.m_HiLo.m_Hi = GIFTAG_REGS_AD,
+ .m_BitBlt.m_Value           = GS_SET_BITBLTBUF( 0, 0, 0, 0, 0, GSPixelFormat_PSMT8H ),
+ .m_BitBltID                 = GS_BITBLTBUF,
+ .m_TrxPos.m_Value           = GS_SET_TRXPOS( 0, 0, 0, 0, GS_TRXPOS_DIR_LR_UD ),
+ .m_TrxPosID                 = GS_TRXPOS,
+ .m_TrxRegID                 = GS_TRXREG,
+ .m_TrxDir.m_Value           = GS_SET_TRXDIR( GS_TRXDIR_HOST_TO_LOCAL ),
+ .m_TrxDirID                 = GS_TRXDIR,
+ .m_GIFTagData.m_HiLo.m_Lo   = GIF_TAG( 0, 0, 0, 0, GIFTAG_FLG_IMAGE, 0 ),
+ .m_GIFTagData.m_HiLo.m_Hi   = 0,
+ .m_DMATagData.m_Value       = DMA_TAG( 0, 0, DMATAG_ID_REF, 0, 0, 0 ),
+ .m_Pad1                     = 0,
+ .m_DMATagDraw.m_Value       = DMA_TAG( 10, 0, DMATAG_ID_RET, 0, 0, 0 ),
+ .m_Pad2                     = 0,
+ .m_GIFTagDraw0.m_HiLo.m_Lo  = GIF_TAG( 3, 0, 0, 0, GIFTAG_FLG_PACKED, 1 ),
+ .m_GIFTagDraw0.m_HiLo.m_Hi  = GIFTAG_REGS_AD,
+ .m_TexFlush.m_Value         = GS_SET_TEXFLUSH( 0 ),
+ .m_TexFlushID               = GS_TEXFLUSH,
+ .m_Prim.m_Value             = GS_SET_PRIM(
+                                GS_PRIM_PRIM_SPRITE,
+                                GS_PRIM_IIP_FLAT,
+                                GS_PRIM_TME_ON,
+                                GS_PRIM_FGE_OFF,
+                                GS_PRIM_ABE_OFF,
+                                GS_PRIM_AA1_OFF,
+                                GS_PRIM_FST_UV,
+                                GS_PRIM_CTXT_1,
+                                GS_PRIM_FIX_UNFIXED
+                               ),
+ .m_PrimID                   = GS_PRIM,
+ .m_TestOn.m_Value           = GS_SET_TEST(
+                                GS_TEST_ATE_ON,
+                                GS_TEST_ATST_NOTEQUAL,
+                                0,
+                                GS_TEST_AFAIL_KEEP,
+                                GS_TEST_DATE_OFF,
+                                GS_TEST_DATM_0PASS,
+                                GS_TEST_ZTE_ON,
+                                GS_TEST_ZTST_GEQUAL
+                               ),
+ .m_TestOnID                 = GS_TEST_1,
+ .m_GIFTagDraw1.m_HiLo.m_Lo  = GIF_TAG( 1, 0, 0, 0, GIFTAG_FLG_REGLIST, 6 ),
+ .m_GIFTagDraw1.m_HiLo.m_Hi  = ( GIFTAG_REGS_RGBAQ  <<  0 ) |
+                               ( GIFTAG_REGS_TEX0_1 <<  4 ) |
+                               ( GIFTAG_REGS_UV     <<  8 ) |
+                               ( GIFTAG_REGS_XYZ2   << 12 ) |
+                               ( GIFTAG_REGS_UV     << 16 ) |
+                               ( GIFTAG_REGS_XYZ2   << 20 ),
+ .m_RGBAQ.m_Value            = GS_SET_RGBAQ( 0x00, 0x00, 0x00, 0x80, 0x00 ),
+ .m_UVLeftTop.m_Value        = GS_SET_UV( 8, 8 ),
+ .m_GIFTagDraw2.m_HiLo.m_Lo  = GIF_TAG( 1, 1, 0, 0, GIFTAG_FLG_PACKED, 1 ),
+ .m_GIFTagDraw2.m_HiLo.m_Hi  = GIFTAG_REGS_AD,
+ .m_TestOff.m_Value          = GS_SET_TEST(
+                                GS_TEST_ATE_OFF,
+                                GS_TEST_ATST_NEVER,
+                                0,
+                                GS_TEST_AFAIL_KEEP,
+                                GS_TEST_DATE_OFF,
+                                GS_TEST_DATM_0PASS,
+                                GS_TEST_ZTE_ON,
+                                GS_TEST_ZTST_GEQUAL
+                               ),
+ .m_TestOffID                = GS_TEST_1
+};
 
-static void IPU_StopSync ( int afStop ) {
-
- g_IPUCtx.m_fStopSync = afStop;
-
-}  /* end IPU_Stop */
+extern void IPU_Sync     ( void );
+extern void IPU_StopSync ( int  );
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ ".text\n\t"
+ "IPU_Sync:\n\t"
+ "pcpyld    $s0, $s0, $s0\n\t"
+ "lw        $s0, s_SyncS\n\t"
+ "pcpyld    $s1, $s1, $s1\n\t"
+ "lw        $s1, s_pDXSBDFrm\n\t"
+ "pcpyld    $ra, $ra, $ra\n\t"
+ "jal       WaitSema\n\t"
+ "addiu     $a0, $s0, 0\n\t"
+ "beql      $s1, $zero, 1f\n\t"
+ "addiu     $a0, $s0, 0\n\t"
+ "jal       free\n\t"
+ "addiu     $a0, $s1, 0\n\t"
+ "sw        $zero, s_pDXSBDFrm\n\t"
+ "addiu     $a0, $s0, 0\n\t"
+ "1:\n\t"
+ "pcpyud    $ra, $ra, $ra\n\t"
+ "pcpyud    $s1, $s1, $s1\n\t"
+ "j         SignalSema\n\t"
+ "pcpyud    $s0, $s0, $s0\n\t"
+ "IPU_StopSync:\n\t"
+ "jr        $ra\n\t"
+ "sw        $a0, s_fStopSync\n\t"
+ ".set at\n\t"
+ ".set macro\n\t"
+ ".set reorder\n\t"
+);
 
 static void IPU_DestroyContext ( void ) {
 
@@ -53,7 +193,7 @@ static void IPU_DestroyContext ( void ) {
  DisableIntc ( INTC_VB_ON );
  RemoveIntcHandler ( INTC_VB_ON, g_IPUCtx.m_VBlankStartHandlerID );
 
- DeleteSema ( g_IPUCtx.m_SyncS );
+ DeleteSema ( s_SyncS );
 
  if ( g_IPUCtx.m_pResult ) {
 
@@ -66,6 +206,10 @@ static void IPU_DestroyContext ( void ) {
  }  /* end if */
 
  IPU_RESET();
+
+ if ( s_pDXSBDFrm ) free ( s_pDXSBDFrm );
+ if ( s_pDXSBAFrm ) free ( s_pDXSBAFrm );
+ if ( s_pDXSBRFrm ) free ( s_pDXSBRFrm );
 
 }  /* end IPU_DestroyContext */
 
@@ -132,7 +276,7 @@ static int IPU_DMAHandlerFromIPU ( int aChan ) {
      "m"( g_IPUCtx.m_pDMAPacket )
  );
 
- return 0;
+ return -1;
 
 }  /* end IPU_DMAHandlerFromIPU */
 
@@ -145,18 +289,38 @@ static void IPU_GIFHandlerDraw ( void ) {
 
  }  /* end if */
 
- iSignalSema ( g_IPUCtx.m_SyncS );
+ iSignalSema ( s_SyncS );
 
 }  /* end IPU_GIFHandlerDraw */
+
+static unsigned long* IPU_EraseSub ( unsigned long* apPkt ) {
+
+ unsigned int lSrc = ( unsigned int )&s_DXSBDPack | 0x20000000;
+ unsigned int lDst = ( unsigned int )&s_DXSBEPack | 0x20000000;
+
+ s_pDXSBDFrm = s_pDXSBAFrm;
+ s_pDXSBAFrm = NULL;
+
+ SMS_DXSB_EP_XYZ_LTE( lDst ) = (  SMS_DXSB_DP_XYZ_LT( lSrc ) << 32  ) >> 32;
+ SMS_DXSB_EP_XYZ_RBE( lDst ) = (  SMS_DXSB_DP_XYZ_RB( lSrc ) << 32  ) >> 32;
+
+ apPkt[ 0 ] = DMA_TAG( 7, 1, DMATAG_ID_REF, 0, &s_DXSBEPack, 0 );
+
+ return apPkt + 2;
+
+}  /* end IPU_EraseSub */
 
 static int IPU_VBlankStartHandler ( int aCause ) {
 
  if ( g_IPUCtx.m_fDraw ) {
 
-  if ( !g_IPUCtx.m_fStopSync && g_IPUCtx.m_pAudioPTS ) {
+  long           lVPTS = g_IPUCtx.m_VideoPTS;
+  unsigned long* lpGIFPack;
+
+  if ( !s_fStopSync && g_IPUCtx.m_pAudioPTS ) {
 
    int64_t lAudioPTS = *g_IPUCtx.m_pAudioPTS;
-   int64_t lDiff     = g_IPUCtx.m_VideoPTS - lAudioPTS;
+   int64_t lDiff     = lVPTS - lAudioPTS;
 
    if ( lDiff > 80 || !lAudioPTS )
     goto end;
@@ -166,9 +330,49 @@ static int IPU_VBlankStartHandler ( int aCause ) {
 
   IPU_Flush ();
 
+  lpGIFPack = ( unsigned long int* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+
   g_IPUCtx.m_fDraw    = 0;
   g_IPUCtx.GIFHandler = IPU_GIFHandlerDraw;
-  DMA_Send ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
+
+  if ( s_pDXSBAFrm && s_pDXSBAFrm -> m_EndPTS <= lVPTS ) lpGIFPack = IPU_EraseSub ( lpGIFPack );
+
+  if ( s_pDXSBRFrm && s_pDXSBRFrm -> m_StartPTS >= lVPTS && !s_pDXSBAFrm ) {
+
+   int            lTW, lTH;
+   SMS_DXSBFrame* lpFrm = s_pDXSBRFrm;
+   unsigned int   lDst  = ( unsigned int )&s_DXSBDPack | 0x20000000;
+   unsigned short lRW   = lpFrm -> m_RWidth;
+   unsigned int   lTBW  = (  ( lRW + 63 ) & ~63  ) >> 6;
+
+   s_pDXSBAFrm = lpFrm;
+   s_pDXSBRFrm = NULL;
+
+   GS_TWTH( lpFrm -> m_Width, lpFrm -> m_Height, &lTW, &lTH );
+
+   SMS_DXSB_DP_BB_TBW( lDst )  = lTBW;
+   SMS_DXSB_DP_TX_W( lDst )    = lRW;
+   SMS_DXSB_DP_TX_H( lDst )    = lpFrm -> m_RHeight;
+   SMS_DXSB_DP_QWC_GIF( lDst ) = lpFrm -> m_QWCPixmap;
+   SMS_DXSB_DP_QWC_DMA( lDst ) = lpFrm -> m_QWCPixmap;
+   SMS_DXSB_DP_PTR_DMA( lDst ) = ( unsigned int )lpFrm -> m_pPixmap;
+   SMS_DXSB_DP_TEX0( lDst )    = GS_SET_TEX0_1(
+    g_IPUCtx.m_SVRAM, lTBW, GSPixelFormat_PSMT8H, lTW, lTH, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL,
+    g_GSCtx.m_CLUT[ 0 ], GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 0, GS_TEX_CLD_LOAD
+   );
+   SMS_DXSB_DP_XYZ_LT( lDst )  = GS_XYZ ( lpFrm -> m_Left  * g_GSCtx.m_Width, lpFrm -> m_Top    * g_GSCtx.m_Height, 1 );
+   SMS_DXSB_DP_UV_R( lDst )    = ( lpFrm -> m_Width  << 4 ) - 8;
+   SMS_DXSB_DP_UV_B( lDst )    = ( lpFrm -> m_Height << 4 ) - 8;
+   SMS_DXSB_DP_XYZ_RB( lDst )  = GS_XYZ ( lpFrm -> m_Right * g_GSCtx.m_Width, lpFrm -> m_Bottom * g_GSCtx.m_Height, 1 );
+
+   lpGIFPack[ 0 ] = DMA_TAG( 0, 0, DMATAG_ID_CALL, 0, &s_DXSBDPack, 0 );
+   lpGIFPack     += 2;
+
+  }  /* end if */
+
+  lpGIFPack[ 0 ] = DMA_TAG(  14, 1, DMATAG_ID_REFE, 0, g_IPUCtx.m_DMAGIFDraw, 0  );
+  __asm__ __volatile__( "sync.l\n\t" );
+  DMA_SendChain ( DMAC_GIF, g_IPUCtx.m_DMAGIFPack );
 
  }  /* end if */
 end:
@@ -211,7 +415,7 @@ static int IPU_DMAHandlerToGIF ( int aChan ) {
 
 static void IPU_Display ( void* apFB, long aVideoPTS ) {
 
- WaitSema ( g_IPUCtx.m_SyncS );
+ WaitSema ( s_SyncS );
 
  g_IPUCtx.m_DestY = 0;
  g_IPUCtx.m_Slice = g_IPUCtx.m_nMBSlices;
@@ -229,7 +433,7 @@ static void IPU_Display ( void* apFB, long aVideoPTS ) {
 
 static void IPU_DisplayNoCSC ( void* apFB, long aVideoPTS ) {
 
- WaitSema ( g_IPUCtx.m_SyncS );
+ WaitSema ( s_SyncS );
 
  g_IPUCtx.m_fDraw    = 0;
  g_IPUCtx.GIFHandler = IPU_GIFHandlerSendNoCSC;
@@ -274,7 +478,7 @@ static void IPU_ChangeMode ( unsigned int anIdx ) {
    g_IPUCtx.m_DMAGIFDraw[ 19 ] = 0;
    g_IPUCtx.m_DMAGIFDraw[ 20 ] = GIF_TAG( 1, 1, 0, 0, 1, 6 );
    g_IPUCtx.m_DMAGIFDraw[ 21 ] = GS_TEX0_2 | ( GS_PRIM << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 ) | ( GS_UV << 16 ) | ( GS_XYZ2 << 20 );
-   g_IPUCtx.m_DMAGIFDraw[ 22 ] = GS_SET_TEX0( g_IPUCtx.m_VRAM, g_IPUCtx.m_TBW, g_IPUCtx.m_PixFmt, g_IPUCtx.m_TW, g_IPUCtx.m_TH, 0, 2, 0, 0, 0, 0, 0 );
+   g_IPUCtx.m_DMAGIFDraw[ 22 ] = GS_SET_TEX0( g_IPUCtx.m_VRAM, g_IPUCtx.m_TBW, g_IPUCtx.m_TexFmt, g_IPUCtx.m_TW, g_IPUCtx.m_TH, 0, 2, 0, 0, 0, 0, 0 );
    g_IPUCtx.m_DMAGIFDraw[ 23 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 1, 0 );
    g_IPUCtx.m_DMAGIFDraw[ 24 ] = GS_SET_UV( g_IPUCtx.m_TxtLeft  [ anIdx ], g_IPUCtx.m_TxtTop   [ anIdx ] );
    g_IPUCtx.m_DMAGIFDraw[ 25 ] = GS_SET_XYZ( g_IPUCtx.m_ImgLeft [ anIdx ], g_IPUCtx.m_ImgTop   [ anIdx ], 0 );
@@ -491,7 +695,14 @@ static void IPU_ResumeNoCSC ( void ) {
 
 static void IPU_Repaint ( void ) {
 
- DMA_Send ( DMAC_GIF, g_IPUCtx.m_DMAGIFDraw, 14 );
+ unsigned long int* lpGIFPack = ( unsigned long int* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+
+ if ( s_pDXSBAFrm ) lpGIFPack = IPU_EraseSub ( lpGIFPack );
+
+ lpGIFPack[ 0 ] = DMA_TAG(  14, 1, DMATAG_ID_REFE, 0, g_IPUCtx.m_DMAGIFDraw, 0  );
+ __asm__ __volatile__( "sync.l\n\t" );
+ DMA_SendChain ( DMAC_GIF, g_IPUCtx.m_DMAGIFPack );
+
  DMA_Wait ( DMAC_GIF );
 
 }  /* end IPU_Repaint */
@@ -512,7 +723,7 @@ static void IPU_DummyResume ( void ) {
 
 static void IPU_DummyDisplay ( void* apParam, long aVideoPTS ) {
 
- WaitSema ( g_IPUCtx.m_SyncS );
+ WaitSema ( s_SyncS );
 
  g_IPUCtx.m_pDMAPacket = ( unsigned long* )apParam;
  g_IPUCtx.m_fDraw = 1;
@@ -561,12 +772,22 @@ static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
 }  /* end IPU_SetBrightness */
 
+static void IPU_QueueSubtitle ( void* apSub ) {
+
+ SMS_DXSBFrame* lpFrame = ( SMS_DXSBFrame* )apSub;
+
+ if ( !s_pDXSBRFrm )
+  s_pDXSBRFrm = lpFrame;
+ else free ( lpFrame );
+
+}  /* end IPU_QueueSubtitle */
+
 IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afNoCSC ) {
 
  ee_sema_t lSema;
 
  lSema.init_count = 1;
- g_IPUCtx.m_SyncS = CreateSema ( &lSema );
+ s_SyncS = CreateSema ( &lSema );
 
  s_pVIFPacket = ( unsigned long int* )UNCACHED_SEG( &g_IPUCtx.m_DMAVIFDraw[ 0 ] );
  s_pViFPacket = ( unsigned long int* )UNCACHED_SEG( &g_IPUCtx.m_DMAViFDraw[ 0 ] );
@@ -585,6 +806,10 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afN
  g_IPUCtx.SetBrightness = IPU_SetBrightness;
  g_IPUCtx.StopSync      = IPU_StopSync;
  g_IPUCtx.m_pAudioPTS   = apAudioPTS;
+
+ s_pDXSBDFrm =
+ s_pDXSBAFrm =
+ s_pDXSBRFrm = NULL;
 
  if ( aWidth && aHeight ) {
 
@@ -611,6 +836,7 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afN
    unsigned int i;
    unsigned int lMBSz;
    unsigned int lMBQWC;
+   unsigned int lSVRAM;
    uint8_t*     lpRes;
    uint64_t*    lpBuf;
 
@@ -622,6 +848,8 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afN
    g_IPUCtx.m_nMBSlices     = ( aHeight + 15 ) >> 4;
    g_IPUCtx.m_QWCToIPUSlice = g_IPUCtx.m_nMBSlice * 24;
 
+   i = ( unsigned int )&s_DXSBDPack | 0x20000000;
+
    if (     (    (   lVRAM + (  ( aWidth * aHeight ) >> 6  ) > 0x4000   ) ||
                  ( g_Config.m_PlayerFlags & SMS_PF_C16 )
             ) && !( g_Config.m_PlayerFlags & SMS_PF_C32 )
@@ -630,7 +858,12 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afN
     lMBSz  = 512;
     lMBQWC =  32;
     g_IPUCtx.m_CSCmd  = 0x7C000000 | g_IPUCtx.m_nMBSlice;
-    g_IPUCtx.m_PixFmt = GSPixelFormat_PSMCT16;
+    g_IPUCtx.m_PixFmt =
+    g_IPUCtx.m_TexFmt = GSPixelFormat_PSMCT16;
+
+    lSVRAM = lVRAM + (
+     (  ( 1 << g_IPUCtx.m_TW ) * aHeight  ) >> 7
+    );
 
    } else {
 
@@ -638,21 +871,27 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afN
     lMBQWC =   64;
     g_IPUCtx.m_CSCmd  = 0x70000000 | g_IPUCtx.m_nMBSlice;
     g_IPUCtx.m_PixFmt = GSPixelFormat_PSMCT32;
+    g_IPUCtx.m_TexFmt = GSPixelFormat_PSMCT24;
+
+    lSVRAM = lVRAM;
 
    }  /* end else */
 
    g_IPUCtx.m_QWCFromIPUSlice = g_IPUCtx.m_nMBSlice * lMBQWC;
-   g_IPUCtx.m_pResult         = ( unsigned char* )malloc ( lMBSz * g_IPUCtx.m_nMBSlice );
+   g_IPUCtx.m_pResult         = ( unsigned char* )memalign ( 64, lMBSz * g_IPUCtx.m_nMBSlice );
    g_IPUCtx.m_pDMAPacket      = ( uint64_t* )g_pSPRTop;
    FlushCache ( 0 );
+
+   SMS_DXSB_DP_BB_VRAM( i ) = g_IPUCtx.m_SVRAM = lSVRAM;
 
    g_pSPRTop += ( g_IPUCtx.m_nMBSlice * 12 + 8 ) * 8;
    lpRes      = g_IPUCtx.m_pResult;
    lpBuf      = g_IPUCtx.m_pDMAPacket;
 
-   g_IPUCtx.Display = IPU_Display;
-   g_IPUCtx.Suspend = IPU_Suspend;
-   g_IPUCtx.Resume  = IPU_Resume;
+   g_IPUCtx.Display       = IPU_Display;
+   g_IPUCtx.Suspend       = IPU_Suspend;
+   g_IPUCtx.Resume        = IPU_Resume;
+   g_IPUCtx.QueueSubtitle = IPU_QueueSubtitle;
 
    lpBuf[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
    lpBuf[ 1 ] = 0;
@@ -688,6 +927,7 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afN
   } else {
 
    g_IPUCtx.m_PixFmt  = GSPixelFormat_PSMCT32;
+   g_IPUCtx.m_TexFmt  = GSPixelFormat_PSMCT32;
    g_IPUCtx.m_pResult = NULL;
    g_IPUCtx.Suspend   = IPU_SuspendNoCSC;
    g_IPUCtx.Resume    = IPU_ResumeNoCSC;

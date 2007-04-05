@@ -206,7 +206,7 @@ typedef struct SMString {
 # define STR_CONTROLLER_SLOT2     SMS_STRING( 183 )
 # define STR_GAMEPAD              SMS_STRING( 184 )
 # define STR_REMOTE_CONTROL       SMS_STRING( 185 )
-# define STR_MP3_HP               SMS_STRING( 186 )
+# define STR_AC3_RANGE_LEVEL      SMS_STRING( 186 )
 # define STR_RIGHT                SMS_STRING( 187 )
 # define STR_VESA_60_HZ           SMS_STRING( 188 )
 # define STR_VESA_75_HZ           SMS_STRING( 189 )
@@ -219,6 +219,8 @@ typedef struct SMString {
 # define STR_COMM_ERROR           SMS_STRING( 196 )
 # define STR_PROT_NEG_ERROR       SMS_STRING( 197 )
 # define STR_LOGIN_ERROR          SMS_STRING( 198 )
+# define STR_SUBTITLES            SMS_STRING( 199 )
+# define STR_DISABLE_CDVD         SMS_STRING( 200 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );

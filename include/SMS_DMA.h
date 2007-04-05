@@ -45,7 +45,7 @@ typedef struct DMACRegs {
 # define DMATAG_ID_RET  0x6
 # define DMATAG_ID_END  0x7
 
-typedef struct DMATag {
+typedef union DMATag {
 
  struct {
 

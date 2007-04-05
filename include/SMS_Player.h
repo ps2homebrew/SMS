@@ -15,6 +15,19 @@
 #  include "SMS_Container.h"
 # endif  /* __SMS_Container_H */
 
+# define SMS_FLAGS_STOP      0x00000001
+# define SMS_FLAGS_PAUSE     0x00000002
+# define SMS_FLAGS_MENU      0x00000004
+# define SMS_FLAGS_EXIT      0x00000008
+# define SMS_FLAGS_VSCROLL   0x00000010
+# define SMS_FLAGS_ASCROLL   0x00000020
+# define SMS_FLAGS_AASCROLL  0x00000040
+# define SMS_FLAGS_ABSCROLL  0x00000080
+# define SMS_FLAGS_SPDIF     0x00000100
+# define SMS_FLAGS_USER_STOP 0x00000200
+# define SMS_FLAGS_AC3       0x00000400
+# define SMS_FLAGS_DXSB      0x00000800
+
 struct FileContext;
 struct IPUContext;
 struct SPUContext;
@@ -54,6 +67,7 @@ typedef struct SMS_Player {
  int                     m_EOF;
  short*                  m_pAudioSamples;
  unsigned int            m_StartPos;
+          int            m_SubIdx;
 
  void ( *Play      ) ( void );
  void ( *Destroy   ) ( void );

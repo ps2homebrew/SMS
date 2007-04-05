@@ -136,6 +136,10 @@ void SMS_CodecClose ( SMS_CodecContext* apCtx ) {
 
  }  /* end if */
 
+ if ( apCtx -> UserDataDestructor ) apCtx -> UserDataDestructor (
+  apCtx -> m_pUserData
+ );
+
 }  /* end SMS_CodecClose */
 
 void SMS_CodecReleaseBuffer ( SMS_CodecContext* apCtx, struct SMS_Frame* apPic ) {

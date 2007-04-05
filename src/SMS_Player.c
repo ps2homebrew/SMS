@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2005 - 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005 - 2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -33,6 +33,7 @@
 #include "SMS_Spectrum.h"
 #include "SMS_RC.h"
 #include "SMS_RingBuffer.h"
+#include "SMS_DXSB.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -43,17 +44,6 @@
 
 #define SMS_VP_BUFFER_SIZE ( 1024 * 1024 * 3 )
 #define SMS_AP_BUFFER_SIZE ( 1024 *  512     )
-
-#define SMS_FLAGS_STOP      0x00000001
-#define SMS_FLAGS_PAUSE     0x00000002
-#define SMS_FLAGS_MENU      0x00000004
-#define SMS_FLAGS_EXIT      0x00000008
-#define SMS_FLAGS_VSCROLL   0x00000010
-#define SMS_FLAGS_ASCROLL   0x00000020
-#define SMS_FLAGS_AASCROLL  0x00000040
-#define SMS_FLAGS_ABSCROLL  0x00000080
-#define SMS_FLAGS_SPDIF     0x00000100
-#define SMS_FLAGS_USER_STOP 0x00000200
 
 #define THREAD_ID_VR s_ThreadIDs[ 0 ]
 #define THREAD_ID_VD s_ThreadIDs[ 1 ]
@@ -173,6 +163,18 @@ static void _terminate_threads ( int afDelete ) {
   s_Flags &= ~SMS_FLAGS_STOP;
  }  /* end if */
 
+ while (  SMS_RingBufferCount ( s_pVideoBuffer )  ) {
+
+  SMS_FrameBuffer* lpFrame = ( SMS_FrameBuffer* )SMS_RingBufferWait ( s_pVideoBuffer );
+
+  if ( lpFrame -> m_FrameType == SMS_FT_T_TYPE ) free ( lpFrame );
+
+  SMS_RingBufferFree ( s_pVideoBuffer, 4 );
+
+ }  /* end while */
+
+ SMS_RingBufferReset ( s_pVideoBuffer );
+
  if ( !afDelete ) {
 
   for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i ) {
@@ -183,7 +185,6 @@ static void _terminate_threads ( int afDelete ) {
 
   }  /* end for */
 
-  SMS_RingBufferReset ( s_pVideoBuffer );
   SMS_RingBufferReset ( s_pAudioBuffer );
 
  } else for ( i = 0; i < 4; ++i ) DeleteThread ( s_ThreadIDs[ i ] );
@@ -399,16 +400,26 @@ static void _sms_video_renderer ( void* apParam ) {
 
   s_Player.m_pIPUCtx -> Sync ();
 
-  if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) s_Player.m_pSubCtx -> Display ( lpFrame -> m_SPTS - s_Player.m_SVDelta );
+  if ( lpFrame -> m_FrameType != SMS_FT_T_TYPE ) {
 
-  if ( s_Player.m_OSD ) {
+   if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) s_Player.m_pSubCtx -> Display ( lpFrame -> m_SPTS - s_Player.m_SVDelta );
 
-   s_Player.m_pIPUCtx -> PQueuePacket ( s_Player.m_OSDQWC[ 1 ], s_Player.m_OSDPackets[ 1 ] );
-   s_Player.m_pIPUCtx -> PQueuePacket ( s_Player.m_OSDQWC[ 0 ], s_Player.m_OSDPackets[ 0 ] );
+   if ( s_Player.m_OSD ) {
 
-  }  /* end if */
+    s_Player.m_pIPUCtx -> PQueuePacket ( s_Player.m_OSDQWC[ 1 ], s_Player.m_OSDPackets[ 1 ] );
+    s_Player.m_pIPUCtx -> PQueuePacket ( s_Player.m_OSDQWC[ 0 ], s_Player.m_OSDPackets[ 0 ] );
 
-  s_Player.m_pIPUCtx -> Display ( lpFrame, s_Player.m_VideoTime = lpFrame -> m_PTS );
+   }  /* end if */
+
+   s_Player.m_pIPUCtx -> Display ( lpFrame, s_Player.m_VideoTime = lpFrame -> m_PTS );
+
+  } else {
+
+   if ( s_Player.m_Flags & SMS_PF_SUBS )
+    s_Player.m_pIPUCtx -> QueueSubtitle ( lpFrame );
+   else free ( lpFrame );
+
+  }  /* end else */
 
   SMS_RingBufferFree ( s_pVideoBuffer, 4 );
 
@@ -825,7 +836,20 @@ static void _sms_play ( void ) {
 
     s_Player.m_pSubCtx = NULL;
 
-   }  /* end if */
+   } else {
+
+    int i, lnStm = s_Player.m_pCont -> m_nStm;
+
+    for ( i = 0; i < lnStm; ++i ) if ( lpStms[ i ] -> m_Flags & SMS_STRM_FLAGS_SUBTL ) {
+
+     SMS_RingBufferDestroy ( lpStms[ i ] -> m_pPktBuf );
+     lpStms[ i ] -> m_pPktBuf = NULL;
+
+    }  /* end for */
+
+    s_Player.m_Flags &= ~SMS_FLAGS_DXSB;
+
+   }  /* end else */
 
   }  /* end if */
 
@@ -1261,6 +1285,7 @@ static void _check_ac3 ( SMS_Stream* apStm ) {
  if ( apStm -> m_pCodec -> m_ID == SMS_CodecID_AC3  ) {
   if (  !( g_Config.m_PlayerFlags & SMS_PF_SPDIF )  ) {
    if ( apStm -> m_pCodec -> m_Channels > 2 ) apStm -> m_pCodec -> m_Channels = 2;
+   s_Player.m_Flags |= SMS_FLAGS_AC3;
   } else {
    s_Player.m_Flags               |= SMS_FLAGS_SPDIF;
    apStm -> m_pCodec -> m_Channels = 5;
@@ -1376,11 +1401,24 @@ addSub:
    lpAD = _sms_audio_decoder;
    lpVR = _sms_video_renderer;
 
-   for ( i = 0; i < lSubIdx; ++i ) {
-    s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_Flags   |= SMS_STRM_FLAGS_SUBTL;
-    s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_pPktBuf  = lpVideoBuffer;
-    SMS_RingBufferAddRef ( lpVideoBuffer );
-   }  /* end for */
+   if ( lSubIdx ) {
+
+    SMS_DXSB_Init (
+     s_Player.m_pCont -> m_pStm[  lSubStm[ 0 ]  ] -> m_pCodec -> m_Width,
+     s_Player.m_pCont -> m_pStm[  lSubStm[ 0 ]  ] -> m_pCodec -> m_Height,
+     &s_Player.m_SubIdx
+    );
+
+    s_Player.m_SubIdx = lSubStm[ 0 ];
+    s_Player.m_Flags |= SMS_FLAGS_DXSB;
+
+    for ( i = 0; i < lSubIdx; ++i ) {
+     s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_Flags   |= SMS_STRM_FLAGS_SUBTL;
+     s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_pPktBuf  = lpVideoBuffer;
+     SMS_RingBufferAddRef ( lpVideoBuffer );
+    }  /* end for */
+
+   }  /* end if */
 
   } else if ( s_Player.m_AudioIdx >= 0 ) {
 

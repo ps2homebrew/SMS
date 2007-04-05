@@ -184,7 +184,7 @@ DTV 480P
 Control Puerto 2
 Comando de Juego
 Control Remoto
-Modo Alta precisión .avi
+?AC3 range level?
 Derecha
 VESA (60Hz)
 VESA (75Hz)
@@ -197,3 +197,5 @@ SMB/CIFS
 Error de Comunicación (presione \ X \ para continuar)...
 Error de Negociación de Protocolo (%d) (presione \ X \ para continuar)...
 Error de Logueo (%d) (presione \ X \ para continuar)...
+?Subtitles?
+?Disable CD/DVD?

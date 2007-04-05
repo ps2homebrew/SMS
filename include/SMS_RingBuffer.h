@@ -11,15 +11,7 @@
 #ifndef __SMS_RingBuffer_H
 # define __SMS_RingBuffer_H
 
-# define LOCK_QUEUES
-
 # include <kernel.h>
-
-# ifdef LOCK_QUEUES
-#  define SMS_RB_NSEMAS 3
-# else
-#  define SMS_RB_NSEMAS 2
-# endif  /* LOCK_QUEUES */
 
 typedef struct SMS_RingBuffer {
 
@@ -33,7 +25,7 @@ typedef struct SMS_RingBuffer {
  int            m_Capacity;
  int            m_fWait;
  void ( *WaitCB ) ( struct SMS_RingBuffer* );
- int            m_Sema[ SMS_RB_NSEMAS ];
+ int            m_Sema[ 3 ];
  int            m_nRef;
  void*          m_pBlockCBParam;
  void*          m_pUserCBParam;

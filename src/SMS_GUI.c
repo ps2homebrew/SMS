@@ -313,82 +313,86 @@ static int _gui_thread ( void* apParam ) {
 
    }  /* end if */
 
-   lDiskType = CDDA_DiskType ();
+   if (  !( g_Config.m_NetworkFlags & SMS_DF_CDVD ) || ( s_DevFlags & DEVF_CDVD_MASK )  ) {
 
-   if (  lDiskType == DiskType_CDDA && !( s_DevFlags & DEVF_CDDA )  ) {
+    lDiskType = CDDA_DiskType ();
 
-    s_Event    |=  ( GUI_MSG_MOUNT_BIT | GUI_MSG_CDDA );
-    s_DevFlags &= ~DEVF_CDVD_DETECT;
-    s_DevFlags |=  DEVF_CDDA;
+    if (  lDiskType == DiskType_CDDA && !( s_DevFlags & DEVF_CDDA )  ) {
 
-    goto raiseEvent;
-
-   } else if (  lDiskType == DiskType_CD && !( s_DevFlags & DEVF_CD )  ) {
-
-    s_Event    |=  ( GUI_MSG_MOUNT_BIT | GUI_MSG_CDROM );
-    s_DevFlags &= ~DEVF_CDVD_DETECT;
-    s_DevFlags |=  DEVF_CD;
-
-    CDVD_SetDVDV ( 0 );
-
-    goto raiseEvent;
-
-   } else if (  ( lDiskType == DiskType_DVD || lDiskType == DiskType_DVDV ) && !( s_DevFlags & DEVF_DVD )  ) {
-
-    s_Event    |=  ( GUI_MSG_MOUNT_BIT | GUI_MSG_DVD );
-    s_DevFlags &= ~DEVF_CDVD_DETECT;
-    s_DevFlags |=  DEVF_DVD;
-
-    CDVD_SetDVDV ( lDiskType == DiskType_DVDV );
-
-    goto raiseEvent;
-
-   } else if (  lDiskType == DiskType_Detect && !( s_DevFlags & DEVF_CDVD_DETECT )  ) {
-
-    s_DevFlags |= DEVF_CDVD_DETECT;
-    GUI_Status ( STR_READING_DISK.m_pStr );
-
-    continue;
-
-   } else if (  lDiskType == DiskType_Unknown && !( s_DevFlags & DEVF_CDVD_UNKNOWN )  ) {
-
-    s_DevFlags |=  DEVF_CDVD_UNKNOWN;
-    s_DevFlags &= ~DEVF_CDVD_DETECT;
-    GUI_Error ( STR_ILLEGAL_DISK.m_pStr );
-
-    GUI_UpdateStatus ();
-
-   } else if ( lDiskType == DiskType_None && ( s_DevFlags & DEVF_CDVD_MASK )  ) {
-
-    if ( s_DevFlags & DEVF_CDVD_UNKNOWN )
-
-     s_DevFlags &= ~DEVF_CDVD_UNKNOWN;
-
-    else if ( s_DevFlags & DEVF_CDDA ) {
-
-     s_DevFlags &= ~DEVF_CDDA;
-     s_Event    |=  GUI_MSG_CDDA;
-
-     goto raiseEvent;
-
-    } else if ( s_DevFlags & DEVF_CD ) {
-
-     s_DevFlags &= ~DEVF_CD;
-     s_Event    |=  GUI_MSG_CDROM;
-
-     goto raiseEvent;
-
-    } else if ( s_DevFlags & DEVF_DVD ) {
-
-     s_DevFlags &= ~DEVF_DVD;
-     s_Event    |=  GUI_MSG_DVD;
-
-     goto raiseEvent;
-
-    } else if ( s_DevFlags & DEVF_CDVD_DETECT ) {
-
+     s_Event    |=  ( GUI_MSG_MOUNT_BIT | GUI_MSG_CDDA );
      s_DevFlags &= ~DEVF_CDVD_DETECT;
+     s_DevFlags |=  DEVF_CDDA;
+
+     goto raiseEvent;
+
+    } else if (  lDiskType == DiskType_CD && !( s_DevFlags & DEVF_CD )  ) {
+
+     s_Event    |=  ( GUI_MSG_MOUNT_BIT | GUI_MSG_CDROM );
+     s_DevFlags &= ~DEVF_CDVD_DETECT;
+     s_DevFlags |=  DEVF_CD;
+
+     CDVD_SetDVDV ( 0 );
+
+     goto raiseEvent;
+
+    } else if (  ( lDiskType == DiskType_DVD || lDiskType == DiskType_DVDV ) && !( s_DevFlags & DEVF_DVD )  ) {
+
+     s_Event    |=  ( GUI_MSG_MOUNT_BIT | GUI_MSG_DVD );
+     s_DevFlags &= ~DEVF_CDVD_DETECT;
+     s_DevFlags |=  DEVF_DVD;
+
+     CDVD_SetDVDV ( lDiskType == DiskType_DVDV );
+
+     goto raiseEvent;
+
+    } else if (  lDiskType == DiskType_Detect && !( s_DevFlags & DEVF_CDVD_DETECT )  ) {
+
+     s_DevFlags |= DEVF_CDVD_DETECT;
+     GUI_Status ( STR_READING_DISK.m_pStr );
+
+     continue;
+
+    } else if (  lDiskType == DiskType_Unknown && !( s_DevFlags & DEVF_CDVD_UNKNOWN )  ) {
+
+     s_DevFlags |=  DEVF_CDVD_UNKNOWN;
+     s_DevFlags &= ~DEVF_CDVD_DETECT;
+     GUI_Error ( STR_ILLEGAL_DISK.m_pStr );
+
      GUI_UpdateStatus ();
+
+    } else if ( lDiskType == DiskType_None && ( s_DevFlags & DEVF_CDVD_MASK )  ) {
+
+     if ( s_DevFlags & DEVF_CDVD_UNKNOWN )
+
+      s_DevFlags &= ~DEVF_CDVD_UNKNOWN;
+
+     else if ( s_DevFlags & DEVF_CDDA ) {
+
+      s_DevFlags &= ~DEVF_CDDA;
+      s_Event    |=  GUI_MSG_CDDA;
+
+      goto raiseEvent;
+
+     } else if ( s_DevFlags & DEVF_CD ) {
+
+      s_DevFlags &= ~DEVF_CD;
+      s_Event    |=  GUI_MSG_CDROM;
+
+      goto raiseEvent;
+
+     } else if ( s_DevFlags & DEVF_DVD ) {
+
+      s_DevFlags &= ~DEVF_DVD;
+      s_Event    |=  GUI_MSG_DVD;
+
+      goto raiseEvent;
+
+     } else if ( s_DevFlags & DEVF_CDVD_DETECT ) {
+
+      s_DevFlags &= ~DEVF_CDVD_DETECT;
+      GUI_UpdateStatus ();
+
+     }  /* end if */
 
     }  /* end if */
 

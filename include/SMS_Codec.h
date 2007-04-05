@@ -77,6 +77,8 @@ typedef struct SMS_CodecContext {
  int           m_IntBufCnt;
  void*         m_pIntBuf;
  SMS_Codec*    m_pCodec;
+ void*         m_pUserData;
+ void          ( *UserDataDestructor ) ( void* );
 
 } SMS_CodecContext;
 

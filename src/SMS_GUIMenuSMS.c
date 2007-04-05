@@ -68,6 +68,7 @@ static void _startusb_handler ( GUIMenu*, int );
 static void _starthdd_handler ( GUIMenu*, int );
 static void _editipc_handler  ( GUIMenu*, int );
 static void _netprot_handler  ( GUIMenu*, int );
+static void _cdvd_handler     ( GUIMenu*, int );
 
 static void _ip1_handler     ( GUIMenu*, int );
 static void _ip2_handler     ( GUIMenu*, int );
@@ -155,11 +156,12 @@ static GUIMenuItem s_AdvDispMenu[] __attribute__(   (  section( ".data" )  )   )
  {                   0, &STR_APPLY_SETTINGS,     0, 0, _apply_handler, 0, 0 }
 };
 
-static GUIMenuItem s_DevMenu[ 9 ] __attribute__(   (  section( ".data" )  )   ) = {
+static GUIMenuItem s_DevMenu[ 10 ] __attribute__(   (  section( ".data" )  )   ) = {
  { MENU_ITEM_TYPE_TEXT, &STR_CONTROLLER_SLOT2,  0, 0, _cntslot_handler, 0, 0 },
  {                   0, &STR_AUTOSTART_NETWORK, 0, 0, _autonet_handler, 0, 0 },
  {                   0, &STR_AUTOSTART_USB,     0, 0, _autousb_handler, 0, 0 },
- {                   0, &STR_AUTOSTART_HDD,     0, 0, _autohdd_handler, 0, 0 }
+ {                   0, &STR_AUTOSTART_HDD,     0, 0, _autohdd_handler, 0, 0 },
+ {                   0, &STR_DISABLE_CDVD,      0, 0, _cdvd_handler,    0, 0 }
 };
 
 static GUIMenuItem s_IPCMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -456,7 +458,7 @@ static void _display_handler ( GUIMenu* apMenu, int aDir ) {
 static void _device_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
- unsigned int  lSize   = 3;
+ unsigned int  lSize   = 4;
 
  if ( g_Config.m_NetworkFlags & SMS_DF_GAMEPAD )
   s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_GAMEPAD;
@@ -467,6 +469,7 @@ static void _device_handler ( GUIMenu* apMenu, int aDir ) {
  s_DevMenu[ 1 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_NET ? GUICON_ON   : GUICON_OFF;
  s_DevMenu[ 2 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_USB ? GUICON_ON   : GUICON_OFF;
  s_DevMenu[ 3 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_HDD ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 4 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_CDVD     ? GUICON_ON   : GUICON_OFF;
 
  if ( g_IOPFlags & SMS_IOPF_DEV9 ) {
 
@@ -1109,6 +1112,12 @@ static void _netprot_handler ( GUIMenu* apMenu, int aDir ) {
  apMenu -> Redraw ( apMenu );
 
 }  /* end _netprot_handler */
+
+static void _cdvd_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 4, &g_Config.m_NetworkFlags, SMS_DF_CDVD );
+
+}  /* end _cdvd_handler */
 
 static void _roll_ip_number ( GUIMenu* apMenu, char* apStr, int aDir ) {
 

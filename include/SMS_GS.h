@@ -163,7 +163,7 @@ typedef union GIFTag {
   unsigned long m_Lo __attribute__(  ( packed )  );
   unsigned long m_Hi __attribute__(  ( packed )  );
 
- } __attribute__(  ( packed )  );
+ } m_HiLo __attribute__(  ( packed )  );
 
 } GIFTag __attribute__(   (  aligned( 16 )  )   );
 

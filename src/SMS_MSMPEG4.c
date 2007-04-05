@@ -17,6 +17,7 @@
 #include "SMS_H263.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_DMA.h"
+#include "SMS_DXSB.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -2354,6 +2355,7 @@ static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutpu
 
  } else {
 
+  retVal = SMS_DXSB_Decode ( lpPkt, apOutput );
 
  }  /* end else */
 end:

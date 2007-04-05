@@ -276,8 +276,8 @@ void GSContext_InitBitBlt ( GSBitBltPacket* apPkt, unsigned int aDst, int aDstX,
 
  apPkt -> m_VIFCodes[ 0 ]        = 0;
  apPkt -> m_VIFCodes[ 1 ]        = VIF_DIRECT( 6 );
- apPkt -> m_Tag.m_Lo             = GIF_TAG( 5, 1, 0, 0, 0, 1 );
- apPkt -> m_Tag.m_Hi             = GIFTAG_REGS_AD;
+ apPkt -> m_Tag.m_HiLo.m_Lo      = GIF_TAG( 5, 1, 0, 0, 0, 1 );
+ apPkt -> m_Tag.m_HiLo.m_Hi      = GIFTAG_REGS_AD;
  apPkt -> m_BITBLTBUFVal.m_Value = GS_SET_BITBLTBUF ( aSrc << 5, lFBW, lPSM, aDst << 5, lFBW, lPSM );
  apPkt -> m_BITBLTBUFTag         = GS_BITBLTBUF;
  apPkt -> m_TRXREGVal.m_Value    = GS_SET_TRXREG( aWidth, aHeight );
@@ -330,16 +330,16 @@ void GSContext_RenderTexSprite ( GSTexSpritePacket* apPkt, int aX, int anY, int 
 
  apPkt -> m_VIFCodes[ 0 ]       = 0;
  apPkt -> m_VIFCodes[ 1 ]       = VIF_DIRECT( 7 );
- apPkt -> m_Tag0.m_Lo           = GIF_TAG( 1, 0, 0, 0, 0, 1 );
- apPkt -> m_Tag0.m_Hi           = GIFTAG_REGS_AD;
+ apPkt -> m_Tag0.m_HiLo.m_Lo    = GIF_TAG( 1, 0, 0, 0, 0, 1 );
+ apPkt -> m_Tag0.m_HiLo.m_Hi    = GIFTAG_REGS_AD;
  apPkt -> m_TEXFLUSHVal.m_Value = 0;
  apPkt -> m_TEXFLUSHTag         = GS_TEXFLUSH;
- apPkt -> m_Tag1.m_Lo           = GIF_TAG( 1, 0, 0, 0, 1, 2 );
- apPkt -> m_Tag1.m_Hi           = GS_TEX0_1 | ( GS_PRIM << 4 );
+ apPkt -> m_Tag1.m_HiLo.m_Lo    = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ apPkt -> m_Tag1.m_HiLo.m_Hi    = GS_TEX0_1 | ( GS_PRIM << 4 );
  apPkt -> m_TEX0Val.m_Value     = GS_SET_TEX0( g_GSCtx.m_VRAMTexPtr, g_GSCtx.m_TBW, GSPixelFormat_PSMCT32, g_GSCtx.m_TW, g_GSCtx.m_TH, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, 0, 0, 0, 0, 1 );
  apPkt -> m_PRIMVal.m_Value     = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON, GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_OFF, GS_PRIM_FST_UV, GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED );
- apPkt -> m_Tag2.m_Lo           = GIF_TAG( 2, 1, 0, 0, 1, 2 );
- apPkt -> m_Tag2.m_Hi           = GS_UV | ( GS_XYZ2 << 4 );
+ apPkt -> m_Tag2.m_HiLo.m_Lo    = GIF_TAG( 2, 1, 0, 0, 1, 2 );
+ apPkt -> m_Tag2.m_HiLo.m_Hi    = GS_UV | ( GS_XYZ2 << 4 );
  apPkt -> m_UV0Val.m_Value      = GS_SET_UV( ++aTX << 4, ++aTY << 4 );
  apPkt -> m_XYZ0Val.m_Value     = lXYZ0;
  apPkt -> m_UV1Val.m_Value      = GS_SET_UV(  ( aTX + --aTW ) << 4, ( aTY + --aTH ) << 4  );

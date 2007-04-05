@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -28,6 +28,8 @@ int main ( void ) {
  CDVD_Init       ();
  SMS_IOPInit     ();
  SMS_EEPort2Init ();
+
+ if (  CDDA_DiskType () != DiskType_None  ) CDVD_Stop ();
 
  GUI_Run ();
 

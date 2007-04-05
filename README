@@ -1009,3 +1009,17 @@ Update (23-03-2007) - SVN synchronization
 - fixed incorrect clip duration calculations for DivX6 files with
   subtitles (thanks to 'Tirabol' for the sample clip);
 - changes due to upcoming implementation of DivX6 subtitles support;
+
+Update (03-04-2007)
+-------------------
+- added support for subtitles embedded into .avi files produced by DivX6+
+  sofrware. These subtitles are encoded as bitmaps, so no more problems
+  with eastern etc. languages. Multiple language subtitles are supported
+  and switchable via player menu during playback. Note that external
+  subtitles (.srt etc.(if present/specified)) have precedence. Tested here
+  with only one file provided by 'Tirabol' (thanks to him);
+- added option to configure 'range level' (1-9) for AC3 audio streams (can be
+  helpful to remove sound distortions). This option is also available in the
+  player menu (thanks to 'orangpelupa' and 'eMaNoN' for the sample clips);
+- added code to stop DVD drive at startup;
+- added option (SMS menu -> Device settings) to disable CD/DVD autodetection;

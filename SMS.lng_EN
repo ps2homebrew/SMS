@@ -184,16 +184,18 @@ DTV 480P
 Controller port 2
 gamepad
 remote control
-High precision mode for .avi
+AC3 Range level
 right
 VESA (60Hz)
 VESA (75Hz)
-?widescreen
-?wide pan-scan 1
-?wide pan-scan 2
-?Network protocol
-?ps2dev/host
-?SMB/CIFS
-?Communication error (press \"cross\" to continue)...
-?Protocol negotiation error (%d) (press \"cross\" to continue)...
-?Login error (%d) (press \"cross\" to continue)...
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Network protocol
+ps2dev/host
+SMB/CIFS
+Communication error (press \"cross\" to continue)...
+Protocol negotiation error (%d) (press \"cross\" to continue)...
+Login error (%d) (press \"cross\" to continue)...
+Subtitles
+Disable CD/DVD

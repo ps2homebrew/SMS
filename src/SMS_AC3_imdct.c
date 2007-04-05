@@ -338,9 +338,14 @@ static void SMS_INLINE _ifft4 ( int* apBuf ) {
 
 }  /* end _ifft4 */
 
-extern void BUTTERFLY_0 ( sample_t, sample_t, sample_t, sample_t, sample_t*, sample_t* );
+extern void BUTTERFLY_0    ( sample_t, sample_t, sample_t, sample_t, sample_t*, sample_t* );
+extern void BUTTERFLY_ZERO ( sample_t*, sample_t*, sample_t*, sample_t*                   );
+extern void BUTTERFLY_HALF ( sample_t*, sample_t*, sample_t*, sample_t*, sample_t         );
 __asm__(
  ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ ".text\n\t"
  "BUTTERFLY_0:\n\t"
  "pextlw    $a0, $a1, $a0\n\t"
  "pextlw    $a2, $a3, $a2\n\t"
@@ -365,14 +370,6 @@ __asm__(
  "pcpyud    $v1, $v1, $zero\n\t"
  "jr        $ra\n\t"
  "sw        $v1, 0($t1)\n\t"
- ".set reorder\n\t"
-);
-
-extern void BUTTERFLY_ZERO ( sample_t*, sample_t*, sample_t*, sample_t* );
-__asm__(
- ".set noreorder\n\t"
- ".set nomacro\n\t"
- ".set noat\n\t"
  "BUTTERFLY_ZERO:\n\t"
  "ld        $t0, 0($a2)\n\t"
  "ld        $t1, 0($a3)\n\t"
@@ -400,16 +397,6 @@ __asm__(
  "sd        $t1, 0($a3)\n\t"
  "jr        $ra\n\t"
  "sd        $t0, 0($a1)\n\t"
- ".set at\n\t"
- ".set macro\n\t"
- ".set reorder\n\t"
-);
-
-extern void BUTTERFLY_HALF ( sample_t*, sample_t*, sample_t*, sample_t*, sample_t );
-__asm__(
- ".set noreorder\n\t"
- ".set nomacro\n\t"
- ".set noat\n\t"
  "BUTTERFLY_HALF:\n\t"
  "lw      $t1, 0($a2)\n\t"
  "lw      $t2, 4($a2)\n\t"

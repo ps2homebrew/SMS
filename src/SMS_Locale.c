@@ -230,7 +230,7 @@ static unsigned char s_pDTV480P        [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pCPort2         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Controller port 2";
 static unsigned char s_pGamepad        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "gamepad";
 static unsigned char s_pRemoteControl  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "remote control";
-static unsigned char s_pMP3HP          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "High precision mode for .avi";
+static unsigned char s_pAC3RangeLevel  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "AC3 range level";
 static unsigned char s_pRight          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "right";
 static unsigned char s_pVESA60Hz       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "VESA (60Hz)";
 static unsigned char s_pVESA75Hz       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "VESA (75Hz)";
@@ -243,6 +243,8 @@ static unsigned char s_pSMB_CIFS       [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pCommError      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Communication error (press \"cross\" to continue)...";
 static unsigned char s_pProtNegError   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Protocol negotiation error (%d) (press \"cross\" to continue)...";
 static unsigned char s_pLoginError     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Login error (%d) (press \"cross\" to continue)...";
+static unsigned char s_pSubtitles      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Subtitles";
+static unsigned char s_pDisableCDVD    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Disable CD/DVD";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -431,7 +433,7 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pCPort2          ) - 1, s_pCPort2          },
  { sizeof ( s_pGamepad         ) - 1, s_pGamepad         },
  { sizeof ( s_pRemoteControl   ) - 1, s_pRemoteControl   },
- { sizeof ( s_pMP3HP           ) - 1, s_pMP3HP           },
+ { sizeof ( s_pAC3RangeLevel   ) - 1, s_pAC3RangeLevel   },
  { sizeof ( s_pRight           ) - 1, s_pRight           },
  { sizeof ( s_pVESA60Hz        ) - 1, s_pVESA60Hz        },
  { sizeof ( s_pVESA75Hz        ) - 1, s_pVESA75Hz        },
@@ -443,7 +445,9 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pSMB_CIFS        ) - 1, s_pSMB_CIFS        },
  { sizeof ( s_pCommError       ) - 1, s_pCommError       },
  { sizeof ( s_pProtNegError    ) - 1, s_pProtNegError    },
- { sizeof ( s_pLoginError      ) - 1, s_pLoginError      }
+ { sizeof ( s_pLoginError      ) - 1, s_pLoginError      },
+ { sizeof ( s_pSubtitles       ) - 1, s_pSubtitles       },
+ { sizeof ( s_pDisableCDVD     ) - 1, s_pDisableCDVD     }
 };
 
 static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );

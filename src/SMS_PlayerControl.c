@@ -55,6 +55,8 @@ static unsigned  s_SBY2;
 
 static SMS_List*     s_pLang;
 static SMS_ListNode* s_pCurLang;
+static SMS_List*     s_pSubLang;
+static SMS_ListNode* s_pCurSubLang;
 
 extern SMS_Player s_Player;
 
@@ -213,6 +215,21 @@ static void _sb_init ( void ) {
 
 }  /* end _sb_init */
 
+static void _set_default ( SMS_List* apList ) {
+
+ if ( apList -> m_Size == 1 ) {
+
+  int lX = ( int )apList -> m_pTail -> m_Param;
+
+  SMS_ListPop ( apList );
+  SMS_ListPushBack ( apList, STR_DEFAULT1.m_pStr );
+
+  apList -> m_pTail -> m_Param = lX;
+
+ }  /* end if */
+
+}  /* end _set_default */
+
 void PlayerControl_Init ( void ) {
 
  uint64_t* lpPaint = _U( g_VCPaint );
@@ -364,6 +381,10 @@ void PlayerControl_Init ( void ) {
   SMS_ListDestroy ( s_pLang, 0 );
  else s_pLang = SMS_ListInit ();
 
+ if ( s_pSubLang )
+  SMS_ListDestroy ( s_pSubLang, 0 );
+ else s_pSubLang = SMS_ListInit ();
+
  lY = 1;
 
  for ( lX = 0; lX < SMS_MAX_STREAMS; ++lX ) {
@@ -375,18 +396,24 @@ void PlayerControl_Init ( void ) {
   if ( lpStm -> m_Flags & SMS_STRM_FLAGS_AUDIO ) {
 
    if ( lpStm -> m_pName )
-
     SMS_ListPushBack ( s_pLang, lpStm -> m_pName );
-
    else {
-
     char lBuff[ 32 ]; sprintf ( lBuff, g_pPercDStr, lY );
-
     SMS_ListPushBack ( s_pLang, lBuff );
-
    }  /* end else */
 
    s_pLang -> m_pTail -> m_Param = lX;
+
+  } else if ( lpStm -> m_Flags & SMS_STRM_FLAGS_SUBTL ) {
+
+   if ( lpStm -> m_pName )
+    SMS_ListPushBack ( s_pSubLang, lpStm -> m_pName );
+   else {
+    char lBuff[ 32 ]; sprintf ( lBuff, g_pPercDStr, lY );
+    SMS_ListPushBack ( s_pSubLang, lBuff );
+   }  /* end else */
+
+   s_pSubLang -> m_pTail -> m_Param = lX;
 
   }  /* end if */
 
@@ -394,18 +421,11 @@ void PlayerControl_Init ( void ) {
 
  }  /* end for */
 
- if ( s_pLang -> m_Size == 1 ) {
+ _set_default ( s_pLang    );
+ _set_default ( s_pSubLang );
 
-  lX = ( int )s_pLang -> m_pTail -> m_Param;
-
-  SMS_ListPop ( s_pLang );
-  SMS_ListPushBack ( s_pLang, STR_DEFAULT1.m_pStr );
-
-  s_pLang -> m_pTail -> m_Param = lX;
-
- }  /* end if */
-
- s_pCurLang = s_pLang -> m_pHead;
+ s_pCurLang    = s_pLang    -> m_pHead;
+ s_pCurSubLang = s_pSubLang -> m_pHead;
 /* Initialize MP3/M3U playlist (if any) */
  if ( s_Player.m_pCont -> m_pPlayList ) {
 
@@ -817,23 +837,41 @@ int PlayerControl_Rewind ( void ) {
 
 }  /* end PlayerControl_Rewind */
 
+static SMS_ListNode* _do_change_lang ( SMS_List* apList, SMS_ListNode* apListNode ) {
+
+ if ( !apListNode -> m_pNext )
+
+  apListNode = apList -> m_pHead;
+
+ else apListNode = apListNode -> m_pNext;
+
+ return apListNode;
+
+}  /* end _do_change_lang */
+
 SMS_ListNode* PlayerControl_ChangeLang ( void ) {
 
- if ( !s_pCurLang -> m_pNext )
-
-  s_pCurLang = s_pLang -> m_pHead;
-
- else s_pCurLang = s_pCurLang -> m_pNext;
-
- return s_pCurLang;
+ return s_pCurLang = _do_change_lang ( s_pLang, s_pCurLang );
 
 }  /* end PlayerControl_ChangeLang */
+
+SMS_ListNode* PlayerControl_ChangeSubLang ( void ) {
+
+ return s_pCurSubLang = _do_change_lang ( s_pSubLang, s_pCurSubLang );
+
+}  /* end PlayerControl_ChangeSubLang */
 
 SMS_ListNode* PlayerControl_GetLang ( void ) {
 
  return s_pCurLang;
 
 }  /* end PlayerControl_GetLang */
+
+SMS_ListNode* PlayerControl_GetSubLang ( void ) {
+
+ return s_pCurSubLang;
+
+}  /* end PlayerControl_GetSubLang */
 
 void PlayerControl_SwitchSubs ( void ) {
 
@@ -1238,7 +1276,7 @@ begin:
 
    } else if (  ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) && lCurPos < g_Config.m_ScrollBarNum  ) {
 
-    lCurPos = SMS_clip ( ( lCurPos + 1 ) , 0, g_Config.m_ScrollBarNum );
+    lCurPos = SMS_clip (  ( lCurPos + 1 ) , 0, g_Config.m_ScrollBarNum  );
     lResume = 0;
 
     PlayerControl_DisplayScrollBar ( lCurPos );

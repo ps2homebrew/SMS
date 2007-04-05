@@ -2408,6 +2408,7 @@ __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"
  ".set noat\n\t"
+ ".text\n\t"
  "_ac3_float_to_int_1:\n\t"
  "pnor      $v1, $zero, $zero\n\t"
  "psllw     $v0, $v1, 31\n\t"
@@ -2499,7 +2500,7 @@ static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
  };
 
  int      lFlags = s_AC3Ctx.m_Flags;
- sample_t lLevel = 8 << 24;
+ sample_t lLevel = (  ( sample_t )g_Config.m_PlayerAC3RL  ) << 24;
  int      i, retVal;
  short*   lpOutBuf;
 
