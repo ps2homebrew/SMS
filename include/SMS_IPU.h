@@ -91,7 +91,7 @@ typedef struct IPUContext {
  unsigned int           m_MBStride;
  unsigned int           m_QWCToIPUSlice;
  unsigned int           m_QWCFromIPUSlice;
- unsigned int           m_DMAHandlerID_IPU;
+ unsigned int           m_fAlloc;
  unsigned int           m_DMAHandlerID_GIF;
  unsigned int           m_CSCmd;
  unsigned int           m_PixFmt;

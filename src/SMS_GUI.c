@@ -400,7 +400,7 @@ static int _gui_thread ( void* apParam ) {
 
    if ( g_IOPFlags & SMS_IOPF_NET ) {
 
-    if (  !( s_lCntr++ & 0xF )  ) {
+    if (  !( s_lCntr++ & 0x0F )  ) {
 
      int lFD = fioDopen ( "host:" );
 

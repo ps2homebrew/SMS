@@ -67,7 +67,7 @@ static void _copy2hdd_handler ( GUIMenu* apMenu, int aDir ) {
   if ( lFD >= 0 ) {
 
    char         lSts[ 128 ];
-   unsigned int lSize    = 131072;
+   unsigned int lSize    = 4096 * 96;
    unsigned int lnCopied = 0;
    float        lSpeed   = 0.0F;
    char*        lpBuff   = ( char* )malloc ( lSize );

@@ -1317,7 +1317,7 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
 
  s_Player.m_pCont   = SMS_GetContainer ( apFileCtx, 0x80000000 );
  s_Player.m_pSubCtx = NULL;
- s_Player.m_Flags  &= ~SMS_FLAGS_SPDIF;
+ s_Player.m_Flags  &= ~( SMS_FLAGS_SPDIF | SMS_FLAGS_DXSB );
  s_MainThreadID     = GetThreadId ();
 
  if ( s_Player.m_pCont != NULL ) {

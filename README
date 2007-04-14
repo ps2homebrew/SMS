@@ -1023,3 +1023,16 @@ Update (03-04-2007)
   player menu (thanks to 'orangpelupa' and 'eMaNoN' for the sample clips);
 - added code to stop DVD drive at startup;
 - added option (SMS menu -> Device settings) to disable CD/DVD autodetection;
+
+Update (12-04-2007)
+-------------------
+- network and hdd drivers are updated. Note: there're quite significant changes
+  in network divers code (DMA controller is employed to transfer data from the
+  network adapter and data transfer speed and overall IOP performance are increased
+  a bit) and I'm not 100% sure if this stuff is stable enough;
+- fixed currupted sound issue for AC3 audio strams with 1 channel (mono)
+  (thanks to 'Psychic Bison' and 'Bootlegninja' for the sample clip);
+- fixed crash issue when player menu is activated during playback of .avi files
+  without embedded subtitles while previously played clip contained them;
+- slightly improved playback performance for .avi clips by using DMA stall control
+  feature instead of interrupt handler;

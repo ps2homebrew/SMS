@@ -12,13 +12,13 @@
 # define __SMS_Data_H
 
 # define SMS_IDCT_CONST_SIZE   368
-# define SMS_PS2ATAD_SIZE    11805
-# define SMS_PS2HDD_SIZE     26169
-# define SMS_PS2FS_SIZE      54785
+# define SMS_PS2ATAD_SIZE    11821
+# define SMS_PS2HDD_SIZE     26209
+# define SMS_PS2FS_SIZE      54737
 # define SMS_USB_MASS_SIZE   27693
 # define SMS_USBD_SIZE       26065
-# define SMS_PS2IP_SIZE      70453
-# define SMS_PS2SMAP_SIZE    11161
+# define SMS_PS2IP_SIZE      69321
+# define SMS_PS2SMAP_SIZE    11557
 # define SMS_PS2HOST_SIZE    16349
 # define SMS_VU0_MPG_SIZE     1312
 # define SMS_VU0_DATA_SIZE     256
