@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!-- $Revision: 1.26 $ -->
 
-<sect1 id="sms-installation-detail">
+<sect1 id="installation-copytomemcard">
   <title>
-    <phrase lang="en">Installation Instructions In Detail</phrase>
-    <phrase lang="el">#Installation Instructions In Detail#</phrase>
-    <phrase lang="es">#Installation Instructions In Detail#</phrase>
-    <phrase lang="pt">Instruções de Instalação Detalhadas</phrase>
+    <phrase lang="en">Copying SMS to your memory card (Independence/Modchip)</phrase>
+    <phrase lang="pt">#Copying SMS to your memory card (Independence/Modchip)#</phrase>
   </title>
   <para lang="en">
-    First download a copy of the latest <filename>SMS.ELF</filename>. The 
-    latest release is  available at 
+    First download a copy of the latest <filename>SMS.ELF</filename>. The
+    latest release is  available at
     <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
-    also, some older versions are held at 
+    also, some older versions are held at
     <ulink url="http://ps2dev.org/ps2/Projects"/>. Developers can download the
     source from svn://svn.ps2dev.org.
   </para>
@@ -20,8 +18,8 @@
     Primeiro faça o download da última versão do <filename>SMS.ELF</filename>.
     A última versão está disponível em
     <ulink url="http://home.casema.nl/eugene_plotnikov/"/>
-    algumas das versões antigas também estão disponíveis em 
-    <ulink url="http://ps2dev.org/ps2/Projects"/>. Os programadores podem 
+    algumas das versões antigas também estão disponíveis em
+    <ulink url="http://ps2dev.org/ps2/Projects"/>. Os programadores podem
     fazer download do código fonte em svn://svn.ps2dev.org.
   </para>
 
@@ -35,9 +33,9 @@
   </para>
 
   <sect2>
-  <title id="installation-detail-copyftp">
-    <phrase lang="en">Copying SMS to your PS2 using FTP</phrase>
-    <phrase lang="pt">Copiando o SMS para a PS2 usando FTP</phrase>
+  <title id="installation-copytomemcard-ftp">
+    <phrase lang="en">Copying SMS to your memory card using FTP</phrase>
+    <phrase lang="pt">#Copying SMS to your memory card using FTP#</phrase>
   </title>
   <para lang="en">
     You'll need an
@@ -49,11 +47,11 @@
   <para lang="pt">
     Necessitará de um <emphasis role="bold">servidor de FTP</emphasis>
     a correr na PS2, e um <emphasis role="bold">cliente de FTP</emphasis> 
-    a correr no seu PC, com um cabo cruzado a ligar os dois ou ambos ligados 
+    a correr no seu PC, com um cabo cruzado a ligar os dois ou ambos ligados
     a um switcher com cabos direitos.
   </para>
 
-  <sect3 id="installation-detail-copyftp-ulaunchelf">
+  <sect3 id="installation-copytomemcard-ftp-ulaunchelf">
   <title>
     <phrase lang="en">Starting the FTP Server (uLaunchELF)</phrase>
     <phrase lang="pt">Inicializando o servidor de FTP (uLaunchELF)</phrase>
@@ -484,12 +482,12 @@
 
   <para lang="en">
     Now that you've got your FTP server running, skip ahead to
-    <xref linkend="installation-detail-ftpclient"/> for how to upload
+    <xref linkend="installation-copytomemcard-ftp-ftpclient"/> for how to upload
     SMS to your memcard.
   </para>
   <para lang="pt">
     Agora que já tem o seu servidor de FTP a correr, salte para a secção
-    <xref linkend="installation-detail-ftpclient"/> para saber como 
+    <xref linkend="installation-copytomemcard-ftp-ftpclient"/> para saber como
     tranferir o SMS para o seu cartão de memória.
   </para>
   </sect3>
@@ -502,7 +500,7 @@
 
   <para lang="en">
     If you are <emphasis>not</emphasis>
-    <link linkend="installation-detail-copyftp-ulaunchelf">using 
+    <link linkend="installation-copytomemcard-ftp-ulaunchelf">using
     uLaunchELF</link>, you'll need to load a seperate FTP server
     application onto your memory card such as
     <filename>EXECFTPS.ELF</filename>.  Activate your exploit, and boot
@@ -512,7 +510,7 @@
   </para>
   <para lang="pt">
     Se <emphasis>não</emphasis> estiver a
-    <link linkend="installation-detail-copyftp-ulaunchelf">usar o uLaunchELF
+    <link linkend="installation-copytomemcard-ftp-ulaunchelf">usar o uLaunchELF
     </link>, terá de correr uma aplicação de FTP em separado tal como o 
     <filename>EXECFTPS.ELF</filename>.  Active o seu exploit, e inicie o seu
     navegador de boot (e.g. LaunchELF).  Pode configurar um dos butões para
@@ -680,8 +678,8 @@
   </row>
   <row>
     <entry>
-      <para lang="en">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
-      <para lang="pt">mc0:/BEDATA-SYSTEM/CONFIG.DAT</para>
+      <para lang="en">mc0:/BxDATA-SYSTEM/CONFIG.DAT</para>
+      <para lang="pt">mc0:/BxDATA-SYSTEM/CONFIG.DAT</para>
     </entry>
     <entry> file not created</entry>
   </row>
@@ -699,7 +697,7 @@
     <xref linkend="installation-configuration-ipconfig"/>.
   </para>
   <para lang="pt">
-    Se quiser utilizar uma configuração de IP diferente, necessitará de 
+    Se quiser utilizar uma configuração de IP diferente, necessitará de
     modificar o ficheiro <filename>mc0:/BxDATA-SYSTEM/CONFIG.DAT</filename>.  
     No entanto, se tencionar utilizar FTP para copiar um ficheiro
     <filename>CONFIG.DAT</filename> alterado para a sua PS2, primeiro terá 
@@ -726,7 +724,7 @@
   </sect3>
 
   <sect3>
-  <title id="installation-detail-ftpclient">
+  <title id="installation-copytomemcard-ftp-ftpclient">
     <phrase lang="en">
       Starting the FTP Client
     </phrase>
@@ -736,9 +734,9 @@
   </title>
   <para lang="en">
     Once you've got the FTP server working, and successfully PINGed your PS2,
-    start your FTP client. Lots of people seem to be recommending FlashFXP 
-    (<ulink url="http://www.inicom.net/pages/en.ffxp-download.php"/>), but I 
-    was happier with the free (and non-nagware) GPL FileZilla 
+    start your FTP client. Lots of people seem to be recommending FlashFXP
+    (<ulink url="http://www.inicom.net/pages/en.ffxp-download.php"/>), but I
+    was happier with the free (and non-nagware) GPL FileZilla
     (<ulink url="http://sourceforge.net/projects/filezilla"/>). Not all FTP
     clients will work. For example I couldn't get FTPexplorer to work for
     some reason.
@@ -770,7 +768,7 @@
   <figure>
     <title>
        <phrase lang="en">
-         Setting up the IP to connect to (note that the default IP address 
+         Setting up the IP to connect to (note that the default IP address
          for the PS2 is 192.168.0.10).
       </phrase>
       <phrase lang="pt">
@@ -882,10 +880,471 @@
     card. Close down your FTP client then restart your PS2.
   </para>
   <para lang="pt">
-    Parabéns, conseguiu copiar o executável do SMS para o seu cartão de 
+    Parabéns, conseguiu copiar o executável do SMS para o seu cartão de
     memória. Feche o seu cliente de FTP e reinicie a PS2.
   </para>
 
   </sect3>
   </sect2>
 </sect1>
+
+<sect1 id="installation-bootablecdr">
+  <title>
+    <phrase lang="en">Using a bootable SMS CDR (Modchip only)</phrase>
+    <phrase lang="pt">#Using a bootable SMS CDR (Modchip only)#</phrase>
+  </title>
+  <para lang="en">
+    The author of the
+    <ulink url="http://www.ps2-scene.org/sms/">SMS website</ulink> has kindly
+    contributed
+    <ulink url="http://www.ps2-scene.org/sms/eng/cdimage.htm">pre-made
+    CD images for SMS</ulink>.  This means you don't need to
+    go to the bother of creating your own image.  PAL and NTSC versions are
+    available, on the page linked above.
+  </para>
+  <para lang="pt">
+    #The author of the
+    <ulink url="http://www.ps2-scene.org/sms/">SMS website</ulink> kindly
+    contributed
+    <ulink url="http://www.ps2-scene.org/sms/eng/cdimage.htm">pre-made
+    CD images for SMS</ulink>.  This means you don't need to
+    go to the bother of creating your own image.  PAL and NTSC versions are
+    available, on the page linked above.#
+  </para>
+
+  <para lang="en">
+    When you first use this disc, you will get the default
+    <application>uLaunchELF</application> settings, which is just the file
+    browser. We suggest you go to the settings option, and map a button to
+    launch SMS. (SMS is under CDFS). These settings are saved, so you only
+    have to do this once.
+  </para>
+  <para lang="pt">
+    #When you first use this disc, you will get the default
+    <application>uLaunchELF</application> settings, which is just the file
+    browser. We suggest you go to the settings option, and map a button to
+    launch SMS. (SMS is under CDFS). These settings are saved, so you only
+    have to do this once.#
+  </para>
+
+  <para lang="en">
+    If you want to upgrade SMS later, you can copy the new
+    <filename>SMS.elf</filename> onto a USB drive.  Then use the
+    <application>uLaunchELF</application> file browser to copy it over to
+    your PS2's memory card.  Put it into the sms folder (otherwise it will
+    appear as 'corrupted data'), and adjust your key mappings to suit. it
+    takes up about half a meg on your memory card.
+  </para>
+  <para lang="pt">
+    #If you want to upgrade SMS later, you can copy the new
+    <filename>SMS.elf</filename> onto a USB drive.  Then use the
+    <application>uLaunchELF</application> file browser to copy it over to
+    your PS2's memory card.  Put it into the sms folder (otherwise it will
+    appear as 'corrupted data'), and adjust your key mappings to suit. it
+    takes up about half a meg on your memory card.#
+  </para>
+
+  <para lang="en">
+    As the author of SMS does not work on the website himself, the version
+    of SMS in these CD Images will occasionally fall behind. Here are
+    instructions to make your own SMS disc:
+  </para>
+  <para lang="pt">
+    As the author of SMS does not work on the website himself, the version
+    of SMS in these CD Images will occasionally fall behind. Here are
+    instructions to make your own SMS disc:
+  </para>
+
+  <sect2>
+  <title id="installation-bootablecdr-create">
+    <phrase lang="en">
+      Creating Your Own CDR (Modchip Only)
+    </phrase>
+    <phrase lang="pt">
+      #Creating Your Own CDR (Modchip Only)#
+    </phrase>
+  </title>
+
+  <itemizedlist mark="number">
+    <listitem>
+      <para lang="en">
+        You will need to find and download CDGenPS2 v3.0
+      </para>
+      <para lang="pt">
+        #You will need to find and download CDGenPS2 v3.0#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Download the latest 
+        <ulink url="http://home.casema.nl/eugene_plotnikov/">SMS Release</ulink>,
+        and the latest
+        <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=37242">uLaunchELF</ulink>
+        release.  You will need to sign up at the forums to view the
+        <application>uLaunchELF</application> pages.
+      </para>
+      <para lang="pt">
+        #Download the latest
+        <ulink url="http://home.casema.nl/eugene_plotnikov/">SMS Release</ulink>,
+        and the latest
+        <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=37242">uLaunchELF</ulink>
+        release.  You will need to sign up at the forums to view the
+        <application>uLaunchELF</application> pages.#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Unzip the uLaunchELF zip file, and delete everything but BOOTc.ELF. 
+        (you don't need the other stuff)
+      </para>
+      <para lang="pt">
+        #Unzip the uLaunchELF zip file, and delete everything but BOOTc.ELF.
+        (you don't need the other stuff)#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Rename "<filename>BOOTc.ELF</filename>" to
+        "<filename>BOOT.ELF</filename>".
+      </para>
+      <para lang="pt">
+        #Rename "<filename>BOOTc.ELF</filename>" to
+        "<filename>BOOT.ELF</filename>".#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Rename "<filename>SMS Version x.y (Rev x).elf</filename>" to
+        "<filename>SMS.ELF</filename>"
+      </para>
+      <para lang="pt">
+        #Rename "<filename>SMS Version x.y (Rev x).elf</filename>" to
+        "<filename>SMS.ELF</filename>"#
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+             Rename both files.
+          </phrase>
+          <phrase lang="pt">
+             #Rename both files.#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-cdrrenameboth.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>rename both files</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Open Notepad, and paste this:
+      </para>
+      <para lang="pt">
+        #Open Notepad, and paste this:#
+      </para>
+      <screen><![CDATA[BOOT2 = cdrom0:\BOOT.ELF;1
+VER = 1.00
+VMODE = NTSC
+]]></screen>
+     <para lang="en">
+        <emphasis>Note: Use PAL instead of NTSC if you have a PAL TV, and 
+        make sure to add a blank line after the last line (press enter after 
+        NTSC).</emphasis>
+      </para>
+     <para lang="pt">
+        #<emphasis>Note: Use PAL instead of NTSC if you have a PAL TV, and
+        make sure to add a blank line after the last line (press enter after
+        NTSC).</emphasis>#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        File --> Save As: "<filename>system.cnf</filename>" (make sure it is 
+        a <filename>.cnf</filename> file, not a <filename>.txt</filename>
+        file).
+      </para>
+      <para lang="pt">
+        #File --> Save As: "<filename>system.cnf</filename>" (make sure it is
+        a <filename>.cnf</filename> file, not a <filename>.txt</filename>
+        file).#
+      </para>
+      <para lang="en">
+        You should now have:
+      </para>
+      <para lang="pt">
+        You should now have:
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Files ready for <application>CDGenPS2</application>.
+          </phrase>
+          <phrase lang="pt">
+            #Files ready for <application>CDGenPS2</application>.#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-smsfolder.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Files ready for CDGenPS2</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Open <application>CDGenPS2</application>, and in order:
+      </para>
+      <para lang="pt">
+        Open <application>CDGenPS2</application>, and in order:
+      </para>
+      <itemizedlist mark="letter">
+        <listitem>
+          <para lang="en">
+            Drag <filename>system.cnf</filename> into the main window.
+          </para>
+          <para lang="pt">
+            #Drag <filename>system.cnf</filename> into the main window.#
+          </para>
+        </listitem>
+        <listitem>
+          <para lang="en">
+            Drag <filename>BOOT.ELF</filename> into the main window.
+          </para>
+          <para lang="pt">
+            #Drag <filename>BOOT.ELF</filename> into the main window.#
+          </para>
+        </listitem>
+        <listitem>
+          <para lang="en">
+            Drag <filename>SMS.ELF</filename> into the main window.
+          </para>
+          <para lang="pt">
+            #Drag <filename>SMS.ELF</filename> into the main window.#
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para lang="en">
+        (Don't rush, do them one at a time).
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Right click <filename>system.cnf</filename> -> edit.
+      </para>
+      <para lang="pt">
+        #Right click <filename>system.cnf</filename> -> edit.#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        choose Fix LBA, and enter '12231':
+      </para>
+      <para lang="pt">
+
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Fix LBA option in CDGenPS2.
+          </phrase>
+          <phrase lang="pt">
+            #Fix LBA option in CDGenPS2.#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-fixlba.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Fix LBA option in CDGenPS2</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Go ahead and add some other files and folders now if you want, such
+        as MP3s and videos... you might as well use the rest of the space on
+        the CD.
+      </para>
+      <para lang="pt">
+        #Go ahead and add some other files and folders now if you want, such
+        as MP3s and videos... you might as well use the rest of the space on
+        the CD.#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        CDGenPS2 should look like this...
+      </para>
+      <para lang="pt">
+        #CDGenPS2 should look like this...#
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            CDGenPS2 window after adding files.
+          </phrase>
+          <phrase lang="pt">
+            #CDGenPS2 window after adding files.#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-cdgenps2.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Fix LBA option in CDGenPS2</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Choose File -> Create CD. Save the file as type BIN files. (the name
+        doesn't matter, so long as you remember where you saved it).
+      </para>
+      <para lang="pt">
+        #Choose File -> Create CD. Save the file as type BIN files. (the name
+        doesn't matter, so long as you remember where you saved it).#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Burn the image using Disc at Once. If you already know how to burn a
+        CD image, you're done here. just burn the disc and put it in your PS2.
+        if not, read on.
+      </para>
+      <para lang="pt">
+        #Burn the image using Disc at Once. If you already know how to burn a
+        CD image, you're done here. just burn the disc and put it in your PS2.
+        if not, read on.#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Open Nero, and cancel the wizard that appears.
+      </para>
+      <para lang="pt">
+        #Open Nero, and cancel the wizard that appears.#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Choose Recorder -> Burn Image (Burn Image may also be under the File
+        menu in some versions of Nero)
+      </para>
+      <para lang="pt">
+        #Choose Recorder -> Burn Image (Burn Image may also be under the File
+        menu in some versions of Nero)#
+      </para>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Browse and select the CUE file that was saved with your BIN file when
+        you made the CD image.
+
+
+      </para>
+      <para lang="pt">
+        #Browse and select the CUE file that was saved with your BIN file when
+        you made the CD image.#
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Burning the image, step 1.
+          </phrase>
+          <phrase lang="pt">
+            #Burning the image, step 1.#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-cdburn01.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Burning the image, step 1.</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+    <listitem>
+      <para lang="en">
+        Press Burn... I have no trouble myself with 40x, but you may want to
+        lower the speed.
+      </para>
+      <para lang="pt">
+        #Press Burn... I have no trouble myself with 40x, but you may want to
+        lower the speed.#
+      </para>
+      <figure>
+        <title>
+          <phrase lang="en">
+            Burning the image, step 2.
+          </phrase>
+          <phrase lang="pt">
+            #Burning the image, step 2.#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="../images/installation-cdburn02.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Burning the image, step 2.</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+    </listitem>
+  </itemizedlist>
+
+  <para lang="en">
+    That's it. you're done.  If you don't want to include uLaunchELF on the 
+    CD, just rename SMS.ELF to BOOT.ELF.
+  </para>
+  <para lang="pt">
+    That's it. you're done.  If you don't want to include uLaunchELF on the
+    CD, just rename SMS.ELF to BOOT.ELF.
+  </para>
+  </sect2>
+</sect1>
+
+<sect1 id="installation-bootabledvdr">
+  <title>
+    <phrase lang="en">Using a bootable SMS DVDR (Modchip only)</phrase>
+    <phrase lang="pt">#Using a bootable SMS DVDR (Modchip only)#</phrase>
+  </title>
+  <para lang="en">
+    If you're fortunate enough to have a modchip, Swap Magic, or
+    HDLoader/HDAdvance, and access to a DVD writer, the easiest way to
+    get up and running with SMS is to download the
+    <ulink url="http://ps2-scene.org/sms/eng/cdimage.htm">DVD
+    .iso image</ulink> from the SMS Media Player website, and burn it to
+    a blank DVD-/+R.
+  </para>
+  <para lang="en">
+    Refer to your DVD writer application instructions for how to burn
+    ISO images.
+  </para>
+  <para lang="en">
+    After you have burned your DVD, put it into your modchipped PS2 and
+    press reset...  that's it.
+  </para>
+</sect1>
+

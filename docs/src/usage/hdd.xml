@@ -65,14 +65,14 @@
   <para lang="en">
     Transfering files to the HDD is out of the scope of this Manual, but you
     can follow the instructions in the
-    <xref linkend="installation-detail-copyftp-ulaunchelf"/> section, and 
-    transfer the files you want to your HDD using the FTP method explained 
+    <xref linkend="installation-copytomemcard-ftp-ulaunchelf"/> section, and 
+    transfer the files you want to your HDD using the FTP method explained
     there.
   </para>
   <para lang="pt">
-    Transferir ficheiros para o HDD não faz parte dos objectivos deste 
+    Transferir ficheiros para o HDD não faz parte dos objectivos deste
     manual, mas pode sempre seguir as instruções na secção
-    <xref linkend="installation-detail-copyftp-ulaunchelf"/>, e transferir 
+    <xref linkend="installation-copytomemcard-ftp-ulaunchelf"/>, e transferir
     os ficheiros que quiser para o seu HDD utilizando o mesmo método de FTP
     explicado aí.
   </para>

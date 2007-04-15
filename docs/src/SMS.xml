@@ -4,7 +4,7 @@
 [
 <!ENTITY introduction.xml	SYSTEM "introduction.xml">
 <!ENTITY installation-requirements.xml SYSTEM "installation/requirements.xml">
-<!ENTITY installation-quick.xml	SYSTEM "installation/quick.xml">
+<!ENTITY installation-overview.xml     SYSTEM "installation/overview.xml">
 <!ENTITY installation-detail.xml	SYSTEM "installation/detail.xml">
 <!ENTITY installation-configuration.xml	SYSTEM "installation/configuration.xml">
 <!ENTITY usage.xml	SYSTEM "usage.xml">
@@ -44,7 +44,7 @@
     <subtitle lang='sv'>Användarmanual</subtitle>
     <subtitle lang='zh_CN'>用户手册</subtitle>
 
-    <subtitle><ulink url="http://www.sms.ps2-scene.org"></ulink></subtitle>
+    <subtitle><ulink url="http://ps2-scene.org/sms/index.htm"></ulink></subtitle>
 
 
   <date>December 28, 2005</date>
@@ -55,7 +55,7 @@
     Translators: Nuno Bento</holder>
   </copyright>
 
-  <legalnotice lang="en;de">
+  <legalnotice>
     <title>License</title>
     <para lang="en">
     This program is distributed in the hope that it will be useful, but
@@ -63,9 +63,6 @@
     or FITNESS FOR A PARTICULAR PURPOSE.
     </para>
     <para lang="en">
-    
-    
-
     The code created specifically for this project is released under the
     Academic Free License
     <ulink url="http://www.opensource.org/licenses/academic.php">
@@ -83,6 +80,21 @@
     Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the
     license is included in the section enphrased GNU Free Documentation License.
     </para>
+    
+    <tip>
+      <para lang="en">
+        Some mirror copies of this manual are starting to appear across the
+        internet.  For the original (and most up-to-date) version, please go
+        to
+        <ulink url="http://ps2-scene.org/sms/SMSMANUAL/sms_usermanual.html"/>
+      </para>
+      <para lang="pt">
+        #Some mirror copies of this manual are starting to appear across the
+        internet.  For the original (and most up-to-date) version, please go
+        to
+        <ulink url="http://ps2-scene.org/sms/SMSMANUAL/sms_usermanual.html"/>#
+      </para>
+    </tip>
   </legalnotice>
 
 <!--
@@ -187,8 +199,8 @@
       <phrase lang="es">#Installation#</phrase>
       <phrase lang="pt">Instalação</phrase>
     </title>
+    &installation-overview.xml;
     &installation-requirements.xml;
-    &installation-quick.xml;
     &installation-detail.xml;
     &installation-configuration.xml;
   </chapter>

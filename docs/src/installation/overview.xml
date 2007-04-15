@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!-- $Revision$ -->
+
+<sect1 id="sms-installation-overview">
+  <title>
+    <phrase lang="en">Overview</phrase>
+    <phrase lang="pt">#Overview#</phrase>
+  </title>
+  
+  <figure>
+    <title>
+       <phrase lang="en">Installation overview.</phrase>
+       <phrase lang="pt">#Installation overview.#</phrase>
+    </title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/installation-overview.png"
+          format="PNG"/>
+      </imageobject>
+      <textobject>
+        <phrase>Installation overview flow diagram.</phrase>
+      </textobject>
+    </mediaobject>
+  </figure>
+</sect1>

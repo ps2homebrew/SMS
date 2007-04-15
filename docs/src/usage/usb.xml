@@ -21,85 +21,37 @@
   </para>
 
   <para lang="en">
-    SMS is capable of reading files from a USB drive, but due to liscencing
-    issues, the USB driver <filename>USBD.IRX</filename> is not included with 
-    the SMS distribution.  SMS looks for it in the following folders:
+    SMS reads files from a USB drive using a <emphasis role="bold">USB driver 
+    built-in to the SMS application</emphasis>.  There's no need to install
+    any additional files to enable USB support in new versions of SMS (V1.7
+    or later).  Older versions required a 3rd party
+    <filename>USBD.IRX</filename> file.
   </para>
   <para lang="pt">
-    O SMS é capaz de ler ficheiros a partir de um dispositvo USB, mas devido a
-    problemas de licensiamento, o ficheiro <filename>USBD.IRX</filename> não
-    está incluido na distribuição do SMS. O SMS procura-o nos seguintes
-    directórios:
+    #SMS reads files from a USB drive using a <emphasis role="bold">USB driver 
+    built-in to the SMS application</emphasis>.  There's no need to install
+    any additional files to enable USB support in new versions of SMS (V1.7
+    or later).  Older versions required a 3rd party
+    <filename>USBD.IRX</filename> file.#
   </para>
-
-
-  <itemizedlist>
-    <listitem>
-      <para><filename>host:USBD.IRX</filename></para>
-    </listitem>
-    <listitem>
-      <para><filename>mc0:/BOOT/USBD.IRX</filename></para>
-    </listitem>
-    <listitem>
-      <para><filename>mc0:/PS2OSCFG/USBD.IRX</filename></para>
-    </listitem>
-    <listitem>
-      <para><filename>mc0:/SYS-CONF/USBD.IRX</filename></para>
-    </listitem>
-    <listitem>
-      <para><filename>mc0:/PS2MP3/USBD.IRX</filename></para>
-    </listitem>
-    <listitem>
-      <para><filename>mc0:/BOOT/PS2MP3/USBD.IRX</filename></para>
-    </listitem>
-    <listitem>
-      <para><filename>mc0:/SMS/USBD.IRX</filename></para>
-    </listitem>
-  </itemizedlist>
 
   <para lang="en">
-    A suitable version of <filename>USBD.IRX</filename> can be found within 
-    the distribution of <application>naplink</application>: 
-    naplink-ps2-v1.0.1a. This can be found at
-    <ulink url="http://naplink.napalm-x.com/"/>.
-  </para>  
-  <para lang="pt">
-    Uma versão do ficheiro <filename>USBD.IRX</filename> pode ser encontrada 
-    na distribuição do <application>naplink</application>: 
-    naplink-ps2-v1.0.1a. Isto pode ser encontrado em
-    <ulink url="http://naplink.napalm-x.com/"/>.
-  </para>
-  
-  <para lang="en">
-    Download the above zip file, and open it up – inside you will find a 
-    file called <filename>npm-usbd.irx</filename>. Copy this file to a local
-    folder on your computer, then <emphasis role="bold">rename</emphasis>
-    it to <filename>USBD.IRX</filename> (must be in capitals). 
-    Then use an FTP program or other method to copy the file to one of the 
-    above locations. Next time SMS starts up, it will have USB support 
-    enabled. You won't see any difference until you plug in a compatible 
-    USB drive. Then you will see a new icon as shown below.
-    Press <emphasis role="bold">RIGHT</emphasis> to select this icon and
-    browse the USB drive.
+    When you plug a compatible USB drive into the front USB port on the PS2,
+    you will see a new icon as shown below. Press <emphasis 
+    role="bold">RIGHT</emphasis> to select this icon and browse the USB 
+    drive.
   </para>
   <para lang="pt">
-    Faça o download do .zip acima mencionado e abra-o - dentro do mesmo
-    encontrará um ficheiro chamado <filename>npm-usbd.irx</filename>.
-    Copie este ficheiro para um directório no seu PC, depois tem de
-    <emphasis role="bold">renome-á-lo</emphasis> para 
-    <filename>USBD.IRX</filename> (tem de ser em letras maiúsculas).
-    Depois use um programa de FTP ou qualquer outro método para copiar
-    o ficheiro para um dos locais mencionados em cima. Da próxima vez 
-    que iniciar o SMS, terá suporte para USB. Não verá qualquer diferença 
-    até ligar um dispositivo USB à PS2. Nessa altura verá um icon igual
-    ao mostrado em baixo. Pressione <emphasis role="bold">DIREITA</emphasis>
-    para seleccionar este icon e navegar no dispositivo USB.
+    #When you plug a compatible USB drive into the front USB port on the PS2,
+    you will see a new icon as shown below.# Pressione 
+    <emphasis role="bold">DIREITA</emphasis> para seleccionar este icon e 
+    navegar no dispositivo USB.
   </para>
 
   <figure>
     <title>
-      <phrase lang="en">SMS with USB support activated.</phrase>
-      <phrase lang="pt">SMS com suporte USB activado.</phrase>
+      <phrase lang="en">SMS with USB activated.</phrase>
+      <phrase lang="pt">SMS com USB activado.</phrase>
     </title>
     <mediaobject>
       <imageobject>
@@ -107,7 +59,7 @@
         format="PNG"/>
       </imageobject>
       <textobject>
-        <phrase>SMS with USB support activated.</phrase>
+        <phrase>SMS with USB activated.</phrase>
       </textobject>
     </mediaobject>
   </figure>

@@ -155,11 +155,11 @@ pdf-$(1): $(XSL_DEPS) xsltproc.sh xmllint.sh pdf-dir \
 	#./xsltproc
 
 zip-html-chunked-$(1): zip-dir html-chunked-$(1)
-	zip -r $(ZIP)/html-chunked-$(1).zip $(HTML_CHUNKED)/$(1) \
+	zip -r $(ZIP)/sms-html-chunked-$(1).zip $(HTML_CHUNKED)/$(1) \
     $(HTML_CHUNKED)/images
 
 zip-html-single-$(1): zip-dir html-single-$(1)
-	zip -r $(ZIP)/html-single-$(1).zip $(HTML_SINGLE)/$(1) \
+	zip -r $(ZIP)/sms-html-single-$(1).zip $(HTML_SINGLE)/$(1) \
     $(HTML_SINGLE)/images
 
 endef

@@ -3,8 +3,9 @@
 
 <sect1 id="usage-dvdr" xreflabel="DVD-R">
   <title>
-    <phrase lang="en">Playing files from a DVD-R</phrase>
-    <phrase lang="pt">Correndo ficheiros a partir de um DVD-R</phrase>
+    <phrase lang="en">Playing files from a DVD-R (without a modchip)</phrase>
+    <phrase lang="pt">Correndo ficheiros a partir de um DVD-R (without a 
+    modchip)</phrase>
   </title>
   <warning>
     <para lang="en">

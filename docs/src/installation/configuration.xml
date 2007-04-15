@@ -88,7 +88,7 @@
       created this file, you must copy it to your PS2, into the location
       <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>.  You can do this
       using the FTP technique described in the
-      <link linkend="installation-detail-copyftp">installation</link>
+      <link linkend="installation-copytomemcard-ftp">installation</link>
       section.
     </para>
     <para lang="pt">
@@ -98,7 +98,7 @@
       criado este ficheiro, tem de copiá-lo para a sua PS2, para a localização
       <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>. Pode fazer isto
       utilizando a técnica de FTP referida na secção
-      <link linkend="installation-detail-copyftp">instalação</link>.
+      <link linkend="installation-copytomemcard-ftp">instalação</link>.
     </para>
 
     <para lang="en">

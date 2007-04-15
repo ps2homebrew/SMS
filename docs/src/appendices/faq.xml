@@ -21,7 +21,7 @@
     any other removable media without a Mod-Chip. You always need either:
   </para>
   <para lang="pt">
-    O CDXplorer não cria um CD-R a partir do qual se pode arrancar. Apenas 
+    O CDXplorer não cria um CD-R a partir do qual se pode arrancar. Apenas
     cria um disco que pode ser lido quando o SMS já está a correr. CDDAFS não
     é um método de inicializar o SMS, é um método de fornecer os ficheiros ao
     SMS quando este já está a correr. Que eu saiba, não existe nenhum método
@@ -68,18 +68,18 @@
     </phrase>
   </title>
 
-    <para lang="en">
-      We aren't currently attempting to compare or benchmark SMS against any
+  <para lang="en">
+    We aren't currently attempting to compare or benchmark SMS against any
       other media players at the moment. The only goal is to make SMS as
-      good as possible. If you'd like to do some detailed comparisons
-      yourself, go ahead, we'd be interested in the results.
-    </para>
-    <para lang="pt">
-      Não estamos a tentar comparar o SMS contra outros leitores de media de 
-      momento. O único objectivo é fazer o SMS o melhor possível. Se estiver
-      interessado em fazer as suas próprias comparações, força nisso, seria
-      interessante ver os resultados.
-    </para>
+    good as possible. If you'd like to do some detailed comparisons
+    yourself, go ahead, we'd be interested in the results.
+  </para>
+  <para lang="pt">
+    Não estamos a tentar comparar o SMS contra outros leitores de media de
+    momento. O único objectivo é fazer o SMS o melhor possível. Se estiver
+    interessado em fazer as suas próprias comparações, força nisso, seria
+    interessante ver os resultados.
+  </para>
 
 </sect1>
 
@@ -160,7 +160,7 @@
   <para lang="en">
     The <emphasis role="bold">Independence Exploit</emphasis> is a software
     based exploit that allows a PS2 to run unencrypted and homebrew applications
-    (such as SMS) from the memory card.  The most concise description of what
+    (such as SMS) from the memory card.  A description of what
     the exploit actually is can be found
     <ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
     here</ulink>.
@@ -371,6 +371,127 @@
     Alguém que queira (e tenha o hardware necessário) é bem-vindo a
     desenvolve-la.
   </para>
+</sect1>
+
+<sect1 id="faq-writeablemedia" xreflabel="Writeable Media Compatibility">
+  <title>
+    <phrase lang="en">
+      <emphasis>What types of of writeable media 
+      (DVD-R/DVD+R/DVD+RW/DVD-RW/CDR/CDRW) will work with SMS?</emphasis>
+    </phrase>
+    <phrase lang="pt">
+      <emphasis>#What types of of writeable media
+      (DVD-R/DVD+R/DVD+RW/DVD-RW/CDR/CDRW) will work with SMS?#</emphasis>
+    </phrase>
+  </title>
+  <para lang="en">
+    Users have had success with all current types of writeable disc, but the 
+    most popular in a
+    <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=44531">
+    recent survey</ulink> was the DVD-R.  Please note that without a
+    mod chip, the only way you can trick the PS2 into reading your
+    home-burned discs, is either the <xref linkend="usage-cddafs"/> method
+    or the <xref linkend="usage-dvdr"/> 'Dummy DVD Video Disc' method.
+  </para>
+  <para lang="pt">
+    #Users have had success with all current types of writeable disc, but the
+    most popular in a
+    <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=44531">
+    recent survey</ulink> was the DVD-R.  Please note that without a
+    mod chip, the only way you can trick the PS2 into reading your
+    home-burned discs, is either the <xref linkend="usage-cddafs"/> method
+    or the <xref linkend="usage-dvdr"/> 'Dummy DVD Video Disc' method.#
+  </para>
+
+  <informaltable frame='none'>
+  <tgroup cols='2'>
+  <thead>
+  <row>
+    <entry>
+      <para lang="en">Format</para>
+      <para lang="pt">#Format#</para>
+    </entry>
+    <entry>
+      <para lang="en">Working?</para>
+      <para lang="pt">#Working?#</para>
+    </entry>
+    <entry>
+      <para lang="en">Comments</para>
+      <para lang="pt">#Comments#</para>
+    </entry>
+  </row>
+  </thead>
+  <tbody>
+  <row>
+    <entry>CDR</entry>
+    <entry>
+      <para lang="en">Yes</para>
+      <para lang="pt">#Yes#</para>
+    </entry>
+    <entry>
+      <para lang="en">None</para>
+      <para lang="pt">#None#</para>
+    </entry>
+  </row>
+  <row>
+    <entry>CDRW</entry>
+    <entry>
+      <para lang="en">Yes</para>
+      <para lang="pt">#Yes#</para>
+    </entry>
+    <entry>
+      <para lang="en">None</para>
+      <para lang="pt">#None#</para>
+    </entry>
+  </row>
+  <row>
+    <entry>DVD-R</entry>
+    <entry>
+      <para lang="en">Yes</para>
+      <para lang="pt">#Yes#</para>
+    </entry>
+    <entry>
+      <para lang="en">None</para>
+      <para lang="pt">#None#</para>
+    </entry>
+  </row>
+  <row>
+    <entry>DVD+R</entry>
+    <entry>
+      <para lang="en">Yes</para>
+      <para lang="pt">#Yes#</para>
+    </entry>
+    <entry>
+      <para lang="en">None</para>
+      <para lang="pt">#None#</para>
+    </entry>
+  </row>
+  <row>
+    <entry>DVD-RW</entry>
+    <entry>
+      <para lang="en">Yes</para>
+      <para lang="pt">#Yes#</para>
+    </entry>
+    <entry>
+      <para lang="en">None</para>
+      <para lang="pt">#None#</para>
+    </entry>
+  </row>
+  <row>
+    <entry>DVD+RW</entry>
+    <entry>
+      <para lang="en">Yes</para>
+      <para lang="pt">#Yes#</para>
+    </entry>
+    <entry>
+      <para lang="en">None</para>
+      <para lang="pt">#None#</para>
+    </entry>
+  </row>
+  </tbody>
+  </tgroup>
+  </informaltable>
+
 </sect1>
 
 
