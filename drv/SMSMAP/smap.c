@@ -23,6 +23,7 @@
 #include "intrman.h"
 #include "loadcore.h"
 #include "thbase.h"
+#include "thevent.h"
 #include "dev9.h"
 #include "ps2ip.h"
 #include "../SMSUTILS/smsutils.h"
@@ -145,19 +146,16 @@ typedef struct SMapCircularBuffer
 } SMapCB;
 
 
-typedef struct SMap
-{
-	u32				u32Flags;
-	u8 volatile*	pu8Base;
-	u8					au8HWAddr[6];
-	u32				u32TXMode;
-	u8					u8PPWC;
-	SMapCB			TX;
-	u8					u8RXIndex;
-	u16				u16RXPTR;
-	SMapBD*			pRXBD;
+typedef struct SMap {
+ u32          u32Flags;
+ u8 volatile* pu8Base;
+ u8           au8HWAddr[ 6 ];
+ u32          u32TXMode;
+ u8           u8PPWC;
+ SMapCB       TX;
+ u8           u8RXIndex;
+ SMapBD*      pRXBD;
 } SMap;
-
 
 //Register Offset and Definitions
 #define	SMAP_PIOPORT_DIR	0x2C
@@ -431,8 +429,6 @@ typedef struct SMap
 static SMap         SMap0;
 extern struct netif NIF;
 
-static u32	au32TXBuf[(SMAP_TXMAXSIZE+SMAP_TXMAXTAILPAD+3)/4]; 
-
 /*--------------------------------------------------------------------------*/
 
 static void		TXRXEnable(SMap* pSMap,int iEnable);
@@ -440,7 +436,7 @@ static void		TXBDInit(SMap* pSMap);
 static void		RXBDInit(SMap* pSMap);
 static int		ReadPhy(SMap* pSMap,u32 phyadr,u32 regadr);
 static int		WritePhy(SMap* pSMap,u32 phyadr,u32 regadr,u16 data);
-static int		FIFOReset(SMap* pSMap);
+static int      FIFOReset(SMap* pSMap);
 static int		EMAC3SoftReset(SMap* pSMap);
 static void		EMAC3SetDefValue(SMap* pSMap);
 static void		EMAC3Init(SMap* pSMap,int iReset);
@@ -457,6 +453,9 @@ static void		Reset(SMap* pSMap,int iReset);
 static int		GetNodeAddr(SMap* pSMap);
 static void		BaseInit(SMap* pSMap);
 
+extern int  SMap_GetIRQ              ( void     );
+extern void SMap_ClearIRQ            ( int      );
+extern void SMap_HandleEMACInterrupt ( void     );
 /*--------------------------------------------------------------------------*/
 static inline u32 EMAC3REG_READ ( SMap* pSMap,u32 u32Offset ) {
 
@@ -483,7 +482,72 @@ static u16 ComputeFreeSize ( SMapCB const* pCB ) {
                           : ( SMAP_TXBUFSIZE - u16End + u16Start );
 }  /* end ComputeFreeSize */
 
-extern void SMAP_CopyFromFIFO ( SMap*, struct pbuf* );
+static void SMAP_CopyFromFIFO ( SMap* apSMAP, struct pbuf* apBuf ) {
+
+ u8* lpData   = apBuf -> payload;
+ int lLen     = ( apBuf -> tot_len + 3 ) & ~3;
+ u32 lDMASize = lLen / 128;
+
+ if ( lDMASize ) {
+
+  SMAP_REG16( apSMAP, SMAP_RXFIFO_SIZE ) = lDMASize;
+  SMAP_REG8(  apSMAP, SMAP_RXFIFO_CTRL ) = RXFIFO_DMAEN;
+
+  dev9DmaTransfer (  1, lpData, ( lDMASize << 16 ) | 0x20, 0  );
+
+  lDMASize *= 128;
+  lpData   += lDMASize;
+  lLen     -= lDMASize;
+
+  while (  SMAP_REG8(  apSMAP, SMAP_RXFIFO_CTRL ) & RXFIFO_DMAEN  );
+
+ }  /* end if */
+
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "lui      $v0, 0xB000\n\t"
+  "srl      $at, %1, 5\n\t"
+  "beqz     $at, 3f\n\t"
+  "andi     %1, %1, 0x1F\n\t"
+  "4:\n\t"
+  "lw      $t0, 4608($v0)\n\t"
+  "lw      $t1, 4608($v0)\n\t"
+  "lw      $t2, 4608($v0)\n\t"
+  "lw      $t3, 4608($v0)\n\t"
+  "lw      $t4, 4608($v0)\n\t"
+  "lw      $t5, 4608($v0)\n\t"
+  "lw      $t6, 4608($v0)\n\t"
+  "lw      $t7, 4608($v0)\n\t"
+  "addiu   $at, $at, -1\n\t"
+  "sw      $t0,  0(%0)\n\t"
+  "sw      $t1,  4(%0)\n\t"
+  "sw      $t2,  8(%0)\n\t"
+  "sw      $t3, 12(%0)\n\t"
+  "sw      $t4, 16(%0)\n\t"
+  "sw      $t5, 20(%0)\n\t"
+  "sw      $t6, 24(%0)\n\t"
+  "sw      $t7, 28(%0)\n\t"
+  "bgtz    $at, 4b\n\t"
+  "addiu   %0, %0, 32\n\t"
+  "3:\n\t"
+  "beqz     %1, 1f\n\t"
+  "nop\n\t"
+  "2:\n\t"
+  "lw      $t0, 4608($v0)\n\t"
+  "addiu   %1, %1, -4\n\t"
+  "sw      $t0, 0(%0)\n\t"
+  "bnez    %1, 2b\n\t"
+  "addiu   %0, %0, 4\n\t"
+  "1:\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "r"( lpData ), "r"( lLen ) : "at", "v0", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"
+ );
+
+}  /* end SMAP_CopyFromFIFO */
 
 /*--------------------------------------------------------------------------*/
 static void
@@ -519,7 +583,6 @@ TXRXEnable(SMap* pSMap,int iEnable)
 	}
 }
 
-
 static void
 TXBDInit(SMap* pSMap)
 {
@@ -538,13 +601,11 @@ TXBDInit(SMap* pSMap)
 	}
 }
 
-
 static void
 RXBDInit(SMap* pSMap)
 {
 	int	iA;
 
-	pSMap->u16RXPTR=0;
 	pSMap->u8RXIndex=0;
 	for	(iA=0;iA<SMAP_BD_MAX_ENTRY;++iA)
 	{
@@ -555,8 +616,8 @@ RXBDInit(SMap* pSMap)
 	}
 }
 
-
-static int ReadPhy(SMap* pSMap,u32 u32PhyAddr,u32 u32RegAddr)
+static int
+ReadPhy(SMap* pSMap,u32 u32PhyAddr,u32 u32RegAddr)
 {
 	int	iA;
 
@@ -634,7 +695,6 @@ WritePhy(SMap* pSMap,u32 u32PhyAddr,u32 u32RegAddr,u16 u16Data)
 	return	-1;
 }
 
-
 static int
 FIFOReset(SMap* pSMap)
 {
@@ -660,6 +720,7 @@ FIFOReset(SMap* pSMap)
 	}
 	if	(iA==0)
 	{
+		dbgprintf("FIFOReset: Txfifo reset is in progress\n");
 		iRetVal|=1;
 	}
 
@@ -672,6 +733,7 @@ FIFOReset(SMap* pSMap)
 	}
 	if	(iA==0)
 	{
+		dbgprintf("FIFOReset: Rxfifo reset is in progress\n");
 		iRetVal|=2;
 	}
 	return	iRetVal;
@@ -693,7 +755,6 @@ EMAC3SoftReset(SMap* pSMap)
 	dbgprintf("EMAC3SoftReset: EMAC3 reset is in progress\n");
 	return	-1;
 }
-
 
 static void
 EMAC3SetDefValue(SMap* pSMap)
@@ -768,57 +829,81 @@ EMAC3Init(SMap* pSMap,int iReset)
 	EMAC3SetDefValue(pSMap);
 }
 
-static void EMAC3ReInit ( SMap* pSMap ) {
+static void
+EMAC3ReInit(SMap* pSMap)
+{
+	EMAC3SoftReset(pSMap);
+	EMAC3REG_WRITE(pSMap,SMAP_EMAC3_MODE1,pSMap->u32TXMode);
+	EMAC3SetDefValue(pSMap);
+}
 
- EMAC3SoftReset ( pSMap );
- EMAC3REG_WRITE( pSMap, SMAP_EMAC3_MODE1, pSMap -> u32TXMode );
- EMAC3SetDefValue ( pSMap );
+//return value 0: success, <0: error
 
-}  /* end EMAC3ReInit */
+static int
+PhyInit(SMap* pSMap,int iReset)
+{
+	int	iVal=PhyReset(pSMap);
 
-static int PhyInit ( SMap* pSMap, int iReset ) {
+	if (iVal<0)
+	{
+		return	iVal;
+	}
 
- int iVal = PhyReset ( pSMap );
+	//This flag may be set when unloading
 
- if ( iVal < 0 ) return iVal;
- if ( iReset   ) return 0;
+	if	(iReset)
+	{
+		return	0;
+	}
 
- iVal = AutoNegotiation ( pSMap, DISABLE );
+	//After phy reset, auto-nego is performed automatically
 
- if ( iVal == 0 ) {
+	iVal=AutoNegotiation(pSMap,DISABLE);
+	if (iVal==0)
+	{
 
-  pSMap -> u32Flags |= SMAP_F_LINKESTABLISH;
-  PhySetDSP ( pSMap );
+		//Wait 1 second ?? probably need not.
 
-  return 0;
+		pSMap->u32Flags|=SMAP_F_LINKESTABLISH;
+		PhySetDSP(pSMap);
 
- }  /* end if */
+		//Auto-negotiation is succeeded
 
- ForceSPD100M ( pSMap );
+		return	0;
+	}
 
- return 0;
+	//Force 100Mbps(HDX) or 10Mbps(HDX).
 
-}  /* end PhyInit */
+	ForceSPD100M(pSMap);
+	return	0;
+}
 
-static int PhyReset ( SMap* pSMap ) {
+static int
+PhyReset(SMap* pSMap)
+{
+	int	iA;
 
- int i;
+	//Set reset bit.
 
- WritePhy ( pSMap, DsPHYTER_ADDRESS, DsPHYTER_BMCR, PHY_BMCR_RST | PHY_BMCR_100M | PHY_BMCR_ANEN | PHY_BMCR_DUPM );
+	WritePhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR,PHY_BMCR_RST|PHY_BMCR_100M|PHY_BMCR_ANEN|PHY_BMCR_DUPM);
 
- DelayThread ( 300 );
+	//Wait 300us.
 
- for ( i = SMAP_LOOP_COUNT; i; --i ) {
+	DelayThread(300);
 
-  if (   !(  ReadPhy ( pSMap, DsPHYTER_ADDRESS, DsPHYTER_BMCR ) & PHY_BMCR_RST  )   ) return 0;
+	//Confirm reset done.
 
-  DelayThread ( 300 );
-
- }  /* end for */
-
- return -1;
-
-}  /* end PhyReset */
+	for	(iA=SMAP_LOOP_COUNT;iA!=0;--iA)
+	{
+		if	(!(ReadPhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR)&PHY_BMCR_RST))
+		{
+			return	0;
+		}
+		DelayThread(300);
+	}
+	dbgprintf("PhyReset: PHY reset not complete(BMCR=0x%x)\n",ReadPhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR));
+	return	-1;
+}
 
 static int
 AutoNegotiation(SMap* pSMap,int iEnableAutoNego)
@@ -827,6 +912,9 @@ AutoNegotiation(SMap* pSMap,int iEnableAutoNego)
 
 	if	(iEnableAutoNego)
 	{
+
+		//Set auto-negotiation.
+
 		WritePhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR,PHY_BMCR_100M|PHY_BMCR_ANEN|PHY_BMCR_DUPM);
 	}
 
@@ -837,6 +925,8 @@ AutoNegotiation(SMap* pSMap,int iEnableAutoNego)
 	for	(iA=SMAP_AUTONEGO_RETRY;iA!=0;--iA)
 	{
 
+		//Timeout restart auto-negotiation.
+
 		WritePhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR,PHY_BMCR_100M|PHY_BMCR_ANEN|PHY_BMCR_DUPM|PHY_BMCR_RSAN);
 		if	(ConfirmAutoNegotiation(pSMap)>=0)
 		{
@@ -844,9 +934,10 @@ AutoNegotiation(SMap* pSMap,int iEnableAutoNego)
 		}
 	}
 
+	//Error.
+
 	return	-1;
 }
-
 
 static int
 ConfirmAutoNegotiation(SMap* pSMap)
@@ -933,28 +1024,39 @@ ConfirmAutoNegotiation(SMap* pSMap)
 	return	0;
 }
 
+static void
+ForceSPD100M(SMap* pSMap)
+{
+	int	iA;
 
-static void ForceSPD100M ( SMap* apSMap ) {
+	dbgprintf("ForceSPD100M: try 100Mbps Half duplex mode...\n");
 
- int i;
+	//Set 100Mbps, half duplex.
 
- WritePhy ( apSMap, DsPHYTER_ADDRESS, DsPHYTER_BMCR, PHY_BMCR_100M );
+	WritePhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR,PHY_BMCR_100M);
 
- apSMap -> u32Flags |= SMAP_F_CHECK_FORCE100M;
+	//Delay 2s.
 
- for ( i = SMAP_FORCEMODE_WAIT; i; --i ) DelayThread ( 1000 );
-
- ConfirmForceSPD ( apSMap );
-
-}  /* end ForceSPD100M */
-
+	pSMap->u32Flags|=SMAP_F_CHECK_FORCE100M;
+	for	(iA=SMAP_FORCEMODE_WAIT;iA!=0;--iA)
+	{
+		DelayThread(1000);
+	}
+	ConfirmForceSPD(pSMap);
+}
 
 static void
 ForceSPD10M(SMap* pSMap)
 {
 	int	iA;
 
+	dbgprintf("ForceSPD10M: try 10Mbps Half duplex mode...\n");
+
+	//Set 10Mbps, half duplex.
+
 	WritePhy(pSMap,DsPHYTER_ADDRESS,DsPHYTER_BMCR,PHY_BMCR_10M);
+
+	//Delay 2s.
 
 	pSMap->u32Flags|=SMAP_F_CHECK_FORCE10M;
 	for	(iA=SMAP_FORCEMODE_WAIT;iA!=0;--iA)
@@ -963,7 +1065,6 @@ ForceSPD10M(SMap* pSMap)
 	}
 	ConfirmForceSPD(pSMap);
 }
-
 
 static void
 ConfirmForceSPD(SMap* pSMap)
@@ -1023,6 +1124,10 @@ validlink:
 
 			pSMap->u32Flags|=SMAP_F_CHECK_FORCE10M;
 			goto	validlink;
+		}
+		else
+		{
+			dbgprintf("ConfirmForceSPD: fail force speed mode. link not valid.  phystat=0x%04x\n",iPhyVal);
 		}
 	}
 }
@@ -1230,16 +1335,14 @@ static void ReadFromEEPROM ( SMap* pSMap,u8 u8Addr,u16* pu16Data,int iN ) {
 
 }  /* end ReadFromEEPROM */
 
-static int
-GetNodeAddr(SMap* pSMap)
-{
+static int GetNodeAddr ( SMap* apSMap ) {
 	int	iA;
-	u16*	pu16MAC=(u16*)pSMap->au8HWAddr;
+	u16*	pu16MAC=(u16*)apSMap->au8HWAddr;
 	u16	u16CHKSum;
 	u16	u16Sum=0;
 
-	ReadFromEEPROM(pSMap,0x0,pu16MAC,3);
-	ReadFromEEPROM(pSMap,0x3,&u16CHKSum,1);
+	ReadFromEEPROM(apSMap,0x0,pu16MAC,3);
+	ReadFromEEPROM(apSMap,0x3,&u16CHKSum,1);
 
 	for	(iA=0;iA<3;++iA)
 	{
@@ -1247,11 +1350,12 @@ GetNodeAddr(SMap* pSMap)
 	}
 	if	(u16Sum!=u16CHKSum)
 	{
-		mips_memset(pSMap->au8HWAddr,0,6);
+		mips_memset(apSMap->au8HWAddr,0,6);
 		return	-1;
 	}
 	return	0;
-}
+
+}  /* end GetNodeAddr */
 
 static void BaseInit ( SMap* apSMap ) {
 
@@ -1268,26 +1372,6 @@ SMap_GetMACAddress(void)
 
 	return	pSMap->au8HWAddr;
 }
-
-int SMap_GetIRQ ( void ) {
-	SMap*		pSMap=&SMap0;
-
-	return	SMAP_REG16(pSMap,SMAP_INTR_STAT)&INTR_BITMSK;
-}
-
-
-void
-SMap_ClearIRQ(int iFlags)
-{
-	SMap*		pSMap=&SMap0;
-
-	SMAP_REG16(pSMap,SMAP_INTR_CLR)=iFlags&INTR_BITMSK;
-	if	(iFlags&INTR_EMAC3)
-	{
-		EMAC3REG_WRITE(pSMap,SMAP_EMAC3_INTR_STAT,E3_INTR_ALL);
-	}
-}
-
 
 int
 SMap_Init(void)
@@ -1327,204 +1411,137 @@ SMap_Init(void)
 	return	TRUE;
 }
 
+void SMap_Start ( void ) {
 
-void
-SMap_Start(void)
-{
-	SMap*		pSMap=&SMap0;
+ SMap* lpSMap = &SMap0;
 
-	if (pSMap->u32Flags&SMAP_F_OPENED)
-	{
-		return;
-	}
+ if (  !( lpSMap -> u32Flags & SMAP_F_OPENED )  ) {
+  SMap_ClearIRQ ( INTR_BITMSK );
+  TXRXEnable ( lpSMap, ENABLE );
+  dev9IntrEnable ( INTR_BITMSK );
+  lpSMap -> u32Flags |= SMAP_F_OPENED;
+ }  /* end if */
 
-	SMap_ClearIRQ(INTR_BITMSK);
-	TXRXEnable(pSMap,ENABLE);
-	dev9IntrEnable ( INTR_BITMSK );
+}  /* end SMap_Start */
 
-	pSMap->u32Flags|=SMAP_F_OPENED;
-}
+void SMap_Stop ( void ) {
 
+ SMap* lpSMap = &SMap0;
 
-void
-SMap_Stop(void)
-{
-	SMap*		pSMap=&SMap0;
+ TXRXEnable ( lpSMap, DISABLE );
 
-	TXRXEnable(pSMap,DISABLE);
+ dev9IntrDisable ( INTR_BITMSK );
+ SMap_ClearIRQ   ( INTR_BITMSK );
 
-	dev9IntrDisable(INTR_BITMSK);
-	SMap_ClearIRQ(INTR_BITMSK);
+ lpSMap -> u32Flags &= ~SMAP_F_OPENED;
 
-	pSMap->u32Flags&=~SMAP_F_OPENED;
-}
+}  /* end SMap_Stop */
 
-
-int
-SMap_CanSend(void)
-{
-	SMap*		pSMap=&SMap0;
-
-	return	ComputeFreeSize(&pSMap->TX);
-}
-
-
-static void
-CopyToTXBuffer(SMap* pSMap,struct pbuf* pSrc)
-{
-	u8*	pu8Dest=(u8*)au32TXBuf;
-
-	while	(pSrc!=NULL)
-	{
-		mips_memcpy(pu8Dest,pSrc->payload,pSrc->len);
-		pu8Dest+=pSrc->len;
-		pSrc=pSrc->next;
-	}
-}
 extern void SMAP_CopyToFIFO ( SMap*, u32*, int );
 
-static int inline IsWordAligned ( struct pbuf* apBuf ) {
+static int inline IsEMACReady ( SMap* apSMap ) {
+ return !(  EMAC3REG_READ ( apSMap, SMAP_EMAC3_TxMODE0 ) & E3_TX_GNP_0  );
+}  /* end IsEMACReady */
 
- u32 lAddress = ( u32 )apBuf -> payload;
+SMapStatus SMap_Send ( struct pbuf* apPacket ) {
 
- return	( lAddress & 3 ) == 0;
+ SMap*   lpSMap    = &SMap0;
+ SMapBD* lpTXBD    = &lpSMap -> TX.pBD[ lpSMap -> TX.u8IndexEnd ];
+ int     lTotalLen = apPacket -> tot_len;
+ int     lTXLen;
 
-}  /* end IsWordAligned */
+ if (  ! ( lpSMap -> u32Flags & SMAP_F_LINKVALID ) ) return SMap_Con;
+ if (  lTotalLen > SMAP_TXMAXSIZE                  ) return SMap_Err;
 
-static int
-IsEMACReady(SMap* pSMap)
-{
+ lTXLen = ( lTotalLen + 3 ) & ~3;
 
-	//Wait for the EMAC to become ready to transmit.
+ if (  lTXLen > ComputeFreeSize ( &lpSMap -> TX )  ) return SMap_TX;
+ if (  !IsEMACReady             ( lpSMap        )  ) return SMap_Err;
 
-	int	iA;
+ SMAP_CopyToFIFO ( lpSMap, apPacket -> payload, lTXLen );
 
-	for	(iA=0;iA<1000;++iA)
-	{
-		if	(!(EMAC3REG_READ(pSMap,SMAP_EMAC3_TxMODE0)&E3_TX_GNP_0))
-		{
-			return	1;
-		}
-	}
-	return	0;
-}
+ lpTXBD -> length  = lTotalLen;
+ lpTXBD -> pointer = lpSMap -> TX.u16PTREnd + SMAP_TXBUFBASE;
+ SMAP_REG8( lpSMap, SMAP_TXFIFO_FRAME_INC ) = 1;
+ lpTXBD -> ctrl_stat = SMAP_BD_TX_READY | SMAP_BD_TX_GENFCS | SMAP_BD_TX_GENPAD;
 
+ *( volatile unsigned int* )0xB0002008 = 0x8000;
+ *( volatile unsigned int* )0xB0002008;
 
-SMapStatus
-SMap_Send(struct pbuf* pPacket)
-{
+ lpSMap -> TX.u16PTREnd = ( lpSMap -> TX.u16PTREnd + lTXLen ) % SMAP_TXBUFSIZE;
+ SMAP_BD_NEXT( lpSMap -> TX.u8IndexEnd );
 
-	//Send the packet, pPacket, over the ethernet.
+ return SMap_OK;
 
-	SMap*		pSMap=&SMap0;
-	int		iTXLen;
-	SMapBD*	pTXBD=&pSMap->TX.pBD[pSMap->TX.u8IndexEnd];
-	int		iTotalLen=pPacket->tot_len;
+}  /* end SMap_Send */
 
-	//Do we have a valid link?
+__asm__(
+"SMAP_CopyToFIFO:\n\t"
+    ".set noreorder\n\t"
+    ".set nomacro\n\t"
+    ".set noat\n\t"
+    ".text\n\t"
+    "srl     $at, $a2, 4\n\t"
+    "lhu     $v0, 30($a0)\n\t"
+    "lui     $v1, 0xB000\n\t"
+    "sh      $v0, 4100($v1)\n\t"
+    "beqz    $at, 3f\n\t"
+    "andi    $a2, $a2, 0xF\n\t"
+"4:\n\t"
+    "lwr     $t0,  0($a1)\n\t"
+    "lwl     $t0,  3($a1)\n\t"
+    "lwr     $t1,  4($a1)\n\t"
+    "lwl     $t1,  7($a1)\n\t"
+    "lwr     $t2,  8($a1)\n\t"
+    "lwl     $t2, 11($a1)\n\t"
+    "lwr     $t3, 12($a1)\n\t"
+    "lwl     $t3, 15($a1)\n\t"
+    "addiu   $at, $at, -1\n\t"
+    "sw      $t0, 4352($v1)\n\t"
+    "sw      $t1, 4352($v1)\n\t"
+    "sw      $t2, 4352($v1)\n\t"
+    "addiu   $a1, $a1, 16\n\t"
+    "bgtz    $at, 4b\n\t"
+    "sw      $t3, 4352($v1)\n\t"
+"3:\n\t"
+    "beqz    $a2, 1f\n\t"
+    "nop\n\t"
+"2:\n\t"
+    "lwr     $v0, 0($a1)\n\t"
+    "lwl     $v0, 3($a1)\n\t"
+    "addiu   $a2, $a2, -4\n\t"
+    "sw      $v0, 4352($v1)\n\t"
+    "bnez    $a2, 2b\n\t"
+    "addiu   $a1, $a1, 4\n\t"
+"1:\n\t"
+    "jr      $ra\n\t"
+    "nop\n\t"
+    ".set reorder\n\t"
+    ".set macro\n\t"
+    ".set at\n\t"
+);
 
-	if	(!(pSMap->u32Flags&SMAP_F_LINKVALID))
-	{
+int SMap_HandleTXInterrupt ( int aSema ) {
 
-		//No, return SMap_Con to indicate that!
+ SMap* lpSMap = &SMap0;
+ int   retVal = 0;
 
-		dbgprintf("SMap_Send: Link not valid\n");
-		return	SMap_Con;
-	}
-
-	//Is the packetsize in the valid range?
-
-	if	(iTotalLen>SMAP_TXMAXSIZE)
-	{
-
-		//No, return SMap_Err to indicate an error occured.
-
-		dbgprintf("SMap_Send: Packet size too large: %d, Max: %d\n",iTotalLen,SMAP_TXMAXSIZE);
-		return	SMap_Err;
-	}
-
-	//We'll copy whole words to the TX-mem. Compute the number of bytes pPacket will occupy in the TX-mem.
-
-	iTXLen=(iTotalLen+3)&~3;
-
-	//Is there enough free TX-mem?
-
-	if	(iTXLen>ComputeFreeSize(&pSMap->TX))
-	{
-
-		//No, return SMap_TX to indicate that an TX-resource exhaustion occured.
-
-		dbgprintf("SMap_Send: Not enough free TX-mem, TXLen: %d, Free: %d\n",iTXLen,ComputeFreeSize(&pSMap->TX));
-		return	SMap_TX;
-	}
-
-	//Is the EMAC ready?
-
-	if	(!IsEMACReady(pSMap))
-	{
-
-		//No, the EMAC didn't become ready, return SMap_Err to indicate an error occured.
-
-		dbgprintf("SMap_Send: EMAC not ready\n");
-		return	SMap_Err;
-	}
-
-	//Is the packet-data located in one buffer aligned on a 4-byte boundary?
-
-	if	(iTotalLen==pPacket->len&&IsWordAligned(pPacket))
-	{
-
-		//Yes, copy the packet-data directly to FIFO.
-
-		SMAP_CopyToFIFO(pSMap,(u32*)pPacket->payload,iTXLen);
-	}
-	else
-	{
-
-		//No, copy the packet-data to the intermediary TX-buffer.
-
-		CopyToTXBuffer(pSMap,pPacket);
-
-		//Copy TX-buffer to FIFO.
-
-		SMAP_CopyToFIFO(pSMap,au32TXBuf,iTXLen);
-	}
-
-	//Send from FIFO to ethernet.
-
-	pTXBD->length=iTotalLen;
-	pTXBD->pointer=pSMap->TX.u16PTREnd+SMAP_TXBUFBASE;
-	SMAP_REG8(pSMap,SMAP_TXFIFO_FRAME_INC)=1;
-	pTXBD->ctrl_stat=SMAP_BD_TX_READY|SMAP_BD_TX_GENFCS|SMAP_BD_TX_GENPAD;
-	EMAC3REG_WRITE(pSMap,SMAP_EMAC3_TxMODE0,E3_TX_GNP_0);
-
-	//Update the end of the active-range.
-
-	pSMap->TX.u16PTREnd=(pSMap->TX.u16PTREnd+iTXLen)%SMAP_TXBUFSIZE;
-	SMAP_BD_NEXT(pSMap->TX.u8IndexEnd);
-
-	//Return SMap_OK to indicate success.
-
-	return	SMap_OK;
-}
-
-int SMap_HandleTXInterrupt ( int iFlags ) {
-
- SMap* lpSMap   = &SMap0;
- int   iNoError = 1;
-
- SMap_ClearIRQ ( iFlags );
+ WaitSema ( aSema );
 
  while ( lpSMap -> TX.u8IndexStart != lpSMap -> TX.u8IndexEnd ) {
 
   SMapBD* pBD     = &lpSMap -> TX.pBD[ lpSMap -> TX.u8IndexStart ];
   int     iStatus = pBD -> ctrl_stat;
 
-  if ( iStatus & SMAP_BD_TX_ERRMASK ) iNoError = 0;
-  if ( iStatus & SMAP_BD_TX_READY   ) break;
+  if ( iStatus & SMAP_BD_TX_READY ) {
 
-  lpSMap -> TX.u16PTRStart = (  lpSMap -> TX.u16PTRStart + (  ( pBD -> length + 3 ) & ~3  )   ) % SMAP_TXBUFSIZE;
-  SMAP_BD_NEXT( lpSMap -> TX.u8IndexStart );
+   retVal = 1;
+   goto end;
+
+  }  /* end if */
+
+  lpSMap -> TX.u16PTRStart  = (  lpSMap -> TX.u16PTRStart + (  ( pBD -> length + 3 ) & ~3  )   ) % SMAP_TXBUFSIZE;
+  lpSMap -> TX.u8IndexStart = ( lpSMap -> TX.u8IndexStart + 1 ) & 0x3F;
 
   pBD -> length    = 0;
   pBD -> pointer   = 0;
@@ -1533,66 +1550,85 @@ int SMap_HandleTXInterrupt ( int iFlags ) {
  }  /* end while */
 
  lpSMap -> TX.u16PTRStart = lpSMap -> TX.u16PTREnd;
+end:
+ SignalSema ( aSema );
 
- return iNoError;
+ return retVal;
 
 }  /* end SMap_HandleTXInterrupt */
 
-int SMap_HandleRXEMACInterrupt ( int iFlags ) {
+void SMap_HandleRXInterrupt ( void ) {
 
- int   iNoError = 1;
- SMap* lpSMap   = &SMap0;
+ SMap* lpSMap = &SMap0;
 
- if (  iFlags & ( INTR_RXDNV | INTR_RXEND )  ) {
+ SMap_ClearIRQ ( INTR_RXEND );
 
-  iFlags &= INTR_RXDNV | INTR_RXEND;
-  SMap_ClearIRQ ( iFlags );
+ while ( 1 ) {
 
-  while ( 1 ) {
+  SMapBD* pRXBD   = &lpSMap -> pRXBD[ lpSMap -> u8RXIndex & 0x3F ];
+  int     iStatus = pRXBD -> ctrl_stat;
+  int     iPKTLen;
 
-   SMapBD* pRXBD   = &lpSMap -> pRXBD[ lpSMap -> u8RXIndex ];
-   int     iStatus = pRXBD -> ctrl_stat;
-   int     iPKTLen;
+  if ( iStatus & SMAP_BD_RX_EMPTY ) break;
 
-   if ( iStatus & SMAP_BD_RX_EMPTY ) break;
+  iPKTLen = pRXBD -> length;
 
-   iPKTLen = pRXBD -> length;
+  if (  !( iStatus & SMAP_BD_RX_ERRMASK ) && ( iPKTLen >= SMAP_RXMINSIZE && iPKTLen <= SMAP_RXMAXSIZE )  ) {
 
-   if (  !( iStatus & SMAP_BD_RX_ERRMASK ) && ( iPKTLen >= SMAP_RXMINSIZE && iPKTLen <= SMAP_RXMAXSIZE )  ) {
+   struct pbuf* pBuf = ( struct pbuf* )pbuf_alloc ( PBUF_RAW, iPKTLen, PBUF_POOL );
 
-    struct pbuf* pBuf = ( struct pbuf* )pbuf_alloc ( PBUF_RAW, iPKTLen, PBUF_POOL );
+   if ( pBuf ) {
 
-    if ( pBuf ) {
+    SMAP_REG16( lpSMap, SMAP_RXFIFO_RD_PTR ) = (  ( pRXBD -> pointer - SMAP_RXBUFBASE ) % SMAP_RXBUFSIZE  ) & ~3;
 
-     lpSMap -> u16RXPTR = (  ( pRXBD -> pointer - SMAP_RXBUFBASE ) % SMAP_RXBUFSIZE  ) & ~3;
+    SMAP_CopyFromFIFO ( lpSMap, pBuf );
 
-     SMAP_CopyFromFIFO ( lpSMap, pBuf );
+    ps2ip_input ( pBuf, &NIF );
 
-     ps2ip_input ( pBuf, &NIF );
+   }  /* end if */
 
-    } else iNoError = 0;
+  }  /* end if */
 
-   } else iNoError = 0;
+  SMAP_REG8( lpSMap, SMAP_RXFIFO_FRAME_DEC ) = 1;
+  pRXBD -> ctrl_stat = SMAP_BD_RX_EMPTY;
+  ++lpSMap -> u8RXIndex;
 
-   SMAP_REG8( lpSMap, SMAP_RXFIFO_FRAME_DEC ) = 1;
-   pRXBD -> ctrl_stat = SMAP_BD_RX_EMPTY;
-   SMAP_BD_NEXT( lpSMap -> u8RXIndex );
+ }  /* end while */
 
-  }  /* end while */
+}  /* end SMap_HandleRXInterrupt */
 
-  iFlags = SMap_GetIRQ ();
-
- }  /* end if */
-
- if	( iFlags & INTR_EMAC3 ) {
-
-  u32 lSts = EMAC3REG_READ( lpSMap, SMAP_EMAC3_INTR_STAT );
-
-  EMAC3REG_WRITE( lpSMap, SMAP_EMAC3_INTR_STAT, lSts );
-  SMap_ClearIRQ ( INTR_EMAC3 );
-
- }  /* end if */
-
- return iNoError;
-
-}  /* end SMap_HandleRXEMACInterrupt */
+__asm__(
+    ".set noreorder\n\t"
+    ".set nomacro\n\t"
+    ".set noat\n\t"
+    ".text\n\t"
+    ".globl SMap_GetIRQ\n\t"
+    ".globl SMap_ClearIRQ\n\t"
+    ".globl SMap_HandleEMACInterrupt\n\t"
+    "SMap_GetIRQ:\n\t"
+    "lui    $v0, 0xB000\n\t"
+    "lhu    $v0, 40($v0)\n\t"
+    "jr     $ra\n\t"
+    "andi   $v0, $v0, 0x7C\n\t"
+    "SMap_ClearIRQ:\n\t"
+    "_smap_clear_irq:\n\t"
+    "lui    $v0, 0xB000\n\t"
+    "jr     $ra\n\t"
+    "sh     $a0, 296($v0)\n\t"
+    "SMap_HandleEMACInterrupt:\n\t"
+    "addiu  $sp, $sp, -4\n\t"
+    "lui    $v0, 0xB000\n\t"
+    "sw     $ra, 0($sp)\n\t"
+    "addiu  $a0, $zero, 0x40\n\t"
+    "bgezal $zero, _smap_clear_irq\n\t"
+    "lw     $v0, 0x2014($v0)\n\t"
+    "addiu  $v1, $zero, 0x01C0\n\t"
+    "lw     $ra, 0($sp)\n\t"
+    "sw     $v1, 0x2014($v0)\n\t"
+    "lw     $v0, 0x2014($v0)\n\t"
+    "jr     $ra\n\t"
+    "addiu  $sp, $sp, 4\n\t"
+    ".set reorder\n\t"
+    ".set macro\n\t"
+    ".set at\n\t"
+);

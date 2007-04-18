@@ -56,7 +56,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
-#define PBUF_POOL_SIZE         25
+#define PBUF_POOL_SIZE         48
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
 //Boman666: Should be atleast 1518 to be compatible with ps2smap
@@ -146,7 +146,7 @@ a lot of data that needs to be copied, this should be set high. */
 #endif
 
 /* ---------- UDP options ---------- */
-#define LWIP_UDP                1
+#define LWIP_UDP                0
 #define UDP_TTL                 255
 
 

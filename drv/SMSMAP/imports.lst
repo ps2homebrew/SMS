@@ -1,4 +1,6 @@
 thbase_IMPORTS_start
+ I_CreateThread
+ I_StartThread
  I_DelayThread
  I_SetAlarm
  I_USec2SysClock
@@ -28,6 +30,7 @@ dev9_IMPORTS_start
  I_dev9IntrEnable
  I_dev9IntrDisable
  I_dev9RegisterIntrCb
+ I_dev9DmaTransfer
 dev9_IMPORTS_end
 
 ps2ip_IMPORTS_start
@@ -40,3 +43,9 @@ ps2ip_IMPORTS_start
  I_inet_addr
  I_tcpip_input
 ps2ip_IMPORTS_end
+
+thevent_IMPORTS_start
+ I_CreateEventFlag
+ I_iSetEventFlag
+ I_WaitEventFlag
+thevent_IMPORTS_end

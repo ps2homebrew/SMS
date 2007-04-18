@@ -33,20 +33,18 @@ struct pbuf;
 
 typedef enum SMapStatus		{SMap_OK,SMap_Err,SMap_Con,SMap_TX} SMapStatus;
 
-
-//Function prototypes
-int			SMap_Init(void);
-void			SMap_Start(void);
-void			SMap_Stop(void);
-int			SMap_CanSend(void);
-SMapStatus	SMap_Send(struct pbuf* pPacket);
-int			SMap_HandleTXInterrupt(int iFlags);
-int			SMap_HandleRXEMACInterrupt(int iFlags);
-u8 const*	SMap_GetMACAddress(void);
-void			SMap_EnableInterrupts(int iFlags);
-void			SMap_DisableInterrupts(int iFlags);
-int			SMap_GetIRQ(void);
-void			SMap_ClearIRQ(int iFlags);
+int        SMap_Init                ( void         );
+void       SMap_Start               ( void         );
+void       SMap_Stop                ( void         );
+int        SMap_CanSend             ( void         );
+SMapStatus SMap_Send                ( struct pbuf* );
+void       SMap_HandleEMACInterrupt ( void         );
+int        SMap_HandleTXInterrupt   ( int          );
+void       SMap_HandleRXInterrupt   ( void         );
+void       SMap_Thread              ( void*        );
+u8 const*  SMap_GetMACAddress       ( void         );
+int        SMap_GetIRQ              ( void         );
+void       SMap_ClearIRQ            ( int          );
 
 
 #if		defined(DEBUG)
@@ -64,5 +62,9 @@ void			SMap_ClearIRQ(int iFlags);
 #define	INTR_CLR_ALL	(INTR_RXEND|INTR_TXEND|INTR_RXDNV)
 #define	INTR_ENA_ALL	(INTR_EMAC3|INTR_CLR_ALL)
 #define	INTR_BITMSK		0x7C
+
+#define EVENT_TIMER 0x00000001
+#define EVENT_INTR  0x00000002
+#define EVENT_MASK  0x00000003
 
 #endif	/* __SMAP_H__ */

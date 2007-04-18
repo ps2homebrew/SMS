@@ -75,7 +75,6 @@ struct api_msg_msg {
     struct {
       void *dataptr;
       u16_t len;
-      unsigned char copy;
     } w;    
     sys_mbox_t mbox;
     u16_t len;

@@ -80,15 +80,6 @@ static int inline IsMessageBoxEmpty ( sys_mbox_t apMBox ) {
  return apMBox -> u16Last == apMBox -> u16First;
 }  /* end IsMessageBoxEmpty */
 
-void PostInputMSG ( sys_mbox_t pMBox, void* pvMSG ) {
-
- pMBox -> apvMSG[ pMBox -> u16Last ] = pvMSG;
- pMBox -> u16Last = GenNextMBoxIndex ( pMBox -> u16Last );
-
- if	( pMBox -> iWaitFetch > 0 ) iSignalSema ( pMBox -> Mail );
-
-}  /* end PostInputMSG */
-
 int ps2ip_getconfig ( char* pszName, t_ip_info* pInfo ) {
 
  struct netif* pNetIF = netif_find ( pszName );
@@ -203,35 +194,7 @@ static void InitTimer ( void ) {
 
 }  /* end InitTimer */
 
-typedef struct InputMSG {
- struct pbuf*  pInput;
- struct netif* pNetIF;
-} InputMSG;
-
-#define	MSG_QUEUE_SIZE 16
-
-static InputMSG	aMSGs[ MSG_QUEUE_SIZE ];
-static u8_t     u8FirstMSG = 0;
-static u8_t     u8LastMSG  = 0;
-
-static u8_t inline GetNextMSGQueueIndex ( u8_t u8Index ) {
- return	( u8Index + 1 ) % MSG_QUEUE_SIZE;
-}  /* end GetNextMSGQueueIndex */
-
-static int inline IsMSGQueueFull ( void ) {
- return	GetNextMSGQueueIndex ( u8LastMSG ) == u8FirstMSG;
-}  /* end IsMSGQueueFull */
-
-static void InputCB ( void* pvArg ) {
-
- InputMSG*     pMSG   = ( InputMSG* )pvArg;
- struct pbuf*  pInput = pMSG -> pInput;
- struct netif* pNetIF = pMSG -> pNetIF;
- int           iFlags;
-
- CpuSuspendIntr ( &iFlags );
-  u8FirstMSG = GetNextMSGQueueIndex ( u8FirstMSG );
- CpuResumeIntr ( iFlags );
+err_t ps2ip_input ( struct pbuf* pInput, struct netif* pNetIF ) {
 
  switch (   (  ( struct eth_hdr* )( pInput -> payload )  ) -> type   ) {
 
@@ -248,40 +211,6 @@ static void InputCB ( void* pvArg ) {
   default: pbuf_free ( pInput );
 
  }  /* end switch */
-
-}  /* end InputCB */
-
-extern sys_mbox_t g_TCPIPMBox;
-
-err_t ps2ip_input ( struct pbuf* pInput, struct netif* pNetIF ) {
-//When ps2smap receive data, it invokes this function. It'll be called directly by the interrupthandler, which means we are
-//running in an interrupt-context. We'll pass on the data to the tcpip message-thread by adding a callback message. If the
-//messagebox is full, we can't wait for the tcpip-thread to process a message to make room for our message, since we're
-//in interrupt-context. If the messagebox or messagequeue is full, drop the packet.
- InputMSG*         pIMSG;
- struct tcpip_msg* pMSG;
-
- if (  IsMessageBoxFull ( g_TCPIPMBox ) || IsMSGQueueFull ()  ) {
-  pbuf_free ( pInput );
-  return ERR_OK;
- }  /* end if */
-//Allocate messagequeue entry.
- pIMSG     = &aMSGs[ u8LastMSG ];
- u8LastMSG = GetNextMSGQueueIndex  ( u8LastMSG );
-//Initialize the InputMSG.
- pIMSG -> pInput = pInput;
- pIMSG -> pNetIF = pNetIF;
- pMSG = ( struct tcpip_msg* )memp_malloc ( MEMP_TCPIP_MSG );
-
- if	( !pMSG ) {
-  pbuf_free ( pInput );
-  return ERR_MEM;  
- }  /* end if */
-
- pMSG -> type       = TCPIP_MSG_CALLBACK;
- pMSG -> msg.cb.f   = InputCB;
- pMSG -> msg.cb.ctx = pIMSG;
- PostInputMSG ( g_TCPIPMBox, pMSG );
 
  return ERR_OK;
 

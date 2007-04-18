@@ -678,7 +678,6 @@ etharp_output(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q)
       ethhdr->dest.addr[i] = dest->addr[i];
       ethhdr->src.addr[i] = srcaddr->addr[i];
     }
-
     ethhdr->type = ETHTYPE_IP;
     /* return the outgoing packet */
     return q;

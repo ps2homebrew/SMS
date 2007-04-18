@@ -6,7 +6,7 @@
 
 
 IOP_BIN = SMSMAP.irx
-IOP_OBJS = main.o smap_opt.o smap.o imports.o
+IOP_OBJS = main.o smap.o imports.o
 
 ifeq ($(DEBUG),1)
 DEBUG_FLAGS = -DDEBUG

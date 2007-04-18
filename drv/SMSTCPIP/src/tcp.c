@@ -544,7 +544,7 @@ tcp_connect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port,
       (((u32_t)pcb->mss / 256) << 8) |
       (pcb->mss & 255));
 
-  ret = tcp_enqueue(pcb, NULL, 0, TCP_SYN, 0, (u8_t *)&optdata, 4);
+  ret = tcp_enqueue(pcb, NULL, 0, TCP_SYN, (u8_t *)&optdata, 4);
   if (ret == ERR_OK) { 
     tcp_output(pcb);
   }

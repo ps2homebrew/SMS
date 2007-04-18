@@ -25,7 +25,7 @@
 
 #define	TIMER_INTERVAL		(100*1000)
 #define	TIMEOUT				(300*1000)
-#define	MAX_REQ_CNT			8
+#define	MAX_REQ_CNT			16
 
 typedef struct ip_addr IPAddr;
 typedef struct netif   NetIF;
@@ -33,13 +33,13 @@ typedef struct SMapIF  SMapIF;
 typedef struct pbuf    PBuf;
 
 
-static int		iSendMutex;
 static int		iSendReqMutex;
 static int		iSendReq = 0x80000000;
 static int 		iReqNR=0;
 static int 		iReqCNT=0;
 static PBuf*	apReqQueue[MAX_REQ_CNT];
-static int		iTimeoutCNT=0;
+static int      s_Event;
+static int      s_Sema;
 
 struct SMapIF {
 
@@ -57,21 +57,16 @@ NetIF NIF;
 
 static SMapStatus AddToQueue ( PBuf* pBuf ) {
 
- int        iIntFlags;
- SMapStatus Ret;
+ SMapStatus retVal;
+ int        lSema = s_Sema;
 
- CpuSuspendIntr ( &iIntFlags );
+ WaitSema ( lSema );
 
  if ( !iReqCNT ) {
 
-  Ret = SMap_Send ( pBuf );
+  retVal = SMap_Send ( pBuf );
 
-  if ( Ret == SMap_TX ) {
-
-   iTimeoutCNT = 0;
-   goto storeLast;
-
-  }  /* end if */
+  if ( retVal == SMap_TX ) goto storeLast;
 
  } else if ( iReqCNT < MAX_REQ_CNT ) {
 storeLast:
@@ -79,26 +74,28 @@ storeLast:
   ++iReqCNT;
   ++pBuf -> ref;
 
-  Ret = SMap_OK;
+  retVal = SMap_OK;
 
- } else Ret = SMap_TX;
+ } else retVal = SMap_TX;
 
- CpuResumeIntr ( iIntFlags );
+ SignalSema ( lSema );
 
- return	Ret;
+ return	retVal;
 
 }  /* end AddToQueue */
 
-static void SendRequests ( void ) {
+static void QueueHandler ( void ) {
+
+ int lSema = s_Sema;
+
+ WaitSema ( lSema );
 
  while ( iReqCNT > 0 ) {
 
   PBuf*      lpReq = apReqQueue[ iReqNR ];
   SMapStatus lSts  = SMap_Send ( lpReq );
 
-  iTimeoutCNT = 0;
-
-  if ( lSts == SMap_TX ) return;
+  if ( lSts == SMap_TX ) goto end;
 
   pbuf_free ( lpReq );
 
@@ -107,38 +104,21 @@ static void SendRequests ( void ) {
 
  }  /* end while */
 
-}  /* end SendRequests */
-
-static void QueueHandler ( void ) {
-
- SendRequests ();
-
  if ( iSendReq >= 0 ) {
 
-  iSignalSema ( iSendReq );
+  SignalSema ( iSendReq );
   iSendReq = 0x80000000;
 
  }  /* end if */
+end:
+ SignalSema ( lSema );
 
 }  /* end QueueHandler */
 
 static int SMapInterrupt ( int iFlag ) {
 
- int iFlags = SMap_GetIRQ ();
-
- if (  iFlags & ( INTR_TXDNV | INTR_TXEND )  ) {
-
-  SMap_HandleTXInterrupt (  iFlags & ( INTR_TXDNV | INTR_TXEND )  );
-
-  QueueHandler ();
-
-  iFlags = SMap_GetIRQ ();
-
- }  /* end if */
-
- if (  iFlags & ( INTR_EMAC3 | INTR_RXDNV | INTR_RXEND )  )
-
-  SMap_HandleRXEMACInterrupt (  iFlags & ( INTR_EMAC3 | INTR_RXDNV | INTR_RXEND )  );
+ dev9IntrDisable ( INTR_BITMSK );
+ iSetEventFlag ( s_Event, EVENT_INTR );
 
  return 1;
 
@@ -146,13 +126,7 @@ static int SMapInterrupt ( int iFlag ) {
 
 static unsigned int Timer ( void* pvArg ) {
 
- if ( iReqCNT ) {
-
-  iTimeoutCNT += TIMER_INTERVAL;
-
-  if (  iTimeoutCNT >= TIMEOUT && iTimeoutCNT < ( TIMEOUT + TIMER_INTERVAL )  ) QueueHandler ();
-
- }  /* end if */
+ if ( iReqCNT ) iSetEventFlag ( s_Event, EVENT_TIMER );
 
  return	( unsigned int )pvArg;
 
@@ -169,8 +143,6 @@ static err_t SMapLowLevelOutput ( NetIF* pNetIF, PBuf* pOutput ) {
   if (      Res                             == SMap_Err  ) return ERR_IF;
   if (      Res                             == SMap_Con  ) return ERR_CONN;
 
-  WaitSema ( iSendMutex );
-
   CpuSuspendIntr ( &iFlags );
 
   if ( iReqCNT == MAX_REQ_CNT ) {
@@ -182,11 +154,48 @@ static err_t SMapLowLevelOutput ( NetIF* pNetIF, PBuf* pOutput ) {
 
   } else CpuResumeIntr ( iFlags );
 
-  SignalSema ( iSendMutex );
-
  }  /* end while */
 
 }  /* end SMapLowLevelOutput */
+
+void SMap_Thread ( void* apArg ) {
+
+ int lSema = s_Sema;
+
+ while ( 1 ) {
+
+  unsigned long lRes;
+  int           lfTXBD = 0;
+
+  WaitEventFlag (  ( int )apArg, EVENT_MASK, WEF_CLEAR | WEF_OR, &lRes  );
+
+  if ( lRes & EVENT_TIMER ) {
+   QueueHandler ();
+   lfTXBD = SMap_HandleTXInterrupt ( lSema );
+  }  /* end if */
+
+  if ( lRes & EVENT_INTR ) {
+
+   int lFlags = SMap_GetIRQ ();
+
+   if ( lFlags & INTR_EMAC3 ) SMap_HandleEMACInterrupt ();
+   if ( lFlags & INTR_RXEND ) SMap_HandleRXInterrupt   ();
+   if ( lFlags & INTR_RXDNV ) SMap_ClearIRQ ( INTR_RXDNV );
+   if ( lFlags & INTR_TXDNV ) SMap_HandleTXInterrupt   ( lSema );
+
+   QueueHandler ();
+
+   lfTXBD = SMap_HandleTXInterrupt ( lSema );
+
+   dev9IntrEnable ( INTR_EMAC3 | INTR_RXEND | INTR_RXDNV );
+
+  }  /* end if */
+
+  if ( lfTXBD ) dev9IntrEnable ( INTR_TXDNV );
+
+ }  /* end while */
+
+}  /* end SMap_Thread */
 
 static err_t SMapOutput ( NetIF* pNetIF, PBuf* pOutput, IPAddr* pIPAddr ) {
 
@@ -219,6 +228,8 @@ static int SMapInit ( IPAddr IP, IPAddr NM, IPAddr GW ) {
 
  int             i;
  iop_sys_clock_t ClockTicks;
+ iop_event_t     lEvent;
+ iop_thread_t    lThread = { TH_C, 0, SMap_Thread, 0x800, 0x18 };
 
  dev9IntrDisable ( INTR_BITMSK );
  EnableIntr ( IOP_IRQ_DEV9 );
@@ -226,9 +237,14 @@ static int SMapInit ( IPAddr IP, IPAddr NM, IPAddr GW ) {
 
  UNKN_1464 = 3;
 
- if (   (  iSendMutex    = CreateMutex ( IOP_MUTEX_UNLOCKED )  ) < 0   ) return 0;
+ if (   (  s_Sema        = CreateMutex ( IOP_MUTEX_UNLOCKED )  ) < 0   ) return	0;
  if (   (  iSendReqMutex = CreateMutex ( IOP_MUTEX_UNLOCKED )  ) < 0   ) return	0;
  if	(   !SMap_Init ()                                                  ) return	0;
+
+ lEvent.attr = 0;
+ lEvent.bits = 0;
+ s_Event = CreateEventFlag ( &lEvent );
+ StartThread (  CreateThread ( &lThread ), ( void* )s_Event  );
 
  for ( i = 2; i < 7; ++i ) dev9RegisterIntrCb ( i, SMapInterrupt );
 
@@ -250,9 +266,9 @@ int _start ( int iArgC,char** ppcArgV ) {
 
  if ( iArgC >= 4 ) {
 
-  IP.addr = inet_addr( ppcArgV[ 1 ] );
-  NM.addr = inet_addr( ppcArgV[ 2 ] );
-  GW.addr = inet_addr (ppcArgV[ 3 ] );
+  IP.addr = inet_addr ( ppcArgV[ 1 ] );
+  NM.addr = inet_addr ( ppcArgV[ 2 ] );
+  GW.addr = inet_addr ( ppcArgV[ 3 ] );
 
  } else {
 

@@ -29,23 +29,19 @@
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
-
 #include "lwip/opt.h"
-
 #include "lwip/sys.h"
-
 #include "lwip/memp.h"
 #include "lwip/pbuf.h"
-
 #include "lwip/ip.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
-
 #include "lwip/tcpip.h"
 
-static void (* tcpip_init_done)(void *arg) = NULL;
-static void *tcpip_init_done_arg;
-sys_mbox_t g_TCPIPMBox;
+static void ( *tcpip_init_done ) ( void* ) = NULL;
+static void* tcpip_init_done_arg;
+
+static sys_mbox_t g_TCPIPMBox;
 
 static void tcpip_thread ( void* arg ) {
 
@@ -72,10 +68,6 @@ static void tcpip_thread ( void* arg ) {
 
    case TCPIP_MSG_INPUT:
     ip_input ( msg -> msg.inp.p, msg -> msg.inp.netif );
-   break;
-
-   case TCPIP_MSG_CALLBACK:
-    msg -> msg.cb.f ( msg -> msg.cb.ctx );
    break;
 
   }  /* end switch */

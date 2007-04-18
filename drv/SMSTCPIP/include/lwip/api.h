@@ -145,8 +145,7 @@ struct netbuf *   netconn_recv    (struct netconn *conn);
 err_t             netconn_send    (struct netconn *conn,
            struct netbuf *buf);
 err_t             netconn_write   (struct netconn *conn,
-           void *dataptr, u16_t size,
-           u8_t copy);
+           void *dataptr, u16_t size);
 err_t             netconn_close   (struct netconn *conn);
 
 err_t             netconn_err     (struct netconn *conn);

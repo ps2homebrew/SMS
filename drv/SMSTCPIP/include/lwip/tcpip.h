@@ -44,8 +44,7 @@ void tcpip_tcp_timer_needed(void);
 
 enum tcpip_msg_type {
   TCPIP_MSG_API,
-  TCPIP_MSG_INPUT,
-  TCPIP_MSG_CALLBACK
+  TCPIP_MSG_INPUT
 };
 
 struct tcpip_msg {
@@ -57,10 +56,6 @@ struct tcpip_msg {
       struct pbuf *p;
       struct netif *netif;
     } inp;
-    struct {
-      void (*f)(void *ctx);
-      void *ctx;
-    } cb;
   } msg;
 };
 

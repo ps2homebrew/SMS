@@ -89,8 +89,7 @@ err_t            tcp_connect (struct tcp_pcb *pcb, struct ip_addr *ipaddr,
 struct tcp_pcb * tcp_listen  (struct tcp_pcb *pcb);
 void             tcp_abort   (struct tcp_pcb *pcb);
 err_t            tcp_close   (struct tcp_pcb *pcb);
-err_t            tcp_write   (struct tcp_pcb *pcb, const void *dataptr, u16_t len,
-            u8_t copy);
+err_t            tcp_write   (struct tcp_pcb *pcb, const void *dataptr, u16_t len);
 
 #define tcp_setprio( pcb, prio ) pcb -> prio = ( prio )
 
@@ -427,10 +426,14 @@ struct tcp_seg *tcp_seg_copy(struct tcp_seg *seg);
 #define tcp_ack_now(pcb) (pcb)->flags |= TF_ACK_NOW; \
                          tcp_output(pcb)
 
-err_t tcp_send_ctrl(struct tcp_pcb *pcb, u8_t flags);
+
 err_t tcp_enqueue(struct tcp_pcb *pcb, void *dataptr, u16_t len,
-    u8_t flags, u8_t copy,
+    u8_t flags,
                 u8_t *optdata, u8_t optlen);
+
+static err_t inline tcp_send_ctrl ( struct tcp_pcb *pcb, u8_t flags ) {
+ return tcp_enqueue ( pcb, NULL, 0, flags, NULL, 0 );
+}  /* end tcp_send_ctrl */
 
 void tcp_rexmit_seg(struct tcp_pcb *pcb, struct tcp_seg *seg);
 

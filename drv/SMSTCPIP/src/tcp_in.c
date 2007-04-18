@@ -444,7 +444,7 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
         (((u32_t)npcb->mss / 256) << 8) |
         (npcb->mss & 255));
     /* Send a SYN|ACK together with the MSS option. */
-    tcp_enqueue(npcb, NULL, 0, TCP_SYN | TCP_ACK, 0, (u8_t *)&optdata, 4);
+    tcp_enqueue(npcb, NULL, 0, TCP_SYN | TCP_ACK, (u8_t *)&optdata, 4);
     return tcp_output(npcb);
   }
   return ERR_OK;

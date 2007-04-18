@@ -498,7 +498,7 @@ lwip_send(int s, void *data, int size, unsigned int flags)
     netbuf_delete(buf);
     break;
   case NETCONN_TCP:
-    err = netconn_write(sock->conn, data, size, NETCONN_COPY);
+    err = netconn_write(sock->conn, data, size);
     break;
   default:
     err = ERR_ARG;
@@ -558,7 +558,6 @@ lwip_socket(int domain, int type, int protocol)
 {
   struct netconn *conn;
   int i;
-
   /* create a netconn */
   switch (type) {
   case SOCK_RAW:

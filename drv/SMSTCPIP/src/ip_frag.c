@@ -315,7 +315,6 @@ ip_frag(struct pbuf *p, struct netif *netif, struct ip_addr *dest)
     header = pbuf_alloc(PBUF_LINK, 0, PBUF_RAM);
     pbuf_chain(header, rambuf);
     netif->output(netif, header, dest);
-    IPFRAG_STATS_INC(ip_frag.xmit);
     pbuf_free(header);
 
     left -= cop;

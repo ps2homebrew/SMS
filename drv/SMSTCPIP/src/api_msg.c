@@ -693,7 +693,7 @@ static void do_recv ( struct api_msg_msg* msg ) {
 #if LWIP_TCP
  if ( conn -> pcb.tcp && conn -> type == NETCONN_TCP )
   tcp_recved ( conn -> pcb.tcp, msg -> msg.len );
-#endif  
+#endif  /* LWIP_TCP */
  sys_mbox_post ( conn -> mbox, NULL );
 
 }  /* end do_recv */
@@ -723,7 +723,7 @@ do_write(struct api_msg_msg *msg)
 #if LWIP_TCP 
     case NETCONN_TCP:      
       err = tcp_write(msg->conn->pcb.tcp, msg->msg.w.dataptr,
-                      msg->msg.w.len, msg->msg.w.copy);
+                      msg->msg.w.len);
       /* This is the Nagle algorithm: inhibit the sending of new TCP
    segments when new outgoing data arrives from the user if any
    previously transmitted data on the connection remains
@@ -746,40 +746,36 @@ do_write(struct api_msg_msg *msg)
   sys_mbox_post(msg->conn->mbox, NULL);
 }
 
-static void
-do_close(struct api_msg_msg *msg)
-{
-  err_t err;
+static void do_close ( struct api_msg_msg* msg ) {
 
-  err = ERR_OK;
+ err_t err            = ERR_OK;
+ struct netconn* conn = msg -> conn;
 
-  if (msg->conn->pcb.tcp != NULL) {
-    switch (msg->conn->type) {
+ if ( conn -> pcb.tcp ) {
+
+  switch ( conn -> type ) {
 #if LWIP_RAW
-    case NETCONN_RAW:
-      break;
-#endif
+   case NETCONN_RAW: break;
+#endif  /* LWIP_RAW */
 #if LWIP_UDP
-    case NETCONN_UDPLITE:
-      /* FALLTHROUGH */
-    case NETCONN_UDPNOCHKSUM:
-      /* FALLTHROUGH */
-    case NETCONN_UDP:
-      break;
+   case NETCONN_UDPLITE    :
+   case NETCONN_UDPNOCHKSUM:
+   case NETCONN_UDP        : break;
 #endif /* LWIP_UDP */
 #if LWIP_TCP
-    case NETCONN_TCP:
-      if (msg->conn->pcb.tcp->state == LISTEN) {
-  err = tcp_close(msg->conn->pcb.tcp);
-      }
-      msg->conn->err = err;      
-#endif
-    default:      
-      break;
-    }
-  }
-  sys_mbox_post(msg->conn->mbox, NULL);
-}
+   case NETCONN_TCP:
+    if ( conn -> pcb.tcp -> state == LISTEN ) err = tcp_close ( conn -> pcb.tcp );
+    conn -> err = err;      
+#endif  /* LWIP_TCP */
+   default: break;
+
+  }  /* end switch */
+
+ }  /* end if */
+
+ sys_mbox_post ( conn -> mbox, NULL );
+
+}  /* end do_close */
 
 api_msg_decode __decode__[ API_MSG_MAX ] = {
  do_newconn,

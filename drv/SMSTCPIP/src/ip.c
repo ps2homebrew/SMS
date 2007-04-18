@@ -379,7 +379,6 @@ ip_output_if(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
     iphdr = p->payload;
     dest = &(iphdr->dest);
   }
-
 #if IP_FRAG
   /* don't fragment if interface has mtu set to 0 [loopif] */
   if (netif->mtu && (p->tot_len > netif->mtu))

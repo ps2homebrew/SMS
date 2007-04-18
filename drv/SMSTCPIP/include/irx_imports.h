@@ -23,5 +23,4 @@
 # include "thsemap.h"
 # include "thevent.h"
 # include "../../SMSUTILS/smsutils.h"
-
 #endif  /* IOP_IRX_IMPORTS_H */

@@ -509,7 +509,7 @@ netconn_send(struct netconn *conn, struct netbuf *buf)
 
 
 err_t
-netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
+netconn_write(struct netconn *conn, void *dataptr, u16_t size)
 {
   struct api_msg *msg;
   u16_t len;
@@ -532,7 +532,6 @@ netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
   conn->state = NETCONN_WRITE;
   while (conn->err == ERR_OK && size > 0) {
     msg->msg.msg.w.dataptr = dataptr;
-    msg->msg.msg.w.copy = copy;
     
     if (conn->type == NETCONN_TCP) {
       if (tcp_sndbuf(conn->pcb.tcp) == 0) {
@@ -552,7 +551,6 @@ netconn_write(struct netconn *conn, void *dataptr, u16_t size, u8_t copy)
       len = size;
     }
     
-    LWIP_DEBUGF(API_LIB_DEBUG, ("netconn_write: writing %d bytes (%d)\n", len, copy));
     msg->msg.msg.w.len = len;
     api_msg_post(msg);
     sys_mbox_fetch(conn->mbox, NULL);    
