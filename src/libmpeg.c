@@ -19,6 +19,7 @@
 
 static _MPEGContext s_MPEG12Ctx;
 static long*        s_pCurPTS;
+static int          s_fSeq;
 
 static void ( *LumaOp[ 8 ] ) ( _MPEGMotion* ) = {
  _MPEG_put_luma, _MPEG_put_luma_X, _MPEG_put_luma_Y, _MPEG_put_luma_XY,
@@ -94,6 +95,7 @@ void MPEG_Initialize (
  _init_cb       = apInitCB;
  s_pInitCBParam = apInitCBParam;
  s_pCurPTS      = apCurPTS;
+ s_fSeq         = 0;
 
  s_MPEG12Ctx.m_SI.m_FrameCnt  =  0;
  s_MPEG12Ctx.m_SI.m_fEOF      =  0;
@@ -213,31 +215,37 @@ static void _destroy_seq ( void ) {
 static int _get_hdr ( void ) {
 
  unsigned int lCode;
+ int          lfSeq = s_fSeq;
 
  while ( 1 ) {
 
   lCode = _MPEG_NextStartCode (); _MPEG_GetBits ( 32 );
 
-  switch ( lCode ) {
+  if ( lCode == _MPEG_CODE_SEQ_HDR ) {
 
-   case _MPEG_CODE_SEQ_HDR:
-    _seq_header ();
-   break;
+   _seq_header ();
+   lfSeq = s_fSeq = 1;
 
-   case _MPEG_CODE_GRP_START:
-    _gop_header ();
-   break;
+  } else if ( lfSeq ) {
 
-   case _MPEG_CODE_PIC_START:
-    _pic_header ();
-   return 1;
+   switch ( lCode ) {
 
-   case _MPEG_CODE_SEQ_END:
-    MPEG_Picture = _get_first_picture;
+    case _MPEG_CODE_GRP_START:
+     _gop_header ();
+    break;
+
+    case _MPEG_CODE_PIC_START:
+     _pic_header ();
+    return 1;
+
+    case _MPEG_CODE_SEQ_END:
+     MPEG_Picture = _get_first_picture;
+     s_fSeq       = 0;
     return 0;
-   break;
 
-  }  /* end switch */
+   }  /* end switch */
+
+  }  /* end if */
 
  }  /* end while */
 

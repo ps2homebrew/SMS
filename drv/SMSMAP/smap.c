@@ -24,6 +24,7 @@
 #include "loadcore.h"
 #include "thbase.h"
 #include "thevent.h"
+#include "thsemap.h"
 #include "dev9.h"
 #include "ps2ip.h"
 #include "../SMSUTILS/smsutils.h"
@@ -1445,10 +1446,13 @@ static int inline IsEMACReady ( SMap* apSMap ) {
 
 SMapStatus SMap_Send ( struct pbuf* apPacket ) {
 
+ static u32 sl_TXBuf[ ( SMAP_TXMAXSIZE + SMAP_TXMAXTAILPAD + 3 ) / 4 ]; 
+
  SMap*   lpSMap    = &SMap0;
  SMapBD* lpTXBD    = &lpSMap -> TX.pBD[ lpSMap -> TX.u8IndexEnd ];
  int     lTotalLen = apPacket -> tot_len;
  int     lTXLen;
+ u32*    lpSrc;
 
  if (  ! ( lpSMap -> u32Flags & SMAP_F_LINKVALID ) ) return SMap_Con;
  if (  lTotalLen > SMAP_TXMAXSIZE                  ) return SMap_Err;
@@ -1456,9 +1460,22 @@ SMapStatus SMap_Send ( struct pbuf* apPacket ) {
  lTXLen = ( lTotalLen + 3 ) & ~3;
 
  if (  lTXLen > ComputeFreeSize ( &lpSMap -> TX )  ) return SMap_TX;
- if (  !IsEMACReady             ( lpSMap        )  ) return SMap_Err;
+ if (  !IsEMACReady             ( lpSMap        )  ) return SMap_TX;
 
- SMAP_CopyToFIFO ( lpSMap, apPacket -> payload, lTXLen );
+ if ( !apPacket -> next )
+  lpSrc = apPacket -> payload;
+ else {
+  u8* lpDst = ( u8* )sl_TXBuf;
+  while ( apPacket ) {
+   int lLen = apPacket -> len;
+   mips_memcpy ( lpDst, apPacket -> payload, lLen );
+   lpDst   += apPacket -> len;
+   apPacket = apPacket -> next;
+  }  /* end while */
+  lpSrc = sl_TXBuf;
+ }  /* end else */
+
+ SMAP_CopyToFIFO ( lpSMap, lpSrc, lTXLen );
 
  lpTXBD -> length  = lTotalLen;
  lpTXBD -> pointer = lpSMap -> TX.u16PTREnd + SMAP_TXBUFBASE;

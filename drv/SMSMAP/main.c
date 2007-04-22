@@ -165,14 +165,10 @@ void SMap_Thread ( void* apArg ) {
  while ( 1 ) {
 
   unsigned long lRes;
-  int           lfTXBD = 0;
 
   WaitEventFlag (  ( int )apArg, EVENT_MASK, WEF_CLEAR | WEF_OR, &lRes  );
 
-  if ( lRes & EVENT_TIMER ) {
-   QueueHandler ();
-   lfTXBD = SMap_HandleTXInterrupt ( lSema );
-  }  /* end if */
+  if ( lRes & EVENT_TIMER ) QueueHandler ();
 
   if ( lRes & EVENT_INTR ) {
 
@@ -181,17 +177,15 @@ void SMap_Thread ( void* apArg ) {
    if ( lFlags & INTR_EMAC3 ) SMap_HandleEMACInterrupt ();
    if ( lFlags & INTR_RXEND ) SMap_HandleRXInterrupt   ();
    if ( lFlags & INTR_RXDNV ) SMap_ClearIRQ ( INTR_RXDNV );
-   if ( lFlags & INTR_TXDNV ) SMap_HandleTXInterrupt   ( lSema );
+   if ( lFlags & INTR_TXDNV ) SMap_ClearIRQ ( INTR_TXDNV );
 
    QueueHandler ();
-
-   lfTXBD = SMap_HandleTXInterrupt ( lSema );
 
    dev9IntrEnable ( INTR_EMAC3 | INTR_RXEND | INTR_RXDNV );
 
   }  /* end if */
 
-  if ( lfTXBD ) dev9IntrEnable ( INTR_TXDNV );
+  if (  SMap_HandleTXInterrupt ( lSema )  ) dev9IntrEnable ( INTR_TXDNV );
 
  }  /* end while */
 

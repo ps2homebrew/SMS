@@ -276,27 +276,51 @@ redo:
 
 }  /* end _read_header */
 
-static int _fill_video_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, int aLen ) {
+static int _fill_video_parameters ( SMS_Container* apCont, SMS_Stream* apStm, int aLen, int aSID ) {
 
- int          retVal = 0;
- unsigned int lPos   = apFileCtx -> m_CurPos;
+ int          i         = 0;
+ int          retVal    = 0;
+ FileContext* lpFileCtx = apCont    -> m_pFileCtx;
+ unsigned int lPos      = lpFileCtx -> m_CurPos;
 
- if (  _next_start_code ( apFileCtx ) == 0x000001B3  ) {
+ while ( 1 ) {
 
-  char           lBuffer[ aLen ];
-  SMS_BitContext lBitCtx;
+  if (  _next_start_code ( lpFileCtx ) == 0x000001B3  ) {
 
-  apFileCtx -> Read ( apFileCtx, lBuffer, aLen );
-  SMS_InitGetBits ( &lBitCtx, lBuffer, aLen );
+   char*          lpBuffer = ( char* )malloc ( aLen );
+   SMS_BitContext lBitCtx;
 
-  apStm -> m_pCodec -> m_Width  = SMS_GetBits ( &lBitCtx, 12 );
-  apStm -> m_pCodec -> m_Height = SMS_GetBits ( &lBitCtx, 12 );
+   lpFileCtx -> Read ( lpFileCtx, lpBuffer, aLen );
+   SMS_InitGetBits ( &lBitCtx, lpBuffer, aLen );
 
-  retVal = 1;
+   apStm -> m_pCodec -> m_Width  = SMS_GetBits ( &lBitCtx, 12 );
+   apStm -> m_pCodec -> m_Height = SMS_GetBits ( &lBitCtx, 12 );
 
- }  /* end if */
+   free ( lpBuffer );
 
- apFileCtx -> Seek ( apFileCtx, lPos );
+   retVal = 1;
+   break;
+
+  }  /* end if */
+
+  while ( 1 ) {
+
+   uint64_t lPTS, lDTS;
+   int      lStartCode;
+
+   if (  i++ == 1024 || FILE_EOF( lpFileCtx )  ) goto end;
+
+   aLen = _read_header ( apCont, &lStartCode, &lPTS, &lDTS );
+
+   if ( !aLen ) goto end;
+
+   if ( lStartCode == aSID ) break;
+
+  }  /* end while */
+
+ }  /* end while */
+end:
+ lpFileCtx -> Seek ( lpFileCtx, lPos );
 
  return retVal;
 
@@ -641,7 +665,7 @@ int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
 
     if ( lCodecType == SMS_CodecTypeVideo ) {
 
-     if ( !lfVideoParam ) lfVideoParam = _fill_video_parameters ( lpFileCtx, lpStm, lLen );
+     if ( !lfVideoParam ) lfVideoParam = _fill_video_parameters ( apCont, lpStm, lLen, lStartCode );
 
     } else lfAudio = _fill_audio_parameters ( lpFileCtx, lpStm, lLen );
 

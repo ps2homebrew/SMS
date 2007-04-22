@@ -1036,3 +1036,9 @@ Update (12-04-2007)
   without embedded subtitles while previously played clip contained them;
 - slightly improved playback performance for .avi clips by using DMA stall control
   feature instead of interrupt handler;
+
+Update (22-04-2007)
+-------------------
+- improved MPEG auto detection and playback for broken streams (thanks to the
+  'topshooter' for the sample clip);
+- network adapter driver is updated again;
