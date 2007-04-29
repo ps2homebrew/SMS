@@ -33,7 +33,7 @@
     <xref linkend="usage-usb"/>).
   </para>
 
-  <sect2>
+  <sect2 id="usage-mp3-single">
     <title>
       <phrase lang="en">Playing single MP3 files</phrase>
       <phrase lang="pt">Correndo um só ficheiro MP3</phrase>
@@ -86,10 +86,29 @@
 
   </sect2>
 
+  <sect2 id="usage-mp3-noplaylist">
+    <title>
+      <phrase lang="en">Playing multiple MP3 files without a Playlist</phrase>
+      <phrase lang="pt">#Playing multiple MP3 files without a Playlist#</phrase>
+    </title>
+
+    <para lang="en">
+      You can play the contents of a folder as an automatic playlist by
+      pressing '<emphasis role="bold">O</emphasis>' on the folder name.  The 
+      files will be played in alphabetical order.
+    </para>
+    <para lang="pt">
+      #You can play the contents of a folder as an automatic playlist by
+      pressing '<emphasis role="bold">O</emphasis>' on the folder name.  The 
+      files will be played in alphabetical order.#
+    </para>
+
+  </sect2>
+
   <sect2>
     <title>
-      <phrase lang="en">Playing Multiple MP3 files in a Playlist</phrase>
-      <phrase lang="pt">Tocando múltiplos ficheiros MP3 numa 
+      <phrase lang="en">Playing multiple MP3 files using a Playlist</phrase>
+      <phrase lang="pt">Tocando múltiplos ficheiros MP3 numa
       'Playlist'</phrase>
     </title>
 

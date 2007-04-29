@@ -307,7 +307,38 @@
     do que com ficheiros <filename>.srt</filename>, mas os resultados podem
     variar.
   </para>
+  </sect2>
 
+  <sect2 id="usage-subtitles-manual">
+    <title>
+      <phrase lang="en">Manually Selecting the Subtitle File</phrase>
+      <phrase lang="pt">#Manually Selecting the Subtitle File#</phrase>
+    </title>
+
+    <para lang="en">
+      If you want to use a special subtitle file, that doesn't share the
+      filename of the video file, you can do so by pressing
+      '<emphasis role="bold">O</emphasis>' with the video file selected.
+      This activates a 'mini browser', in which all of the available subtitle
+      files (within the current directory) can be selected.  Select the
+      desired subtitle file, then press
+      '<emphasis role="bold">X</emphasis>' or
+      '<emphasis role="bold">O</emphasis>' to begin playback with that file.
+      Press '<emphasis role="bold">TRIANGLE</emphasis>' to cancel the 
+      selection.
+    </para>
+    <para lang="pt">
+      #If you want to use a special subtitle file, that doesn't share the
+      filename of the video file, you can do so by pressing
+      '<emphasis role="bold">O</emphasis>' with the video file selected.
+      This activates a 'mini browser', in which all of the available subtitle
+      files (within the current directory) can be selected.  Select the
+      desired subtitle file, then press
+      '<emphasis role="bold">X</emphasis>' or
+      '<emphasis role="bold">O</emphasis>' to begin playback with that file.
+      Press <emphasis role="bold">TRIANGLE</emphasis> to cancel the
+      selection.#
+    </para>
   </sect2>
 
   <sect2 id="usage-subtitles-non-ascii">

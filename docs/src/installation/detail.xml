@@ -1338,13 +1338,29 @@ VMODE = NTSC
     .iso image</ulink> from the SMS Media Player website, and burn it to
     a blank DVD-/+R.
   </para>
+  <para lang="pt">
+    #If you're fortunate enough to have a modchip, Swap Magic, or
+    HDLoader/HDAdvance, and access to a DVD writer, the easiest way to
+    get up and running with SMS is to download the
+    <ulink url="http://ps2-scene.org/sms/eng/cdimage.htm">DVD
+    .iso image</ulink> from the SMS Media Player website, and burn it to
+    a blank DVD-/+R.#
+  </para>
   <para lang="en">
     Refer to your DVD writer application instructions for how to burn
     ISO images.
   </para>
+  <para lang="pt">
+    #Refer to your DVD writer application instructions for how to burn
+    ISO images.#
+  </para>
   <para lang="en">
     After you have burned your DVD, put it into your modchipped PS2 and
     press reset...  that's it.
+  </para>
+  <para lang="pt">
+    #After you have burned your DVD, put it into your modchipped PS2 and
+    press reset...  that's it.#
   </para>
 </sect1>
 

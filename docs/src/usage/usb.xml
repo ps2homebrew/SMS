@@ -28,7 +28,7 @@
     <filename>USBD.IRX</filename> file.
   </para>
   <para lang="pt">
-    #SMS reads files from a USB drive using a <emphasis role="bold">USB driver 
+    #SMS reads files from a USB drive using a <emphasis role="bold">USB driver
     built-in to the SMS application</emphasis>.  There's no need to install
     any additional files to enable USB support in new versions of SMS (V1.7
     or later).  Older versions required a 3rd party
@@ -66,7 +66,7 @@
 
   <para lang="en">
     As usual, press <emphasis role="bold">X</emphasis> to play the selected 
-    video file.
+    media file.
   </para>
   <para lang="pt">
     Como habitualmente, pressione <emphasis role="bold">X</emphasis> para

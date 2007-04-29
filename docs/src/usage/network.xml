@@ -8,34 +8,691 @@
   </title>
 
   <para lang="en">
-    First of all, you'll need to have a working network. That means you'll 
-    need a network switch with a patch cable to your PS2 and a patch cable 
-    to your PC, Alternatively you can use a single crossover cable directly
-    linking your PS2 to your PC. If you can't successfully ping your PS2 
-    while you're running SMS, then you'll need to get that working first. 
-    Once your network is working you can use either RadHostClient, or
-    PS2Client-gui running on your PC to share your media directories. 
-    RadHostClient is a little easier to use than ps2client-gui, and can 
-    involve less running back and forth between the PC and PS2.
-  </para>
-  <para lang="pt">
-    Primeiro que tudo, necessitará de uma rede a funcionar. ISto significa
-    que precisará de um switcher/router com um cabo de rede (direito) ligado
-    à PS2 e outro cabo igual ligado ao PC. Em alternativa, poderá utilizar um
-    cabo de rede (cruzado) para ligar o PC directamente à PS2. Se não conseguir
-    fazer PING à PS2 enquanto o SMS estiver ligado, significa que algo está mal
-    e precisa de ser corrigido antes de continuar. Assim que a rede estiver a 
-    funcionar poderá utilizar o RadHostClient ou o PS2Client-gui no seu PC para
-    partilhar os seus directórios. O RadHostClient é um pouco mais fácil de
-    utilizar e pode poupar umas deslocações do PC para a PS2 e vice-versa.
+    First of all, you'll need to have a working network configuration. That
+    means you'll need a network switch with a patch cable to your PS2 and a
+    patch cable to your PC, Alternatively you can use a single crossover
+    cable directly linking your PS2 to your PC. Your PC and PS2 will both
+    need to be on the same subnet with statically assigned IP addresses.  If
+    you can't successfully ping your PS2 while you're running SMS, then
+    you'll need to get that working first.  For more information see
+    <xref linkend="installation-configuration-ipconfig"/>.  Once your network
+    is working, the easiest way to share files is using a windows shared
+    folder.  Legacy support for the older methods of PS2Client-gui or
+    RadHostClient running on your PC are also described here.
   </para>
 
-  <sect2>
+  <para lang="pt">
+    #First of all, you'll need to have a working network configuration. That
+    means you'll need a network switch with a patch cable to your PS2 and a
+    patch cable to your PC, Alternatively you can use a single crossover
+    cable directly linking your PS2 to your PC. Your PC and PS2 will both
+    need to be on the same subnet with statically assigned IP addresses.  If
+    you can't successfully ping your PS2 while you're running SMS, then
+    you'll need to get that working first.   Once your network is working, the
+    easiest way to share files is using a windows shared folder.  Legacy
+    support for the older methods of PS2Client-gui or RadHostClient running
+    on your PC are also described here.#
+  </para>
+
+  <sect2 id="usage-network-smb">
+    <title>
+      <phrase lang="en">Playing Media Files Using a Windows Shared 
+      Folder</phrase>
+      <phrase lang="pt">#Playing Media Files Using a Windows Shared
+      Folder#</phrase>
+    </title>
+
+    <para lang="en">
+      SMS can play media files shared from a regular PC on your network, via a
+      windows 'SMB' share.  This is now one of the easiest ways to play your
+      full media collection on SMS.  You won't need any additional software to
+      do this.  An SMB share can be created on Windows, Linux or MacOS.
+      This section covers the following topics:
+    </para>
+    <para lang="pt">
+      #SMS can play media files shared from a regular PC on your network, via a
+      windows 'SMB' share.  This is now one of the easiest ways to play your
+      full media collection on SMS.  You won't need any additional software to
+      do this.  An SMB share can be created on Windows, Linux or MacOS.
+      This section covers the following topics:#
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        <para>
+          <xref linkend="usage-network-smb-winxp"/>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <xref linkend="usage-network-smb-sms_setup"/>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <xref linkend="usage-network-smb-sms_usage"/>
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <sect3 id="usage-network-smb-winxp">
+      <title>
+        <phrase lang="en">Setting Up The Shared Folder In WinXP (PC side)
+        </phrase>
+        <phrase lang="pt">#Setting Up The Shared Folder In WinXP (PC side)#
+        </phrase>
+      </title>
+
+      <para lang="en">
+        If you already have an SMB share set up, feel free to skip ahead to
+        <xref linkend="usage-network-smb-sms_setup"/>.  Just make sure you
+        note down the <emphasis role="bold">IP address of the SMB 
+        server</emphasis> and the <emphasis role="bold">Netbios name of the 
+        SMB server</emphasis>
+      </para>
+      <para lang="pt">
+        #If you already have an SMB share set up, feel free to skip ahead to
+        <xref linkend="usage-network-smb-sms_setup"/>.  Just make sure you
+        note down the <emphasis role="bold">IP address of the SMB 
+        server</emphasis> and the <emphasis role="bold">Netbios name of the 
+        SMB server</emphasis>#
+      </para>
+
+      <para lang="en">
+        The following instructions explain how to set up a windows share in
+        WindowsXP home/professional.
+      </para>
+      <para lang="pt">
+        #The following instructions explain how to set up a windows share in
+        WindowsXP home/professional.#
+      </para>
+
+      <para lang="en">
+        Let's assume the folder
+        <filename>D:/Shared/videos/</filename> contains the media files you
+        want to share.  Navigate to this folder in windows explorer, then
+        right click on the folder name 'videos' and click
+        <emphasis role="bold">Sharing and Security...</emphasis>:
+      </para>
+      <para lang="pt">
+        #Let's assume the folder
+        <filename>D:/Shared/videos/</filename> contains the media files you
+        want to share.  Navigate to this folder in windows explorer, then
+        right click on the folder name 'videos' and click
+        <emphasis role="bold">Sharing and Security...</emphasis>:#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Setting up a windows XP share, step 1
+          </phrase>
+          <phrase lang="pt">
+            #Setting up a windows XP share, step 1#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-winxp-share01.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Setting up a windows XP share, step 1</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        In the box that opens up, click the option saying that you understand
+        the security risks but want to share the files without the wizard.
+      </para>
+      <para lang="pt">
+        #In the box that opens up, click the option saying that you
+        understand the security risks but want to share the files without the
+        wizard.#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Setting up a windows XP share, step 2
+          </phrase>
+          <phrase lang="pt">
+            #Setting up a windows XP share, step 2#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-winxp-share02.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Setting up a windows XP share, step 2</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+      <para lang="en">
+        In the next box, click
+        '<emphasis role="bold">Just enable file sharing</emphasis>', then
+        click <emphasis role="bold">OK</emphasis>.
+      </para>
+      <para lang="pt">
+        #In the next box, click
+        '<emphasis role="bold">Just enable file sharing</emphasis>', then
+        click <emphasis role="bold">OK</emphasis>.#
+      </para>
+
+      <para lang="en">
+        Now the properties box will have changed, showing the network sharing
+        options.  Tick the box
+        '<emphasis role="bold">Share this folder on the network</emphasis>'
+        and enter a share name, e.g. 'videos'.  Leave the
+        'Allow network users to change my files' option un-ticked.  This will
+        make the share read-only.
+      </para>
+      <para lang="pt">
+        #Now the properties box will have changed, showing the network sharing
+        options.  Tick the box
+        '<emphasis role="bold">Share this folder on the network</emphasis>'
+        and enter a share name, e.g. 'videos'.  Leave the
+        'Allow network users to change my files' option un-ticked.  This will
+        make the share read-only.#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Setting up a windows XP share, step 3
+          </phrase>
+          <phrase lang="pt">
+            #Setting up a windows XP share, step 3#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-winxp-share03.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Setting up a windows XP share, step 3</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        Next click <emphasis role="bold">OK</emphasis> (unless you are
+        one of those people who feels more comfortable by unnecessarily
+        clicking 'Apply' first).  Either way, you'll now have a shared
+        video folder.  You should see a 'hand' underneath the folder icon:
+      </para>
+      <para lang="pt">
+        #Next click <emphasis role="bold">OK</emphasis> (unless you are
+        one of those people who feels more comfortable by unnecessarily
+        clicking 'Apply' first).  Either way, you'll now have a shared
+        video folder.  You should see a 'hand' underneath the folder icon:#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Shared folder in windows XP
+          </phrase>
+          <phrase lang="pt">
+            #Shared folder in windows XP#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-winxp-share04.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Shared folder in windows XP</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        That's it.  if you have another computer on your network, you may
+        wish to test the share out before trying it on your PS2.
+      </para>
+      <para lang="pt">
+        #That's it.  if you have another computer on your network, you may
+        wish to test the share out before trying it on your PS2.#
+      </para>
+      
+      <para lang="en">
+        The next step is to configure SMS on your PS2 to access this
+        new shared folder.
+      </para>
+      <para lang="pt">
+        #The next step is to configure SMS on your PS2 to access this
+        new shared folder.#
+      </para>
+
+    </sect3>
+
+
+    <sect3 id="usage-network-smb-sms_setup">
+      <title>
+        <phrase lang="en">Setting up SMS to access the shared folder (PS2
+        side)</phrase>
+        <phrase lang="pt">#Setting up SMS to access the shared folder (PS2
+        side)#</phrase>
+      </title>
+
+      <para lang="en">
+        Open up a basic text editor such as windows
+        <application>notepad</application>, and enter the following:
+      </para>
+      <para lang="pt">
+        #Open up a basic text editor such as windows
+        <application>notepad</application>, and enter the following:#
+      </para>
+
+<screen><![CDATA[<ip address of the SMB server (computer sharing the files)>
+<name of the SMB server>
+<name of the PS2 (any name will do)>
+<username (optional)>
+<password (optional)>]]></screen>
+
+      <para lang="en">
+        The name of the SMB server is found in My Computer > Properties >
+        Computer Name > Full Computer Name.  Type the name in
+        <emphasis role="bold">CAPITALS</emphasis>, omitting the trailing '.'
+        character.  The PS2 name can be anything you want.  The username and
+        password are only required if your share is user or password
+        restricted.  If you have set up the share using the method described
+        above, leave both blank.  For example:
+      </para>
+
+<screen><![CDATA[192.168.2.20
+DTHP
+Playstation2]]></screen>
+
+      <para lang="en">
+        Save the file to a temporary location (e.g. desktop) as
+        <filename>SMS.smb</filename>.  Note that you will probably have to
+        type the " marks into the SaveAs box in notepad, i.e.
+        <filename>"SMS.smb"</filename>.  Just typing
+        <filename>SMS.smb</filename> will probably give you a file called
+        <filename>SMS.smb.txt</filename> (although windows will hide the
+        <filename>.txt</filename>) which is not what you want!
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Saving the SMS.smb file
+          </phrase>
+          <phrase lang="pt">
+            #Saving the SMS.smb file#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_setup-saveas.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Saving the SMS.smb file</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+      <para lang="en">
+        Now you must copy this <filename>SMS.smb</filename> file onto your
+        memory card, into the SMS folder.  As you've already got
+        a networked PS2, I'm going to assume you'll use FTP to transfer
+        the files (see <xref linkend="installation-copytomemcard-ftp"/>
+        for how to set up an FTP connection).  Copy the file to
+        <filename>/mc/0/SMS/SMS.smb</filename>.
+      </para>
+      <para lang="pt">
+        #Now you must copy this <filename>SMS.smb</filename> file onto your
+        memory card, into the SMS folder.  As you've already got
+        a networked PS2, I'm going to assume you'll use FTP to transfer
+        the files (see <xref linkend="installation-copytomemcard-ftp"/>
+        for how to set up an FTP connection).  Copy the file to
+        <filename>/mc/0/SMS/SMS.smb</filename>.#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Screenshot of SMS.smb upload via FTP
+          </phrase>
+          <phrase lang="pt">
+            #Screenshot of SMS.smb upload via FTP#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_setup-ftp.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of SMS.smb upload via FTP</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        Once the transfer is finished, restart your PS2 and load up
+        <application>SMS</application>.
+      </para>
+      <para lang="pt">
+        #Once the transfer is finished, restart your PS2 and load up
+        <application>SMS</application>.#
+      </para>
+    </sect3>
+
+    <sect3 id="usage-network-smb-sms_usage">
+      <title>
+        <phrase lang="en">Accessing the shared folder from within 
+        SMS</phrase>
+        <phrase lang="pt">#Accessing the shared folder from within
+        SMS#</phrase>
+      </title>
+
+      <para lang="en">
+        <emphasis role="bold">On the PS2:</emphasis> Load up SMS, then
+        open the
+        <emphasis role="bold">Device settings</emphasis> menu
+        (press <emphasis role="bold">START</emphasis>, select
+        <emphasis role="bold">Device settings...</emphasis>, press
+        <emphasis role="bold">X</emphasis>.
+      </para>
+      <para lang="pt">
+        #<emphasis role="bold">On the PS2:</emphasis> Load up SMS, then
+        open the
+        <emphasis role="bold">Device settings</emphasis> menu
+        (press <emphasis role="bold">START</emphasis>, select
+        <emphasis role="bold">Device settings...</emphasis>, press
+        <emphasis role="bold">X</emphasis>.#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Device settings menu
+          </phrase>
+          <phrase lang="pt">
+            #Device settings menu#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage01.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of Device settings menu</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+      <para lang="en">
+        If the Autostart network option is turned on, turn it off:
+      </para>
+      <para lang="pt">
+        #If the Autostart network option is turned on, turn it off:#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Device settings menu (Autostart network disabled)
+          </phrase>
+          <phrase lang="pt">
+            #Device settings menu (Autostart network disabled)#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage02.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of Device settings menu (Autostart 
+            network disabled)</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+      <para lang="en">
+        Press <emphasis role="bold">TRIANGLE</emphasis> to leave this
+        menu, then select
+        <emphasis role="bold">Save settings</emphasis>, from the
+        main menu and press
+        <emphasis role="bold">X</emphasis>.  Now restart SMS.
+      </para>
+      <para lang="pt">
+        #Press <emphasis role="bold">TRIANGLE</emphasis> to leave this
+        menu, then select
+        <emphasis role="bold">Save settings</emphasis>, from the
+        main menu and press
+        <emphasis role="bold">X</emphasis>.  Now restart SMS.#
+      </para>
+      
+      <para lang="en">
+        Go back to the 'Device settings' menu, and scroll down, you
+        should see a new option
+        <emphasis role="bold">Network protocol</emphasis>.  Press
+        <emphasis role="bold">X</emphasis> to change this option
+        to <emphasis role="bold">SMB/CIFS</emphasis>.
+      </para>
+      <para lang="pt">
+        #Go back to the 'Device settings' menu, and scroll down, you
+        should see a new option
+        <emphasis role="bold">Network protocol</emphasis>.  Press
+        <emphasis role="bold">X</emphasis> to change this option
+        to <emphasis role="bold">SMB/CIFS</emphasis>.#
+      </para>
+      
+      <figure>
+        <title>
+          <phrase lang="en">
+            Device settings menu (Select SMB/CIFS Network protocol)
+          </phrase>
+          <phrase lang="pt">
+            #Device settings menu (Select SMB/CIFS Network protocol)#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage03.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of Device settings menu (Select 
+            SMB/CIFS Network protocol)</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        Now select
+        <emphasis role="bold">Start network support</emphasis> and press
+        <emphasis role="bold">X</emphasis>.  After an
+        <emphasis>Intialising Network...</emphasis> message, you should now
+        see a new icon in the PS2 browser:
+      </para>
+      <para lang="pt">
+        #Now select
+        <emphasis role="bold">Start network support</emphasis> and press
+        <emphasis role="bold">X</emphasis>.  After an
+        <emphasis>Intialising Network...</emphasis> message, you should now
+        see a new icon in the PS2 browser:#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            SMB share connected (right hand icon in top menu bar)
+          </phrase>
+          <phrase lang="pt">
+            #SMB share connected (right hand icon in top menu bar)#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage04.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of SMB share connected (right hand 
+            icon in top menu bar)</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+
+      <para lang="en">
+        At this point you may wish to turn 'Autostart network' back on,
+        if you do so, don't forget to
+        <emphasis role="bold">Save settings</emphasis> afterwards.
+        Press <emphasis role="bold">TRIANGLE</emphasis> to exit the
+        menu, then
+        <emphasis role="bold">RIGHT</emphasis>,
+        <emphasis role="bold">RIGHT</emphasis>,
+        <emphasis role="bold">X</emphasis> to select the network share:
+      </para>
+      <para lang="pt">
+        #At this point you may wish to turn 'Autostart network' back on,
+        if you do so, don't forget to
+        <emphasis role="bold">Save settings</emphasis> afterwards.
+        Press <emphasis role="bold">TRIANGLE</emphasis> to exit the
+        menu, then
+        <emphasis role="bold">RIGHT</emphasis>,
+        <emphasis role="bold">RIGHT</emphasis>,
+        <emphasis role="bold">X</emphasis> to select the network share:#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Navigating an SMB share
+          </phrase>
+          <phrase lang="pt">
+            #Navigating an SMB share#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage05.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of navigating an SMB share</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+      <para lang="en">
+        Press <emphasis role="bold">X</emphasis> to navigate into the
+        folder, then
+        <emphasis role="bold">X</emphasis> as usual to play the file.
+      </para>
+      <para lang="pt">
+        #Press <emphasis role="bold">X</emphasis> to navigate into the
+        folder, then
+        <emphasis role="bold">X</emphasis> as usual to play the file.#
+      </para>
+
+      <figure>
+        <title>
+          <phrase lang="en">
+            Navigating an SMB share - selecting file for playback
+          </phrase>
+          <phrase lang="pt">
+            #Navigating an SMB share - selecting file for playback#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage06.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Screenshot of navigating an SMB share - selecting file
+            for playback</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+      <figure>
+        <title>
+          <phrase lang="en">
+            Playback started
+          </phrase>
+          <phrase lang="pt">
+            #Playback started#
+          </phrase>
+        </title>
+        <mediaobject>
+          <imageobject>
+            <imagedata
+              fileref="../images/usage-network-smb-sms_usage07.png"
+              format="PNG"/>
+          </imageobject>
+          <textobject>
+            <phrase>Playback started</phrase>
+          </textobject>
+        </mediaobject>
+      </figure>
+      
+    <tip>
+      <para lang="en">
+        If you have problems, check the settings in your
+        <filename>SMS.smb</filename> file.  Make sure that you
+        have the correct IP address entered (the IP address of your PC), and
+        make sure the SMB server name is in CAPITALS.
+      </para>
+      <para lang="pt">
+        If you have problems, check the settings in your
+        <filename>SMS.smb</filename> file.  Make sure that you
+        have the correct IP address entered (the IP address of your PC), and
+        make sure the SMB server name is in CAPITALS.
+      </para>
+    </tip>
+    </sect3>
+
+  </sect2>
+
+  <sect2 id="usage-network-rhc">
     <title>
       <phrase lang="en">Playing Network Video Files Using RadHostClient</phrase>
       <phrase lang="pt">Vizualizando ficheiros de Video pela rede
       utilizando o RadHostClient</phrase>
     </title>
+
+    <note>
+      <para lang="en">
+        The recommended (and easiest) way to play networked media on SMS is to
+        use an <link linkend="usage-network-smb">SMB share</link> (feature
+        introduced in SMS 1.9).  This section is only provided for legacy
+        support.
+      </para>
+      <para lang="pt">
+        #The recommended (and easiest) way to play networked media on SMS is to
+        use an <link linkend="usage-network-smb">SMB share</link> (feature
+        introduced in SMS 1.9).  This section is only provided for legacy
+        support.#
+      </para>
+    </note>
 
     <para lang="en">
       Download and install RadHostClient from
@@ -180,8 +837,24 @@
       <phrase lang="pt">Vizualizando ficheiros de Video pela rede
       utilizando o PS2Client-gui</phrase>
     </title>
+
+    <note>
+      <para lang="en">
+        The recommended (and easiest) way to play networked media on SMS is to
+        use an <link linkend="usage-network-smb">SMB share</link> (feature
+        introduced in SMS 1.9).  This section is only provided for legacy
+        support.
+      </para>
+      <para lang="pt">
+        #The recommended (and easiest) way to play networked media on SMS is to
+        use an <link linkend="usage-network-smb">SMB share</link> (feature
+        introduced in SMS 1.9).  This section is only provided for legacy
+        support.#
+      </para>
+    </note>
+
     <para lang="en">
-      <emphasis role="bold">On the PC</emphasis> download and install 
+      <emphasis role="bold">On the PC</emphasis> download and install
       ps2client-gui. Run the GUI, and select the directories of where your 
       videofiles are. If you have a base directory that contains all your 
       files, enter that directory. It doesn't matter if your files are in 

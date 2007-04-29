@@ -334,49 +334,40 @@
 <sect1 id="faq-opticalout">
   <title>
     <phrase lang="en">
-      <emphasis>Does the PS2 optical digital output work in SMS for AC3 
-      passthrough?</emphasis>
+      <emphasis>Does the PS2 optical digital output (S/PDIF) work in SMS for
+      AC3 passthrough?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>A saída óptica digital da PS2 funciona no SMS para som AC3?
-      </emphasis>
+      <emphasis>A saída óptica digital (S/PDIF) da PS2 funciona no SMS para
+      som AC3?</emphasis>
     </phrase>
   </title>
   <para lang="en">
-    No.  The PS2 optical digital output is not currently supported by SMS.
+    Yes, you can connect the PS2 output to an external audio processor
+    via a fibre optic cable.  You can enable the output by selecting 
+    <emphasis role="bold">SMS Menu -> Player settings</emphasis>. This has 
+    been tested with a SoundBlaster PC sound card and 384kb/s ac3 streams.
   </para>
   <para lang="pt">
-    Não. A saída óptica digital da PS2 não é suportada pelo SMS.
+    #Yes, you can connect the PS2 output to an external audio processor
+    via a fibre optic cable.  This has been tested with a SoundBlaster
+    PC sound card and 384kb/s ac3 streams.#
   </para>
+  <note>
+    <para lang="en">
+      It is not possible to adjust the audio volume in this mode.
+    </para>
+    <para lang="pt">
+      #It is not possible to adjust the audio volume in this mode.#
+    </para>
+  </note>
 
-  <para lang="en">
-    The optical digital output would allow the PS2 output to be connected
-    via a fibre optic cable to an external audio processor such as a dolby
-    digital home cinema system.  However, this is not yet supported, and you
-    are advised to use the standard audio outputs in the mean time.
-  </para>
-  <para lang="pt">
-    A saída óptica digital permitiria à PS2 ser conectada por um cabo de fibra
-    óptica a um amplificador e processador de áudio externo tal como um sistema
-    home cinema dolby digital.  No entanto, isto ainda não é suportado, e é 
-    recomendado que use as saídas de áudio normais por enquanto.
-  </para>
-
-  <para lang="en">
-    This feature may be introduced in a future release of SMS.  Anyone who
-    would like to (and has the necessary hardware) is welcome to develop it.
-  </para>
-  <para lang="pt">
-    Esta capacidade pode ser introduzida numa publicação futura do SMS.  
-    Alguém que queira (e tenha o hardware necessário) é bem-vindo a
-    desenvolve-la.
-  </para>
 </sect1>
 
 <sect1 id="faq-writeablemedia" xreflabel="Writeable Media Compatibility">
   <title>
     <phrase lang="en">
-      <emphasis>What types of of writeable media 
+      <emphasis>What types of of writeable media
       (DVD-R/DVD+R/DVD+RW/DVD-RW/CDR/CDRW) will work with SMS?</emphasis>
     </phrase>
     <phrase lang="pt">

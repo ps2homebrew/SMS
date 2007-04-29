@@ -151,7 +151,7 @@
             <para lang="pt">OU</para>
             <para lang="en">Increase numerical value</para>
             <para lang="pt">Aumentar valor numérico</para>
-            
+
           </entry>
         </row>
         <row>
@@ -161,6 +161,16 @@
           <entry>
             <para lang="en">Decrease numerical value</para>
             <para lang="pt">Diminuir valor numérico</para>
+            <para lang="en">OR</para>
+            <para lang="pt">OU</para>
+            <para lang="en">
+              (on a folder) <link linkend="usage-mp3-noplaylist">play
+              multiple MP3 files without a playlist</link>
+            </para>
+            <para lang="pt">
+              #(on a folder) <link linkend="usage-mp3-noplaylist">play
+              multiple MP3 files without a playlist</link>#
+            </para>
           </entry>
         </row>
         <row>
