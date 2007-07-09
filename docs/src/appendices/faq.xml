@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- $Revision: 1.31 $ -->
 
 
@@ -9,9 +9,14 @@
       sees it as an audio CD. What's wrong?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>Criei o meu CD-R CDDAFS mas a minha PS2 n�o o inicia - apenas
-      o v� como um CD de �udio. O que est� errado?</emphasis>
+      <emphasis>Criei o meu CD-R CDDAFS mas a minha PS2 não o inicia - apenas
+      o vê como um CD de áudio. O que está errado?</emphasis>
     </phrase>
+    <phrase lang="ru">
+      <emphasis>Я сделал мой CDDAFS CDR, но моя PS2 не загружается с него -
+       видит его как audio CD. Что делать? </emphasis>
+    </phrase>
+
   </title>
   <para lang="en">
     CDXplorer does not create a CD-R which you can boot from. It just creates
@@ -21,21 +26,30 @@
     any other removable media without a Mod-Chip. You always need either:
   </para>
   <para lang="pt">
-    O CDXplorer n�o cria um CD-R a partir do qual se pode arrancar. Apenas
-    cria um disco que pode ser lido quando o SMS j� est� a correr. CDDAFS n�o
-    � um m�todo de inicializar o SMS, � um m�todo de fornecer os ficheiros ao
-    SMS quando este j� est� a correr. Que eu saiba, n�o existe nenhum m�todo
+    O CDXplorer não cria um CD-R a partir do qual se pode arrancar. Apenas
+    cria um disco que pode ser lido quando o SMS já está a correr. CDDAFS não
+    é um método de inicializar o SMS, é um método de fornecer os ficheiros ao
+    SMS quando este já está a correr. Que eu saiba, não existe nenhum método
     para executar o SMS a partir de um CD, DVD-R ou qualquer outro tipo de 
     media amovivel sem ter um Mod-Chip. Precisa sempre de:
   </para>
+  <para lang="ru">
+   CDXplorer не создает CD-R, с которого вы можете загружаться. Просто 
+   создается диск, который может быть прочитан, когда запущен SMS. CDDAFS не 
+   является методом для запуска SMS, это метод для доступа к файлам в SMS. 
+   Насколько мне известно, не существует способа загрузить SMS напрямую с CD, 
+   DVD-R или любого другого съемного носителя без модчипа. Вам потребуется 
+   (на выбор):   </para>
   <itemizedlist mark='bullet'>
     <listitem>
       <para lang="en">An exploit</para>
       <para lang="pt">Um exploit</para>
+      <para lang="ru">Программная модификация консоли (exploit)</para>      
     </listitem>
     <listitem>
       <para lang="en">A mod chip</para>
       <para lang="pt">Ou um Mod-chip</para>
+      <para lang="ru">Аппаратная модификация консоли (модчип)</para>            
     </listitem>
   </itemizedlist>
   <para lang="en">
@@ -48,10 +62,19 @@
   <para lang="pt">
     para executar o SMS primeiro... e <emphasis>depois</emphasis> coloca o seu
     disco CDDAFS, DVD-R, etc. Em muitos casos, o <filename>SMS.ELF</filename>
-    ser� colocado no cart�o de mem�ria, depois ser� usado um exploit para 
-    executar o SMS do cart�o de mem�ria. Sem um exploit ou sem um modchip n�o
-    existe nenhum m�todo conhecido para executar o SMS. Mas se descobrir uma
+    será colocado no cartão de memória, depois será usado um exploit para 
+    executar o SMS do cartão de memória. Sem um exploit ou sem um modchip não
+    existe nenhum método conhecido para executar o SMS. Mas se descobrir uma
     maneira - diga-nos!!!
+  </para>
+  <para lang="ru">
+    чтобы сначала запустить SMS …и <emphasis>только после этого</emphasis>, вы 
+    сможете использовать свой диск CDDAFS, DVD-R или что-то подобное. Во 
+    многих случаях, <filename>SMS.ELF</filename> помещают на карту памяти, 
+    чтобы потом использовать exploit для запуска SMS с карты памяти. Не 
+    существует другого пути для того, чтобы запустить SMS на вашей PS2 без 
+    программной или аппаратной модификации консоли. Но если вы найдете другой 
+    путь, то сообщите нам ! 
   </para>
 </sect1>
 
@@ -63,8 +86,12 @@
       <application>PS2Reality Media Player</application>?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>Como � que a qualidade de vizualiza��o do SMS se compara com 
+      <emphasis>Como é que a qualidade de vizualização do SMS se compara com 
       o <application>PS2Reality Media Player</application>?</emphasis>
+    </phrase>
+    <phrase lang="ru">
+      <emphasis>Как насчет качества воспроизведения SMS в сравнении с 
+      <application>PS2Reality Media Player</application>?</emphasis>
     </phrase>
   </title>
 
@@ -75,10 +102,17 @@
     yourself, go ahead, we'd be interested in the results.
   </para>
   <para lang="pt">
-    N�o estamos a tentar comparar o SMS contra outros leitores de media de
-    momento. O �nico objectivo � fazer o SMS o melhor poss�vel. Se estiver
-    interessado em fazer as suas pr�prias compara��es, for�a nisso, seria
+    Não estamos a tentar comparar o SMS contra outros leitores de media de
+    momento. O único objectivo é fazer o SMS o melhor possível. Se estiver
+    interessado em fazer as suas próprias comparações, força nisso, seria
     interessante ver os resultados.
+  </para>
+  <para lang="ru">
+    В настоящее время, мы не пытаемся сравнивать SMS с другими медиа плеерами. 
+    Единственная наша цель состоит в том, чтобы сделать SMS, по возможности, 
+    как можно лучше. Если вы хотели бы сделать детальное сравнение 
+    самостоятельно, то результаты такого исследования нас, бесспорно, 
+    заинтересуют. 
   </para>
 
 </sect1>
@@ -89,8 +123,12 @@
       <emphasis>I can't see my network files - what's wrong?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>N�o consigo ver os ficheiros na rede - o que se passa?</emphasis>
+      <emphasis>Não consigo ver os ficheiros na rede - o que se passa?</emphasis>
     </phrase>
+    <phrase lang="ru">
+      <emphasis>Система не видит мои сетевые файлы - что происходит?</emphasis>
+    </phrase>
+    
   </title>
 
     <para lang="en">
@@ -104,13 +142,22 @@
       instructions again.
     </para>
     <para lang="pt">
-      Veja no menu de op��es de rede (no SMS: Start->Network Settings),
+      Veja no menu de opções de rede (no SMS: Start->Network Settings),
       e se o vir, pressione '<emphasis role="bold">start network 
       now</emphasis>'. Ligar o 
-      <emphasis role="bold">Autostart network</emphasis> far� com que o SMS
+      <emphasis role="bold">Autostart network</emphasis> fará com que o SMS
       tente ligar-se a um cliente ao iniciar. Se os problemas persistirem,
       tente reiniciar o cliente (e.g. <application>RadHostClient</application>) 
-      no seu PC e releia as instru��es.
+      no seu PC e releia as instruções.
+    </para>
+    <para lang="ru">
+      Проверьте установки в меню сетевых настроек  (SMS: Start->Network 
+      Settings) и, если вы их видите, то нажмите '<emphasis role="bold">start 
+      network now</emphasis>'. Включение опции <emphasis role="bold">Autostart 
+      network</emphasis> заставит SMS пытаться подключиться к клиенту на
+      стадии запуска. Если проблемы все еще остались, то попробуйте 
+      перезапустить клиента (например <application>RadHostClient</application>) 
+      на вашем компьютере и проверьте настройки снова. 
     </para>
 
 </sect1>
@@ -122,9 +169,14 @@
       running an exploit?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>O que � um 'exploit'? Cheira-me a esturro. Posso ir para a 
-      pris�o por usar um 'exploit'?</emphasis>
+      <emphasis>O que é um 'exploit'? Cheira-me a esturro. Posso ir para a 
+      prisão por usar um 'exploit'?</emphasis>
     </phrase>
+    <phrase lang="ru">
+      <emphasis>Что такое exploit? Звучит подозрительно! Меня за это не 
+      посадят?</emphasis>
+    </phrase>
+    
   </title>
 
     <para lang="en">
@@ -137,8 +189,15 @@
     <para lang="pt">
       A <trademark>Sony Computer Entertainment</trademark> desaprova os 
       exploits e mod-chips, mas estes continuam a ser vendidos em todo o mundo.
-      A legisla��o pode variar de pa�s para pa�s, por isso � aconselh�vel que
+      A legislação pode variar de país para país, por isso é aconselhável que
       se informe das leis locaisantes de instalar o mod-chip ou exploit.
+    </para>
+    <para lang="ru">
+      <trademark>Sony Computer Entertainment</trademark> не одобряет 
+      использование exploit-ов и модчипов и все равно они получили 
+      распространение по всему миру. Законодательство в разных странах может 
+      различаться, так что советуем вам проверить местные законы перед 
+      установкой exploit'а или приобретением модчипа. 
     </para>
 
 </sect1>
@@ -152,9 +211,14 @@
       it help me?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>O que � o <quote>Independence Exploit</quote> e como � que me 
+      <emphasis>O que é o <quote>Independence Exploit</quote> e como é que me 
       ajuda?</emphasis>
     </phrase>
+    <phrase lang="ru">
+      <emphasis>Что такое <quote>Independence Exploit</quote> зачем мне это
+      нужно?</emphasis>
+    </phrase>
+
   </title>
 
   <para lang="en">
@@ -166,12 +230,20 @@
     here</ulink>.
   </para>
   <para lang="pt">
-    O <emphasis role="bold">Independence Exploit</emphasis> � um exploit 
-    baseado em software que deixa a PS2 ler aplica��es n�o encriptadas (tal
-    como o SMS) a partir do cart�o de mem�ria.  A explica��o mais concisa do
-    que � o exploit pode ser encontrada 
+    O <emphasis role="bold">Independence Exploit</emphasis> é um exploit 
+    baseado em software que deixa a PS2 ler aplicações não encriptadas (tal
+    como o SMS) a partir do cartão de memória.  A explicação mais concisa do
+    que é o exploit pode ser encontrada 
     <ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
     aqui</ulink>.
+  </para>
+  <para lang="ru">
+    <emphasis role="bold">Independence Exploit</emphasis> - это программное 
+    обеспечение, основанное на программной модификации консоли, которое 
+    позволяет запускать на PS2 незашифрованные и самодельные программы (такие 
+    как SMS) с карты памяти. Краткое описание exploit'а можно найти
+    <ulink url="http://en.wikipedia.org/w/index.php?title=PS2_Independence_Exploit&amp;oldid=33927710">
+    здесь</ulink>.
   </para>
 
   <para lang="en">
@@ -191,22 +263,38 @@
     <ulink url="http://www.exploitstation.com/index.php?page=faq">here</ulink>.
   </para>
   <para lang="pt">
-    O Independence Exploit � uma das t�cnicas que pode ser usada para enganar
-    a PS2 para correr o SMS.  Normalmente a PS2 n�o permite que corra 
-    programas n�o-encriptados, esta protec��o existe principalmente para 
-    reduzir a utiliza��o de jogos copiados.  No que toca a projectos legitimos
-    como o SMS, a protec��o so impede que este seja executado. Quando instalado,
-    O Independence Exploit deixa o utilizador correr uma aplica��o especifica
-    que esteja no cart�o de mem�ria.  Normamente a aplica��o escolhida � um 
-    programa de execu��o de ficheiros ELF (um navegador de ficheiros) que 
-    depois permite correr outras aplica��es. O Exploit em si � executado 
-    introduzindo um  jogo de PS1 (escolhido), inserindo um cart�o de mem�ria
+    O Independence Exploit é uma das técnicas que pode ser usada para enganar
+    a PS2 para correr o SMS.  Normalmente a PS2 não permite que corra 
+    programas não-encriptados, esta protecção existe principalmente para 
+    reduzir a utilização de jogos copiados.  No que toca a projectos legitimos
+    como o SMS, a protecção so impede que este seja executado. Quando instalado,
+    O Independence Exploit deixa o utilizador correr uma aplicação especifica
+    que esteja no cartão de memória.  Normamente a aplicação escolhida é um 
+    programa de execução de ficheiros ELF (um navegador de ficheiros) que 
+    depois permite correr outras aplicações. O Exploit em si é executado 
+    introduzindo um  jogo de PS1 (escolhido), inserindo um cartão de memória
     com ficheiros especificamente modificados nele, e pressionando Reset. Um
-    tutorial de como arranjar os ficheiros modificados para o cart�o de 
-    mem�ria pode ser encontrado
+    tutorial de como arranjar os ficheiros modificados para o cartão de 
+    memória pode ser encontrado
     <ulink url="http://www.exploitstation.com/index.php?page=faq">aqui</ulink>.
   </para>
-
+  <para lang="ru">
+    Independence Exploit является одним из методов обмана вашей PS2 для того,
+    чтобы она смогла запустить SMS. Обычно ваша PS2 не позволяет запускать 
+    незашифрованные программы и эта защита главным образом связана с 
+    защитой от копирования игр. К сожалению, когда речь идет о легальном 
+    программном обеспечении с открытым кодом (таким, как SMS), эта защита
+    только мешает нормальной работе программы. Когда Independence Exploit 
+    установлен, то он позволяет запускать определенное приложение, сохраненное 
+    на карте памяти. Зачастую, выбранное приложение является программой для 
+    запуска ELF файлов (проводник файлов), которая позволяет запускать другие 
+    приложения. Для запуска Exploit`а вставьте оригинальный диск PS1, так 
+    называемый "trigger disc" (или "диск запуска"), карту памяти с 
+    специальными модифицированными файлами и затем нажмите сброс. Более 
+    подробно о том, как создать на карте памяти эти файлы можно прочитать 
+    <ulink url="http://www.exploitstation.com/index.php?page=faq">здесь</ulink>.
+  </para>
+  
   <para lang="en">
     The recommended approach is to use the tutorial to install an ELF launching
     program and an FTP server.  Then you can use the FTP server to install
@@ -215,24 +303,36 @@
     strange people who still use their PS2 to play games!
   </para>
   <para lang="pt">
-    A aproxima��o recomendada � utilizar o tutorial para instalar um programa
-    de execu��o de ficheiros ELF e um servidor de FTP. Depois pode utilizar o 
-    servidor de FTP para instalar todas as aplica��es (ficheiros ELF)que 
-    desejar.  Isto permite tamb�m que fa�a c�pias de seguran�a de todos os seus
-    saves, que pode ser �til para aquelas pessoas estranhas que ainda usam a 
+    A aproximação recomendada é utilizar o tutorial para instalar um programa
+    de execução de ficheiros ELF e um servidor de FTP. Depois pode utilizar o 
+    servidor de FTP para instalar todas as aplicações (ficheiros ELF)que 
+    desejar.  Isto permite também que faça cópias de segurança de todos os seus
+    saves, que pode ser útil para aquelas pessoas estranhas que ainda usam a 
     PS2 para jogar jogos!
   </para>
-
+  <para lang="ru">
+    Рекомендуемый нами подход состоит в установке программы для запуска ELF 
+    файлов и FTP сервера. Тогда вы сможете использовать FTP сервер для 
+    установки многих других приложений (ELF файлов). Кроме того, можно будет 
+    делать резервные копии ваших игровых сейвов, если вы, разумеется, 
+    настолько странный человек, что используете PS2 для игр.
+  </para>
+  
   <para lang="en">
     The exploit is significant to SMS users since it is one of the cheapest
     ways of running SMS, requiring no additional hardware other than a
     PS2, a memory card, and an original PS1 game.
   </para>
   <para lang="pt">
-    O Exploit � importante para os utilizadores do SMS visto que � o m�todo 
-    mais barato de executar o SMS, n�o requerindo qualquer hardware extra para
-    al�m da PS2, cart�o de mem�ria e um jogo original PS1.
+    O Exploit é importante para os utilizadores do SMS visto que é o método 
+    mais barato de executar o SMS, não requerindo qualquer hardware extra para
+    além da PS2, cartão de memória e um jogo original PS1.
   </para>
+  <para lang="ru">
+    Exploit предоставляет пользователям самый простой и легкий путь для 
+    запуска SMS, поскольку не он не требует никакого дополнительного 
+    оборудования, кроме PS2, карты памяти и оригинального диска PS1.   </para>
+  
 </sect1>
 
 <sect1 id="faq-dhcp">
@@ -243,8 +343,13 @@
       </emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>N�o consigo aceder ao SMS na minha rede DHCP.  O SMS n�o 
+      <emphasis>Não consigo aceder ao SMS na minha rede DHCP.  O SMS não 
       configura o seu IP automaticamente. O que se passa?
+      </emphasis>
+    </phrase>
+    <phrase lang="ru">
+      <emphasis>SMS не получает доступ к моей сети, основанной на DHCP. SMS
+      отказывается сконфигурировать IP адрес. Что не так?
       </emphasis>
     </phrase>
   </title>
@@ -257,12 +362,19 @@
     <xref linkend="installation-configuration-ipconfig"/>).
   </para>
   <para lang="pt">
-    O SMS n�o configura o seu endere�o de IP numa rede de DHCP (Dynamic Host 
+    O SMS não configura o seu endereço de IP numa rede de DHCP (Dynamic Host 
     Configuration Protocol), tal como os servidores DHCP normalmente 
-    encontrados em access points wireless, etc.  SMS requere um endere�o de IP
-    est�tico (ou manual) configurado em
+    encontrados em access points wireless, etc.  SMS requere um endereço de IP
+    estático (ou manual) configurado em
     <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>, (veja
     <xref linkend="installation-configuration-ipconfig"/>).
+  </para>
+  <para lang="ru">
+    SMS не будет автоматически запрашивать адрес от DHCP сервера (Dynamic Host 
+    Configuration Protocol - обычно этот сервер работает в рутерах, точках
+    беспроводного доступа и т.д.).  Для SMS требуется статичный (или заданный 
+    вручную) IP адрес, сохраненный в  <filename>mc0:/SYS-CONF/IPCONFIG.DAT</filename>, 
+    (см. <xref linkend="installation-configuration-ipconfig"/>).
   </para>
 
   <para lang="en">
@@ -274,13 +386,23 @@
     access point assigns IP addresses from 192.168.1.100 to 192.168.1.254)
   </para>
   <para lang="pt">
-    Isto n�o significa que tenha de desligar o DHCP e fazer com que toda a sua
-    rede funcione com endere�os est�ticos.  Basta verificar a configura��o do
-    seu servidor de DHCP, e configurar o endere�o de IP da PS2 manualmente para
-    ser compat�vel.  A grande maioria dos servidores de DHCP tem um raio de
-    endere�os IP que ir� atribuir aos clientes (por exemplo, a minha access
-    point linksys WRT54G atribui endere�os de IP de 192.168.1.100 a 
+    Isto não significa que tenha de desligar o DHCP e fazer com que toda a sua
+    rede funcione com endereços estáticos.  Basta verificar a configuração do
+    seu servidor de DHCP, e configurar o endereço de IP da PS2 manualmente para
+    ser compatível.  A grande maioria dos servidores de DHCP tem um raio de
+    endereços IP que irá atribuir aos clientes (por exemplo, a minha access
+    point linksys WRT54G atribui endereços de IP de 192.168.1.100 a 
     192.168.1.254).
+  </para>
+  <para lang="ru">
+    Это, разумеется, не означает, что вам теперь необходимо отключить DHCP
+    во всей вашей сети. Все, что потребуется, это ограничить диапазон 
+    адресов, которые DHCP будет раздавать клиентам. Например, в Linksys 
+    WRT54G можно ограничить DHCP адресами от 192.168.1.100 до 192.168.1.254
+    В таком случае, вы вполне можете задать SMS адрес, скажем, 192.168.1.22
+    без какого-либо влияния на остальные компоненты вашей сети (разумеется,
+    вы должны проверить, что этот адрес уже не занят каким-либо иным 
+    сетевым устройством).
   </para>
 
   <para lang="en">
@@ -290,10 +412,14 @@
     address if there is not already a range you can use.
   </para>
   <para lang="pt">
-    Desde que atribua � PS2 um IP fora deste raio (e.g. 192.168.1.22), ent�o
-    o SMS correr� feliz junto com os seus clientes de DHCP. Pode ter de
-    ajustar as suas defini��es de DHCP modificando o endere�o de IP inicial se
-    ainda n�o houver um raio que possa usar.
+    Desde que atribua à PS2 um IP fora deste raio (e.g. 192.168.1.22), então
+    o SMS correrá feliz junto com os seus clientes de DHCP. Pode ter de
+    ajustar as suas definições de DHCP modificando o endereço de IP inicial se
+    ainda não houver um raio que possa usar.
+  </para>
+  <para lang="ru">
+    Возможно, вам придется скорректировать настройки DHCP если диапазон 
+    адресов еще не сконфигурирован.
   </para>
 
   <para lang="en">
@@ -304,13 +430,21 @@
     your network).
   </para>
   <para lang="pt">
-    Tem de se certificar que o IP que est� a usar n�o � usado por outros 
-    aparelhos na sua rede local (tal como PC's, outras PS2's, ou a pr�pria
+    Tem de se certificar que o IP que está a usar não é usado por outros 
+    aparelhos na sua rede local (tal como PC's, outras PS2's, ou a própria
     access point), e a PS2 tem de estar na mesma 'subnet' (i.e. os primeiros
-    3 n�meros do endere�o de IP devem ser os mesmos que os outros aparelhos
+    3 números do endereço de IP devem ser os mesmos que os outros aparelhos
     na sua rede local).
   </para>
-
+  <para lang="ru">
+    Разумеется, как было сказано выше, вам необходимо убедиться в том, что 
+    выбранный вами для SMS адрес уже не используется каким-либо другим
+    устройством в вашей сети. Кроме того, надо помнить о том, что PS2 должна
+    находиться в той же подсетке, что и все остальные устройства (например,
+    первые три сегмента адреса сети должны быть такими же, как и у других
+    сетевых устройств в вашей сети)
+  </para>
+  
   <tip>
     <para lang="en">
       If you are not sure whether you've got a DHCP server or not, go to
@@ -321,13 +455,22 @@
       by typing the access point IP address into a web browser.
     </para>
     <para lang="pt">
-      Se n�o estiver certo se tem ou n�o um servidor de DHCP, v� ao command
+      Se não estiver certo se tem ou não um servidor de DHCP, vá ao command
       prompt e insira <userinput>ipconfig /all</userinput>.
-      Se vir um servidor de DHCP listado com um endere�o de IP, ent�o isso
-      significa que voc� <emphasis role="bold">tem</emphasis> um servidor de
-      DHCP a correr. Pode normalmente aceder � configura��o das access points
-      inserindo o seu endere�o de IP num navegador de internet.
+      Se vir um servidor de DHCP listado com um endereço de IP, então isso
+      significa que você <emphasis role="bold">tem</emphasis> um servidor de
+      DHCP a correr. Pode normalmente aceder à configuração das access points
+      inserindo o seu endereço de IP num navegador de internet.
     </para>
+    <para lang="ru">
+      Если вы не уверены, что в вашей сети вообще есть DHCP сервер, откройте
+      окно ДОС и напечатайте <userinput>ipconfig /all</userinput>.  Если вы 
+      увидите, что в списке есть строка DHCP server и в ней записан IP адрес,
+      это означает, что у вас в сети <emphasis role="bold">есть</emphasis> 
+      DHCP рабочий сервер. Как правило, вы можете сконфигурировать точку 
+      доступа, просто напечатав ее IP адрес в веб-браузере.
+    </para>
+    
   </tip>
 </sect1>
 
@@ -338,8 +481,12 @@
       AC3 passthrough?</emphasis>
     </phrase>
     <phrase lang="pt">
-      <emphasis>A sa�da �ptica digital (S/PDIF) da PS2 funciona no SMS para
+      <emphasis>A saída óptica digital (S/PDIF) da PS2 funciona no SMS para
       som AC3?</emphasis>
+    </phrase>
+    <phrase lang="ru">
+      <emphasis>Будет ли работать оптический выход (S/PDIF), имеющийся в PS2,
+      в SMS для вывода АС3?</emphasis>
     </phrase>
   </title>
   <para lang="en">
@@ -353,6 +500,14 @@
     via a fibre optic cable.  This has been tested with a SoundBlaster
     PC sound card and 384kb/s ac3 streams.#
   </para>
+  <para lang="ru">
+    Да, вы можете подключить оптический выход PS2 к внешнему аудиопроцессору
+    через оптоволоконный кабель. После чего, можно включить оптический
+    выход с помощью <emphasis role="bold">SMS Menu -> Player settings</emphasis>. 
+    Эта опция проверялась совместно со звуковой компьютерной картой 
+    SoundBlaster и потоком АС3 в 384Кб/c.
+  </para>
+  
   <note>
     <para lang="en">
       It is not possible to adjust the audio volume in this mode.
@@ -360,6 +515,11 @@
     <para lang="pt">
       #It is not possible to adjust the audio volume in this mode.#
     </para>
+   <para lang="ru">
+      Обратите внимание на то, что изменение громкости звука в этом 
+      режиме недоступно.
+    </para>
+
   </note>
 
 </sect1>
@@ -374,6 +534,11 @@
       <emphasis>#What types of of writeable media
       (DVD-R/DVD+R/DVD+RW/DVD-RW/CDR/CDRW) will work with SMS?#</emphasis>
     </phrase>
+    <phrase lang="ru">
+      <emphasis>Какие типы записываемых оптических дисков 
+      (DVD-R/DVD+R/DVD+RW/DVD-RW/CDR/CDRW) совместимы с SMS?</emphasis>
+    </phrase>
+    
   </title>
   <para lang="en">
     Users have had success with all current types of writeable disc, but the 
@@ -393,6 +558,15 @@
     home-burned discs, is either the <xref linkend="usage-cddafs"/> method
     or the <xref linkend="usage-dvdr"/> 'Dummy DVD Video Disc' method.#
   </para>
+  <para lang="ru">
+    Пользователи программы успешно работали с различными видами дисков, но 
+    наиболее часто используемым типом дисков, как видно из
+    <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=44531">
+    недавнего опроса</ulink> является DVD-R.  Обратите внимание на то, что 
+    без установки модчипа, единственным путем заставить PS2 прочитать ваш
+    диск, являются <xref linkend="usage-cddafs"/> этот
+    или <xref linkend="usage-dvdr"/> 'Поддельный DVD Video диск' методы.
+  </para>
 
   <informaltable frame='none'>
   <tgroup cols='2'>
@@ -401,14 +575,17 @@
     <entry>
       <para lang="en">Format</para>
       <para lang="pt">#Format#</para>
+      <para lang="ru">Формат</para>      
     </entry>
     <entry>
       <para lang="en">Working?</para>
       <para lang="pt">#Working?#</para>
+      <para lang="ru">Работает?</para>      
     </entry>
     <entry>
       <para lang="en">Comments</para>
       <para lang="pt">#Comments#</para>
+      <para lang="ru">Комментарии</para>            
     </entry>
   </row>
   </thead>
@@ -418,10 +595,12 @@
     <entry>
       <para lang="en">Yes</para>
       <para lang="pt">#Yes#</para>
+      <para lang="ru">Да</para>
     </entry>
     <entry>
       <para lang="en">None</para>
       <para lang="pt">#None#</para>
+      <para lang="ru">Нет</para>
     </entry>
   </row>
   <row>
@@ -429,10 +608,12 @@
     <entry>
       <para lang="en">Yes</para>
       <para lang="pt">#Yes#</para>
+      <para lang="ru">Да</para>      
     </entry>
     <entry>
       <para lang="en">None</para>
       <para lang="pt">#None#</para>
+      <para lang="ru">Нет</para>      
     </entry>
   </row>
   <row>
@@ -440,10 +621,12 @@
     <entry>
       <para lang="en">Yes</para>
       <para lang="pt">#Yes#</para>
+      <para lang="ru">Да</para>       
     </entry>
     <entry>
       <para lang="en">None</para>
       <para lang="pt">#None#</para>
+      <para lang="ru">Нет</para>      
     </entry>
   </row>
   <row>
@@ -451,10 +634,12 @@
     <entry>
       <para lang="en">Yes</para>
       <para lang="pt">#Yes#</para>
+      <para lang="ru">Да</para>       
     </entry>
     <entry>
       <para lang="en">None</para>
       <para lang="pt">#None#</para>
+      <para lang="ru">Нет</para>      
     </entry>
   </row>
   <row>
@@ -462,10 +647,12 @@
     <entry>
       <para lang="en">Yes</para>
       <para lang="pt">#Yes#</para>
+      <para lang="ru">Да</para>       
     </entry>
     <entry>
       <para lang="en">None</para>
       <para lang="pt">#None#</para>
+      <para lang="ru">Нет</para>      
     </entry>
   </row>
   <row>
@@ -473,10 +660,12 @@
     <entry>
       <para lang="en">Yes</para>
       <para lang="pt">#Yes#</para>
+      <para lang="ru">Да</para>       
     </entry>
     <entry>
       <para lang="en">None</para>
       <para lang="pt">#None#</para>
+      <para lang="ru">Нет</para>      
     </entry>
   </row>
   </tbody>
@@ -484,5 +673,3 @@
   </informaltable>
 
 </sect1>
-
-

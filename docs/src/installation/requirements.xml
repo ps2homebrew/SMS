@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <!-- $Revision: 1.26 $ -->
 
 <sect1 id="sms-installation-requirements">
@@ -7,6 +7,7 @@
     <phrase lang="el">#Requirements#</phrase>
     <phrase lang="es">#Requirements#</phrase>
     <phrase lang="pt">Requerimentos</phrase>
+    <phrase lang="ru">Системные требования</phrase>        
   </title>
   
   <para lang="en">
@@ -21,6 +22,13 @@
     such as <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=37242">uLaunchELF</ulink>.
     The options you have available to you depend mainly on which PS2 variant you have:#
   </para>
+  <para lang="ru">
+    Для установки SMS необходим какой-либо способ запускать сторонние (не 
+    авторизованные Sony) программы <filename>.ELF</filename>. Например,
+    вы можете воспользоваться каким-либо менеджером загрузки, таким как 
+    <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=37242">uLaunchELF</ulink>.
+    В любом случае, все зависит от типа имеющейся у вас PS2.
+  </para>
 
   <itemizedlist>
     <listitem>
@@ -29,6 +37,9 @@
       </para>
       <para lang="pt">
         #A chubby PS2 (V11 and below) needs one of the following:#
+      </para>
+      <para lang="ru">
+        Для "толстой" PS2 (версия V11 и более ранние) требуется одно из:
       </para>
       <itemizedlist>
         <listitem>
@@ -48,6 +59,13 @@
             <ulink url="http://console.iscentral.net/?go=start">tutorial
             2</ulink>)
           </para>
+          <para lang="ru">
+            <ulink url="http://en.wikipedia.org/wiki/PS2_Independence_Exploit">Independence
+            Exploit (программная модификация консоли)</ulink>
+            (<ulink url="http://www.exploitstation.com/index.php?page=faq">
+            руководство 1</ulink>,
+            <ulink url="http://console.iscentral.net/?go=start">руководство 2</ulink>)
+          </para>
         </listitem>
         <listitem>
           <para lang="en">
@@ -55,6 +73,9 @@
           </para>
           <para lang="pt">
             Modchip
+          </para>
+          <para lang="ru">
+            Модчип (аппаратная модификация консоли)
           </para>
         </listitem>
       </itemizedlist>
@@ -67,6 +88,9 @@
       <para lang="pt">
         #A slimline PS2 (V12 and above) needs the following:#
       </para>
+      <para lang="ru">
+        Для "тонкой" PS2 (версии V12 и более поздних) потребуется:
+      </para>
       <itemizedlist>
         <listitem>
           <para lang="en">
@@ -74,6 +98,9 @@
           </para>
           <para lang="pt">
             Modchip
+          </para>
+          <para lang="ru">
+            Модчип (аппаратная модификация консоли)
           </para>
         </listitem>
       </itemizedlist>
@@ -98,6 +125,17 @@
     technique</ulink> (patience required).  Come back to this page when
     you've got <application>uLaunchELF</application> on your TV screen.#
   </para>
+  <para lang="ru">
+    Если у вас нет возможности запускать <filename>.ELF</filename> файлы на 
+    вашей консоли, то работать с SMS у вас не получится. На немодифицированной
+    консоли запустить SMS напрямую с CD/DVD невозможно. Если у вас есть
+    немодифицированная "тонкая" PS2 и модчип вы ставить не хотите, то 
+    единственным вариантом запуска SMS будет способ <ulink
+    url="http://forums.afterdawn.com/thread_view.cfm/337567">смены диска</ulink>,
+    требующий терпения. Когда вы увидите на экране своего телевизора окно
+    <application>uLaunchELF</application>, можете вернуться на эту страницу
+    и продолжить чтение.
+  </para>
 
   <important>
     <para lang="en">
@@ -109,13 +147,24 @@
       running.
     </para>
     <para lang="pt">
-      O SMS n�o � um meio para correr ficheiros
-      ELF, ele necessita de um exploit ou de um modchip para correr.  N�o
+      O SMS não é um meio para correr ficheiros
+      ELF, ele necessita de um exploit ou de um modchip para correr.  Não
       pode simplesmente gravar o SMS.ELF para um CD visto que o sistema de
-      protec��o anti-c�pia da PS2 o impedir� de ler.  Por favor tenha tamb�m
-      em aten��o que o m�todo do CDXplorer tamb�m n�o servir� para correr o
-      SMS.  � apenas um m�todo de fornecer ficheiros de media ao SMS assim que
-      o SMS j� esteja a correr.
+      protecção anti-cópia da PS2 o impedirá de ler.  Por favor tenha também
+      em atenção que o método do CDXplorer também não servirá para correr o
+      SMS.  É apenas um método de fornecer ficheiros de media ao SMS assim que
+      o SMS já esteja a correr.
+    </para>
+    <para lang="ru">
+      SMS не является программой модификации вашей консоли, наоборот, для
+      запуска SMS, консоль должна быть уже модифицирована тем или иным
+      способом. Вы не можете просто сделать CD диск с SMS.ELF в надежде на то,
+      что вы сможете просто запустить его на своей консоли - система защиты
+      от копирования, встроенная в PS2 просто не даст вам это сделать.
+      Также, обратите внимание на то, что метод CDXplorer-а также не позволит
+      решить эту проблему, поскольку он представляет собой просто способ
+      записи медиа-файлов для последующего воспроизведения с помощью SMS, а
+      саму программу запустить он не поможет.
     </para>
   </important>
 
@@ -126,6 +175,10 @@
   <para lang="pt">
     ~Assuming you can meet the above requirements, please select one of the
     following sections for instructions on how to get SMS onto your PS2:~
+  </para>
+  <para lang="ru">
+    Если ваша система отвечает требованиям, изложенным выше, выберите способ,
+    с помощью которого вы хотите установить SMS на вашей PS2:
   </para>
   
   <itemizedlist>

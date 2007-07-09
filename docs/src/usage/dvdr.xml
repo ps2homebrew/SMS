@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- $Revision: -->
 
 <sect1 id="usage-dvdr" xreflabel="DVD-R">
@@ -6,6 +6,7 @@
     <phrase lang="en">Playing files from a DVD-R (without a modchip)</phrase>
     <phrase lang="pt">Correndo ficheiros a partir de um DVD-R (without a 
     modchip)</phrase>
+    <phrase lang="ru">Воспроизведение файлов с DVD-R на PS2 без модчипа.</phrase>    
   </title>
   <warning>
     <para lang="en">
@@ -14,10 +15,17 @@
       the chip is turned on. Modchip users can just burn a normal Data DVD.
     </para>
     <para lang="pt">
-      Se tiver um modchip instalado na PS2 n�o utilize este m�todo. N�o
-      precisa, ali�s, a PS2 pode nem sequer conseguir ler este DVD
+      Se tiver um modchip instalado na PS2 não utilize este método. Não
+      precisa, aliás, a PS2 pode nem sequer conseguir ler este DVD
       enquanto o modchip estiver ligado. OS utilizadores com modchip
       podem simplesmente gravar um DVD de dados normal.
+    </para>
+    <para lang="ru">
+      Не пользуйтесь этим методом, если в вашей PS2 уже установлен модчип.
+      Для таких консолей этот метод не нужен и, более того, может мешать
+      некоторым PS2 прочитать этот диск, когда модчип активирован. 
+      Пользователи аппаратно модифицированных консолей могут просто создать
+      DVD в формате обычных данных (Data DVD).
     </para>
   </warning>
 
@@ -34,9 +42,19 @@
     DVD's de Video podem ser lidos em qualquer PS2, mesmo sem modchip. A PS2
     consegue aceder a qualquer outro ficheiro que esteja no DVD. Para que o
     SMS consiga ler o DVD, vamos criar um DVD de video com um 'dummy', que
-    depois poderemos encher com ficheiros DivX. O video para o DVD j� est�
-    criado, por isso tudo o que voc� tem de fazer � grav�-lo com o Nero,
+    depois poderemos encher com ficheiros DivX. O video para o DVD já está
+    criado, por isso tudo o que você tem de fazer é gravá-lo com o Nero,
     junto com os seus ficheiros de video (AVI).
+  </para>
+  <para lang="ru">
+    Поскольку PS2 уже поддерживает работу с DVD Video дисками, модчип для 
+    чтения таких дисков нужен. Кроме того, PS2 может получить доступ к
+    любым другим файлам, записанным на DVD Video диске (помимо самого видео).
+    Для того, чтобы SMS могла увидеть эти файлы, мы создадим фиктивный 
+    DVD Video диск, который мы, затем, заполним файлами DivX.
+    Поскольку мы уже проделали тяжелейшую работу по созданию подходящего
+    образа DVD Video диска, то все, что остается вам сделать - это записать
+    его на DVD диск, вместе с вашими видеофайлами.
   </para>
 
   <itemizedlist mark='number'>
@@ -47,10 +65,16 @@
         (144k), and unzip it onto the Desktop. or create your own DVD-Video files.
       </para>
       <para lang="pt">
-        Fa�a o download do video de DVD
+        Faça o download do video de DVD
         <ulink url="http://www.adam.com.au/kellyjones/YABB/dvdMini.zip">aqui</ulink>
         (144k), e extraia-o para o Ambiente de Trabalho. 
         Ou se preferir crie os seus ficheiros de video.
+      </para>
+      <para lang="ru">
+        Скачайте фиктивный DVD видеоролик 
+        <ulink url="http://www.adam.com.au/kellyjones/YABB/dvdMini.zip">отсюда</ulink>
+        (144КБ) и распакуйте его на Рабочий Стол или создайте свои собственные
+        DVD Video файлы.
       </para>
     </listitem>
     <listitem>
@@ -60,13 +84,20 @@
       <para lang="pt">
         Abra o Nero. Seleccione DVD, e escolha DVD-Video. Pressione 'New'.
       </para>
+      <para lang="ru">
+        Запустите Nero. Выберите DVD и отметьте тип диска "DVD-Video". Нажмите 
+        New.
+      </para>
       <figure>
         <title>
           <phrase lang="en">
             Select DVD option.
           </phrase>
           <phrase lang="pt">
-            Seleccione a Op��o DVD.
+            Seleccione a Opção DVD.
+          </phrase>
+          <phrase lang="ru">
+            Выбираем формат DVD.
           </phrase>
         </title>
         <mediaobject>
@@ -87,6 +118,9 @@
       <para lang="pt">
         Arraste os ficheiros 'dummy' para a pasta VIDEO-TS no DVD.
       </para>
+      <para lang="ru">
+        Перетащите файлы фиктивного DVD-Video в папку VIDEO_TS на DVD.
+      </para>
       <figure>
         <title>
           <phrase lang="en">
@@ -94,6 +128,9 @@
           </phrase>
           <phrase lang="pt">
             Copie os ficheiros 'dummy'
+          </phrase>
+          <phrase lang="ru">
+            Копируем файлы фиктивного DVD-Video.
           </phrase>
         </title>
         <mediaobject>
@@ -114,6 +151,10 @@
       <para lang="pt">
         Preencha o resto do DVD com os seus ficheiros DivX e MP3 favoritos.
       </para>
+      <para lang="ru">
+        Оставшееся на диске место заполните своими собственными файлами
+        DivX и MP3.
+      </para>      
       <figure>
         <title>
           <phrase lang="en">
@@ -121,6 +162,9 @@
           </phrase>
           <phrase lang="pt">
             Copie os seus ficheiros de media.
+          </phrase>
+          <phrase lang="ru">
+           Копируем наши собственные файлы.
           </phrase>
         </title>
         <mediaobject>
@@ -139,8 +183,12 @@
         Burn the DVD. You can now play it using SMS in any unmodified console.
       </para>
       <para lang="pt">
-        Grave o DVD. Pode agora us�-lo com o SMS em qualquer consola
-        n�o modificada.
+        Grave o DVD. Pode agora usá-lo com o SMS em qualquer consola
+        não modificada.
+      </para>
+      <para lang="ru">
+        Запишите диск. Вы сможете воспроизвести записанные на нем файлы
+        на любой немодифицированной аппаратно консоли.
       </para>
     </listitem>
   </itemizedlist>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
   <para lang="en">
     So, now that you've got SMS installed on your PS2
@@ -6,11 +6,15 @@
     chapter explains all you need to know.
   </para>
   <para lang="pt">
-    Agora que o SMS j� est� instalado na PS2
-    (veja <xref linkend="installation"/>), como ver os filmes?  Este cap�tulo
-    explica tudo o que voc� precisa de saber.
+    Agora que o SMS já está instalado na PS2
+    (veja <xref linkend="installation"/>), como ver os filmes?  Este capítulo
+    explica tudo o que você precisa de saber.
   </para>
-
+  <para lang="ru">
+    Теперь, когда SMS была успешно установлена на вашей PS2 (см <xref linkend="installation"/>), 
+    как заставить её восроизводить фильмы? Этот раздел поможет понять, как это сделать.
+  </para>
+  
   <para lang="en">
     To run SMS you first need to run your exploit or start up your PS2 with
     the modchip installed.  Then use the appropriate technique to start the
@@ -21,25 +25,37 @@
     you want to run.
   </para>
   <para lang="pt">
-    Para correr o SMS primeiro voc� precisa de correr o 'exploit' ou ligar a
-    PS2 se tiver modchip instalado.  Depois tem de utilizar a t�cnica
+    Para correr o SMS primeiro você precisa de correr o 'exploit' ou ligar a
+    PS2 se tiver modchip instalado.  Depois tem de utilizar a técnica
     apropriada para ligar o SMS.  Se estiver a usar o
     <xref linkend="faq-independence"/>
-    insira o seu CD de PS1 (original), e pressione reset. Isto executar�
-    a aplica��o de gest�o ('LaunchElf por exemplo'), onde puder� escolher qual
+    insira o seu CD de PS1 (original), e pressione reset. Isto executará
+    a aplicação de gestão ('LaunchElf por exemplo'), onde puderá escolher qual
     o ELF que quer executar.
   </para>
-
+  <para lang="ru">
+    Чтобы начать пользоваться SMS, необходимо использовать программную модификацию PS2 или
+    включить чип модификации. После чего, запустить SMS.
+    Если используется  <xref linkend="faq-independence"/>, то надо вставить 
+    оригинальный PS1 диск и нажать на кнопку сброса. Таким образом, PS2 запустит 
+    программу-загрузчик, в которой можно выбирать ELF, который вы хотите выполнить.
+  </para>
+  
   <para lang="en">
     Next, if you're using LaunchELF/uLaunchELF as your boot application, you
     can run SMS by navigating to SMS.ELF and pressing O. You may want to
     assign a shortcut button to it so it is easier to load next time.
   </para>
   <para lang="pt">
-    De seguida, se estiver a usar o LaunchELF/uLaunchELF como aplica��o
-    inicial, pode correr o SMS bastando para isso navegar at� ao ficheiro
-    SMS.ELF e pressionar O.  Talvez queira adicionar um but�o de atalho
-    para o SMS para ser mais f�cil de carregar na pr�xima vez.
+    De seguida, se estiver a usar o LaunchELF/uLaunchELF como aplicação
+    inicial, pode correr o SMS bastando para isso navegar até ao ficheiro
+    SMS.ELF e pressionar O.  Talvez queira adicionar um butão de atalho
+    para o SMS para ser mais fácil de carregar na próxima vez.
+  </para>
+  <para lang="ru">
+    Теперь, если в качестве программы-загрузчика используется LaunchELF/uLaunchELF,
+    можно запустить SMS, выбрав его из списка и нажав O. Для облегчения последующих
+    запусков программы, можно настроить кнопку быстрого запуска.
   </para>
 
   <tip>
@@ -49,9 +65,14 @@
       delay.
     </para>
     <para lang="pt">
-      Se voc� usa o SMS regularmente, talvez queira adicion�-lo como a op��o
-      'default' no LaunchELF, para que ele seja executado autom�ticamente,
+      Se você usa o SMS regularmente, talvez queira adicioná-lo como a opção
+      'default' no LaunchELF, para que ele seja executado automáticamente,
       passado pouco tempo.
+    </para>
+    <para lang="ru">
+      Если вы планируете часто пользоваться SMS, то имеет смысл установить эту
+      программу в "запуск по умолчанию" (default). В таком случае, SMS будет запущена на
+      исполнение автоматически, после короткой задержки.
     </para>
   </tip>
 
@@ -61,11 +82,17 @@
     are the same, whichever Exploit/Modchip you are using.
   </para>
   <para lang="pt">
-    Assim que tiver o SMS a correr, dever� ver a bela 'interface' do SMS
-    no seu televisor. Daqui para a frente, todas as instru��es
-    s�o as mesmas, qualquer que seja o 'exploit'/modchip que estiver a usar.
+    Assim que tiver o SMS a correr, deverá ver a bela 'interface' do SMS
+    no seu televisor. Daqui para a frente, todas as instruções
+    são as mesmas, qualquer que seja o 'exploit'/modchip que estiver a usar.
+  </para>
+  <para lang="ru">
+    После того, как SMS стартовала, вы можете увидеть приятный графический интерфейс
+    программы на вашем телевизоре. С этого момента, все инструкции, приведенные в данном
+    документе, не зависят от типа модификации игровой приставки.
   </para>
 
+  
   <figure>
     <title>
        <phrase lang="en">
@@ -74,9 +101,14 @@
          this case).
       </phrase>
       <phrase lang="pt">
-        Screenshot do interface do SMS. (os ficheiros que voc� v� s�o os
+        Screenshot do interface do SMS. (os ficheiros que você vê são os
         ficheiros presentes no CD que se encontra na PS2 - o disco de
         arranque do 'exploit independence' neste caso).
+      </phrase>
+       <phrase lang="en">
+         Так выглядит главное окно программы. На приведенной картинке, можно видеть
+         файлы, которые находятся на CD, вставленном в привод PS2 (в данном случае -
+         диска программной модификации independence).
       </phrase>
     </title>
     <mediaobject>
@@ -89,6 +121,9 @@
       <textobject lang="pt">
         <phrase>GUI principal do SMS</phrase>
       </textobject>
+      <textobject lang="en">
+        <phrase>Главное окно SMS</phrase>
+      </textobject>
     </mediaobject>
   </figure>
 
@@ -100,9 +135,17 @@
     pressing <emphasis role="bold">start</emphasis>.
   </para>
   <para lang="pt">
-    Este � o ecr� de onde poder� aceder a mais op��es. Pode navegar pelos
+    Este é o ecrã de onde poderá aceder a mais opções. Pode navegar pelos
     ficheiros usando as teclas cima/baixo/esq./dir. nos controladores 1 ou 2,
     e pode corre-los pressionando <emphasis role="bold">X</emphasis>.
-    Um menu de configura��o pode ser acedido
+    Um menu de configuração pode ser acedido
     pressionando <emphasis role="bold">start</emphasis>.
+  </para>
+  <para lang="ru">
+    Это окно, из которого можно получить доступ к большинству функций программы. 
+    Здесь можно перемещаться по файлам, используя кнопки влево/вправо/вверх/вниз на
+    контроллерах 1 или 2. Также, можно начать воспроизведение выбранного файла с помощью
+    кнопки <emphasis role="bold">X</emphasis>.
+    Меню настроек программы может быть вызвано с помощью кнопки 
+    <emphasis role="bold">start</emphasis>.
   </para>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- $Revision: 1.31 $ -->
 
 <sect1 id="usage-hdd" xreflabel="Internal HDD">
@@ -9,6 +9,9 @@
     <phrase lang="pt">
       Correndo ficheiros de Video a partir do Disco Rigido da PS2
     </phrase>
+    <phrase lang="ru">
+      Воспроизведение видео файлов со встроенного в PS2 жесткого диска.
+    </phrase>
   </title>
 
   <para lang="en">
@@ -16,8 +19,12 @@
     play video and music files using SMS.
   </para>
   <para lang="pt">
-    Se tiver um Disco Rigido (HDD) na sua PS2, pode utiliz�-lo para guardar
-    e tocar os seus ficheiros de video e m�sica atrav�s do SMS.
+    Se tiver um Disco Rigido (HDD) na sua PS2, pode utilizá-lo para guardar
+    e tocar os seus ficheiros de video e música através do SMS.
+  </para>
+  <para lang="ru">
+    Если у вашей PS2 есть жесткий диск (HDD), то вы можете использовать его 
+    для хранения и воспроизведения видео- и аудиофайлов, используя SMS. 
   </para>
   <para lang="en">
     You can use any type of Hard Drive you want, whether it is Sony's 
@@ -30,12 +37,21 @@
   <para lang="pt">
     Pode utilizar qualquer tipo de HDD que quiser, quer seja o HDD oficial 
     da Sony para a PS2 ou um HDD 'normal' de PC.  Para uma lista dos HDDs 
-    que funcionam/n�o funcionam na PS2, veja aqui:
+    que funcionam/não funcionam na PS2, veja aqui:
     <ulink url="http://ps2drives.x-pec.com/"/>.
-    Tenha em aten��o que <emphasis role="bold">necessita</emphasis> de um
-    adaptador de rede oficial da Sony para poder ligar o HDD � PS2.
+    Tenha em atenção que <emphasis role="bold">necessita</emphasis> de um
+    adaptador de rede oficial da Sony para poder ligar o HDD à PS2.
   </para>
-
+  <para lang="ru">
+    Вы можете использовать любой жесткий диск (но он должен иметь
+    интерфейс IDE!):  официальный PS2 HDD от Sony или любой 'нормальный' 
+    HDD для персонального компьютера. Просмотреть список HDD, работающих с 
+    PS2, можно здесь: 
+    <ulink url="http://ps2drives.x-pec.com/"/>.
+    Пожалуйста не забудьте, что вам 
+    <emphasis role="bold">обязательно</emphasis>  потребуется Sony Network 
+    Adaptor для подключения диска к PS2.
+  </para>
   <note>
     <para lang="en">
       Some users have reported problems about SMS not detecting the HDD on
@@ -44,10 +60,16 @@
       (V0-11).
     </para>
     <para lang="pt">
-      Alguns utilizadores tiveram problemas com o SMS n�o ser capaz de
-      detectar o HDD nas suas PSTwo (vers�es finas), aquando da utiliza��o 
-      de mods como o HDConnect.  Assim sendo, assumimos que s� � poss�vel 
-      detectar o HDD nas vers�es antigas da PS2 (V0-11).
+      Alguns utilizadores tiveram problemas com o SMS não ser capaz de
+      detectar o HDD nas suas PSTwo (versões finas), aquando da utilização 
+      de mods como o HDConnect.  Assim sendo, assumimos que só é possível 
+      detectar o HDD nas versões antigas da PS2 (V0-11).
+    </para>
+    <para lang="ru">
+      У некоторых пользователей возникают проблемы с определением жесткого
+      диска в SMS при работе с "тонкой" PSTwo (когда используется модификация
+      типа HDConnect). Поэтому мы будем считаем, что HDD определятеся
+      только на старых "толстых" версиях PS2 (V0-11).
     </para>
   </note>
 
@@ -57,10 +79,14 @@
     application called 'PFS Explorer'.
   </para>
   <para lang="pt">
-    Pode transferir ficheiros para o seu HDD de v�rias formas.  Pode faz�-lo
-    por FTP, utilizando a fun��o 'host' do uLaunchELF ou utilizando uma 
-    aplica��o de Windows chamada 'PFS Explorer'.
+    Pode transferir ficheiros para o seu HDD de várias formas.  Pode fazê-lo
+    por FTP, utilizando a função 'host' do uLaunchELF ou utilizando uma 
+    aplicação de Windows chamada 'PFS Explorer'.
   </para>
+  <para lang="ru">
+    Вы можете скопировать файлы на HDD в PS2 различными путями. Например, это
+    можно сделать через FTP (используя FTP-сервер uLaunchELF) или использовать 
+    программу PFS Explorer, работающую под Windows.   </para>
   
   <para lang="en">
     Transfering files to the HDD is out of the scope of this Manual, but you
@@ -70,11 +96,18 @@
     there.
   </para>
   <para lang="pt">
-    Transferir ficheiros para o HDD n�o faz parte dos objectivos deste
-    manual, mas pode sempre seguir as instru��es na sec��o
+    Transferir ficheiros para o HDD não faz parte dos objectivos deste
+    manual, mas pode sempre seguir as instruções na secção
     <xref linkend="installation-copytomemcard-ftp-ulaunchelf"/>, e transferir
-    os ficheiros que quiser para o seu HDD utilizando o mesmo m�todo de FTP
-    explicado a�.
+    os ficheiros que quiser para o seu HDD utilizando o mesmo método de FTP
+    explicado aí.
+  </para>
+  <para lang="ru">
+    Тема копирования файлов на внутренний HDD PS2 выходит за рамки этого 
+    руководства. Однако, вы можете прочесть главу 
+    <xref linkend="installation-copytomemcard-ftp-ulaunchelf"/> и копировать
+    файлы с помощью описанного в ней FTP метода.
+    there.
   </para>
 
   <warning>
@@ -84,9 +117,14 @@
       (e.g. lost data, deleted partitions, etc).
     </para>
     <para lang="pt">
-      N�o � recomendado o uso do 'PFS Explorer' para transferir ficheiros 
+      Não é recomendado o uso do 'PFS Explorer' para transferir ficheiros 
       para o HDD porque alguns utilizadores parecem ter tido problemas com 
-      esta aplica��o (e.g. informa��o perdida, parti��es apagadas, etc).
+      esta aplicação (e.g. informação perdida, partições apagadas, etc).
+    </para>
+    <para lang="ru">
+      Мы не рекомендуем использовать PFS Explorer для передачи файлов на HDD, 
+      так как у некоторых пользователей возникают проблемы при работе с этим 
+      приложением (например, потеря данных, удаление разделов и т.д.). 
     </para>
   </warning>
 
@@ -102,15 +140,27 @@
     partition(s) you just created.
   </para>
   <para lang="pt">
-    Qualquer que seja o m�todo utilizado para transferir ficheiros para o 
-    HDD, dever� criar uma nova parti��o para guardas os ficheiros de media.  
-    Para criar as parti��es necessitar� de uma aplica��o chamada 'DMS HDD 
-    Format Tool'.  Instru��es passo-a-passo de como utilizar esta ferramenta 
+    Qualquer que seja o método utilizado para transferir ficheiros para o 
+    HDD, deverá criar uma nova partição para guardas os ficheiros de media.  
+    Para criar as partições necessitará de uma aplicação chamada 'DMS HDD 
+    Format Tool'.  Instruções passo-a-passo de como utilizar esta ferramenta 
     podem ser encontradas aqui:
     <ulink url="http://www.exploitstation.com/articles/launchelf_tut/launchtut.html"/>
-    (role para baixo).  Depois de criar as parti��es pode utilizar os 
-    m�todos mencionados em cima para transferir os seus ficheiros de media 
-    para as parti��es do HDD que acabou de criar.
+    (role para baixo).  Depois de criar as partições pode utilizar os 
+    métodos mencionados em cima para transferir os seus ficheiros de media 
+    para as partições do HDD que acabou de criar.
+  </para>
+  <para lang="ru">
+   Какой бы метод передачи данных на HDD вы бы не использовали, от вас 
+   потребуется создать новый раздел для хранения медиа файлов на внутреннем 
+   диске PS2. Для этого вам понадобится программа  
+   <emphasis role="italic">DMS HDD Format Tool </emphasis>. 
+    Пошаговая инструкция по использованию программы приведена на этом сайте: 
+    <ulink url="http://www.exploitstation.com/articles/launchelf_tut/launchtut.html"/>
+    (пролистайте страницу вниз, чтобы найти нужную статью). После того, как 
+    раздел был успешно создан, вы можете воспользоваться вышеупомянутыми
+    методами для копирования медиафайлов в только что созданный раздел (или 
+    разделы) HDD PS2.
   </para>
   
   <para lang="en">
@@ -122,30 +172,44 @@
     'Device Settings' and choose the 'Start HDD Support' option.
   </para>
   <para lang="pt">
-    Quando iniciar o SMS dever� ver o icon do HDD ao lado dos outros 
-    dispositivos em 'Available Media' (Media dispon�vel).  Se n�o vir, e
+    Quando iniciar o SMS deverá ver o icon do HDD ao lado dos outros 
+    dispositivos em 'Available Media' (Media disponível).  Se não vir, e
     estiver a usar o SMS v1.6 ou superior provavelmente necessita de ir ao
-    menu e iniciar o suporte de HDD a partir de l�.  para fazer isto, abra o
+    menu e iniciar o suporte de HDD a partir de lá.  para fazer isto, abra o
     menu (pressione
-    <emphasis role="bold">START</emphasis> na janela do navegador), v� a
-    'Device Settings' (Op��es do Dispositivo) e escolha a op��o
+    <emphasis role="bold">START</emphasis> na janela do navegador), vá a
+    'Device Settings' (Opções do Dispositivo) e escolha a opção
     'Start HDD Support' (Iniciar suporte de HDD).
+  </para>
+  <para lang="ru">
+    Когда вы запустите SMS, вы увидите иконку HDD вверху экрана. Если ее там
+    нет и вы пользуетесь SMS v1.6 (или более новой версией), то вам небходимо 
+    включить поддержку HDD в меню настроек программы. Для того, чтобы это 
+    сделать, зайдите в меню (нажав кнопку
+    <emphasis role="bold">START</emphasis> в окне списка файлов), затем 
+    выберите Device Settings и включите опцию Start HDD Support.
   </para>
   <para lang="en">
     You'll probably want SMS to detect the HDD when it starts.  To activate
     this, check the option 'Autostart HDD' in the menu.
   </para>
   <para lang="pt">
-    Provavelmente querer� que o SMS detecte o HDD ao iniciar.  Para activar
-    esta funcionalidade, ligue a op��o 'Autostart HDD' (Carregar HDD auto) 
+    Provavelmente quererá que o SMS detecte o HDD ao iniciar.  Para activar
+    esta funcionalidade, ligue a opção 'Autostart HDD' (Carregar HDD auto) 
     no menu.
   </para>
+  <para lang="ru">
+    Вы вероятно захотите, чтобы SMS подключал HDD при запуске. Для этого 
+    активируйте опцию Autostart HDD в меню.
+  </para>
+  
 
   <figure>
     <title>
       <phrase lang="en">SMS 1.6 Device Settings Menu.</phrase>
-      <phrase lang="pt">SMS 1.6 Menu Device Settings (Op��es do 
+      <phrase lang="pt">SMS 1.6 Menu Device Settings (Opções do 
       Dispositivo).</phrase>
+      <phrase lang="ru">Меню настроек устройств в SMS 1.6.</phrase>      
     </title>
     <mediaobject>
       <imageobject>
@@ -163,9 +227,15 @@
     options related to the HDD:
   </para>
   <para lang="pt">
-    Se desejar, pode ir ao menu 'Browser Settings' (Op��es do Navegador) e 
-    alterar algumas op��es relacionadas com o HDD:
+    Se desejar, pode ir ao menu 'Browser Settings' (Opções do Navegador) e 
+    alterar algumas opções relacionadas com o HDD:
   </para>
+  <para lang="ru">
+    Если хотите, то можете зайти в Browser Settings (настройки файлового
+    проводника) в меню и поменять там некоторые настройки, относящиеся к
+    HDD:
+  </para>
+    
   <itemizedlist>
     <listitem>
       <para lang="en">
@@ -174,9 +244,14 @@
       the browser.  (recommended: OFF)
       </para>
       <para lang="pt">
-      <emphasis role="bold">Display HDL partitions (Mostrar Parti��es do 
-      HDL) - </emphasis>Ligar esta op��o far� com que as parti��es criadas 
+      <emphasis role="bold">Display HDL partitions (Mostrar Partições do 
+      HDL) - </emphasis>Ligar esta opção fará com que as partições criadas 
       pelo HDLoader sejam visiveis no navegador.  (recomendado: Desligado)
+      </para>
+      <para lang="ru">
+      <emphasis role="bold">Display HDL partitions - </emphasis>Показывать 
+      разделы HDL (созданные с помощью HDLoader/HDAdvance). Рекомендованное
+      значение: OFF (отключено).
       </para>
     </listitem>
     <listitem>
@@ -186,10 +261,15 @@
       in the browser.  (recommended: ON)
       </para>
       <para lang="pt">
-      <emphasis role="bold">Hide system partitions (Esconder Parti��es do
-      Sistema) - </emphasis>Ligar estaop��o far� com que as parti��es
-      criadas pela PS2 n�o sejam mostradas no navegador.  (recomendado:
+      <emphasis role="bold">Hide system partitions (Esconder Partições do
+      Sistema) - </emphasis>Ligar estaopção fará com que as partições
+      criadas pela PS2 não sejam mostradas no navegador.  (recomendado:
       Ligado)
+      </para>
+      <para lang="ru">
+      <emphasis role="bold">Hide system partitions - </emphasis>Отключить 
+      показ системных разделов в списке файлов. Рекомендованное
+      значение: ON (включено).
       </para>
     </listitem>
   </itemizedlist>
@@ -197,8 +277,9 @@
   <figure>
     <title>
       <phrase lang="en">SMS Browser Settings Menu.</phrase>
-      <phrase lang="pt">Menu de Browser Settings (Op��es do 
+      <phrase lang="pt">Menu de Browser Settings (Opções do 
       Navegador).</phrase>
+      <phrase lang="ru">Настройки файлового проводника SMS.</phrase>      
     </title>
     <mediaobject>
       <imageobject>
@@ -218,13 +299,18 @@
   <para lang="pt">
     Agora saia do menu, e pressione <emphasis role="bold">DIREITA</emphasis>
     no seu controlador e seleccione o icon do HDD para navegar no seu 
-    conte�do.
+    conteúdo.
+  </para>
+  <para lang="ru">
+    Выйдите из меню и нажмите кнопку <emphasis role="bold">ВПРАВО</emphasis> 
+    на геймпаде чтобы выбрать иконку HDD и просмотреть содержимое диска.
   </para>
   
   <figure>
     <title>
       <phrase lang="en">SMS with HDD support activated.</phrase>
       <phrase lang="pt">SMS com suporte para HDD activado.</phrase>
+      <phrase lang="ru">SMS c включенной поддержкой жесткого диска.</phrase>      
     </title>
     <mediaobject>
       <imageobject>
@@ -243,6 +329,11 @@
   </para>
   <para lang="pt">
     Seleccione o ficheiro que deseja tocar e pressione 
-    <emphasis role="bold">X</emphasis> para iniciar a vizualiza��o.
+    <emphasis role="bold">X</emphasis> para iniciar a vizualização.
   </para>
+  <para lang="ru">
+    Выберите нужный файл и нажмите <emphasis role="bold">X
+    </emphasis> для начала воспроизведения.
+  </para>
+  
 </sect1>

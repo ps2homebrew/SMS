@@ -1,27 +1,27 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
     "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY introduction.xml	SYSTEM "introduction.xml">
+<!ENTITY introduction.xml   SYSTEM "introduction.xml">
 <!ENTITY installation-requirements.xml SYSTEM "installation/requirements.xml">
 <!ENTITY installation-overview.xml     SYSTEM "installation/overview.xml">
-<!ENTITY installation-detail.xml	SYSTEM "installation/detail.xml">
-<!ENTITY installation-configuration.xml	SYSTEM "installation/configuration.xml">
-<!ENTITY usage.xml	SYSTEM "usage.xml">
-<!ENTITY usage-controls.xml	SYSTEM "usage/controls.xml">
-<!ENTITY usage-network.xml	SYSTEM "usage/network.xml">
-<!ENTITY usage-cddafs.xml	SYSTEM "usage/cddafs.xml">
-<!ENTITY usage-dvdr.xml	SYSTEM "usage/dvdr.xml">
-<!ENTITY usage-hdd.xml	SYSTEM "usage/hdd.xml">
-<!ENTITY usage-usb.xml	SYSTEM "usage/usb.xml">
-<!ENTITY usage-mp3.xml	SYSTEM "usage/mp3.xml">
-<!ENTITY usage-skinning.xml	SYSTEM "usage/skinning.xml">
-<!ENTITY usage-subtitles.xml	SYSTEM "usage/subtitles.xml">
-<!ENTITY appendices-faq.xml	SYSTEM "appendices/faq.xml">
-<!ENTITY appendices-bitsandpieces.xml	SYSTEM "appendices/bitsandpieces.xml">
-<!ENTITY appendices-fdl.xml	SYSTEM "appendices/fdl.xml">
+<!ENTITY installation-detail.xml    SYSTEM "installation/detail.xml">
+<!ENTITY installation-configuration.xml SYSTEM "installation/configuration.xml">
+<!ENTITY usage.xml  SYSTEM "usage.xml">
+<!ENTITY usage-controls.xml SYSTEM "usage/controls.xml">
+<!ENTITY usage-network.xml  SYSTEM "usage/network.xml">
+<!ENTITY usage-cddafs.xml   SYSTEM "usage/cddafs.xml">
+<!ENTITY usage-dvdr.xml SYSTEM "usage/dvdr.xml">
+<!ENTITY usage-hdd.xml  SYSTEM "usage/hdd.xml">
+<!ENTITY usage-usb.xml  SYSTEM "usage/usb.xml">
+<!ENTITY usage-mp3.xml  SYSTEM "usage/mp3.xml">
+<!ENTITY usage-skinning.xml SYSTEM "usage/skinning.xml">
+<!ENTITY usage-subtitles.xml    SYSTEM "usage/subtitles.xml">
+<!ENTITY appendices-faq.xml SYSTEM "appendices/faq.xml">
+<!ENTITY appendices-bitsandpieces.xml   SYSTEM "appendices/bitsandpieces.xml">
+<!ENTITY appendices-fdl.xml SYSTEM "appendices/fdl.xml">
 
-<!ENTITY faq.xml	SYSTEM "faq.xml">
+<!ENTITY faq.xml    SYSTEM "faq.xml">
 ]>
 <book id="sms-main">
   <bookinfo id="toc">
@@ -29,6 +29,9 @@
       <application>SMS</application> - Playstation 2 Simple Media System
     </title>
     <title lang="pt">
+      <application>SMS</application> - Playstation 2 Simple Media System
+    </title>
+    <title lang="ru">
       <application>SMS</application> - Playstation 2 Simple Media System
     </title>
 
@@ -43,6 +46,7 @@
     <subtitle lang='pt'>Manual do Utilizador</subtitle>
     <subtitle lang='sv'>Användarmanual</subtitle>
     <subtitle lang='zh_CN'>用户手册</subtitle>
+    <subtitle lang='ru'>Руководство пользователя</subtitle>
 
     <subtitle><ulink url="http://ps2-scene.org/sms/index.htm"></ulink></subtitle>
 
@@ -51,18 +55,19 @@
   <copyright>
     <year>2005</year>
     <year>2006</year>
+    <year>2007</year>
     <holder>The SMS Documentation Team, Contributors: Dave T, Juddman.
-    Translators: Nuno Bento</holder>
+    Translators: Nuno Bento (pt), VxWorks (ru)</holder>
   </copyright>
 
   <legalnotice>
     <title>License</title>
-    <para lang="en">
+    <para>
     This program is distributed in the hope that it will be useful, but
     WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
     or FITNESS FOR A PARTICULAR PURPOSE.
     </para>
-    <para lang="en">
+    <para>
     The code created specifically for this project is released under the
     Academic Free License
     <ulink url="http://www.opensource.org/licenses/academic.php">
@@ -73,7 +78,7 @@
     your option) any later version.
     </para>
 
-    <para lang="en">
+    <para>
     Permission is granted to copy, distribute and/or modify this document under
     the terms of the GNU Free Documentation License, Version 1.2 or any later
     version published by the Free Software Foundation; with no Invariant
@@ -93,6 +98,12 @@
         internet.  For the original (and most up-to-date) version, please go
         to
         <ulink url="http://ps2-scene.org/sms/SMSMANUAL/sms_usermanual.html"/>#
+      </para>
+      <para lang="ru">
+        Копии этого руководства появляются на различных сайтах в Интернет, но
+        если вы хотите получить доступ к оригинальному (и наиболее полному)
+        руководству, оно находится по следующему адресу:
+        <ulink url="http://ps2-scene.org/sms/SMSMANUAL/sms_usermanual.html"/>
       </para>
     </tip>
   </legalnotice>
@@ -186,6 +197,7 @@
       <phrase lang="it">Introduzione</phrase>
       <phrase lang="nl">Introduktie</phrase>
       <phrase lang="pt">Introdução</phrase>
+      <phrase lang="ru">Введение</phrase>
       <phrase lang="sv">Introduktion</phrase>
       <phrase lang="zh_CN">简介</phrase>
     </title>
@@ -198,6 +210,7 @@
       <phrase lang="el">#Installation#</phrase>
       <phrase lang="es">#Installation#</phrase>
       <phrase lang="pt">Instalação</phrase>
+      <phrase lang="ru">Установка и конфигурирование программы  </phrase>
     </title>
     &installation-overview.xml;
     &installation-requirements.xml;
@@ -211,6 +224,7 @@
       <phrase lang="el">#Usage#</phrase>
       <phrase lang="es">#Usage#</phrase>
       <phrase lang="pt">Utilização</phrase>
+      <phrase lang="ru">Как пользоваться программой </phrase>
     </title>
     &usage.xml;
     &usage-controls.xml;
@@ -228,6 +242,7 @@
     <title>
       <phrase lang="en">Frequently Asked Questions</phrase>
       <phrase lang="pt">FAQ - Questões Mais Frequentes</phrase>
+      <phrase lang="ru">ЧаВо - Часто Задаваемые Вопросы</phrase>
     </title>
     &appendices-faq.xml;
   </appendix>
@@ -236,6 +251,7 @@
     <title>
       <phrase lang="en">Bits and Pieces</phrase>
       <phrase lang="pt">Variados</phrase>
+      <phrase lang="ru">Всякая всячина </phrase>
     </title>
     &appendices-bitsandpieces.xml;
   </appendix>
