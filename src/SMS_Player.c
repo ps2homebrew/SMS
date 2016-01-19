@@ -189,7 +189,7 @@ static void _clear_packet_queues ( void ) {
 static void _terminate_threads ( int afDelete ) {
 
  int         i;
- ee_thread_t lThread;
+ ee_thread_status_t lThread;
 
  ChangeThreadPriority ( s_MainThreadID, SMS_THREAD_PRIORITY - 3 );
  s_Player.m_pIPUCtx -> StopSync ( 1 );
@@ -198,7 +198,7 @@ static void _terminate_threads ( int afDelete ) {
  TerminateThread ( THREAD_ID_VR );
  TerminateThread ( THREAD_ID_VD );
  TerminateThread ( THREAD_ID_AD );
- ReferThreadStatus ( THREAD_ID_AR, lThread );
+ ReferThreadStatus ( THREAD_ID_AR, &lThread );
  ChangeThreadPriority ( s_MainThreadID, SMS_THREAD_PRIORITY );
 
  if ( lThread.status != 0x10 ) {
