@@ -9,11 +9,11 @@
 #
 */
 #ifndef __SMS_ContainerJPG_H
-# define __SMS_ContainerJPG_H
+#define __SMS_ContainerJPG_H
 
-# ifndef __SMS_Container_H
-#  include "SMS_Container.h"
-# endif  /* __SMS_Container_H */
+#ifndef __SMS_Container_H
+#include "SMS_Container.h"
+#endif  /* __SMS_Container_H */
 
 typedef struct SMS_ContainerJPEG {
 
@@ -24,13 +24,13 @@ typedef struct SMS_ContainerJPEG {
 
 } SMS_ContainerJPEG;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 int SMS_GetContainerJPG ( SMS_Container* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_ContainerJPG_H */

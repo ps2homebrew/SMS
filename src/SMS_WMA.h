@@ -9,19 +9,19 @@
 #
 */
 #ifndef __SMS_WMA_H
-# define __SMS_WMA_H
+#define __SMS_WMA_H
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_Codec_WMA_Open ( SMS_CodecContext* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_WMA_H */

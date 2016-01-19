@@ -9,8 +9,8 @@
 #
 */
 #ifndef __SMS_OS_H
-# define __SMS_OS_H
-# ifndef EMBEDDED
+#define __SMS_OS_H
+#ifndef EMBEDDED
 
 #  ifdef __cplusplus
 extern "C" {
@@ -23,5 +23,5 @@ void SMS_OSInit ( const char* );
 #  ifdef __cplusplus
 }
 #  endif  /* __cplusplus */
-# endif  /* EMBEDDED */
+#endif  /* EMBEDDED */
 #endif  /* __SMS_OS_H */

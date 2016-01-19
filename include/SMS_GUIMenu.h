@@ -9,25 +9,25 @@
 #
 */
 #ifndef __SMS_GUIMenu_H
-# define __SMS_GUIMenu_H
+#define __SMS_GUIMenu_H
 
-# ifndef __SMS_GUI_H
-#  include "SMS_GUI.h"
-# endif  /* __SMS_GUI_H */
+#ifndef __SMS_GUI_H
+#include "SMS_GUI.h"
+#endif  /* __SMS_GUI_H */
 
-# ifndef __SMS_Locale_H
-#  include "SMS_Locale.h"
-# endif  /* __SMS_Locale_H */
+#ifndef __SMS_Locale_H
+#include "SMS_Locale.h"
+#endif  /* __SMS_Locale_H */
 
-# ifndef __SMS_List_H
-#  include "SMS_List.h"
-# endif  /* __SMS_List_H */
+#ifndef __SMS_List_H
+#include "SMS_List.h"
+#endif  /* __SMS_List_H */
 
-# define MENU_ITEM_TYPE_TEXT   0x00000001
-# define MENU_ITEM_TYPE_PALIDX 0x00000002
-# define MENU_ITEM_HIDDEN      0x00800000
+#define MENU_ITEM_TYPE_TEXT   0x00000001
+#define MENU_ITEM_TYPE_PALIDX 0x00000002
+#define MENU_ITEM_HIDDEN      0x00800000
 
-# define MENU_FLAGS_TEXT 0x00000001
+#define MENU_FLAGS_TEXT 0x00000001
 
 struct GUIMenu;
 
@@ -82,9 +82,9 @@ typedef struct GUIMenu {
 
 } GUIMenu;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 GUIObject* GUI_CreateMenu    ( void );
 GUIObject* GUI_CreateMenuSMS ( void );
@@ -94,7 +94,7 @@ int           GUI_MenuPopState         ( GUIMenu*              );
 void          GUIMenu_SelectItemByName ( GUIMenu*, const char* );
 void          GUIMenu_ShowItem         ( GUIMenu*, int, int    );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_GUIMenu_H */

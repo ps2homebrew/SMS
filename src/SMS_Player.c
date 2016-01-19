@@ -41,7 +41,7 @@
 #include "SMS_GUIClock.h"
 
 #ifndef EMBEDDED
-# include "SMS_OS.h"
+#include "SMS_OS.h"
 #endif  /* EMBEDDED */
 
 #include <kernel.h>
@@ -1477,8 +1477,8 @@ static void _Destroy ( void* apPlayer ) {
 static unsigned char s_VDStack[ 0x4000 ] __attribute__(   (  aligned( 16 )  )   );
 static unsigned char s_ADStack[ 0x4000 ] __attribute__(   (  aligned( 16 )  )   );
 #else
-# define s_VDStack &g_OS[     0 ]
-# define s_ADStack &g_OS[ 16384 ]
+#define s_VDStack &g_OS[     0 ]
+#define s_ADStack &g_OS[ 16384 ]
 #endif  /* EMBEDDED */
 
 extern void SMS_JPEGPlayerDestroy ( void* );

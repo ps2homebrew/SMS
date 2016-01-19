@@ -10,53 +10,53 @@
 #
 */
 #ifndef __libmpeg_internal_H
-# define __libmpeg_internal_H
+#define __libmpeg_internal_H
 
-# include "libmpeg.h"
+#include "libmpeg.h"
 
-# define _MPEG_PT_I 1
-# define _MPEG_PT_P 2
-# define _MPEG_PT_B 3
-# define _MPEG_PT_D 4
+#define _MPEG_PT_I 1
+#define _MPEG_PT_P 2
+#define _MPEG_PT_B 3
+#define _MPEG_PT_D 4
 
-# define _MPEG_PS_TOP_FIELD    1
-# define _MPEG_PS_BOTTOM_FIELD 2
-# define _MPEG_PS_FRAME        3
+#define _MPEG_PS_TOP_FIELD    1
+#define _MPEG_PS_BOTTOM_FIELD 2
+#define _MPEG_PS_FRAME        3
 
-# define _MPEG_MBT_INTRA           1
-# define _MPEG_MBT_PATTERN         2
-# define _MPEG_MBT_MOTION_BACKWARD 4
-# define _MPEG_MBT_MOTION_FORWARD  8
-# define _MPEG_MBT_QUANT          16
+#define _MPEG_MBT_INTRA           1
+#define _MPEG_MBT_PATTERN         2
+#define _MPEG_MBT_MOTION_BACKWARD 4
+#define _MPEG_MBT_MOTION_FORWARD  8
+#define _MPEG_MBT_QUANT          16
 
-# define _MPEG_MC_FIELD 1
-# define _MPEG_MC_FRAME 2
-# define _MPEG_MC_16X8  2
-# define _MPEG_MC_DMV   3
+#define _MPEG_MC_FIELD 1
+#define _MPEG_MC_FRAME 2
+#define _MPEG_MC_16X8  2
+#define _MPEG_MC_DMV   3
 
-# define _MPEG_MV_FIELD 0
-# define _MPEG_MV_FRAME 1
+#define _MPEG_MV_FIELD 0
+#define _MPEG_MV_FRAME 1
 
-# define _MPEG_CODE_PIC_START 0x00000100
-# define _MPEG_CODE_SLICE_MIN 0x00000101
-# define _MPEG_CODE_SLICE_MAX 0x000001AF
-# define _MPEG_CODE_USER_DATA 0x000001B2
-# define _MPEG_CODE_SEQ_HDR   0x000001B3
-# define _MPEG_CODE_EXTENSION 0x000001B5
-# define _MPEG_CODE_SEQ_END   0x000001B7
-# define _MPEG_CODE_GRP_START 0x000001B8
+#define _MPEG_CODE_PIC_START 0x00000100
+#define _MPEG_CODE_SLICE_MIN 0x00000101
+#define _MPEG_CODE_SLICE_MAX 0x000001AF
+#define _MPEG_CODE_USER_DATA 0x000001B2
+#define _MPEG_CODE_SEQ_HDR   0x000001B3
+#define _MPEG_CODE_EXTENSION 0x000001B5
+#define _MPEG_CODE_SEQ_END   0x000001B7
+#define _MPEG_CODE_GRP_START 0x000001B8
 
-# define _MPEG_XID_0         0
-# define _MPEG_XID_SEQUENCE  1
-# define _MPEG_XID_DISPLAY   2
-# define _MPEG_XID_QMATRIX   3
-# define _MPEG_XID_COPYRIGHT 4
-# define _MPEG_XID_SCALABLE  5
-# define _MPEG_XID_6         6
-# define _MPEG_XID_PIC_DSP   7
-# define _MPEG_XID_PIC_COD   8
-# define _MPEG_XID_PIC_SSC   9
-# define _MPEG_XID_PIC_TSC  10
+#define _MPEG_XID_0         0
+#define _MPEG_XID_SEQUENCE  1
+#define _MPEG_XID_DISPLAY   2
+#define _MPEG_XID_QMATRIX   3
+#define _MPEG_XID_COPYRIGHT 4
+#define _MPEG_XID_SCALABLE  5
+#define _MPEG_XID_6         6
+#define _MPEG_XID_PIC_DSP   7
+#define _MPEG_XID_PIC_COD   8
+#define _MPEG_XID_PIC_SSC   9
+#define _MPEG_XID_PIC_TSC  10
 
 typedef struct _MPEGMBXY {
 

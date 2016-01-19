@@ -11,11 +11,11 @@
 #
 */
 #ifndef __SMS_DSP_H
-# define __SMS_DSP_H
+#define __SMS_DSP_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
 typedef void ( *SMS_OpPixFunc  ) ( uint8_t*, const uint8_t*, int, int, int );
 typedef void ( *SMS_QPelMCFunc ) ( uint8_t*, const uint8_t*, int, int, int );
@@ -70,9 +70,9 @@ extern const uint8_t  g_SMS_DSP_zigzag_direct            [ 64 ];
 extern const uint8_t  g_SMS_DSP_alternate_horizontal_scan[ 64 ];
 extern const uint8_t  g_SMS_DSP_alternate_vertical_scan  [ 64 ];
 extern SMS_DSPGMCData g_GMCData;
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void  SMS_DSP_Init       ( void            );
 void  SMS_DSPContextInit ( SMS_DSPContext* );
@@ -234,7 +234,7 @@ void DSP_DCT4Kernel ( float*, float* );
 void DST4_32        ( float*, float* );
 void DCT4_32        ( float*, float* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_DSP_H */

@@ -9,17 +9,17 @@
 #
 */
 #ifndef __SMS_Spectrum_H
-# define __SMS_Spectrum_H
+#define __SMS_Spectrum_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif   /* __cplusplus */
+#endif   /* __cplusplus */
 
 void SMS_SpectrumInit   ( void   );
 void SMS_SpectrumCalc   ( short* );
 void SMS_SpectrumUpdate ( void   );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif   /* __cplusplus */
+#endif   /* __cplusplus */
 #endif  /* __SMS_Spectrum_H */

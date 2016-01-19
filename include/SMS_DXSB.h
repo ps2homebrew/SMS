@@ -9,23 +9,23 @@
 #
 */
 #ifndef __SMS_DXSB_H
-# define __SMS_DXSB_H
+#define __SMS_DXSB_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# ifndef __SMS_RingBuffer_H
-#  include "SMS_RingBuffer.h"
-# endif  /* __SMS_RingBuffer_H */
+#ifndef __SMS_RingBuffer_H
+#include "SMS_RingBuffer.h"
+#endif  /* __SMS_RingBuffer_H */
 
-# ifndef __SMS_DMA_H
-#  include "SMS_DMA.h"
-# endif  /* __SMS_DMA_H */
+#ifndef __SMS_DMA_H
+#include "SMS_DMA.h"
+#endif  /* __SMS_DMA_H */
 
-# ifndef __SMS_GS_H
-#  include "SMS_GS.h"
-# endif  /* __SMS_GS_H */
+#ifndef __SMS_GS_H
+#include "SMS_GS.h"
+#endif  /* __SMS_GS_H */
 
 typedef struct SMS_DXSBDrawPack {
  DMATag         m_DMATagUpload;
@@ -63,18 +63,18 @@ typedef struct SMS_DXSBDrawPack {
  unsigned long  m_TestOffID;
 } SMS_DXSBDrawPack __attribute__(   (  aligned( 64 )  )   );
 
-# define SMS_DXSB_DP_BB_VRAM( p ) (   *( unsigned short* )(  ( p ) +  36  )   )
-# define SMS_DXSB_DP_BB_TBW( p )  (   *( unsigned char*  )(  ( p ) +  38  )   )
-# define SMS_DXSB_DP_TX_W( p )    (   *( unsigned short* )(  ( p ) +  64  )   )
-# define SMS_DXSB_DP_TX_H( p )    (   *( unsigned short* )(  ( p ) +  68  )   )
-# define SMS_DXSB_DP_QWC_GIF( p ) (   *( unsigned short* )(  ( p ) +  96  )   )
-# define SMS_DXSB_DP_QWC_DMA( p ) (   *( unsigned short* )(  ( p ) + 112  )   )
-# define SMS_DXSB_DP_PTR_DMA( p ) (   *( unsigned int*   )(  ( p ) + 116  )   )
-# define SMS_DXSB_DP_TEX0( p )    (   *( unsigned long*  )(  ( p ) + 232  )   )
-# define SMS_DXSB_DP_XYZ_LT( p )  (   *( unsigned long*  )(  ( p ) + 248  )   )
-# define SMS_DXSB_DP_UV_R( p )    (   *( unsigned short* )(  ( p ) + 256  )   )
-# define SMS_DXSB_DP_UV_B( p )    (   *( unsigned short* )(  ( p ) + 258  )   )
-# define SMS_DXSB_DP_XYZ_RB( p )  (   *( unsigned long*  )(  ( p ) + 264  )   )
+#define SMS_DXSB_DP_BB_VRAM( p ) (   *( unsigned short* )(  ( p ) +  36  )   )
+#define SMS_DXSB_DP_BB_TBW( p )  (   *( unsigned char*  )(  ( p ) +  38  )   )
+#define SMS_DXSB_DP_TX_W( p )    (   *( unsigned short* )(  ( p ) +  64  )   )
+#define SMS_DXSB_DP_TX_H( p )    (   *( unsigned short* )(  ( p ) +  68  )   )
+#define SMS_DXSB_DP_QWC_GIF( p ) (   *( unsigned short* )(  ( p ) +  96  )   )
+#define SMS_DXSB_DP_QWC_DMA( p ) (   *( unsigned short* )(  ( p ) + 112  )   )
+#define SMS_DXSB_DP_PTR_DMA( p ) (   *( unsigned int*   )(  ( p ) + 116  )   )
+#define SMS_DXSB_DP_TEX0( p )    (   *( unsigned long*  )(  ( p ) + 232  )   )
+#define SMS_DXSB_DP_XYZ_LT( p )  (   *( unsigned long*  )(  ( p ) + 248  )   )
+#define SMS_DXSB_DP_UV_R( p )    (   *( unsigned short* )(  ( p ) + 256  )   )
+#define SMS_DXSB_DP_UV_B( p )    (   *( unsigned short* )(  ( p ) + 258  )   )
+#define SMS_DXSB_DP_XYZ_RB( p )  (   *( unsigned long*  )(  ( p ) + 264  )   )
 
 typedef struct SMS_DXSBFrame {
 
@@ -95,15 +95,15 @@ typedef struct SMS_DXSBFrame {
 
 } SMS_DXSBFrame;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void  SMS_DXSB_Init     ( int, int, int*                 );
 int   SMS_DXSB_Decode   ( SMS_AVPacket*, SMS_RingBuffer* );
 void  SMS_DXSB_SetRatio ( int, int                       );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_DXSB_H */

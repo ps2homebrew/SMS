@@ -9,19 +9,19 @@
 #
 */
 #ifndef __mbstring_H
-# define __mbstring_H
+#define __mbstring_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 unsigned int _mbstrlen  ( const char*              );
 char*        _mbstrspnp ( const char*, const char* );
 char*        _mbstrpbrk ( const char*, const char* );
 char*        _mbstrtok  ( char*, const char*       );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 #endif  /* __mbstring_H */

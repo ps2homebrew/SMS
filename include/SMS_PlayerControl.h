@@ -9,23 +9,23 @@
 #
 */
 #ifndef __SMS_PlayerControl_H
-# define __SMS_PlayerControl_H
+#define __SMS_PlayerControl_H
 
-# ifndef __SMS_GS_H
-#  include "SMS_GS.h"
-# endif  /* __SMS_GS_H */
+#ifndef __SMS_GS_H
+#include "SMS_GS.h"
+#endif  /* __SMS_GS_H */
 
-# ifndef __SMS_Player_H
-#  include "SMS_Player.h"
-# endif  /* __SMS_Player_H */
+#ifndef __SMS_Player_H
+#include "SMS_Player.h"
+#endif  /* __SMS_Player_H */
 
 struct SMS_List;
 
-# define PC_GSP_SIZE( n ) (  ( n << 2 ) + 6  )
+#define PC_GSP_SIZE( n ) (  ( n << 2 ) + 6  )
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void                 PlayerControl_Init             ( void                             );
 void                 PlayerControl_Destroy          ( void                             );
@@ -49,7 +49,7 @@ void                 PlayerControl_AdjustBrightness ( int                       
 void                 PlayerControl_UpdateInfo       ( void                             );
 void                 PlayerControl_ChangeLangOSD    ( int                              );
 void                 PlayerControl_FormatTime       ( char*, uint64_t                  );
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_PlayerControl_H */

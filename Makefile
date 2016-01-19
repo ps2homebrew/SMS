@@ -5,10 +5,9 @@ EE_SRC_DIR = src/
 
 EE_BIN = $(EE_BIN_DIR)SMS.elf
 
-EE_INCS     = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
-EE_INCS    := -I$(EE_INC_DIR) $(EE_INCS) -I$(PS2SDK)/sbv/include
-EE_LIBS     = -lpatches -lc -lkernel -lmf -llzma
-EE_LDFLAGS  = -L$(PS2SDK)/sbv/lib -L$(PS2SDK)/ee/lib -LD:/Eugene/MYDOCU~1/Projects/SMSPS2
+EE_INCS    = -I$(EE_INC_DIR) -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include
+EE_LIBS    = -lpatches -lc -lkernel -lmf -llzma
+EE_LDFLAGS = -L$(PS2SDK)/sbv/lib -L$(PS2SDK)/ee/lib -LD:/Eugene/MYDOCU~1/Projects/SMSPS2
 
 EE_OBJS  = main.o SMS_OS.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_Timer.o           \
            SMS_MP123Core.o SMS_FileContext.o  SMS_H263.o                          \

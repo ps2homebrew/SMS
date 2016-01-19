@@ -10,91 +10,91 @@
 #
 */
 #ifndef __SMS_MPEG_H
-# define __SMS_MPEG_H
+#define __SMS_MPEG_H
 
-# ifndef __SMS_DSP_H
-#  include "SMS_DSP.h"
-# endif  /* __SMS_DSP_H */
+#ifndef __SMS_DSP_H
+#include "SMS_DSP.h"
+#endif  /* __SMS_DSP_H */
 
-# ifndef __SMS_Bitio_H
-#  include "SMS_Bitio.h"
-# endif  /* __SMS_Bitio_H */
+#ifndef __SMS_Bitio_H
+#include "SMS_Bitio.h"
+#endif  /* __SMS_Bitio_H */
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# define SMS_RECT_SHAPE     0
-# define SMS_BIN_SHAPE      1
-# define SMS_BIN_ONLY_SHAPE 2
-# define SMS_GRAY_SHAPE     3
+#define SMS_RECT_SHAPE     0
+#define SMS_BIN_SHAPE      1
+#define SMS_BIN_ONLY_SHAPE 2
+#define SMS_GRAY_SHAPE     3
 
-# define SMS_FRAME_SKIPED    100
-# define SMS_ASPECT_EXTENDED  15
+#define SMS_FRAME_SKIPED    100
+#define SMS_ASPECT_EXTENDED  15
 
-# define SMS_ER_CAREFUL         1
-# define SMS_ER_COMPLIANT       2
-# define SMS_ER_AGGRESSIVE      3
-# define SMS_ER_VERY_AGGRESSIVE 4
+#define SMS_ER_CAREFUL         1
+#define SMS_ER_COMPLIANT       2
+#define SMS_ER_AGGRESSIVE      3
+#define SMS_ER_VERY_AGGRESSIVE 4
 
-# define SMS_MV_DIR_BACKWARD 1
-# define SMS_MV_DIR_FORWARD  2
-# define SMS_MV_DIRECT       4
+#define SMS_MV_DIR_BACKWARD 1
+#define SMS_MV_DIR_FORWARD  2
+#define SMS_MV_DIRECT       4
 
-# define SMS_MV_TYPE_16X16 0
-# define SMS_MV_TYPE_8X8   1
-# define SMS_MV_TYPE_16X8  2
-# define SMS_MV_TYPE_FIELD 3
+#define SMS_MV_TYPE_16X16 0
+#define SMS_MV_TYPE_8X8   1
+#define SMS_MV_TYPE_16X8  2
+#define SMS_MV_TYPE_FIELD 3
 
-# define SMS_MB_TYPE_INTRA4x4   0x0001
-# define SMS_MB_TYPE_INTRA16x16 0x0002
-# define SMS_MB_TYPE_INTRA_PCM  0x0004
-# define SMS_MB_TYPE_16x16      0x0008
-# define SMS_MB_TYPE_16x8       0x0010
-# define SMS_MB_TYPE_8x16       0x0020
-# define SMS_MB_TYPE_8x8        0x0040
-# define SMS_MB_TYPE_INTERLACED 0x0080
-# define SMS_MB_TYPE_DIRECT2    0x0100
-# define SMS_MB_TYPE_ACPRED     0x0200
-# define SMS_MB_TYPE_GMC        0x0400
-# define SMS_MB_TYPE_SKIP       0x0800
-# define SMS_MB_TYPE_P0L0       0x1000
-# define SMS_MB_TYPE_P1L0       0x2000
-# define SMS_MB_TYPE_P0L1       0x4000
-# define SMS_MB_TYPE_P1L1       0x8000
-# define SMS_MB_TYPE_L0         ( SMS_MB_TYPE_P0L0 | SMS_MB_TYPE_P1L0 )
-# define SMS_MB_TYPE_L1         ( SMS_MB_TYPE_P0L1 | SMS_MB_TYPE_P1L1 )
-# define SMS_MB_TYPE_L0L1       ( SMS_MB_TYPE_L0   | SMS_MB_TYPE_L1   )
-# define SMS_MB_TYPE_QUANT      0x00010000
-# define SMS_MB_TYPE_CBP        0x00020000
-# define SMS_MB_TYPE_INTRA      SMS_MB_TYPE_INTRA4x4
+#define SMS_MB_TYPE_INTRA4x4   0x0001
+#define SMS_MB_TYPE_INTRA16x16 0x0002
+#define SMS_MB_TYPE_INTRA_PCM  0x0004
+#define SMS_MB_TYPE_16x16      0x0008
+#define SMS_MB_TYPE_16x8       0x0010
+#define SMS_MB_TYPE_8x16       0x0020
+#define SMS_MB_TYPE_8x8        0x0040
+#define SMS_MB_TYPE_INTERLACED 0x0080
+#define SMS_MB_TYPE_DIRECT2    0x0100
+#define SMS_MB_TYPE_ACPRED     0x0200
+#define SMS_MB_TYPE_GMC        0x0400
+#define SMS_MB_TYPE_SKIP       0x0800
+#define SMS_MB_TYPE_P0L0       0x1000
+#define SMS_MB_TYPE_P1L0       0x2000
+#define SMS_MB_TYPE_P0L1       0x4000
+#define SMS_MB_TYPE_P1L1       0x8000
+#define SMS_MB_TYPE_L0         ( SMS_MB_TYPE_P0L0 | SMS_MB_TYPE_P1L0 )
+#define SMS_MB_TYPE_L1         ( SMS_MB_TYPE_P0L1 | SMS_MB_TYPE_P1L1 )
+#define SMS_MB_TYPE_L0L1       ( SMS_MB_TYPE_L0   | SMS_MB_TYPE_L1   )
+#define SMS_MB_TYPE_QUANT      0x00010000
+#define SMS_MB_TYPE_CBP        0x00020000
+#define SMS_MB_TYPE_INTRA      SMS_MB_TYPE_INTRA4x4
 
-# define SMS_IS_DIRECT( a )       (  (a) & SMS_MB_TYPE_DIRECT2    )
-# define SMS_IS_SKIP( a )         (  (a) & SMS_MB_TYPE_SKIP       )
-# define SMS_IS_INTRA( a )        (  (a) & 7                      )
-# define SMS_IS_ACPRED( a )       (  (a) & SMS_MB_TYPE_ACPRED     )
-# define SMS_IS_8X8( a )          (  (a) & SMS_MB_TYPE_8x8        )
-# define SMS_IS_INTERLACED( a )   (  (a) & SMS_MB_TYPE_INTERLACED )
-# define SMS_USES_LIST( a, list ) (  (a) & (  ( SMS_MB_TYPE_P0L0 | SMS_MB_TYPE_P1L0 ) << ( 2 * (list) )  )   )
+#define SMS_IS_DIRECT( a )       (  (a) & SMS_MB_TYPE_DIRECT2    )
+#define SMS_IS_SKIP( a )         (  (a) & SMS_MB_TYPE_SKIP       )
+#define SMS_IS_INTRA( a )        (  (a) & 7                      )
+#define SMS_IS_ACPRED( a )       (  (a) & SMS_MB_TYPE_ACPRED     )
+#define SMS_IS_8X8( a )          (  (a) & SMS_MB_TYPE_8x8        )
+#define SMS_IS_INTERLACED( a )   (  (a) & SMS_MB_TYPE_INTERLACED )
+#define SMS_USES_LIST( a, list ) (  (a) & (  ( SMS_MB_TYPE_P0L0 | SMS_MB_TYPE_P1L0 ) << ( 2 * (list) )  )   )
 
-# define SMS_SLICE_OK     0
-# define SMS_SLICE_END   -2
-# define SMS_SLICE_NOEND -3
+#define SMS_SLICE_OK     0
+#define SMS_SLICE_END   -2
+#define SMS_SLICE_NOEND -3
 
-# define SMS_VP_START  1
-# define SMS_AC_ERROR  2
-# define SMS_DC_ERROR  4
-# define SMS_MV_ERROR  8
-# define SMS_AC_END   16
-# define SMS_DC_END   32
-# define SMS_MV_END   64
+#define SMS_VP_START  1
+#define SMS_AC_ERROR  2
+#define SMS_DC_ERROR  4
+#define SMS_MV_ERROR  8
+#define SMS_AC_END   16
+#define SMS_DC_END   32
+#define SMS_MV_END   64
 
-# define SMS_PICT_TOP_FIELD    1
-# define SMS_PICT_BOTTOM_FIELD 2
-# define SMS_PICT_FRAME        3
+#define SMS_PICT_TOP_FIELD    1
+#define SMS_PICT_BOTTOM_FIELD 2
+#define SMS_PICT_FRAME        3
 
-# define MAX_PICTURE_COUNT     3
-# define BITSTREAM_BUFFER_SIZE 1024 * 256
+#define MAX_PICTURE_COUNT     3
+#define BITSTREAM_BUFFER_SIZE 1024 * 256
 
 typedef struct SMS_ScanTable {
 
@@ -268,9 +268,9 @@ typedef struct SMS_MPEGContext {
 
 extern SMS_MPEGContext g_MPEGCtx;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_MPEGContext_Init          ( int, int                        );
 void SMS_MPEGContext_Destroy       ( void                            );
@@ -285,9 +285,9 @@ void SMS_MPEG_DummyCB              ( void*                           );
 void SMS_MPEG_MCB                  ( void*                           );
 void SMS_MPEG_SCB                  ( void*                           );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 static SMS_INLINE void SMS_MPEG_UpdateBlockIdx ( void ) {
  g_MPEGCtx.m_BlockIdx[ 0 ] += 2;

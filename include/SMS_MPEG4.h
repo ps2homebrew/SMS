@@ -11,19 +11,19 @@
 #
 */
 #ifndef __SMS_MPEG4_H
-# define __SMS_MPEG4_H
+#define __SMS_MPEG4_H
 
-# ifndef __SMS_VideoBuffer_H
-#  include "SMS_VideoBuffer.h"
-# endif  /* __SMS_VideoBuffer_H */
+#ifndef __SMS_VideoBuffer_H
+#include "SMS_VideoBuffer.h"
+#endif  /* __SMS_VideoBuffer_H */
 
-# ifndef __SMS_MPEG_H
-#  include "SMS_MPEG.h"
-# endif  /* __SMS_MPEG_H */
+#ifndef __SMS_MPEG_H
+#include "SMS_MPEG.h"
+#endif  /* __SMS_MPEG_H */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 typedef struct SMS_MPEGCSC {
  SMS_FrameBuffer m_Buf[ 3 ];
@@ -37,7 +37,7 @@ void MPEG4_CommonInit    ( SMS_CodecContext*                 );
 void MPEG4_CommonDestroy ( void                              );
 void MPEG4_CommonHWCtl   ( SMS_CodecContext*, SMS_CodecHWCtl );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_MPEG4_H */

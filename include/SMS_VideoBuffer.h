@@ -9,11 +9,11 @@
 #
 */
 #ifndef __SMS_VideoBuffer_H
-# define __SMS_VideoBuffer_H
+#define __SMS_VideoBuffer_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
 typedef struct SMS_FrameBuffer {
 
@@ -46,9 +46,9 @@ typedef struct SMS_VideoBuffer {
 
 } SMS_VideoBuffer;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_VideoBuffer* SMS_VideoBufferInit    ( int, int                             );
 void             SMS_VideoBufferDestroy ( SMS_VideoBuffer*                     );
@@ -59,8 +59,8 @@ void             SMS_CSC                ( SMS_CSCParam*, unsigned long*, void* )
 void             SMS_FrameBufferInit    ( SMS_FrameBuffer*, int, int, int, int );
 void             SMS_FrameBufferDestroy ( SMS_FrameBuffer*, int                );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 #endif  /* __SMS_VideoBuffer_H */

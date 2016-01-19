@@ -11,19 +11,19 @@
 #
 */
 #ifndef __SMS_MSMPEG4_H
-# define __SMS_MSMPEG4_H
+#define __SMS_MSMPEG4_H
 
-# ifndef __SMS_MPEG_H
-#  include "SMS_MPEG.h"
-# endif  /* __SMS_MPEG_H */
+#ifndef __SMS_MPEG_H
+#include "SMS_MPEG.h"
+#endif  /* __SMS_MPEG_H */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_Codec_MSMPEG4_Open ( SMS_CodecContext* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_MSMPEG4_H */

@@ -9,38 +9,38 @@
 #
 */
 #ifndef __SMS_ioctl_H
-# define __SMS_ioctl_H
+#define __SMS_ioctl_H
 
-# ifdef _IOP
+#ifdef _IOP
 #  define PS2HDD_IOCTL_TRANSFER_DATA    0
-# endif  /* _IOP */
-# define PS2HDD_IOCTL_FLUSH_CACHE       1
-# define PS2HDD_IOCTL_SET_PART_ERROR    2
-# define PS2HDD_IOCTL_NUMBER_OF_SUBS    3
-# ifdef _IOP
+#endif  /* _IOP */
+#define PS2HDD_IOCTL_FLUSH_CACHE       1
+#define PS2HDD_IOCTL_SET_PART_ERROR    2
+#define PS2HDD_IOCTL_NUMBER_OF_SUBS    3
+#ifdef _IOP
 #  define PS2HDD_IOCTL_GETSIZE          4
 #  define PS2HDD_IOCTL_ADD_SUB          5
-# endif  /* _IOP */
-# define PS2HDD_IOCTL_DELETE_LAST_SUB   6
-# ifdef _IOP
+#endif  /* _IOP */
+#define PS2HDD_IOCTL_DELETE_LAST_SUB   6
+#ifdef _IOP
 #  define PS2HDD_IOCTL_GET_PART_ERROR   7
-# endif  /* _IOP */
-# define PS2HDD_IOCTL_MAX_SECTORS       8
-# define PS2HDD_IOCTL_TOTAL_SECTORS     9
-# define PS2HDD_IOCTL_SHUTDOWN         10
-# ifdef _IOP
+#endif  /* _IOP */
+#define PS2HDD_IOCTL_MAX_SECTORS       8
+#define PS2HDD_IOCTL_TOTAL_SECTORS     9
+#define PS2HDD_IOCTL_SHUTDOWN         10
+#ifdef _IOP
 #  define PS2HDD_IOCTL_IDLE            11
 #  define PS2HDD_IOCTL_SWAP_TMP        12
-# endif  /* _IOP */
-# define PS2HDD_IOCTL_SMART_STAT       13
-# define PS2HDD_IOCTL_FORMAT           14
-# ifdef _IOP
+#endif  /* _IOP */
+#define PS2HDD_IOCTL_SMART_STAT       13
+#define PS2HDD_IOCTL_FORMAT           14
+#ifdef _IOP
 #  define PS2HDD_DEVCTL_SET_OSDMBR     15
-# endif  /* _IOP */
-# define PS2HDD_IOCTL_GET_SECTOR_ERROR 16
-# define PS2HDD_IOCTL_STATUS           17
+#endif  /* _IOP */
+#define PS2HDD_IOCTL_GET_SECTOR_ERROR 16
+#define PS2HDD_IOCTL_STATUS           17
 
-# ifdef _IOP
+#ifdef _IOP
 #  define PS2HDD_TMODE_READ  0
 #  define PS2HDD_TMODE_WRITE 1
 
@@ -56,7 +56,7 @@ typedef struct {
  unsigned int start;
  unsigned int size;
 } hddSetOsdMBR_t;
-# endif  /* _IOP */
+#endif  /* _IOP */
 
 typedef struct PS2HDDMountInfo {
 
@@ -65,10 +65,10 @@ typedef struct PS2HDDMountInfo {
 
 } PS2HDDMountInfo;
 
-# define PFS_IOCTL_MOUNT         0
-# define PFS_IOCTL_UMOUNT        1
-# define PFS_IOCTL_GET_ZONE_SIZE 2
-# define PFS_IOCTL_GET_ZONE_FREE 3
-# define PFS_IOCTL_CLOSE_ALL     4
+#define PFS_IOCTL_MOUNT         0
+#define PFS_IOCTL_UMOUNT        1
+#define PFS_IOCTL_GET_ZONE_SIZE 2
+#define PFS_IOCTL_GET_ZONE_FREE 3
+#define PFS_IOCTL_CLOSE_ALL     4
 
 #endif  /* __SMS_ioctl_H */

@@ -10,20 +10,20 @@
 #
 */
 #ifndef __SMS_Codec_H
-# define __SMS_Codec_H
+#define __SMS_Codec_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# ifndef __SMS_RingBuffer_H
-#  include "SMS_RingBuffer.h"
-# endif  /* __SMS_RingBuffer_H */
+#ifndef __SMS_RingBuffer_H
+#include "SMS_RingBuffer.h"
+#endif  /* __SMS_RingBuffer_H */
 
-# define SMS_CODEC_FLAG_LOW_DELAY 0x00080000
-# define SMS_CODEC_FLAG_NOCSC     0x00000001
-# define SMS_CODEC_FLAG_UNCACHED  0x20000000
-# define SMS_CODEC_FLAG_IPU       0x00000002
+#define SMS_CODEC_FLAG_LOW_DELAY 0x00080000
+#define SMS_CODEC_FLAG_NOCSC     0x00000001
+#define SMS_CODEC_FLAG_UNCACHED  0x20000000
+#define SMS_CODEC_FLAG_IPU       0x00000002
 
 typedef enum SMS_CodecType {
  SMS_CodecTypeUnknown = -1, SMS_CodecTypeVideo, SMS_CodecTypeAudio
@@ -89,9 +89,9 @@ typedef struct SMS_CodecContext {
 
 } SMS_CodecContext;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_CodecID SMS_CodecGetID         ( SMS_CodecType, uint32_t              );
 int         SMS_CodecOpen          ( SMS_CodecContext*                    );
@@ -100,7 +100,7 @@ void        SMS_CodecGetBuffer     ( SMS_CodecContext*, struct SMS_Frame* );
 void        SMS_CodecReleaseBuffer ( SMS_CodecContext*, struct SMS_Frame* );
 void        SMS_CodecDestroy       ( SMS_CodecContext*                    );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 };
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_Codec_H */

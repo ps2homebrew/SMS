@@ -9,19 +9,19 @@
 #
 */
 #ifndef __SMS_SIF_H
-# define __SMS_SIF_H
+#define __SMS_SIF_H
 
-# include <tamtypes.h>
-# include <sifrpc.h>
-# include <sifcmd.h>
+#include <tamtypes.h>
+#include <sifrpc.h>
+#include <sifcmd.h>
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 int SIF_BindRPC ( SifRpcClientData_t*, int );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_SIF_H */

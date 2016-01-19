@@ -12,30 +12,30 @@
 #
 */
 #ifndef __SMS_MP123_H
-# define __SMS_MP123_H
+#define __SMS_MP123_H
 
-# ifndef __SMS_Bitio_H
-#  include "SMS_Bitio.h"
-# endif  /* __SMS_Bitio_H */
+#ifndef __SMS_Bitio_H
+#include "SMS_Bitio.h"
+#endif  /* __SMS_Bitio_H */
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# define SMS_HEADER_SIZE                 4
-# define SMS_MPA_MAX_CODED_FRAME_SIZE 1792
-# define SMS_BACKSTEP_SIZE             512
-# define SMS_SBLIMIT                    32
+#define SMS_HEADER_SIZE                 4
+#define SMS_MPA_MAX_CODED_FRAME_SIZE 1792
+#define SMS_BACKSTEP_SIZE             512
+#define SMS_SBLIMIT                    32
 
-# define SMS_MODE_EXT_I_STEREO  1
-# define SMS_MODE_EXT_MS_STEREO 2
+#define SMS_MODE_EXT_I_STEREO  1
+#define SMS_MODE_EXT_MS_STEREO 2
 
-# define SMS_MPA_STEREO  0
-# define SMS_MPA_JSTEREO 1
-# define SMS_MPA_DUAL    2
-# define SMS_MPA_MONO    3
+#define SMS_MPA_STEREO  0
+#define SMS_MPA_JSTEREO 1
+#define SMS_MPA_DUAL    2
+#define SMS_MPA_MONO    3
 
-# define SMS_SAME_HEADER_MASK (  0xFFE00000 | ( 3 << 17 ) | (0xF << 12 ) | ( 3 << 10 ) | ( 3 << 19 )  )
+#define SMS_SAME_HEADER_MASK (  0xFFE00000 | ( 3 << 17 ) | (0xF << 12 ) | ( 3 << 10 ) | ( 3 << 19 )  )
 
 extern const uint16_t g_mpa_freq_tab   [ 3 ];
 extern const uint16_t g_mpa_bitrate_tab[ 2 ][ 3 ][ 15 ];
@@ -117,15 +117,15 @@ typedef struct SMS_Codec_MPAContext {
 
 extern SMS_Codec_MPAContext g_MPACtx;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_Codec_MP123_Open ( SMS_CodecContext*      );
 int  MP123_CheckHeader    ( uint32_t               );
 int  MP123_DecodeHeader   ( uint32_t, SMS_MPAInfo* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_MP123_H */

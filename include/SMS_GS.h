@@ -9,12 +9,12 @@
 #
 */
 #ifndef __SMS_GS_H
-# define __SMS_GS_H
+#define __SMS_GS_H
 
-# define GS_BGCOLOR() (  *( volatile unsigned long* )0x120000E0  )
+#define GS_BGCOLOR() (  *( volatile unsigned long* )0x120000E0  )
 
-# define GIF_MODE() (  *( volatile unsigned int* )0x10003010  )
-# define GIF_STAT() (  *( volatile unsigned int* )0x10003020  )
+#define GIF_MODE() (  *( volatile unsigned int* )0x10003010  )
+#define GIF_STAT() (  *( volatile unsigned int* )0x10003020  )
 
 typedef enum GSFieldMode {
 
@@ -108,28 +108,28 @@ typedef enum GSCodePage {
 
 } GSCodePage;
 
-# define GIFTAG_FLG_PACKED  0
-# define GIFTAG_FLG_REGLIST 1
-# define GIFTAG_FLG_IMAGE   2
+#define GIFTAG_FLG_PACKED  0
+#define GIFTAG_FLG_REGLIST 1
+#define GIFTAG_FLG_IMAGE   2
 
-# define GIFTAG_REGS_PRIM     0x0
-# define GIFTAG_REGS_RGBAQ    0x1
-# define GIFTAG_REGS_ST       0x2
-# define GIFTAG_REGS_UV       0x3
-# define GIFTAG_REGS_XYZF2    0x4
-# define GIFTAG_REGS_XYZ2     0x5
-# define GIFTAG_REGS_TEX0_1   0x6
-# define GIFTAG_REGS_TEX0_2   0x7
-# define GIFTAG_REGS_CLAMP_1  0x8
-# define GIFTAG_REGS_CLAMP_2  0x9
-# define GIFTAG_REGS_FOG      0xA
-# define GIFTAG_REGS_RESERVED 0xA
-# define GIFTAG_REGS_XYZF3    0xC
-# define GIFTAG_REGS_XYZ3     0xD
-# define GIFTAG_REGS_AD       0xE
-# define GIFTAG_REGS_NOP      0xF
+#define GIFTAG_REGS_PRIM     0x0
+#define GIFTAG_REGS_RGBAQ    0x1
+#define GIFTAG_REGS_ST       0x2
+#define GIFTAG_REGS_UV       0x3
+#define GIFTAG_REGS_XYZF2    0x4
+#define GIFTAG_REGS_XYZ2     0x5
+#define GIFTAG_REGS_TEX0_1   0x6
+#define GIFTAG_REGS_TEX0_2   0x7
+#define GIFTAG_REGS_CLAMP_1  0x8
+#define GIFTAG_REGS_CLAMP_2  0x9
+#define GIFTAG_REGS_FOG      0xA
+#define GIFTAG_REGS_RESERVED 0xA
+#define GIFTAG_REGS_XYZF3    0xC
+#define GIFTAG_REGS_XYZ3     0xD
+#define GIFTAG_REGS_AD       0xE
+#define GIFTAG_REGS_NOP      0xF
 
-# define GIF_TAG( NLOOP, EOP, PRE, PRIM, FLG, NREG ) \
+#define GIF_TAG( NLOOP, EOP, PRE, PRIM, FLG, NREG ) \
  (  ( unsigned long )( NLOOP ) <<  0  ) |            \
  (  ( unsigned long )( EOP   ) << 15  ) |            \
  (  ( unsigned long )( PRE   ) << 46  ) |            \
@@ -176,97 +176,97 @@ typedef union GIFTag {
 
 } GIFTag __attribute__(   (  aligned( 16 )  )   );
 
-# define GS_ALPHA_1    0x42
-# define GS_ALPHA_2    0x43
-# define GS_BITBLTBUF  0x50
-# define GS_COLCLAMP   0x46
-# define GS_DIMX       0x44
-# define GS_DTHE       0x45
-# define GS_FBA_1      0x4A
-# define GS_FBA_2      0x4B
-# define GS_FINISH     0x61
-# define GS_FRAME_1    0x4C
-# define GS_FRAME_2    0x4D
-# define GS_PABE       0x49
-# define GS_PRIM       0x00
-# define GS_PRMODECONT 0x1A
-# define GS_RGBAQ      0x01L
-# define GS_SCISSOR_1  0x40
-# define GS_SCISSOR_2  0x41
-# define GS_TEST_1     0x47
-# define GS_TEST_2     0x48
-# define GS_TEX0_1     0x06
-# define GS_TEX0_2     0x07
-# define GS_TEX1_1     0x14
-# define GS_TEX1_2     0x15
-# define GS_TEXA       0x3B
-# define GS_TEXFLUSH   0x3F
-# define GS_TRXDIR     0x53
-# define GS_TRXPOS     0x51
-# define GS_TRXREG     0x52
-# define GS_UV         0x03
-# define GS_XYOFFSET_1 0x18
-# define GS_XYOFFSET_2 0x19
-# define GS_XYZ2       0x05L
-# define GS_ZBUF_1     0x4E
-# define GS_ZBUF_2     0x4F
-# define GS_NOP        0x0FL
+#define GS_ALPHA_1    0x42
+#define GS_ALPHA_2    0x43
+#define GS_BITBLTBUF  0x50
+#define GS_COLCLAMP   0x46
+#define GS_DIMX       0x44
+#define GS_DTHE       0x45
+#define GS_FBA_1      0x4A
+#define GS_FBA_2      0x4B
+#define GS_FINISH     0x61
+#define GS_FRAME_1    0x4C
+#define GS_FRAME_2    0x4D
+#define GS_PABE       0x49
+#define GS_PRIM       0x00
+#define GS_PRMODECONT 0x1A
+#define GS_RGBAQ      0x01L
+#define GS_SCISSOR_1  0x40
+#define GS_SCISSOR_2  0x41
+#define GS_TEST_1     0x47
+#define GS_TEST_2     0x48
+#define GS_TEX0_1     0x06
+#define GS_TEX0_2     0x07
+#define GS_TEX1_1     0x14
+#define GS_TEX1_2     0x15
+#define GS_TEXA       0x3B
+#define GS_TEXFLUSH   0x3F
+#define GS_TRXDIR     0x53
+#define GS_TRXPOS     0x51
+#define GS_TRXREG     0x52
+#define GS_UV         0x03
+#define GS_XYOFFSET_1 0x18
+#define GS_XYOFFSET_2 0x19
+#define GS_XYZ2       0x05L
+#define GS_ZBUF_1     0x4E
+#define GS_ZBUF_2     0x4F
+#define GS_NOP        0x0FL
 
-# define GS_SET_ALPHA_1 GS_SET_ALPHA
-# define GS_SET_ALPHA_2 GS_SET_ALPHA
-# define GS_SET_ALPHA( a, b, c, d, f )                                        \
+#define GS_SET_ALPHA_1 GS_SET_ALPHA
+#define GS_SET_ALPHA_2 GS_SET_ALPHA
+#define GS_SET_ALPHA( a, b, c, d, f )                                        \
  (   (  ( unsigned long )( a ) <<  0  ) | (  ( unsigned long )( b ) << 2  ) | \
      (  ( unsigned long )( c ) <<  4  ) | (  ( unsigned long )( d ) << 6  ) | \
      (  ( unsigned long )( f ) << 32  )                                       \
  )
 
-# define GS_SET_BITBLTBUF( sbp, sbw, spsm, dbp, dbw, dpsm )                          \
+#define GS_SET_BITBLTBUF( sbp, sbw, spsm, dbp, dbw, dpsm )                          \
  (   (  ( unsigned long )( sbp  ) <<  0  ) | (  ( unsigned long )( sbw  ) << 16  ) | \
      (  ( unsigned long )( spsm ) << 24  ) | (  ( unsigned long )( dbp  ) << 32  ) | \
      (  ( unsigned long )( dbw  ) << 48  ) | (  ( unsigned long )( dpsm ) << 56  )   \
  )
 
-# define GS_SET_DTHE( v ) ( v )
+#define GS_SET_DTHE( v ) ( v )
 
-# define GS_SET_FBA_1 GS_SET_FBA
-# define GS_SET_FBA_2 GS_SET_FBA
-# define GS_SET_FBA( fba ) (  ( unsigned long )( fba )  )
+#define GS_SET_FBA_1 GS_SET_FBA
+#define GS_SET_FBA_2 GS_SET_FBA
+#define GS_SET_FBA( fba ) (  ( unsigned long )( fba )  )
 
-# define GS_SET_FINISH( v ) (  ( unsigned long )( v )  )
+#define GS_SET_FINISH( v ) (  ( unsigned long )( v )  )
 
-# define GS_SET_FRAME_1 GS_SET_FRAME
-# define GS_SET_FRAME_2 GS_SET_FRAME
-# define GS_SET_FRAME( fbp, fbw, psm, fbmask )                                        \
+#define GS_SET_FRAME_1 GS_SET_FRAME
+#define GS_SET_FRAME_2 GS_SET_FRAME
+#define GS_SET_FRAME( fbp, fbw, psm, fbmask )                                        \
  (   (  ( unsigned long )( fbp ) <<  0  ) | (  ( unsigned long )( fbw    ) << 16  ) | \
      (  ( unsigned long )( psm ) << 24  ) | (  ( unsigned long )( fbmask ) << 32  )   \
  )
 
-# define GS_SET_PABE( pabe ) (  ( unsigned long )( pabe )  )
+#define GS_SET_PABE( pabe ) (  ( unsigned long )( pabe )  )
 
-# define GS_SET_PRIM( prim, iip, tme, fge, abe, aa1, fst, ctxt, fix )                                                     \
+#define GS_SET_PRIM( prim, iip, tme, fge, abe, aa1, fst, ctxt, fix )                                                     \
  (   (  ( unsigned long )( prim ) << 0  ) | (  ( unsigned long )( iip  ) << 3  ) | (  ( unsigned long )( tme ) <<  4  ) | \
      (  ( unsigned long )( fge  ) << 5  ) | (  ( unsigned long )( abe  ) << 6  ) | (  ( unsigned long )( aa1 ) <<  7  ) | \
      (  ( unsigned long )( fst  ) << 8  ) | (  ( unsigned long )( ctxt ) << 9  ) | (  ( unsigned long )( fix ) << 10  )   \
  )
 
-# define GS_SET_RGBAQ( r, g, b, a, q )                                         \
+#define GS_SET_RGBAQ( r, g, b, a, q )                                         \
  (   (  ( unsigned long )( r ) <<  0  ) | (  ( unsigned long )( g ) <<  8  ) | \
      (  ( unsigned long )( b ) << 16  ) | (  ( unsigned long )( a ) << 24  ) | \
      (  ( unsigned long )( q ) << 32  )                                        \
  )
 
-# define GS_SET_SCISSOR_1 GS_SET_SCISSOR
-# define GS_SET_SCISSOR_2 GS_SET_SCISSOR
-# define GS_SET_SCISSOR( scax0, scax1, scay0, scay1 ) \
+#define GS_SET_SCISSOR_1 GS_SET_SCISSOR
+#define GS_SET_SCISSOR_2 GS_SET_SCISSOR
+#define GS_SET_SCISSOR( scax0, scax1, scay0, scay1 ) \
  (   (  ( unsigned long )( scax0 ) <<  0  ) |         \
      (  ( unsigned long )( scax1 ) << 16  ) |         \
      (  ( unsigned long )( scay0 ) << 32  ) |         \
      (  ( unsigned long )( scay1 ) << 48  )           \
  )
 
-# define GS_SET_TEST_1 GS_SET_TEST
-# define GS_SET_TEST_2 GS_SET_TEST
-# define GS_SET_TEST( ate, atst, aref, afail, date, datm, zte, ztst ) \
+#define GS_SET_TEST_1 GS_SET_TEST
+#define GS_SET_TEST_2 GS_SET_TEST
+#define GS_SET_TEST( ate, atst, aref, afail, date, datm, zte, ztst ) \
  (   (  ( unsigned long )( ate   ) <<  0  ) |                         \
      (  ( unsigned long )( atst  ) <<  1  ) |                         \
      (  ( unsigned long )( aref  ) <<  4  ) |                         \
@@ -277,9 +277,9 @@ typedef union GIFTag {
      (  ( unsigned long )( ztst  ) << 17  )                           \
  )
 
-# define GS_SET_TEX0_1 GS_SET_TEX0
-# define GS_SET_TEX0_2 GS_SET_TEX0
-# define GS_SET_TEX0(                                                               \
+#define GS_SET_TEX0_1 GS_SET_TEX0
+#define GS_SET_TEX0_2 GS_SET_TEX0
+#define GS_SET_TEX0(                                                               \
           tbp, tbw, psm, tw, th, tcc, tfx,                                          \
           cbp, cpsm, csm, csa, cld                                                  \
          )                                                                          \
@@ -291,9 +291,9 @@ typedef union GIFTag {
      (  ( unsigned long )( csa  ) << 56  ) | (  ( unsigned long )( cld ) << 61  )   \
  )
 
-# define GS_SET_TEX1_1 GS_SET_TEX1
-# define GS_SET_TEX1_2 GS_SET_TEX1
-# define GS_SET_TEX1( lcm, mxl, mmag, mmin, mtba, l, k ) \
+#define GS_SET_TEX1_1 GS_SET_TEX1
+#define GS_SET_TEX1_2 GS_SET_TEX1
+#define GS_SET_TEX1( lcm, mxl, mmag, mmin, mtba, l, k ) \
  (   (  ( unsigned long )( lcm  ) <<  0  ) |             \
      (  ( unsigned long )( mxl  ) <<  2  ) |             \
      (  ( unsigned long )( mmag ) <<  5  ) |             \
@@ -303,45 +303,45 @@ typedef union GIFTag {
      (  ( unsigned long )( k    ) << 32  )               \
  )
 
-# define GS_SET_TEXFLUSH( v ) (  ( unsigned long )( v )  )
+#define GS_SET_TEXFLUSH( v ) (  ( unsigned long )( v )  )
 
-# define GS_SET_TEXA( ta0, aem, ta1 )       \
+#define GS_SET_TEXA( ta0, aem, ta1 )       \
  (   (  ( unsigned long )( ta0 ) <<  0  ) | \
      (  ( unsigned long )( aem ) << 15  ) | \
      (  ( unsigned long )( ta1 ) << 32  )   \
  )
 
-# define GS_SET_TRXDIR( xdr ) (  ( unsigned long )( xdr )  )
+#define GS_SET_TRXDIR( xdr ) (  ( unsigned long )( xdr )  )
 
-# define GS_SET_TRXPOS( ssax, ssay, dsax, dsay, dir )                              \
+#define GS_SET_TRXPOS( ssax, ssay, dsax, dsay, dir )                              \
  (   (  ( unsigned long )( ssax ) <<  0  ) | (  ( unsigned long )( ssay ) << 16) | \
      (  ( unsigned long )( dsax ) << 32  ) | (  ( unsigned long )( dsay ) << 48) | \
      (  ( unsigned long )( dir  ) << 59  )                                         \
  )
 
-# define GS_SET_TRXREG( rrw, rrh ) \
+#define GS_SET_TRXREG( rrw, rrh ) \
  (   ( unsigned long )( rrw ) | (  ( unsigned long )( rrh ) << 32  )   )
 
-# define GS_SET_UV( u, v ) (   ( unsigned long )( u ) | (  ( unsigned long )( v ) << 16  )   )
+#define GS_SET_UV( u, v ) (   ( unsigned long )( u ) | (  ( unsigned long )( v ) << 16  )   )
 
-# define GS_SET_XYOFFSET_1 GS_SET_XYOFFSET
-# define GS_SET_XYOFFSET_2 GS_SET_XYOFFSET
-# define GS_SET_XYOFFSET( ofx, ofy )        \
+#define GS_SET_XYOFFSET_1 GS_SET_XYOFFSET
+#define GS_SET_XYOFFSET_2 GS_SET_XYOFFSET
+#define GS_SET_XYOFFSET( ofx, ofy )        \
  (   (  ( unsigned long )( ofx ) <<  0  ) | \
      (  ( unsigned long )( ofy ) << 32 )    \
  )
 
-# define GS_SET_XYZ3 GS_SET_XYZ
-# define GS_SET_XYZ2 GS_SET_XYZ
-# define GS_SET_XYZ( x, y, z )            \
+#define GS_SET_XYZ3 GS_SET_XYZ
+#define GS_SET_XYZ2 GS_SET_XYZ
+#define GS_SET_XYZ( x, y, z )            \
  (   (  ( unsigned long )( x ) <<  0  ) | \
      (  ( unsigned long )( y ) << 16  ) | \
      (  ( unsigned long )( z ) << 32  )   \
  )
 
-# define GS_SET_ZBUF_1 GS_SET_ZBUF
-# define GS_SET_ZBUF_2 GS_SET_ZBUF
-# define GS_SET_ZBUF( zbp, psm, zmsk )       \
+#define GS_SET_ZBUF_1 GS_SET_ZBUF
+#define GS_SET_ZBUF_2 GS_SET_ZBUF
+#define GS_SET_ZBUF( zbp, psm, zmsk )       \
  (   (  ( unsigned long )( zbp  ) <<  0  ) | \
      (  ( unsigned long )( psm  ) << 24  ) | \
      (  ( unsigned long )( zmsk ) << 32  )   \
@@ -361,17 +361,17 @@ typedef union GIFTag {
      (  ( unsigned long )( dm32 ) << 56  ) | (  ( unsigned long )( dm33 ) << 60  )   \
  )
 
-# define GS_PMODE_EN_OFF   0
-# define GS_PMODE_EN_ON    1
+#define GS_PMODE_EN_OFF   0
+#define GS_PMODE_EN_ON    1
 
-# define GS_PMODE_MMOD_RC1 0
-# define GS_PMODE_MMOD_ALP 1
+#define GS_PMODE_MMOD_RC1 0
+#define GS_PMODE_MMOD_ALP 1
 
-# define GS_PMODE_AMOD_RC1 0
-# define GS_PMODE_AMOD_RC2 1
+#define GS_PMODE_AMOD_RC1 0
+#define GS_PMODE_AMOD_RC2 1
 
-# define GS_PMODE_SLBG_RC2 0
-# define GS_PMODE_SLBG_BG  1
+#define GS_PMODE_SLBG_RC2 0
+#define GS_PMODE_SLBG_BG  1
 
 typedef union GSRegPMODE {
 
@@ -393,16 +393,16 @@ typedef union GSRegPMODE {
 
 } GSRegPMODE;
 
-# define GS_SMODE2_INT_NOINTERLACE 0
-# define GS_SMODE2_INT_INTERLACE   1
+#define GS_SMODE2_INT_NOINTERLACE 0
+#define GS_SMODE2_INT_INTERLACE   1
 
-# define GS_SMODE2_FFMD_FIELD      0
-# define GS_SMODE2_FFMD_FRAME      1
+#define GS_SMODE2_FFMD_FIELD      0
+#define GS_SMODE2_FFMD_FRAME      1
 
-# define GS_SMODE2_DPMS_ON         0
-# define GS_SMODE2_DPMS_STANDBY    1
-# define GS_SMODE2_DPMS_SUSPEND    2
-# define GS_SMODE2_DPMS_OFF        3
+#define GS_SMODE2_DPMS_ON         0
+#define GS_SMODE2_DPMS_STANDBY    1
+#define GS_SMODE2_DPMS_SUSPEND    2
+#define GS_SMODE2_DPMS_OFF        3
 
 typedef union GSRegSMODE2 {
 
@@ -544,8 +544,8 @@ typedef union GSRegSCISSOR {
 
 } GSRegSCISSOR;
 
-# define GS_PRMODECONT_PRMODE 0
-# define GS_PRMODECONT_PRIM   1
+#define GS_PRMODECONT_PRMODE 0
+#define GS_PRMODECONT_PRIM   1
 
 typedef union GSRegPRMODECONT {
 
@@ -560,8 +560,8 @@ typedef union GSRegPRMODECONT {
 
 } GSRegPRMODECONT;
 
-# define GS_PABE_OFF 0
-# define GS_PABE_ON  1
+#define GS_PABE_OFF 0
+#define GS_PABE_ON  1
 
 typedef struct GSRegPABE {
 
@@ -569,8 +569,8 @@ typedef struct GSRegPABE {
 
 } GSRegPABE;
 
-# define GS_COLCLAMP_MASK  0
-# define GS_COLCLAMP_CLAMP 1
+#define GS_COLCLAMP_MASK  0
+#define GS_COLCLAMP_CLAMP 1
 
 typedef union GSRegCOLCLAMP {
 
@@ -585,8 +585,8 @@ typedef union GSRegCOLCLAMP {
 
 } GSRegCOLCLAMP;
 
-# define GS_DTHE_OFF 0
-# define GS_DTHE_ON  1
+#define GS_DTHE_OFF 0
+#define GS_DTHE_ON  1
 
 typedef union GSRegDTHE {
 
@@ -601,35 +601,35 @@ typedef union GSRegDTHE {
 
 } GSRegDTHE;
 
-# define GS_TEST_ATE_OFF        0
-# define GS_TEST_ATE_ON         1
+#define GS_TEST_ATE_OFF        0
+#define GS_TEST_ATE_ON         1
 
-# define GS_TEST_ATST_NEVER     0
-# define GS_TEST_ATST_ALWAYS    1
-# define GS_TEST_ATST_LESS      2
-# define GS_TEST_ATST_LEQUAL    3
-# define GS_TEST_ATST_EQUAL     4
-# define GS_TEST_ATST_GEQUAL    5
-# define GS_TEST_ATST_GREATER   6
-# define GS_TEST_ATST_NOTEQUAL  7
+#define GS_TEST_ATST_NEVER     0
+#define GS_TEST_ATST_ALWAYS    1
+#define GS_TEST_ATST_LESS      2
+#define GS_TEST_ATST_LEQUAL    3
+#define GS_TEST_ATST_EQUAL     4
+#define GS_TEST_ATST_GEQUAL    5
+#define GS_TEST_ATST_GREATER   6
+#define GS_TEST_ATST_NOTEQUAL  7
 
-# define GS_TEST_AFAIL_KEEP     0
-# define GS_TEST_AFAIL_FB_ONLY  1
-# define GS_TEST_AFAIL_ZB_ONLY  2
-# define GS_TEST_AFAIL_RGB_ONLY 3
+#define GS_TEST_AFAIL_KEEP     0
+#define GS_TEST_AFAIL_FB_ONLY  1
+#define GS_TEST_AFAIL_ZB_ONLY  2
+#define GS_TEST_AFAIL_RGB_ONLY 3
 
-# define GS_TEST_DATE_OFF       0
-# define GS_TEST_DATE_ON        1
+#define GS_TEST_DATE_OFF       0
+#define GS_TEST_DATE_ON        1
 
-# define GS_TEST_DATM_0PASS     0
-# define GS_TEST_DATM_1PASS     1
+#define GS_TEST_DATM_0PASS     0
+#define GS_TEST_DATM_1PASS     1
 
-# define GS_TEST_ZTE_OFF        0
-# define GS_TEST_ZTE_ON         1
-# define GS_TEST_ZTST_NEVER     0
-# define GS_TEST_ZTST_ALWAYS    1
-# define GS_TEST_ZTST_GEQUAL    2
-# define GS_TEST_ZTST_GREATER   3
+#define GS_TEST_ZTE_OFF        0
+#define GS_TEST_ZTE_ON         1
+#define GS_TEST_ZTST_NEVER     0
+#define GS_TEST_ZTST_ALWAYS    1
+#define GS_TEST_ZTST_GEQUAL    2
+#define GS_TEST_ZTST_GREATER   3
 
 typedef union GSRegTEST {
 
@@ -651,18 +651,18 @@ typedef union GSRegTEST {
 
 } GSRegTEST;
 
-# define GS_ALPHA_A_CS      0
-# define GS_ALPHA_A_CD      1
-# define GS_ALPHA_A_ZERO    2
-# define GS_ALPHA_B_CS      0
-# define GS_ALPHA_B_CD      1
-# define GS_ALPHA_B_ZERO    2
-# define GS_ALPHA_C_AS      0
-# define GS_ALPHA_C_AD      1
-# define GS_ALPHA_C_FIX     2
-# define GS_ALPHA_D_CS      0
-# define GS_ALPHA_D_CD      1
-# define GS_ALPHA_D_ZERO    2
+#define GS_ALPHA_A_CS      0
+#define GS_ALPHA_A_CD      1
+#define GS_ALPHA_A_ZERO    2
+#define GS_ALPHA_B_CS      0
+#define GS_ALPHA_B_CD      1
+#define GS_ALPHA_B_ZERO    2
+#define GS_ALPHA_C_AS      0
+#define GS_ALPHA_C_AD      1
+#define GS_ALPHA_C_FIX     2
+#define GS_ALPHA_D_CS      0
+#define GS_ALPHA_D_CD      1
+#define GS_ALPHA_D_ZERO    2
 
 typedef union GSRegALPHA {
 
@@ -682,37 +682,37 @@ typedef union GSRegALPHA {
 
 } GSRegALPHA;
 
-# define GS_PRIM_PRIM_POINT     0
-# define GS_PRIM_PRIM_LINE      1
-# define GS_PRIM_PRIM_LINESTRIP 2
-# define GS_PRIM_PRIM_TRIANGLE  3
-# define GS_PRIM_PRIM_TRISTRIP  4
-# define GS_PRIM_PRIM_TRIFAN    5
-# define GS_PRIM_PRIM_SPRITE    6
+#define GS_PRIM_PRIM_POINT     0
+#define GS_PRIM_PRIM_LINE      1
+#define GS_PRIM_PRIM_LINESTRIP 2
+#define GS_PRIM_PRIM_TRIANGLE  3
+#define GS_PRIM_PRIM_TRISTRIP  4
+#define GS_PRIM_PRIM_TRIFAN    5
+#define GS_PRIM_PRIM_SPRITE    6
 
-# define GS_PRIM_IIP_FLAT       0
-# define GS_PRIM_IIP_GOURAUD    1
+#define GS_PRIM_IIP_FLAT       0
+#define GS_PRIM_IIP_GOURAUD    1
 
-# define GS_PRIM_TME_OFF        0
-# define GS_PRIM_TME_ON         1
+#define GS_PRIM_TME_OFF        0
+#define GS_PRIM_TME_ON         1
 
-# define GS_PRIM_FGE_OFF        0
-# define GS_PRIM_FGE_ON         1
+#define GS_PRIM_FGE_OFF        0
+#define GS_PRIM_FGE_ON         1
 
-# define GS_PRIM_ABE_OFF        0
-# define GS_PRIM_ABE_ON         1
+#define GS_PRIM_ABE_OFF        0
+#define GS_PRIM_ABE_ON         1
 
-# define GS_PRIM_AA1_OFF        0
-# define GS_PRIM_AA1_ON         1
+#define GS_PRIM_AA1_OFF        0
+#define GS_PRIM_AA1_ON         1
 
-# define GS_PRIM_FST_STQ        0
-# define GS_PRIM_FST_UV         1
+#define GS_PRIM_FST_STQ        0
+#define GS_PRIM_FST_UV         1
 
-# define GS_PRIM_CTXT_1         0
-# define GS_PRIM_CTXT_2         1
+#define GS_PRIM_CTXT_1         0
+#define GS_PRIM_CTXT_2         1
 
-# define GS_PRIM_FIX_UNFIXED    0
-# define GS_PRIM_FIX_FIXED      1
+#define GS_PRIM_FIX_UNFIXED    0
+#define GS_PRIM_FIX_FIXED      1
 
 typedef union GSRegPRIM {
 
@@ -758,10 +758,10 @@ typedef union GSRegBITBLTBUF {
 
 } GSRegBITBLTBUF;
 
-# define GS_TRXPOS_DIR_LR_UD 0
-# define GS_TRXPOS_DIR_LR_DU 1
-# define GS_TRXPOS_DIR_RL_UD 2
-# define GS_TRXPOS_DIR_RL_DU 3
+#define GS_TRXPOS_DIR_LR_UD 0
+#define GS_TRXPOS_DIR_LR_DU 1
+#define GS_TRXPOS_DIR_RL_UD 2
+#define GS_TRXPOS_DIR_RL_DU 3
 
 typedef union GSRegTRXPOS {
 
@@ -798,9 +798,9 @@ typedef union GSRegTRXREG {
 
 } GSRegTRXREG;
 
-# define GS_TRXDIR_HOST_TO_LOCAL  0
-# define GS_TRXDIR_LOCAL_TO_HOST  1
-# define GS_TRXDIR_LOCAL_TO_LOCAL 2
+#define GS_TRXDIR_HOST_TO_LOCAL  0
+#define GS_TRXDIR_LOCAL_TO_HOST  1
+#define GS_TRXDIR_LOCAL_TO_LOCAL 2
 
 typedef union GSRegTRXDIR {
 
@@ -821,8 +821,8 @@ typedef struct GSRegFINISH {
 
 } GSRegFINISH;
 
-# define GS_ZBUF_ZMSK_NOMASK 0
-# define GS_ZBUF_ZMSK_MASK   1
+#define GS_ZBUF_ZMSK_NOMASK 0
+#define GS_ZBUF_ZMSK_MASK   1
 
 typedef union GSRefZBUF {
 
@@ -841,20 +841,20 @@ typedef union GSRefZBUF {
 
 } GSRefZBUF;
 
-# define GS_TEX_TCC_RGB              0
-# define GS_TEX_TCC_RGBA             1
-# define GS_TEX_TFX_MODULATE         0
-# define GS_TEX_TFX_DECAL            1
-# define GS_TEX_TFX_HIGHLIGHT        2
-# define GS_TEX_TFX_HIGHLIGHT2       3
-# define GS_TEX_CSM_CSM1             0
-# define GS_TEX_CSM_CSM2             1
-# define GS_TEX_CLD_NOUPDATE         0
-# define GS_TEX_CLD_LOAD             1
-# define GS_TEX_CLD_LOAD_COPY0       2
-# define GS_TEX_CLD_LOAD_COPY1       3
-# define GS_TEX_CLD_TEST0_LOAD_COPY0 4
-# define GS_TEX_CLD_TEST1_LOAD_COPY1 5
+#define GS_TEX_TCC_RGB              0
+#define GS_TEX_TCC_RGBA             1
+#define GS_TEX_TFX_MODULATE         0
+#define GS_TEX_TFX_DECAL            1
+#define GS_TEX_TFX_HIGHLIGHT        2
+#define GS_TEX_TFX_HIGHLIGHT2       3
+#define GS_TEX_CSM_CSM1             0
+#define GS_TEX_CSM_CSM2             1
+#define GS_TEX_CLD_NOUPDATE         0
+#define GS_TEX_CLD_LOAD             1
+#define GS_TEX_CLD_LOAD_COPY0       2
+#define GS_TEX_CLD_LOAD_COPY1       3
+#define GS_TEX_CLD_TEST0_LOAD_COPY0 4
+#define GS_TEX_CLD_TEST1_LOAD_COPY1 5
 
 typedef union GSRegTEX0 {
 
@@ -879,18 +879,18 @@ typedef union GSRegTEX0 {
 
 } GSRegTEX0;
 
-# define GS_TEX1_LCM_CALC                    0
-# define GS_TEX1_LCM_K                       1
-# define GS_TEX1_MMAG_NEAREST                0
-# define GS_TEX1_MMAG_LINEAR                 1
-# define GS_TEX1_MMIN_NEAREST                0
-# define GS_TEX1_MMIN_LINEAR                 1
-# define GS_TEX1_MMIN_NEAREST_MIPMAP_NEAREST 2
-# define GS_TEX1_MMIN_NEAREST_MIPMAP_LINEAR  3
-# define GS_TEX1_MMIN_LINEAR_MIPMAP_NEAREST  4
-# define GS_TEX1_MMIN_LINEAR_MIPMAP_LINEAR   5
-# define GS_TEX1_MTBA_NOAUTO                 0
-# define GS_TEX1_MTBA_AUTO                   1
+#define GS_TEX1_LCM_CALC                    0
+#define GS_TEX1_LCM_K                       1
+#define GS_TEX1_MMAG_NEAREST                0
+#define GS_TEX1_MMAG_LINEAR                 1
+#define GS_TEX1_MMIN_NEAREST                0
+#define GS_TEX1_MMIN_LINEAR                 1
+#define GS_TEX1_MMIN_NEAREST_MIPMAP_NEAREST 2
+#define GS_TEX1_MMIN_NEAREST_MIPMAP_LINEAR  3
+#define GS_TEX1_MMIN_LINEAR_MIPMAP_NEAREST  4
+#define GS_TEX1_MMIN_LINEAR_MIPMAP_LINEAR   5
+#define GS_TEX1_MTBA_NOAUTO                 0
+#define GS_TEX1_MTBA_AUTO                   1
 
 typedef union GSRegTEX1 {
 
@@ -914,15 +914,15 @@ typedef union GSRegTEX1 {
 
 } GSRegTEX1 __attribute__(  ( packed )  );
 
-# define GS_CSR_SIGNAL 0x0000000000000001L
-# define GS_CSR_FINISH 0x0000000000000002L
-# define GS_CSR_HSINT  0x0000000000000004L
-# define GS_CSR_VSINT  0x0000000000000008L
-# define GS_CSR_EDWINT 0x0000000000000010L
-# define GS_CSR_FLUSH  0x0000000000000100L
-# define GS_CSR_RESET  0x0000000000000200L
-# define GS_CSR_NFIELD 0x0000000000001000L
-# define GS_CSR_FIELD  0x0000000000002000L
+#define GS_CSR_SIGNAL 0x0000000000000001L
+#define GS_CSR_FINISH 0x0000000000000002L
+#define GS_CSR_HSINT  0x0000000000000004L
+#define GS_CSR_VSINT  0x0000000000000008L
+#define GS_CSR_EDWINT 0x0000000000000010L
+#define GS_CSR_FLUSH  0x0000000000000100L
+#define GS_CSR_RESET  0x0000000000000200L
+#define GS_CSR_NFIELD 0x0000000000001000L
+#define GS_CSR_FIELD  0x0000000000002000L
 
 typedef union GSRegCSR {
 
@@ -1237,23 +1237,23 @@ extern unsigned int*    g_MBFont;
 extern GSMTKFontHeader* g_pASCII;
 extern GSMTKFontHeader* g_Fonts[ 4 ];
 
-# define GS_CSR      (  ( volatile unsigned long* )0x12001000  )
-# define GS_PMODE    (  ( volatile unsigned long* )0x12000000  )
-# define GS_DISPFB1  (  ( volatile unsigned long* )0x12000070  )
-# define GS_DISPLAY1 (  ( volatile unsigned long* )0x12000080  )
-# define GS_DISPFB2  (  ( volatile unsigned long* )0x12000090  )
-# define GS_DISPLAY2 (  ( volatile unsigned long* )0x120000A0  )
+#define GS_CSR      (  ( volatile unsigned long* )0x12001000  )
+#define GS_PMODE    (  ( volatile unsigned long* )0x12000000  )
+#define GS_DISPFB1  (  ( volatile unsigned long* )0x12000070  )
+#define GS_DISPLAY1 (  ( volatile unsigned long* )0x12000080  )
+#define GS_DISPFB2  (  ( volatile unsigned long* )0x12000090  )
+#define GS_DISPLAY2 (  ( volatile unsigned long* )0x120000A0  )
 
-# define GS_TXT_PACKET_SIZE( n ) (   ( n << 2 ) + 6 + (  ( g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL ) << 3  )   )
-# define GS_RRT_PACKET_SIZE()    ( 34 )
-# define GS_BBT_PACKET_SIZE()    ( 12 )
-# define GS_TSP_PACKET_SIZE()    ( 14 )
-# define GS_VGR_PACKET_SIZE()    ( 10 )
-# define GS_LDI_PACKET_SIZE()    ( 22 )
+#define GS_TXT_PACKET_SIZE( n ) (   ( n << 2 ) + 6 + (  ( g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL ) << 3  )   )
+#define GS_RRT_PACKET_SIZE()    ( 34 )
+#define GS_BBT_PACKET_SIZE()    ( 12 )
+#define GS_TSP_PACKET_SIZE()    ( 14 )
+#define GS_VGR_PACKET_SIZE()    ( 10 )
+#define GS_LDI_PACKET_SIZE()    ( 22 )
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 GSParams*     GS_Params          ( void                                                                        );
 void          GS_Reset           ( GSInterlaceMode, GSVideoMode, GSFieldMode                                   );
@@ -1303,7 +1303,7 @@ static int inline GSFont_CharWidth ( GSMTKFontHeader* apHdr, unsigned int aChr )
  return (   (  ( unsigned char* )apHdr  ) + 11   )[ aChr ];
 }  /* end GSFont_CharWidth */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_GS_H */

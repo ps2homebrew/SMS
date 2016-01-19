@@ -9,11 +9,11 @@
 #
 */
 #ifndef __SMS_FLAC_H
-# define __SMS_FLAC_H
+#define __SMS_FLAC_H
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
 typedef struct FLACData {
  SMS_AudioInfo m_Info;
@@ -25,13 +25,13 @@ typedef struct FLACData {
  unsigned int  m_Duration;
 } FLACData;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_Codec_FLAC_Open ( SMS_CodecContext* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_FLAC_H */

@@ -9,7 +9,7 @@
 #
 */
 #ifndef __SMS_JPEG_H
-# define __SMS_JPEG_H
+#define __SMS_JPEG_H
 
 typedef enum _jpeg_clr_fmt {
  JCF_Invalid = -1, JCF_8x8, JCF_16x8, JCF_8x16, JCF_16x16
@@ -105,9 +105,9 @@ typedef struct SMS_JPEGViewer {
  struct SMS_ContainedrJPEG* m_pCont;
 } SMS_JPEGViewer;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_JPEGContext* SMS_JPEGInit    (  void ( * ) ( void*, unsigned int ), void*  );
 void             SMS_JPEGDestroy ( SMS_JPEGContext*                            );
@@ -117,7 +117,7 @@ SMS_JPEGViewer* SMS_JPEGViewerInit    ( void                              );
 void            SMS_JPEGViewerDestroy ( SMS_JPEGViewer*                   );
 void            SMS_JPEGViewerPerform ( SMS_JPEGViewer*, struct SMS_List* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_JPEG_H */

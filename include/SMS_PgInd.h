@@ -9,18 +9,18 @@
 #
 */
 #ifndef __SMS_PgInd_H
-# define __SMS_PgInd_H
+#define __SMS_PgInd_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_PgIndInitialize ( void );
 void SMS_PgIndStart      ( void );
 void SMS_PgIndStop       ( void );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 #endif  /* __SMS_PgInd_H */

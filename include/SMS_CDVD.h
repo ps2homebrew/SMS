@@ -50,11 +50,11 @@
 # OF SUCH DAMAGE.
 */
 #ifndef __SMS_CDVD_H
-# define __SMS_CDVD_H
+#define __SMS_CDVD_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 int  CDVD_Init       ( void );
 void CDVD_Stop       ( void );
@@ -63,7 +63,7 @@ int  CDVD_SetDVDV    ( int  );
 int  CDVD_QueryDVDV  ( void );
 int  CDVD_SetSpeed   ( void );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_CDVD_H */

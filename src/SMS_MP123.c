@@ -18,8 +18,8 @@
 #include <string.h>
 
 #ifndef _WIN32
-# include <kernel.h>
-# include "SMS_DMA.h"
+#include <kernel.h>
+#include "SMS_DMA.h"
 #endif  /* _WIN32 */
 
 typedef struct _BandInfo {

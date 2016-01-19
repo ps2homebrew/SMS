@@ -9,7 +9,7 @@
 #
 */
 #ifndef __SMS_GUIClock_H
-# define __SMS_GUIClock_H
+#define __SMS_GUIClock_H
 
 typedef struct GUIClockParam {
  short m_X;
@@ -20,9 +20,9 @@ typedef struct GUIClockParam {
 
 extern GUIClockParam g_Clock;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_GUIClockInitialize ( void                 );
 void SMS_GUIClockStart      ( const GUIClockParam* );
@@ -31,8 +31,8 @@ void SMS_GUIClockSuspend    ( void                 );
 void SMS_GUIClockResume     ( void                 );
 void SMS_GUIClockRedraw     ( void                 );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 #endif  /* __SMS_GUIClock_H */

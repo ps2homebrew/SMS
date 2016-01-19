@@ -33,7 +33,7 @@ typedef struct _ball_pos {
 
 } _ball_pos;
 
-# define s_BallPos (  ( _ball_pos* )g_Balls  )
+#define s_BallPos (  ( _ball_pos* )g_Balls  )
 
 static void _create_ball ( int anIdx ) {
 

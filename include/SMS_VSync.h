@@ -9,15 +9,15 @@
 #
 */
 #ifndef __SMS_VSync_H
-# define __SMS_VSync_H
+#define __SMS_VSync_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
 unsigned int SMS_EstimateVSync ( int, int, int );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
 #endif  /* __cplusplus */
 

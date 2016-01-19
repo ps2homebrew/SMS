@@ -10,15 +10,15 @@
 #
 */
 #ifndef __SMS_VLC_H
-# define __SMS_VLC_H
+#define __SMS_VLC_H
 
-# ifndef __SMS_Bitio_H
-#  include "SMS_Bitio.h"
-# endif  /* __SMS_Bitio_H */
+#ifndef __SMS_Bitio_H
+#include "SMS_Bitio.h"
+#endif  /* __SMS_Bitio_H */
 
-# define SMS_MAX_RUN     64
-# define SMS_MAX_LEVEL   64
-# define SMS_MV_VLC_BITS  9
+#define SMS_MAX_RUN     64
+#define SMS_MAX_LEVEL   64
+#define SMS_MV_VLC_BITS  9
 
 typedef struct SMS_VLC {
 
@@ -53,7 +53,7 @@ typedef struct SMS_RLTable {
 
 extern SMS_VLC g_SMS_mv_vlc;
 
-# define SMS_GET_VLC( code, name, gb, table, bits, max_depth ) { \
+#define SMS_GET_VLC( code, name, gb, table, bits, max_depth ) { \
  int n, index, nb_bits;                                          \
  index = SMS_SHOW_UBITS( name, gb, bits );                       \
  code  = table[ index ][ 0 ];                                    \
@@ -77,7 +77,7 @@ extern SMS_VLC g_SMS_mv_vlc;
  SMS_SKIP_BITS( name, gb, n )                                    \
 }
 
-# define SMS_GET_RL_VLC( level, run, name, gb, table, bits, max_depth ) { \
+#define SMS_GET_RL_VLC( level, run, name, gb, table, bits, max_depth ) { \
  int n, index, nb_bits;                                                   \
  index = SMS_SHOW_UBITS( name, gb, bits );                                \
  level = table[ index ].m_Level;                                          \
@@ -113,7 +113,7 @@ static SMS_INLINE int SMS_GetVLC2 ( SMS_BitContext* apCtx, int16_t ( *apTbl )[ 2
  return lCode;
 }  /* end SMS_GetVLC2 */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
@@ -126,7 +126,7 @@ void SMS_RL_Free ( SMS_RLTable* );
 void SMS_VLC_RL_Init ( SMS_RLTable* );
 void SMS_VLC_RL_Free ( SMS_RLTable* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
 #endif  /* __cplusplus */
 #endif  /* __SMS_VLC_H */

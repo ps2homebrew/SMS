@@ -10,7 +10,7 @@
 #
 */
 #ifndef __SMS_MC_H
-# define __SMS_MC_H
+#define __SMS_MC_H
 
 typedef struct SMS_MCTable {
 
@@ -65,9 +65,9 @@ typedef struct SMS_MCIcon {
 
 } SMS_MCIcon;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 int MC_Init    ( void                                               );
 int MC_Sync    ( int*                                               );
@@ -83,7 +83,7 @@ int  MC_ReadS  ( int, void*, int            );
 void MC_CloseS ( int                        );
 int  MC_SeekS  ( int, int, int              );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_MC_H */

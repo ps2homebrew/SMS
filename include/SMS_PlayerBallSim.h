@@ -9,20 +9,20 @@
 #
 */
 #ifndef __SMS_PlayerBallSim_H
-# define __SMS_PlayerBallSim_H
+#define __SMS_PlayerBallSim_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 uint64_t* SMS_PlayerBallSim_Init   ( uint32_t* );
 void      SMS_PlayerBallSim_Update ( uint64_t* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_PlayerBallSim_H */
