@@ -1,3 +1,5 @@
+.SILENT:
+
 EE_OBJ_DIR = obj/
 EE_INC_DIR = include/
 EE_BIN_DIR = bin/
