@@ -236,8 +236,8 @@ static void IPU_SetTEX ( void ) {
 
 }  /* end IPU_SetTEX */
 
-int IPU_GIFHandlerDraw      ( int aCh, void* apArg, void* apAddr );
-int IPU_GIFHandlerDummyDraw ( int aCh, void* apArg, void* apAddr );
+int IPU_GIFHandlerDraw(int aCh);
+int IPU_GIFHandlerDummyDraw(int aCh);
 __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"
@@ -706,7 +706,7 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afW
  ee_sema_t      lSema;
  unsigned short lCRTMode = GS_Params () -> m_GSCRTMode;
 
- int ( *GIFHandler ) ( int, void*, void* );
+ int (*GIFHandler)(int);
 
  lSema.init_count = 1;
  s_SyncS = CreateSema ( &lSema );
@@ -851,7 +851,7 @@ retry:
 
  }  /* end else */
 
- g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler2 ( DMAC_I_GIF, GIFHandler, 0, NULL );
+ g_IPUCtx.m_DMAHandlerID_GIF = AddDmacHandler( DMAC_I_GIF, GIFHandler, 0 );
  g_IPUCtx.Resume ();
  SetCPUTimerHandler ( IPU_RfshHandler );
 

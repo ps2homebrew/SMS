@@ -1947,7 +1947,7 @@ static int _DrvIOCtl ( iop_io_file_t* apFile, unsigned long aCmd, void* apParam 
 
       while ( 1 ) {
 
-       ReferThreadStatus ( lpSrvCtx -> m_LoginThreadID, &lInfo );
+       ReferThreadStatus ( lpSrvCtx -> m_LoginThreadID, lInfo );
        if ( lInfo.info[ 2 ] == 0x10 ) break;
        DelayThread ( 500 );
 
