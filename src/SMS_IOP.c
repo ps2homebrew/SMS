@@ -98,7 +98,7 @@ void SMS_IOPSetSifCmdHandler (  void ( *apFunc ) ( void* ), int aCmd  ) {
 
 static void _sif_cmd_handler ( void* apPkt, void* apArg ) {
 
- s_SMS_SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> unknown ] ( apPkt );
+ s_SMS_SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> opt ] ( apPkt );
 
 }  /* end _sif_cmd_handler */
 
