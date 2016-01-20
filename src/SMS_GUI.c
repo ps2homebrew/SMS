@@ -229,7 +229,7 @@ static void TimerHandler ( void* apArg ) {
 
 static void _smb_handler_connect ( void* apHdr ) {
 
- int* lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> unknown;
+ int* lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> opt;
 
  g_SMBUnit        = lpParam[ 1 ];
  g_SMBError       = lpParam[ 2 ];
@@ -242,7 +242,7 @@ static void _smb_handler_connect ( void* apHdr ) {
 
 static void _usb_handler_connect ( void* apHdr ) {
 
- int*         lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> unknown;
+ int*         lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> opt;
  int          lUnit   = lpParam[ 1 ];
  unsigned int lCMask, lDMask;
 
@@ -263,7 +263,7 @@ static void _usb_handler_connect ( void* apHdr ) {
 
 static void _usb_handler_disconnect ( void* apHdr ) {
 
- int*         lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> unknown;
+ int*         lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> opt;
  int          lUnit   = lpParam[ 1 ];
  unsigned int lCMask, lDMask;
 
