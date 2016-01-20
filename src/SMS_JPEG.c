@@ -26,7 +26,7 @@
 #include "SMS_GUI.h"
 #include "SMS_RC.h"
 #include "SMS_PAD.h"
-#include "SMS_GUICons.h"
+#include "SMS_GUIcons.h"
 #include "SMS_VIF.h"
 #include "SMS_PgInd.h"
 
