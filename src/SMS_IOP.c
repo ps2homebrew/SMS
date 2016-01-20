@@ -295,7 +295,7 @@ int SMS_IOPStartUSB ( int afStatus ) {
   i = SifLoadModule ( lBuf, 0, NULL );
  }  /* end if */
 
- if ( i < 0 ) SifExecDecompModuleBuffer ( &g_DataBuffer[ SMS_USBD_OFFSET ], SMS_USBD_SIZE, 0, NULL, &i );
+ if ( i < 0 ) SifExecModuleBuffer ( &g_DataBuffer[ SMS_USBD_OFFSET ], SMS_USBD_SIZE, 0, NULL, &i );
 
  g_IOPFlags |= SMS_IOPF_USB;
 
@@ -309,7 +309,7 @@ int SMS_IOPStartUSB ( int afStatus ) {
  }  /* end if */
 
  if ( i < 0 ) {
-  SifExecDecompModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
+  SifExecModuleBuffer ( &g_DataBuffer[ SMS_USB_MASS_OFFSET ], SMS_USB_MASS_SIZE, 0, NULL, &i );
   g_IOPFlags |= SMS_IOPF_UMS;
   *( int* )g_pUSB = 0x20736D75;
  }  /* end if */
