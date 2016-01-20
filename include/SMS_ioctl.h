@@ -11,6 +11,16 @@
 #ifndef __SMS_ioctl_H
 #define __SMS_ioctl_H
 
+#define _IOC(type, nr)		(((type) << 8)|(nr))
+
+#define DEV9_CTL_TYPE		'd'
+
+/* DEV9 devctl().  */
+#define DEV9CTLSHUTDOWN 	_IOC(DEV9_CTL_TYPE, 1)	/* Shutdown DEV9.  */
+#define DEV9CTLTYPE         _IOC(DEV9_CTL_TYPE, 2)	/* Return type of device.  */
+#define DEV9CTLSMAPSTOP     _IOC(DEV9_CTL_TYPE, 3)  /* Shutdown SMAP */
+#define DEV9CTLINIT         _IOC(DEV9_CTL_TYPE, 4)  /* Initialize DEV9 */
+
 #ifdef _IOP
 #  define PS2HDD_IOCTL_TRANSFER_DATA    0
 #endif  /* _IOP */
