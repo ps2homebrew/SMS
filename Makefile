@@ -80,7 +80,7 @@ $(EE_BIN) : $(EE_OBJS) $(PS2SDK)/ee/startup/crt0.o
 rebuild: clean all
 
 clean:
-	@rm -rf $(EE_BIN_DIR)*.elf $(EE_OBJ_DIR)*.o
+	@rm -f -r $(EE_BIN_DIR) $(EE_OBJ_DIR)
 
 include $(PS2SDK)/Defs.make
 
