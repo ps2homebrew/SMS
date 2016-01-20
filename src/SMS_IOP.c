@@ -140,9 +140,13 @@ void SMS_IOPReset ( int afExit ) {
  SifExitIopHeap ();
  SifLoadFileExit(); 
  SifExitRpc     (); 
- SifIopReset ( s_pUDNL, 0 );
 
- while (  !SifIopSync ()  );
+ while(!SifIopReset(s_pUDNL, 0)){};
+
+ FlushCache(0);
+ FlushCache(2);
+
+ while (!SifIopSync()) {;}
 
  SifInitRpc ( 0 );
 
@@ -151,7 +155,12 @@ void SMS_IOPReset ( int afExit ) {
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
 
- SifUpdateIop ( s_iop_image, size_s_iop_image );
+ while(!SifIopReset(s_iop_image, 0)){};
+
+ FlushCache(0);
+ FlushCache(2);
+
+ while (!SifIopSync()) {;}
 
  SifInitRpc ( 0 );
  _slib_cur_exp_lib_list.tail = NULL;
