@@ -73,7 +73,7 @@
 #define BLK_RB_PUSHADVANCE( c )  (   ( c ) -> m_pBlkIn  = BLK_RB_SLOT(  ( c ), ( c ) -> m_pBlkIn  + 80  )   )
 #define BLK_RB_POPADVANCE( c )   (   ( c ) -> m_pBlkOut = BLK_RB_SLOT(  ( c ), ( c ) -> m_pBlkOut + 80  )   )
 
-extern SMS_LZMAData g_JPEGData[ 5 ] __attribute__(   (  section( ".rodata" )  )   );
+extern SMS_LZMA2Data g_JPEGData[ 5 ] __attribute__(   (  section( ".rodata" )  )   );
 
 static void         _reset_pred   ( SMS_JPEGContext*               );
 static int          _ceil_div     ( int, int                       );

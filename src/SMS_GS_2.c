@@ -20,7 +20,8 @@
 #include <limits.h>
 #include <fileio.h>
 #include <malloc.h>
-#include <liblzma.h>
+
+#include <lzma2.h>
 
 typedef struct _Unaligned32 {
 
@@ -529,11 +530,10 @@ void* GSFont_Load ( const char* apFileName ) {
      lpFile[ 3 ] ^= 'G';
      lpFile[ 4 ] ^= 'X';
 
-     if (  LZMADecompress (
-            ( unsigned char* )g_MBFont, lpFile, lFileSize
-           ) != lDataSize
-     ) goto error;
-
+     if ( lzma2_get_uncompressed_size(lpFile, lFileSize) != lDataSize )  goto error;
+     
+     lzma2_uncompress(lpFile, lFileSize, ( unsigned char* )g_MBFont, lDataSize);
+		 
     } else {
 error:
      free ( g_MBFont );

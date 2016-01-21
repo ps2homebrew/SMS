@@ -299,7 +299,7 @@ static const unsigned char s_CSC4[] __attribute__(   (  aligned( 16 ), section( 
  0x08
 };
 
-const SMS_LZMAData g_JPEGData[ 5 ] __attribute__(   (  section( ".rodata" )  )   ) = {
+const SMS_LZMA2Data g_JPEGData[ 5 ] __attribute__(   (  section( ".rodata" )  )   ) = {
  { 2016, sizeof ( s_IDCT  ), s_IDCT  },
  { 1232, sizeof ( s_CSC1  ), s_CSC1  },
  { 2128, sizeof ( s_CSC2h ), s_CSC2h },

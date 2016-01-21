@@ -25,7 +25,8 @@
 #include "SMS_List.h"
 #include "SMS_DMA.h"
 
-#include <liblzma.h>
+#include <lzma2.h>
+
 #include <loadfile.h>
 
 #include <kernel.h>
@@ -906,23 +907,32 @@ void SMS_EETlbInit ( void ) {
 
 }  /* end SMS_EETlbInit */
 
-void* SMS_LZMADecompress ( SMS_LZMAData* apData ) {
+void* SMS_LZMA2Decompress ( SMS_LZMA2Data* apData ) {
 
- void* retVal = SMS_SyncMalloc ( apData -> m_Size );
- int   lSize  = LZMADecompress (  UNCACHED_SEG( retVal ), apData -> m_pData, apData -> m_PackSize  );
+ unsigned int retVal;
+
+ unsigned char *retPtr = SMS_SyncMalloc ( apData -> m_Size );
+
+ size_t lSize = lzma2_get_uncompressed_size(apData -> m_pData, apData -> m_PackSize);
 
  if ( lSize != apData -> m_Size ) {
-  free ( retVal );
-  retVal = NULL;
- }  /* end if */
+  free ( retPtr );
+  retPtr = NULL;
+ }
 
- return retVal;
+ retVal = lzma2_uncompress(	apData -> m_pData, 
+							apData -> m_PackSize, 
+							UNCACHED_SEG( retPtr ), 
+							lSize 
+							);
 
-}  /* end SMS_LZMADecompress */
+ return UNCACHED_SEG( retPtr );
 
-int SMS_InitVU ( volatile DMAChannel* apChan, SMS_LZMAData* apData ) {
+}  /* end SMS_LZMA2Decompress */
 
- void* lpData = SMS_LZMADecompress ( apData );
+int SMS_InitVU ( volatile DMAChannel* apChan, SMS_LZMA2Data* apData ) {
+
+ void* lpData = SMS_LZMA2Decompress ( apData );
 
  if ( lpData ) {
   DMA_SendChainT ( apChan, lpData );

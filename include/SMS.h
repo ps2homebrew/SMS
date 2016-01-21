@@ -12,6 +12,11 @@
 #ifndef __SMS_H
 #define __SMS_H
 
+#ifndef _SIZE_T_DEFINED
+typedef unsigned int size_t;
+#define _SIZE_T_DEFINED
+#endif
+
 extern unsigned char* g_pSPRTop;
 extern void*          g_pSynthBuffer;
 extern int            g_XShift;
@@ -253,34 +258,34 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
  return aB;
 }  /* end SMS_mid_pred */
 
-typedef struct SMS_LZMAData {
- unsigned int m_Size;
- unsigned int m_PackSize;
- const void*  m_pData;
-} SMS_LZMAData;
+typedef struct SMS_LZMA2Data {
+	size_t m_Size;
+	size_t m_PackSize;
+	unsigned char *m_pData;
+} SMS_LZMA2Data;
 
 struct DMAChannel;
 
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
-void     SMS_Initialize       ( void*                                      );
-void*    SMS_Realloc          ( void*, unsigned int*, unsigned int         );
-uint32_t SMS_Align            ( unsigned int, unsigned int                 );
-void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int                  );
-int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t                  );
-void     SMS_StartNetwork     ( void*                                      );
-void     SMS_ResetIOP         ( void                                       );
-char*    SMS_ReverseString    ( char*, int                                 );
-void     SMS_SetDirButtons    ( void                                       );
-void     SMS_InitBitBlt       ( void*, int, int, int                       );
-void*    SMS_SyncMalloc       ( int                                        );
-void     SMS_SetExecPath      ( const char*                                );
-int      SMS_FileID           ( const char*                                );
-int      SMS_ContID           ( const char*                                );
-int      SMS_SubContID        ( const char*                                );
-void*    SMS_LZMADecompress   ( SMS_LZMAData*                              );
-int      SMS_InitVU           ( volatile struct DMAChannel*, SMS_LZMAData* );
+void     SMS_Initialize       ( void*                                       );
+void*    SMS_Realloc          ( void*, unsigned int*, unsigned int          );
+uint32_t SMS_Align            ( unsigned int, unsigned int                  );
+void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int                   );
+int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t                   );
+void     SMS_StartNetwork     ( void*                                       );
+void     SMS_ResetIOP         ( void                                        );
+char*    SMS_ReverseString    ( char*, int                                  );
+void     SMS_SetDirButtons    ( void                                        );
+void     SMS_InitBitBlt       ( void*, int, int, int                        );
+void*    SMS_SyncMalloc       ( int                                         );
+void     SMS_SetExecPath      ( const char*                                 );
+int      SMS_FileID           ( const char*                                 );
+int      SMS_ContID           ( const char*                                 );
+int      SMS_SubContID        ( const char*                                 );
+void*    SMS_LZMA2Decompress  ( SMS_LZMA2Data*                              );
+int      SMS_InitVU           ( volatile struct DMAChannel*, SMS_LZMA2Data* );
 
 #ifdef __cplusplus
 }
