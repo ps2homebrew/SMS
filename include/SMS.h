@@ -259,9 +259,9 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
 }  /* end SMS_mid_pred */
 
 typedef struct SMS_LZMA2Data {
-	size_t m_Size;
-	size_t m_PackSize;
-	unsigned char *m_pData;
+ size_t m_Size;
+ size_t m_PackSize;
+ const void*  m_pData;
 } SMS_LZMA2Data;
 
 struct DMAChannel;

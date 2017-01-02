@@ -909,24 +909,22 @@ void SMS_EETlbInit ( void ) {
 
 void* SMS_LZMA2Decompress ( SMS_LZMA2Data* apData ) {
 
- unsigned int retVal;
+ void* retVal = SMS_SyncMalloc ( apData -> m_Size );
 
- unsigned char *retPtr = SMS_SyncMalloc ( apData -> m_Size );
-
- size_t lSize = lzma2_get_uncompressed_size(apData -> m_pData, apData -> m_PackSize);
+ size_t lSize = lzma2_get_uncompressed_size((unsigned char *)apData -> m_pData, apData -> m_PackSize);
 
  if ( lSize != apData -> m_Size ) {
-  free ( retPtr );
-  retPtr = NULL;
+  free ( retVal );
+  retVal = NULL;
  }
 
- retVal = lzma2_uncompress(	apData -> m_pData, 
+ lzma2_uncompress(	(unsigned char *)apData -> m_pData, 
 							apData -> m_PackSize, 
-							UNCACHED_SEG( retPtr ), 
+							UNCACHED_SEG( retVal ), 
 							lSize 
 							);
 
- return UNCACHED_SEG( retPtr );
+ return retVal;
 
 }  /* end SMS_LZMA2Decompress */
 

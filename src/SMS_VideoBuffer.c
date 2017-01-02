@@ -17,7 +17,7 @@
 #include <malloc.h>
 #include <string.h>
 
-int _csc_handler(int);
+int _csc_handler ( int, void*, void* );
 
 SMS_VideoBuffer* SMS_VideoBufferInit ( int aWidth, int aHeight ) {
 
@@ -84,7 +84,9 @@ SMS_VideoBuffer* SMS_VideoBufferInit ( int aWidth, int aHeight ) {
  retVal -> m_VFrm[ 2 ].m_pNext = NULL;
  retVal -> m_pFree             = &retVal -> m_VFrm[ 0 ];
 
- retVal -> m_CSCParam.m_HandlerID = AddDmacHandler(3, _csc_handler, 0);
+ retVal -> m_CSCParam.m_HandlerID = AddDmacHandler2 (
+  3, _csc_handler, 0, &retVal -> m_CSCParam
+ );
 
  return retVal;
 
@@ -209,7 +211,7 @@ __asm__(                        // a0 = CSC parameters
  ".set reorder\n\t"
 );
 
-int _csc_handler ( int );
+int _csc_handler ( int, void*, void* );
 __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"

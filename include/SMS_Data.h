@@ -14,8 +14,8 @@
 #define SMS_PS2ATAD_SIZE    11821
 #define SMS_PS2HDD_SIZE     24953
 #define SMS_PS2FS_SIZE      50405
-#define SMS_USB_MASS_SIZE    9950
-#define SMS_USBD_SIZE        9121
+#define SMS_USB_MASS_SIZE    8504
+#define SMS_USBD_SIZE        9140
 #define SMS_PS2IP_SIZE      67061
 #define SMS_PS2SMAP_SIZE     7909
 #define SMS_PS2HOST_SIZE    16349

@@ -455,7 +455,7 @@ void GUI_Status ( unsigned char* apMsg ) {
 
  if ( s_nDMASL < lWidth ) {
 
-  s_pDMASL = ( unsigned long* )realloc(  s_pDMASL, lWidth * sizeof ( unsigned long )  );
+  s_pDMASL = ( unsigned long* )realloc64(  s_pDMASL, lWidth * sizeof ( unsigned long )  );
   s_nDMASL = lWidth;
 
  }  /* end if */
