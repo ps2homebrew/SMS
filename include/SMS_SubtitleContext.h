@@ -16,9 +16,23 @@
 #  include "SMS.h"
 # endif  /* __SMS_H */
 
+# ifndef __SMS_List_H
+#  include "SMS_List.h"
+# endif  /* __SMS_List_H */
+
 struct IPUContext;
 struct FileContext;
 struct GSContext;
+
+typedef struct SubNode {
+
+ struct SubNode* m_pNext;
+
+ SMS_List* m_pList;
+ int64_t   m_Begin;
+ int64_t   m_End;
+
+} SubNode;
 
 typedef struct SubtitlePacket {
 
@@ -36,13 +50,19 @@ typedef struct SubtitleContext {
  unsigned int    m_Idx;
  unsigned int    m_Cnt;
  SubtitlePacket* m_pPackets;
- uint64_t*       m_pDMA;
+ uint64_t*       m_pDMA[ 2 ];
  unsigned int    m_ErrorCode;
  unsigned int    m_ErrorLine;
+ SubNode*        m_pHead;
+ SubNode*        m_pTail;
+ unsigned int    m_nAlloc;
+ unsigned int    m_nPreAlloc;
+ unsigned int    m_DMAIdx;
 
  void ( *Prepare ) ( void    );
  void ( *Display ) ( int64_t );
  void ( *Destroy ) ( void    );
+ void ( *Reset   ) ( void    );
 
 } SubtitleContext;
 
@@ -60,7 +80,7 @@ typedef enum SubtitleError {
 extern "C" {
 # endif  /* __cplusplus */
 
-SubtitleContext* SubtitleContext_Init ( struct FileContext*, SubtitleFormat, float );
+SubtitleContext* SubtitleContext_Init ( struct FileContext*, SubtitleFormat, float, int, int );
 
 # ifdef __cplusplus
 }

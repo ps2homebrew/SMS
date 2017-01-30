@@ -20,14 +20,15 @@
 #include "SMS_CDDA.h"
 #include "SMS_FileContext.h"
 #include "SMS_Sounds.h"
+#include "SMS_IOP.h"
+#include "SMS_Container.h"
+#include "SMS_ContainerM3U.h"
 
 #include <kernel.h>
 #include <string.h>
-#include <fileXio.h>
-#include <fileXio_rpc.h>
 #include <fileio.h>
 #include <fcntl.h>
-#include <libhdd.h>
+#include <sys/stat.h>
 #include <malloc.h>
 
 unsigned char g_pUSB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "mass";
@@ -40,17 +41,28 @@ unsigned char g_pCDDAFS[] __attribute__(   (  aligned( 4 ), section( ".data" )  
 unsigned char g_pSMB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb0";
 unsigned char g_pSMBS  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb:";
 
-static unsigned char s_pAVI  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".avi";
-static unsigned char s_pDIVX [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".divx";
-static unsigned char s_pXVID [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".xvid";
-static unsigned char s_pMPG  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpg";
-static unsigned char s_pMPEG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpeg";
-static unsigned char s_pMP3  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp3";
-static unsigned char s_pM3U  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m3u";
-static unsigned char s_pMPA  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpa";
-static unsigned char s_pMP2  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp2";
-static unsigned char s_pELL  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:elflist.txt";
-static unsigned char s_pHST  [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:";
+static unsigned char s_pAVI [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".avi";
+static unsigned char s_pDIVX[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".divx";
+static unsigned char s_pXVID[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".xvid";
+static unsigned char s_pMPG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpg";
+static unsigned char s_pMPEG[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpeg";
+static unsigned char s_pMP3 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp3";
+static unsigned char s_pM3U [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m3u";
+static unsigned char s_pMPA [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpa";
+static unsigned char s_pMP2 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp2";
+static unsigned char s_pOGG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".ogg";
+static unsigned char s_pWMA [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".wma";
+static unsigned char s_pM4A [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m4a";
+static unsigned char s_pAAC [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".aac";
+static unsigned char s_pMP4 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp4";
+static unsigned char s_pFLAC[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".flac";
+static unsigned char s_pAC3 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".ac3";
+static unsigned char s_pJPG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".jpg";
+static unsigned char s_pJPEG[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".jpeg";
+static unsigned char s_pELL [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:elflist.txt";
+static unsigned char s_pHST [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:";
+
+unsigned char g_HDDWD[ 1024 ] __attribute__(   (  aligned( 1 ), section( ".bss"  )  )   );
 
 unsigned char* g_pDevName[ 7 ] = {
  g_pUSB, g_pCDROM, g_pHDD0, g_pCDDA, g_pHOST, g_pDVD, g_pSMB
@@ -58,37 +70,39 @@ unsigned char* g_pDevName[ 7 ] = {
 
 SMS_List*    g_pFileList;
 int          g_CMedia;
+int          g_CUnit;
 int          g_PD;
 int          g_SMBU;
 CDDAContext* g_pCDDACtx;
 
-int _set_id ( char* apName ) {
+int SMS_SubContID ( const char* apName ) {
 
- int retVal = GUICON_FILE;
+ int retVal = -1;
  int lLen   = strlen ( apName );
 
  if ( lLen > 4 ) {
 
-  char* lpExt = apName + lLen - 4;
+  const char* lpExt = apName + lLen - 4;
 
-  if (       !stricmp ( lpExt, s_pAVI  ) ||
-             !stricmp ( lpExt, s_pMPG  )
-  )
-   retVal = GUICON_AVI;
-  else if (  !stricmp ( lpExt, s_pMP3 ) ||
-             !stricmp ( lpExt, s_pMPA ) ||
-             !stricmp ( lpExt, s_pMP2 )
-       )
-   retVal = GUICON_MP3;
-  else if (  !stricmp ( lpExt, s_pM3U )  )
-   retVal = GUICON_M3U;
+  if (  !stricmp ( lpExt, s_pMP3 ) ||
+        !stricmp ( lpExt, s_pMPA ) ||
+        !stricmp ( lpExt, s_pMP2 )
+  ) retVal = SMS_SUBCONTAINER_MP3;
+  else if (  !stricmp ( lpExt, s_pOGG )  )
+   retVal = SMS_SUBCONTAINER_OGG;
+  else if (  !stricmp ( lpExt, s_pWMA )  )
+   retVal = SMS_SUBCONTAINER_ASF;
+  else if (  !stricmp ( lpExt, s_pM4A ) ||
+             !stricmp ( lpExt, s_pMP4 )
+       ) retVal = SMS_SUBCONTAINER_M4A;
+  else if (  !stricmp ( lpExt, s_pAAC )  )
+   retVal = SMS_SUBCONTAINER_AAC;
+  else if (  !stricmp ( lpExt, s_pAC3 )  )
+   retVal = SMS_SUBCONTAINER_AC3;
 
-  if ( retVal == GUICON_FILE && lLen > 5 ) {
+  if ( retVal == -1 && lLen > 5 ) {
 
-   if (  !stricmp ( --lpExt, s_pDIVX ) ||
-         !stricmp (   lpExt, s_pXVID ) ||
-         !stricmp (   lpExt, s_pMPEG )
-   ) retVal = GUICON_AVI;
+   if (  !stricmp ( lpExt, s_pFLAC )  ) retVal = SMS_SUBCONTAINER_FLAC;
 
   }  /* end if */
 
@@ -96,7 +110,110 @@ int _set_id ( char* apName ) {
 
  return retVal;
 
-}  /* end set_id */
+}  /* end SMS_SubContID */
+
+int SMS_ContID ( const char* apName ) {
+
+ int retVal = -1;
+ int lLen   = strlen ( apName );
+
+ if ( lLen > 4 ) {
+
+  const char* lpExt = apName + lLen - 4;
+
+  if (  !stricmp ( lpExt, s_pAVI )  )
+   retVal = SMS_CONTAINER_AVI;
+  else if (  !stricmp ( lpExt, s_pMPG  )  )
+   retVal = SMS_CONTAINER_MPEG_PS;
+  else if (  !stricmp ( lpExt, s_pMP3 ) ||
+             !stricmp ( lpExt, s_pMPA ) ||
+             !stricmp ( lpExt, s_pMP2 )
+       ) retVal = SMS_CONTAINER_MP3;
+  else if (  !stricmp ( lpExt, s_pOGG )  )
+   retVal = SMS_CONTAINER_OGG;
+  else if (  !stricmp ( lpExt, s_pWMA )  )
+   retVal = SMS_CONTAINER_ASF;
+  else if (  !stricmp ( lpExt, s_pM4A ) ||
+             !stricmp ( lpExt, s_pMP4 )
+       ) retVal = SMS_CONTAINER_M4A;
+  else if (  !stricmp ( lpExt, s_pAAC )  )
+   retVal = SMS_CONTAINER_AAC;
+  else if (  !stricmp ( lpExt, s_pAC3 )  )
+   retVal = SMS_CONTAINER_AC3;
+  else if (  !stricmp ( lpExt, s_pM3U )  )
+   retVal = SMS_CONTAINER_M3U;
+  else if (  !stricmp ( lpExt, s_pJPG )  )
+   retVal = SMS_CONTAINER_JPG;
+
+  if ( retVal == -1 && lLen > 5 ) {
+
+   if (  !stricmp ( --lpExt, s_pDIVX ) ||
+         !stricmp (   lpExt, s_pXVID )
+   )
+    retVal = SMS_CONTAINER_AVI;
+   else if (  !stricmp ( lpExt, s_pMPEG )  )
+    retVal = SMS_CONTAINER_MPEG_PS;
+   else if (  !stricmp ( lpExt, s_pFLAC )  )
+    retVal = SMS_CONTAINER_FLAC;
+   else if (  !stricmp ( lpExt, s_pJPEG )  )
+    retVal = SMS_CONTAINER_JPG;
+
+  }  /* end if */
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end SMS_ContID */
+
+int SMS_FileID ( const char* apName ) {
+
+ int retVal = GUICON_FILE;
+ int lLen   = strlen ( apName );
+
+ if ( lLen > 4 ) {
+
+  const char* lpExt = apName + lLen - 4;
+
+  if (       !stricmp ( lpExt, s_pAVI  ) ||
+             !stricmp ( lpExt, s_pMPG  )
+  )
+   retVal = GUICON_AVI;
+  else if (  !stricmp ( lpExt, s_pMP3 ) ||
+             !stricmp ( lpExt, s_pMPA ) ||
+             !stricmp ( lpExt, s_pMP2 ) ||
+             !stricmp ( lpExt, s_pOGG ) ||
+             !stricmp ( lpExt, s_pWMA ) ||
+             !stricmp ( lpExt, s_pM4A ) ||
+             !stricmp ( lpExt, s_pAAC ) ||
+             !stricmp ( lpExt, s_pMP4 ) ||
+             !stricmp ( lpExt, s_pAC3 )
+       )
+   retVal = GUICON_MP3;
+  else if (  !stricmp ( lpExt, s_pM3U )  )
+   retVal = GUICON_M3U;
+  else if (  !stricmp ( lpExt, s_pJPG )  )
+   retVal = GUICON_PICTURE;
+
+  if ( retVal == GUICON_FILE && lLen > 5 ) {
+
+   if (  !stricmp ( --lpExt, s_pDIVX ) ||
+         !stricmp (   lpExt, s_pXVID ) ||
+         !stricmp (   lpExt, s_pMPEG )
+   )
+    retVal = GUICON_AVI;
+   else if (  !stricmp ( lpExt, s_pFLAC )  )
+    retVal = GUICON_MP3;
+   else if (  !stricmp ( lpExt, s_pJPEG )  )
+    retVal = GUICON_PICTURE;
+
+  }  /* end if */
+
+ }  /* end if */
+
+ return retVal;
+
+}  /* end SMS_FileID */
 
 void SMS_FileDirInit ( unsigned char* apPath ) {
 
@@ -105,10 +222,12 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
  SMS_List*     lpDirList;
  SMS_List*     lpFileList;
  SMS_List*     lpList;
- iox_dirent_t  lEntry;
+ fio_dirent_t  lEntry;
  char          lPath[ 1024 ] __attribute__(   (  aligned( 4 )  )   );
  char*         lpPtr;
  SMS_ListNode* lpNode;
+
+ if (  g_CMedia == 0 && ( g_IOPFlags & SMS_IOPF_UMS )  ) g_pUSB[ 3 ] = g_CUnit + '0';
 
  GUI_Status ( STR_READING_MEDIA.m_pStr );
 
@@ -124,22 +243,19 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
   if ( g_CMedia == 2 ) {
 
-   lFD = fileXioDopen ( g_CWD );
+   lFD = fioDopen ( g_CWD );
 
-   SMS_Strcat ( g_CWD, g_SlashStr );
+   strcat ( g_CWD, g_SlashStr );
 
    if ( lFD >= 0 ) {
 
-    while (  fileXioDread ( lFD, &lEntry ) > 0  ) {
+    while (  fioDread ( lFD, &lEntry ) > 0  ) {
 
-     if (   !(  ( lEntry.stat.attr  & ATTR_SUB_PARTITION ) ||
-                ( lEntry.stat.mode == FS_TYPE_EMPTY      )
-           )
-     ) SMS_ListPushBack ( g_pFileList, lEntry.name ) -> m_Param = GUICON_PARTITION;
+     if (   !(  ( lEntry.stat.attr  & 1 ) || ( lEntry.stat.mode == 0 )  )   ) SMS_ListPushBack ( g_pFileList, lEntry.name ) -> m_Param = GUICON_PARTITION;
 
     }  /* end while */
 
-    fileXioDclose ( lFD );
+    fioDclose ( lFD );
 
     if ( lfSort ) SMS_ListSort ( g_pFileList );
 
@@ -174,8 +290,8 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
       if ( lpName ) {
 
        strcpy ( lpName, lpShareInfo[ i ].m_Name    );
-       SMS_Strcat ( lpName, g_ColonSStr );
-       SMS_Strcat ( lpName, lpShareInfo[ i ].m_pRemark );
+       strcat ( lpName, g_ColonSStr );
+       strcat ( lpName, lpShareInfo[ i ].m_pRemark );
 
        SMS_ListPushBack ( g_pFileList, lpName ) -> m_Param = GUICON_SHARE;
 
@@ -207,11 +323,11 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
  if ( g_CMedia == 4 ) {
 
-  if ( apPath[ 0 ] && g_CWD[ 5 ] && g_CWD[ lFD ] != '\\' && apPath[ 0 ] != '\\' ) SMS_Strcat ( g_CWD, g_BSlashStr );
+  if ( apPath[ 0 ] && g_CWD[ 5 ] && g_CWD[ lFD ] != '\\' && apPath[ 0 ] != '\\' ) strcat ( g_CWD, g_BSlashStr );
 
- } else if ( apPath[ 0 ] != '/' && g_CWD[ lFD ] != '/' ) SMS_Strcat ( g_CWD, g_SlashStr );
+ } else if ( apPath[ 0 ] != '/' && g_CWD[ lFD ] != '/' ) strcat ( g_CWD, g_SlashStr );
 
- SMS_Strcat ( g_CWD, apPath );
+ if (  !( apPath[ 0 ] == '.' && apPath[ 1 ] == '\x00' ) && apPath[ 0 ] != '\x01' ) strcat ( g_CWD, apPath );
 
  if ( g_CMedia == 1 && g_pCDDACtx ) {
 
@@ -222,7 +338,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
    *( int* )&lPath[ 0 ] = 0x2E;
 
-  else strcpy ( lPath, apPath );
+  else if ( apPath[ 0 ] != '\x01' ) strcpy ( lPath, apPath );
 
   while ( lpDirs ) {
 
@@ -248,7 +364,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
     while ( lpFile ) {
 
-     SMS_ListPushBack ( lpFileList, lpFile -> m_pName ) -> m_Param = _set_id ( lpFile -> m_pName );
+     SMS_ListPushBack ( lpFileList, lpFile -> m_pName ) -> m_Param = SMS_FileID ( lpFile -> m_pName );
 
      lpFile = lpFile -> m_pNext;
 
@@ -261,11 +377,9 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
   }  /* end if */
 
   strcpy ( g_CWD, g_pCDDAFS );
-  SMS_Strcat ( g_CWD, apPath );
+  strcat ( g_CWD, apPath    );
 
  } else if ( g_CMedia != 3 ) {
-
-  char* lpName = g_CMedia == 2 ? lEntry.name : (  ( io_dirent_t* )&lEntry  ) -> name;
 
   if ( g_CMedia == 4 && !apPath[ 0 ] ) {
 
@@ -291,7 +405,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
      }  /* end if */
 
      strcpy ( lPath, s_pHST );
-     SMS_Strcat ( lPath, lBuf );
+     strcat ( lPath, lBuf   );
 
      lID = fioOpen ( lPath, O_RDONLY );
 
@@ -299,7 +413,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
       fioClose ( lID );
       lpList = lpFileList;
-      lID    = _set_id ( lBuf );
+      lID    = SMS_FileID ( lBuf );
 
      } else {
 
@@ -325,7 +439,7 @@ void SMS_FileDirInit ( unsigned char* apPath ) {
 
   } else {
 doScan:
-   lFD = fileXioDopen ( g_CWD );
+   lFD = fioDopen ( g_CWD );
 
    if ( lFD >= 0 ) {
 
@@ -333,24 +447,24 @@ doScan:
 
     strcpy ( lPath, g_CWD );
 
-    if ( lPath[ lIdx ] != '\\' && lPath[ lIdx ] != '/' ) SMS_Strcat ( lPath, g_BSlashStr );
+    if ( lPath[ lIdx ] != '\\' && lPath[ lIdx ] != '/' ) strcat ( lPath, g_BSlashStr );
 
     lpPtr = lPath + strlen ( lPath );
 
-    while (  fileXioDread ( lFD, &lEntry ) > 0  ) {
+    while (  fioDread ( lFD, &lEntry ) > 0  ) {
 
      int lID;
 
      if ( !lEntry.stat.mode ) {
 
-      strcpy ( lpPtr, lpName );
+      strcpy ( lpPtr, lEntry.name );
 
       lID = fioOpen ( lPath, O_RDONLY );
 
       if ( lID >= 0 ) {
 
        fioClose ( lID );
-       lEntry.stat.mode = FIO_S_IFREG;
+       lEntry.stat.mode = FIO_SO_IFREG;
 
       } else {
 
@@ -359,7 +473,7 @@ doScan:
        if ( lID >= 0 ) {
 
         fioDclose ( lID );
-        lEntry.stat.mode = FIO_S_IFDIR;
+        lEntry.stat.mode = FIO_SO_IFDIR;
 
        } else continue;
 
@@ -367,28 +481,27 @@ doScan:
 
      }  /* end if */
 
-     if ( lEntry.stat.mode & FIO_S_IFDIR ) {
+     if ( lEntry.stat.mode & FIO_SO_IFDIR ) {
 
-      if (  !strcmp ( lpName, "."  ) ||
-            !strcmp ( lpName, ".." )
+      if (  !strcmp ( lEntry.name, "."  ) ||
+            !strcmp ( lEntry.name, ".." )
       ) continue;
 
       lpList = lpDirList;
       lID    = GUICON_FOLDER;
 
-     } else if ( lEntry.stat.mode & FIO_S_IFREG ) {
-
-      lID = _set_id ( lpName );
+     } else if ( lEntry.stat.mode & FIO_SO_IFREG ) {
 
       lpList = lpFileList;
+      lID    = SMS_FileID ( lEntry.name );
 
      } else continue;
 
-     SMS_ListPushBack ( lpList, lpName ) -> m_Param = lID;
+     SMS_ListPushBack ( lpList, lEntry.name ) -> m_Param = lID;
 
     }  /* end while */
 
-    fileXioDclose ( lFD );
+    fioDclose ( lFD );
 
    }  /* end if */
 
@@ -412,15 +525,15 @@ doScan:
 
   if ( lpNode -> m_Param == GUICON_AVI ) {
 
-   int lLen = strlen ( lpNode -> m_pString );
+   int lLen = strlen (  _STR( lpNode )  );
    int lPos;
 
-   if ( lpNode -> m_pString[ lLen - 4 ] == '.'  )
+   if (  _STR( lpNode )[ lLen - 4 ] == '.'  )
     lPos = lLen - 3;
    else lPos = lLen - 4;
 
-   strcpy ( lPath, lpNode -> m_pString );
-   strcpy ( lPath + lPos, g_pSrtStr    );
+   strcpy (  lPath, _STR( lpNode )    );
+   strcpy (  lPath + lPos, g_pSrtStr  );
 
    if (  SMS_ListFindI ( lpFileList, lPath )  ) {
 setSub:
@@ -451,6 +564,12 @@ next:
 end:
  GUI_Status ( g_CWD );
 
- if ( g_CMedia & 1 ) CDVD_Stop ();
+ if ( g_CMedia & 1 )
+  CDVD_Stop ();
+ else if ( g_CMedia == 2 ) {
+  if ( apPath[ 0 ] == '\x00' )
+   g_HDDWD[ 0 ] = '\x00';
+  else strcpy ( g_HDDWD, g_CWD );
+ }  /* end if */
 
 }  /* end SMS_FileDirInit */

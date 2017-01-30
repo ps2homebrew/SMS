@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -32,6 +32,7 @@
 # define RC_TOP         0x45DF
 # define RC_AUDIO       0x46DF
 # define RC_6           0x50D9
+# define RC_ON          0x51D9
 # define RC_RESET       0x51DB
 # define RC_SHUFFLE     0x53DB
 # define RC_RIGHT       0x55DF
@@ -67,6 +68,8 @@
 # define RC_PROGRAM     0xF1D9
 # define RC_SQUARE      0xF5DF
 
+extern unsigned char g_pSMSRMMAN[] __attribute__(   (  section( ".data" )  )   );
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
@@ -87,6 +90,9 @@ int RC_Close  ( int  );
 int RCX_Close ( void );
 
 unsigned int (   *RC_SetTranslator (  unsigned int ( * ) ( unsigned int )  )   ) ( unsigned int );
+
+unsigned int RC_TransPAD ( unsigned int );
+unsigned int RC_TransRC  ( unsigned int );
 
 extern unsigned int ( *RC_Read ) ( void );
 

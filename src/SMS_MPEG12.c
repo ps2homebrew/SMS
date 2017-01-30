@@ -9,11 +9,14 @@
 #
 */
 #include "SMS_MPEG12.h"
+#include "SMS_MPEG.h"
 #include "SMS_GS.h"
 #include "SMS_DMA.h"
 #include "SMS_IPU.h"
 #include "SMS_VideoBuffer.h"
+#include "SMS_Locale.h"
 #include "libmpeg.h"
+#include "libmpeg_internal.h"
 
 #include <stdio.h>
 #include <kernel.h>
@@ -21,17 +24,17 @@
 
 typedef struct MPEGState {
 
- SMS_FrameBuffer   m_Pics[ 6 ];
+ SMS_FrameBuffer   m_Pics[ 3 ];
  int64_t           m_PTS;
  int64_t           m_PrevPTS;
  int64_t           m_StreamPTS;
- int               m_MSPerFrame;
  SMS_RingBuffer*   m_pInput;
  SMS_AVPacket*     m_pPacket;
  MPEGSequenceInfo* m_pInfo;
  int               m_Width;
  int               m_Height;
  int               m_PicIdx;
+ unsigned char     m_f16;
 
 } MPEGState;
 
@@ -44,19 +47,52 @@ static int   _set_dma ( void*                    );
 
 static MPEGState s_MPEGState;
 
+static void _hwctl ( SMS_CodecContext* apCtx, SMS_CodecHWCtl aCtl ) {
+
+ switch ( aCtl ) {
+
+  case SMS_HWC_Init: {
+
+   unsigned char lf16 = g_IPUCtx.m_TexFmt == GSPixelFormat_PSMCT16;
+
+   s_MPEGState.m_f16 = lf16;
+   _MPEG_Set16 ( lf16 );
+
+  } break;
+
+  case SMS_HWC_Reset: {
+
+   int i;
+
+   for (  i = 0; i < sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] ); ++i  )
+    s_MPEGState.m_Pics[ i ].m_FrameType = -1;
+
+  } break;
+
+  default: break;
+
+ }  /* end switch */
+
+}  /* end _hwctl */
+
 void SMS_Codec_MPEG12_Open ( SMS_CodecContext* apCtx ) {
+
+ memset (  &g_MPEGCtx, 0, sizeof ( g_MPEGCtx )  );
 
  apCtx -> m_pCodec = calloc (  1, sizeof ( SMS_Codec )  );
 
- apCtx -> m_pCodec -> m_pName = "mpeg12";
+ apCtx -> m_pCodec -> m_pName = g_pMPEG12;
  apCtx -> m_pCodec -> Init    = MPEG12_Init;
  apCtx -> m_pCodec -> Decode  = MPEG12_Decode;
  apCtx -> m_pCodec -> Destroy = MPEG12_Destroy;
  apCtx -> m_Flags            |= SMS_CODEC_FLAG_NOCSC | SMS_CODEC_FLAG_UNCACHED | SMS_CODEC_FLAG_IPU;
+ apCtx -> HWCtl               = _hwctl;
 
  IPU_FRST ();
  MPEG_Initialize ( _set_dma, &s_MPEGState, _init_cb, &s_MPEGState, &s_MPEGState.m_StreamPTS );
  memset (  &s_MPEGState, 0, sizeof ( s_MPEGState )  );
+
+ _hwctl ( apCtx, SMS_HWC_Reset );
 
 }  /* end SMS_Codec_MPEG12_Open */
 
@@ -84,24 +120,14 @@ void SMS_Codec_MPEG12_Reset ( unsigned int aFlags ) {
  
 }  /* end SMS_Codec_MPEG12_Reset */
 
-static void _delete_frames ( void ) {
-
- int i;
-
- for (  i = 0; i < sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] ); ++i  )
-  if ( s_MPEGState.m_Pics[ i ].m_pBase ) {
-   free ( s_MPEGState.m_Pics[ i ].m_pBase );
-   s_MPEGState.m_Pics[ i ].m_pBase = NULL;
-  }  /* end for */
-
-}  /* end _delete_frames */
-
 static void MPEG12_Destroy ( SMS_CodecContext* apCtx ) {
 
  MPEG_Destroy ();
  IPU_FRST ();
  ResetEE ( 0x40 );
- _delete_frames ();
+ SMS_FrameBufferDestroy (
+  s_MPEGState.m_Pics, sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] )
+ );
 
 }  /* end MPEG12_Destroy */
 
@@ -113,57 +139,17 @@ static void* _init_cb ( void* apParam, MPEGSequenceInfo* apSeqInfo ) {
 
  if ( lpState -> m_Width != lWidth || lpState -> m_Height != lHeight ) {
 
-  unsigned int   i, lSize = ( lWidth * lHeight ) << 2;
-  unsigned int   lMBW = lWidth  >> 4;
-  unsigned int   lMBH = lHeight >> 4;
-  unsigned long* lpDMA;
-
   lpState -> m_pInfo  = apSeqInfo;
   lpState -> m_Width  = lWidth;
   lpState -> m_Height = lHeight;
 
-  _delete_frames ();
-
-  for (  i = 0; i < sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] ); ++i  ) {
-
-   int            lX, lY;
-   unsigned char* lpPic = ( unsigned char* )memalign (   64, lSize + (  ( 8 + 12 * lMBW * lMBH ) << 3  )   );
-
-   lpState -> m_Pics[ i ].m_pBase = ( SMS_MacroBlock* )lpPic;
-   lpState -> m_Pics[ i ].m_pData = ( SMS_MacroBlock* )(  lpDMA = ( unsigned long* )( lpPic + lSize )  );
-
-   lpDMA[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
-   lpDMA[ 1 ] = 0LL;
-   lpDMA[ 2 ] = GIF_TAG( 2, 0, 0, 0, 0, 1 );
-   lpDMA[ 3 ] = GIFTAG_REGS_AD;
-   lpDMA[ 4 ] = GS_SET_TRXREG( 16, 16 );
-   lpDMA[ 5 ] = GS_TRXREG;
-   lpDMA[ 6 ] = GS_SET_BITBLTBUF( 0, 0, GSPixelFormat_PSMCT32, g_IPUCtx.m_VRAM, g_IPUCtx.m_TBW, GSPixelFormat_PSMCT32 );
-   lpDMA[ 7 ] = GS_BITBLTBUF;
-   lpDMA     += 8;
-
-   for ( lY = 0; lY < lHeight; lY += 16 )
-    for ( lX = 0; lX < lWidth; lX += 16 ) {
-     lpDMA[ 0 ] = DMA_TAG( 4, 0, DMATAG_ID_CNT, 0, 0, 0 );
-     lpDMA[ 1 ] = 0LL;
-      lpDMA[ 2 ] = GIF_TAG( 2, 0, 0, 0, 0, 1 );
-      lpDMA[ 3 ] = GIFTAG_REGS_AD;
-      lpDMA[ 4 ] = GS_SET_TRXPOS( 0, 0, lX, lY, GS_TRXPOS_DIR_LR_UD );
-      lpDMA[ 5 ] = GS_TRXPOS;
-      lpDMA[ 6 ] = GS_SET_TRXDIR( GS_TRXDIR_HOST_TO_LOCAL );
-      lpDMA[ 7 ] = GS_TRXDIR;
-      lpDMA[ 8 ] = GIF_TAG( 64, 0, 0, 0, 2, 0 );
-      lpDMA[ 9 ] = 0LL;
-     lpDMA[ 10 ] = DMA_TAG(  64, 0, DMATAG_ID_REF, 0, ( unsigned int )lpPic, 0  );
-     lpDMA[ 11 ] = 0LL;
-     lpDMA +=   12;
-     lpPic += 1024;
-    }  /* end for */
-
-   lpDMA[ -4 ] = GIF_TAG( 64, 1, 0, 0, 2, 0 );
-   lpDMA[ -2 ] = DMA_TAG(  64, 0, DMATAG_ID_REFE, 0, ( unsigned int )( lpPic - 1024 ), 0  );
-
-  }  /* end for */
+  SMS_FrameBufferDestroy (
+   s_MPEGState.m_Pics, sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] )
+  );
+  SMS_FrameBufferInit (
+   s_MPEGState.m_Pics, sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] ),
+   lWidth, lHeight, s_MPEGState.m_f16
+  );
 
   FlushCache ( 0 );
 
@@ -209,7 +195,8 @@ static int32_t MPEG12_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput
 
  lPicIdx = s_MPEGState.m_PicIdx;
  lpFrame = &s_MPEGState.m_Pics[ lPicIdx ];
- retVal  = MPEG_Picture ( lpFrame -> m_pBase, &lPTS );
+
+ retVal = MPEG_Picture ( lpFrame -> m_pBase, &lPTS );
 
  if ( retVal ) {
 
@@ -217,12 +204,13 @@ static int32_t MPEG12_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput
 
   *lppOutput = lpFrame;
 
+  lpFrame -> m_FrameType = 0;
+
   if ( s_MPEGState.m_PrevPTS == lPTS )
    lPTS = ( s_MPEGState.m_PTS += s_MPEGState.m_pInfo -> m_MSPerFrame );
   else s_MPEGState.m_PrevPTS = s_MPEGState.m_PTS = lPTS;
 
-  lpFrame -> m_PTS  =
-  lpFrame -> m_SPTS = lPTS;
+  lpFrame -> m_StartPTS = lPTS;
 
   if (  ++lPicIdx == sizeof ( s_MPEGState.m_Pics ) / sizeof ( s_MPEGState.m_Pics[ 0 ] )  ) lPicIdx = 0;
 

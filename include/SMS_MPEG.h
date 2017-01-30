@@ -4,7 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
-#               2005 - Adopted for SMS by Eugene Plotnikov <e-plotnikov@operamail.com>
+#               2005-2007 - Adopted for SMS by Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -93,6 +93,9 @@
 # define SMS_PICT_BOTTOM_FIELD 2
 # define SMS_PICT_FRAME        3
 
+# define MAX_PICTURE_COUNT     3
+# define BITSTREAM_BUFFER_SIZE 1024 * 256
+
 typedef struct SMS_ScanTable {
 
  const uint8_t* m_pScantable;
@@ -102,20 +105,31 @@ typedef struct SMS_ScanTable {
 
 typedef struct SMS_MPEGContext {
 
+ char              m_Y_DCScale;
+ char              m_C_DCScale;
+ char              m_QScale;
+ char              m_ChromaQScale;
+ const uint8_t*    m_pChromaQScaleTbl;
+ uint8_t*          m_pY_DCScaleTbl;
+ uint8_t*          m_pC_DCScaleTbl;
+ int               m_MBX;
+ int               m_MBY;
+ int               m_MBW;
+ int               m_MBH;
  SMS_DSPContext    m_DSPCtx;
  SMS_ScanTable     m_InterScanTbl;
  SMS_ScanTable     m_IntraScanTbl;
  SMS_ScanTable     m_IntraHScanTbl;
  SMS_ScanTable     m_IntraVScanTbl;
- uint16_t          m_IntraMatrix      [ 64 ];
- uint16_t          m_ChromaIntraMatrix[ 64 ];
- uint16_t          m_InterMatrix      [ 64 ];
- uint16_t          m_ChromaInterMatrix[ 64 ];
  SMS_Frame         m_CurPic;
  SMS_Frame         m_NextPic;
  SMS_Frame         m_LastPic;
  int               m_MV          [  2 ][ 4 ][ 2 ];
- int               m_BlockLastIdx[ 12 ];
+ short             m_BlockLastIdx[  6 ];
+ short             m_BlockSum;
+ short             m_MCBlkIdx;
+ SMS_MacroBlock*   m_pMCBlk[ 2 ];
+ int               m_BlockIdx    [  6 ];
  int               m_LastMV      [  2 ][ 2 ][ 2 ];
  int               m_BlockWrap   [  6 ];
  int               m_SpriteOffset[  2 ][ 2 ];
@@ -133,7 +147,7 @@ typedef struct SMS_MPEGContext {
 
  int  ( *DecodeMB            ) ( SMS_DCTELEM[ 6 ][ 64 ] );
  void ( *DCT_UnquantizeIntra ) ( SMS_DCTELEM*           );
- void ( *DCT_UnquantizeInter ) ( SMS_DCTELEM*, int, int );
+ void ( *DCT_UnquantizeInter ) ( SMS_DCTELEM*           );
  void ( *MBCallback          ) ( void*                  );
 
  SMS_DCTELEM       ( *m_pBlock  )     [ 64 ];
@@ -148,26 +162,15 @@ typedef struct SMS_MPEGContext {
  int*              m_pMBIdx2XY;
  int16_t*          m_pDCValBase;
  int16_t           ( *m_pACValBase  )[ 16 ];
- uint8_t*          m_pY_DCScaleTbl;
- uint8_t*          m_pC_DCScaleTbl;
  uint8_t*          m_pCBPTbl;
  uint8_t*          m_pPredDirTbl;
- uint8_t*          m_pErrStatTbl;
  uint8_t*          m_pMBIntraTbl;
  uint8_t*          m_pMBSkipTbl;
- uint8_t*          m_pPrevPicTypes;
  uint8_t*          m_pBSBuf;
  uint8_t*          m_pCodedBlockBase;
  uint8_t*          m_pCodedBlock;
- const uint8_t*    m_pChromaQScaleTbl;
- int               m_fDirtyCache;
- int               m_Y_DCScale;
- int               m_C_DCScale;
+ int               m_BitRate;
  int               m_ACPred;
- int               m_MBX;
- int               m_MBY;
- int               m_MBW;
- int               m_MBH;
  int               m_MBStride;
  int               m_B8Stride;
  int               m_B4Stride;
@@ -226,46 +229,40 @@ typedef struct SMS_MPEGContext {
  int               m_IntraDCThreshold;
  int               m_TopFieldFirst;
  int               m_AltScan;
- int               m_ChromaQScale;
- int               m_QScale;
  int               m_nMBLeft;
  int               m_FCode;
  int               m_BCode;
  int               m_Bugs;
- int               m_MBIntra;
- int               m_MVDir;
- int               m_MVType;
- int               m_MCSel;
- int               m_InterlacedDCT;
- int               m_BlockIdx[ 6 ];
- int               m_FirstSliceLine;
- int               m_H263LongVectors;
- int               m_H263Pred;
- int               m_PaddingBugScore;
- int               m_Dropable;
- int               m_NextPFrameDamaged;
- int               m_CodedPicNr;
- int               m_LineStride;
- int               m_PicStruct;
- int               m_FirstField;
  int               m_BSBufSize;
- int               m_DCTblIdx;
- int               m_MVTblIdx;
- int               m_InterIntraPred;
- int               m_RLTblIdx;
- int               m_RLChromaTblIdx;
- int               m_UseSkipMBCode;
- int               m_PerMBRLTbl;
- int               m_H263AICDir;
- int               m_SliceHeight;
- int               m_FlipFlopRnd;
- int               m_BitRate;
- int               m_MSPerFrame;
- int               m_LastPPTS;
+ int               m_PaddingBugScore;
+ uint16_t          m_LineSize;
+ uint16_t          m_LineStride;
+ uint16_t          m_SliceHeight;
+ uint16_t          m_MSPerFrame;
  uint16_t          m_PPTime;
  uint16_t          m_PBTime;
  uint16_t          m_PPFieldTime;
  uint16_t          m_PBFieldTime;
+ uint8_t           m_MBIntra;
+ uint8_t           m_MVDir;
+ uint8_t           m_MVType;
+ uint8_t           m_MCSel;
+ uint8_t           m_InterlacedDCT;
+ uint8_t           m_FirstSliceLine;
+ uint8_t           m_H263LongVectors;
+ uint8_t           m_H263Pred;
+ uint8_t           m_NextPFrameDamaged;
+ uint8_t           m_PicStruct;
+ uint8_t           m_FirstField;
+ uint8_t           m_DCTblIdx;
+ uint8_t           m_MVTblIdx;
+ uint8_t           m_InterIntraPred;
+ uint8_t           m_RLTblIdx;
+ uint8_t           m_RLChromaTblIdx;
+ uint8_t           m_UseSkipMBCode;
+ uint8_t           m_PerMBRLTbl;
+ uint8_t           m_H263AICDir;
+ uint8_t           m_FlipFlopRnd;
 
 } SMS_MPEGContext;
 
@@ -277,29 +274,20 @@ extern "C" {
 
 void SMS_MPEGContext_Init          ( int, int                        );
 void SMS_MPEGContext_Destroy       ( void                            );
-int  SMS_MPEG_FrameStart           ( void                            );
+void SMS_MPEG_FrameStart           ( void                            );
 void SMS_MPEG_InitBlockIdx         ( void                            );
 void SMS_MPEG_InitScanTable        ( SMS_ScanTable*, const uint8_t*  );
 void SMS_MPEG_SetQScale            ( int                             );
 void SMS_MPEG_FrameEnd             ( void                            );
 void SMS_MPEG_DecodeMB             ( SMS_DCTELEM[ 12 ][ 64 ]         );
 void SMS_MPEG_CleanIntraTblEntries ( void                            );
-int  SMS_MPEGContext_FindUnusedPic ( void                            );
 void SMS_MPEG_DummyCB              ( void*                           );
+void SMS_MPEG_MCB                  ( void*                           );
+void SMS_MPEG_SCB                  ( void*                           );
 
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */
-
-static void SMS_INLINE SMS_MPEG_CleanBuffers ( void ) {
-
- __asm__ __volatile__(
-  "sd   $zero, %0\n\t"
-  "sd   $zero, %1\n\t"
-  :: "m"( g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 0 ] ), "m"( g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 0 ] )
- );
-
-}  /* end SMS_MPEG_CleanBuffers */
 
 static SMS_INLINE void SMS_MPEG_UpdateBlockIdx ( void ) {
  g_MPEGCtx.m_BlockIdx[ 0 ] += 2;

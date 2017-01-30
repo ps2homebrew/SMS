@@ -10,23 +10,17 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include "SMS.h"
 #include "SMS_GS.h"
 #include "SMS_DMA.h"
+#include "SMS_MC.h"
 
 #include <kernel.h>
 #include <string.h>
 #include <limits.h>
-
-typedef struct _MTKFontHeader {
-
- char           m_ID [ 3 ]    __attribute__(  ( packed )  );
- char           m_ClrType     __attribute__(  ( packed )  );
- char           m_Unk[ 3 ]    __attribute__(  ( packed )  );
- unsigned short m_nGlyphs     __attribute__(  ( packed )  );
- unsigned char  m_GlyphWidth  __attribute__(  ( packed )  );
- unsigned char  m_GlyphHeight __attribute__(  ( packed )  );
-
-} _MTKFontHeader;
+#include <fileio.h>
+#include <malloc.h>
+#include <liblzma.h>
 
 typedef struct _Unaligned32 {
 
@@ -34,7 +28,8 @@ typedef struct _Unaligned32 {
 
 } _Unaligned32;
 
-GSCharIndent g_GSCharIndent[ 224 ];
+char          g_GSCharWidth[ 224 ];
+unsigned int* g_MBFont;
 
 extern unsigned char g_ASCII[ 4572 ] __attribute__(   (  section( ".data" )  )   );
 extern unsigned char g_1250 [ 7736 ] __attribute__(   (  section( ".data" )  )   );
@@ -42,12 +37,18 @@ extern unsigned char g_1251 [ 7856 ] __attribute__(   (  section( ".data" )  )  
 extern unsigned char g_1252 [ 7732 ] __attribute__(   (  section( ".data" )  )   );
 extern unsigned char g_1253 [ 7588 ] __attribute__(   (  section( ".data" )  )   );
 
-static _MTKFontHeader* s_pASCII     = ( _MTKFontHeader* )g_ASCII;
-static _MTKFontHeader* s_Fonts[ 4 ] = {
- ( _MTKFontHeader* )g_1250,
- ( _MTKFontHeader* )g_1251,
- ( _MTKFontHeader* )g_1252,
- ( _MTKFontHeader* )g_1253
+extern int g_XShift;
+
+GSMTKFontHeader* g_pASCII     = ( GSMTKFontHeader* )g_ASCII;
+GSMTKFontHeader* g_Fonts[ 4 ] = {
+ ( GSMTKFontHeader* )g_1250,
+ ( GSMTKFontHeader* )g_1251,
+ ( GSMTKFontHeader* )g_1252,
+ ( GSMTKFontHeader* )g_1253
+};
+static unsigned int s_FontSizes[ 5 ] = {
+ sizeof ( g_ASCII ), sizeof ( g_1250 ), sizeof ( g_1251 ),
+ sizeof ( g_1252  ), sizeof ( g_1253 )
 };
 
 static inline unsigned int _unaligned32 ( const void* apData ) {
@@ -64,188 +65,162 @@ static inline unsigned int _swap_bytes ( unsigned int aVal ) {
         (  ( aVal & 0xFF00 ) >> 8 );
 }  /* end _swap_bytes */
 
-static unsigned int _next_block ( unsigned char* apBuf, int aBufPos, unsigned int* apColor, unsigned int* apLen ) {
+static unsigned int _next_block ( unsigned char* apBuf, int aBufPos ) {
 
- unsigned int   lBytePos = aBufPos >> 3;
- unsigned int   lHiLo    = aBufPos  & 7;
  unsigned int   lData;
+ unsigned int   lLen;
+ unsigned int   lClr;
  unsigned char* lpData;
  unsigned char  lTest;
 
- lpData = apBuf + lBytePos;
+ lpData = apBuf + ( aBufPos >> 3 );
  lData  = _unaligned32 ( lpData );
 
- if ( lHiLo > 0 ) lData = _swap_nibbles (  _swap_nibbles ( lData ) >> 4  );
+ if ( aBufPos & 7 ) lData = _swap_nibbles (  _swap_nibbles ( lData ) >> 4  );
 
  lTest = lData & 0xFF;
  lData = _swap_bytes ( lData );
 
  if (  !( lTest & 0xFC )  ) {
 
-  *apColor = lData & 0x03;
-  *apLen   = ( lData & 0x03FC ) >> 2;
+  lClr     = lData & 0x03;
+  lLen     = ( lData & 0x03FC ) >> 2;
   aBufPos += 16;
 
  } else  if (  !( lTest & 0xF0 )  ) {
 
-  *apColor = ( lData & 0x30  ) >> 4;
-  *apLen   = ( lData & 0xFC0 ) >> 6;
+  lClr     = ( lData & 0x30  ) >> 4;
+  lLen     = ( lData & 0xFC0 ) >> 6;
   aBufPos += 12;
 
  } else if (  !( lTest & 0xC0 )  ) {
 
-  *apColor = lTest & 0x03;
-  *apLen   = ( lTest & 0x3C ) >> 2;
+  lClr     = lTest & 0x03;
+  lLen     = ( lTest & 0x3C ) >> 2;
   aBufPos += 8;
 
  } else {
 
   lTest  >>= 4;
-  *apColor = lTest & 0x03;
-  *apLen   = ( lTest & 0x0C ) >> 2;
+  lClr     = lTest & 0x03;
+  lLen     = ( lTest & 0x0C ) >> 2;
   aBufPos += 4;
 
  }  /* end else */
 
- *apColor -= 1;
+ __asm__ __volatile__(
+  ".set noat\n\t"
+  "or       $v1, $zero, %0\n\t"
+  "addiu    $at, %1, -1\n\t"
+  ".set at\n\t"
+  :: "r"( lLen ), "r"( lClr )
+ );
 
  return aBufPos;    
 
 }  /* end _next_block */
 
-static void _font_character ( _MTKFontHeader* apHdr, unsigned int aChr, void* apBuf, char* apIndent ) {
+int GSFont_UnpackChr ( GSMTKFontHeader* apHdr, unsigned int aChr, void* apBuf ) {
 
  unsigned char* lpFont   = ( unsigned char* )apHdr;
  unsigned char* lpBuff   = ( unsigned char* )apBuf;
  unsigned int   lWidth   = ( lpFont + 11 )[ aChr ];
- unsigned int*  lpOffs   = ( unsigned int* )( lpFont + 11 + apHdr -> m_nGlyphs + 1 );
- unsigned char* lpOffset = ( unsigned char* )lpOffs + ( apHdr -> m_nGlyphs << 2 ) + lpOffs[ aChr ] + 4;
- unsigned int   lBegin   = 0;
- unsigned int   lEnd     = lWidth * apHdr -> m_GlyphHeight;
- unsigned int   lBufPos  = 0;
- unsigned int   lFlag    = 0;
- unsigned int   lDIdx    = 0;
- unsigned int   lSIdx    = 0;
- unsigned char  lPixel   = 0;
+ unsigned int   lBegin;
+ unsigned int   lEnd;
+ unsigned int   lBufPos;
+ unsigned int   lFlag;
+ unsigned int   lDIdx;
+ unsigned int   lSIdx;
+ unsigned char  lPixel;
+ unsigned int*  lpOffs;
+ unsigned char* lpOffset;
  unsigned int   lColor;
  unsigned int   lLength;
  unsigned int   i;
-          int   j;
 
  memset ( apBuf, 0, 512 );
 
- while ( lBegin < lEnd ) {
+ if ( lWidth ) {
 
-  lBufPos = _next_block ( lpOffset, lBufPos, &lColor, &lLength );
+  lBegin   = 0;
+  lBufPos  = 0;
+  lFlag    = 0;
+  lDIdx    = 0;
+  lSIdx    = 0;
+  lPixel   = 0;
+  lEnd     = lWidth * apHdr -> m_GlyphHeight;
+  lpOffs   = ( unsigned int*  )( lpFont + 11 + apHdr -> m_nGlyphs + 1 );
+  lpOffset = ( unsigned char* )lpOffs + ( apHdr -> m_nGlyphs << 2 ) + SMS_unaligned32 ( &lpOffs[ aChr ] ) + 4;
 
-  for ( i = 0; i < lLength; ++i ) {
+  while ( lBegin < lEnd ) {
 
-   if ( !lFlag ) {
+   lBufPos = _next_block ( lpOffset, lBufPos );
 
-    lFlag  = 1;
-    lPixel = lColor;
+   __asm__ __volatile__(
+    ".set noat\n\t"
+    "or %0, $zero, $v1\n\t"
+    "or %1, $zero, $at\n\t"    
+    ".set at\n\t"
+    : "=r"( lLength ), "=r"( lColor )
+   );
 
-   } else {
+   for ( i = 0; i < lLength; ++i ) {
 
-    lFlag             = 0;
-    lPixel           |= ( lColor & 0x0F ) << 4;
-    lpBuff[ lDIdx++ ] = lPixel;
+    if ( !lFlag ) {
 
-   }  /* end else */
+     lFlag  = 1;
+     lPixel = lColor;
 
-   if ( ++lSIdx == lWidth ) {
+    } else {
 
-    if ( lFlag ) {
+     lFlag             = 0;
+     lPixel           |= ( lColor & 0x0F ) << 4;
+     lpBuff[ lDIdx++ ] = lPixel;
 
-     lFlag           = 0;
-     lpBuff[ lDIdx ] = lPixel;
+    }  /* end else */
+
+    if ( ++lSIdx == lWidth ) {
+
+     if ( lFlag ) {
+
+      lFlag           = 0;
+      lpBuff[ lDIdx ] = lPixel;
+
+     }  /* end if */
+
+     lSIdx   =  0;
+     lpBuff += 16;
+     lDIdx   =  0;
 
     }  /* end if */
 
-    lSIdx   =  0;
-    lpBuff += 16;
-    lDIdx   =  0;
+   }  /* end for */
 
-   }  /* end if */
+   lBegin += lLength;
 
-  }  /* end for */
+  }  /* end while */
 
-  lBegin += lLength;
+ }  /* end if */
 
- }  /* end while */
+ return lWidth;
 
- lpBuff = ( unsigned char* )apBuf;
-
- for ( i = 0; i < 32; ++i, lpBuff += 16 ) {
-
-  int lGap = -1;
-
-  for ( j = 0; j < 16; ++j ) {
-
-   lColor = lpBuff[ j ];
-
-   if (  !( lColor & 0xF0 )  ) {
-    ++lGap;
-   } else break;
-
-   if (  !( lColor & 0x0F )  )
-    ++lGap;
-   else break;
-
-  }  /* end for */
-
-  apIndent[ 0 ] = lGap;
-  lGap          = -1;
-
-  for ( j = 15; j >= 0; --j ) { 
-
-   lColor = lpBuff[ j ];
-
-   if (  !( lColor & 0x0F )  )
-    ++lGap;
-   else break;
-
-   if (  !( lColor & 0xF0 )  )
-    ++lGap;
-   else break;
-
-  }  /* end for */
-
-  apIndent[ 32 ] = lGap; ++apIndent;
-
- }  /* end for */
-
-}  /* end _font_character */
-
-static void _set_indent ( void* apDst, unsigned short anIndent ) {
-
- __asm__ __volatile__ (
-  "srl      $v1,  %1, 8\n\t"
-  "pextlb    %1,  %1, %1\n\t"
-  "pextlb   $v1, $v1, $v1\n\t"
-  "pcpyh     %1,  %1\n\t"
-  "pcpyh    $v1, $v1\n\t"
-  "pcpyld    %1,  %1,  %1\n\t"
-  "pcpyld   $v1, $v1, $v1\n\t"
-  "sq       $v1,  0(%0)\n\t"
-  "sq       $v1, 16(%0)\n\t"
-  "sq        %1, 32(%0)\n\t"
-  "sq        %1, 48(%0)\n\t"
-  :: "r"( apDst ), "r"( anIndent )
- );
-
-}  /* end _set_indent */
+}  /* end GSFont_UnpackChr */
 
 void GSFont_Init ( void ) {
 
- unsigned int    lX, lY, lIdx, lCharIdx = 0, lStrideIdx = 0;
- GSLoadImage     lLoadImage;
- unsigned char   lCharBuf[ 512 ] __attribute__(   (  aligned( 16 )  )   );
- _MTKFontHeader* lpFont = s_Fonts[ g_GSCtx.m_CodePage ];
- GSLoadImage*    lpLoadImage = UNCACHED_SEG( &lLoadImage );
+ unsigned int     lX, lY, lIdx, lCharIdx = 0, lStrideIdx = 0;
+ GSLoadImage      lLoadImage;
+ unsigned char    lCharBuf[ 512 ] __attribute__(   (  aligned( 16 )  )   );
+ GSMTKFontHeader* lpFont = g_Fonts[ g_GSCtx.m_CodePage ];
+ GSLoadImage*     lpLoadImage = UNCACHED_SEG( &lLoadImage );
+
+ if ( g_GSCtx.m_VRAMFontPtr ) {
+  g_GSCtx.m_VRAMPtr   += 496;
+  g_GSCtx.m_FontTexFmt = GSPixelFormat_PSMT4;
+ } else g_GSCtx.m_FontTexFmt = GSPixelFormat_PSMT4HL;
 
  GS_InitLoadImage (
-  &lLoadImage, g_GSCtx.m_VRAMFontPtr, 8, GSPixelFormat_PSMT4, 0, 0, 32, 32
+  &lLoadImage, g_GSCtx.m_VRAMFontPtr, 8, g_GSCtx.m_FontTexFmt, 0, 0, 32, 32
  );
 
  lY = 0;
@@ -255,12 +230,13 @@ void GSFont_Init ( void ) {
 
  for ( lIdx = 0; lIdx < 96; ++lIdx, ++lCharIdx ) {
 
-  _font_character (  s_pASCII, lIdx, lCharBuf, ( char* )&g_GSCharIndent[ lCharIdx ]  );
+  g_GSCharWidth[ lCharIdx ] = GSFont_UnpackChr ( g_pASCII, lIdx, lCharBuf );
 
   lpLoadImage -> m_TrxPosReg.m_Value = GS_SET_TRXPOS( 0, 0, lX, lY, 0 );
 
   SyncDCache ( lCharBuf, lCharBuf + 512 );
   GS_LoadImage ( &lLoadImage, lCharBuf );
+  DMA_Wait ( DMAC_GIF );
 
   if ( ++lStrideIdx == 16 ) {
 
@@ -274,12 +250,13 @@ void GSFont_Init ( void ) {
 
  for ( lIdx = 0; lIdx < 128; ++lIdx, ++lCharIdx ) {
 
-  _font_character (  lpFont, lIdx, lCharBuf, ( char* )&g_GSCharIndent[ lCharIdx ]  );
+  g_GSCharWidth[ lCharIdx ] = GSFont_UnpackChr ( lpFont, lIdx, lCharBuf );
 
   lpLoadImage -> m_TrxPosReg.m_Value = GS_SET_TRXPOS( 0, 0, lX, lY, 0 );
 
   SyncDCache ( lCharBuf, lCharBuf + 512 );
   GS_LoadImage ( &lLoadImage, lCharBuf );
+  DMA_Wait ( DMAC_GIF );
 
   if ( ++lStrideIdx == 16 ) {
 
@@ -291,109 +268,55 @@ void GSFont_Init ( void ) {
 
  }  /* end for */
 
- _set_indent ( &g_GSCharIndent[ ' ' - ' ' ], 0x0B0B );
- _set_indent ( &g_GSCharIndent[ '.' - ' ' ], 0x0018 );
- _set_indent ( &g_GSCharIndent[ ',' - ' ' ], 0x0018 );
- _set_indent ( &g_GSCharIndent[ '-' - ' ' ], 0xFD14 );
- _set_indent ( &g_GSCharIndent[ '_' - ' ' ], 0x0010 );
-
- g_GSCtx.m_VRAMPtr += 496;
-
- DMA_Wait ( DMAC_GIF );
+ g_GSCharWidth[ ' ' - ' ' ] = g_GSCharWidth[ ':' - ' ' ];
 
 }  /* end GSFont_Init */
 
 int GSFont_Width ( unsigned char* apStr, int aLen ) {
 
- int i, lKern, lX[ 32 ];
+ int lW   = 0;
  int lChr = apStr[ 0 ] - ' ';
-
- for ( i = 0; i < 32; ++i ) lX[ i ] = g_GSCharIndent[ lChr ].m_Left[ i ];
 
  while ( aLen-- ) {
 
   lChr  = *apStr++ - ' ';
-  lKern = -SHRT_MAX;
-
-  for ( i = 0; i < 32; ++i ) {
-
-   int lOffset = lX[ i ] - g_GSCharIndent[ lChr ].m_Left[ i ];
-
-   __asm__ __volatile__(
-    "pmaxw %0, %1, %2\n\t"
-    : "=r"( lKern ) : "r"( lKern ), "r"( lOffset )
-   );
-
-  }  /* end for */
-
-  for ( i = 0; i < 32; ++i ) lX[ i ] = lKern + 31 - g_GSCharIndent[ lChr ].m_Right[ i ];
+  lW   += g_GSCharWidth[ lChr ];
 
  }  /* end for */
 
- lKern = -SHRT_MAX;
-
- for ( i = 0; i < 32; ++i )
-
-  __asm__ __volatile__(
-   "pmaxw %0, %1, %2\n\t"
-   : "=r"( lKern ) : "r"( lKern ), "r"( lX[ i ] )
-  );
-
- return lKern;
+ return lW;
 
 }  /* end GSFont_Width */
 
 int GSFont_WidthEx ( unsigned char* apStr, int aLen, int aDW ) {
 
- int   i, lKern, lX[ 32 ];
- int   lChr = apStr[ 0 ] - ' ';
- float lAR  = ( 32.0F + aDW ) / 32.0F;
-
- for ( i = 0; i < 32; ++i ) lX[ i ] = g_GSCharIndent[ lChr ].m_Left[ i ] * lAR;
+ int   lChr;
+ int   retVal = 0;;
+ float lAR    = ( 32 + aDW ) / 32.0F;
 
  while ( aLen-- ) {
 
-  lChr  = *apStr++ - ' ';
-  lKern = -SHRT_MAX;
+  lChr    = *apStr++ - ' ';
+  retVal += ( int )(  ( float )g_GSCharWidth[ lChr ] * lAR + 0.5F  );
 
-  for ( i = 0; i < 32; ++i ) {
+ }  /* end while */
 
-   int lOffset = lX[ i ] - g_GSCharIndent[ lChr ].m_Left[ i ] * lAR;
-
-   __asm__ __volatile__(
-    "pmaxw %0, %1, %2\n\t"
-    : "=r"( lKern ) : "r"( lKern ), "r"( lOffset )
-   );
-
-  }  /* end for */
-
-  for ( i = 0; i < 32; ++i ) lX[ i ] = lKern + ( 31 - g_GSCharIndent[ lChr ].m_Right[ i ] ) * lAR;
-
- }  /* end for */
-
- lKern = -SHRT_MAX;
-
- for ( i = 0; i < 32; ++i )
-
-  __asm__ __volatile__(
-   "pmaxw %0, %1, %2\n\t"
-   : "=r"( lKern ) : "r"( lKern ), "r"( lX[ i ] )
-  );
-
- return lKern;
+ return retVal;
 
 }  /* end GSFont_WidthEx */
 
 void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, unsigned long* apDMA ) {
 
- int lXV[ 32 ];
- int i;
+ int lDelta;
  int lY1;
  int lY2;
+ int lf16   = g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL;
+ int lShift = g_XShift;
+ int lCurX  = aX;
 
  __asm__ __volatile__ (
   ".set noreorder\n\t"
-  "move     $t9, $ra\n\t"
+  "pcpyld   $ra, $ra, $ra\n\t"
   "addiu    $v0, %2, 32\n\t"
   "move     $a1, %2\n\t"
   "move     $a0, $zero\n\t"
@@ -406,63 +329,71 @@ void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, unsigned l
   "sll      $v0, $v0, 16\n\t"
   "move     %0, $v0\n\t"
   "move     %1, $a1\n\t"
-  "move     $ra, $t9\n\t"
+  "pcpyud   $ra, $ra, $ra\n\t"
   ".set reorder\n\t"
-  : "=r"( lY1 ), "=r"( lY2 ) : "r"( anY ) : "a0", "a1", "a2", "v0", "v1", "t9"
+  : "=r"( lY1 ), "=r"( lY2 ) : "r"( anY ) : "a0", "a1", "a2", "v0", "v1"
  );
 
- for ( i = 0; i < 32; ++i ) lXV[ i ] = aX;
+ lDelta = ( 512 >> lShift ) + 4;
 
- *apDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 2 );
- *apDMA++ = GS_TEX0_1 | ( GS_PRIM << 4 );
- *apDMA++ = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, GSPixelFormat_PSMT4, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, g_GSCtx.m_CLUT[ g_GSCtx.m_TextColor ], GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 0, GS_TEX_CLD_LOAD );
- *apDMA++ = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON, GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_ON, GS_PRIM_FST_UV, GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED );
- *apDMA++ = GIF_TAG( aLen, 1, 0, 0, 1, 4 );
- *apDMA++ = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
+ if ( lf16 ) {
+
+  apDMA[ 0 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 ); 
+  apDMA[ 1 ] = GIFTAG_REGS_AD;
+  apDMA[ 2 ] = GS_SET_DTHE( 0 );
+  apDMA[ 3 ] = GS_DTHE;
+  apDMA += 4;
+
+ }  /* end if */
+
+ apDMA[ 0 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ apDMA[ 1 ] = GS_TEX0_1 | ( GS_PRIM << 4 );
+ apDMA[ 2 ] = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, g_GSCtx.m_FontTexFmt, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, 0, GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, g_GSCtx.m_TextColor, GS_TEX_CLD_NOUPDATE );
+ apDMA[ 3 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON, GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_ON, GS_PRIM_FST_UV, GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED );
+ apDMA[ 4 ] = GIF_TAG( aLen, !lf16, 0, 0, 1, 4 );
+ apDMA[ 5 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
+ apDMA     += 6;
 
  while ( aLen-- ) {
 
-  int lChr  = *apStr++ - ' ';
-  int lCurX = -INT_MAX;
+  int lChr = *apStr++ - ' ';
   int lX, lU, lV;
 
-  for ( i = 0; i < 32; ++i ) {
+  lX     = lCurX << 4;
+  lCurX += g_GSCharWidth[ lChr ];
 
-   int lOffset = lXV[ i ] - g_GSCharIndent[ lChr ].m_Left[ i ];
+  lU   = ( lChr & 0x0000000F ) << 9;
+  lV   = ( lChr & 0xFFFFFFF0 ) << 5;
+  lX >>= lShift;
 
-   __asm__ __volatile__(
-    "pmaxw %0, %1, %2\n\t"
-    : "=r"( lCurX ) : "r"( lCurX ), "r"( lOffset )
-   );
-
-  }  /* end for */
-
-  lX = lCurX << 4;
-
-  for ( i = 0; i < 32; ++i ) lXV[ i ] = lCurX + 31 - g_GSCharIndent[ lChr ].m_Right[ i ];
-
-  lU = ( lChr & 0x0000000F ) << 9;
-  lV = ( lChr & 0xFFFFFFF0 ) << 5;
-
-  *apDMA++ = GS_SET_UV( lU + 8, lV + 8 );
-  *apDMA++ = lX | lY1;
-  *apDMA++ = GS_SET_UV( lU + 504, lV + 504 );
-  *apDMA++ = ( lX + 512 ) | lY2;
+  apDMA[ 0 ] = GS_SET_UV( lU + 8, lV + 8 );
+  apDMA[ 1 ] = lX | lY1;
+  apDMA[ 2 ] = GS_SET_UV( lU + 506, lV + 506 );
+  apDMA[ 3 ] = ( lX + lDelta ) | lY2;
+  apDMA     += 4;
 
  }  /* end while */
+
+ if ( lf16 ) {
+
+  apDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 ); 
+  apDMA[ 1 ] = GIFTAG_REGS_AD;
+  apDMA[ 2 ] = GS_SET_DTHE( 1 );
+  apDMA[ 3 ] = GS_DTHE;
+
+ }  /* end if */
 
 }  /* end GSFont_Render */
 
 void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, unsigned long* apDMA, int aDW, int aDH ) {
 
- int   lXV[ 32 ];
- int   i;
- int   lY1;
- int   lY2;
- int   lDW  = aDW << 4;
- float lAR  = ( 32.0F + aDW ) / 32.0F;
- int   lDTY = 0;
- int   lH   = 32;
+ int   lDW    = aDW << 4;
+ float lAR    = ( 32 + aDW ) / 32.0F;
+ int   lDTY   = 0;
+ int   lH     = 32;
+ int   lf16   = g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL;
+ int   lShift = g_XShift;
+ int   lX, lY1, lY2, lU, lV, lDelta, lCurX = aX;
 
  if ( anY < 0 ) {
 
@@ -475,7 +406,7 @@ void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, unsigned
 
  __asm__ __volatile__ (
   ".set noreorder\n\t"
-  "move     $t9, $ra\n\t"
+  "pcpyld   $ra, $ra, $ra\n\t"
   "addu     $v0, %2, %4\n\t"
   "addu     $v0, $v0, %3\n\t"
   "move     $a1, %2\n\t"
@@ -489,57 +420,146 @@ void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, unsigned
   "sll      $v0, $v0, 16\n\t"
   "move     %0, $v0\n\t"
   "move     %1, $a1\n\t"
-  "move     $ra, $t9\n\t"
+  "pcpyud   $ra, $ra, $ra\n\t"
   ".set reorder\n\t"
-  : "=r"( lY1 ), "=r"( lY2 ) : "r"( anY ), "r"( aDH ), "r"( lH ) : "a0", "a1", "a2", "v0", "v1", "t9"
+  : "=r"( lY1 ), "=r"( lY2 ) : "r"( anY ), "r"( aDH ), "r"( lH ) : "a0", "a1", "a2", "v0", "v1"
  );
 
- for ( i = 0; i < 32; ++i ) lXV[ i ] = aX;
+ lDelta = ( 512 >> lShift ) + 4;
+ lDW  >>= lShift;
 
- *apDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 2 );
- *apDMA++ = GS_TEX0_1 | ( GS_PRIM << 4 );
- *apDMA++ = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, GSPixelFormat_PSMT4, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, g_GSCtx.m_CLUT[ g_GSCtx.m_TextColor ], GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 0, GS_TEX_CLD_LOAD );
- *apDMA++ = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON, GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_ON, GS_PRIM_FST_UV, GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED );
- *apDMA++ = GIF_TAG( aLen, 1, 0, 0, 1, 4 );
- *apDMA++ = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
+ if ( lf16 ) {
+
+  apDMA[ 0 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 ); 
+  apDMA[ 1 ] = GIFTAG_REGS_AD;
+  apDMA[ 2 ] = GS_SET_DTHE( 0 );
+  apDMA[ 3 ] = GS_DTHE;
+  apDMA += 4;
+
+ }  /* end if */
+
+ apDMA[ 0 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ apDMA[ 1 ] = GS_TEX0_1 | ( GS_PRIM << 4 );
+ apDMA[ 2 ] = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, g_GSCtx.m_FontTexFmt, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, 0, GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, g_GSCtx.m_TextColor, GS_TEX_CLD_NOUPDATE );
+ apDMA[ 3 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON, GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_ON, GS_PRIM_FST_UV, GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED );
+ apDMA[ 4 ] = GIF_TAG( aLen, !lf16, 0, 0, 1, 4 );
+ apDMA[ 5 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
+ apDMA     += 6;
 
  while ( aLen-- ) {
 
-  int lChr  = *apStr++ - ' ';
-  int lCurX = -INT_MAX;
-  int lX, lU, lV;
+  int lChr = *apStr++ - ' ';
 
-  for ( i = 0; i < 32; ++i ) {
-
-   int lOffset = lXV[ i ] - g_GSCharIndent[ lChr ].m_Left[ i ] * lAR;
-
-   __asm__ __volatile__(
-    "pmaxw %0, %1, %2\n\t"
-    : "=r"( lCurX ) : "r"( lCurX ), "r"( lOffset )
-   );
-
-  }  /* end for */
-
-  lX = lCurX << 4;
-
-  for ( i = 0; i < 32; ++i ) lXV[ i ] = lCurX + ( 31 - g_GSCharIndent[ lChr ].m_Right[ i ] ) * lAR;
+  lX     = lCurX << 4;
+  lCurX += ( int )(  ( float )g_GSCharWidth[ lChr ] * lAR + 0.5F  );
+  lX   >>= lShift;
 
   lU = ( lChr & 0x0000000F ) << 9;
   lV = ( lChr & 0xFFFFFFF0 ) << 5;
 
-  *apDMA++ = GS_SET_UV( lU + 8, lV + lDTY + 8 );
-  *apDMA++ = lX | lY1;
-  *apDMA++ = GS_SET_UV( lU + 504, lV + 504 );
-  *apDMA++ = ( lX + 512 + lDW ) | lY2;
+  apDMA[ 0 ] = GS_SET_UV( lU + 8, lV + lDTY + 8 );
+  apDMA[ 1 ] = lX | lY1;
+  apDMA[ 2 ] = GS_SET_UV( lU + 506, lV + 506 );
+  apDMA[ 3 ] = ( lX + lDelta + lDW ) | lY2;
+  apDMA     += 4;
 
  }  /* end while */
+
+ if ( lf16 ) {
+
+  apDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 ); 
+  apDMA[ 1 ] = GIFTAG_REGS_AD;
+  apDMA[ 2 ] = GS_SET_DTHE( 1 );
+  apDMA[ 3 ] = GS_DTHE;
+
+ }  /* end if */
 
 }  /* end GSFont_RenderEx */
 
 void GSFont_Set ( unsigned int anIndex, void* apData ) {
 
  if ( !anIndex-- )
-  s_pASCII = ( _MTKFontHeader* )apData;
- else s_Fonts[ anIndex ] = ( _MTKFontHeader* )apData;
+  g_pASCII = ( GSMTKFontHeader* )apData;
+ else g_Fonts[ anIndex ] = ( GSMTKFontHeader* )apData;
 
 }  /* end GSFont_Set */
+
+void* GSFont_Get ( unsigned int anIndex, unsigned int* apSize ) {
+
+ *apSize = s_FontSizes[ anIndex ];
+
+ return !anIndex-- ? g_pASCII : g_Fonts[ anIndex ];
+
+}  /* end GSFont_Get */
+
+void* GSFont_Load ( const char* apFileName ) {
+
+ static SMS_GUID sl_FontGUID = {
+  0x59, 0x80, 0x9B, 0xAA, 0xBE, 0x82, 0x31, 0x46, 0x8F, 0xA5, 0x40, 0x7D, 0x34, 0x63, 0x31, 0xA5
+ };
+
+ SMS_GUID lGUID;
+ int      lFD, lFileSize;
+
+ lFD = MC_OpenS ( g_MCSlot, 0, apFileName + 4, O_RDONLY );
+
+ if ( lFD >= 0 ) {
+
+  lFileSize = MC_SeekS ( lFD, 0, SEEK_END );
+  MC_SeekS ( lFD, 0, SEEK_SET );
+
+  if (   MC_ReadS (  lFD, lGUID, sizeof ( lGUID )  ) == sizeof ( lGUID ) &&
+         !memcmp (  lGUID, sl_FontGUID, sizeof ( lGUID )  )
+  ) {
+
+   unsigned int lDataSize;
+
+   if (  MC_ReadS ( lFD, &lDataSize, 4 ) == 4  ) {
+
+    char* lpFile;
+
+    g_MBFont = ( unsigned int* )malloc ( lDataSize       );
+    lpFile   = ( char*         )malloc ( lFileSize -= 20 );
+
+    if (  MC_ReadS ( lFD, lpFile, lFileSize ) == lFileSize  ) {
+
+     lpFile[ 0 ] ^= 'E';
+     lpFile[ 1 ] ^= 'E';
+     lpFile[ 2 ] ^= 'U';
+     lpFile[ 3 ] ^= 'G';
+     lpFile[ 4 ] ^= 'X';
+
+     if (  LZMADecompress (
+            ( unsigned char* )g_MBFont, lpFile, lFileSize
+           ) != lDataSize
+     ) goto error;
+
+    } else {
+error:
+     free ( g_MBFont );
+     g_MBFont = NULL;
+
+    }  /* end else */
+
+    free ( lpFile );
+
+   }  /* end if */
+
+  }  /* end if */
+
+  MC_CloseS ( lFD );
+
+ }  /* end if */
+
+ return g_MBFont;
+
+}  /* end GSFont_Load */
+
+void GSFont_Unload ( void ) {
+
+ if ( g_MBFont ) {
+  free ( g_MBFont );
+  g_MBFont = NULL;
+ }  /* end if */
+
+}  /* end GSFont_Unload */

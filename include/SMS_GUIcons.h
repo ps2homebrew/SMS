@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -23,6 +23,7 @@
 # define GUICON_PARTITION 10
 # define GUICON_AVIS      12
 # define GUICON_SHARE     14
+# define GUICON_PICTURE   16
 
 # define GUICON_USB   (  ( GUI_MSG_USB   >> 16 ) - 1  )
 # define GUICON_CDROM (  ( GUI_MSG_CDROM >> 16 ) - 1  )
@@ -57,8 +58,9 @@ typedef enum GUIcon {
 extern "C" {
 # endif  /* __cplusplus */
 
-void GUI_LoadIcons ( void                                           );
-void GUI_DrawIcon  ( unsigned int, int, int, GUIcon, unsigned long* );
+void GUI_LoadIcons      ( void                                           );
+void GUI_DrawIcon       ( unsigned int, int, int, GUIcon, unsigned long* );
+void GUI_UnloadIcons    ( void                                           );
 
 # ifdef __cplusplus
 }

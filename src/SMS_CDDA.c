@@ -36,6 +36,7 @@
 #define CD_CMD_MMODE       0x22
 
 static int                s_Sema;
+static int                s_LockSema;
 static int                s_SyncFlag;
 static int                s_Size;
 static void*              s_pBuf;
@@ -45,7 +46,6 @@ static SifRpcClientData_t s_ClientSCmd         __attribute__ (   (  aligned( 64 
 static SifRpcClientData_t s_ClientDiskReady    __attribute__ (   (  aligned( 64 )  )   );
 static unsigned char      s_NCmdRecvBuff[ 48 ] __attribute__ (   (  aligned( 64 )  )   );
 static unsigned char      s_SCmdRecvBuff[ 48 ] __attribute__ (   (  aligned( 64 )  )   );
-static unsigned int       s_InitMode           __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_GetTOCmd[    3 ]   __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_ReadData[    6 ]   __attribute__ (   (  aligned( 64 )  )   );
 static unsigned int       s_ReadResp[   64 ]   __attribute__ (   (  aligned( 64 )  )   );
@@ -70,40 +70,22 @@ int CDDA_Init ( void ) {
          (  retVal = SIF_BindRPC ( &s_ClientDiskReady, CD_SERVER_DISKREADY )  )
   )  {
 
-   ee_sema_t lSema;
+   ee_sema_t lSemaParam;
 
-   lSema.init_count = 0;
-   lSema.max_count  = 1;
-   s_Sema = CreateSema ( &lSema );
+   lSemaParam.init_count = 0;
+   lSemaParam.max_count  = 1;
+   s_Sema = CreateSema ( &lSemaParam );
 
-   s_InitMode  = CDVD_INIT_NOCHECK;
+   lSemaParam.init_count = 1;
+   s_LockSema = CreateSema ( &lSemaParam );
+
    g_CDDASpeed = 4;
-   SifWriteBackDCache ( &s_InitMode, 4 );
-
-   retVal = SifCallRpc ( &s_ClientInit, 0, 0, &s_InitMode, 4, 0, 0, 0, 0 ) >= 0;
 
   }  /* end if */
 
  return retVal;
 
 }  /* end CDDA_Init */
-
-void CDDA_Exit ( void ) {
-
- if ( s_ClientInit.server ) {
-
-  s_InitMode = CDVD_INIT_EXIT;
-
-  SifWriteBackDCache ( &s_InitMode, 4 );
-  SifCallRpc ( &s_ClientInit, 0, 0, &s_InitMode, 4, 0, 0, 0, 0 );
-
-  s_ClientInit.server = 0;
-
-  DeleteSema ( s_Sema );
-
- }  /* end if */
-
-}  /* end CDDA_Exit */
 
 int CDDA_ReadTOC ( CDDA_TOC* apTOC ) {
 
@@ -169,6 +151,8 @@ DiskType CDDA_DiskType ( void ) {
 
  DiskType retVal = DiskType_None;
 
+ WaitSema ( s_LockSema );
+
  if (  SifCallRpc (
         &s_ClientSCmd, CD_CMD_GETDISCTYPE, 0, 0, 0, s_SCmdRecvBuff, 4, 0, 0
        ) >= 0
@@ -194,6 +178,8 @@ DiskType CDDA_DiskType ( void ) {
   }  /* end switch */
 
  }  /* end if */
+
+ SignalSema ( s_LockSema );
 
  return retVal;
 
@@ -266,14 +252,18 @@ int CDDA_SetMediaMode ( MediaMode aMode ) {
 
  int retVal = 0;
 
- *( unsigned int * )s_SCmdRecvBuff = ( unsigned int )aMode;
+ *( unsigned int* )s_SCmdRecvBuff = ( unsigned int )aMode;
 
  SifWriteBackDCache ( s_SCmdRecvBuff, 4 );
+
+ WaitSema ( s_LockSema );
 
  if (  SifCallRpc (
         &s_ClientSCmd, CD_CMD_MMODE, 0, s_SCmdRecvBuff, 4, s_SCmdRecvBuff, 4, 0, 0
         ) >= 0
  ) retVal = *( int* )UNCACHED_SEG( s_SCmdRecvBuff );
+
+ SignalSema ( s_LockSema );
 
  return retVal;
 
@@ -321,3 +311,34 @@ int CDDA_RawRead ( int aStartSec, int aCount, unsigned char* apBuf ) {
  return retVal;
 
 }  /* end CDDA_RawRead */
+
+int CDDA_ReadClock ( void* apClock ) {
+
+ int retVal = 0;
+
+ WaitSema ( s_LockSema );
+
+ if (  SifCallRpc (
+        &s_ClientSCmd, 1, 0, NULL, 0, s_SCmdRecvBuff, 16, NULL, NULL
+       ) >= 0
+ ) __asm__(
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "lui  $at, 0x2000\n\t"
+  "or   %2, %2, $at\n\t"
+  "lw   %0,   0(%2)\n\t"
+  "ldr  $at,  4(%2)\n\t"
+  "ldl  $at, 11(%2)\n\t"
+  "sd   $at,  0(%1)\n\t"
+  ".set noat\n\t"
+  ".set nomacro\n\t"
+  ".set noreorder\n\t"
+  : "=r"( retVal ) : "r"( apClock ), "r"( s_SCmdRecvBuff ) : "at"
+ );
+
+ SignalSema ( s_LockSema );
+
+ return retVal;
+
+}  /* end CDDA_ReadClock */

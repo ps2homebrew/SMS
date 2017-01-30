@@ -63,13 +63,7 @@ int MC_Init ( void ) {
 
  int retVal = 0;
 
- if ( s_Client.server == NULL              &&
-      SIF_BindRPC ( &s_Client, MC_SERVER ) &&
-      SifCallRpc (
-       &s_Client, MC_RPCCMD_INIT, 0,
-       &s_MCmd, 48, s_RecvData, 12, 0, 0
-      ) >= 0
- ) retVal = *( int *)UNCACHED_SEG( s_RecvData );
+ if (  s_Client.server == NULL && SIF_BindRPC ( &s_Client, MC_SERVER )  ) retVal = *( int* )UNCACHED_SEG( s_RecvData );
 
  s_LastCmd = 0;
 

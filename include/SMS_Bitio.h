@@ -48,7 +48,6 @@
 typedef struct SMS_BitContext {
 
  const uint8_t* m_pBuf;
- const uint8_t* m_pBufEnd;
  int            m_Idx;
  int            m_szInBits;
 
@@ -58,9 +57,7 @@ typedef struct SMS_BitContext {
 extern "C" {
 # endif  /* __cplusplus */
 
-void     SMS_InitGetBits  ( SMS_BitContext*, const uint8_t*, uint32_t );
-uint32_t SMS_GetBitsLong  ( SMS_BitContext*, uint32_t                 );
-uint32_t SMS_ShowBitsLong ( SMS_BitContext*, uint32_t                 );
+//void SMS_InitGetBits ( SMS_BitContext*, const uint8_t*, uint32_t );
 
 # ifdef __cplusplus
 }
@@ -142,4 +139,10 @@ static SMS_INLINE int32_t SMS_GetXBits ( SMS_BitContext* apCtx, uint32_t aN ) {
  SMS_CLOSE_READER( re, apCtx )
  return lVal;
 }  /* end SMS_GetXBits */
+
+static SMS_INLINE void SMS_InitGetBits ( SMS_BitContext* apCtx, const uint8_t* apBuf, uint32_t aBitSize ) {
+ apCtx -> m_pBuf     = apBuf;
+ apCtx -> m_szInBits = aBitSize;
+ apCtx -> m_Idx      = 0;
+}  /* end SMS_InitGetBits */
 #endif  /* __SMS_Bitio_H */

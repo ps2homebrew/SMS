@@ -18,22 +18,16 @@
 #include "SMS_MPEG12.h"
 #include "SMS_MP123.h"
 #include "SMS_AC3.h"
+#include "SMS_DTS.h"
+#include "SMS_OGG.h"
+#include "SMS_WMA.h"
+#include "SMS_PCM.h"
+#include "SMS_AAC.h"
+#include "SMS_FLAC.h"
 #include "SMS_VideoBuffer.h"
 
 #include <malloc.h>
 #include <string.h>
-
-#define SMS_INTERNAL_BUFFER_SIZE 32
-
-typedef struct SMS_InternalBuffer {
-
- int              m_LastPicNr;
- SMS_FrameBuffer* m_pBuf;
- int              m_Linesize;
-
-} SMS_InternalBuffer;
-
-static SMS_VideoBuffer* s_pVideoBuffer;
 
 static SMS_CodecTag s_CodecVideoTags[] = {
  { SMS_CodecID_MPEG4,     SMS_MKTAG(  'D',  'I',  'V',  'X' ) },
@@ -61,10 +55,18 @@ static SMS_CodecTag s_CodecVideoTags[] = {
 };
 
 static SMS_CodecTag s_CodecAudioTags[] = {
- { SMS_CodecID_MP2,  0x00000050 },
- { SMS_CodecID_MP3,  0x00000055 },
- { SMS_CodecID_AC3,  0x00002000 },
- { SMS_CodecID_NULL, 0x00000000 }
+ { SMS_CodecID_MP2,     0x00000050 },
+ { SMS_CodecID_MP3,     0x00000055 },
+ { SMS_CodecID_AC3,     0x00002000 },
+ { SMS_CodecID_DTS,     0x00002001 },
+ { SMS_CodecID_OGGV,    0x0000674F },
+ { SMS_CodecID_WMA_V1,  0x00000160 },
+ { SMS_CodecID_WMA_V2,  0x00000161 },
+ { SMS_CodecID_PCM16LE, 0x00000001 },
+ { SMS_CodecID_AAC,     0x6134706D },
+ { SMS_CodecID_AAC,     0x000000FF },
+ { SMS_CodecID_FLAC,    0x43614C66 },
+ { SMS_CodecID_NULL,    0x00000000 }
 };
 
 SMS_CodecID SMS_CodecGetID ( SMS_CodecType aType, uint32_t aTag ) {
@@ -89,20 +91,7 @@ SMS_CodecID SMS_CodecGetID ( SMS_CodecType aType, uint32_t aTag ) {
 
 int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
- int lID = apCtx -> m_ID;
-
- if (  apCtx -> m_Type == SMS_CodecTypeVideo && !(
-        lID == SMS_CodecID_MPEG1 || lID == SMS_CodecID_MPEG2 ||
-        lID == SMS_CodecID_DXSB
-       )
- ) {
-
-  s_pVideoBuffer     = ( SMS_VideoBuffer* )SMS_InitVideoBuffer ( apCtx -> m_Width, apCtx -> m_Height );
-  apCtx -> m_pIntBuf = calloc (  SMS_INTERNAL_BUFFER_SIZE, sizeof ( SMS_InternalBuffer )  );
-
- }  /* end if */
-
- switch ( lID ) {
+ switch ( apCtx -> m_ID ) {
 
   case SMS_CodecID_MPEG4    : SMS_Codec_MPEG4_Open   ( apCtx ); break;
   case SMS_CodecID_MSMPEG4V3: SMS_Codec_MSMPEG4_Open ( apCtx ); break;
@@ -111,97 +100,69 @@ int SMS_CodecOpen ( SMS_CodecContext* apCtx ) {
 
   case SMS_CodecID_DXSB: return 1;
 
-  case SMS_CodecID_MP2:
-  case SMS_CodecID_MP3: SMS_Codec_MP123_Open ( apCtx ); break;
-  case SMS_CodecID_AC3: SMS_Codec_AC3_Open   ( apCtx ); break;
+  case SMS_CodecID_MP2    : apCtx -> m_Tag = SMS_MKTAG( 'm', 'p', '2', ' ' ); goto SMS_CodecID_MPA;
+  case SMS_CodecID_MP3    : apCtx -> m_Tag = SMS_MKTAG( 'm', 'p', '3', ' ' );
+       SMS_CodecID_MPA    :                                                   SMS_Codec_MP123_Open ( apCtx ); break;
+  case SMS_CodecID_AC3    : apCtx -> m_Tag = SMS_MKTAG( 'a', 'c', '3', ' ' ); SMS_Codec_AC3_Open   ( apCtx ); break;
+  case SMS_CodecID_DTS    : apCtx -> m_Tag = SMS_MKTAG( 'd', 't', 's', ' ' ); SMS_Codec_DTS_Open   ( apCtx ); break;
+  case SMS_CodecID_OGGV   : apCtx -> m_Tag = SMS_MKTAG( 'o', 'g', 'g', ' ' ); SMS_Codec_OGGV_Open  ( apCtx ); break;
+  case SMS_CodecID_WMA_V1 : apCtx -> m_Tag = SMS_MKTAG( 'w', 'm', 'a', '1' ); goto SMS_CodecID_WMA;
+  case SMS_CodecID_WMA_V2 : apCtx -> m_Tag = SMS_MKTAG( 'w', 'm', 'a', '2' );
+       SMS_CodecID_WMA    :                                                   SMS_Codec_WMA_Open   ( apCtx ); break;
+  case SMS_CodecID_PCM16BE:
+  case SMS_CodecID_PCM16LE: apCtx -> m_Tag = SMS_MKTAG( 'p', 'c', 'm', ' ' ); SMS_Codec_PCM_Open   ( apCtx ); break;
+  case SMS_CodecID_AAC    : apCtx -> m_Tag = SMS_MKTAG( 'a', 'a', 'c', ' ' ); SMS_Codec_AAC_Open   ( apCtx ); break;
+  case SMS_CodecID_FLAC   :                                                   SMS_Codec_FLAC_Open  ( apCtx ); break;
 
   default: break;
 
  }  /* end switch */
 
- return apCtx -> m_pCodec != 0;
+ return apCtx -> m_pCodec != NULL;
 
 }  /* end SMS_CodecOpen */
 
 void SMS_CodecClose ( SMS_CodecContext* apCtx ) {
 
- int lID = apCtx -> m_ID;
-
- if ( apCtx -> m_pIntBuf && apCtx -> m_Type == SMS_CodecTypeVideo &&
-      !( lID == SMS_CodecID_MPEG1 || lID == SMS_CodecID_MPEG2 )
- ) {
-
-  s_pVideoBuffer -> Destroy ();
-  free ( apCtx -> m_pIntBuf );
-
- }  /* end if */
-
- if ( apCtx -> UserDataDestructor ) apCtx -> UserDataDestructor (
-  apCtx -> m_pUserData
- );
+ if ( apCtx -> HWCtl       ) apCtx -> HWCtl ( apCtx, SMS_HWC_Destroy );
+ if ( apCtx -> m_pUserData ) free ( apCtx -> m_pUserData );
 
 }  /* end SMS_CodecClose */
 
-void SMS_CodecReleaseBuffer ( SMS_CodecContext* apCtx, struct SMS_Frame* apPic ) {
+void SMS_CodecDestroy ( SMS_CodecContext* apCtx ) {
 
- int                 i;
- SMS_InternalBuffer* lpBuf, *lpLast, lBuf;
+ if ( apCtx ) {
 
- lpBuf = 0;
+  if ( apCtx -> m_pCodec ) {
 
- for ( i = 0; i < apCtx -> m_IntBufCnt; ++i ) {
+   apCtx -> m_pCodec -> Destroy ( apCtx );
+   free ( apCtx -> m_pCodec );
 
-  lpBuf = &(  ( SMS_InternalBuffer* )apCtx -> m_pIntBuf )[ i ];
+  }  /* end if */
 
-  if ( lpBuf -> m_pBuf == apPic -> m_pBuf ) break;
+  SMS_CodecClose ( apCtx );
 
- }  /* end for */
+  free ( apCtx );
 
- --apCtx -> m_IntBufCnt;
+ }  /* end if */
 
- lpLast = &(  ( SMS_InternalBuffer* )apCtx ->m_pIntBuf  )[ apCtx -> m_IntBufCnt ];
-
- lBuf    = *lpBuf;
- *lpBuf  = *lpLast;
- *lpLast = lBuf;
-
- s_pVideoBuffer -> Release ( apPic -> m_pBuf );
- apPic -> m_pBuf = 0;
-
-}  /* end SMS_CodecReleaseBuffer */
+}  /* end SMS_CodecDestroy */
 
 void SMS_CodecGetBuffer ( SMS_CodecContext* apCtx, struct SMS_Frame* apPic ) {
 
- SMS_InternalBuffer* lpBuf;
- int*                lpPicNr;
+ SMS_VideoBuffer* lpBuf = ( SMS_VideoBuffer* )apCtx -> m_pIntBuf;
 
- if ( apCtx -> m_pIntBuf == 0 )
-
-  apCtx -> m_pIntBuf = calloc (
-   1, SMS_INTERNAL_BUFFER_SIZE * sizeof ( SMS_InternalBuffer )
-  );
-
- lpBuf   = &(  ( SMS_InternalBuffer* )apCtx -> m_pIntBuf )[ apCtx -> m_IntBufCnt ];
- lpPicNr = &(   (  ( SMS_InternalBuffer* )apCtx -> m_pIntBuf  )[ SMS_INTERNAL_BUFFER_SIZE - 1 ]   ).m_LastPicNr;
- ++*lpPicNr;
-    
- if ( lpBuf -> m_pBuf != NULL ) {
-
-  apPic -> m_Age       = *lpPicNr - lpBuf -> m_LastPicNr;
-  lpBuf -> m_LastPicNr = *lpPicNr;
-
- } else {
-
-  lpBuf -> m_LastPicNr = -256 * 256 * 256 * 64;
-  apPic -> m_Age       =  256 * 256 * 256 * 64;
-
- }  /* end else */
-
- lpBuf -> m_pBuf =
- apPic -> m_pBuf = s_pVideoBuffer -> Alloc ();
-
- apPic -> m_Linesize = s_pVideoBuffer -> m_Linesize;
-
- ++apCtx -> m_IntBufCnt;
+ apPic -> m_pBuf  = lpBuf -> m_pFree;
+ lpBuf -> m_pFree = lpBuf -> m_pFree -> m_pNext;
 
 }  /* end SMS_CodecGetBuffer */
+
+void SMS_CodecReleaseBuffer ( SMS_CodecContext* apCtx, struct SMS_Frame* apPic ) {
+
+ SMS_VideoBuffer* lpBuf = ( SMS_VideoBuffer* )apCtx -> m_pIntBuf;
+
+ apPic -> m_pBuf -> m_pNext = lpBuf -> m_pFree;
+ lpBuf -> m_pFree           = apPic -> m_pBuf;
+ apPic -> m_pBuf            = NULL;
+
+}  /* end SMS_CodecReleaseBuffer */

@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -15,20 +15,12 @@
 #  include "SMS_Container.h"
 # endif  /* __SMS_Container_H */
 
-typedef struct SMS_MP3Info {
-
- int m_SampleRate;
- int m_nChannels;
- int m_BitRate;
-
-} SMS_MP3Info;
-
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
 
-int      SMS_GetContainerMP3 ( SMS_Container*             );
-uint64_t SMS_MP3Probe        ( FileContext*, SMS_MP3Info* );
+int      SMS_GetContainerMP3 ( SMS_Container*               );
+uint64_t SMS_MP3Probe        ( FileContext*, SMS_AudioInfo* );
 
 # ifdef __cplusplus
 }

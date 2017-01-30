@@ -184,7 +184,7 @@ int SMS_VLC_Init (
 
 void SMS_VLC_Free ( SMS_VLC* apVLC ) {
 
- free ( apVLC -> m_pTable );
+ if ( apVLC -> m_pTable ) free ( apVLC -> m_pTable ), apVLC -> m_pTable = NULL;
 
 }  /* end SMS_VLC_Free */
 

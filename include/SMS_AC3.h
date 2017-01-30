@@ -4,7 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # Based on ffmpeg project (no copyright notes in the original source code)
-# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -40,6 +40,9 @@
 # define LEVEL_45DB    0.5946035575013605
 # define LEVEL_6DB     0.5
 # define LEVEL_PLUS6DB 2.0
+# define LEVEL_SSUM    1.9318516525781364
+# define LEVEL_SA      1.2247448713915889
+# define LEVEL_SB      0.7071067811865474
 
 # define DELTA_BIT_REUSE    0
 # define DELTA_BIT_NEW      1

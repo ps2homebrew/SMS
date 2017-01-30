@@ -19,6 +19,7 @@
 #include "SMS_AC3.h"
 #include "SMS_Config.h"
 #include "SMS_RingBuffer.h"
+#include "SMS_Locale.h"
 
 #include <string.h>
 #include <malloc.h>
@@ -314,7 +315,12 @@ static int8_t s_LATab[ 256 ] = {
    0,   0,   0,   0
 };
 
-static sample_t s_Samples[ 16 * 256 * 12 ] __attribute__(   (  section( ".bss" )  )   );
+static int s_SAB[ 20 ] __attribute__(   (  aligned( 16 ), section( ".sdata" ), unused  )   ) = {
+ 0x38504E62, 0x38504E62, 0x38504E62, 0x38504E62,
+ 0x3CCC2D41, 0x3CCC2D41, 0x3CCC2D41, 0x3CCC2D41
+};
+
+static sample_t s_Samples[ 16 * 256 * 12 ] __attribute__(   (  aligned( 16 ), section( ".bss" )  )   );
 
 SMS_Codec_AC3Context s_AC3Ctx;
 static int ( *DecodeFrame ) ( SMS_RingBuffer*, int, int );
@@ -332,20 +338,17 @@ void SMS_Codec_AC3_Open ( SMS_CodecContext* apCtx ) {
 
  apCtx -> m_pCodec = calloc (  1, sizeof ( SMS_Codec )  );
 
- apCtx -> m_pCodec -> m_pName = "ac3";
+ apCtx -> m_pCodec -> m_pName = g_pAC3;
  apCtx -> m_pCodec -> m_pCtx  = &s_AC3Ctx;
  apCtx -> m_pCodec -> Init    = AC3_Init;
  apCtx -> m_pCodec -> Decode  = AC3_Decode;
  apCtx -> m_pCodec -> Destroy = AC3_Destroy;
 
  if (  !( g_Config.m_PlayerFlags & SMS_PF_SPDIF )  )
-
   DecodeFrame = _ac3_decode;
-
  else DecodeFrame = _ac3_spdif;
 
- s_AC3Ctx.m_pWorkarea = ( sample_t* )g_pSPRTop;
- g_pSPRTop += 1024;
+ s_AC3Ctx.m_pWorkarea = ( sample_t* )g_pSynthBuffer;
 
 }  /* end SMS_Codec_AC3_Open */
 
@@ -508,12 +511,15 @@ level_3db:
    break;
 
    case CONVERT( AC3_3F1R, AC3_DOLBY ):
-   case CONVERT( AC3_2F2R, AC3_DOLBY ):
     lAdjust = LEVEL(  1 / ( 1 + 2 * LEVEL_3DB )  );
    break;
 
+   case CONVERT( AC3_2F2R, AC3_DOLBY ):
+    lAdjust = LEVEL(  1 / ( 1 + LEVEL_SSUM * LEVEL_3DB )  );
+   break;
+
    case CONVERT( AC3_3F2R, AC3_DOLBY ):
-    lAdjust = LEVEL(  1 / ( 1 + 3 * LEVEL_3DB )  );
+    lAdjust = LEVEL(  1 / ( 1 + ( 1 + LEVEL_SSUM ) * LEVEL_3DB )  );
    break;
 
    default: return lOutput;
@@ -1204,15 +1210,15 @@ int _ac3_downmix_coeff (
 
  switch (  CONVERT( anACMod, anOutput & AC3_CHANNEL_MASK )  ) {
 
-  case CONVERT(AC3_CHANNEL, AC3_CHANNEL ):
-  case CONVERT(AC3_MONO,    AC3_MONO    ):
-  case CONVERT(AC3_STEREO,  AC3_STEREO  ):
-  case CONVERT(AC3_3F,      AC3_3F      ):
-  case CONVERT(AC3_2F1R,    AC3_2F1R    ):
-  case CONVERT(AC3_3F1R,    AC3_3F1R    ):
-  case CONVERT(AC3_2F2R,    AC3_2F2R    ):
-  case CONVERT(AC3_3F2R,    AC3_3F2R    ):
-  case CONVERT(AC3_STEREO,  AC3_DOLBY   ):
+  case CONVERT( AC3_CHANNEL, AC3_CHANNEL ):
+  case CONVERT( AC3_MONO,    AC3_MONO    ):
+  case CONVERT( AC3_STEREO,  AC3_STEREO  ):
+  case CONVERT( AC3_3F,      AC3_3F      ):
+  case CONVERT( AC3_2F1R,    AC3_2F1R    ):
+  case CONVERT( AC3_3F1R,    AC3_3F1R    ):
+  case CONVERT( AC3_2F2R,    AC3_2F2R    ):
+  case CONVERT( AC3_3F2R,    AC3_3F2R    ):
+  case CONVERT( AC3_STEREO,  AC3_DOLBY   ):
 
    apCoeff[ 0 ] = apCoeff[ 1 ] = apCoeff[ 2 ] = apCoeff[ 3 ] = apCoeff[ 4 ] = aLevel;
 
@@ -1642,59 +1648,137 @@ static void _ac3_mix31toS ( sample_t* apSamples ) {
 
 static void _ac3_mix22toS ( sample_t* apSamples ) {
 
- int      i;
- sample_t lSurround;
+ int i;
 
  for ( i = 0; i < 256; ++i ) {
-
-  lSurround = apSamples[ i + 512 ] + apSamples[ i + 768 ];
-  apSamples[ i       ] += -lSurround;
-  apSamples[ i + 256 ] +=  lSurround;
-
+  apSamples[ i       ] += -MUL(  apSamples[ i + 512 ], SAMPLE( LEVEL_SA ) ) - MUL( apSamples[ i + 768 ], SAMPLE( LEVEL_SB )  );
+  apSamples[ i + 256 ] +=  MUL(  apSamples[ i + 512 ], SAMPLE( LEVEL_SB ) ) + MUL( apSamples[ i + 768 ], SAMPLE( LEVEL_SA )  );
  }  /* end for */
 
 }  /* end _ac3_mix22toS */
 
-static void _ac3_mix32to2 ( sample_t* apSamples ) {
+void _ac3_mix32to2 ( sample_t* );
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ ".text\n\t"
+ "_ac3_mix32to2:\n\t"
+ "addiu     $a1, $a0, 1024\n\t"
+ "1:\n\t"
+ "lq        $at,    0($a0)\n\t"
+ "lq        $v0, 1024($a0)\n\t"
+ "lq        $v1, 2048($a0)\n\t"
+ "lq        $a2, 3072($a0)\n\t"
+ "lq        $a3, 4096($a0)\n\t"
+ "paddw     $at, $at, $v0\n\t"
+ "paddw     $v0, $v0, $v1\n\t"
+ "paddw     $at, $at, $a2\n\t"
+ "paddw     $v0, $v0, $a3\n\t"
+ "addiu     $a0, $a0, 16\n\t"
+ "sq        $at, -16($a0)\n\t"
+ "bne       $a0, $a1, 1b\n\t"
+ "sq        $v0, 1008($a0)\n\t"
+ "jr        $ra\n\t"
+ "nop\n\t"
+ ".set at\n\t"
+ ".set macro\n\t"
+ ".set reorder\n\t"
+);
 
- int      i;
- sample_t lCommon;
-
- for ( i = 0; i < 256; ++i ) {
-
-  lCommon = apSamples[ i + 256 ];
-  apSamples[ i       ] += lCommon + apSamples[ i + 768 ];
-  apSamples[ i + 256 ]  = lCommon + apSamples[ i + 512 ] + apSamples[ i + 1024 ];
-
- }  /* end for */
-
-}  /* end _ac3_mix32to2 */
-
-static void _ac3_mix32toS ( sample_t* apSamples ) {
-
- int      i;
- sample_t lCommon, lSurround;
-
- for ( i = 0; i < 256; ++i ) {
-
-  lCommon   = apSamples[ i + 256 ];
-  lSurround = apSamples[ i + 768 ] + apSamples[ i + 1024 ];
-  apSamples[ i       ] += lCommon - lSurround;
-  apSamples[ i + 256 ]  = apSamples[ i + 512 ] + lCommon + lSurround;
-
- }  /* end for */
-
-}  /* end _ac3_mix32toS */
+void _ac3_mix32toS ( sample_t* );
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ ".text\n\t"
+ "_ac3_mix32toS:\n\t"
+ "addiu     $a1, $a0, 1024\n\t"
+ "la        $t0, s_SAB\n\t"
+ "lq        $v0,  0($t0)\n\t"
+ "lq        $a2, 16($t0)\n\t"
+ "psllw     $v1, $v0, 16\n\t"
+ "psllw     $a3, $a2, 16\n\t"
+ "1:\n\t"
+ "lq        $t3, 3072($a0)\n\t"
+ "lq        $t4, 4096($a0)\n\t"
+ "pmulth    $t5, $t3, $v0\n\t"
+ "pcgth     $at, $zero, $t3\n\t"
+ "pand      $at, $at, $v0\n\t"
+ "psllw     $at, $at, 16\n\t"
+ "paddh     $t5, $t5, $at\n\t"
+ "pmfhl.uw  $at\n\t"
+ "pmulth    $zero, $t3, $v1\n\t"
+ "paddw     $t5, $t5, $at\n\t"
+ "psraw     $t5, $t5, 14\n\t"
+ "lq        $t0,    0($a0)\n\t"
+ "pmfhl.uw  $at\n\t"
+ "psllw     $at, $at, 2\n\t"
+ "paddw     $t5, $t5, $at\n\t"
+ "pmulth    $t6, $t4, $a2\n\t"
+ "pcgth     $at, $zero, $t4\n\t"
+ "pand      $at, $at, $a2\n\t"
+ "psllw     $at, $at, 16\n\t"
+ "paddh     $t6, $t6, $at\n\t"
+ "pmfhl.uw  $at\n\t"
+ "pmulth    $zero, $t4, $a3\n\t"
+ "paddw     $t6, $t6, $at\n\t"
+ "psraw     $t6, $t6, 14\n\t"
+ "lq        $t1, 1024($a0)\n\t"
+ "pmfhl.uw  $at\n\t"
+ "psllw     $at, $at, 2\n\t"
+ "paddw     $t6, $t6, $at\n\t"
+ "pmulth    $t7, $t3, $a2\n\t"
+ "pcgth     $at, $zero, $t3\n\t"
+ "pand      $at, $at, $a2\n\t"
+ "psllw     $at, $at, 16\n\t"
+ "paddh     $t7, $t7, $at\n\t"
+ "pmfhl.uw  $at\n\t"
+ "pmulth    $zero, $t3, $a3\n\t"
+ "paddw     $t7, $t7, $at\n\t"
+ "psraw     $t7, $t7, 14\n\t"
+ "lq        $t2, 2048($a0)\n\t"
+ "pmfhl.uw  $at\n\t"
+ "psllw     $at, $at, 2\n\t"
+ "paddw     $t7, $t7, $at\n\t"
+ "pmulth    $t8, $t4, $v0\n\t"
+ "pcgth     $at, $zero, $t4\n\t"
+ "pand      $at, $at, $v0\n\t"
+ "psllw     $at, $at, 16\n\t"
+ "paddh     $t8, $t8, $at\n\t"
+ "pmfhl.uw  $at\n\t"
+ "pmulth    $zero, $t4, $v1\n\t"
+ "paddw     $t8, $t8, $at\n\t"
+ "psraw     $t8, $t8, 14\n\t"
+ "paddw     $t0, $t0, $t1\n\t"
+ "pmfhl.uw  $at\n\t"
+ "addiu     $a0, $a0, 16\n\t"
+ "psllw     $at, $at, 2\n\t"
+ "paddw     $t8, $t8, $at\n\t"
+ "psubw     $t0, $t0, $t5\n\t"
+ "psubw     $t0, $t0, $t6\n\t"
+ "paddw     $t1, $t1, $t2\n\t"
+ "paddw     $t1, $t1, $t7\n\t"
+ "paddw     $t1, $t1, $t8\n\t"
+ "sq        $t0,  -16($a0)\n\t"
+ "bne       $a0, $a1, 1b\n\t"
+ "sq        $t1, 1008($a0)\n\t"
+ "jr        $ra\n\t"
+ "nop\n\t"
+ ".set at\n\t"
+ ".set macro\n\t"
+ ".set reorder\n\t"
+);
 
 static void _ac3_move2to1 ( sample_t* apSrc, sample_t* apDest ) {
 
  int i;
 
- for (i = 0; i < 256; i++) apDest[ i ] = apSrc[ i ] + apSrc[ i + 256 ];
+ for ( i = 0; i < 256; ++i ) apDest[ i ] = apSrc[ i ] + apSrc[ i + 256 ];
 
 }  /* end _ac3_move2to1 */
 
-void _ac3_downmix ( sample_t* apSamples, int anACMod, int anOutput, sample_t aBias, level_t aCLev, level_t aSLev ) {
+void _ac3_downmix ( sample_t* apSamples, int anACMod, int anOutput, level_t aCLev, level_t aSLev ) {
 
  switch (  CONVERT( anACMod, anOutput & AC3_CHANNEL_MASK )  ) {
 
@@ -2360,7 +2444,7 @@ static int _ac3_block ( void ) {
   }  /* end for */
 
   _ac3_downmix (
-   lpSamples, s_AC3Ctx.m_ACMmod, s_AC3Ctx.m_Output, s_AC3Ctx.m_Bias,
+   lpSamples, s_AC3Ctx.m_ACMmod, s_AC3Ctx.m_Output,
    s_AC3Ctx.m_CLev, s_AC3Ctx.m_SLev
   );
 
@@ -2369,7 +2453,7 @@ static int _ac3_block ( void ) {
   lnFChans = s_nFChansTbl[ s_AC3Ctx.m_Output & AC3_CHANNEL_MASK ];
 
   _ac3_downmix (
-   lpSamples, s_AC3Ctx.m_ACMmod, s_AC3Ctx.m_Output, 0,
+   lpSamples, s_AC3Ctx.m_ACMmod, s_AC3Ctx.m_Output,
    s_AC3Ctx.m_CLev, s_AC3Ctx.m_SLev
   );
 
@@ -2378,7 +2462,7 @@ static int _ac3_block ( void ) {
    s_AC3Ctx.m_Downmixed = 1;
 
    _ac3_downmix (
-    lpSamples + 1536, s_AC3Ctx.m_ACMmod, s_AC3Ctx.m_Output, 0,
+    lpSamples + 1536, s_AC3Ctx.m_ACMmod, s_AC3Ctx.m_Output,
     s_AC3Ctx.m_CLev, s_AC3Ctx.m_SLev
    );
 
@@ -2438,14 +2522,10 @@ __asm__(
  "ppach     $t1, $t1, $t1\n\t"
  "ppach     $t2, $t2, $t2\n\t"
  "ppach     $t3, $t3, $t3\n\t"
- "sdr       $t0,  0($a1)\n\t"
- "sdl       $t0,  7($a1)\n\t"
- "sdr       $t1,  8($a1)\n\t"
- "sdl       $t1, 15($a1)\n\t"
- "sdr       $t2, 16($a1)\n\t"
- "sdl       $t2, 23($a1)\n\t"
- "sdr       $t3, 24($a1)\n\t"
- "sdl       $t3, 31($a1)\n\t"
+ "sd        $t0,  0($a1)\n\t"
+ "sd        $t1,  8($a1)\n\t"
+ "sd        $t2, 16($a1)\n\t"
+ "sd        $t3, 24($a1)\n\t"
  "bgtz      $at, 1b\n\t"
  "addiu     $a1, $a1, 32\n\t"
  "jr        $ra\n\t"
@@ -2478,14 +2558,10 @@ __asm__(
  "pinteh    $t2, $t3, $t2\n\t"
  "pcpyud    $t1, $t0, $t0\n\t"
  "pcpyud    $t3, $t2, $t2\n\t"
- "sdr       $t0,  0($a1)\n\t"
- "sdl       $t0,  7($a1)\n\t"
- "sdr       $t1,  8($a1)\n\t"
- "sdl       $t1, 15($a1)\n\t"
- "sdr       $t2, 16($a1)\n\t"
- "sdl       $t2, 23($a1)\n\t"
- "sdr       $t3, 24($a1)\n\t"
- "sdl       $t3, 31($a1)\n\t"
+ "sd        $t0,  0($a1)\n\t"
+ "sd        $t1,  8($a1)\n\t"
+ "sd        $t2, 16($a1)\n\t"
+ "sd        $t3, 24($a1)\n\t"
  "bgtz      $at, 1b\n\t"
  "addiu     $a1, $a1, 32\n\t"
  "jr        $ra\n\t"
@@ -2511,7 +2587,7 @@ static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
  if ( anChannels == 1 )
   lFlags = AC3_MONO;
  else if ( anChannels == 2 )
-  lFlags = AC3_STEREO;
+  lFlags = AC3_DOLBY;
  else lFlags |= AC3_ADJUST_LEVEL;
 
  if (  _ac3_frame ( s_AC3Ctx.m_InBuf, &lFlags, &lLevel, 384 )  ) {
@@ -2525,10 +2601,10 @@ static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 
  anChannels += 7;
  retVal      = 6 << ( anChannels + 1 );
- lpOutBuf    = ( short* )SMS_RingBufferAlloc ( apRB, retVal + 68 );
+ lpOutBuf    = ( short* )SMS_RingBufferAlloc ( apRB, retVal + 80 );
  lpOutBuf   += 32;
  *( int* )lpOutBuf = retVal;
- lpOutBuf   += 2;
+ lpOutBuf   += 8;
 
  for ( i = 0; i < 6; ++i ) {
 
@@ -2544,11 +2620,11 @@ static int _ac3_decode ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 static int _ac3_spdif ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
 
  int            retVal   = 6144;
- unsigned char* lpOutBuf = SMS_RingBufferAlloc ( apRB, retVal + 68 );
+ unsigned char* lpOutBuf = SMS_RingBufferAlloc ( apRB, retVal + 80 );
 
  lpOutBuf += 64;
  *( int* )lpOutBuf = retVal;
- lpOutBuf += 4;
+ lpOutBuf += 16;
 
  (  ( uint16_t* )lpOutBuf  )[ 0 ] = 0xF872;
  (  ( uint16_t* )lpOutBuf  )[ 1 ] = 0x4E1F;
@@ -2571,14 +2647,10 @@ static int _ac3_spdif ( SMS_RingBuffer* apRB, int anChannels, int aLen ) {
   "por      $t7, $t9, $t7\n\t"
   "pcpyud   $v1, $t8, $zero\n\t"
   "pcpyud   $t9, $t7, $zero\n\t"
-  "sdr      $t8,  0(%0)\n\t"
-  "sdl      $t8,  7(%0)\n\t"
-  "sdr      $v1,  8(%0)\n\t"
-  "sdl      $v1, 15(%0)\n\t"
-  "sdr      $t7, 16(%0)\n\t"
-  "sdl      $t7, 23(%0)\n\t"
-  "sdr      $t9, 24(%0)\n\t"
-  "sdl      $t9, 31(%0)\n\t"
+  "sd       $t8,  0(%0)\n\t"
+  "sd       $v1,  8(%0)\n\t"
+  "sd       $t7, 16(%0)\n\t"
+  "sd       $t9, 24(%0)\n\t"
   "addiu    $t6, $t6, -1\n\t"
   "addiu    %1, %1, 32\n\t"
   "bgtz     $t6, 1b\n\t"

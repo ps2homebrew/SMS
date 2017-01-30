@@ -10,11 +10,18 @@
 */
 #include "SMS_ContainerM3U.h"
 #include "SMS_ContainerMP3.h"
+#include "SMS_ContainerOGG.h"
+#include "SMS_ContainerASF.h"
+#include "SMS_ContainerMOV.h"
+#include "SMS_ContainerAAC.h"
+#include "SMS_ContainerFLAC.h"
+#include "SMS_ContainerAC3.h"
 #include "SMS_List.h"
 #include "SMS_Locale.h"
 #include "SMS_FileDir.h"
 #include "SMS_Sounds.h"
 #include "SMS_Config.h"
+#include "SMS_Timer.h"
 
 #include <string.h>
 #include <malloc.h>
@@ -32,8 +39,11 @@ typedef struct _M3UEntry {
 
 typedef struct _M3UContainer {
 
- SMS_Container* m_pMP3Cont;
+ SMS_Container* m_pSubCont;
  int            m_fInit;
+ int            m_Active;
+ int            m_ContID[ 7 ];
+ uint64_t       ( *Probe[ 7 ] ) ( FileContext*, SMS_AudioInfo* );
 
 } _M3UContainer;
 
@@ -67,13 +77,22 @@ static int _check_name ( char* apName ) {
 
 }  /* end _check_name */
 
-static FileContext* _open_file ( SMS_Container* apCont, SMS_ListNode* apNode, FileContext* ( *apOpen ) ( const char*, void* ), void* apOpenParam  ) {
+static FileContext* _open_file (
+                     SMS_Container* apCont,
+                     SMS_ListNode*  apNode,
+                     FileContext* ( *apOpen ) ( const char*, void* ),
+                     void* apOpenParam
+                    ) {
 
  char lFileName[ 1024 ];
 
  strcpy ( lFileName, g_CWD );
- SMS_Strcat (  lFileName, g_SlashStr                   );
- SMS_Strcat (  lFileName, MYENTR( apNode ) -> m_pPath  );
+
+ if (  MYENTR( apNode ) -> m_pPath[ 0 ] != '/' &&
+       g_CWD[ strlen ( g_CWD ) - 1 ]    != '/'
+ ) strcat (  lFileName, g_SlashStr );
+
+ strcat (  lFileName, MYENTR( apNode ) -> m_pPath  );
 
  return apOpen ( lFileName, apOpenParam );
 
@@ -84,7 +103,7 @@ static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
  int            retVal   = -1;
  _M3UContainer* lpMyCont = MYCONT( apCont );
 
- if (   (  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apCont, apIdx )  ) < 0   ) {
+ if (   (  retVal = lpMyCont -> m_pSubCont -> ReadPacket ( lpMyCont -> m_pSubCont, apIdx )  ) < 0   ) {
 
   if ( apCont -> m_pPlayItem -> m_pNext ) {
 
@@ -102,22 +121,47 @@ static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
 
 static int _ReadFirstPacket ( SMS_Container* apCont, int* apIdx ) {
 
- int            retVal   = 1;
- _M3UContainer* lpMyCont = MYCONT( apCont );
- 
- if (  !lpMyCont -> m_fInit ) {
+ int               i, lfDoInit = 0, retVal  = 1;
+ _M3UContainer*    lpMyCont   = MYCONT( apCont );
+ FileContext*      lpFileCtx  = lpMyCont -> m_pSubCont -> m_pFileCtx;
+ SMS_CodecContext* lpCodecCtx = apCont -> m_pStm[ 0 ] -> m_pCodec;
+ SMS_AudioInfo     lInfo;
 
-  FileContext*      lpFileCtx  = lpMyCont -> m_pMP3Cont -> m_pFileCtx;
-  SMS_CodecContext* lpCodecCtx = apCont -> m_pStm[ 0 ] -> m_pCodec;
-  SMS_MP3Info       lInfo;
+ i = lpMyCont -> m_Active;
 
-  if (  SMS_MP3Probe ( lpFileCtx, &lInfo )  ) {
+ if ( !lpMyCont -> m_fInit ) {
 
-   lpCodecCtx -> m_Channels   = lInfo.m_nChannels;
-   lpCodecCtx -> m_SampleRate = lInfo.m_SampleRate;
-   lpCodecCtx -> m_BitRate    = lInfo.m_BitRate;
+  int lSubContID = SMS_SubContID ( lpFileCtx -> m_pPath );
 
-   lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize >> 3 );
+  i = lSubContID < 0 ? 0 : lSubContID;
+
+  while ( 1 ) {
+
+   for (  ; i < sizeof ( lpMyCont -> Probe ) / sizeof ( lpMyCont -> Probe[ 0 ] ); ++i  )
+    if (  lpMyCont -> Probe[ i ] ( lpFileCtx, &lInfo )  ) {
+     if ( i == SMS_SUBCONTAINER_M4A ||
+          i == SMS_SUBCONTAINER_ASF ||
+          i == SMS_SUBCONTAINER_FLAC
+     ) lfDoInit = 1;
+     break;
+    } else RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
+
+   if (  i == sizeof ( lpMyCont -> Probe ) / sizeof ( lpMyCont -> Probe[ 0 ] ) && lSubContID >= 0  ) {
+    i          = 0;
+    lSubContID = -1;
+   } else break;
+
+  }  /* end while */
+
+  if (  i != sizeof ( lpMyCont -> Probe ) / sizeof ( lpMyCont -> Probe[ 0 ] )  ) {
+
+   if ( i == lpMyCont -> m_Active ) {
+    lpCodecCtx -> m_Channels   = lInfo.m_nChannels;
+    lpCodecCtx -> m_SampleRate = lInfo.m_SampleRate;
+    lpCodecCtx -> m_BitRate    = lInfo.m_BitRate;
+   }  /* end if */
+
+   lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 4 );
 
   } else retVal = 0;
 
@@ -125,15 +169,58 @@ static int _ReadFirstPacket ( SMS_Container* apCont, int* apIdx ) {
 
  if ( retVal ) {
 
-  retVal = lpMyCont -> m_pMP3Cont -> ReadPacket ( apCont, apIdx );
+  if ( i != lpMyCont -> m_Active || lfDoInit ) {
+
+   SMS_RingBuffer* lpBuf = lpMyCont -> m_pSubCont -> m_pStm[ 0 ] -> m_pPktBuf;
+
+   apCont -> m_pStm[ 0 ] = NULL;
+
+   lpMyCont -> m_pSubCont -> m_pStm[ 0 ] -> m_pPktBuf = NULL;
+   lpMyCont -> m_pSubCont -> m_pStm[ 0 ] -> m_pCodec  = NULL;
+   lpMyCont -> m_pSubCont -> m_pFileCtx               = NULL;
+
+   lpMyCont -> m_pSubCont -> Destroy ( lpMyCont -> m_pSubCont, 1 );
+   lpMyCont -> m_pSubCont = SMS_GetContainer ( lpFileCtx, lpMyCont -> m_ContID[ i ] );
+
+   RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
+
+   if ( lpMyCont -> m_pSubCont ) {
+
+    SMS_Stream* lpStm = lpMyCont -> m_pSubCont -> m_pStm[ 0 ];
+
+    apCont -> m_pStm[ 0 ]   = lpStm;
+    apCont -> m_DefPackSize = lpMyCont -> m_pSubCont -> m_DefPackSize;
+    apCont -> m_DefPackIdx  = lpMyCont -> m_pSubCont -> m_DefPackIdx;
+
+    lpStm -> m_pPktBuf = lpBuf;
+
+   } else {
+
+    lpFileCtx -> Destroy ( lpFileCtx );
+    SMS_CodecDestroy ( lpCodecCtx );
+    SMS_RingBufferDestroy ( lpBuf );
+    retVal = 0;
+    goto end;
+
+   }  /* end else */
+
+  }  /* end else */
+
+  retVal = lpMyCont -> m_pSubCont -> ReadPacket ( lpMyCont -> m_pSubCont, apIdx );
 
   (  ( SMS_AVPacket* )( apCont -> m_pStm[ 0 ] -> m_pPktBuf -> m_pPtr )  ) -> m_PTS = SMS_STPTS_VALUE;
+
+  if ( i != lpMyCont -> m_Active || lfDoInit ) {
+   (  ( SMS_AVPacket* )( apCont -> m_pStm[ 0 ] -> m_pPktBuf -> m_pPtr )  ) -> m_DTS    = ( int64_t )( unsigned int )apCont -> m_pStm[ 0 ] -> m_pCodec;
+   (  ( SMS_AVPacket* )( apCont -> m_pStm[ 0 ] -> m_pPktBuf -> m_pPtr )  ) -> m_Flags |= SMS_PKT_FLAG_NWC;
+   lpMyCont -> m_Active = i;
+  }  /* end if */
 
   apCont -> m_Duration = MYENTR( apCont -> m_pPlayItem ) -> m_Duration;
   apCont -> ReadPacket = _ReadPacket;
 
  }  /* end if */
-
+end:
  return retVal;
 
 }  /* end _ReadFirstPacket */
@@ -143,7 +230,7 @@ static int _SelectFile ( SMS_Container* apCont, _M3UContainer* apMyCont ) {
  FileContext* ( *lpOpen ) ( const char*, void* ) = apCont -> m_pFileCtx -> Open;
  void*           lpOpenParam                     = apCont -> m_pFileCtx -> m_pOpenParam;
  int             retVal    = 0;
- SMS_Container*  lpSubCont = apMyCont -> m_pMP3Cont;
+ SMS_Container*  lpSubCont = apMyCont -> m_pSubCont;
 
  lpSubCont -> m_pFileCtx -> Destroy ( lpSubCont -> m_pFileCtx );
  lpSubCont -> m_pFileCtx = _open_file ( apCont, apCont -> m_pPlayItem, lpOpen, lpOpenParam );
@@ -165,9 +252,9 @@ static void _Destroy ( SMS_Container* apCont, int afAll ) {
 
  _M3UContainer* lpCont = MYCONT( apCont );
 
- if ( lpCont -> m_pMP3Cont ) {
+ if ( lpCont -> m_pSubCont ) {
 
-  lpCont -> m_pMP3Cont -> Destroy ( lpCont -> m_pMP3Cont, 1 );
+  lpCont -> m_pSubCont -> Destroy ( lpCont -> m_pSubCont, 1 );
   apCont -> m_pStm[ 0 ] = NULL;
   apCont -> m_pFileCtx  = NULL;
 
@@ -182,11 +269,13 @@ static void _Destroy ( SMS_Container* apCont, int afAll ) {
 
 static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
 
- FileContext* lpFileCtx = MYCONT( apCont ) -> m_pMP3Cont -> m_pFileCtx;
+ FileContext* lpFileCtx = MYCONT( apCont ) -> m_pSubCont -> m_pFileCtx;
 
  lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 0 );
 
  apCont -> m_pPlayItem = ( SMS_ListNode* )aPos;
+
+ MYCONT( apCont ) -> m_Active = -1;
 
  return _SelectFile (  apCont, MYCONT( apCont )  );
 
@@ -198,7 +287,7 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
  char         lTitle[ 512 ];
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
  int          retVal    = 0;
- SMS_List*    lpList    = NULL;
+ SMS_List*    lpList    = SMS_ListInit ();
  int          lLen;
  char*        lpPtr;
  _M3UEntry*   lpEntry;
@@ -209,20 +298,20 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
   SMS_List*     lpFileList = ( SMS_List* )(  ( unsigned int )lpFileCtx & 0x7FFFFFFF  );
   SMS_ListNode* lpNode     = lpFileList -> m_pHead;
 
-  lpList = SMS_ListInit ();
-
   while ( lpNode ) {
 
-   lLen = strlen ( lpNode -> m_pString );
+   lLen = strlen (  _STR( lpNode )  );
 
    lpEntry = ( _M3UEntry* )malloc (  sizeof ( _M3UEntry )  );
    lpEntry -> m_pPath    = ( char* )malloc ( lLen + 1 );
    lpEntry -> m_Duration = 0;
 
-   strcpy ( lpEntry -> m_pPath, lpNode -> m_pString );
-   lpNode -> m_pString[ lLen - 4 ] = '\x00';
+   strcpy (  lpEntry -> m_pPath, _STR( lpNode )  );
+   _STR( lpNode )[ lLen - 4 ] = '\x00';
 
-   SMS_ListPushBack ( lpList, lpNode -> m_pString ) -> m_Param = ( unsigned int )lpEntry;
+   if (  _STR( lpNode )[ lLen - 5 ] == '.'  ) _STR( lpNode )[ lLen - 5 ] = '\x00';
+
+   SMS_ListPushBack (  lpList, _STR( lpNode )  ) -> m_Param = ( unsigned int )lpEntry;
 
    lpNode = lpNode -> m_pNext;
 
@@ -230,114 +319,84 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
 
   retVal = 1;
 
-  goto start;
+ } else {
 
- }  /* end if */
-
- File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
-
- if (  !strcmp ( lBuf, g_pExtM3UStr )  ) {
-
-  lpList = SMS_ListInit ();
+  char         lfExtInf  = 0;
+  unsigned int lDuration = 0;
 
   while ( 1 ) {
 
-   char*        lpPath;
-   unsigned int lDuration;
-
-   lpPtr = &lBuf[ 7 ];
-
    File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
 
-   if ( lBuf[ 0 ] == '\x00' ) {
+   if ( !lBuf[ 0 ] ) {
 
-    if (  FILE_EOF( lpFileCtx )  ) {
+    if (  FILE_EOF( lpFileCtx )  ) break;
 
-     retVal = 1;
-     break;
+    continue;
+
+   } if ( lBuf[ 0 ] == '#' ) {
+
+    if (  !strcmp ( &lBuf[ 1 ], &g_pExtM3UStr[ 1 ] )  ) {
+
+     continue;
+
+    } else if (  !strncmp ( &lBuf[ 1 ], &g_pExtInfStr[ 1 ], 6 )  ) {
+
+     if (  lBuf[ 7 ] == ':' && sscanf ( &lBuf[ 8 ], g_pPercDStr, &lDuration ) &&
+           (  lpPtr = strchr ( &lBuf[ 8 ], ',' )  )
+     ) {
+      strcpy ( lTitle, lpPtr + 1 );
+      lfExtInf = 1;
+      continue;
+     }  /* end if */
 
     }  /* end if */
 
+    lfExtInf  = 0;
+    lDuration = 0;
     continue;
 
    }  /* end if */
 
-   if (  strncmp ( lBuf, g_pExtInfStr, 7 ) || *lpPtr++ != ':'  ) break;
-   if (  !sscanf ( lpPtr, g_pPercDStr, &lDuration )            ) break;
-
-   while ( *lpPtr && *lpPtr != ',' ) ++lpPtr;
-
-   if ( *lpPtr++ != ',' ) break;
-
-   if (  !strlen ( lpPtr )  ) break;
-
-   strcpy ( lTitle, lpPtr );
-
-   File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
-
-   if ( lBuf[ 0 ] == '\x00' ) break;
-
-   lpPath = ( char* )malloc (  strlen ( lBuf ) + 1  );
-   strcpy ( lpPath, lBuf );
+   if (  !_check_name ( lBuf )  ) break;
 
    lpEntry = ( _M3UEntry* )malloc (  sizeof ( _M3UEntry )  );
+   lpEntry -> m_pPath    = ( char* )malloc (  strlen ( lBuf ) + 1  );
    lpEntry -> m_Duration = lDuration;
-   lpEntry -> m_pPath    = lpPath;
+
+   lpPtr = lpEntry -> m_pPath;
+   strcpy ( lpEntry -> m_pPath, lBuf );
+
+   while ( lpPtr[ 0 ] ) {
+    if ( lpPtr[ 0 ] == '\\' ) lpPtr[ 0 ] = '/';
+    ++lpPtr;
+   }  /* end while */
+
+   if ( !lfExtInf ) {
+    char* lpDot = strrchr ( lpEntry -> m_pPath, '.' );
+    if ( lpDot ) lpDot[ 0 ] = '\x00';
+    lpPtr = lpEntry -> m_pPath + strlen ( lpEntry -> m_pPath ) - 1;
+    while ( lpPtr >= lpEntry -> m_pPath ) {
+     if ( lpPtr[ 0 ] == '/' ) {
+      ++lpPtr;
+      break;
+     }  /* end if */
+     --lpPtr;
+    }  /* end while */
+    if ( lpPtr < lpEntry -> m_pPath ) lpPtr = lpEntry -> m_pPath;
+    strcpy ( lTitle, lpPtr );
+    if ( lpDot ) lpDot[ 0 ] = '.';
+   }  /* end else */
 
    SMS_ListPushBack ( lpList, lTitle ) -> m_Param = ( unsigned int )lpEntry;
 
-  }  /* end while */
-
- } else if (  lBuf[ 0 ] && (  lLen = _check_name ( lBuf )  )   ) {
-
-  lpList = SMS_ListInit ();
-
-  while ( 1 ) {
-
-   lpEntry = ( _M3UEntry* )malloc (  sizeof ( _M3UEntry )  );
-   lpEntry -> m_pPath    = ( char* )malloc ( lLen + 1 );
-   lpEntry -> m_Duration = 0;
-
-   strcpy ( lpEntry -> m_pPath, lBuf );
-
-   lpPtr = &lBuf[ lLen - 1 ];
-
-   while ( lpPtr > &lBuf[ 0 ] ) if ( *lpPtr == '.' ) {
-
-    *lpPtr-- = '\x00';
-    break;
-
-   } else --lpPtr;
-
-   while ( lpPtr > &lBuf[ 0 ] ) if ( *lpPtr == '\\' || *lpPtr == '/' ) {
-
-    ++lpPtr;
-    break;
-
-   } else --lpPtr;
-
-   SMS_ListPushBack ( lpList, lpPtr ) -> m_Param = ( unsigned int )lpEntry;
-
-   File_GetString ( lpFileCtx, lBuf, M3U_MAXLEN );
-
-   if ( lBuf[ 0 ] == '\x00' ) {
-
-    if (  FILE_EOF( lpFileCtx )  ) {
-
-     retVal = 1;
-     break;
-
-    } else break;
-
-   }  /* end if */
-
-   lLen = _check_name ( lBuf );
-
-   if ( !lLen ) break;
+   lfExtInf = 0;
 
   }  /* end while */
 
- }  /* end if */
+  retVal = 1;
+
+ }  /* end else */
 
  if ( !retVal || !lpList -> m_Size ) {
 
@@ -351,7 +410,7 @@ int SMS_GetContainerM3U ( SMS_Container* apCont ) {
   SMS_Container*  lpSubCont;
   FileContext* ( *lpOpen ) ( const char*, void* );
   void*           lpOpenParam;
-start:
+
   retVal = 0;
 
   if ( g_Config.m_PlayerFlags & SMS_PF_RAND ) {
@@ -359,14 +418,16 @@ start:
    SMS_List*    lpNewList = SMS_ListInit ();
    unsigned int lSize     = lpList -> m_Size;
 
+   g_RandSeed = ( int )g_Timer;
+
    while ( lSize ) {
 
     unsigned int  lIdx   = SMS_rand () % lSize;
     SMS_ListNode* lpNode = SMS_ListAt ( lpList, lIdx );
 
-    if ( !lpNode || SMS_ListFind ( lpNewList, lpNode -> m_pString )  ) continue;
+    if (   !lpNode || SMS_ListFind (  lpNewList, _STR( lpNode )  )   ) continue;
 
-    SMS_ListPushBack ( lpNewList, lpNode -> m_pString ) -> m_Param = lpNode -> m_Param;
+    SMS_ListPushBack (  lpNewList, _STR( lpNode )  ) -> m_Param = lpNode -> m_Param;
     SMS_ListRemove ( lpList, lpNode );
 
     --lSize;
@@ -407,16 +468,41 @@ start:
 
   if ( lpSubFileCtx ) {
 
-   lpSubCont = SMS_GetContainer ( lpSubFileCtx, SMS_CONTAINER_MP3 );
+   int i;
+
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_M4A  ] = SMS_CONTAINER_M4A;
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_OGG  ] = SMS_CONTAINER_OGG;
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_ASF  ] = SMS_CONTAINER_ASF;
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_FLAC ] = SMS_CONTAINER_FLAC;
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_AAC  ] = SMS_CONTAINER_AAC;
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_AC3  ] = SMS_CONTAINER_AC3;
+   lpCont -> m_ContID[ SMS_SUBCONTAINER_MP3  ] = SMS_CONTAINER_MP3;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_M4A  ] = SMS_M4AProbe;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_OGG  ] = SMS_OGGVProbe;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_ASF  ] = SMS_WMAProbe;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_FLAC ] = SMS_FLACProbe;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_AAC  ] = SMS_AACProbe;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_AC3  ] = SMS_AC3Probe;
+   lpCont -> Probe   [ SMS_SUBCONTAINER_MP3  ] = SMS_MP3Probe;
+
+   for (  i = 0; i < sizeof ( lpCont -> Probe ) / sizeof ( lpCont -> Probe[ 0 ]  ); ++i ) {
+    if (   (  lpSubCont = SMS_GetContainer ( lpSubFileCtx, lpCont -> m_ContID[ i ] )  )   ) {
+     lpCont -> m_Active = i;
+     break;
+    }  /* end if */
+    lpSubFileCtx -> Seek ( lpSubFileCtx, 0 );
+   }  /* end for */
 
    if ( lpSubCont ) {
 
-    apCont -> m_pFileCtx  = lpSubFileCtx;
-    lpCont -> m_pMP3Cont  = lpSubCont;
-    apCont -> m_pStm[ 0 ] = lpSubCont -> m_pStm[ 0 ];
-    apCont -> m_nStm      = 1;
-    apCont -> m_Duration  = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
-    apCont -> m_Flags    |= SMS_CONT_FLAGS_SEEKABLE;
+    apCont -> m_pFileCtx    = lpSubFileCtx;
+    lpCont -> m_pSubCont    = lpSubCont;
+    apCont -> m_pStm[ 0 ]   = lpSubCont -> m_pStm[ 0 ];
+    apCont -> m_nStm        = 1;
+    apCont -> m_DefPackSize = lpSubCont -> m_DefPackSize;
+    apCont -> m_DefPackIdx  = lpSubCont -> m_DefPackIdx;
+    apCont -> m_Duration    = MYENTR(  apCont -> m_pPlayList -> m_pHead ) -> m_Duration;
+    apCont -> m_Flags      |= SMS_CONT_FLAGS_SEEKABLE;
 
     lpCont -> m_fInit = 1;
 

@@ -19,12 +19,12 @@
 extern "C" {
 # endif  /* __cplusplus */
 
-int      SMS_H263_DecodeMotion       ( int, int               );
-int16_t* SMS_H263_PredMotion         ( int, int, int*, int*   );
-void     SMS_H263_UpdateMotionVal    ( void                   );
-int      SMS_H263_RoundChroma        ( int                    );
-void     SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM*           );
-void     SMS_H263_DCTUnquantizeInter ( SMS_DCTELEM*, int, int );
+int      SMS_H263_DecodeMotion       ( int, int             );
+int16_t* SMS_H263_PredMotion         ( int, int, int*, int* );
+void     SMS_H263_UpdateMotionVal    ( void                 );
+int      SMS_H263_RoundChroma        ( int                  );
+void     SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM*         );
+void     SMS_H263_DCTUnquantizeInter ( SMS_DCTELEM*         );
 
 # ifdef __cplusplus
 extern "C" {

@@ -2,11 +2,14 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2007      Petr Otoupal (HDTV support)
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
 .set noreorder
+
+.globl g_XShift
 
 .sdata
 .align 4
@@ -15,7 +18,10 @@ s_GSParams:
 s_PAR_NTSC: .word  0x3F6EEEEF
 s_PAR_PAL : .word  0x3F888889
 s_PAR_480P: .word  0x3F59999A
+s_PAR_576P: .word  0x3F800000
 s_PAR_VESA: .word  0x3F800000
+s_PAR_720P: .word  0x3F800000
+s_PAR_1080I:.word  0x3F800000
 s_Half    : .word  0x3F000000
 s_OffsetX:  .word 636
             .word 656
@@ -29,6 +35,8 @@ s_SinCos:   .word   0x00000000
             .word   0x3F4F1BBD
             .word   0x3F737879
             .word   0x3F800000
+g_XShift:   .word   0x00000000
+
 .text
 
 .globl GS_Reset
@@ -47,7 +55,9 @@ s_SinCos:   .word   0x00000000
 .globl GS_RRV
 .globl GS_RenderRoundRect
 .globl GS_VSync
-.globl GS_TWTH
+.globl GS_L2P
+.globl GS_VSync2
+.globl GS_VMode2Index
 
 .ent GS_Params
 GS_Params:
@@ -66,6 +76,7 @@ GS_Reset:
     ori     $a0, $zero, 0xFF00
     lw      $v1, s_GSParams + 8
     beq     $v1, $zero, 1f
+    nop
     jal     DisableIntc
     move    $a0, $zero
     lw      $a1, s_GSParams + 12
@@ -93,7 +104,16 @@ GS_Reset:
     slti    $v0, $a1, 0x50
     bnel    $v0, $zero, 2f
     lw      $v1, s_PAR_VESA
+    slti    $v0, $a1, 0x51
+    bnel    $v0, $zero, 2f
     lw      $v1, s_PAR_480P
+    slti    $v0, $a1, 0x52
+    bnel    $v0, $zero, 2f
+    lw      $v1, s_PAR_1080I
+    slti    $v0, $a1, 0x53
+    bnel    $v0, $zero, 2f
+    lw      $v1, s_PAR_720P
+    lw      $v1, s_PAR_576P
 2:
     li      $t0, 1
     sll     $v0, $a2, 1
@@ -111,69 +131,208 @@ GS_Reset:
     sw      $v1, s_GSParams + 24
     sw      $v1, s_GSParams + 28
     lqc2    $vf31, 0($t0)
-    j       SetGsCrt
+    j       SetGsCrtEx
     addu    $sp, $sp, 16
 .end GS_Reset
 
+.ent SetGsCrtEx
+SetGsCrtEx:
+    addiu   $sp, $sp, -32
+    sd      $ra, 0($sp)
+    sd      $s0, 8($sp)
+    addiu   $s0, $a1, -0x53
+    beql    $s0, $zero, 1f
+    ori     $a1, $zero, 0x50
+1:
+    jal     SetGsCrt
+    nop
+    bne     $s0, $zero, 3f
+    nop
+    jal     GS_VSync
+    nop
+.if 1
+    lui	    $v0, 0x1200
+    lui	    $v1, 0x00A9
+    ori	    $v1, $v1, 0x0005
+    dsll	$v1, $v1, 0x10
+    ori	    $v1, $v1, 0x0210
+    dsll	$v1, $v1, 0x10
+    ori	    $v1, $v1, 0x1404
+    ori	    $v0, $v0, 0x0060
+    sd	    $v1, 0x0000($v0)
+.else
+    jal     GetOsdConfigParam
+    addiu   $a0, $sp, 16
+    lw		$a1, 16($sp)    
+	lui		$a3, 0x1200
+	addiu	$a0, $zero, 0x0017
+	dsll	$a0, $a0, 16
+	ori		$a0, $a0, 0x404B
+	dsll	$a0, $a0, 16
+	ori		$a0, $a0, 0x0504
+	ori		$a3, $a3, 0x0010
+	andi	$a1, $a1, 0x0008
+	lui		$v1, 0x1200
+	dsll	$a1, $a1, 22
+	ori		$v1, $v1, 0x0040
+	or		$a0, $a1, $a0
+	lui		$a2, 0x0004
+	ori		$a2, $a2, 0x02e0
+	dsll	$a2, $a2, 16
+	ori		$a2, $a2, 0x2003
+	dsll	$a2, $a2, 16
+	ori		$a2, $a2, 0xc827
+	sd		$a0, 0x0000($a3)
+	lui		$v0, 0x1200
+	sd		$a2, 0x0000($v1)
+	ori		$v0, $v0, 0x0050
+	lui		$a0, 0x0019
+	ori		$a0, $a0, 0xca67
+	lui		$v1, 0x1200
+	sd		$a0, 0x0000($v0)
+	ori		$v1, $v1, 0x0060
+	lui		$a0, 0x00a9
+	dsll	$a0, $a0, 16
+	ori		$a0, $a0, 0x0270
+	dsll	$a0, $a0, 16
+	ori		$a0, $a0, 0x0005
+	lui		$v0, 0x1200
+	sd		$a0, 0x0000($v1)
+	ori		$v0, $v0, 0x0020
+	sd		$zero, 0x0000($v0)
+	lui		$v1, 0x1200
+	ori		$v1, $v1, 0x0030
+	addiu	$v0, $zero, 0x0004
+	addiu	$a0, $zero, 0x0017
+	dsll	$a0, $a0, 16
+	ori		$a0, $a0, 0x4049
+	dsll	$a0, $a0, 16
+	ori		$a0, $a0, 0x0504
+	sd		$v0, 0x0000($v1)
+	or		$a1, $a1, $a0
+    or		$a1, $zero, $a0
+	sd		$a1, 0x0000($a3)
+	li      $a2, 5000000
+2:
+	nop
+	nop
+	addiu   $a2, $a2, -1
+	nop
+	nop
+	bne     $a2, $zero, 2b
+	nop
+.endif
+3:
+    ld      $ra, 0($sp)
+    ld      $s0, 8($sp)
+    jr      $ra
+    addu    $sp, $sp, 32
+.end SetGsCrtEx
+
+# GS_DISPLAY1_DX_O    ( 0)
+# GS_DISPLAY1_DY_O    (12)
+# GS_DISPLAY1_MAGH_O  (23)
+# GS_DISPLAY1_MAGV_O  (27)
+# GS_DISPLAY1_DW_O    (32)
+# GS_DISPLAY1_DH_O    (44)    
+
 .ent GS_InitDC
 GS_InitDC:
-    lhu     $v0, s_GSParams + 2
+    lhu     $v0, s_GSParams + 2 # v0 = m_GSCRTMode
     slti    $v1, $v0, 4
-    move    $t8, $zero
-    move    $t9, $zero
-    bnel    $v1, $zero, 1f
+    sw      $zero, g_XShift
+    move    $t8, $zero  
+    move    $t9, $zero          # switch ( m_GSCRTMode )
+    bnel    $v1, $zero, 1f      #  case PAL/NTSC      : goto 1f
     lhu     $t8, s_GSParams + 0
     li      $v1, 0x50
-    beql    $v0, $v1, 2f
-    li      $v1, 720
+    beql    $v0, $v1, 2f        #  case DTV_720x480P  : goto 2f
+    li      $v1, 1440
+    li      $v1, 0x53
+    beql    $v0, $v1, 2f        #  case DTV_640x576p  : goto 2f
+    li      $v1, 1440
+    li      $v1, 0x51
+    beql    $v0, $v1, 8f        #  case DTV_1920x1080I: goto 8f
+    li      $v1, 1920
+    li      $v1, 0x52
+    beql    $v0, $v1, 9f        #  case DTV_1280x720P : goto 9f
+    li      $v1, 1280
     li      $v1, 0x1A
-    beql    $v0, $v1, 4f
-    addiu   $t0, $t0, 276
+    beql    $v0, $v1, 4f        #  case VESA640x480@60: goto 4f
+    addiu   $t0, $t0, 276 
     li      $v1, 0x1C
-    beql    $v0, $v1, 5f
+    beql    $v0, $v1, 5f        #  case VESA640x480@75: goto 5f
     addiu   $t0, $t0, 356
-    break   7
-4:
+    break   7                   #  default: exception
+4:                              # VESA640x480@60
     beql    $zero, $zero, 6f
     addiu   $t1, $t1, 34
-5:
+5:                              # VESA640x480@75
     addiu   $t1, $t1, 18
-6:
-    lui     $v1, 0x0080
+6:                              # VESA common
+    lui     $v1, 0x0080 
     lui     $t6, 0x001D
     li      $t3, 0xF4FF
     dsll32  $t6, $t6, 0
-    dsll32  $t3, $t3, 0
-    sll     $t1, $t1, 12
+    dsll32  $t3, $t3, 0  
+    sll     $t1, $t1, 12  
     or      $t6, $t6, $t3
     or      $t6, $t6, $v1
     or      $t6, $t6, $t1
     or      $t6, $t6, $t0
     beq     $zero, $zero, 3f
     li      $v1, 640
-2:
-    subu    $v1, $v1, $a2
-    sll     $t0, $t0, 1
-    srl     $v0, $v1, 31
-    addu    $v0, $v0, $v1
-    addiu   $t0, $t0, 232
-    sra     $v0, $v0, 1
-    sll     $t2, $a2, 1
-    sll     $v0, $v0, 1
-    subu    $a3, $a3, 1
+2:                              # DTV_720x480P
+    div     $v1, $a2
+    mflo    $v0
+    subu    $v0, 1
+    sll     $v0, 23             # MAGH
+    addiu   $t0, $t0, 232       # DX = OffsetX + DX
+    or      $v0, $t0, $v0
+    sll     $t2, $a2, 1         # DW * 2
+    subu    $t2, $t2, 1         # DW * 2 - 1
+    subu    $t6, $a3, 1         # DH - 1
+    dsll32  $t2, $t2, 0     
+    dsll32  $t6, $t6, 12  
+    addiu   $t1, $t1, 35        # OffsetY = OffsetY + DY
+    or      $t6, $t6, $t2       # DW_DH
+    sll     $t1, $t1, 12        # DY = OffsetY + 35
+    or      $t6, $t6, $t1       # DW_DH_DY_DX
+    beq     $zero, $zero, 3f 
+    or      $t6, $t6, $v0       # DW_DH_ MAGV_MAGH_DY_DX
+8:                              # DTV_1920x1080I
+    div     $v1, $a2
+    mflo    $v0
+    subu    $v0, 1
+    sw      $v0, g_XShift
+    sllv    $t2, $a2, $v0
+    sll     $v0, 23
+    addiu   $t0, $t0, 238       # DX = OffsetX + DX
+    or      $v0, $t0, $v0
     subu    $t2, $t2, 1
-    addu    $v0, $v0, $t0
-    dsll32  $t6, $a3, 12
-    dsll32  $t2, $t2, 0
-    addiu   $t1, $t1, 35
-    or      $t6, $t6, $t2
-    lui     $v1, 0x0080
-    sll     $t1, $t1, 12
-    or      $t6, $t6, $v1
-    or      $t6, $t6, $t1
+    subu    $t6, $a3, 2
+    dsll32  $t2, $t2, 0    
+    dsll32  $t6, $t6, 12 
+    addiu   $t1, $t1, 40        # OffsetY = OffsetY + DY
+    or      $t6, $t6, $t2       # DW_DH
+    sll     $t1, $t1, 12        # DY = OffsetY + 35
+    or      $t6, $t6, $t1       # DW_DH_DY_DX
+    li      $t8, 1              # interlacing
     beq     $zero, $zero, 3f
-    or      $t6, $t6, $v0
-1:
+    or      $t6, $t6, $v0       # DW_DH_ MAGV_MAGH_DY_DX
+9:                              # DTV_1280x720p
+    addiu   $t0, $t0, 302       # DX = OffsetX + DX
+    subu    $t2, $a2, 1  
+    subu    $t6, $a3, 1
+    dsll32  $t2, $t2, 0
+    dsll32  $t6, $t6, 12
+    addiu   $t1, $t1, 24        # OffsetY = OffsetY + DY
+    or      $t6, $t6, $t2       # DW_DH
+    sll     $t1, $t1, 12        # DY = OffsetY + 35
+    or      $t6, $t6, $t1       # DW_DH_DY_DX
+    beq     $zero, $zero, 3f
+    or      $t6, $t6, $t0
+1:                              # PAL/NTSC
     addiu   $t2, $a2, 2559
     subu    $v0, $v0, 2
     div     $t2, $a2
@@ -185,6 +344,7 @@ GS_InitDC:
     la      $t5, s_OffsetY
     addu    $t5, $t5, $t3
     lhu     $t9, s_GSParams + 4
+    addiu   $a3, $a3, -1
     addu    $t5, $t5, $v0
     and     $v0, $t8, $t9
     sllv    $a3, $a3, $v0
@@ -206,7 +366,7 @@ GS_InitDC:
     addu    $v1, $v1, $t7
     or      $t6, $t6, $a3
     or      $t6, $t6, $v1
-3:
+3:                              # Common for all
     addiu   $v0, $zero, 0x66
     addiu   $a2, $a2, 63
     sra     $a2, $a2, 6
@@ -217,11 +377,11 @@ GS_InitDC:
     or      $t8, $t8, $t9
     or      $a1, $a1, $a2
     movz    $t8, $a3, $t8
-    sd      $v0,  0($a0)
-    sd      $t8,  8($a0)
-    sd      $a1, 16($a0)
-    jr      $ra
-    sd      $t6, 24($a0)
+    sd      $v0,  0($a0)        # store m_PMODE en1-0,en2-1,crtmd-1,alpreg-1,blend-0,alpha-0
+    sd      $t8,  8($a0)        # store m_SMODE2
+    sd      $a1, 16($a0)        # store m_DISPFB
+    jr      $ra 
+    sd      $t6, 24($a0)        # store m_DISPLAY
 .end GS_InitDC
 
 .ent GS_SetDC
@@ -256,10 +416,12 @@ GS_SetDC:
 GS_XYZ :
 _gs_xyz:
     .set noat
+    lw          $at, g_XShift
+    srav        $a0, $a0, $at
     qmfc2       $at, $vf01
     qmtc2       $a1, $vf01
-    sll         $v0, $a0, 4
     vitof0.xyzw $vf01, $vf01
+    sll         $v0, $a0, 4
     mtsah       $zero, -1
     ori         $v1, $zero, 0xFFFF
     vmul.xyzw   $vf01, $vf01, $vf31
@@ -290,6 +452,7 @@ GS_XYZF:
 
 .ent GS_XYZv
 GS_XYZv:
+    .set noat
     lw      $t1, 0($a3)
     lw      $t2, 4($a3)
     lw      $t3, 8($a3)
@@ -300,6 +463,7 @@ GS_XYZv:
     pextlw  $t1, $t1, $t1
     pextlw  $t2, $t2, $t2
     pextlw  $t3, $t3, $t3
+    lw      $at, g_XShift
     qmtc2   $t1, $vf01
     qmtc2   $t2, $vf02
     qmtc2   $t3, $vf03
@@ -322,6 +486,9 @@ GS_XYZv:
     qmfc2   $t2, $vf05
     addu    $a3, $a3, 16
     pinteh  $t2, $t2, $zero
+    bgtzl   $at, 2f
+    psrah   $t1, $t1, 1
+2:
     por     $t1, $t1, $t2
     pextlw  $t3, $zero, $t1
     pextuw  $t1, $zero, $t1
@@ -332,6 +499,7 @@ GS_XYZv:
     bgtz    $a2, 1b
     addu    $a0, $a0, 32
     jr      $ra
+    .set at
 .end GS_XYZv
 
 .ent GS_InitGC
@@ -342,6 +510,9 @@ GS_InitGC:
     movz    $v0, $t3, $v1
     sra     $t3, $v0, 6
     andi    $v0, $a2, 2
+    srl     $t6, $v0, 1
+    sll     $t7, $v0, 26
+    nor     $t7, $t7, $t7
     beqz    $v0, 1f
     move    $t4, $a0
     addiu   $t2, $t0, 63
@@ -365,7 +536,7 @@ GS_InitGC:
     mult    $t5, $t3, $v0
     lui     $v0, 0x1000
     dsll32  $v0, $v0, 0
-    ori     $v0, $v0,0x800B
+    ori     $v0, $v0, 0x800C
     sd      $v0, 0($a1)
     li      $v0, 0x000E
     sd      $v0, 8($a1)
@@ -378,7 +549,7 @@ GS_InitGC:
     addiu   $v0, $t4, 0x004C
     sd      $v0, 24($a1)
     mult    $v0, $t3, $t2
-    lui     $v1, 0x3A00
+    lui     $v1, 0x0A00
     or      $v0, $v0, $v1
     bnez    $t1, 3f
     move    $v1, $v0
@@ -386,6 +557,7 @@ GS_InitGC:
     dsll    $v0, $v0, 17
     or      $v1, $v1, $v0
 3:
+    and     $v1, $v1, $t7
     sd      $v1, 32($a1)
     addiu   $v0, $t4, 0x004E
     sd      $v0, 40($a1)
@@ -408,7 +580,7 @@ GS_InitGC:
     sd      $a0, 96($a1)
     sd      $v0, 104($a1)
     li      $v0, 0x0045
-    sd      $zero, 112($a1)
+    sd      $t6, 112($a1)
     sd      $v0, 120($a1)
     dsll32  $v0, $t1, 0
     dsrl    $v0, $v0, 16
@@ -429,6 +601,14 @@ GS_InitGC:
     addiu   $v0, $t4, 0x0014
     sd      $v1, 176($a1)
     sd      $v0, 184($a1)
+    lui     $v0, 0x4071
+    ori     $v0, 0x2635
+    lui     $v1, 0x7160
+    ori     $v1, 0x3524
+    pextlw  $v1, $v0, $v1
+    li      $v0, 0x0044
+    sd      $v1, 192($a1)
+    sd      $v0, 200($a1)
     jr      $ra
     move    $v0, $t5
 .end GS_InitGC
@@ -437,7 +617,7 @@ GS_InitGC:
 GS_SetGC:
     li  $v1, 0xA000
     b   _gs_send
-    li  $a1, 12
+    li  $a1, 13
 .end GS_SetGC
 
 _gs_send:
@@ -545,6 +725,8 @@ GS_InitLoadImage:
 2:
     sll     $v0, $t4, 1
     addu    $t4, $t4, $v0
+    beq     $zero, $zero, 4f
+    srl     $t4, $t4, 4
 1:
     b       4f
     srl     $t4, $t4, 2
@@ -570,8 +752,11 @@ GS_InitLoadImage:
 4:
     lui     $v0, 0x1000
     ori     $v0, $v0, 0x0007
-    sd      $v0, 0($a0)
-    sd      $zero, 8($a0)
+    sd      $v0, 0($a0)         # m_DMATag1[ 0 ] = DMA_TAG( 7, 0, DMATAG_ID_CNT, 0, 0, 0 );
+    lui     $v0, 0x5000
+    ori     $v0, $v0, 0x0007
+    dsll32  $v0, $v0, 0
+    sd      $v0, 8($a0)         # m_FMATag1[ 1 ] = VIF_DIRECT( 7 )
     lui     $v0, 0x1000
     dsll32  $v0, $v0, 0
     ori     $v0, $v0, 0x0005
@@ -611,11 +796,17 @@ GS_InitLoadImage:
     or      $v0, $v0, $v1
     sd      $v0, 112($a0)
     sd      $zero, 120($a0)
-    dsll32  $v0, $t4, 0
-    dsrl32  $v0, $v0, 0
-    sd      $v0, 128($a0)
+    lui     $v0, 0x3000
+    or      $v0, $v0, $t4
+    sd      $v0, 128($a0)       # m_DMATag2[ 0 ] = DMA_TAG( lQWC, 0, DMATAG_ID_REF, 0, 0, 0 )
+    lui     $v0, 0x5000
+    or      $v0, $v0, $t4
+    dsll32  $v0, $v0, 0
+    sd      $v0, 136($a0)       # m_DMATag2[ 1 ] = VIF_DIRECT( lQWC )
+    lui     $v0, 0x6000
+    sd      $v0, 144($a0)       # m_DMATag3[ 0 ] = DMA_TAG( 0, 0, DMATAG_ID_RET, 0, 0, 0 )
     jr      $ra
-    sd      $zero,136($a0)
+    sd      $zero, 152($a0)     # m_DMATag3[ 1 ] = VIF_NOP()
 .end GS_InitLoadImage
 
 .ent GS_LoadImage
@@ -625,8 +816,7 @@ GS_LoadImage:
     sw      $a1, 132($v0)
     sync
     b       _gs_send_chain
-    li      $v1, 0xA000
-    nop
+    or      $v1, $zero, 0xA000
 .end GS_LoadImage
 
 .ent GS_RRV
@@ -821,14 +1011,14 @@ GS_RenderRoundRect:
     negu    $s2, $t1
     li      $v0, 2
     sw      $v0, 0($sp)
-    li      $fp, 1
+    addiu   $fp, $zero, 1
     addiu   $s0, $a0, 56
     b       2f
     li      $v0, 27
 1:
-    li      $v0, 5
+    li      $v0, 0x45
     sw      $v0, 0($sp)
-    move    $fp, $zero
+    xor     $fp, $fp, $fp
     addiu   $s0, $a0, 64
     li      $v0, 28
 2:
@@ -854,7 +1044,7 @@ GS_RenderRoundRect:
     li      $v0, 16
     sd      $v0, 24($s1)
     lw      $v0, 0($sp)
-    ori     $v1, $v0, 0x40
+    or      $v1, $zero, $v0
     move    $v0, $fp
     ld      $fp, 144($sp)
     dsll    $v0, $v0, 7
@@ -896,18 +1086,90 @@ GS_VSync:
     nop
 .end GS_VSync
 
-.ent GS_TWTH
-GS_TWTH:
-    pnor    $v1, $zero, $zero
-    dsll32  $a1, $a1, 0
-    psrlw   $v1, $v1, 31
-    or      $a0, $a0, $a1
-    psllw   $v0, $v1, 5
-    psubw   $a0, $a0, $v1
-    psubw   $v0, $v0, $v1
-    plzcw   $a0, $a0
-    psubw   $v0, $v0, $a0
-    sw      $v0, 0($a2)
-    dsrl32  $v0, $v0, 0
+.ent GS_L2P
+GS_L2P:
+    .set noat
+    lw          $v0, g_XShift
+    pcpyld      $a1, $zero, $a1
+    qmfc2       $at, $vf01
+    pextlw      $a1, $a3, $a1
+    qmtc2       $a1, $vf01
+    vitof0.xyzw $vf01, $vf01
+    srav        $a0, $a0, $v0
+    dsll32      $v0, $a2, 0
+    mtsah       $zero, -1
+    vmul.xyzw   $vf01, $vf01, $vf31
+    or          $v0, $v0, $a0
+    vftoi0      $vf01, $vf01
+    qmfc2       $a1, $vf01
+    qmtc2       $at, $vf01
+    qfsrv       $a1, $a1, $a1
+    jr          $ra
+    or          $v0, $v0, $a1
+    .set at
+.end GS_L2P
+
+.ent GS_VSync2
+GS_VSync2:
+    .set noat
+    lui     $v0, 0x1001
+    addiu   $v1, $zero, 8
+    sw      $v1, -4096($v0)
+1:
+    lw      $v1, -4096($v0)
+    andi    $v1, $v1, 8
+    beq     $v1, $zero, 1b
+    nop
+    lui     $v0, 0x1200
+    addiu   $v1, $zero, 4
+    nor     $at, $v1, $zero
+1:
+    ld      $a2, 4096($v0)
+    or      $a2, $a2, $v1
+    sd      $a2, 4096($v0)
+2:
+    ld      $a2, 4096($v0)
+    andi    $a3, $a2, 4
+    beq     $a3, $zero, 2b
+    nop
+    and     $a2, $a2, $at
+    addiu   $a0, $a0, -1
+    bgtz    $a0, 1b
+    sd      $a2, 4096($v0)
     jr      $ra
-    sw      $v0, 0($a3)
+    .set at
+.end GS_VSync2
+
+.ent GS_VMode2Index
+GS_VMode2Index:
+    .set noat
+    ori     $t0, $zero, 0x0002  # GSVideoMode_NTSC           - 0
+    ori     $t1, $zero, 0x0003  # GSVideoMode_PAL            - 1
+    ori     $t2, $zero, 0x0050  # GSVideoMode_DTV_720x480P   - 2
+    ori     $t3, $zero, 0x0051  # GSVideoMode_DTV_1920x1080I - 5
+    ori     $t4, $zero, 0x0052  # GSVideoMode_DTV_1280x720P  - 4
+    ori     $t5, $zero, 0x001A  # GSVideoMode_VESA_60Hz      - 6
+    ori     $t6, $zero, 0x001C  # GSVideoMode_VESA_75Hz      - 7
+    ori     $v0, $zero, 0x0008  # GSVideoMode_Default        - 8
+    ori     $at, $zero, 0x0053  # GSVideoMode_DTV_640x576P   - 3
+    beql    $a0, $t0, 1f
+    ori     $v0, $zero, 0       # NTSC
+    beql    $a0, $t1, 1f
+    ori     $v0, $zero, 1       # PAL
+    beql    $a0, $t2, 1f
+    ori     $v0, $zero, 2       # 480p
+    beql    $a0, $t3, 1f
+    ori     $v0, $zero, 5       # 1080i
+    beql    $a0, $t4, 1f
+    ori     $v0, $zero, 4       # 720p
+    beql    $a0, $t5, 1f
+    ori     $v0, $zero, 6       # VESA60Hz
+    beql    $a0, $t6, 1f
+    ori     $v0, $zero, 7       # VESA75Hz
+    beql    $a0, $at, 1f
+    ori     $v0, $zero, 3       # 576p
+1:
+    jr      $ra
+    nop
+    .set at
+.end GS_VMode2Index

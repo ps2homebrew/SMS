@@ -18,6 +18,8 @@
 .globl RC_ReadX
 .globl RC_ReadI
 .globl RC_SetTranslator
+.globl RC_TransPAD
+.globl RC_TransRC
 
 .section ".sbss"
 .align 6
@@ -30,7 +32,7 @@ RC_Translator:  .word   RC_DefTranslator
 
 RC_ReadDummy:
     jr      $ra
-    addu    $v0, $zero, $zero
+    xor     $v0, $v0, $v0
 
 RC_ReadX:
     la      $a0, g_RCData
@@ -62,6 +64,7 @@ RC_ReadI:
     srl     $v0, $v0, 8
 
 RC_DefTranslator:
+_rc_def_translator:
     addiu   $at, $zero, 0x05DF
     andi    $v1, $a0, 0x0FFF
     beql    $v1, $at, 1f
@@ -77,3 +80,57 @@ RC_SetTranslator:
     lw      $v0, RC_Translator
     jr      $ra
     sw      $a0, RC_Translator
+
+RC_TransPAD:
+    pcpyld  $ra, $ra, $ra
+    bgezal  $zero, _rc_def_translator
+    ori     $a1, $zero, 0x97DF
+    ori     $a2, $zero, 0xA7DF
+    ori     $a3, $zero, 0xB7DF
+    ori     $t0, $zero, 0xC7DF
+    beq     $v0, $zero, 1f
+    pcpyud  $ra, $ra, $ra
+    beql    $v0, $a1, 1f
+    xor     $v0, $v0, $v0
+    beql    $v0, $a2, 1f
+    xor     $v0, $v0, $v0
+    beql    $v0, $a3, 1f
+    xor     $v0, $v0, $v0
+    beql    $v0, $t0, 1f
+    xor     $v0, $v0, $v0
+1:
+    jr      $ra
+    nop
+
+RC_TransRC:
+    pcpyld  $ra, $ra, $ra
+    bgezal  $zero, _rc_def_translator
+    or      $a1, $zero, 0x0010
+    or      $a2, $zero, 0x0020
+    or      $a3, $zero, 0x0040
+    or      $t0, $zero, 0x0080
+    beq     $v0, $zero, 1f
+    pcpyud  $ra, $ra, $ra
+    beql    $v0, $a1, 1f
+    xor     $v0, $v0, $v0
+    beql    $v0, $a2, 1f
+    xor     $v0, $v0, $v0
+    beql    $v0, $a3, 1f
+    xor     $v0, $v0, $v0
+    beql    $v0, $t0, 1f
+    xor     $v0, $v0, $v0
+    ori     $a1, $zero, 0x97DF
+    ori     $a2, $zero, 0xA7DF
+    ori     $a3, $zero, 0xB7DF
+    ori     $t0, $zero, 0xC7DF
+    beql    $v0, $a1, 1f
+    ori     $v0, $zero, 0x0010
+    beql    $v0, $a2, 1f
+    ori     $v0, $zero, 0x0040
+    beql    $v0, $a3, 1f
+    ori     $v0, $zero, 0x0080
+    beql    $v0, $t0, 1f
+    ori     $v0, $zero, 0x0020
+1:
+    jr      $ra
+    nop

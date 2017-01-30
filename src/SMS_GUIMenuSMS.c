@@ -3,8 +3,9 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006-2008 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2006 bix64
+# (c) 2007 lior e
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -24,13 +25,18 @@
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
 #include "SMS_RC.h"
+#include "SMS_CDVD.h"
+#include "SMS_GUIClock.h"
+#include "SMS_IOP.h"
+#include "SMS_ioctl.h"
 
 #include <kernel.h>
 #include <malloc.h>
 #include <string.h>
 #include <stdio.h>
 #include <libhdd.h>
-#include <fileXio_rpc.h>
+#include <sys/ioctl.h>
+#include <sifrpc.h>
 
 typedef struct _Sample {
 
@@ -38,7 +44,6 @@ typedef struct _Sample {
 
 } _Sample;
 
-static int        ( *HandleEventBase ) ( GUIObject*, unsigned long );
 static int        s_fHDD;
 static GUIObject* s_pSample;
 
@@ -67,8 +72,9 @@ static void _startnet_handler ( GUIMenu*, int );
 static void _startusb_handler ( GUIMenu*, int );
 static void _starthdd_handler ( GUIMenu*, int );
 static void _editipc_handler  ( GUIMenu*, int );
-static void _netprot_handler  ( GUIMenu*, int );
 static void _cdvd_handler     ( GUIMenu*, int );
+static void _cdvd_spd_handler ( GUIMenu*, int );
+static void _dirbtn_handler   ( GUIMenu*, int );
 
 static void _ip1_handler     ( GUIMenu*, int );
 static void _ip2_handler     ( GUIMenu*, int );
@@ -89,6 +95,7 @@ static void _sound_handler  ( GUIMenu*, int );
 static void _sortfs_handler ( GUIMenu*, int );
 static void _filter_handler ( GUIMenu*, int );
 static void _dsphdl_handler ( GUIMenu*, int );
+static void _usexh_handler  ( GUIMenu*, int );
 static void _hidesp_handler ( GUIMenu*, int );
 static void _abclr_handler  ( GUIMenu*, int );
 static void _ibclr_handler  ( GUIMenu*, int );
@@ -96,12 +103,14 @@ static void _txtclr_handler ( GUIMenu*, int );
 static void _sltxt_handler  ( GUIMenu*, int );
 static void _sclr_handler   ( GUIMenu*, int );
 static void _exit_2_handler ( GUIMenu*, int );
+static void _pwrbtn_handler ( GUIMenu*, int );
 
 static void _autols_handler  ( GUIMenu*, int );
 static void _opaqs_handler   ( GUIMenu*, int );
 static void _dsbt_handler    ( GUIMenu*, int );
 static void _aadsp_handler   ( GUIMenu*, int );
 static void _spdif_handler   ( GUIMenu*, int );
+static void _pdw22_handler   ( GUIMenu*, int );
        void _subclr_handler  ( GUIMenu*, int );
        void _subbclr_handler ( GUIMenu*, int );
        void _subiclr_handler ( GUIMenu*, int );
@@ -117,8 +126,14 @@ static void _sblen_handler   ( GUIMenu*, int );
 static void _sbpos_handler   ( GUIMenu*, int );
 static void _sfonth_handler  ( GUIMenu*, int );
 static void _sfontv_handler  ( GUIMenu*, int );
+static void _smbcs_handler   ( GUIMenu*, int );
 static void _advset_handler  ( GUIMenu*, int );
 static void _disph_handler   ( GUIMenu*, int );
+static void _dispw_handler   ( GUIMenu*, int );
+static void _dispc_handler   ( GUIMenu*, int );
+static void _disps1_handler  ( GUIMenu*, int );
+static void _disps2_handler  ( GUIMenu*, int );
+static void _disps3_handler  ( GUIMenu*, int );
 static void _apply_handler   ( GUIMenu*, int );
 
 static void _enter_sample ( GUIMenu* );
@@ -128,6 +143,14 @@ static void _mp3_handler        ( GUIMenu*, int );
 static void _mp3_rand_handler   ( GUIMenu*, int );
 static void _mp3_repeat_handler ( GUIMenu*, int );
 static void _mp3_asd_handler    ( GUIMenu*, int );
+static void _mp3_adp_handler    ( GUIMenu*, int );
+
+static void _network_handler ( GUIMenu*, int );
+static void _netprot_handler ( GUIMenu*, int );
+static void _smbsrv_handler  ( GUIMenu*, int );
+static void _opmode_handler  ( GUIMenu*, int );
+static void _duplex_handler  ( GUIMenu*, int );
+static void _standt_handler  ( GUIMenu*, int );
 
 static GUIMenuItem s_SMSMenu[] __attribute__(   (  section( ".data" )  )   ) = {
  { 0, &STR_DISPLAY_SETTINGS,     GUICON_DISPLAY, 0, _display_handler,  0, 0 },
@@ -152,16 +175,24 @@ static GUIMenuItem s_DispMenu[] __attribute__(   (  section( ".data" )  )   ) = 
 };
 
 static GUIMenuItem s_AdvDispMenu[] __attribute__(   (  section( ".data" )  )   ) = {
- { MENU_ITEM_TYPE_TEXT, &STR_DISPLAY_HEIGHT,     0, 0, _disph_handler, 0, 0 },
- {                   0, &STR_APPLY_SETTINGS,     0, 0, _apply_handler, 0, 0 }
+ { MENU_ITEM_TYPE_TEXT, &STR_DISPLAY_HEIGHT,     0, 0, _disph_handler,  0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_DISPLAY_WIDTH,      0, 0, _dispw_handler,  0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_COLOR_RESOLUTION,   0, 0, _dispc_handler,  0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_SYNC_PAR_1,         0, 0, _disps1_handler, 0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_SYNC_PAR_2,         0, 0, _disps2_handler, 0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_SYNC_PAR_3,         0, 0, _disps3_handler, 0, 0 },
+ {                   0, &STR_APPLY_SETTINGS,     0, 0, _apply_handler,  0, 0 }
 };
 
-static GUIMenuItem s_DevMenu[ 10 ] __attribute__(   (  section( ".data" )  )   ) = {
- { MENU_ITEM_TYPE_TEXT, &STR_CONTROLLER_SLOT2,  0, 0, _cntslot_handler, 0, 0 },
- {                   0, &STR_AUTOSTART_NETWORK, 0, 0, _autonet_handler, 0, 0 },
- {                   0, &STR_AUTOSTART_USB,     0, 0, _autousb_handler, 0, 0 },
- {                   0, &STR_AUTOSTART_HDD,     0, 0, _autohdd_handler, 0, 0 },
- {                   0, &STR_DISABLE_CDVD,      0, 0, _cdvd_handler,    0, 0 }
+static GUIMenuItem s_DevMenu[ 11 ] __attribute__(   (  section( ".data" )  )   ) = {
+ {                   0, &STR_NETWORK_SETTINGS,    0, 0, _network_handler,  0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_CONTROLLER_SLOT2,    0, 0, _cntslot_handler,  0, 0 },
+ {                   0, &STR_AUTOSTART_NETWORK,   0, 0, _autonet_handler,  0, 0 },
+ {                   0, &STR_AUTOSTART_USB,       0, 0, _autousb_handler,  0, 0 },
+ {                   0, &STR_AUTOSTART_HDD,       0, 0, _autohdd_handler,  0, 0 },
+ {                   0, &STR_DISABLE_CDVD,        0, 0, _cdvd_handler,     0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_CDVD_SPEED,          0, 0, _cdvd_spd_handler, 0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_DIRECTIONAL_BUTTONS, 0, 0, _dirbtn_handler,   0, 0 }
 };
 
 static GUIMenuItem s_IPCMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -181,18 +212,21 @@ static GUIMenuItem s_IPCMenu[] __attribute__(   (  section( ".data" )  )   ) = {
 };
 
 static GUIMenuItem s_BrowserMenu[] __attribute__(   (  section( ".data" )  )   ) = {
- { 0,                     &STR_USE_BACKGROUND_IMAGE, 0, 0, _usebg_handler,  0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_USE_BACKGROUND_IMAGE, 0, 0, _usebg_handler,  0, 0 },
  { 0,                     &STR_SOUND_FX,             0, 0, _sound_handler,  0, 0 },
  { 0,                     &STR_SORT_FS_OBJECTS,      0, 0, _sortfs_handler, 0, 0 },
  { 0,                     &STR_FILTER_MEDIA_FILES,   0, 0, _filter_handler, 0, 0 },
  { 0,                     &STR_DISPLAY_HDL_PART,     0, 0, _dsphdl_handler, 0, 0 },
  { 0,                     &STR_HIDE_SYSTEM_PART,     0, 0, _hidesp_handler, 0, 0 },
+ { 0,                     &STR_USE_XH,               0, 0, _usexh_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_ACTIVE_BORDER_CLR,    0, 0, _abclr_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_INACTIVE_BORDER_CLR,  0, 0, _ibclr_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_TEXT_CLR,             0, 0, _txtclr_handler, 0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_STATUS_LINE_TEXT_CLR, 0, 0, _sltxt_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SEL_BAR_CLR,          0, 0, _sclr_handler,   0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_RESET_BUTTON_ACTION,  0, 0, _pwrbtn_handler, 0, 0 },
  { MENU_ITEM_TYPE_TEXT,   &STR_EXIT_TO,              0, 0, _exit_2_handler, 0, 0 }
+
 };
 
 static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -201,6 +235,7 @@ static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) 
  { 0,                     &STR_OPAQUE_SUBTITLES,    0, 0, _opaqs_handler,   0, 0 },
  { 0,                     &STR_DISPLAY_SB_TIME,     0, 0, _dsbt_handler,    0, 0 },
  { 0,                     &STR_SPDIF_DD,            0, 0, _spdif_handler,   0, 0 },
+ { 0,                     &STR_PULLDOWN22,          0, 0, _pdw22_handler,   0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_COLOR,      0, 0, _subclr_handler,  0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_BOLD_COLOR, 0, 0, _subbclr_handler, 0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_ITL_COLOR,  0, 0, _subiclr_handler, 0, 0 },
@@ -215,14 +250,16 @@ static GUIMenuItem s_PlayerMenu[] __attribute__(   (  section( ".data" )  )   ) 
  { MENU_ITEM_TYPE_TEXT,   &STR_SCROLLBAR_POSITION,  0, 0, _sbpos_handler,   0, 0 },
  { MENU_ITEM_TYPE_TEXT,   &STR_SUBTITLE_OFFSET,     0, 0, _suboff_handler,  _enter_sample, _leave_sample },
  { MENU_ITEM_TYPE_TEXT,   &STR_SUB_FONT_HSIZE,      0, 0, _sfonth_handler,  _enter_sample, _leave_sample },
- { MENU_ITEM_TYPE_TEXT,   &STR_SUB_FONT_VSIZE,      0, 0, _sfontv_handler,  _enter_sample, _leave_sample }
+ { MENU_ITEM_TYPE_TEXT,   &STR_SUB_FONT_VSIZE,      0, 0, _sfontv_handler,  _enter_sample, _leave_sample },
+ { MENU_ITEM_TYPE_TEXT,   &STR_SUBTITLE_MBCS,       0, 0, _smbcs_handler,   0, 0 }
 };
 
 static GUIMenuItem s_MP3Menu[] __attribute__(   (  section( ".data" )  )   ) = {
- { 0, &STR_AUDIO_ANIM_DISPLAY, 0, 0, _aadsp_handler,      0, 0 },
- { 0, &STR_RANDOMIZE_PLAYLIST, 0, 0, _mp3_rand_handler,   0, 0 },
- { 0, &STR_REPEAT_MODE,        0, 0, _mp3_repeat_handler, 0, 0 },
- { 0, &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 }
+ { 0,                   &STR_AUDIO_ANIM_DISPLAY, 0, 0, _aadsp_handler,      0, 0 },
+ { 0,                   &STR_RANDOMIZE_PLAYLIST, 0, 0, _mp3_rand_handler,   0, 0 },
+ { 0,                   &STR_REPEAT_MODE,        0, 0, _mp3_repeat_handler, 0, 0 },
+ { 0,                   &STR_AUDIO_SPECTRUM_DSP, 0, 0, _mp3_asd_handler,    0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_MP3_PARAMETER,      0, 0, _mp3_adp_handler,    0, 0 }
 };
 
 static GUIMenuItem s_HelpMenu[] __attribute__(   (  section( ".data" )  )   ) = {
@@ -264,6 +301,11 @@ static GUIMenuItem s_HelpMenu[] __attribute__(   (  section( ".data" )  )   ) = 
  { 0, &STR_HELP_33, 0, 0, 0, 0, 0 }
 };
 
+static GUIMenuItem s_NetMenu[ 6 ] __attribute__(   (  section( ".data" )  )   ) = {
+ { 0,                   &STR_EDIT_IPCONFIG,    0, 0, _editipc_handler, 0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_NETWORK_PROTOCOL, 0, 0, _netprot_handler, 0, 0 }
+};
+
 static void _Sample_Render ( GUIObject* apObj, int aCtx ) {
 
  if ( !apObj -> m_pGSPacket ) {
@@ -278,7 +320,7 @@ static void _Sample_Render ( GUIObject* apObj, int aCtx ) {
    STR_SAMPLE.m_pStr, lLen, 0, g_GSCtx.m_Height - g_Config.m_PlayerSubOffset, lpDMA, g_Config.m_SubHIncr, g_Config.m_SubVIncr
   );
   GSFont_RenderEx (
-   STR_SAMPLE.m_pStr, lLen, g_GSCtx.m_Width - lWidth, g_GSCtx.m_Height - g_Config.m_PlayerSubOffset, lpDMA + lDWC, g_Config.m_SubHIncr, g_Config.m_SubVIncr
+   STR_SAMPLE.m_pStr, lLen, g_GSCtx.m_Width - lWidth - 96, g_GSCtx.m_Height - g_Config.m_PlayerSubOffset, lpDMA + lDWC, g_Config.m_SubHIncr, g_Config.m_SubVIncr
   );
 
   apObj -> m_pGSPacket = lpDMA;
@@ -289,23 +331,24 @@ static void _Sample_Render ( GUIObject* apObj, int aCtx ) {
 
 }  /* end _Sample_Render */
 
-static void _Sample_Cleanup ( GUIObject* apObj ) {
-
- GSContext_DeleteList ( apObj -> m_pGSPacket );
- apObj -> m_pGSPacket = NULL;
-
-}  /* end _Sample_Cleanup */
-
 static GUIObject* _create_sample ( void ) {
 
  _Sample* retVal = ( _Sample* )calloc (  1, sizeof ( _Sample )  );
 
  retVal -> Render  = _Sample_Render;
- retVal -> Cleanup = _Sample_Cleanup;
+ retVal -> Cleanup = GUIObject_Cleanup;
 
  return ( GUIObject* )retVal;
 
 }  /* end _create_sample */
+
+static void _redraw_sample ( void ) {
+
+ GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
+  GSContext_CallList ( 1, s_pSample -> m_pGSPacket );
+ GSContext_Flush ( 1, GSFlushMethod_KeepLists );
+
+}  /* end _redraw_sample */
 
 static void _setup_dimensions ( GUIMenu* apMenu ) {
 
@@ -314,14 +357,14 @@ static void _setup_dimensions ( GUIMenu* apMenu ) {
 
  lWidth += lWidth / 12;
 
- apMenu -> m_X          = ( g_GSCtx.m_Width  - lWidth  ) >> 1;
- apMenu -> m_Y          = (  ( g_GSCtx.m_Height - lHeight ) >> 1  ) + 8;
- apMenu -> m_Width      = lWidth;
- apMenu -> m_Height     = lHeight;
+ apMenu -> m_X      = ( g_GSCtx.m_Width  - lWidth  ) >> 1;
+ apMenu -> m_Y      = (  ( g_GSCtx.m_Height - lHeight ) >> 1  ) + 8;
+ apMenu -> m_Width  = lWidth;
+ apMenu -> m_Height = lHeight;
 
 }  /* end _setup_dimensions */
 
-static void _update_status ( GUIMenu* apMenu ) {
+void GUIMenuSMS_UpdateStatus ( GUIMenu* apMenu ) {
 
  int           lIdx;
  char          lBuf[ 1024 ];
@@ -347,22 +390,25 @@ static void _update_status ( GUIMenu* apMenu ) {
 
  GUI_Status ( lBuf );
 
-}  /* end _update_status */
+}  /* end GUIMenuSMS_UpdateStatus */
+
+extern int GUIMenu_HandleEvent ( GUIObject*, unsigned long );
 
 int GUIMenuSMS_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
- GUIMenu* lpMenu = ( GUIMenu* )apObj;
+ GUIMenu*      lpMenu  = ( GUIMenu* )apObj;
+ GUIMenuState* lpState = (  ( GUIMenuState* )( unsigned int )lpMenu -> m_pState -> m_pTail -> m_Param  );
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_STOP         :
   case RC_RETURN       :
   case RC_RESET        :
   case SMS_PAD_TRIANGLE: {
 
-   SMS_ListNode* lpNode = lpMenu -> m_pState -> m_pTail;
-   GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpNode -> m_Param;
-
    if ( lpState -> m_pCurr -> Leave ) lpState -> m_pCurr -> Leave ( lpMenu );
+
+   if ( lpState -> HandleEvent ) apObj -> HandleEvent = lpState -> HandleEvent;
 
    if ( !GUI_MenuPopState ( lpMenu )  ) {
 
@@ -379,7 +425,7 @@ int GUIMenuSMS_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
    } else {
 
-    _update_status ( lpMenu );
+    GUIMenuSMS_UpdateStatus ( lpMenu );
     lpMenu -> Redraw ( lpMenu );
 
    }  /* end else */
@@ -388,7 +434,7 @@ int GUIMenuSMS_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  }  /* end switch */
 
- return HandleEventBase ( apObj, anEvent );
+ return GUIMenu_HandleEvent ( apObj, anEvent );
 
 }  /* end GUIMenuSMS_HandleEvent */
 
@@ -397,36 +443,31 @@ void GUIMenuSMS_Redraw ( GUIMenu* apMenu ) {
  if ( apMenu ) apMenu -> Cleanup (  ( GUIObject* )apMenu  );
 
  GUI_Redraw ( GUIRedrawMethod_Redraw );
+ SMS_GUIClockRedraw ();
+
+ if ( apMenu ) GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end GUIMenuSMS_Redraw */
 
-static SMString* s_Charsets[ 4 ] = {
+static SMString* s_Charsets[ 4 ] __attribute__(   (  section( ".data" )  )   ) = {
  &STR_WINLATIN2, &STR_WINCYRILLIC, &STR_WINLATIN1, &STR_WINGREEK
+};
+
+static SMString* s_VModeName[ 9 ] __attribute__(   (  section( ".data" )  )   ) = {
+ &STR_NTSC,     &STR_PAL,       &STR_DTV_480P,   &STR_DTV_576P,
+ &STR_DTV_720P, &STR_DTV_1080I, &STR_VESA_60_HZ, &STR_VESA_75_HZ,
+ &STR_AUTO
 };
 
 static void _update_display_menu ( void ) {
 
- SMString* lpStr;
-
- switch ( g_Config.m_DisplayMode ) {
-
-  case GSVideoMode_NTSC        : lpStr = &STR_NTSC;       break;
-  case GSVideoMode_PAL         : lpStr = &STR_PAL;        break;
-  case GSVideoMode_DTV_720x480P: lpStr = &STR_DTV_480P;   break;
-  case GSVideoMode_VESA_60Hz   : lpStr = &STR_VESA_60_HZ; break;
-  case GSVideoMode_VESA_75Hz   : lpStr = &STR_VESA_75_HZ; break;
-  default                      :
-  case GSVideoMode_Default     : lpStr = &STR_AUTO;       break;
-
- }  /* end switch */
+ SMString* lpStr = s_VModeName[ GS_VMode2Index ( g_Config.m_DisplayMode ) ];
 
  s_DispMenu[ 0 ].m_IconRight = ( unsigned int )lpStr;
  s_DispMenu[ 1 ].m_IconRight = ( unsigned int )s_Charsets[ g_Config.m_DisplayCharset ];
 
  if (  strcmp ( g_Config.m_Language, g_pDefStr ) && ( g_Config.m_BrowserFlags & SMS_BF_UDFL )  )
-
   lpStr = &STR_USER_DEFINED;
-
  else lpStr = &STR_DEFAULT;
 
  s_DispMenu[ 2 ].m_IconRight = ( unsigned int )lpStr;
@@ -445,46 +486,43 @@ static void _display_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pLast  = &s_DispMenu[ sizeof ( s_DispMenu ) / sizeof ( s_DispMenu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_DISPLAY_SETTINGS1;
 
- if ( g_Config.m_DisplayMode == GSVideoMode_DTV_720x480P ||
-      g_Config.m_DisplayMode == GSVideoMode_VESA_60Hz    ||
-      g_Config.m_DisplayMode == GSVideoMode_VESA_75Hz
- ) --lpState -> m_pLast;
-
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _display_handler */
 
+static SMString* s_Speeds[ 3 ] = {
+ &STR_LOW, &STR_MEDIUM, &STR_HIGH
+};
+
 static void _device_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
- unsigned int  lSize   = 4;
+ unsigned int  lSize   = 7;
 
  if ( g_Config.m_NetworkFlags & SMS_DF_GAMEPAD )
-  s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_GAMEPAD;
+  s_DevMenu[ 1 ].m_IconRight = ( unsigned int )&STR_GAMEPAD;
  else if (  ( g_IOPFlags & SMS_IOPF_RMMAN ) && ( g_Config.m_NetworkFlags & SMS_DF_REMOTE )  )
-  s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_REMOTE_CONTROL;
- else s_DevMenu[ 0 ].m_IconRight = ( unsigned int )&STR_NONE;
+  s_DevMenu[ 1 ].m_IconRight = ( unsigned int )&STR_REMOTE_CONTROL;
+ else s_DevMenu[ 1 ].m_IconRight = ( unsigned int )&STR_NONE;
 
- s_DevMenu[ 1 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_NET ? GUICON_ON   : GUICON_OFF;
- s_DevMenu[ 2 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_USB ? GUICON_ON   : GUICON_OFF;
- s_DevMenu[ 3 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_HDD ? GUICON_ON   : GUICON_OFF;
- s_DevMenu[ 4 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_CDVD     ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 2 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_NET ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 3 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_USB ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 4 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_AUTO_HDD ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 5 ].m_IconRight = g_Config.m_NetworkFlags & SMS_DF_CDVD     ? GUICON_ON   : GUICON_OFF;
+ s_DevMenu[ 6 ].m_IconRight = ( unsigned int )s_Speeds[ g_Config.m_CDVDSpeed ];
+ s_DevMenu[ 7 ].m_IconRight = ( unsigned int )( g_Config.m_BrowserFlags & SMS_BF_DIRB ? &STR_REMOTE_CONTROL : &STR_GAMEPAD );
 
- if ( g_IOPFlags & SMS_IOPF_DEV9 ) {
+ if ( g_IOPFlags & SMS_IOPF_DEV9_IS ) {
 
   if (   !(  g_IOPFlags & ( SMS_IOPF_NET | SMS_IOPF_SMB )  )   ) {
-
    s_DevMenu[ ++lSize ].m_pOptionName = &STR_START_NETWORK_NOW;
    s_DevMenu[   lSize ].Handler       = _startnet_handler;
-
   }  /* end if */
 
   if (  !( g_IOPFlags & SMS_IOPF_HDD )  ) {
-
    s_DevMenu[ ++lSize ].m_pOptionName = &STR_START_HDD_NOW;
    s_DevMenu[   lSize ].Handler       = _starthdd_handler;
-
   }  /* end if */
 
  }  /* end if */
@@ -496,27 +534,13 @@ static void _device_handler ( GUIMenu* apMenu, int aDir ) {
 
  }  /* end if */
 
- s_DevMenu[ ++lSize ].m_pOptionName = &STR_EDIT_IPCONFIG;
- s_DevMenu[   lSize ].Handler       = _editipc_handler;
-
- if (  (  g_IOPFlags & SMS_IOPF_SMBINFO                 ) &&
-      !(  g_IOPFlags & ( SMS_IOPF_NET | SMS_IOPF_SMB )  )
- ) {
-
-  s_DevMenu[ ++lSize ].m_pOptionName = &STR_NETWORK_PROTOCOL;
-  s_DevMenu[   lSize ].Handler       = _netprot_handler;
-  s_DevMenu[   lSize ].m_Type        = MENU_ITEM_TYPE_TEXT;
-  s_DevMenu[   lSize ].m_IconRight   = ( unsigned int )(  ( g_Config.m_NetworkFlags & SMS_DF_SMB ) ? &STR_SMB_CIFS : &STR_PS2DEV_HOST );
-
- }  /* end if */
-
  lpState -> m_pItems =
  lpState -> m_pFirst =
  lpState -> m_pCurr  = s_DevMenu;
  lpState -> m_pLast  = &s_DevMenu[ lSize ];
  lpState -> m_pTitle = &STR_DEVICE_SETTINGS1;
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _device_handler */
@@ -525,23 +549,42 @@ static SMString* s_ExitTo[ 3 ] = {
  &STR_BOOT_BROWSER, &STR_EXEC0, &STR_EXEC1
 };
 
+static void _update_skin ( void ) {
+
+ static SMString sl_SkinName;
+
+ if ( !g_Config.m_SkinName[ 0 ] ) {
+  sl_SkinName.m_pStr = STR_NONE.m_pStr;
+  sl_SkinName.m_Len  = STR_NONE.m_Len;
+ } else {
+  sl_SkinName.m_pStr = g_Config.m_SkinName;
+  sl_SkinName.m_Len  = strlen ( g_Config.m_SkinName );
+ }  /* end else */
+
+ s_BrowserMenu[ 0 ].m_IconRight = ( unsigned int )&sl_SkinName;
+
+}  /* end _update_skin */
+
 static void _browser_handler ( GUIMenu* apMenu, int aDir ) {
 
  GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
 
- s_BrowserMenu[  0 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SKIN ? GUICON_ON : GUICON_OFF;
+ _update_skin ();
+
  s_BrowserMenu[  1 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SDFX ? GUICON_ON : GUICON_OFF;
  s_BrowserMenu[  2 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SORT ? GUICON_ON : GUICON_OFF;
  s_BrowserMenu[  3 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_AVIF ? GUICON_ON : GUICON_OFF;
  s_BrowserMenu[  4 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_HDLP ? GUICON_ON : GUICON_OFF;
  s_BrowserMenu[  5 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_SYSP ? GUICON_ON : GUICON_OFF;
- s_BrowserMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserABCIdx;
- s_BrowserMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserIBCIdx;
- s_BrowserMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserTxtIdx;
- s_BrowserMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSBCIdx;
- s_BrowserMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSCIdx;
- s_BrowserMenu[ 11 ].m_IconRight = ( unsigned int )s_ExitTo[ g_Config.m_BrowserFlags >> 28 ];
- s_BrowserMenu[ 11 ].m_Type     |= 112 << 24;
+ s_BrowserMenu[  6 ].m_IconRight = g_Config.m_BrowserFlags & SMS_BF_UXH  ? GUICON_ON : GUICON_OFF;
+ s_BrowserMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserABCIdx;
+ s_BrowserMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserIBCIdx;
+ s_BrowserMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserTxtIdx;
+ s_BrowserMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSBCIdx;
+ s_BrowserMenu[ 11 ].m_IconRight = ( unsigned int )&g_Config.m_BrowserSCIdx;
+ s_BrowserMenu[ 12 ].m_IconRight = ( unsigned int )(  ( g_Config.m_BrowserFlags & SMS_BF_EXIT ) ? &STR_EXIT : &STR_POWER_OFF  );
+ s_BrowserMenu[ 13 ].m_IconRight = ( unsigned int )s_ExitTo[ g_Config.m_BrowserFlags >> 28 ];
+ s_BrowserMenu[ 13 ].m_Type     |= (  GSFont_WidthEx ( STR_EXIT_TO.m_pStr, STR_EXIT_TO.m_Len, -7 ) + 16  ) << 24;
 
  lpState -> m_pItems =
  lpState -> m_pFirst =
@@ -549,7 +592,7 @@ static void _browser_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pLast  = &s_BrowserMenu[ sizeof ( s_BrowserMenu ) / sizeof ( s_BrowserMenu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_BROWSER_SETTINGS1;
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _browser_handler */
@@ -608,14 +651,15 @@ static void _update_pstr ( int anIncr ) {
  switch ( g_Config.m_PlayerSAlign ) {
 
   default:
-  case 0 : lpStr = &STR_CENTER; break;
-  case 1 : lpStr = &STR_LEFT;   break;
-  case 2 : lpStr = &STR_RIGHT;  break;
+  case 0 : lpStr = &STR_CENTER;       break;
+  case 1 : lpStr = &STR_LEFT;         break;
+  case 2 : lpStr = &STR_RIGHT;        break;
+  case 3 : lpStr = &STR_CENTER_RIGHT; break;
 
  }  /* end switch */
 
- s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )lpStr;
- s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
+ s_PlayerMenu[ 14 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 3 ];
 
  if ( g_Config.m_PlayerFlags & SMS_PF_C32 )
   lpStr = &STR_32_BIT;
@@ -623,7 +667,7 @@ static void _update_pstr ( int anIncr ) {
   lpStr = &STR_16_BIT;
  else lpStr = &STR_AUTO;
 
- s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )lpStr;
 
  sprintf (    s_OffsetBuffer, "%d",                  g_Config.m_PlayerSubOffset                                                      );
  sprintf (    s_VolumeBuffer, "%d%%",                ( int )(   (  ( float )g_Config.m_PlayerVolume / 24.0F ) * 100.0F + 0.5F   )    );
@@ -637,11 +681,11 @@ static void _update_pstr ( int anIncr ) {
  g_StrPlayer[ 4 ].m_Len = strlen ( s_SHSizeBuffer );
  g_StrPlayer[ 5 ].m_Len = strlen ( s_SVSizeBuffer );
 
- s_PlayerMenu[ 12 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
- s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
- s_PlayerMenu[ 15 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
- s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
- s_PlayerMenu[ 19 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
+ s_PlayerMenu[ 13 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 0 ];
+ s_PlayerMenu[ 18 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 1 ];
+ s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 2 ];
+ s_PlayerMenu[ 19 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 4 ];
+ s_PlayerMenu[ 20 ].m_IconRight = ( unsigned int )&g_StrPlayer[ 5 ];
 
  switch ( g_Config.m_ScrollBarPos ) {
 
@@ -651,26 +695,53 @@ static void _update_pstr ( int anIncr ) {
 
  }  /* end switch */
 
- s_PlayerMenu[ 16 ].m_IconRight = ( unsigned int )lpStr;
+ s_PlayerMenu[ 17 ].m_IconRight = ( unsigned int )lpStr;
 
 }  /* end _update_pstr */
 
+static void _update_mbf ( void ) {
+
+ static SMString sl_MBFName;
+
+ if ( !g_Config.m_MBFName[ 0 ] ) {
+  sl_MBFName.m_pStr = STR_NONE.m_pStr;
+  sl_MBFName.m_Len  = STR_NONE.m_Len;
+ } else {
+  sl_MBFName.m_pStr = g_Config.m_MBFName;
+  sl_MBFName.m_Len  = strlen ( g_Config.m_MBFName );
+ }  /* end else */
+
+ s_PlayerMenu[ 21 ].m_IconRight = ( unsigned int )&sl_MBFName;
+
+}  /* end _update_mbf */
+
 static void _player_handler ( GUIMenu* apMenu, int aDir ) {
 
- GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
+ GUIMenuState*  lpState = GUI_MenuPushState ( apMenu );
+ unsigned short lVideoMode = GS_Params () -> m_GSCRTMode;
 
  s_PlayerMenu[  1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SUBS  ? GUICON_ON : GUICON_OFF;
  s_PlayerMenu[  2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_OSUB  ? GUICON_ON : GUICON_OFF;
  s_PlayerMenu[  3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_TIME  ? GUICON_ON : GUICON_OFF;
  s_PlayerMenu[  4 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_SPDIF ? GUICON_ON : GUICON_OFF;
- s_PlayerMenu[  5 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
- s_PlayerMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
- s_PlayerMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
- s_PlayerMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
- s_PlayerMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSBCIdx;
- s_PlayerMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerVBCIdx;
+ s_PlayerMenu[  5 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_PDW22 ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[  6 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
+ s_PlayerMenu[  7 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCBIdx;
+ s_PlayerMenu[  8 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCIIdx;
+ s_PlayerMenu[  9 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCUIdx;
+ s_PlayerMenu[ 10 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSBCIdx;
+ s_PlayerMenu[ 11 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerVBCIdx;
+
+ if (  ( lVideoMode == GSVideoMode_PAL ) || ( lVideoMode == GSVideoMode_DTV_640x576P )  ) {
+  s_PlayerMenu[ 5 ].m_Type &= ~MENU_ITEM_HIDDEN;
+  if ( g_Config.m_PlayerFlags & SMS_PF_PDW22 ) s_PlayerMenu[ 4 ].m_Type |= MENU_ITEM_HIDDEN;
+ } else {
+  s_PlayerMenu[ 5 ].m_Type |=  MENU_ITEM_HIDDEN;
+  s_PlayerMenu[ 4 ].m_Type &= ~MENU_ITEM_HIDDEN;
+ }  /* end else */
 
  _update_pstr ( 0 );
+ _update_mbf  ();
 
  lpState -> m_pItems =
  lpState -> m_pFirst =
@@ -678,7 +749,7 @@ static void _player_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pLast  = &s_PlayerMenu[ sizeof ( s_PlayerMenu ) / sizeof ( s_PlayerMenu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_PLAYER_SETTINGS1;
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _player_handler */
@@ -694,7 +765,7 @@ static void _help_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pTitle = &STR_QUICK_HELP;
  lpState -> m_Flags  = MENU_FLAGS_TEXT;
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _help_handler */
@@ -707,7 +778,7 @@ void _save_handler ( GUIMenu* apMenu, int aDir ) {
 
  if ( apMenu )
 
-  _update_status ( apMenu );
+  GUIMenuSMS_UpdateStatus ( apMenu );
 
  else GUI_UpdateStatus ();
 
@@ -715,61 +786,95 @@ void _save_handler ( GUIMenu* apMenu, int aDir ) {
 
 void _shutdown_handler ( GUIMenu* apMenu, int aDir ) {
 
- hddPowerOff ();
+ SMS_IOPowerOff ();
 
 }  /* end _shutdown_handler */
-
+#ifdef EMBEDDED
+void SMS_EExec ( char* );
+__asm__(
+ ".text\n\t"
+ "SMS_EExec:\n\t"
+ "ori   $v1, $zero, 252\n\t"
+ "syscall\n\t"
+);
+#endif  /* EMBEDDED */
 void _exit_handler ( GUIMenu* apMenu, int aDir ) {
 
  int  lIdx = g_Config.m_BrowserFlags >> 28;
  char lBuffer[ 1024 ] __attribute__(   (  aligned( 4 )  )   );
 
- SPU_Shutdown ();
+ SMS_TimerDestroy ();
+ SPU_Shutdown     ();
 
  sprintf ( lBuffer, STR_LOADING.m_pStr, s_ExitTo[ lIdx ] -> m_pStr );
  GUI_Status ( lBuffer );
 
- SMS_TimerDestroy ();
-
- if ( g_PD >= 0 ) {
-
-  *( unsigned int* )&g_CWD[ 0 ] = 0x30736670;
-  *( unsigned int* )&g_CWD[ 4 ] = 0x0000003A;
-  fileXioUmount ( g_CWD );
-
- }  /* end if */
+ if ( g_PD >= 0 ) SMS_IOCtl ( g_pPFS, PFS_IOCTL_UMOUNT, NULL );
 
  if ( !lIdx ) {
-
+#ifdef EMBEDDED
+  if ( g_IOPFlags & SMS_IOPF_DEV9_IS ) SMS_IOCtl ( g_pDEV9X, DEV9CTLSHUTDOWN, NULL );
+#endif  /* EMBEDDED */
   SMS_IOPReset ( 1 );
+#ifndef EMBEDDED
   Exit ( 0 );
+#else
+  SifExitRpc ();
+  __asm__ __volatile__(
+   "ori $v1, $zero, 252\n\t"
+   "syscall\n\t"
+  );
+#endif  /* EMBEDDED */
 
- } else SMS_EExec ( s_ExitTo[ lIdx ] -> m_pStr );
+ } else {
+#ifdef EMBEDDED
+  SifExitRpc ();
+#endif  /* EMBEDDED */
+  SMS_EExec ( s_ExitTo[ lIdx ] -> m_pStr );
+ }  /* end else */
 
 }  /* end _exit_handler */
 
-static void _tvsys_handler ( GUIMenu* apMenu, int aDir ) {
-
- if ( g_Config.m_DisplayMode == GSVideoMode_PAL )
-  g_Config.m_DisplayMode = GSVideoMode_NTSC;
- else if ( g_Config.m_DisplayMode == GSVideoMode_NTSC )
-  g_Config.m_DisplayMode = GSVideoMode_DTV_720x480P;
- else if ( g_Config.m_DisplayMode == GSVideoMode_DTV_720x480P )
-  g_Config.m_DisplayMode = GSVideoMode_VESA_60Hz;
- else if ( g_Config.m_DisplayMode == GSVideoMode_VESA_60Hz )
-  g_Config.m_DisplayMode = GSVideoMode_VESA_75Hz;
- else if ( g_Config.m_DisplayMode == GSVideoMode_VESA_75Hz )
-  g_Config.m_DisplayMode = GSVideoMode_Default;
- else g_Config.m_DisplayMode = GSVideoMode_PAL;
+static void _reinitialize ( GUIMenu* apMenu ) {
 
  GUI_MenuPopState ( apMenu );
+
  _display_handler ( apMenu, 0 );
 
- GUI_Initialize ( 0 );
  apMenu -> Cleanup (  ( GUIObject* )apMenu  );
+ GUI_Initialize ( 0 );
  _setup_dimensions ( apMenu );
  apMenu -> Redraw ( apMenu );
- _update_status ( apMenu );
+ SMS_GUIClockStop ();
+ GUIMenuSMS_UpdateStatus ( apMenu );
+ SMS_GUIClockStart ( &g_Clock );
+
+}  /* end _reinitialize */
+
+static void _tvsys_handler ( GUIMenu* apMenu, int aDir ) {
+
+ static const unsigned char sl_DMode[ 9 ] __attribute__(   (  section( ".rodata" )  )   ) = {
+  GSVideoMode_Default,        GSVideoMode_NTSC,
+  GSVideoMode_PAL,            GSVideoMode_DTV_720x480P,
+  GSVideoMode_DTV_640x576P,   GSVideoMode_DTV_1280x720P,
+  GSVideoMode_DTV_1920x1080I, GSVideoMode_VESA_60Hz,
+  GSVideoMode_VESA_75Hz
+ };
+
+ int i, lDispMode = g_Config.m_DisplayMode;
+
+ for (  i = 0; i < sizeof ( sl_DMode ) / sizeof ( sl_DMode[ 0 ] ); ++i  ) if ( sl_DMode[ i ] == lDispMode ) break;
+
+ i += aDir;
+
+ if ( i < 0 )
+  i = sizeof ( sl_DMode ) / sizeof ( sl_DMode[ 0 ] ) - 1;
+ else if (  i == sizeof ( sl_DMode ) / sizeof ( sl_DMode[ 0 ] )  )
+  i = 0;
+
+ g_Config.m_DisplayMode = sl_DMode[ i ];
+
+ _reinitialize ( apMenu );
 
 }  /* end _tvsys_handler */
 
@@ -788,10 +893,11 @@ static void _charset_handler ( GUIMenu* apMenu, int aDir ) {
  _update_display_menu ();
 
  g_GSCtx.m_CodePage = g_Config.m_DisplayCharset;
- GSFont_Init ();
+ GSFont_Init   ();
+ SMS_IOPSetXLT ();
 
  GUI_Redraw ( GUIRedrawMethod_InitClearObj );
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _charset_handler */
 
@@ -809,7 +915,7 @@ static void _lang_handler ( GUIMenu* apMenu, int aDir ) {
 
   _update_display_menu ();
   GUI_Redraw ( GUIRedrawMethod_InitClearObj );
-  _update_status ( apMenu );
+  GUIMenuSMS_UpdateStatus ( apMenu );
 
  }  /* end if */
 
@@ -834,11 +940,18 @@ void _check_dc_offset ( void ) {
 
 static void _init_set_dc ( void ) {
 
+ int lMode       = g_Config.m_DisplayMode;
+ int lHDI        = lMode == GSVideoMode_DTV_1920x1080I;
+ int lColorDepth = g_Config.m_ColorDepth || lHDI ? GSPixelFormat_PSMCT16
+                                                 : GSPixelFormat_PSMCT24;
+
+ if ( lMode == GSVideoMode_Default ) lMode = g_pBXDATASYS[ 6 ] == 'E' ? GSVideoMode_PAL : GSVideoMode_NTSC;
+
  _check_dc_offset ();
 
  GS_VSync ();
- GS_InitDC ( &g_GSCtx.m_DispCtx, GSPixelFormat_PSMCT32, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, g_GSCtx.m_OffsetX, g_GSCtx.m_OffsetY );
- GS_SetDC ( &g_GSCtx.m_DispCtx, 1 );
+ GS_InitDC ( &g_GSCtx.m_DispCtx, lColorDepth, g_GSCtx.m_PWidth, g_GSCtx.m_PHeight, g_GSCtx.m_OffsetX, g_GSCtx.m_OffsetY );
+ GS_SetDC (  &g_GSCtx.m_DispCtx, ( lMode <= GSVideoMode_PAL ) || lHDI  );
 
 }  /* end _init_set_dc */
 
@@ -873,7 +986,9 @@ void _adjup_handler ( GUIMenu* apMenu, int aDir ) {
 
  _set_dx_dy ( &lpDX, &lpDY );
 
- g_GSCtx.m_OffsetY = *lpDY -= 1;
+ *lpDY += *lpDY & 1;
+
+ g_GSCtx.m_OffsetY = *lpDY -= 2;
  _init_set_dc ();
 
 }  /* end _adjup_handler */
@@ -885,7 +1000,9 @@ void _adjdown_handler ( GUIMenu* apMenu, int aDir ) {
 
  _set_dx_dy ( &lpDX, &lpDY );
 
- g_GSCtx.m_OffsetY = *lpDY += 1;
+ *lpDY += *lpDY & 1;
+
+ g_GSCtx.m_OffsetY = *lpDY += 2;
  _init_set_dc ();
 
 }  /* end _adjdown_handler */
@@ -966,7 +1083,7 @@ setNone:
 
  }  /* end else */
 
- s_DevMenu[ 0 ].m_IconRight = lStr;
+ s_DevMenu[ 1 ].m_IconRight = lStr;
 
  apMenu -> Redraw ( apMenu );
 
@@ -974,30 +1091,30 @@ setNone:
 
 static void _autonet_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 1, &g_Config.m_NetworkFlags, SMS_DF_AUTO_NET );
+ _switch_flag ( apMenu, 2, &g_Config.m_NetworkFlags, SMS_DF_AUTO_NET );
 
 }  /* end _autonet_handler */
 
 static void _autousb_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 2, &g_Config.m_NetworkFlags, SMS_DF_AUTO_USB );
+ _switch_flag ( apMenu, 3, &g_Config.m_NetworkFlags, SMS_DF_AUTO_USB );
 
 }  /* end _autousb_handler */
 
 static void _autohdd_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 3, &g_Config.m_NetworkFlags, SMS_DF_AUTO_HDD );
+ _switch_flag ( apMenu, 4, &g_Config.m_NetworkFlags, SMS_DF_AUTO_HDD );
 
 }  /* end _autohdd_handler */
 
-static int _start_device (  GUIMenu* apMenu, int ( *Start ) ( void )  ) {
+static int _start_device (  GUIMenu* apMenu, int ( *Start ) ( int )  ) {
 
  int retVal;
 
- if (   !(  retVal = Start ()  )   ) {
+ if (   !(  retVal = Start ( 1 )  )   ) {
 
   GUI_Error ( STR_ERROR.m_pStr );
-  _update_status ( apMenu );
+  GUIMenuSMS_UpdateStatus ( apMenu );
 
  } else {
 
@@ -1012,8 +1129,7 @@ static int _start_device (  GUIMenu* apMenu, int ( *Start ) ( void )  ) {
 
 static void _startnet_handler ( GUIMenu* apMenu, int aDir ) {
 
- if (  _start_device ( apMenu, SMS_IOPStartNet ) && ( g_IOPFlags & SMS_IOPF_SMB )  )
-  GUI_PostMessage ( GUI_MSG_MOUNT_BIT | GUI_MSG_LOGIN );
+ _start_device ( apMenu, SMS_IOPStartNet );
 
 }  /* end _startnet_handler */
 
@@ -1094,30 +1210,40 @@ static void _editipc_handler ( GUIMenu* apMenu, int aDir ) {
  for ( j = 0; j < 4; ++j, ++i ) s_IPCMenu[ i ].m_IconRight = ( unsigned int )&s_StrMSK[ j ];
  for ( j = 0; j < 4; ++j, ++i ) s_IPCMenu[ i ].m_IconRight = ( unsigned int )&s_StrGW [ j ];
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _editipc_handler */
 
-static void _netprot_handler ( GUIMenu* apMenu, int aDir ) {
-
- SMS_ListNode* lpNode = apMenu -> m_pState -> m_pTail;
- GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpNode -> m_Param;
-
- if ( g_Config.m_NetworkFlags & SMS_DF_SMB )
-  g_Config.m_NetworkFlags &= ~SMS_DF_SMB;
- else g_Config.m_NetworkFlags |= SMS_DF_SMB;
-
- lpState -> m_pCurr -> m_IconRight = ( unsigned int )(  ( g_Config.m_NetworkFlags & SMS_DF_SMB ) ? &STR_SMB_CIFS : &STR_PS2DEV_HOST );
- apMenu -> Redraw ( apMenu );
-
-}  /* end _netprot_handler */
-
 static void _cdvd_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 4, &g_Config.m_NetworkFlags, SMS_DF_CDVD );
+ _switch_flag ( apMenu, 5, &g_Config.m_NetworkFlags, SMS_DF_CDVD );
 
 }  /* end _cdvd_handler */
+
+static void _cdvd_spd_handler ( GUIMenu* apMenu, int aDir ) {
+
+ int lSpeed = g_Config.m_CDVDSpeed + aDir;
+
+ if ( lSpeed < 0 )
+  lSpeed = 2;
+ else if ( lSpeed > 2 ) lSpeed = 0;
+
+ s_DevMenu[ 6 ].m_IconRight = ( unsigned int )s_Speeds[ g_Config.m_CDVDSpeed = lSpeed ];
+ apMenu -> Redraw ( apMenu );
+ CDVD_SetSpeed ();
+
+}  /* end _cdvd_spd_handler */
+
+static void _dirbtn_handler ( GUIMenu* apMenu, int aDir ) {
+
+ g_Config.m_BrowserFlags ^= SMS_BF_DIRB;
+ s_DevMenu[ 7 ].m_IconRight = ( unsigned int )( g_Config.m_BrowserFlags & SMS_BF_DIRB ? &STR_REMOTE_CONTROL : &STR_GAMEPAD );
+ apMenu -> Redraw ( apMenu );
+
+ SMS_SetDirButtons ();
+
+}  /* end _dirbtn_handler */
 
 static void _roll_ip_number ( GUIMenu* apMenu, char* apStr, int aDir ) {
 
@@ -1248,8 +1374,8 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  SMS_Strcat ( lBuf, s_IP[ i ] );
-  SMS_Strcat ( lBuf, g_DotStr  );
+  strcat ( lBuf, s_IP[ i ] );
+  strcat ( lBuf, g_DotStr  );
 
  }  /* end for */
 
@@ -1260,8 +1386,8 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  SMS_Strcat ( lBuf, s_MSK[ i ] );
-  SMS_Strcat ( lBuf, g_DotStr  );
+  strcat ( lBuf, s_MSK[ i ] );
+  strcat ( lBuf, g_DotStr  );
 
  }  /* end for */
 
@@ -1274,8 +1400,8 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  for ( i = 0; i < 4; ++i ) {
 
-  SMS_Strcat ( lBuf, s_GW[ i ] );
-  SMS_Strcat ( lBuf, g_DotStr  );
+  strcat ( lBuf, s_GW[ i ] );
+  strcat ( lBuf, g_DotStr  );
 
  }  /* end for */
 
@@ -1288,26 +1414,32 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
  strncpy ( lDir, g_pIPConf, 13 );
  lDir[ 13 ] = '\x00';
 
- MC_GetInfo ( 0, 0, &lRes, &lRes, &lRes );
+ MC_GetInfo ( g_MCSlot, 0, &lRes, &lRes, &lRes );
  MC_Sync ( &lRes );
 
  if ( lRes > -2 ) {
 
   SMS_MCTable lTbl __attribute__(   (  aligned( 64 )  )   );
 
-  MC_GetDir ( 0, 0, lDir, 0, 1, &lTbl );
+  MC_GetDir ( g_MCSlot, 0, lDir, 0, 1, &lTbl );
   MC_Sync ( &lRes );
 
-  if (  lRes || !fioMkdir ( lDir )  ) {
+  if ( lRes ) {
 
-   int lFD = fioOpen ( g_pIPConf, O_CREAT | O_WRONLY );
+   lRes = fioMkdir ( lDir );
 
-   if ( lFD >= 0 ) {
+   if ( lRes == 0 || lRes == -4 ) {
 
-    i = strlen ( lBuf );
+    int lFD = fioOpen ( g_pIPConf, O_CREAT | O_WRONLY );
 
-    lSts = fioWrite ( lFD, lBuf, i ) == i;
-    fioClose ( lFD );
+    if ( lFD >= 0 ) {
+
+     i = strlen ( lBuf );
+
+     lSts = fioWrite ( lFD, lBuf, i ) == i;
+     fioClose ( lFD );
+
+    }  /* end if */
 
    }  /* end if */
 
@@ -1317,16 +1449,33 @@ static void _saveipc_handler ( GUIMenu* apMenu, int aDir ) {
 
  if ( !lSts ) GUI_Error ( STR_ERROR.m_pStr );
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _saveipc_handler */
 
 static void _usebg_handler ( GUIMenu* apMenu, int aDir ) {
 
- _switch_flag ( apMenu, 0, &g_Config.m_BrowserFlags, SMS_BF_SKIN );
+ SMS_List*     lpList;
+ SMS_ListNode* lpNode = SMS_ListFind (
+  lpList = g_Config.m_pSkinList, g_Config.m_SkinName
+ );
+
+ if ( !lpNode ) lpNode = lpList -> m_pHead;
+
+ if ( aDir > 0 ) {
+  lpNode = lpNode -> m_pNext;
+  if ( !lpNode ) lpNode = lpList -> m_pHead;
+ } else {
+  lpNode = lpNode -> m_pPrev;
+  if ( !lpNode ) lpNode = lpList -> m_pTail;
+ }  /* end else */
+
+ strcpy (  g_Config.m_SkinName, _STR( lpNode )  );
+
+ _update_skin ();
 
  GUI_Initialize ( 0 );
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _usebg_handler */
 
@@ -1349,7 +1498,7 @@ static void _filter_handler ( GUIMenu* apMenu, int aDir ) {
  g_pFileMenu -> HandleEvent ( g_pFileMenu, GUI_MSG_REFILL_BROWSER );
 
  GUI_Redraw ( GUIRedrawMethod_InitClearObj );
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _filter_handler */
 
@@ -1364,7 +1513,7 @@ static void _apply_hdd_filter ( GUIMenu* apMenu ) {
   g_pFileMenu -> HandleEvent ( g_pFileMenu, GUI_MSG_REFILL_BROWSER );
 
   GUI_Redraw ( GUIRedrawMethod_InitClearObj );
-  _update_status ( apMenu );
+  GUIMenuSMS_UpdateStatus ( apMenu );
 
  }  /* end if */
 
@@ -1384,6 +1533,12 @@ static void _hidesp_handler ( GUIMenu* apMenu, int aDir ) {
 
 } /* end _hidesp_handler */
 
+static void _usexh_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _switch_flag ( apMenu, 6, &g_Config.m_BrowserFlags, SMS_BF_UXH );
+
+}  /* end _usexh_handler */
+
 static void _rotate_palette ( GUIMenu* apMenu, unsigned int* apVal, int aDir ) {
 
  int lVal = *apVal;
@@ -1397,7 +1552,7 @@ static void _rotate_palette ( GUIMenu* apMenu, unsigned int* apVal, int aDir ) {
  *apVal = lVal;
 
  GUI_Redraw ( GUIRedrawMethod_InitClearObj );
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _rotate_palette */
 
@@ -1431,7 +1586,7 @@ static void _txtclr_handler ( GUIMenu* apMenu, int aDir ) {
  GSContext_SetTextColor (  2, ( lColor & 0x00FFFFFF ) | 0x20000000  );
 
  GUI_Redraw ( GUIRedrawMethod_InitClearObj );
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _txtclr_handler */
 
@@ -1450,7 +1605,7 @@ static void _sltxt_handler ( GUIMenu* apMenu, int aDir ) {
  GSContext_SetTextColor ( 0, g_Palette[ g_Config.m_BrowserSBCIdx - 1 ] );
 
  GUI_Redraw ( GUIRedrawMethod_InitClearObj );
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
 
 }  /* end _sltxt_handler */
 
@@ -1461,7 +1616,7 @@ static void _sclr_handler ( GUIMenu* apMenu, int aDir ) {
 }  /* end _sclr_handler */
 
 static void _exit_2_handler ( GUIMenu* apMenu, int aDir ) {
-
+#ifndef EMBEDDED
  int lIndex = g_Config.m_BrowserFlags >> 28;
 
  lIndex += aDir;
@@ -1472,13 +1627,25 @@ static void _exit_2_handler ( GUIMenu* apMenu, int aDir ) {
 
  else if ( lIndex > 2 ) lIndex = 0;
 
- s_BrowserMenu[ 11 ].m_IconRight = ( unsigned int )s_ExitTo[ lIndex ];
+ s_BrowserMenu[ 13 ].m_IconRight = ( unsigned int )s_ExitTo[ lIndex ];
 
  g_Config.m_BrowserFlags &= 0x0FFFFFFF;
  g_Config.m_BrowserFlags |= lIndex << 28;
 
  apMenu -> Redraw ( apMenu );
+#endif  /* EMBEDDED */
+}  /* end _exit_2_handler */
 
+static void _pwrbtn_handler ( GUIMenu* apMenu, int aDir ) {
+#ifndef EMBEDDED
+ unsigned int lFlags = g_Config.m_BrowserFlags ^ SMS_BF_EXIT;
+
+ s_BrowserMenu[ 12 ].m_IconRight = ( unsigned int )(  ( lFlags & SMS_BF_EXIT ) ? &STR_EXIT : &STR_POWER_OFF  );
+
+ g_Config.m_BrowserFlags = lFlags;
+
+ apMenu -> Redraw ( apMenu );
+#endif  /* EMBEDDED */
 }  /* end _exit_2_handler */
 
 static void _autols_handler ( GUIMenu* apMenu, int aDir ) {
@@ -1504,6 +1671,31 @@ static void _spdif_handler ( GUIMenu* apMenu, int aDir ) {
  _switch_flag ( apMenu, 4, &g_Config.m_PlayerFlags, SMS_PF_SPDIF );
 
 }  /* end _spdif_handler */
+
+static void _pdw22_handler ( GUIMenu* apMenu, int aDir ) {
+
+ unsigned int  lIconIdx;
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
+ unsigned int* lpFlag  = &g_Config.m_PlayerFlags;
+ int           lfShow;
+
+ if ( *lpFlag & SMS_PF_PDW22 ) {
+  *lpFlag &= ~SMS_PF_PDW22;
+  lIconIdx = GUICON_OFF;
+  lfShow   = 1;
+ } else {
+  *lpFlag |= SMS_PF_PDW22;
+  lIconIdx = GUICON_ON;
+  lfShow   = 0;
+ }  /* end else */
+
+ lpState -> m_pItems[ 5 ].m_IconRight = lIconIdx;
+
+ GUIMenu_ShowItem ( apMenu, 4, lfShow );
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _pdw22_handler */
 
 static void _rotate_palette_2 ( GUIMenu* apMenu, int* apVal, int aDir ) {
 
@@ -1573,7 +1765,7 @@ static void _clres_handler ( GUIMenu* apMenu, int aDir ) {
  _update_pstr ( 0 );
  apMenu -> Redraw ( apMenu );
 
-}  /* end _vbclr_handler */
+}  /* end _clres_handler */
 
 static void _vol_handler ( GUIMenu* apMenu, int aDir ) {
 
@@ -1590,7 +1782,7 @@ static void _vol_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _salign_handler ( GUIMenu* apMenu, int aDir ) {
 
- g_Config.m_PlayerSAlign = ++g_Config.m_PlayerSAlign & 3;
+ g_Config.m_PlayerSAlign = (  ( g_Config.m_PlayerSAlign + 1 ) % 4  );
 
  _update_pstr ( 0 );
  apMenu -> Redraw ( apMenu );
@@ -1614,6 +1806,7 @@ static void _suboff_handler ( GUIMenu* apMenu, int aDir ) {
  _update_pstr ( 0 );
  s_pSample -> Cleanup ( s_pSample );
  apMenu -> Redraw ( apMenu );
+ _redraw_sample ();
 
 }  /* end _suboff_handler */
 
@@ -1665,7 +1858,7 @@ static void _sbpos_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _sfonth_handler ( GUIMenu* apMenu, int aDir ) {
 
- if ( aDir > 0 && g_Config.m_SubHIncr < 16 )
+ if ( aDir > 0 && g_Config.m_SubHIncr < 48 )
 
   ++g_Config.m_SubHIncr;
 
@@ -1674,12 +1867,13 @@ static void _sfonth_handler ( GUIMenu* apMenu, int aDir ) {
  _update_pstr ( 0 );
  s_pSample -> Cleanup ( s_pSample );
  apMenu -> Redraw ( apMenu );
+ _redraw_sample ();
 
 }  /* end _sfonth_handler */
 
 static void _sfontv_handler ( GUIMenu* apMenu, int aDir ) {
 
- if ( aDir > 0 && g_Config.m_SubVIncr < 16 ) {
+ if ( aDir > 0 && g_Config.m_SubVIncr < 48 ) {
 
   int lDelta = 32 + g_Config.m_SubVIncr;
 
@@ -1692,6 +1886,7 @@ static void _sfontv_handler ( GUIMenu* apMenu, int aDir ) {
  _update_pstr ( 0 );
  s_pSample -> Cleanup ( s_pSample );
  apMenu -> Redraw ( apMenu );
+ _redraw_sample ();
 
 }  /* end _sfontv_handler */
 
@@ -1702,6 +1897,7 @@ static void _enter_sample ( GUIMenu* apMenu ) {
  GUI_AddObject (  STR_SAMPLE.m_pStr, s_pSample = _create_sample ()  );
  g_pActiveNode = lpActiveNode;
  apMenu -> Redraw ( apMenu );
+ _redraw_sample ();
 
 }  /* end _enter_sample */
 
@@ -1715,17 +1911,76 @@ static void _leave_sample ( GUIMenu* apMenu ) {
 
 }  /* end _leave_sample */
 
-static char s_DispHBuff[  4 ] __attribute__(   (  section( ".data" )  )   );
+static void _smbcs_handler ( GUIMenu* apMenu, int aDir ) {
 
-static SMString s_StrAdv = { 0, s_DispHBuff };
+ SMS_List*     lpList;
+ SMS_ListNode* lpNode = SMS_ListFind (
+  lpList = g_Config.m_pMBFList, g_Config.m_MBFName
+ );
+
+ if ( !lpNode ) lpNode = lpList -> m_pHead;
+
+ if ( aDir > 0 ) {
+  lpNode = lpNode -> m_pNext;
+  if ( !lpNode ) lpNode = lpList -> m_pHead;
+ } else {
+  lpNode = lpNode -> m_pPrev;
+  if ( !lpNode ) lpNode = lpList -> m_pTail;
+ }  /* end else */
+
+ strcpy (  g_Config.m_MBFName, _STR( lpNode )  );
+
+ _update_mbf ();
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _smbcs_handler */
+
+static char s_DispHBuff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_DispWBuff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP1Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP2Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP3Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+
+static SMString  s_StrAdvH __attribute__(   (  section( ".data" )  )   ) = { 0, s_DispHBuff };
+static SMString  s_StrAdvW __attribute__(   (  section( ".data" )  )   ) = { 0, s_DispWBuff };
+static SMString  s_StrSyP1 __attribute__(   (  section( ".data" )  )   ) = { 0, s_SynP1Buff };
+static SMString  s_StrSyP2 __attribute__(   (  section( ".data" )  )   ) = { 0, s_SynP2Buff };
+static SMString  s_StrSyP3 __attribute__(   (  section( ".data" )  )   ) = { 0, s_SynP3Buff };
+static SMString* s_ClrRes[ 2 ] __attribute__(   (  section( ".data" )  )   ) = {
+ &STR_32_BIT, &STR_16_BIT
+};
 
 static void _update_advs ( void ) {
 
- int lIdx = GS_Params () -> m_GSCRTMode - 2;
+ int   lIdx = GS_VMode2Index (  GS_Params () -> m_GSCRTMode  );
+ int   lH, lW;
+ short lSP1, lSP2, lSP3;
+ 
+ lW   = g_Config.m_DispWH[ lIdx ][ 0 ];
+ lH   = g_Config.m_DispWH[ lIdx ][ 1 ];
+ lSP1 = g_Config.m_SyncPar[ lIdx ][ 0 ];
+ lSP2 = g_Config.m_SyncPar[ lIdx ][ 1 ];
+ lSP3 = g_Config.m_SyncPar[ lIdx ][ 2 ];
+ 
+ sprintf ( s_DispHBuff, "%d", lH   );
+ sprintf ( s_DispWBuff, "%d", lW   );
+ sprintf ( s_SynP1Buff, "%d", lSP1 );
+ sprintf ( s_SynP2Buff, "%d", lSP2 );
+ sprintf ( s_SynP3Buff, "%d", lSP3 );
 
- sprintf ( s_DispHBuff, "%d", g_Config.m_DispH[ lIdx ] );
+ s_StrAdvH.m_Len = strlen ( s_DispHBuff );
+ s_StrAdvW.m_Len = strlen ( s_DispWBuff );
+ s_StrSyP2.m_Len = strlen ( s_SynP2Buff );
+ s_StrSyP3.m_Len = strlen ( s_SynP3Buff );
 
- s_StrAdv.m_Len = strlen ( s_DispHBuff );
+ if ( lSP1 ) {
+  s_StrSyP1.m_Len  = strlen ( s_SynP1Buff );
+  s_StrSyP1.m_pStr = s_SynP1Buff;
+ } else {
+  s_StrSyP1.m_Len  = STR_AUTO.m_Len;
+  s_StrSyP1.m_pStr = STR_AUTO.m_pStr;
+ }  /* end else */
 
 }  /* end _update_advs */
 
@@ -1741,29 +1996,58 @@ static void _advset_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pLast  = &s_AdvDispMenu[ sizeof ( s_AdvDispMenu ) / sizeof ( s_AdvDispMenu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_ADVANCED_SETTINGS1;
 
- s_AdvDispMenu[ 0 ].m_IconRight = ( unsigned int )&s_StrAdv;
+ s_AdvDispMenu[ 0 ].m_IconRight = ( unsigned int )&s_StrAdvH;
+ s_AdvDispMenu[ 1 ].m_IconRight = ( unsigned int )&s_StrAdvW;
+ s_AdvDispMenu[ 2 ].m_IconRight = ( unsigned int )s_ClrRes[ g_Config.m_ColorDepth ];
+ s_AdvDispMenu[ 3 ].m_IconRight = ( unsigned int )&s_StrSyP1;
+ s_AdvDispMenu[ 4 ].m_IconRight = ( unsigned int )&s_StrSyP2;
+ s_AdvDispMenu[ 5 ].m_IconRight = ( unsigned int )&s_StrSyP3;
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _advset_handler */
 
+static void _dispw_handler ( GUIMenu* apMenu, int aDir ) {
+
+ static int s_lMin[ 8 ] __attribute__(   (  section( ".data" )  )   ) = { 640, 640, 640, 640, 1090, 1400, 640, 640 };
+ static int s_lMax[ 8 ] __attribute__(   (  section( ".data" )  )   ) = { 720, 720, 720, 720, 1190, 1830, 720, 720 };
+
+ int lIdx = GS_VMode2Index (  GS_Params () -> m_GSCRTMode  );
+ int lWidth;
+
+ lWidth = g_Config.m_DispWH[ lIdx ][ 0 ] + aDir;
+
+ if ( lWidth > s_lMax[ lIdx ] )
+  lWidth = s_lMax[ lIdx ];
+ else if ( lWidth < s_lMin[ lIdx ] )
+  lWidth = s_lMin[ lIdx ];
+
+ g_Config.m_DispWH[ lIdx ][ 0 ] = lWidth;
+
+ _update_advs ();
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _dispw_handler */
+
 static void _disph_handler ( GUIMenu* apMenu, int aDir ) {
 
- static int lMin[ 2 ] __attribute__(   (  section( ".data" )  )   ) = { 416, 448 };
- static int lMax[ 2 ] __attribute__(   (  section( ".data" )  )   ) = { 480, 576 };
+ static int s_lMin[ 8 ] __attribute__(   (  section( ".data" )  )   ) = { 416, 448, 480, 512, 630,  790, 480, 480 };
+ static int s_lMax[ 8 ] __attribute__(   (  section( ".data" )  )   ) = { 480, 576, 576, 592, 830, 1024, 576, 576 };
 
- int lIdx    = GS_Params () -> m_GSCRTMode - 2;
- int lHeight = g_Config.m_DispH[ lIdx ] += aDir;
+ int lIdx = GS_VMode2Index (  GS_Params () -> m_GSCRTMode   );
+ int lHeight;
 
- if ( lHeight < lMin[ lIdx ] )
+ lHeight = g_Config.m_DispWH[ lIdx ][ 1 ] + aDir;
 
-  lHeight = lMin[ lIdx ];
+ if ( lHeight > s_lMax[ lIdx ] )
+  lHeight = s_lMax[ lIdx ];
+ else if ( lHeight < s_lMin[ lIdx ] )
+  lHeight = s_lMin[ lIdx ];
 
- else if ( lHeight > lMax[ lIdx ] ) lHeight = lMax[ lIdx ];
-
- g_Config.m_DispH[ lIdx ] = lHeight;
- g_Config.m_PAR  [ lIdx ] = ( float )lHeight / 480.0F;
+ g_Config.m_DispWH[ lIdx ][ 1 ] = lHeight;
+ g_Config.m_PAR[ lIdx ]         = ( float )lHeight / 480.0F;
 
  _update_advs ();
 
@@ -1771,12 +2055,82 @@ static void _disph_handler ( GUIMenu* apMenu, int aDir ) {
 
 }  /* end _disph_handler */
 
+static void _dispc_handler ( GUIMenu* apMenu, int aDir ) {
+
+ g_Config.m_ColorDepth = ( g_Config.m_ColorDepth + aDir ) & 1;
+
+ s_AdvDispMenu[ 2 ].m_IconRight = ( unsigned int )s_ClrRes[ g_Config.m_ColorDepth ];
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _dispc_handler */
+
+short g_MaxSyncVal[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
+ 263, 312, 525, 576, 750, 563, 525, 500
+};
+
+static void SMS_INLINE _verify_sp ( int anIdx, short* apVal ) {
+
+ if ( apVal[ 0 ] < 0 )
+  apVal[ 0 ] = g_MaxSyncVal[ anIdx ];
+ else if ( apVal[ 0 ] > g_MaxSyncVal[ anIdx ] )
+  apVal[ 0 ] = 0;
+
+}  /* end _verify_sp */
+
+static void _update_sp ( GUIMenu* apMenu, int aDir, int anIdx ) {
+
+ short* lpVal;
+ short  lVal;
+ int    lIdx = GS_VMode2Index (  GS_Params () -> m_GSCRTMode  );
+
+ lpVal  = &g_Config.m_SyncPar[ lIdx ][ anIdx ];
+ lVal   = *lpVal;
+ lVal  += aDir;
+ *lpVal = lVal;
+
+ _verify_sp ( lIdx, lpVal );
+ _update_advs ();
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _update_sp */
+
+static void _disps1_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _update_sp ( apMenu, aDir, 0 );
+
+}  /* end _disps1_handler */
+
+static void _disps2_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _update_sp ( apMenu, aDir, 1 );
+
+}  /* end _disps2_handler */
+
+static void _disps3_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _update_sp ( apMenu, aDir, 2 );
+
+}  /* end _disps2_handler */
+
 static void _apply_handler ( GUIMenu* apMenu, int aDir ) {
 
- GUI_Initialize ( 0 );
- _update_status ( apMenu );
+ GUI_MenuPopState ( apMenu );
+
+ _reinitialize ( apMenu );
 
 }  /* end _apply_handler */
+
+static char     s_MP3DPS[ 3 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static SMString s_StrMP3DPS = { 0, s_MP3DPS };
+
+static void _mp3_update_dps ( void ) {
+
+ sprintf ( s_MP3DPS, g_pPercDStr, g_Config.m_MP3AutoPar );
+ s_StrMP3DPS.m_Len = strlen ( s_MP3DPS );
+
+}  /* end _mp3_update_dps */
 
 static void _mp3_handler ( GUIMenu* apMenu, int aDir ) {
 
@@ -1788,12 +2142,15 @@ static void _mp3_handler ( GUIMenu* apMenu, int aDir ) {
  lpState -> m_pLast  = &s_MP3Menu[ sizeof ( s_MP3Menu ) / sizeof ( s_MP3Menu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_MP3_SETTINGS;
 
+ _mp3_update_dps ();
+
  s_MP3Menu[ 0 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ANIM  ? GUICON_ON : GUICON_OFF;
  s_MP3Menu[ 1 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_RAND  ? GUICON_ON : GUICON_OFF;
  s_MP3Menu[ 2 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_REP   ? GUICON_ON : GUICON_OFF;
  s_MP3Menu[ 3 ].m_IconRight = g_Config.m_PlayerFlags & SMS_PF_ASD   ? GUICON_ON : GUICON_OFF;
+ s_MP3Menu[ 4 ].m_IconRight = ( unsigned int )&s_StrMP3DPS;
 
- _update_status ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
  apMenu -> Redraw ( apMenu );
 
 }  /* end _mp3_handler */
@@ -1822,12 +2179,199 @@ static void _mp3_asd_handler ( GUIMenu* apMenu, int aDir ) {
 
 }  /* end _mp3_asd_handler */
 
+static void _mp3_adp_handler ( GUIMenu* apMenu, int aDir ) {
+
+ ( char )g_Config.m_MP3AutoPar += aDir;
+
+ if (  ( char )g_Config.m_MP3AutoPar > 99  )
+  g_Config.m_MP3AutoPar = 1;
+ else if (  ( char )g_Config.m_MP3AutoPar < 1  ) g_Config.m_MP3AutoPar = 99;
+
+ _mp3_update_dps ();
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _mp3_adp_handler */
+
+static void _build_net_menu ( GUIMenu* );
+
+static void _netprot_handler ( GUIMenu* apMenu, int aDir ) {
+
+ if ( g_IOPFlags & SMS_IOPF_SMBINFO ) {
+
+  SMS_ListNode* lpNode = apMenu -> m_pState -> m_pTail;
+  GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpNode -> m_Param;
+
+  if ( g_Config.m_NetworkFlags & SMS_DF_SMB )
+   g_Config.m_NetworkFlags &= ~SMS_DF_SMB;
+  else g_Config.m_NetworkFlags |= SMS_DF_SMB;
+
+  lpState -> m_pCurr -> m_IconRight = ( unsigned int )(  ( g_Config.m_NetworkFlags & SMS_DF_SMB ) ? &STR_SMB_CIFS : &STR_PS2DEV_HOST );
+
+  _build_net_menu ( apMenu );
+  apMenu -> Redraw ( apMenu );
+
+ }  /* end if */
+
+}  /* end _netprot_handler */
+
+static void _update_opmode ( GUIMenu* apMenu ) {
+
+ SMString*     lpStr;
+ int           lMode   = ( g_Config.m_NetworkFlags >> 8 ) & 3;
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
+
+ switch ( lMode ) {
+
+  case 0 : lpStr = &STR_AUTONEGOTIATION; break;
+  case 1 : lpStr = &STR_AUTOMATIC;       break;
+  default: lpStr = &STR_MANUAL;          break;
+
+ }  /* end switch */
+
+ lpState -> m_pLast = lMode == 2 ? &s_NetMenu[ lpState -> m_Count - 1 ]
+                                 : &s_NetMenu[ lpState -> m_Count - 3 ];
+
+ s_NetMenu[ lpState -> m_Count - 3 ].m_IconRight = ( unsigned int )lpStr;
+
+}  /* end _update_opmode */
+
+static void _update_dup_mode ( GUIMenu* apMenu ) {
+
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
+
+ s_NetMenu[ lpState -> m_Count - 2 ].m_IconRight = ( unsigned int )( g_Config.m_NetworkFlags & SMS_DF_HALF ? &STR_HALF : &STR_FULL );
+
+}  /* end _update_dup_mode */
+
+static void _update_standard ( GUIMenu* apMenu ) {
+
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
+
+ s_NetMenu[ lpState -> m_Count - 1 ].m_IconRight = ( unsigned int )( g_Config.m_NetworkFlags & SMS_DF_10 ? &STR_10_BASE_T : &STR_100_BASE_TX );
+
+}  /* end _update_standard */
+
+static void _build_net_menu ( GUIMenu* apMenu ) {
+
+ int           lIdx    = 2;
+ GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )apMenu -> m_pState -> m_pTail -> m_Param;
+
+ lpState -> m_Count = 5;
+
+ if ( g_Config.m_NetworkFlags & SMS_DF_SMB ) {
+  s_NetMenu[ 2 ].m_Type        = 0;
+  s_NetMenu[ 2 ].m_pOptionName = &STR_SMB_SERVER;
+  s_NetMenu[ 2 ].m_IconLeft    = 0;
+  s_NetMenu[ 2 ].m_IconRight   = 0;
+  s_NetMenu[ 2 ].Handler       = _smbsrv_handler;
+  s_NetMenu[ 2 ].Enter         = NULL;
+  s_NetMenu[ 2 ].Leave         = NULL;
+  lpState -> m_Count = 6;
+  ++lIdx;
+ }  /* end if */
+
+ s_NetMenu[ lIdx   ].m_Type        = MENU_ITEM_TYPE_TEXT;
+ s_NetMenu[ lIdx   ].m_pOptionName = &STR_OPERATING_MODE;
+ s_NetMenu[ lIdx   ].m_IconLeft    = 0;
+ s_NetMenu[ lIdx   ].m_IconRight   = 0;
+ s_NetMenu[ lIdx   ].Handler       = _opmode_handler;
+ s_NetMenu[ lIdx   ].Enter         = NULL;
+ s_NetMenu[ lIdx++ ].Leave         = NULL;
+
+ s_NetMenu[ lIdx   ].m_Type        = MENU_ITEM_TYPE_TEXT;
+ s_NetMenu[ lIdx   ].m_pOptionName = &STR_DUPLEX_MODE;
+ s_NetMenu[ lIdx   ].m_IconLeft    = 0;
+ s_NetMenu[ lIdx   ].m_IconRight   = 0;
+ s_NetMenu[ lIdx   ].Handler       = _duplex_handler;
+ s_NetMenu[ lIdx   ].Enter         = NULL;
+ s_NetMenu[ lIdx++ ].Leave         = NULL;
+
+ s_NetMenu[ lIdx ].m_Type        = MENU_ITEM_TYPE_TEXT;
+ s_NetMenu[ lIdx ].m_pOptionName = &STR_STANDARD;
+ s_NetMenu[ lIdx ].m_IconLeft    = 0;
+ s_NetMenu[ lIdx ].m_IconRight   = 0;
+ s_NetMenu[ lIdx ].Handler       = _standt_handler;
+ s_NetMenu[ lIdx ].Enter         = NULL;
+ s_NetMenu[ lIdx ].Leave         = NULL;
+
+ _update_opmode ( apMenu );
+ _update_dup_mode ( apMenu );
+ _update_standard ( apMenu );
+
+}  /* end _build_net_menu */
+
+static void _network_handler ( GUIMenu* apMenu, int aDir ) {
+
+ GUIMenuState* lpState = GUI_MenuPushState ( apMenu );
+
+ lpState -> m_pItems =
+ lpState -> m_pFirst =
+ lpState -> m_pCurr  = s_NetMenu;
+ lpState -> m_pTitle = &STR_NETWORK_SETTINGS1;
+
+ s_NetMenu[ 1 ].m_IconRight = ( unsigned int )(  ( g_Config.m_NetworkFlags & SMS_DF_SMB ) ? &STR_SMB_CIFS : &STR_PS2DEV_HOST );
+
+ _build_net_menu ( apMenu );
+ GUIMenuSMS_UpdateStatus ( apMenu );
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _network_handler */
+
+static void _opmode_handler ( GUIMenu* apMenu, int aDir ) {
+
+ int lMode = ( g_Config.m_NetworkFlags >> 8 ) & 3;
+
+ lMode += aDir;
+
+ if ( lMode < 0 )
+  lMode = 2;
+ else if ( lMode > 2 )
+  lMode = 0;
+
+ lMode <<= 8;
+
+ g_Config.m_NetworkFlags &= 0xFFFFFCFF;
+ g_Config.m_NetworkFlags |= lMode;
+
+ _update_opmode ( apMenu );
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _opmode_handler */
+
+static void _duplex_handler ( GUIMenu* apMenu, int aDir ) {
+
+ g_Config.m_NetworkFlags ^= SMS_DF_HALF;
+
+ _update_dup_mode ( apMenu );
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _duplex_handler */
+
+static void _standt_handler ( GUIMenu* apMenu, int aDir ) {
+
+ g_Config.m_NetworkFlags ^= SMS_DF_10;
+
+ _update_standard ( apMenu );
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _standt_handler */
+
+extern void _smb_menu ( GUIMenu* );
+
+static void _smbsrv_handler ( GUIMenu* apMenu, int aDir ) {
+
+ _smb_menu ( apMenu );
+
+}  /* end _smbsrv_handler */
+
 GUIObject* GUI_CreateMenuSMS ( void ) {
 
  GUIMenu*      retVal  = ( GUIMenu* )GUI_CreateMenu ();
  GUIMenuState* lpState;
-
- HandleEventBase = retVal -> HandleEvent;
 
  retVal -> m_Color      = 0x78301010UL;
  retVal -> HandleEvent  = GUIMenuSMS_HandleEvent;
@@ -1842,7 +2386,7 @@ GUIObject* GUI_CreateMenuSMS ( void ) {
  lpState -> m_pLast  = &s_SMSMenu[ sizeof ( s_SMSMenu ) / sizeof ( s_SMSMenu[ 0 ] ) - 1 ];
  lpState -> m_pTitle = &STR_SMS_MENU;
 
- _update_status ( retVal );
+ GUIMenuSMS_UpdateStatus ( retVal );
  _setup_dimensions (  ( GUIMenu* )retVal  );
 
  s_fHDD = 0;

@@ -4758,9 +4758,9 @@ void SMS_Codec_MP123_Open ( SMS_CodecContext* apCtx ) {
  apCtx -> m_pCodec -> Decode  = MP123_Decode;
  apCtx -> m_pCodec -> Destroy = MP123_Destroy;
 
- memcpy (  ( void* )0x11000520, s_VU0Mpg0, sizeof ( s_VU0Mpg0 )  );
- memcpy (  ( void* )0x11000680, s_VU0Mpg1, sizeof ( s_VU0Mpg1 )  );
- memcpy (  ( void* )0x11000920, s_VU0Mpg2, sizeof ( s_VU0Mpg2 )  );
+ memcpy (  ( void* )0x11000560, s_VU0Mpg0, sizeof ( s_VU0Mpg0 )  );
+ memcpy (  ( void* )0x110006C0, s_VU0Mpg1, sizeof ( s_VU0Mpg1 )  );
+ memcpy (  ( void* )0x11000960, s_VU0Mpg2, sizeof ( s_VU0Mpg2 )  );
 
 }  /* end SMS_Codec_MP123_Open */
 
@@ -4937,11 +4937,11 @@ static void _mp1_decode_frame ( SMS_RingBuffer* apRB ) {
  unsigned int lBAlloc[ 64 ];
  unsigned int lScaleIdx[ 2 ][ 32 ];
  int          lnAlloc   = lStereo * 768;
- short*       lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 68 );
+ short*       lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 80 );
 
  lpSamples += 32;
  *( int* )lpSamples = lnAlloc;
- lpSamples += 2;
+ lpSamples += 8;
 
  g_MPACtx.m_JSBound = g_MPACtx.m_Info.m_Mode == SMS_MPA_JSTEREO ?
   ( g_MPACtx.m_Info.m_ModeExt << 2 ) + 4 : 32;
@@ -5229,11 +5229,11 @@ static void _mp2_decode_frame ( SMS_RingBuffer* apRB ) {
  unsigned int   lBitAlloc[ 64 ];
  int            lScale   [ 192 ];
  int            lnAlloc   = g_MPACtx.m_Info.m_nChannels * 2304;
- short*         lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 68 );
+ short*         lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 80 );
 
  lpSamples += 32;
  *( int* )lpSamples = lnAlloc;
- lpSamples += 2;
+ lpSamples += 8;
 
  _mp2_select_table ();
 
@@ -6405,11 +6405,11 @@ static void _mp3_decode_frame ( SMS_RingBuffer* apRB ) {
 
  lnGran    = g_MPACtx.m_Info.m_LSF ? 1 : 2;
  lnAlloc   = lnGran * g_MPACtx.m_Info.m_nChannels * 1152;
- lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 68 );
+ lpSamples = ( short* )SMS_RingBufferAlloc ( apRB, lnAlloc + 80 );
 
  lpSamples += 32;
  *( int* )lpSamples = lnAlloc;
- lpSamples += 2;
+ lpSamples += 8;
 
  if (  !_mp3_get_side_info (
          &lSI, g_MPACtx.m_Info.m_nChannels, lMStereo,
@@ -6518,7 +6518,7 @@ int32_t MP123_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_Ri
   _mp3_decode_frame
  };
 
- SMS_AVPacket* lpPck = ( SMS_AVPacket*   )apInput -> m_pOut;
+ SMS_AVPacket* lpPck = ( SMS_AVPacket* )apInput -> m_pOut;
  uint8_t*      lpBuf;
  uint32_t      lHdr;
  int           lLen;

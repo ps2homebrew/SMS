@@ -15,6 +15,14 @@
 #  include "SMS_Container.h"
 # endif  /* __SMS_Container_H */
 
+# define SMS_SUBCONTAINER_M4A  0
+# define SMS_SUBCONTAINER_OGG  1
+# define SMS_SUBCONTAINER_ASF  2
+# define SMS_SUBCONTAINER_FLAC 3
+# define SMS_SUBCONTAINER_AAC  4
+# define SMS_SUBCONTAINER_AC3  5
+# define SMS_SUBCONTAINER_MP3  6
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */

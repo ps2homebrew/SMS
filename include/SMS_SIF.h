@@ -20,7 +20,6 @@ extern "C" {
 # endif  /* __cplusplus */
 
 int SIF_BindRPC ( SifRpcClientData_t*, int );
-int SIF_SyncIOP ( void                     );
 
 # ifdef __cplusplus
 }

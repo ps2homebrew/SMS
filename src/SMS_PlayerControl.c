@@ -28,6 +28,10 @@
 #include "SMS_RC.h"
 #include "SMS_MPEG.h"
 #include "SMS_MPEG12.h"
+#include "SMS_FileDir.h"
+#include "SMS_CDVD.h"
+#include "SMS_CDDA.h"
+#include "SMS_PgInd.h"
 
 #include <kernel.h>
 #include <stdio.h>
@@ -38,8 +42,9 @@
 
 static char s_TimeFmt[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "0:00:00";
 
-static uint64_t  s_IntTime;
 static int       s_VCDY;
+static uint64_t  s_VCXY;
+static uint64_t  s_SBXY;
 static uint64_t* s_pPTS;
 static uint64_t* s_pSts  [ 5 ];
 static int       s_StsQWC[ 5 ];
@@ -52,13 +57,19 @@ static uint64_t* s_pDelta;
 static int       s_DeltaX;
 static unsigned  s_SBY1;
 static unsigned  s_SBY2;
+static uint64_t* s_pLangOSD;
 
 static SMS_List*     s_pLang;
 static SMS_ListNode* s_pCurLang;
 static SMS_List*     s_pSubLang;
 static SMS_ListNode* s_pCurSubLang;
+static GUIObject*    s_pInfo;
 
 extern SMS_Player s_Player;
+
+extern GUIObject* SMS_GUInfo       ( SMS_Container* );
+extern void       SMS_GUInfoDelete ( GUIObject**    );
+extern void       IPU_EraseSub     ( void           );
 
 static float s_Speaker[ 48 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   ) = {
  0.2380952F, 0.1904760F, 0.0000000F, 0.0476192F,
@@ -131,11 +142,11 @@ static void* s_pTimerOSDHandlers[ 3 ] = {
 
 static void TimerHandler ( void* apArg ) {
 
- g_IPUCtx.iQueuePacket ( 10, g_VCErase );
+ s_Player.m_Flags &= ~SMS_FLAGS_DISPCTL;
 
 }  /* end TimerHandler */
 
-static void _FormatTime ( char* apBuf, uint64_t aTime ) {
+void PlayerControl_FormatTime ( char* apBuf, uint64_t aTime ) {
 
  int lS = ( int )( aTime / SMS_TIME_BASE );
  int lM = lS / 60;
@@ -146,7 +157,7 @@ static void _FormatTime ( char* apBuf, uint64_t aTime ) {
 
  sprintf ( apBuf, "%1d:%02d:%02d", lH, lM, lS );
 
-}  /* end _FormatTime */
+}  /* end PlayerControl_FormatTime */
 
 static void _create_status ( SMString* apStr, int anIdx ) {
 
@@ -163,7 +174,6 @@ static void _sb_init ( void ) {
  int       lX = g_GSCtx.m_Width - 30;
  int       lY = g_Config.m_ScrollBarPos == SMScrollBarPos_Top ? 10 : g_GSCtx.m_Height - 30;
  uint64_t* lpPaint;
- uint64_t* lpErase;
 
  __asm__ __volatile__(
   ".set noreorder\n\t"
@@ -187,31 +197,17 @@ static void _sb_init ( void ) {
  lX <<= 4;
 
  lpPaint = _U( g_SCPaint );
- lpErase = _U( g_SCErase );
 
- lpPaint[ 0 ] =                                                                                             lpErase[ 0 ] = 0;
- lpPaint[ 1 ] = VIF_DIRECT(     (    (   (  ( g_Config.m_ScrollBarNum * 2 ) + 18  ) / 2   ) - 1    )     ); lpErase[ 1 ] = VIF_DIRECT( 7 );
+ lpPaint[ 0 ] = 0;
+ lpPaint[ 1 ] = VIF_DIRECT(     (    (   (  ( g_Config.m_ScrollBarNum * 2 ) + 8  ) / 2   ) - 1    )     );
+ lpPaint[ 2 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ lpPaint[ 3 ] = GS_RGBAQ | ( GS_PRIM << 4 );
+ lpPaint[ 4 ] = g_Palette[ g_Config.m_PlayerSBCIdx - 1 ];
+ lpPaint[ 5 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
+ lpPaint[ 6 ] = GIF_TAG(  g_Config.m_ScrollBarNum, 1, 0, 0, 1, 2  );
+ lpPaint[ 7 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
 
- lpPaint[ 2 ] = lpErase[ 2 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 );
- lpPaint[ 3 ] = lpErase[ 3 ] = GIFTAG_REGS_AD;
- lpPaint[ 4 ] = lpErase[ 4 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 1 );
- lpPaint[ 5 ] = lpErase[ 5 ] = GS_TEST_1;
-
- lpPaint[ 6 ] = lpErase[ 6 ] = GIF_TAG( 1, 0, 0, 0, 1, 4 );
- lpPaint[ 7 ] = lpErase[ 7 ] = GS_RGBAQ | ( GS_PRIM << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 );
- lpPaint[ 8 ] = lpErase[ 8 ] = g_Palette[ g_Config.m_PlayerSBCIdx - 1 ];
- lpPaint[ 9 ] = lpErase[ 9 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
-
- lpPaint[ 10 ] = lpErase[ 10 ] = lX | s_SBY1;
- lpPaint[ 11 ] = lpErase[ 11 ] =      s_SBY2;
-
- lpPaint[ 12 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 ); lpErase[ 12 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
- lpPaint[ 13 ] = lpErase[ 13 ] = GIFTAG_REGS_AD;
- lpPaint[ 14 ] = lpErase[ 14 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 2 );
- lpPaint[ 15 ] = lpErase[ 15 ] = GS_TEST_1;
-
- lpPaint[ 16 ] = GIF_TAG(  g_Config.m_ScrollBarNum, 1, 0, 0, 1, 2  );
- lpPaint[ 17 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
+ s_SBXY = lX | s_SBY1;
 
 }  /* end _sb_init */
 
@@ -232,13 +228,12 @@ static void _set_default ( SMS_List* apList ) {
 
 void PlayerControl_Init ( void ) {
 
+ uint64_t* lpErase;
  uint64_t* lpPaint = _U( g_VCPaint );
- uint64_t* lpErase = _U( g_VCErase );
  int64_t   lDuration;
 /* Initialize volume control display list */
  int   lX = 20 << 4;
  int   lY = ( g_GSCtx.m_Height - 288 ) >> 1;
- int   lW = 30 << 4;
  int   lH = 288;
  float lScaleOffset[ 3 ] = { 52.0F, 60.0F };
 
@@ -265,35 +260,17 @@ void PlayerControl_Init ( void ) {
   : "a0", "a1", "a2", "v0", "v1"
  );
 
- lpPaint[  0 ] =                   lpErase[ 0 ] = 0;
- lpPaint[  1 ] = VIF_DIRECT( 34 ); lpErase[ 1 ] = VIF_DIRECT( 9 );
+ lpPaint[ 0 ] = 0;
+ lpPaint[ 1 ] = VIF_DIRECT( 27 );
+ lpPaint[ 2 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
+ lpPaint[ 3 ] = GS_RGBAQ | ( GS_PRIM << 4 );
+ lpPaint[ 4 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
+ lpPaint[ 5 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
+ lpPaint[ 6 ] = GIF_TAG( 24, 1, 0, 0, 1, 2 );
+ lpPaint[ 7 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
 
- lpPaint[  2 ] = lpErase[  2 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 );
- lpPaint[  3 ] = lpErase[  3 ] = GIFTAG_REGS_AD;
- lpPaint[  4 ] = lpErase[  4 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 1 );
- lpPaint[  5 ] = lpErase[  5 ] = GS_TEST_1;
-
- lpPaint[  6 ] = lpErase[  6 ] = GIF_TAG( 2, 0, 0, 0, 1, 4 );
- lpPaint[  7 ] = lpErase[  7 ] = GS_RGBAQ | ( GS_PRIM << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 );
- lpPaint[  8 ] = lpErase[  8 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
- lpPaint[  9 ] = lpErase[  9 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
- lpPaint[ 10 ] = lpErase[ 10 ] = GS_SET_XYZ(       lX,      lY, 0  );
- lpPaint[ 11 ] = lpErase[ 11 ] = GS_SET_XYZ(  lX + lW, lY + lH, 0  );
-
- lY = (  ( g_GSCtx.m_Height - 288 ) >> 1  ) + 226;
-
- lpPaint[ 12 ] = lpErase[ 12 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
- lpPaint[ 13 ] = lpErase[ 13 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
- lpPaint[ 14 ] = lpErase[ 14 ] = GS_XYZ (  60, lY,      0 );
- lpPaint[ 15 ] = lpErase[ 15 ] = GS_XYZ ( 112, lY + 52, 0 );
-
- lpPaint[ 16 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 ); lpErase[ 16 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
- lpPaint[ 17 ] = lpErase[ 17 ] = GIFTAG_REGS_AD;
- lpPaint[ 18 ] = lpErase[ 18 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 2 );
- lpPaint[ 19 ] = lpErase[ 19 ] = GS_TEST_1;
-
- lpPaint[ 20 ] = GIF_TAG( 24, 1, 0, 0, 1, 2 );
- lpPaint[ 21 ] = GS_XYZ2 | ( GS_XYZ2 << 4 );
+ s_VCXY = GS_SET_XYZ( lX, lY, 0 );
+ lY     = (  ( g_GSCtx.m_Height - 288 ) >> 1  ) + 226;
 
  lScaleOffset[ 2 ] = ( float )lY;
 
@@ -308,8 +285,8 @@ void PlayerControl_Init ( void ) {
  lpPaint[ 5 ] = lpErase[ 5 ] = GS_SET_PRIM( GS_PRIM_PRIM_TRISTRIP, 0, 0, 0, 0, 0, 0, 0, 0 );
  lpPaint[ 6 ] = GIF_TAG( 21, 1, 0, 0, 1, 1 ); lpErase[ 6 ] = GIF_TAG( 40, 0, 0, 0, 1, 1 );
  lpPaint[ 7 ] = lpErase[ 7 ] = GS_XYZ2;
- GS_XYZv ( &lpPaint[ 8 ], s_Speaker, 24, lScaleOffset, 1 );
- GS_XYZv ( &lpErase[ 8 ], s_Sun,     40, lScaleOffset, 1 );
+ GS_XYZv ( &lpPaint[ 8 ], s_Speaker, 24, lScaleOffset, 0 );
+ GS_XYZv ( &lpErase[ 8 ], s_Sun,     40, lScaleOffset, 0 );
 
  lpErase[ 48 ] = GIF_TAG( 8, 1, 0, 0, 1, 6 );
  lpErase[ 49 ] = GS_PRIM | ( GS_RGBAQ << 4 ) | ( GS_XYZ2 << 8 ) | ( GS_XYZ2 << 12 ) | ( GS_XYZ2 << 16 ) | ( GS_XYZ2 << 20 );
@@ -319,7 +296,7 @@ void PlayerControl_Init ( void ) {
 
   lpErase[ 0 ] = GS_SET_PRIM( GS_PRIM_PRIM_TRISTRIP, 0, 0, 0, 0, 0, 0, 0, 0 );
   lpErase[ 1 ] = g_Palette[ g_Config.m_PlayerVBCIdx - 1 ];
-  GS_XYZv ( &lpErase[ 2 ], s_Rays[ lX ], 4, lScaleOffset, 1 );
+  GS_XYZv ( &lpErase[ 2 ], s_Rays[ lX ], 4, lScaleOffset, 0 );
 
  }  /* end for */
 /* Initialize display lists for OSD timer (status, current PTS, and total time) */
@@ -429,10 +406,9 @@ void PlayerControl_Init ( void ) {
 /* Initialize MP3/M3U playlist (if any) */
  if ( s_Player.m_pCont -> m_pPlayList ) {
 
-  s_Player.m_OSDPackets[ 4 ] = ( uint64_t* )malloc (
+  s_Player.m_OSDPackets[ 4 ] = ( uint64_t* )SMS_SyncMalloc (
    PlayerControl_GSPLen ( s_Player.m_pCont -> m_pPlayList, 0 ) * sizeof ( uint64_t )
   );
-  FlushCache ( 0 );
   s_Player.m_OSDQWC[ 4 ] = PlayerControl_GSPacket (
    s_Player.m_OSDPLPos, s_Player.m_pCont -> m_pPlayList, s_Player.m_OSDPackets[ 4 ]
   );
@@ -454,14 +430,16 @@ void PlayerControl_Init ( void ) {
   ( GSRoundRectPacket* )(  lpPaint + (  GS_VGR_PACKET_SIZE() << 1  ) - 2  ),
   0, g_GSCtx.m_Height - 97, g_GSCtx.m_Width - 1, 35, -8, g_Palette[ g_Config.m_BrowserIBCIdx - 1 ]
  );
+
  GSContext_RenderVGRect (
   lpPaint, 0, 0, g_GSCtx.m_Width, g_GSCtx.m_Height - 96,
   GS_SET_RGBAQ( 0x00, 0x00, 0x80, 0x80, 0x00 ),
   GS_SET_RGBAQ( 0x00, 0x00, 0x80, 0x10, 0x00 )
  );
+
  GSContext_RenderVGRect (
   lpPaint + GS_VGR_PACKET_SIZE(),
-  0, g_GSCtx.m_Height - 64, g_GSCtx.m_Width, 64,
+  0, g_GSCtx.m_Height - 64, g_GSCtx.m_Width, 66,
   GS_SET_RGBAQ( 0x00, 0x00, 0x80, 0x10, 0x00 ),
   GS_SET_RGBAQ( 0x00, 0x00, 0x80, 0x80, 0x00 )
  );
@@ -469,7 +447,7 @@ void PlayerControl_Init ( void ) {
  s_Player.m_OSDPackets[ 2 ] = g_DErase;
  s_Player.m_OSDPackets[ 3 ] = g_DPaint;
  s_Player.m_OSDQWC    [ 2 ] =  3;
- s_Player.m_OSDQWC    [ 3 ] = 29;
+ s_Player.m_OSDQWC    [ 3 ] = 27;
 
 }  /* end PlayerControl_Init */
 
@@ -486,6 +464,11 @@ void PlayerControl_Destroy ( void ) {
 
  if ( s_Player.m_OSDPackets[ 4 ] ) free ( s_Player.m_OSDPackets[ 4 ] );
 
+ SMS_GUInfoDelete ( &s_pInfo );
+
+ GSContext_DeleteList ( s_pLangOSD );
+ s_pLangOSD = NULL;
+
 }  /* end PlayerControl_Destroy */
 
 void PlayerControl_MkTime ( int64_t aTime ) {
@@ -493,7 +476,7 @@ void PlayerControl_MkTime ( int64_t aTime ) {
  char      lBuf[ 8 ];
  uint64_t* lpPacket = _U( s_pPTS );
 
- _FormatTime ( lBuf, aTime );
+ PlayerControl_FormatTime ( lBuf, aTime );
 
  GSFont_Render ( lBuf, 7, s_PTSX[ 0 ], OSD_Y_POS, lpPacket );
 
@@ -517,8 +500,8 @@ void PlayerControl_DisplayTime ( int anOp, int64_t aTime, int afDraw ) {
 
  if ( !afDraw ) {
 
-  s_Player.m_pIPUCtx -> PQueuePacket ( s_StsQWC[ lIdx ], s_pSts[ lIdx ]    - 2   );
-  s_Player.m_pIPUCtx -> PQueuePacket ( GS_TXT_PACKET_SIZE( 7 ) + 1, s_pPTS - 2   );
+  s_Player.m_pIPUCtx -> QueuePacket ( s_StsQWC[ lIdx ], s_pSts[ lIdx ]    - 2   );
+  s_Player.m_pIPUCtx -> QueuePacket ( GS_TXT_PACKET_SIZE( 7 ) + 1, s_pPTS - 2   );
 
  } else {
 
@@ -535,36 +518,44 @@ static void _paint_slider ( int aPos ) {
 
  int       i;
  uint64_t* lpPaint = _U( g_VCPaint );
- uint64_t  lV      = lpPaint[ 10 ];
+ int       lShift  = g_XShift;
+ uint64_t  lV      = s_VCXY;
  uint64_t  lX      = ( lV & 0xFFFF ) + ( 12 << 4 );
  uint64_t  lY      = ( lV >> 16 ) & 0xFFFF;
  uint64_t  lDX     = 6 << 4;
  uint64_t  lDY     = s_VCDY;
 
- aPos = 24 - aPos;
+ aPos  = 24 - aPos;
+ lX  >>= lShift;
+ lDX >>= lShift;
 
- for (  i = 22; i < 22 + ( aPos << 1 ); i += 2  ) {
+ for (  i = 8; i < 8 + ( aPos << 1 ); i += 2  ) {
 
-  lpPaint[ i + 0 ] = GS_SET_XYZ( lX,       lY, 1LL );
+  lpPaint[ i + 0 ] = GS_SET_XYZ( lX,       lY, 0 );
   lY += lDY;
-  lpPaint[ i + 1 ] = GS_SET_XYZ( lX + lDX, lY, 1LL );
-  lY += lDY;
-
- }  /* end for */
-
- lX  = lV & 0xFFFF;
- lDX = 30 << 4;
-
- for (  ; i < 22 + ( 24 << 1 ); i += 2  ) {
-
-  lpPaint[ i + 0 ] = GS_SET_XYZ( lX,       lY, 1LL );
-  lY += lDY;
-  lpPaint[ i + 1 ] = GS_SET_XYZ( lX + lDX, lY, 1LL );
+  lpPaint[ i + 1 ] = GS_SET_XYZ( lX + lDX, lY, 0 );
   lY += lDY;
 
  }  /* end for */
 
- g_IPUCtx.QueuePacket ( 35, g_VCPaint );
+ lX    = lV & 0xFFFF;
+ lDX   = 30 << 4;
+ lX  >>= lShift;
+ lDX >>= lShift;
+
+ for (  ; i < 8 + ( 24 << 1 ); i += 2  ) {
+
+  lpPaint[ i + 0 ] = GS_SET_XYZ( lX,       lY, 0 );
+  lY += lDY;
+  lpPaint[ i + 1 ] = GS_SET_XYZ( lX + lDX, lY, 0 );
+  lY += lDY;
+
+ }  /* end for */
+
+ s_Player.m_OSDPackets[ 9 ] = g_VCPaint;
+ s_Player.m_OSDQWC    [ 9 ] = 28;
+
+ s_Player.m_Flags |= SMS_FLAGS_DISPCTL;
  SMS_TimerSet ( 1, 2000, TimerHandler, NULL );
 
 }  /* end _paint_slider */
@@ -573,7 +564,8 @@ void PlayerControl_AdjustVolume ( int aDelta ) {
 
  g_Config.m_PlayerVolume = SMS_clip ( g_Config.m_PlayerVolume + aDelta, 0, 24 );
 
- g_IPUCtx.QueuePacket ( 15, g_Speaker );
+ s_Player.m_OSDPackets[ 8 ] = g_Speaker;
+ s_Player.m_OSDQWC    [ 8 ] = 15;
 
  _paint_slider ( g_Config.m_PlayerVolume );
 
@@ -585,15 +577,16 @@ void PlayerControl_AdjustBrightness ( int aDelta ) {
 
  g_Config.m_PlayerBrightness = SMS_clip ( g_Config.m_PlayerBrightness + aDelta, 0, 24 );
 
- g_IPUCtx.QueuePacket ( 49, g_Sun );
+ s_Player.m_OSDPackets[ 8 ] = g_Sun;
+ s_Player.m_OSDQWC    [ 8 ] = 49;
 
  _paint_slider ( g_Config.m_PlayerBrightness );
 
- g_IPUCtx.SetBrightness (  ( unsigned int )( g_Config.m_PlayerBrightness * 10.625F )  );
+ g_IPUCtx.SetBrightness (  ( unsigned int )( g_Config.m_PlayerBrightness * 10.625F + 0.5F )  );
 
 }  /* end PlayerControl_AdjustBrightness */
 
-static unsigned char s_DispBuff[ 64 ] __attribute__(   (  aligned( 64 )  )   );
+static unsigned char s_DispBuff[ 64 ] __attribute__(   (  aligned( 64 ), section ( ".bss" )  )   );
 
 static void SeekCB ( SMS_RingBuffer* apRB ) {
 
@@ -625,24 +618,28 @@ static void SeekCB ( SMS_RingBuffer* apRB ) {
 
 static int PlayerControl_Scroll ( int aDir ) {
 
- SMS_Container*   lpCont     = s_Player.m_pCont;
- SMS_Stream**     lpStms     = lpCont -> m_pStm;
- SMS_Stream*      lpStm      = lpStms[ s_Player.m_VideoIdx ];
- FileContext*     lpFileCtx  = lpCont -> m_pFileCtx;
- IPUContext*      lpIPUCtx   = s_Player.m_pIPUCtx;
- int64_t          lTime      = s_Player.m_VideoTime;
- int              retVal     = 0;
- int64_t          lIncr      = 3000LL * aDir;
- uint64_t         lNextTime  = 0LL;
- uint32_t         lFilePos   = 0U;
- void*            lpHandler  = SMS_TimerReset ( 2, NULL );
- SMS_FrameBuffer* lpFrame    = NULL;
- SMS_RingBuffer*  lpBuff     = lpStms[ s_Player.m_VideoIdx ] -> m_pPktBuf;
- SMS_RingBuffer*  lpDispBuff = SMS_RingBufferInit (  s_DispBuff, sizeof ( s_DispBuff )  );
+ SMS_Container*    lpCont     = s_Player.m_pCont;
+ SMS_Stream**      lpStms     = lpCont -> m_pStm;
+ SMS_Stream*       lpStm      = lpStms[ s_Player.m_VideoIdx ];
+ FileContext*      lpFileCtx  = lpCont -> m_pFileCtx;
+ IPUContext*       lpIPUCtx   = s_Player.m_pIPUCtx;
+ int64_t           lTime      = s_Player.m_VideoTime;
+ int               retVal     = 0;
+ int64_t           lIncr      = 3000LL * aDir;
+ uint64_t          lNextTime  = 0LL;
+ uint32_t          lFilePos   = 0U;
+ void*             lpHandler  = SMS_TimerReset ( 2, NULL );
+ SMS_FrameBuffer*  lpFrame    = NULL;
+ SMS_RingBuffer*   lpBuff     = lpStms[ s_Player.m_VideoIdx ] -> m_pPktBuf;
+ SMS_RingBuffer*   lpDispBuff = SMS_RingBufferInit (  s_DispBuff, sizeof ( s_DispBuff )  );
+ SMS_CodecContext* lpVideoCtx = lpStm -> m_pCodec;
+
+ lpVideoCtx -> HWCtl ( lpVideoCtx, SMS_HWC_Reset );
 
  s_Player.m_pIPUCtx -> StopSync ( 1 );
  lpIPUCtx -> Suspend ();
  GS_VSync ();
+ IPU_EraseSub        ();
  lpIPUCtx -> Repaint ();
  lpIPUCtx -> Resume  ();
  lpIPUCtx -> Sync    ();
@@ -667,7 +664,7 @@ static int PlayerControl_Scroll ( int aDir ) {
  while ( 1 ) {
 
   uint64_t lDisplayTime = g_Timer;
-  int64_t  lPos         = SMS_Rescale (  lTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
+  int64_t  lPos         = SMS_Rescale (  lTime - lpCont -> m_StartTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
   int      lSize        = lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, aDir, lPos );
 
   if ( !lSize ) {
@@ -679,7 +676,6 @@ static int PlayerControl_Scroll ( int aDir ) {
 
    s_Player.m_VideoTime = 0;
    s_Player.m_AudioTime = 0;
-   g_MPEGCtx.m_LastPPTS = 0;
    lpFrame              = NULL;
 
    retVal = 1;
@@ -697,11 +693,12 @@ static int PlayerControl_Scroll ( int aDir ) {
    int64_t lDiff;
 
    lpFrame = *( SMS_FrameBuffer** )SMS_RingBufferWait ( lpDispBuff );
+   lpFrame -> m_FrameType = -1;
 
    SMS_RingBufferFree ( lpDispBuff, 4 );
 
-   s_Player.m_VideoTime = lpFrame -> m_PTS;
-   s_Player.m_AudioTime = lpFrame -> m_PTS;
+   s_Player.m_VideoTime = lpFrame -> m_StartPTS;
+   s_Player.m_AudioTime = lpFrame -> m_StartPTS;
 
    do {
 
@@ -715,7 +712,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
       goto end;
 
-     } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) {
+     } else if ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT ) {
 
       if ( aDir > 0 ) {
 
@@ -732,7 +729,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
       }  /* end else */
 
-     } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT || lButtons == RC_LEFTX ) {
+     } else if ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT ) {
 
       if ( aDir > 0 ) {
 
@@ -751,7 +748,7 @@ static int PlayerControl_Scroll ( int aDir ) {
 
      } else if ( lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
 
-      PlayerControl_DisplayTime ( 0, lpFrame -> m_PTS, 0 );
+      PlayerControl_DisplayTime ( 0, lpFrame -> m_StartPTS, 0 );
       lpIPUCtx -> Display ( lpFrame, -1 );
       lpIPUCtx -> Sync ();
 
@@ -766,12 +763,12 @@ static int PlayerControl_Scroll ( int aDir ) {
 
    } while ( lDiff > 0 );
 
-   PlayerControl_DisplayTime ( aDir, lpFrame -> m_PTS, 0 );
+   PlayerControl_DisplayTime ( aDir, lpFrame -> m_StartPTS, 0 );
 
-   if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) {
+   if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_FLAGS_SUBS )  ) {
 
-    s_Player.m_pSubCtx -> m_Idx = 0;
-    s_Player.m_pSubCtx -> Display ( lpFrame -> m_PTS );
+    s_Player.m_pSubCtx -> Reset ();
+    s_Player.m_pSubCtx -> Display ( lpFrame -> m_StartPTS );
 
    }  /* end if */
 
@@ -804,7 +801,6 @@ end:
 
  s_Player.m_VideoTime = 0;
  s_Player.m_AudioTime = 0;
- g_MPEGCtx.m_LastPPTS = 0;
 
  if ( retVal ) {
 
@@ -813,7 +809,7 @@ end:
 
  }  /* end if */
 
- if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> m_Idx = 0;
+ if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> Reset ();
 
  SMS_TimerSet ( 2, 1000, lpHandler, NULL );
 
@@ -875,25 +871,39 @@ SMS_ListNode* PlayerControl_GetSubLang ( void ) {
 
 void PlayerControl_SwitchSubs ( void ) {
 
- if ( s_Player.m_Flags & SMS_PF_SUBS )
+ if ( s_Player.m_Flags & SMS_FLAGS_SUBS )
 
-  s_Player.m_Flags &= ~SMS_PF_SUBS;
+  s_Player.m_Flags &= ~SMS_FLAGS_SUBS;
 
- else s_Player.m_Flags |= SMS_PF_SUBS;
+ else s_Player.m_Flags |= SMS_FLAGS_SUBS;
 
 }  /* end PlayerControl_SwitchSubs */
+
+void PlayerControl_UpdateInfo ( void ) {
+
+ SMS_GUInfoDelete ( &s_pInfo );
+ s_pInfo = SMS_GUInfo ( s_Player.m_pCont );
+
+ s_Player.m_OSDPackets[ 0 ] = s_pInfo -> m_pGSPacket - 2;
+ s_Player.m_OSDQWC    [ 0 ] = (  ( s_pInfo -> m_pGSPacket[ -1 ] >> 32 ) & 0xFFFF  ) + 1;
+ s_Player.m_OSDPackets[ 1 ] = NULL;
+ s_Player.m_OSDQWC    [ 1 ] = 0;
+
+}  /* end PlayerControl_UpdateInfo */
 
 static void _handle_timer_osd ( int aDir ) {
 
  unsigned int lOSD = s_Player.m_OSD;
 
- if ( lOSD > 2 ) lOSD = 0;
+ if ( ++lOSD == 3 ) {
 
- if ( ++lOSD == 3 || !s_pTimerOSDHandlers[ lOSD ] )
+  PlayerControl_UpdateInfo ();
+
+ } else if ( lOSD >= 4 || !s_pTimerOSDHandlers[ lOSD ] ) {
 
   lOSD = 0;
 
- else {
+ } else {
 
   int lIdx = lOSD - 1;
 
@@ -922,9 +932,9 @@ static void _handle_adjust_osd ( int aDelta, int* apVal, int aLimit ) {
 
  if ( lVal == aLimit && aDelta > 0 )
 
-  lVal = aLimit - 25;
+  lVal = aLimit - 10;
 
- else if ( lVal == -aLimit && aDelta < 0 ) lVal = -( aLimit - 25 );
+ else if ( lVal == -aLimit && aDelta < 0 ) lVal = -( aLimit - 10 );
 
  lVal += aDelta;
 
@@ -956,6 +966,8 @@ static void _handle_av_adjust_osd ( int aDir ) {
 
  _handle_adjust_osd ( aDir, &s_Player.m_AVDelta, 5000 );
 
+ g_Config.m_AVDelta = s_Player.m_AVDelta;
+
 }  /* end _handle_av_adjust_osd */
 
 static void _handle_sv_adjust_osd ( int aDir ) {
@@ -964,6 +976,8 @@ static void _handle_sv_adjust_osd ( int aDir ) {
  s_Player.m_OSDQWC    [ 0 ] = s_SVQWC;
 
  _handle_adjust_osd ( aDir, &s_Player.m_SVDelta, 30000 );
+
+ g_Config.m_SVDelta = s_Player.m_SVDelta;
 
 }  /* end _handle_sv_adjust_osd */
 
@@ -983,13 +997,13 @@ unsigned int PlayerControl_GSPLen ( SMS_List* apList, unsigned int aLen ) {
 
  SMS_ListNode* lpNode = apList -> m_pHead;
 
- aLen += PC_GSP_SIZE(  strlen ( lpNode -> m_pString )  );
+ aLen += PC_GSP_SIZE(   strlen (  _STR( lpNode )  )   );
 
  lpNode = lpNode -> m_pNext;
 
  while ( lpNode ) {
 
-  aLen += strlen ( lpNode -> m_pString ) << 2;
+  aLen += strlen (  _STR( lpNode )  ) << 2;
   lpNode = lpNode -> m_pNext;
 
  }  /* end while */
@@ -1005,17 +1019,21 @@ unsigned int PlayerControl_GSPacket ( int anY, SMS_List* apList, uint64_t* apDMA
  SMS_ListNode* lpNode  = apList -> m_pHead;
  unsigned int  lCumLen = 0;
  int           lDispW  = g_GSCtx.m_Width - 4;
+ int           lPixFmt = g_GSCtx.m_VRAMFontPtr ? GSPixelFormat_PSMT4 : GSPixelFormat_PSMT4HL;
+ int           lShift  = g_XShift;
+ int           lW;
 
  apDMA = ( u64* )UNCACHED_SEG( apDMA );
  apDMA[ 0 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
  apDMA[ 1 ] = GS_TEX0_1 | ( GS_PRIM << 4 );
- apDMA[ 2 ] = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, GSPixelFormat_PSMT4, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, g_GSCtx.m_CLUT[ 1 ], GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 0, GS_TEX_CLD_LOAD );
+ apDMA[ 2 ] = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, lPixFmt, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, 0, GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 1, GS_TEX_CLD_NOUPDATE );
  apDMA[ 3 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 );
  apDMA[ 5 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
 
+ lW = ( 512 >> lShift ) + 4;
+
  while ( 1 ) {
 
-  unsigned int lXV[ 32 ];
   unsigned int lX;
   unsigned int lY1, lY2;
   unsigned int lU, lV;
@@ -1023,7 +1041,7 @@ unsigned int PlayerControl_GSPacket ( int anY, SMS_List* apList, uint64_t* apDMA
 
   if ( anY >= -32 ) {
 
-   unsigned int lLen   = strlen ( lpNode -> m_pString );
+   unsigned int lLen   = strlen (  _STR( lpNode )  );
    int          lH     = 32;
    int          lDTY   = 0;
    int          lY     = anY;
@@ -1031,14 +1049,15 @@ unsigned int PlayerControl_GSPacket ( int anY, SMS_List* apList, uint64_t* apDMA
    int          lDW;
    float        lAR;
 
-   while (  GSFont_WidthEx ( lpNode -> m_pString, lLen, lDelta ) > lDispW && lDelta > -16 ) --lDelta;
-   while (  GSFont_WidthEx ( lpNode -> m_pString, lLen, lDelta ) > lDispW                 ) --lLen;
+   while (   GSFont_WidthEx (  _STR( lpNode ), lLen, lDelta  ) > lDispW && lDelta > -16   ) --lDelta;
+   while (   GSFont_WidthEx (  _STR( lpNode ), lLen, lDelta  ) > lDispW                   ) --lLen;
 
-   lAR  = ( 32.0F + lDelta ) / 32.0F;
-   lDW  = lDelta << 4;
-   lX   = (  g_GSCtx.m_Width - GSFont_WidthEx ( lpNode -> m_pString, lLen, lDelta )  ) >> 1;
+   lAR      = ( 32.0F + lDelta ) / 32.0F;
+   lDW      = lDelta << 4;
+   lCurX    = (   g_GSCtx.m_Width - GSFont_WidthEx (  _STR( lpNode ), lLen, lDelta  )   ) >> 1;
+   lDelta >>= lShift;
 
-   if ( lX > g_GSCtx.m_Width ) lX = 0;
+   if ( lCurX > g_GSCtx.m_Width ) lCurX = 0;
 
    if ( lY < 0 ) {
 
@@ -1051,7 +1070,7 @@ unsigned int PlayerControl_GSPacket ( int anY, SMS_List* apList, uint64_t* apDMA
 
    __asm__ __volatile__ (
     ".set noreorder\n\t"
-    "move     $t9, $ra\n\t"
+    "pcpyld   $ra, $ra, $ra\n\t"
     "addu     $v0, %2, %3\n\t"
     "move     $a1, %2\n\t"
     "move     $a0, $zero\n\t"
@@ -1064,42 +1083,26 @@ unsigned int PlayerControl_GSPacket ( int anY, SMS_List* apList, uint64_t* apDMA
     "sll      $v0, $v0, 16\n\t"
     "move     %0, $v0\n\t"
     "move     %1, $a1\n\t"
-    "move     $ra, $t9\n\t"
+    "pcpyud   $ra, $ra, $ra\n\t"
     ".set reorder\n\t"
-    : "=r"( lY1 ), "=r"( lY2 ) : "r"( lY ), "r"( lH ) : "a0", "a1", "a2", "v0", "v1", "t9"
+    : "=r"( lY1 ), "=r"( lY2 ) : "r"( lY ), "r"( lH ) : "a0", "a1", "a2", "v0", "v1"
    );
-
-   for ( j = 0; j < 32; ++j ) lXV[ j ] = lX;
 
    for ( j = 0; j < lLen; ++j, k += 4 ) {
 
-    unsigned int  l;
-    unsigned char lChr = lpNode -> m_pString[ j ] - ' ';
+    unsigned char lChr = _STR( lpNode )[ j ] - ' ';
 
-    lCurX = -INT_MAX;
-
-    for ( l = 0; l < 32; ++l ) {
-
-     int lOffset = lXV[ l ] - g_GSCharIndent[ lChr ].m_Left[ l ] * lAR;
-
-     __asm__ __volatile__(
-      "pmaxw %0, %1, %2\n\t"
-      : "=r"( lCurX ) : "r"( lCurX ), "r"( lOffset )
-     );
-
-    }  /* end for */
-
-    lX = lCurX << 4;
-
-    for ( l = 0; l < 32; ++l ) lXV[ l ] = lCurX + ( 31 - g_GSCharIndent[ lChr ].m_Right[ l ] ) * lAR;
+    lX     = lCurX << 4;
+    lCurX += ( int )(  ( float )g_GSCharWidth[ lChr ] * lAR + 0.5F  );
+    lX   >>= lShift;
 
     lU = ( lChr & 0x0000000F ) << 9;
     lV = ( lChr & 0xFFFFFFF0 ) << 5;
 
     apDMA[ k + 0 ] = GS_SET_UV( lU + 8, lV + lDTY + 8 );
     apDMA[ k + 1 ] = lX | lY1;
-    apDMA[ k + 2 ] = GS_SET_UV( lU + 504, lV + 504 );
-    apDMA[ k + 3 ] = ( lX + 512 + lDW ) | lY2;
+    apDMA[ k + 2 ] = GS_SET_UV( lU + 506, lV + 506 );
+    apDMA[ k + 3 ] = ( lX + lW + lDW ) | lY2;
 
    }  /* end for */
 
@@ -1122,11 +1125,12 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
  int       i;
  uint64_t* lpPaint = _U( g_SCPaint );
- uint64_t  lX      = lpPaint[ 10 ] & 0xFFFF;
+ uint64_t  lX      = s_SBXY & 0xFFFF;
  uint64_t  lY1;
  uint64_t  lY2;
  uint64_t  lIncr;
  uint32_t  lQWC;
+ int       lShift  = g_XShift;
 
  lY2   = s_SBY2 - s_SBY1;
  lIncr = lY2 / 5;
@@ -1141,50 +1145,63 @@ static void PlayerControl_DisplayScrollBar ( int aPos ) {
 
  if ( g_Config.m_ScrollBarNum == 32 ) {
   lIncr = 148;
-  lQWC  = 41;
+  lQWC  = 36;
  } else if ( g_Config.m_ScrollBarNum == 48 ) {
   lIncr = 98;
-  lQWC  = 57;
+  lQWC  = 52;
  } else if ( g_Config.m_ScrollBarNum == 64 ) {
   lIncr = 74;
-  lQWC  = 73;
+  lQWC  = 68;
  } else if ( g_Config.m_ScrollBarNum == 80 ) {
   lIncr = 59;
-  lQWC  = 89;
+  lQWC  = 84;
  } else if ( g_Config.m_ScrollBarNum == 96 ) {
   lIncr = 49;
-  lQWC  = 105;
+  lQWC  = 100;
  } else if ( g_Config.m_ScrollBarNum == 112 ) {
   lIncr = 42;
-  lQWC  = 121;
+  lQWC  = 116;
  } else {  /* 128 */
   lIncr = 37;
-  lQWC  = 137;
+  lQWC  = 132;
  }  /* end else */
 
- for (  i = 18; i < 18 + ( aPos << 1 ); i += 2  ) {
+ for (  i = 8; i < 8 + ( aPos << 1 ); i += 2  ) {
 
-  lpPaint[ i + 0 ] = lX | lY1 | ( 1L << 32 );
+  lpPaint[ i + 0 ] = ( lX >> lShift ) | lY1;
   lX -= lIncr;
-  lpPaint[ i + 1 ] = lX | lY2 | ( 1L << 32 );
+  lpPaint[ i + 1 ] = ( lX >> lShift ) | lY2;
   lX -= lIncr;
 
  }  /* end for */
 
- for (  ; i < 18 + ( g_Config.m_ScrollBarNum << 1 ); i += 2  ) {
+ for (  ; i < 8 + ( g_Config.m_ScrollBarNum << 1 ); i += 2  ) {
 
-  lpPaint[ i + 0 ] = lX | s_SBY1 | ( 1L << 32 );
+  lpPaint[ i + 0 ] = ( lX >> lShift ) | s_SBY1;
   lX -= lIncr;
-  lpPaint[ i + 1 ] = lX | s_SBY2 | ( 1L << 32 );
+  lpPaint[ i + 1 ] = ( lX >> lShift ) | s_SBY2;
   lX -= lIncr;
 
  }  /* end for */
 
  g_IPUCtx.QueuePacket ( lQWC, g_SCPaint );
 
- s_IntTime = g_Timer + 10000;
-
 }  /* end PlayerControl_DisplayScrollBar */
+
+static void _sc_repaint ( int64_t aTime, int anOp, int aPos ) {
+
+ GS_VSync2 ( g_GSCtx.m_DrawDelay );
+ s_Player.m_pIPUCtx -> Repaint ();
+
+ if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_FLAGS_SUBS )  )
+  s_Player.m_pSubCtx -> Display ( s_Player.m_VideoTime - s_Player.m_SVDelta );
+
+ PlayerControl_DisplayTime ( anOp, aTime, 1 );
+ PlayerControl_DisplayScrollBar ( aPos );
+
+ s_Player.m_pIPUCtx -> Flush ();
+
+}  /* end _sc_repaint */
 
 int PlayerControl_ScrollBar (  void ( *InitQueues ) ( int )  ) {
 
@@ -1193,10 +1210,9 @@ int PlayerControl_ScrollBar (  void ( *InitQueues ) ( int )  ) {
  FileContext*   lpFileCtx  = lpCont -> m_pFileCtx;
  IPUContext*    lpIPUCtx   = s_Player.m_pIPUCtx;
  int            retVal     = 0;
- uint64_t       lNextTime  = 0LL;
- uint64_t       lNextTime1 = 0LL;
- int64_t        lTotalTime = lpCont -> m_Duration;
- int64_t        lPassTime  = s_Player.m_VideoTime;
+ uint64_t       lNextTime  = 0UL;
+ int64_t        lTotalTime = lpCont -> m_Duration - lpCont -> m_StartTime;
+ int64_t        lPassTime  = s_Player.m_VideoTime - lpCont -> m_StartTime;
  int            lResume    = 1;
  int64_t        lScale;
  float          lCurPos1;
@@ -1216,26 +1232,24 @@ begin:
  if (  lCurPos1 < 0.5F                                ) lCurPos1 = 0;
  if (  lCurPos1 > ( g_Config.m_ScrollBarNum - 0.5F )  ) lCurPos1 = g_Config.m_ScrollBarNum;
 
- int     lCurPos     = SMS_clip ( lCurPos1, 0, g_Config.m_ScrollBarNum );
- int     lTestPause  = 1;
- int     lTestSelect = 0;
- int     lDir        = 0;
+ int     lCurPos = SMS_clip ( lCurPos1, 0, g_Config.m_ScrollBarNum );
+ int     lDir    = 0;
  int64_t lTime;
  int64_t lPos;
 
  lScale = (  lTotalTime / ( g_Config.m_ScrollBarNum + 1 )  );
 
- PlayerControl_DisplayScrollBar ( lCurPos );
+ _sc_repaint ( lPassTime + lpCont -> m_StartTime, 2, lCurPos );
 
- if ( g_Config.m_PlayerFlags & SMS_PF_TIME ) PlayerControl_DisplayTime ( 2, lPassTime, 1 );
+ if ( g_CMedia & 1 ) CDVD_Stop ();
 
  while ( 1 ) {
 
-  GS_VSync ();
+  uint32_t lButtons;
 
   if ( lResume == 1 ) {
 
-   lTime = s_Player.m_VideoTime;
+   lTime = s_Player.m_VideoTime - lpCont -> m_StartTime;
 
   } else {
 		    
@@ -1252,15 +1266,7 @@ begin:
   }  /* end else */
 
   lPassTime = lTime;
-
-  if ( s_IntTime <= g_Timer ) lpIPUCtx -> QueuePacket ( 8, g_SCErase );
-
-  lpIPUCtx -> Flush   ();
-  lpIPUCtx -> Repaint ();
-
-  if ( s_IntTime >= g_Timer && g_Config.m_PlayerFlags & SMS_PF_TIME ) PlayerControl_DisplayTime ( 2, lTime, 1 );
-
-  uint32_t lButtons = GUI_ReadButtons ();
+  lButtons  = GUI_ReadButtons ();
 
   if ( lButtons && g_Timer > lNextTime ) {
 
@@ -1268,55 +1274,29 @@ begin:
 
    if ( lButtons == SMS_PAD_START || lButtons == SMS_PAD_CROSS || lButtons == RC_ENTER || lButtons == RC_PLAY ) {
 
-    lpIPUCtx -> Repaint ();
-    PlayerControl_DisplayTime ( 0, lTime, 1 );
+    _sc_repaint ( lTime + lpCont -> m_StartTime, 0, lCurPos );
 
     retVal = 1;
     break;
 
-   } else if (  ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT || lButtons == RC_RIGHTX ) && lCurPos < g_Config.m_ScrollBarNum  ) {
+   } else if (  ( lButtons == SMS_PAD_RIGHT || lButtons == RC_SCAN_RIGHT ) && lCurPos < g_Config.m_ScrollBarNum  ) {
 
-    lCurPos = SMS_clip (  ( lCurPos + 1 ) , 0, g_Config.m_ScrollBarNum  );
+    lCurPos = SMS_clip (  ( lCurPos + 1 ), 0, g_Config.m_ScrollBarNum  );
     lResume = 0;
+    _sc_repaint ( lTime + lpCont -> m_StartTime, 2, lCurPos );
 
-    PlayerControl_DisplayScrollBar ( lCurPos );
-
-   } else if (  ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT || lButtons == RC_LEFTX ) && lCurPos > 0  ) {
+   } else if (  ( lButtons == SMS_PAD_LEFT || lButtons == RC_SCAN_LEFT ) && lCurPos > 0  ) {
 
     lCurPos = SMS_clip (  ( lCurPos - 1 ), 0, g_Config.m_ScrollBarNum  );
     lResume = 0;
+    _sc_repaint ( lTime + lpCont -> m_StartTime, 2, lCurPos );
 
-    PlayerControl_DisplayScrollBar ( lCurPos );
-
-   } else if ( lButtons == SMS_PAD_SELECT ) {
-
-    if ( g_Timer > lNextTime1 && lTestSelect == 1 ) {
-    
-     if ( lTestPause == 1 ) {
-
-      g_IPUCtx.QueuePacket ( 8, g_SCErase );
-      lTestPause = 0;
-      s_IntTime  = g_Timer;
-
-     } else {
-
-      PlayerControl_DisplayScrollBar ( lCurPos );
-
-      lTestPause = 1;
-
-     }  /* end else */
-
-    }  /* end if */
-
-    lNextTime1  = g_Timer + 250;
-    lTestSelect = 1;
-    
    } else if ( lButtons == SMS_PAD_TRIANGLE || lButtons == RC_RESET || lButtons == RC_RETURN || lButtons == RC_STOP ) {
 
     lResume = 0;
     break;
 
-   } else if ( lButtons == SMS_PAD_L1 ) {
+   } else if ( lButtons == SMS_PAD_L1 || lButtons == RC_PREV ) {
 
     g_Config.m_ScrollBarNum -= 16;
  
@@ -1325,7 +1305,7 @@ redo:
     _sb_init ();
     goto begin;
 
-   } else if ( lButtons == SMS_PAD_R1 ) {
+   } else if ( lButtons == SMS_PAD_R1 || lButtons == RC_NEXT ) {
 
     g_Config.m_ScrollBarNum += 16;
  
@@ -1343,6 +1323,8 @@ redo:
 
  if ( !lResume ) {
 
+  SMS_CodecContext* lpVideoCtx = lpStm -> m_pCodec;
+
   SMS_Codec_MPEG12_Reset (
    SMS_MPEG12_RESET_QUEUE   |
    SMS_MPEG12_RESET_DECODER |
@@ -1350,11 +1332,9 @@ redo:
    SMS_MPEG12_RESET_RECOVER
   );
 
-  InitQueues ( 0 );
-
   if ( retVal ) {
 
-   if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> m_Idx = 0;
+   if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> Reset ();
 
    lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, 0 );
 
@@ -1364,13 +1344,12 @@ redo:
    if ( lDir <= 0 ) lDir = -1;
 
    lPos = SMS_Rescale (  lTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
-
+ 
    if (  lpCont -> Seek ( lpCont, s_Player.m_VideoIdx, lDir, lPos )  ) {
 
     lpFileCtx -> Stream ( lpFileCtx, lpFileCtx -> m_CurPos, lpFileCtx -> m_StreamSize );
 
     s_Player.m_VideoTime = 0;
-    g_MPEGCtx.m_LastPPTS = 0;
     s_Player.m_AudioTime = 0;
 
     retVal = -1;
@@ -1380,12 +1359,18 @@ redo:
   }  /* end if */
 
   InitQueues ( 0 );
+  lpVideoCtx -> HWCtl ( lpVideoCtx, SMS_HWC_Reset );
 
  }  /* end if */
 
- lpIPUCtx -> QueuePacket ( 8, g_SCErase );
+ if ( g_CMedia & 1 ) SMS_TimerWait ( 1000 );
 
  while (  GUI_ReadButtons ()  );
+
+ if ( g_CMedia & 1 ) {
+  CDDA_Standby     ();
+  CDDA_Synchronize ();
+ }  /* end if */
 
  return retVal;
 
@@ -1398,8 +1383,8 @@ void PlayerControl_UpdateDuration ( unsigned int anIdx, int64_t aDuration ) {
 
  if ( !anIdx || aDuration ) {
 
-  int  lM = aDuration / 60;
-  int  lH = lM        / 60;
+  int lM = aDuration / 60;
+  int lH = lM        / 60;
 
   aDuration %= 60;
   lM        %= 60;
@@ -1421,17 +1406,47 @@ void PlayerControl_UpdateDuration ( unsigned int anIdx, int64_t aDuration ) {
 
 void PlayerControl_UpdateItemNr ( void ) {
 
- char      lBuff[ 32 ];
- int       lLen;
- uint64_t* lpDMA;
+ char  lBuff[ 32 ];
+ char* lpPtr = lBuff;
 
- sprintf ( lBuff, "% 3d /% 3d", s_Player.m_PlayItemNr, s_Player.m_pCont -> m_pPlayList ? s_Player.m_pCont -> m_pPlayList -> m_Size : 1 );
+ sprintf ( lpPtr, "%d", s_Player.m_PlayItemNr );
+ lpPtr += strlen ( lpPtr );
+ sprintf ( lpPtr, "/%d", s_Player.m_pCont -> m_pPlayList ? s_Player.m_pCont -> m_pPlayList -> m_Size : 1 );
+ lpPtr += strlen ( lpPtr );
+ memset ( lpPtr, ' ', 16 );
 
- lpDMA = _U( g_OSDNR );
- lLen  = strlen ( lBuff );
+ s_Player.m_OSDQWC[ 6 ] = GS_TXT_PACKET_SIZE( 9 ) >> 1;
 
- s_Player.m_OSDQWC[ 6 ] = GS_TXT_PACKET_SIZE( lLen ) >> 1;
-
- GSFont_Render ( lBuff, lLen, 16, OSD_Y_POS, lpDMA );
+ GSFont_Render (  lBuff, 9, 16, OSD_Y_POS, _U( g_OSDNR )  );
 
 }  /* end PlayerControl_UpdateItemNr */
+
+void PlayerControl_ChangeLangOSD ( int aTID ) {
+
+ SMS_ListNode* lpNode = PlayerControl_ChangeLang ();
+ int           lLen, lDWC, lW;
+ char          lBuf[ 128 ];
+
+ sprintf (  lBuf, g_pFmt3, STR_AUDIO.m_pStr, g_ColonSStr, _STR( s_pCurLang )  );
+ lLen = strlen ( lBuf );
+ lDWC = GS_TXT_PACKET_SIZE( lLen );
+ lW   = GSFont_Width ( lBuf, lLen );
+
+ s_Player.m_PrevAudioIdx = s_Player.m_AudioIdx;
+ s_Player.m_AudioIdx     = ( unsigned int )lpNode -> m_Param;
+
+ SuspendThread ( aTID );
+  DMA_Wait ( DMAC_VIF1 );
+  PlayerControl_UpdateInfo ();
+  GSContext_DeleteList ( s_pLangOSD );
+  s_pLangOSD = GSContext_NewList ( lDWC );
+  GSFont_Render ( lBuf, lLen, g_GSCtx.m_Width - lW - 16, OSD_Y_POS, s_pLangOSD );
+  s_pLangOSD[ -1 ] = VIF_DIRECT( lDWC >> 1 );
+  SyncDCache ( &s_pLangOSD[ -2 ], &s_pLangOSD[ -2 ] + lDWC );
+  s_Player.m_OSDPackets[ 8 ] = &s_pLangOSD[ -2 ];
+  s_Player.m_OSDQWC    [ 8 ] = ( lDWC >> 1 ) + 1;
+  s_Player.m_Flags |= SMS_FLAGS_DISPCTL;
+  SMS_TimerSet ( 1, 2000, TimerHandler, NULL );
+ ResumeThread ( aTID );
+
+}  /* end PlayerControl_ChangeLangOSD */

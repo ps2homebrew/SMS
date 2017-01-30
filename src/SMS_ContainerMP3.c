@@ -19,74 +19,58 @@
 #include <malloc.h>
 #include <string.h>
 
-#define ID3_HEADER_SIZE   10
 #define MP3_PACKET_SIZE 1024
 
-static int SMS_INLINE _id3_match ( const uint8_t* apBuf ) {
+uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_AudioInfo* apInfo ) {
 
- return apBuf[ 0 ] == 'I'  && apBuf[ 1 ] == 'D'  && apBuf[ 2 ] == '3' &&
-        apBuf[ 3 ] != 0xFF && apBuf[ 4 ] != 0xFF &&
-        ( apBuf[ 6 ] & 0x80 ) == 0 && ( apBuf[ 7 ] & 0x80 ) == 0 &&
-        ( apBuf[ 8 ] & 0x80 ) == 0 && ( apBuf[ 9 ] & 0x80 ) == 0;
-
-}  /* end _id3_match */
-
-static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
-
- int           lSize;
- FileContext*  lpFileCtx = apCont -> m_pFileCtx;
- SMS_AVPacket* lpPkt     = apCont -> AllocPacket (
-  apCont -> m_pStm[ *apIdx = 0 ] -> m_pPktBuf, MP3_PACKET_SIZE
- );
-
- lSize = lpFileCtx -> Read ( lpFileCtx, lpPkt -> m_pData, MP3_PACKET_SIZE );
-
- if ( !lSize )
-  SMS_RingBufferUnalloc ( apCont -> m_pStm[ 0 ] -> m_pPktBuf, MP3_PACKET_SIZE + 64 );
- else if ( lSize < MP3_PACKET_SIZE )
-  memset ( lpPkt -> m_pData + lSize, 0, MP3_PACKET_SIZE - lSize );
-
- return lSize ? lSize : -1;
-
-}  /* end _ReadPacket */
-
-uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_MP3Info* apInfo ) {
-
- SMS_ALIGN( uint8_t lBuf[ ID3_HEADER_SIZE ], 4 );
+ SMS_ALIGN( uint8_t lBuf[ 4 ], 4 );
  unsigned int lMP3Pos = 16384;
  uint64_t     lVal    = 0;
  SMS_MPAInfo  lInfo;
 
  lInfo.m_FreeFmtFrameSize = 0;
 
- if (  apFileCtx -> Read ( apFileCtx, lBuf, ID3_HEADER_SIZE ) == ID3_HEADER_SIZE  ) {
-
-  if (  _id3_match ( lBuf )  ) {
-
-   lVal = (  ( lBuf[ 6 ] & 0x7F ) << 21  ) |
-          (  ( lBuf[ 7 ] & 0x7F ) << 14  ) |
-          (  ( lBuf[ 8 ] & 0x7F ) <<  7  ) |
-             ( lBuf[ 9 ] & 0x7F );
-   File_Skip (  apFileCtx, ( uint32_t )lVal  );
-
-  } else apFileCtx -> Seek ( apFileCtx, 0 );
+ if (  SMSContainer_SkipID3 ( apFileCtx )  ) {
 
   apFileCtx -> Read ( apFileCtx, lBuf, 4 );
 
   while (  lMP3Pos && !FILE_EOF( apFileCtx )  ) {
 
-   lVal  = SMS_bswap32 (  *( uint32_t* )lBuf  );
-   lVal &= SMS_INT64( 0x00000000FFFFFFFF );
+   lVal = SMS_bswap32 (  *( uint32_t* )lBuf  );
 
    if (   MP123_CheckHeader  (  ( uint32_t )lVal          ) &&
          !MP123_DecodeHeader (  ( uint32_t )lVal, &lInfo  )
    ) {
 
+    unsigned int i, lPos;
+
     apInfo -> m_SampleRate = lInfo.m_SampleRate;
     apInfo -> m_nChannels  = lInfo.m_nChannels;
     apInfo -> m_BitRate    = lInfo.m_BitRate;
 
-    apFileCtx -> Seek ( apFileCtx, apFileCtx -> m_CurPos - 4 );
+    lPos = apFileCtx -> m_CurPos - 4;
+
+    for (  i = 0; i < ( int )g_Config.m_MP3AutoPar; ++i  ) {
+
+     apFileCtx -> Seek ( apFileCtx, apFileCtx -> m_CurPos + lInfo.m_FrameSize - 4 );
+     apFileCtx -> Read ( apFileCtx, lBuf, 4 );
+
+     if (  FILE_EOF( apFileCtx )  ) break;
+
+     lVal = SMS_bswap32 (  *( uint32_t* )lBuf  );
+
+     if (   !MP123_CheckHeader  (  ( uint32_t )lVal          ) ||
+             MP123_DecodeHeader (  ( uint32_t )lVal, &lInfo  )
+     ) {
+
+      lVal = 0;
+      goto end;
+
+     }  /* end if */
+
+    }  /* end for */
+
+    apFileCtx -> Seek ( apFileCtx, lPos );
 
     break;
 
@@ -104,19 +88,19 @@ uint64_t SMS_MP3Probe ( FileContext* apFileCtx, SMS_MP3Info* apInfo ) {
   }  /* end while */
 
  }  /* end if */
-
+end:
  return lVal;
 
 }  /* end SMS_MP3Probe */
 
 int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
- int          retVal = 0;
- FileContext* lpFileCtx = apCont -> m_pFileCtx;
- uint64_t     lVal;
- SMS_MP3Info  lInfo;
+ int            retVal = 0;
+ FileContext*   lpFileCtx = apCont -> m_pFileCtx;
+ uint64_t       lVal;
+ SMS_AudioInfo  lInfo;
 
- if (  ( int )lpFileCtx < 0  ) return retVal;
+ if (  ( int )lpFileCtx <= 0  ) return retVal;
 
  lVal = SMS_MP3Probe ( lpFileCtx, &lInfo );
 
@@ -124,11 +108,11 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
 
   SMS_Stream*       lpStm;
   SMS_CodecContext* lpCodecCtx;
-  char*             lpSlash;
-  char*             lpDot;
 
-  apCont -> m_pName    = g_pMP3Str;
-  apCont -> ReadPacket = _ReadPacket;
+  apCont -> m_DefPackSize = MP3_PACKET_SIZE;
+  apCont -> m_DefPackIdx  = 0;
+  apCont -> m_pName       = g_pMP3Str;
+  apCont -> ReadPacket    = SMSContainer_DefReadPacket;
 
   apCont -> m_pStm[ 0 ] = lpStm = ( SMS_Stream* )calloc (  1, sizeof ( SMS_Stream )  );
   apCont -> m_nStm              = 1;
@@ -146,25 +130,9 @@ int SMS_GetContainerMP3 ( SMS_Container* apCont ) {
   lpCodecCtx -> m_BitsPerSample = 16;
   lpCodecCtx -> m_BitRate       = lInfo.m_BitRate;
 
-  apCont -> m_Duration = 0L;
+  retVal = SMSContainer_SetName ( apCont, lpFileCtx );
 
-  apCont -> m_pPlayList = SMS_ListInit ();
-  lpSlash = lpFileCtx -> m_pPath + strlen ( lpFileCtx -> m_pPath ) - 1;
-  lpDot   = NULL;
-
-  while ( *lpSlash != '\\' && *lpSlash != '/' ) {
-
-   if ( !lpDot && *lpSlash == '.' ) lpDot = lpSlash;
-
-   --lpSlash;
-
-  }  /* end while */
-
-  if ( lpDot ) *lpDot = '\x00';
-   SMS_ListPushBack ( apCont -> m_pPlayList, lpSlash + 1 );
-  if ( lpDot ) *lpDot = '.';
-
-  retVal = 1;
+  g_pSynthBuffer = SMS_AUD_SPR;
 
  }  /* end if */
 

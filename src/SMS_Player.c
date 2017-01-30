@@ -15,6 +15,7 @@
 #include "SMS_GUI.h"
 #include "SMS_IPU.h"
 #include "SMS_SPU.h"
+#include "SMS_IOP.h"
 #include "SMS_FileContext.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_Timer.h"
@@ -34,6 +35,14 @@
 #include "SMS_RC.h"
 #include "SMS_RingBuffer.h"
 #include "SMS_DXSB.h"
+#include "SMS_FileDir.h"
+#include "SMS_History.h"
+#include "SMS_PgInd.h"
+#include "SMS_GUIClock.h"
+
+#ifndef EMBEDDED
+# include "SMS_OS.h"
+#endif  /* EMBEDDED */
 
 #include <kernel.h>
 #include <stdio.h>
@@ -42,7 +51,7 @@
 #include <string.h>
 #include "libmpeg_internal.h"
 
-#define SMS_VP_BUFFER_SIZE ( 1024 * 1024 * 3 )
+#define SMS_VP_BUFFER_SIZE ( 1024 * 1024 * 2 )
 #define SMS_AP_BUFFER_SIZE ( 1024 *  512     )
 
 #define THREAD_ID_VR s_ThreadIDs[ 0 ]
@@ -62,12 +71,37 @@ static int s_SemaPauseAudio;
 static int s_SemaPauseVideo;
 static int s_SemaAckPause;
 static int s_MainThreadID;
-static int s_Flags;
 
 static int  ( *FFwdFunc ) ( void );
 static int  ( *RewFunc  ) ( void );
 
 extern void SMS_PlayerMenu ( void );
+
+static void _check_ac3 ( SMS_Stream* apStm ) {
+ if ( apStm -> m_pCodec -> m_ID == SMS_CodecID_AC3 ||
+      apStm -> m_pCodec -> m_ID == SMS_CodecID_DTS
+ ) {
+  if (  !( g_Config.m_PlayerFlags & SMS_PF_SPDIF ) || ( g_Config.m_PlayerFlags & SMS_PF_PDW22 )  ) {
+   if ( apStm -> m_pCodec -> m_Channels > 2 ) apStm -> m_pCodec -> m_Channels = 2;
+   s_Player.m_Flags |= SMS_FLAGS_AC3;
+  } else {
+   s_Player.m_Flags               |= SMS_FLAGS_SPDIF;
+   apStm -> m_pCodec -> m_Channels = 5;
+  }  /* end else */
+ } else {
+  if ( apStm -> m_pCodec -> m_ID == SMS_CodecID_AAC && apStm -> m_pCodec -> m_Channels > 2 ) apStm -> m_pCodec -> m_Channels = 2;
+  s_Player.m_Flags &= ~( SMS_FLAGS_SPDIF | SMS_FLAGS_AC3 );
+ }  /* end else */
+}  /* end _check_ac3 */
+
+static void _sync_dma ( void ) {
+
+ DMA_Wait ( DMAC_TO_IPU   );
+ DMA_Wait ( DMAC_FROM_IPU );
+ DMA_Wait ( DMAC_GIF  );
+ DMA_Wait ( DMAC_VIF1 );
+
+}  /* end _sync_dma */
 
 static void _draw_text ( char* apStr ) {
 
@@ -85,7 +119,7 @@ static void _draw_text ( char* apStr ) {
 
 }  /* end _draw_text */
 
-static void _set_colors ( void ) {
+static void _set_colors ( void* apPlayer ) {
 
  GSContext_SetTextColor ( 0, g_Palette[ g_Config.m_PlayerSCNIdx - 1 ] | 0x80000000 );
  GSContext_SetTextColor ( 1, g_Palette[ g_Config.m_PlayerSCBIdx - 1 ] | 0x80000000 );
@@ -96,35 +130,47 @@ static void _set_colors ( void ) {
 
 static void _prepare_ipu_context ( void ) {
 
- int lWidth  = 0;
- int lHeight = 0;
- int lfNoCSC = 0;
+ int               lWidth     = 0;
+ int               lHeight    = 0;
+ int               lfWS       = 0;
+ SMS_CodecContext* lpCodecCtx = NULL;
 
  if ( s_Player.m_VideoIdx >= 0 ) {
 
-  SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_pCodec;
-
-  lWidth  = lpCodecCtx -> m_Width;
-  lHeight = lpCodecCtx -> m_Height;
-
-  if ( lpCodecCtx -> m_Flags & SMS_CODEC_FLAG_NOCSC ) lfNoCSC = 1;
+  lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_pCodec;
+  lWidth     = lpCodecCtx -> m_Width;
+  lHeight    = lpCodecCtx -> m_Height;
+  lfWS       = lpCodecCtx -> m_fWS;
 
  }  /* end if */
 
  GUI_Redraw ( GUIRedrawMethod_RedrawClear );
+ SMS_GUIClockStop ();
  GS_VSync ();
- GSContext_Init ( g_Config.m_DisplayMode, GSZTest_On, GSDoubleBuffer_Off );
+ GSContext_Init ( g_Config.m_DisplayMode, GSZTest_Off, GSDoubleBuffer_Off );
  GS_VSync ();
 
- _set_colors ();
+ _set_colors ( NULL );
 
  s_Player.m_pIPUCtx = IPU_InitContext (
-  lWidth, lHeight, s_Player.m_AudioIdx >= 0 ? &s_Player.m_AudioTime : NULL, lfNoCSC
+  lWidth, lHeight, s_Player.m_AudioIdx >= 0 ? &s_Player.m_AudioTime : NULL, lfWS
  );
+
+ if ( lpCodecCtx && lpCodecCtx -> HWCtl ) lpCodecCtx -> HWCtl ( lpCodecCtx, SMS_HWC_Init );
 
  if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> Prepare ();
 
 }  /* end _prepare_ipu_context */
+
+static void _init_spu ( void ) {
+
+ s_Player.m_pSPUCtx -> Destroy ();
+ s_Player.m_pSPUCtx = SPU_InitContext (
+  s_Player.m_AudioChannels, s_Player.m_AudioSampleRate, SPU_Index2Volume ( g_Config.m_PlayerVolume ),
+  s_Player.m_PDW22Base, s_Player.m_PDW22Ratio
+ );
+
+}  /* end _init_spu */
 
 static void _clear_packet_queues ( void ) {
 
@@ -156,11 +202,11 @@ static void _terminate_threads ( int afDelete ) {
  ChangeThreadPriority ( s_MainThreadID, SMS_THREAD_PRIORITY );
 
  if ( lThread.status != 0x10 ) {
-  s_Flags |=  SMS_FLAGS_STOP;
-  if ( s_Flags & SMS_FLAGS_PAUSE ) SignalSema ( s_SemaPauseAudio );
+  s_Player.m_Flags |= SMS_FLAGS_STOP;
+  if ( s_Player.m_Flags & SMS_FLAGS_PAUSE ) SignalSema ( s_SemaPauseAudio );
   SMS_RingBufferPost ( s_pAudioBuffer );
   SleepThread ();
-  s_Flags &= ~SMS_FLAGS_STOP;
+  s_Player.m_Flags &= ~SMS_FLAGS_STOP;
  }  /* end if */
 
  while (  SMS_RingBufferCount ( s_pVideoBuffer )  ) {
@@ -175,23 +221,40 @@ static void _terminate_threads ( int afDelete ) {
 
  SMS_RingBufferReset ( s_pVideoBuffer );
 
- if ( !afDelete ) {
+ for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i ) {
 
-  for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i ) {
+  SMS_Stream*     lpStm = s_Player.m_pCont -> m_pStm[ i ];
+  SMS_RingBuffer* lpRB  = lpStm -> m_pPktBuf;
 
-   SMS_RingBuffer* lpRB = s_Player.m_pCont -> m_pStm[ i ] -> m_pPktBuf;
+  if ( lpRB ) {
 
-   if ( lpRB ) SMS_RingBufferReset ( lpRB );
+   if ( lpStm -> m_Flags & SMS_STRM_FLAGS_AUDIO ) while (  SMS_RingBufferCount ( lpRB )  ) {
 
-  }  /* end for */
+    SMS_AVPacket* lpPack = ( SMS_AVPacket* )SMS_RingBufferWait ( lpRB );
 
-  SMS_RingBufferReset ( s_pAudioBuffer );
+    if ( lpPack -> m_Flags & SMS_PKT_FLAG_NWC ) {
+     SMS_CodecContext* lpCodecCtx = ( SMS_CodecContext* )( uint32_t )lpPack -> m_DTS;
+     SMS_CodecDestroy ( lpCodecCtx );
+     if ( lpStm -> m_pCodec == lpCodecCtx ) lpStm -> m_pCodec = NULL;
+    }  /* end if */
 
- } else for ( i = 0; i < 4; ++i ) DeleteThread ( s_ThreadIDs[ i ] );
+    SMS_RingBufferFree ( lpRB, lpPack -> m_Size + 64 );
+
+   }  /* end while */
+
+   SMS_RingBufferReset ( lpRB );
+
+  }  /* end if */
+
+ }  /* end for */
+
+ SMS_RingBufferReset ( s_pAudioBuffer );
+
+ if ( afDelete ) for ( i = 0; i < 4; ++i ) DeleteThread ( s_ThreadIDs[ i ] );
 
 }  /* end _terminate_threads */
 
-static unsigned char s_VideoBuffer[ 320 ] __attribute__(   (  aligned( 64 )  )   );
+static unsigned char s_VideoBuffer[ 192 ] __attribute__(   (  aligned( 64 )  )   );
 
 static void _init_queues ( int afCreate ) {
 
@@ -210,7 +273,7 @@ static void _init_queues ( int afCreate ) {
  } else {
 
   _terminate_threads ( 0 );
-  s_Flags = 0;
+  s_Player.m_Flags &= ~SMS_FLAGS_DYNMSK;
   _clear_packet_queues ();
 
  }  /* end else */
@@ -231,6 +294,9 @@ static void _block_callback ( SMS_RingBuffer* apRB ) {
 
  *( int* )apRB -> m_pBlockCBParam = 1;
 
+ SMS_PgIndStop ();
+ s_Player.m_pIPUCtx -> Resume ();
+
  for ( i = 0; i < 4; ++i ) ResumeThread ( s_ThreadIDs[ i ] );
 
 }  /* end _block_callback */
@@ -239,6 +305,9 @@ static int _fill_packet_queues ( void ) {
 
  int          i, lStmIdx, lSize = 0, lLock = 0;
  SMS_Stream** lpStms = s_Player.m_pCont -> m_pStm;
+
+ s_Player.m_pIPUCtx -> Suspend ();
+ SMS_PgIndStart ();
 
  for ( i = 0; i < 4; ++i ) SuspendThread ( s_ThreadIDs[ i ] );
 
@@ -272,7 +341,14 @@ static int _fill_packet_queues ( void ) {
 
  }  /* end for */
 
- if ( !lLock ) for ( i = 0; i < 4; ++i ) ResumeThread ( s_ThreadIDs[ i ] );
+ if ( !lLock ) {
+
+  SMS_PgIndStop ();
+  s_Player.m_pIPUCtx -> Resume ();
+
+  for ( i = 0; i < 4; ++i ) ResumeThread ( s_ThreadIDs[ i ] );
+
+ }  /* end if */
 
  return lSize;
 
@@ -280,7 +356,7 @@ static int _fill_packet_queues ( void ) {
 
 static void _sms_dummy_video_renderer ( void* apParam ) {
 
- static u64 s_lDMA[ 16 ] __attribute__(   (  aligned( 16 )  )   );
+ static u64 s_lDMA[ 16 ] __attribute__(   (  aligned( 64 )  )   );
 
  u64*   lpDMA     = _U( s_lDMA );
  short* lpSamples = NULL;
@@ -288,47 +364,55 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
  SMS_RingBufferWait ( s_pVideoBuffer );
 
- lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 2 ], 1, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 2 ], 0  );
+ lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 2 ], 0, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 2 ], 0  );
  lpDMA[ i++ ] = 0;
 
  if ( s_Player.m_pCont -> m_pPlayList ) {
 
-  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 4 ], 1, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 4 ], 0  );
+  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 4 ], 0, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 4 ], 0  );
   lpDMA[ i++ ] = 0;
 
  }  /* end if */
 
- lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 3 ], 1, DMATAG_ID_REF,  0, ( u32 )s_Player.m_OSDPackets[ 3 ], 0  );
+ lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 3 ], 0, DMATAG_ID_REF,  0, ( u32 )s_Player.m_OSDPackets[ 3 ], 0  );
  lpDMA[ i++ ] = 0;
 
  if ( g_Config.m_PlayerFlags & SMS_PF_ANIM ) {
 
-  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 5 ], 1, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 5 ], 0   );
+  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 5 ], 0, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 5 ], 0   );
   lpDMA[ i++ ] = 0;
 
  }  /* end if */
 
- lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 6 ], 1, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 6 ], 0   );
+ lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 6 ], 0, DMATAG_ID_REF, 0, ( u32 )s_Player.m_OSDPackets[ 6 ], 0   );
  lpDMA[ i++ ] = 0;
 
- lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 1 ] - 1, 1, DMATAG_ID_REF, 0, ( u32 )( s_Player.m_OSDPackets[ 1 ] + 2 ), 0   );
+ lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 1 ] - 1, 0, DMATAG_ID_REF, 0, ( u32 )( s_Player.m_OSDPackets[ 1 ] + 2 ), 0   );
  lpDMA[ i++ ] = 0;
 
  if ( g_Config.m_PlayerFlags & SMS_PF_ASD ) {
 
-  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 7 ], 1, DMATAG_ID_REF, 0, ( u32 )( s_Player.m_OSDPackets[ 7 ] ), 0   );
+  lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 7 ], 0, DMATAG_ID_REF, 0, ( u32 )( s_Player.m_OSDPackets[ 7 ] ), 0   );
   lpDMA[ i++ ] = 0;
 
  }  /* end if */
 
- lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 0 ] - 1, 1, DMATAG_ID_REFE, 0, ( u32 )( s_Player.m_OSDPackets[ 0 ] + 2 ), 0   );
+ lpDMA[ i++ ] = DMA_TAG(  s_Player.m_OSDQWC[ 0 ] - 1, 0, DMATAG_ID_REFE, 0, ( u32 )( s_Player.m_OSDPackets[ 0 ] + 2 ), 0   );
  lpDMA[ i   ] = 0;
 
  while ( 1 ) {
 
+  if ( s_Player.m_pAudioSamples && lpSamples == s_Player.m_pAudioSamples )
+
+   lpSamples += 1024;
+
+  else lpSamples = s_Player.m_pAudioSamples;
+
+  SMS_SpectrumCalc ( lpSamples );
+
   s_Player.m_pIPUCtx -> Sync ();
 
-  if ( s_Flags & SMS_FLAGS_PAUSE ) {
+  if ( s_Player.m_Flags & SMS_FLAGS_PAUSE ) {
 
    _draw_text ( STR_PAUSE.m_pStr );
 
@@ -337,17 +421,17 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
   }  /* end if */
 
-  if ( s_Flags & SMS_FLAGS_VSCROLL ) {
+  if ( s_Player.m_Flags & SMS_FLAGS_VSCROLL ) {
 
    if ( s_Player.m_OSDPLPos == s_Player.m_OSDPLRes ) {
 
-    s_Flags &= ~SMS_FLAGS_VSCROLL;
+    s_Player.m_Flags &= ~SMS_FLAGS_VSCROLL;
 
-    if (  !( s_Flags & SMS_FLAGS_AASCROLL )  )
+    if (  !( s_Player.m_Flags & SMS_FLAGS_AASCROLL )  )
 
      SignalSema ( s_SemaAckPause );
 
-    else s_Flags &= ~( SMS_FLAGS_ASCROLL | SMS_FLAGS_AASCROLL );
+    else s_Player.m_Flags &= ~( SMS_FLAGS_ASCROLL | SMS_FLAGS_AASCROLL );
 
    } else {
 
@@ -363,15 +447,14 @@ static void _sms_dummy_video_renderer ( void* apParam ) {
 
   SMS_PlayerBallSim_Update ( s_Player.m_OSDPackets[ 5 ] );
 
-  if ( s_Player.m_pAudioSamples && lpSamples == s_Player.m_pAudioSamples )
+  if (  !( g_Config.m_PlayerFlags & SMS_PF_SPDIF ) || ( g_Config.m_PlayerFlags & SMS_PF_PDW22 )  ) SMS_SpectrumUpdate ();
 
-   lpSamples += 1024;
+  if ( s_Player.m_Flags & SMS_FLAGS_DISPCTL ) {
+   s_Player.m_pIPUCtx -> QueuePacket ( s_Player.m_OSDQWC[ 8 ], s_Player.m_OSDPackets[ 8 ] );
+   s_Player.m_pIPUCtx -> QueuePacket ( s_Player.m_OSDQWC[ 9 ], s_Player.m_OSDPackets[ 9 ] );
+  }  /* end if */
 
-  else lpSamples = s_Player.m_pAudioSamples;
-
-  SMS_SpectrumUpdate ( lpSamples );
-
-  __asm__ __volatile__( "sync\n\t" );
+  __asm__ __volatile__( "sync.l\n\t" );
 
   s_Player.m_pIPUCtx -> Display ( s_lDMA, 0 );
 
@@ -387,9 +470,11 @@ static void _sms_video_renderer ( void* apParam ) {
 
   lpFrame = *( SMS_FrameBuffer** )SMS_RingBufferWait ( s_pVideoBuffer );
 
-  if ( s_Flags & SMS_FLAGS_PAUSE ) {
+  s_Player.m_pIPUCtx -> Sync ();
 
-   if (  !( s_Flags & SMS_FLAGS_MENU )  )
+  if ( s_Player.m_Flags & SMS_FLAGS_PAUSE ) {
+
+   if (  !( s_Player.m_Flags & SMS_FLAGS_MENU )  )
     _draw_text ( STR_PAUSE.m_pStr );
    else s_Player.m_pIPUCtx -> Sync ();
 
@@ -398,24 +483,27 @@ static void _sms_video_renderer ( void* apParam ) {
 
   }  /* end if */
 
-  s_Player.m_pIPUCtx -> Sync ();
-
   if ( lpFrame -> m_FrameType != SMS_FT_T_TYPE ) {
 
-   if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_PF_SUBS )  ) s_Player.m_pSubCtx -> Display ( lpFrame -> m_SPTS - s_Player.m_SVDelta );
+   if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_FLAGS_SUBS )  )
 
-   if ( s_Player.m_OSD ) {
+    s_Player.m_pSubCtx -> Display ( lpFrame -> m_StartPTS - s_Player.m_SVDelta );
 
-    s_Player.m_pIPUCtx -> PQueuePacket ( s_Player.m_OSDQWC[ 1 ], s_Player.m_OSDPackets[ 1 ] );
-    s_Player.m_pIPUCtx -> PQueuePacket ( s_Player.m_OSDQWC[ 0 ], s_Player.m_OSDPackets[ 0 ] );
-
+   if ( s_Player.m_Flags & SMS_FLAGS_DISPCTL ) {
+    s_Player.m_pIPUCtx -> QueuePacket ( s_Player.m_OSDQWC[ 8 ], s_Player.m_OSDPackets[ 8 ] );
+    s_Player.m_pIPUCtx -> QueuePacket ( s_Player.m_OSDQWC[ 9 ], s_Player.m_OSDPackets[ 9 ] );
    }  /* end if */
 
-   s_Player.m_pIPUCtx -> Display ( lpFrame, s_Player.m_VideoTime = lpFrame -> m_PTS );
+   if ( s_Player.m_OSD ) {
+    s_Player.m_pIPUCtx -> QueuePacket ( s_Player.m_OSDQWC[ 0 ], s_Player.m_OSDPackets[ 0 ] );
+    s_Player.m_pIPUCtx -> QueuePacket ( s_Player.m_OSDQWC[ 1 ], s_Player.m_OSDPackets[ 1 ] );
+   }  /* end if */
+
+   s_Player.m_pIPUCtx -> Display ( lpFrame, s_Player.m_VideoTime = lpFrame -> m_StartPTS );
 
   } else {
 
-   if ( s_Player.m_Flags & SMS_PF_SUBS )
+   if ( s_Player.m_Flags & SMS_FLAGS_SUBS )
     s_Player.m_pIPUCtx -> QueueSubtitle ( lpFrame );
    else free ( lpFrame );
 
@@ -448,13 +536,9 @@ static void _sms_video_decoder ( void* apParam ) {
 static void _sms_audio_only_renderer ( void* apParam ) {
 
  SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec;
- uint32_t          lBPS       = lpCodecCtx -> m_BitsPerSample;
- float             lMult;
+ float             lMult      = ( float )( s_Player.m_AudioChannels > 2 ? 2 : s_Player.m_AudioChannels );
 
- if ( !lBPS ) lBPS = 16;
-
- lMult = (  1000.0F / ( lBPS * s_Player.m_AudioChannels / 8 )  ) / ( float )s_Player.m_AudioSampleRate;
-
+ lMult                = (  1000.0F / ( 2 * lMult )  ) / ( float )s_Player.m_AudioSampleRate;
  s_Player.m_AudioTime = 0LL;
 
  while ( 1 ) {
@@ -463,9 +547,9 @@ static void _sms_audio_only_renderer ( void* apParam ) {
   int      lLen;
   uint8_t* lpPacket = SMS_RingBufferWait ( s_pAudioBuffer );
 
-  if ( s_Flags & SMS_FLAGS_STOP ) break;
+  if ( s_Player.m_Flags & SMS_FLAGS_STOP ) break;
 
-  if ( s_Flags & SMS_FLAGS_PAUSE ) {
+  if ( s_Player.m_Flags & SMS_FLAGS_PAUSE ) {
 
    s_Player.m_pSPUCtx -> Silence ();
    SignalSema ( s_SemaAckPause );
@@ -479,6 +563,9 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
   if ( lPTS == SMS_STPTS_VALUE ) {
 
+   if (   (  ( int64_t* )lpPacket  )[ 1 ]   )
+    lpCodecCtx = ( SMS_CodecContext* )( uint32_t )(  ( int64_t* )lpPacket  )[ 1 ];
+
    PlayerControl_UpdateDuration ( 1, s_Player.m_pCont -> m_Duration );
 
    s_Player.m_AudioTime = 0LL;
@@ -490,12 +577,10 @@ static void _sms_audio_only_renderer ( void* apParam ) {
     s_Player.m_AudioChannels   = lpCodecCtx -> m_Channels;
     s_Player.m_AudioSampleRate = lpCodecCtx -> m_SampleRate;
 
-    lMult = (  1000.0F / ( lBPS * s_Player.m_AudioChannels / 8 )  ) / ( float )s_Player.m_AudioSampleRate;
+    lMult = ( float )( s_Player.m_AudioChannels > 2 ? 2 : s_Player.m_AudioChannels );
+    lMult = (  1000.0F / ( 2 * lMult )  ) / ( float )s_Player.m_AudioSampleRate;
 
-    s_Player.m_pSPUCtx -> Destroy ();
-    s_Player.m_pSPUCtx = SPU_InitContext (
-     s_Player.m_AudioChannels, s_Player.m_AudioSampleRate, SPU_Index2Volume ( g_Config.m_PlayerVolume )
-    );
+    _init_spu ();
 
    }  /* end if */
 
@@ -505,11 +590,11 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
      s_Player.m_pPlayItem  = s_Player.m_pCont -> m_pPlayList -> m_pHead;
      s_Player.m_PlayItemNr = 1;
-     s_Flags              &= ~SMS_FLAGS_ASCROLL;
+     s_Player.m_Flags     &= ~SMS_FLAGS_ASCROLL;
 
     } else {
 
-     if (  !( s_Flags & SMS_FLAGS_ABSCROLL )  ) {
+     if (  !( s_Player.m_Flags & SMS_FLAGS_ABSCROLL )  ) {
 
       s_Player.m_pPlayItem = s_Player.m_pPlayItem -> m_pNext;
       ++s_Player.m_PlayItemNr;
@@ -523,31 +608,31 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
       }  /* end if */
 
-      s_Flags &= ~SMS_FLAGS_ABSCROLL;
+      s_Player.m_Flags &= ~SMS_FLAGS_ABSCROLL;
 
      }  /* end else */
 
      PlayerControl_UpdateItemNr ();
 
-     if (  !( s_Flags & SMS_FLAGS_ASCROLL )  ) {
+     if (  !( s_Player.m_Flags & SMS_FLAGS_ASCROLL )  ) {
 
-      s_Player.m_OSDPLInc = -4;
+      s_Player.m_OSDPLInc = -8;
       s_Player.m_OSDPLRes = s_Player.m_OSDPLPos - 32;
-      s_Flags            |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_AASCROLL );
+      s_Player.m_Flags   |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_AASCROLL );
 
-     } else s_Flags &= ~SMS_FLAGS_ASCROLL;
+     } else s_Player.m_Flags &= ~SMS_FLAGS_ASCROLL;
 
     }  /* end else */
 
    }  /* end if */
 
-  } else s_Player.m_AudioTime += ( int64_t )( uint32_t )( lLen * lMult );
+  } else s_Player.m_AudioTime += ( int64_t )( uint32_t )( lLen * lMult + 0.5F );
 
-  s_Player.m_pAudioSamples = ( short* )( lpPacket + 68 );
+  s_Player.m_pAudioSamples = ( short* )( lpPacket + 80 );
 
   s_Player.m_pSPUCtx -> PlayPCM ( lpPacket + 64 );
 
-  SMS_RingBufferFree ( s_pAudioBuffer, lLen + 68 );
+  SMS_RingBufferFree ( s_pAudioBuffer, lLen + 80 );
 
  }  /* end while */
 
@@ -559,8 +644,11 @@ static void _sms_audio_only_renderer ( void* apParam ) {
 
 static void _audio_callback ( SMS_RingBuffer* apRB ) {
 
- *( int64_t* )apRB -> m_pPtr         = *( int64_t* )apRB -> m_pUserCBParam;
- *( int64_t* )apRB -> m_pUserCBParam = SMS_NOPTS_VALUE;
+ (  ( int64_t* )apRB -> m_pPtr  )[ 0 ] = (  ( int64_t* )apRB -> m_pUserCBParam  )[ 0 ];
+ (  ( int64_t* )apRB -> m_pPtr  )[ 1 ] = (  ( int64_t* )apRB -> m_pUserCBParam  )[ 1 ];
+
+ (  ( int64_t* )apRB -> m_pUserCBParam  )[ 0 ] = SMS_NOPTS_VALUE;
+ (  ( int64_t* )apRB -> m_pUserCBParam  )[ 1 ] = 0;
 
  SMS_RingBufferPost ( apRB );
 
@@ -569,13 +657,13 @@ static void _audio_callback ( SMS_RingBuffer* apRB ) {
 static void _sms_audio_only_decoder ( void* apParam ) {
 
  SMS_AVPacket*     lpPacket;
- int64_t           lPTS       = SMS_STPTS_VALUE;
+ int64_t           lPTS[ 2 ]  = { SMS_STPTS_VALUE, 0 };
  SMS_Stream*       lpStm      = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ];
  SMS_RingBuffer*   lpBuff     = lpStm -> m_pPktBuf;
  SMS_CodecContext* lpCodecCtx = lpStm -> m_pCodec;
  int               lSize;
 
- s_pAudioBuffer -> m_pUserCBParam = &lPTS;
+ s_pAudioBuffer -> m_pUserCBParam = &lPTS[ 0 ];
  s_pAudioBuffer -> UserCB         = _audio_callback;
 
  while ( 1 ) {
@@ -583,8 +671,20 @@ static void _sms_audio_only_decoder ( void* apParam ) {
   lpPacket = ( SMS_AVPacket* )SMS_RingBufferWait ( lpBuff );
 
   if ( lpPacket -> m_StmIdx == s_Player.m_AudioIdx ) {
-
-   if ( lPTS != SMS_STPTS_VALUE ) lPTS = lpPacket -> m_PTS;
+   if ( lPTS[ 0 ] != SMS_STPTS_VALUE )
+    lPTS[ 0 ] = lpPacket -> m_PTS;
+   if ( lpPacket -> m_PTS == SMS_STPTS_VALUE ) {
+    if ( lpPacket -> m_Flags & SMS_PKT_FLAG_NWC ) {
+     SMS_CodecDestroy ( s_Player.m_pAudioCodecCtx );
+     lpStm = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ];
+     s_Player.m_pAudioCodecCtx = lpCodecCtx = ( SMS_CodecContext* )( uint32_t )lpPacket -> m_DTS;
+     SMS_CodecOpen ( lpCodecCtx );
+     s_Player.m_pAudioCodec    = lpCodecCtx -> m_pCodec;
+     lPTS[ 1 ]                 = ( int64_t )( uint32_t )lpCodecCtx;
+    }  /* end if */
+    _check_ac3 ( lpStm );
+    s_Player.m_pAudioCodec -> Init ( lpCodecCtx );
+   }  /* end if */
 
    do {
     lSize = s_Player.m_pAudioCodec -> Decode ( lpCodecCtx, s_pAudioBuffer, lpBuff );
@@ -611,44 +711,47 @@ static void _sms_audio_renderer ( void* apParam ) {
 
  }  /* end if */
 
+ if ( s_Player.m_pIPUCtx ) s_Player.m_pIPUCtx -> StopSync ( 1 );
+
  while ( 1 ) {
 
   int64_t        lPTS;
   int            lLen;
   unsigned char* lpPacket = SMS_RingBufferWait ( s_pAudioBuffer );
 
-  if ( s_Flags & SMS_FLAGS_STOP ) break;
+  if ( s_Player.m_Flags & SMS_FLAGS_STOP ) break;
 
-  if ( s_Flags & SMS_FLAGS_PAUSE ) {
+  if ( s_Player.m_Flags & SMS_FLAGS_PAUSE ) {
 
+   s_Player.m_pIPUCtx -> StopSync ( 1 );
    s_Player.m_pSPUCtx -> Silence ();
    SignalSema ( s_SemaAckPause );
    WaitSema ( s_SemaPauseAudio );
 
-   if ( s_Flags & SMS_FLAGS_STOP ) break;
+   if ( s_Player.m_Flags & SMS_FLAGS_STOP ) break;
 
    s_Player.m_pSPUCtx -> SetVolume (  SPU_Index2Volume ( g_Config.m_PlayerVolume )  );
 
   }  /* end if */
 
   lLen = *( int* )( lpPacket + 64 );
-  lPTS = *( int64_t* )lpPacket;
+  lPTS = (  ( int64_t* )lpPacket  )[ 0 ];
 
   if ( lPTS != SMS_NOPTS_VALUE )
    s_Player.m_AudioTime = lPTS;
-  else s_Player.m_AudioTime += ( int64_t )( uint32_t )( lLen * lMult );
+  else s_Player.m_AudioTime += ( int64_t )( uint32_t )( lLen * lMult + 0.5F );
 
   s_Player.m_AudioTime += s_Player.m_AVDelta;
+
+  if (   (  ( int64_t* )lpPacket  )[ 1 ]   ) _init_spu ();
+
   s_Player.m_pSPUCtx -> PlayPCM ( lpPacket + 64 );
 
-  if ( s_Player.m_EOF && !SMS_RingBufferCount ( s_pAudioBuffer )  ) {
+  s_Player.m_pIPUCtx -> StopSync (
+   !SMS_RingBufferCount ( s_pAudioBuffer )
+  );
 
-   s_Player.m_pIPUCtx -> StopSync ( 1 );
-   s_Player.m_pSPUCtx -> SetVolume ( 0 );
-
-  }  /* end if */
-
-  SMS_RingBufferFree ( s_pAudioBuffer, lLen + 68 );
+  SMS_RingBufferFree ( s_pAudioBuffer, lLen + 80 );
 
  }  /* end while */
 
@@ -661,11 +764,11 @@ static void _sms_audio_renderer ( void* apParam ) {
 static void _sms_audio_decoder ( void* apParam ) {
 
  SMS_AVPacket*   lpPacket;
- int64_t         lPTS;
+ int64_t         lPTS[ 2 ] = { SMS_NOPTS_VALUE, 0 };
  int             lSize;
  SMS_RingBuffer* lpBuff;
 
- s_pAudioBuffer -> m_pUserCBParam = &lPTS;
+ s_pAudioBuffer -> m_pUserCBParam = &lPTS[ 0 ];
  s_pAudioBuffer -> UserCB         = _audio_callback;
 
  if (  s_Player.m_AudioIdx < 0 || !( lpBuff = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pPktBuf )  ) return;
@@ -676,7 +779,26 @@ static void _sms_audio_decoder ( void* apParam ) {
 
   if ( lpPacket -> m_StmIdx == s_Player.m_AudioIdx ) {
 
-   lPTS = lpPacket -> m_PTS;
+   lPTS[ 0 ] = lpPacket -> m_PTS;
+
+   if ( s_Player.m_AudioIdx != s_Player.m_PrevAudioIdx ) {
+
+    SMS_Stream*       lpStm = s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ];
+    SMS_CodecContext* lpCtx = lpStm -> m_pCodec;
+    SMS_Codec*        lpCod = lpCtx -> m_pCodec;
+
+    _check_ac3 ( lpStm );
+    lpCod -> Init ( lpCtx );
+
+    s_Player.m_pAudioCodec     = lpCod;
+    s_Player.m_pAudioCodecCtx  = lpCtx;
+    s_Player.m_PrevAudioIdx    = s_Player.m_AudioIdx;
+    s_Player.m_AudioChannels   = lpCtx -> m_Channels;
+    s_Player.m_AudioSampleRate = lpCtx -> m_SampleRate;
+
+    lPTS[ 1 ] = 1;
+
+   }  /* end if */
 
    do {
     lSize = s_Player.m_pAudioCodec -> Decode (
@@ -686,7 +808,7 @@ static void _sms_audio_decoder ( void* apParam ) {
 
   }  /* end if */
 
-  if ( lPTS != SMS_NOPTS_VALUE ) s_Player.m_AudioTime = lPTS;
+  if ( lPTS[ 0 ] != SMS_NOPTS_VALUE ) s_Player.m_AudioTime = lPTS[ 0 ];
 
   SMS_RingBufferFree ( lpBuff, lpPacket -> m_Size + 64 );
 
@@ -731,19 +853,18 @@ static int _FFwd_A ( void ) {
  int            retVal = 1;
  SMS_Container* lpCont = s_Player.m_pCont;
 
- if (   s_Player.m_pPlayItem && s_Player.m_pPlayItem -> m_pNext && !(  s_Flags & ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL )  )   ) {
+ if (   s_Player.m_pPlayItem && s_Player.m_pPlayItem -> m_pNext && !(  s_Player.m_Flags & ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL )  )   ) {
 
   _init_queues ( 0 );
-  s_Player.m_pAudioCodec -> Init ( s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec );
   _start_threads ();
 
   if ( s_Player.m_pPlayItem -> m_pNext ) {
 
    s_Player.m_pAudioSamples = NULL;
-   s_Player.m_OSDPLInc      = -4;
+   s_Player.m_OSDPLInc      = -8;
    s_Player.m_OSDPLRes      = s_Player.m_OSDPLPos - 32;
 
-   s_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL );
+   s_Player.m_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL );
    SMS_RingBufferPost ( s_pVideoBuffer );
 
    retVal = lpCont -> Seek (  lpCont, 0, 0, ( uint32_t )s_Player.m_pPlayItem -> m_pNext  );
@@ -763,19 +884,18 @@ static int _Rew_A ( void ) {
  int            retVal = 1;
  SMS_Container* lpCont = s_Player.m_pCont;
 
- if (   s_Player.m_pPlayItem && s_Player.m_pPlayItem -> m_pPrev && !(  s_Flags & ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_ABSCROLL )  )   ) {
+ if (   s_Player.m_pPlayItem && s_Player.m_pPlayItem -> m_pPrev && !(  s_Player.m_Flags & ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_ABSCROLL )  )   ) {
 
   _init_queues ( 0 );
-  s_Player.m_pAudioCodec -> Init ( s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] -> m_pCodec );
   _start_threads ();
 
   if ( s_Player.m_pPlayItem -> m_pPrev ) {
 
    s_Player.m_pAudioSamples = NULL;
-   s_Player.m_OSDPLInc      = 4;
+   s_Player.m_OSDPLInc      = 8;
    s_Player.m_OSDPLRes      = s_Player.m_OSDPLPos + 32;
 
-   s_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_ABSCROLL );
+   s_Player.m_Flags |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ASCROLL | SMS_FLAGS_ABSCROLL );
    SMS_RingBufferPost ( s_pVideoBuffer );
 
    retVal = lpCont -> Seek (  lpCont, 0, 0, ( uint32_t )s_Player.m_pPlayItem -> m_pPrev  );
@@ -792,7 +912,7 @@ static int _Rew_A ( void ) {
 
 }  /* end _Rew_A */
 
-static void _sms_play ( void ) {
+static int _sms_play ( void* apPlayer ) {
 
  int           lSize = 0;
  char          lBuff[ 128 ];
@@ -814,16 +934,20 @@ static void _sms_play ( void ) {
 
   if ( s_Player.m_pSubFileCtx ) {
 
-   float lFPS = ( float )lpStms[ s_Player.m_VideoIdx ] -> m_RealFrameRate / 
-                ( float )lpStms[ s_Player.m_VideoIdx ] -> m_RealFrameRateBase;
+   float lFPS = ( float )lpStms[ s_Player.m_VideoIdx ] -> m_pCodec -> m_FrameRate / 
+                ( float )lpStms[ s_Player.m_VideoIdx ] -> m_pCodec -> m_FrameRateBase;
 
+   SMS_GUIClockSuspend ();
+   SMS_PgIndStart ();
    GUI_Progress ( STR_LOADING_SUBTITLES.m_pStr, 100, 0 );
    s_Player.m_pSubFileCtx -> Stream ( s_Player.m_pSubFileCtx, 0, 10 );
    s_Player.m_pSubCtx = SubtitleContext_Init (
-    s_Player.m_pSubFileCtx, s_Player.m_SubFormat, lFPS
+    s_Player.m_pSubFileCtx, s_Player.m_SubFormat, lFPS, s_Player.m_PDW22Ratio, s_Player.m_PDW22Base
    );
    s_Player.m_pSubFileCtx -> Stream ( s_Player.m_pSubFileCtx, 0, 0 );
    s_Player.m_pSubFileCtx -> Destroy ( s_Player.m_pSubFileCtx );
+   SMS_PgIndStop ();
+   SMS_GUIClockResume ();
  
    if ( s_Player.m_pSubCtx -> m_ErrorCode ) {
 
@@ -867,7 +991,8 @@ static void _sms_play ( void ) {
 
   s_Player.m_pSPUCtx = SPU_InitContext (
    s_Player.m_AudioChannels, s_Player.m_AudioSampleRate,
-   SPU_Index2Volume ( g_Config.m_PlayerVolume )
+   SPU_Index2Volume ( g_Config.m_PlayerVolume ),
+   s_Player.m_PDW22Base, s_Player.m_PDW22Ratio
   );
 
   ++lnDec;
@@ -877,6 +1002,31 @@ static void _sms_play ( void ) {
  if ( s_Player.m_pFileCtx ) {
 
   sprintf ( lBuff, STR_BUFFERING_FILE.m_pStr, s_Player.m_pCont -> m_pName  );
+
+  if ( !lfNoVideo && lfSeekable ) {
+
+   long lPTS = SMS_HistoryLook ( s_Player.m_pCont -> m_pFileCtx -> m_pPath, NULL );
+
+   if ( lPTS != -1 ) {
+
+    char lBuf[ 8 ];
+
+    lPTS = SMS_Rescale ( lPTS, s_Player.m_PDW22Ratio, s_Player.m_PDW22Base );
+    PlayerControl_FormatTime ( lBuf, lPTS );
+    sprintf ( s_VideoBuffer, STR_RESUME.m_pStr, lBuf );
+
+    if (  GUI_Question ( s_VideoBuffer )  ) {
+
+     SMS_Stream* lpStm = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ];
+
+     lPTS = SMS_Rescale (  lPTS - s_Player.m_pCont -> m_StartTime, lpStm -> m_TimeBase.m_Den, SMS_TIME_BASE * ( int64_t )lpStm -> m_TimeBase.m_Num  );
+     s_Player.m_pCont -> Seek ( s_Player.m_pCont, s_Player.m_VideoIdx, -1, lPTS );
+
+    }  /* end if */
+
+   }  /* end if */
+
+  }  /* end if */
 
   GUI_Status ( lBuff );
   s_Player.m_pFileCtx -> Stream (
@@ -888,6 +1038,7 @@ static void _sms_play ( void ) {
  _prepare_ipu_context ();
 
  PlayerControl_Init ();
+ FlushCache ( 0 );
 
  if ( lfNoVideo ) {
 
@@ -897,8 +1048,8 @@ static void _sms_play ( void ) {
 
   SMS_SpectrumInit ();
 
-  PlayerControl_HandleOSD ( 0, 0 );
   PlayerControl_UpdateDuration ( 0, s_Player.m_pCont -> m_Duration );
+  PlayerControl_HandleOSD ( 0, 0 );
   PlayerControl_UpdateItemNr ();
   SMS_RingBufferPost ( s_pVideoBuffer );
 
@@ -909,6 +1060,8 @@ static void _sms_play ( void ) {
 
  }  /* end else */
 repeat:
+ s_Player.m_pIPUCtx -> StopSync ( 1 );
+
  while ( 1 ) {
 
   uint32_t lBtn = GUI_ReadButtons ();
@@ -925,7 +1078,7 @@ repeat:
 
     if ( g_Config.m_ScrollBarPos == SMScrollBarPos_Inactive || lfNoVideo || !lfSeekable ) {
 
-     s_Flags |= SMS_FLAGS_PAUSE;
+     s_Player.m_Flags |= SMS_FLAGS_PAUSE;
 
      s_Player.m_pIPUCtx -> StopSync ( 1 );
 
@@ -933,6 +1086,8 @@ repeat:
      if (  SMS_RingBufferCount ( s_pVideoBuffer ) || lfNoVideo ) WaitSema ( s_SemaAckPause );
 
      s_Player.m_pIPUCtx -> StopSync ( 0 );
+
+     if ( g_CMedia & 1 ) CDVD_Stop ();
 
      while (  GUI_ReadButtons ()  );
 
@@ -962,16 +1117,21 @@ repeat:
 
      }  /* end while */
 resume:
-     s_Flags &= ~SMS_FLAGS_PAUSE;
+     s_Player.m_Flags &= ~SMS_FLAGS_PAUSE;
      SignalSema ( s_SemaPauseAudio );
      SignalSema ( s_SemaPauseVideo );
      lSize = 0;
 
-    } else if (  *( int* )&s_Player.m_AudioTime ) {
+     if ( g_CMedia & 1 ) {
+      CDDA_Standby     ();
+      CDDA_Synchronize ();
+     }  /* end if */
+
+    } else if (  *( int* )&s_Player.m_AudioTime  ) {
 
      int lSts;
 
-     s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
+     s_Player.m_Flags |= ( SMS_FLAGS_PAUSE | SMS_FLAGS_MENU );
 
      s_Player.m_pIPUCtx -> StopSync ( 1 );
 
@@ -983,7 +1143,7 @@ resume:
      while (  GUI_ReadButtons ()  );
 
      if (   !(  lSts = PlayerControl_ScrollBar ( _init_queues )  )   ) {
-      s_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
+      s_Player.m_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
       goto exit;
      }  /* end if */
 
@@ -1003,23 +1163,20 @@ resume:
 
     SMS_CodecContext* lpCodecCtx = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ] -> m_pCodec;
 
-    s_Flags |= SMS_FLAGS_PAUSE | SMS_FLAGS_MENU;
-
-    s_Player.m_pIPUCtx -> StopSync ( 1 );
+    s_Player.m_Flags |= ( SMS_FLAGS_PAUSE | SMS_FLAGS_MENU );
 
     if (  SMS_RingBufferCount ( s_pAudioBuffer )  ) WaitSema ( s_SemaAckPause );
     if (  SMS_RingBufferCount ( s_pVideoBuffer )  ) WaitSema ( s_SemaAckPause );
-
-    s_Player.m_pIPUCtx -> StopSync ( 0 );
 
     s_Player.m_pIPUCtx -> Suspend ();
 
     if ( lpCodecCtx -> m_Flags & SMS_CODEC_FLAG_IPU ) {
      SuspendThread ( THREAD_ID_VD );
      _MPEG_Suspend ();
-     IPU_FRST    ();
+     IPU_FRST      ();
     }  /* end if */
 
+    _sync_dma ();
     SMS_PlayerMenu ();
 
     if ( lpCodecCtx -> m_Flags & SMS_CODEC_FLAG_IPU ) {
@@ -1029,7 +1186,7 @@ resume:
     }  /* end if */
 
     s_Player.m_pIPUCtx -> Resume  ();
-    s_Flags &= ~SMS_FLAGS_MENU;
+    s_Player.m_Flags &= ~SMS_FLAGS_MENU;
 
     lPOffTime = g_Timer + g_Config.m_PowerOff;
 
@@ -1041,33 +1198,33 @@ resume:
                lBtn == RC_STOP
           ) {
 exit:
-    s_Flags |= ( SMS_FLAGS_EXIT | SMS_FLAGS_USER_STOP );
+    s_Player.m_Flags |= ( SMS_FLAGS_EXIT | SMS_FLAGS_USER_STOP );
     break;
 
-   } else if (  ( lBtn == SMS_PAD_UP || lBtn == RC_TOPX ) && lfVolume && s_Player.m_pSPUCtx ) {
+   } else if (  ( lBtn == SMS_PAD_UP ) && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( 1 );
 
-   } else if (  ( lBtn == SMS_PAD_DOWN || lBtn == RC_BOTTOMX ) && lfVolume && s_Player.m_pSPUCtx ) {
+   } else if (  ( lBtn == SMS_PAD_DOWN ) && lfVolume && s_Player.m_pSPUCtx ) {
 
     PlayerControl_AdjustVolume ( -1 );
 
-   } else if (  ( lBtn == SMS_PAD_RIGHT || lBtn == RC_SCAN_RIGHT || lBtn == RC_RIGHTX ) && lfSeekable  ) {
+   } else if (   lfSeekable && (  lBtn == SMS_PAD_RIGHT || lBtn == RC_SCAN_RIGHT || ( lfNoVideo && lBtn == RC_NEXT )  )   ) {
 
     if (  !FFwdFunc ()  ) {
 
-     s_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
+     s_Player.m_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
      goto exit;
 
     }  /* end if */
 
     lSize = lfNoVideo ? 0 : _fill_packet_queues ();
 
-   } else if (  ( lBtn == SMS_PAD_LEFT || lBtn == RC_SCAN_LEFT || lBtn == RC_LEFTX ) && lfSeekable  ) {
+   } else if (   lfSeekable && ( lBtn == SMS_PAD_LEFT || lBtn == RC_SCAN_LEFT || ( lfNoVideo && lBtn == RC_PREV )  )   ) {
 
     if (  !RewFunc ()  ) {
 
-     s_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
+     s_Player.m_Flags |= ( SMS_FLAGS_STOP | SMS_FLAGS_USER_STOP );
      goto exit;
 
     }  /* end if */
@@ -1096,31 +1253,31 @@ exit:
 
     s_Player.m_pIPUCtx -> Reset ();
 
-   } else if (  ( lBtn == SMS_PAD_CROSS || lBtn == RC_TIME ) && !lfNoVideo  ) {
+   } else if (  ( lBtn == SMS_PAD_CROSS || lBtn == RC_TIME || lBtn == RC_ENTER ) && !lfNoVideo  ) {
 
     PlayerControl_HandleOSD ( 0, 0 );
 
-   } else if ( lBtn == SMS_PAD_L2 && !lfNoVideo ) {
+   } else if (  ( lBtn == SMS_PAD_L2 || lBtn == RC_PREV ) && !lfNoVideo  ) {
 
     if ( s_Player.m_OSD == 3 )
 
-     PlayerControl_HandleOSD ( 1, -25 );
+     PlayerControl_HandleOSD ( 1, -10 );
 
     else if ( s_Player.m_OSD == 4 )
 
-     PlayerControl_HandleOSD ( 2, -25 );
+     PlayerControl_HandleOSD ( 2, -10 );
 
     else PlayerControl_AdjustBrightness ( -1 );
 
-   } else if ( lBtn == SMS_PAD_R2 && !lfNoVideo ) {
+   } else if (  ( lBtn == SMS_PAD_R2 || lBtn == RC_NEXT ) && !lfNoVideo  ) {
 
     if ( s_Player.m_OSD == 3 )
 
-     PlayerControl_HandleOSD ( 1, 25 );
+     PlayerControl_HandleOSD ( 1, 10 );
 
     else if ( s_Player.m_OSD == 4 )
 
-     PlayerControl_HandleOSD ( 2, 25 );
+     PlayerControl_HandleOSD ( 2, 10 );
 
     else PlayerControl_AdjustBrightness ( 1 );
 
@@ -1138,7 +1295,7 @@ exit:
 
     }  /* end if */
 
-   } else if (  ( lBtn == SMS_PAD_CIRCLE || lBtn == RC_AUDIO ) && !lfNoVideo  ) {
+   } else if ( lBtn == SMS_PAD_CIRCLE && !lfNoVideo  ) {
 
     if ( s_Player.m_OSD < 3 ) {
 
@@ -1151,9 +1308,13 @@ exit:
 
     } else PlayerControl_HandleOSD ( 2, 0 );
 
+   } else if ( lBtn == RC_AUDIO && !lfNoVideo ) {
+
+    PlayerControl_ChangeLangOSD ( THREAD_ID_VR );
+
    }  /* end if */
 
-  } else if ( g_Config.m_PowerOff > 0 && g_Timer >= lPOffTime ) hddPowerOff ();
+  } else if ( g_Config.m_PowerOff > 0 && g_Timer >= lPOffTime ) SMS_IOPowerOff ();
 skip:
   g_CDDASpeed = 3;
 
@@ -1182,7 +1343,7 @@ skip:
 
    if ( !lnPackets ) break;
 
-   SetAlarm ( 1000, _sms_play_alarm, &lSema );
+   SetAlarm ( g_GSCtx.m_PHeight, _sms_play_alarm, &lSema );
    WaitSema ( lSema );
 
    continue;
@@ -1193,7 +1354,7 @@ skip:
 
  }  /* end while */
 
- if (  !( s_Flags & SMS_FLAGS_EXIT ) && lfNoVideo && ( g_Config.m_PlayerFlags & SMS_PF_REP )  ) {
+ if (  !( s_Player.m_Flags & SMS_FLAGS_EXIT ) && lfNoVideo && ( g_Config.m_PlayerFlags & SMS_PF_REP )  ) {
 
   SMS_Container* lpCont = s_Player.m_pCont;
 
@@ -1208,7 +1369,7 @@ skip:
     s_Player.m_PlayItemNr = 1;
     s_Player.m_OSDPLRes   = g_GSCtx.m_Height - 96;
     s_Player.m_OSDPLInc   = 16;
-    s_Flags              |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ABSCROLL | SMS_FLAGS_ASCROLL );
+    s_Player.m_Flags     |= ( SMS_FLAGS_VSCROLL | SMS_FLAGS_ABSCROLL | SMS_FLAGS_ASCROLL );
     s_Player.m_pPlayItem  = s_Player.m_pCont -> m_pPlayList -> m_pHead;
 
     lpCont -> Seek (  lpCont, 0, 0, ( uint32_t )lpCont -> m_pPlayList -> m_pHead  );
@@ -1231,16 +1392,33 @@ skip:
 
  DeleteSema ( lSema );
  _terminate_threads ( 1 );
+ IPU_FRST ();
 
- if ( s_Flags & SMS_FLAGS_EXIT ) _draw_text ( STR_STOPPING.m_pStr );
+ if ( s_Player.m_Flags & SMS_FLAGS_EXIT ) _draw_text ( STR_STOPPING.m_pStr );
 
  while (  GUI_ReadButtons ()  );
 
+ return s_Player.m_Flags & SMS_FLAGS_USER_STOP;
+
 }  /* end _sms_play */
 
-static void _Destroy ( void ) {
+static unsigned char* s_pVPBuff;
+static unsigned char* s_pAPBuff;
 
- DiskType lType;
+static void _Destroy ( void* apPlayer ) {
+
+ int  lfSeekable = s_Player.m_pCont -> m_Flags & SMS_CONT_FLAGS_SEEKABLE;
+ char lPath[ 512 ];
+
+ strcpy ( lPath, s_Player.m_pCont -> m_pFileCtx -> m_pPath );
+
+ if ( s_Player.m_AudioIdx >= 0 &&
+      ( s_Player.m_pCont -> m_pStm[ s_Player.m_AudioIdx ] == NULL ||
+        s_Player.m_pAudioCodecCtx != s_Player.m_pCont -> m_pStm[
+         s_Player.m_AudioIdx
+        ] -> m_pCodec
+      )
+ ) SMS_CodecDestroy ( s_Player.m_pAudioCodecCtx );
 
  DeleteSema ( s_SemaPauseAudio );
  DeleteSema ( s_SemaPauseVideo );
@@ -1249,19 +1427,20 @@ static void _Destroy ( void ) {
  SMS_RingBufferDestroy ( s_pVideoBuffer );
  SMS_RingBufferDestroy ( s_pAudioBuffer );
 
- if ( s_Player.m_pSPUCtx ) {
+ if ( s_pAPBuff ) {
+  free ( s_pAPBuff );
+  s_pAPBuff = NULL;
+ }  /* end if */
 
-  s_Player.m_pSPUCtx -> Destroy ();
-  s_Player.m_pSPUCtx = NULL;
-
+ if ( s_pVPBuff ) {
+  free ( s_pVPBuff );
+  s_pVPBuff = NULL;
  }  /* end if */
 
  s_Player.m_pIPUCtx -> Destroy ();
  s_Player.m_pIPUCtx = NULL;
 
- lType = CDDA_DiskType ();
-
- if ( lType != DiskType_None ) CDVD_Stop ();
+ if (  CDDA_DiskType () != DiskType_None  ) CDVD_Stop ();
 
  if ( s_Player.m_pSubCtx ) s_Player.m_pSubCtx -> Destroy ();
 
@@ -1271,29 +1450,119 @@ static void _Destroy ( void ) {
  SMS_TimerReset ( 2, NULL );
  PlayerControl_Destroy ();
 
- if (  g_Config.m_PowerOff < 0 && !( s_Flags & SMS_FLAGS_USER_STOP )  ) hddPowerOff ();
+ if ( s_Player.m_pSPUCtx ) {
+
+  s_Player.m_pSPUCtx -> Destroy ();
+  s_Player.m_pSPUCtx = NULL;
+
+ }  /* end if */
+
+ if (  s_Player.m_AudioIdx >= 0 &&
+       s_Player.m_VideoIdx >= 0 &&
+       lfSeekable
+ ) {
+
+  if ( s_Player.m_Flags & SMS_FLAGS_USER_STOP ) {
+   long int lVideoTime = SMS_Rescale ( s_Player.m_VideoTime, s_Player.m_PDW22Base, s_Player.m_PDW22Ratio );
+   SMS_HistoryAdd ( lPath, lVideoTime );
+   SMS_HistorySave ();
+  } else if (  SMS_HistoryRemove ( lPath )  ) SMS_HistorySave ();
+
+ }  /* end if */
+
+ if (  g_Config.m_PowerOff < 0 && !( s_Player.m_Flags & SMS_FLAGS_USER_STOP )  ) SMS_IOPowerOff ();
 
 }  /* end _Destroy */
+#ifdef EMBEDDED
+static unsigned char s_VDStack[ 0x4000 ] __attribute__(   (  aligned( 16 )  )   );
+static unsigned char s_ADStack[ 0x4000 ] __attribute__(   (  aligned( 16 )  )   );
+#else
+# define s_VDStack &g_OS[     0 ]
+# define s_ADStack &g_OS[ 16384 ]
+#endif  /* EMBEDDED */
 
-static unsigned char s_VDStack[ 0x8000 ] __attribute__(   (  aligned( 16 )  )   );
-static unsigned char s_ADStack[ 0x8000 ] __attribute__(   (  aligned( 16 )  )   );
-
-static unsigned char s_VPBuff[ SMS_VP_BUFFER_SIZE ] __attribute__(   (  aligned( 64 )  )   );
-static unsigned char s_APBuff[ SMS_VP_BUFFER_SIZE ] __attribute__(   (  aligned( 64 )  )   );
-
-static void _check_ac3 ( SMS_Stream* apStm ) {
- if ( apStm -> m_pCodec -> m_ID == SMS_CodecID_AC3  ) {
-  if (  !( g_Config.m_PlayerFlags & SMS_PF_SPDIF )  ) {
-   if ( apStm -> m_pCodec -> m_Channels > 2 ) apStm -> m_pCodec -> m_Channels = 2;
-   s_Player.m_Flags |= SMS_FLAGS_AC3;
-  } else {
-   s_Player.m_Flags               |= SMS_FLAGS_SPDIF;
-   apStm -> m_pCodec -> m_Channels = 5;
-  }  /* end else */
- }  /* end if */
-}  /* end _check_ac3 */
+extern void SMS_JPEGPlayerDestroy ( void* );
+extern int  SMS_JPEGPlayerPlay    ( void* );
 
 #define MAX_SUB 8
+
+static void _setup_video_pulldown22 ( void ) {
+
+ unsigned short lVideoMode = GS_Params () -> m_GSCRTMode;
+
+ if ( s_Player.m_VideoIdx >= 0                && !( s_Player.m_Flags & SMS_FLAGS_SPDIF                                       ) &&
+    ( g_Config.m_PlayerFlags & SMS_PF_PDW22 ) &&  (  lVideoMode == GSVideoMode_PAL || lVideoMode == GSVideoMode_DTV_640x576P )
+ ) {
+
+  int            i;
+  SMS_Container* lpCont     = s_Player.m_pCont;
+  SMS_Stream*    lpVideoStm = lpCont -> m_pStm[ s_Player.m_VideoIdx ];
+  uint32_t       lRate      = lpVideoStm -> m_pCodec -> m_FrameRate;
+  uint32_t       lBase      = lpVideoStm -> m_pCodec -> m_FrameRateBase;
+  float          lFPS       = ( float )lRate / ( float )lBase;
+ 
+  if ( lFPS > 23.8 && lFPS < 25.0F ) {
+
+   s_Player.m_Flags |= SMS_FLAGS_PDW22;
+
+   SMSContainer_SetPTSInfo ( lpVideoStm, 1, 25 );
+ 
+   lpVideoStm -> m_pCodec -> m_FrameRate     = 25;
+   lpVideoStm -> m_pCodec -> m_FrameRateBase = 1;
+
+   s_Player.m_PDW22Ratio = lRate;
+   s_Player.m_PDW22Base  = lBase * 25;
+
+   SMS_DXSB_SetRatio ( s_Player.m_PDW22Ratio, s_Player.m_PDW22Base );
+
+   lpCont -> m_Duration  = SMS_Rescale (
+    lpCont -> m_Duration, s_Player.m_PDW22Ratio, s_Player.m_PDW22Base
+   );
+
+   for ( i = 0; i < lpCont -> m_nStm; ++i ) {
+
+    SMS_Stream* lpStm = lpCont -> m_pStm[ i ];
+
+    if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeAudio ) {
+
+     int64_t a = ( int64_t )( lpStm -> m_TimeBase.m_Num ) * lRate;
+     int64_t b = ( int64_t )( lpStm -> m_TimeBase.m_Den ) * lBase;
+     int     c = 25;
+     int     j;
+
+     for ( j = 0; j < 2; ++j ) if ( a % 5 == 0 ) {       
+      a = a / 5;
+      c = c / 5;
+     }  /* end if */
+ 
+     int64_t d = a;
+     int64_t e = b;
+
+     while ( e > 0 ) {
+      int64_t r = d % e;
+      d = e;
+      e = r;
+     }  /* end while */
+
+     a = a / d;
+     b = ( b / d ) * c;
+
+     while (  ( a | b ) > 0x7FFFFFFF  ) {
+      a = a >> 1;
+      b = b >> 1;
+     }  /* end while */
+
+     SMSContainer_SetPTSInfo ( lpStm, a, b );
+
+    }  /* end if */
+
+   }  /* end for */
+
+  }  /* end if */
+
+ }  /* end if */
+
+}  /* end _setup_video_pulldown22 */
 
 SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, unsigned int aSubFormat ) {
 
@@ -1304,191 +1573,216 @@ SMS_Player* SMS_InitPlayer ( FileContext* apFileCtx, FileContext* apSubFileCtx, 
  SMS_RingBuffer* lpVideoBuffer = NULL;
  SMS_RingBuffer* lpAudioBuffer = NULL;
 
- s_pVideoBuffer       = NULL;
- s_pAudioBuffer       = NULL;
- s_Flags              =   0;
- s_Player.m_AudioTime = 0LL;
- s_Player.m_VideoTime = 0LL;
- s_Player.m_EOF       = 0;
+ s_pVideoBuffer        = NULL;
+ s_pAudioBuffer        = NULL;
+ s_Player.m_Flags     &= ~SMS_FLAGS_DYNMSK;
+ s_Player.m_AudioTime  = 0L;
+ s_Player.m_VideoTime  = 0L;
+ s_Player.m_EOF        = 0;
+ s_Player.m_pErrorMsg  = &STR_UNSUPPORTED_FILE;
+ s_Player.m_PDW22Base  = 1;
+ s_Player.m_PDW22Ratio = 1;
 
  g_pSPRTop = SMS_SPR_FREE;
 
  GUI_Status ( STR_DETECTING_FFORMAT.m_pStr );
 
+ SMS_PgIndStart ();
+
  s_Player.m_pCont   = SMS_GetContainer ( apFileCtx, 0x80000000 );
  s_Player.m_pSubCtx = NULL;
- s_Player.m_Flags  &= ~( SMS_FLAGS_SPDIF | SMS_FLAGS_DXSB );
+ s_Player.m_Flags  &= ~( SMS_FLAGS_SPDIF | SMS_FLAGS_DXSB | SMS_PF_PDW22 );
  s_MainThreadID     = GetThreadId ();
 
  if ( s_Player.m_pCont != NULL ) {
 
-  int         i;
-  ee_thread_t lThread;
-  int         lSubStm[ MAX_SUB ];
-  int         lSubIdx = 0;
+  if (  !strcmp ( s_Player.m_pCont -> m_pName, g_pJPEG )  ) {
 
-  s_Player.m_VideoIdx = 0x80000000;
-  s_Player.m_AudioIdx = 0x80000000;
+   s_Player.Play    = SMS_JPEGPlayerPlay;
+   s_Player.Destroy = SMS_JPEGPlayerDestroy;
 
-  for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i ) {
+  } else {
+  
+   int         i;
+   ee_thread_t lThread;
+   int         lSubStm[ MAX_SUB ];
+   int         lSubIdx = 0;
 
-   SMS_Stream* lpStm = s_Player.m_pCont -> m_pStm[ i ];
+   s_Player.m_VideoIdx = 0x80000000;
+   s_Player.m_AudioIdx = 0x80000000;
 
-   if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
+   for ( i = 0; i < s_Player.m_pCont -> m_nStm; ++i ) {
 
-    if ( s_Player.m_VideoIdx < 0 ) {
+    SMS_Stream* lpStm = s_Player.m_pCont -> m_pStm[ i ];
 
-     if (  SMS_CodecOpen ( lpStm -> m_pCodec )  ) {
+    if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
 
-      if ( lpStm -> m_pCodec -> m_ID != SMS_CodecID_DXSB ) {
+     if ( s_Player.m_VideoIdx < 0 ) {
 
-       s_Player.m_pVideoCodec = lpStm -> m_pCodec -> m_pCodec;
-       s_Player.m_pVideoCodec -> Init ( lpStm -> m_pCodec );
+      if (  SMS_CodecOpen ( lpStm -> m_pCodec )  ) {
 
-       s_Player.m_VideoIdx = i;
+       if ( lpStm -> m_pCodec -> m_ID != SMS_CodecID_DXSB ) {
 
-       lpStm -> m_pPktBuf = lpVideoBuffer = SMS_RingBufferInit (
-        ( void* )(
-          (  ( unsigned int )&s_VPBuff[ 0 ]  ) | (
-          lpStm -> m_pCodec -> m_Flags & SMS_CODEC_FLAG_UNCACHED
-         )
-        ), sizeof ( s_VPBuff )
-       );
+        SMS_CodecContext* lpVideoCtx = lpStm -> m_pCodec;
 
-      }  /* end if */
+        if ( lpVideoCtx -> m_Width  > 1024 ||
+             lpVideoCtx -> m_Height > 1024
+        ) {
+         s_Player.m_pErrorMsg = &STR_RESOLUTION_TOO_BIG;
+         goto destroy;
+        }  /* end if */
 
-     } else goto addSub;
+        s_Player.m_pVideoCodec = lpVideoCtx -> m_pCodec;
+        s_Player.m_pVideoCodec -> Init ( lpVideoCtx );
 
-    } else if ( lpStm -> m_pCodec -> m_ID == SMS_CodecID_DXSB )
+        s_Player.m_VideoIdx = i;
+
+        s_pVPBuff = SMS_SyncMalloc ( SMS_VP_BUFFER_SIZE );
+        lpStm -> m_pPktBuf = lpVideoBuffer = SMS_RingBufferInit (
+         ( void* )(
+           (  ( unsigned int )s_pVPBuff  ) | (
+           lpStm -> m_pCodec -> m_Flags & SMS_CODEC_FLAG_UNCACHED
+          )
+         ), SMS_VP_BUFFER_SIZE
+        );
+
+       }  /* end if */
+
+      } else goto addSub;
+
+     } else if ( lpStm -> m_pCodec -> m_ID == SMS_CodecID_DXSB )
 addSub:
-     if ( lSubIdx < MAX_SUB ) lSubStm[ lSubIdx++ ] = i;
+      if ( lSubIdx < MAX_SUB ) lSubStm[ lSubIdx++ ] = i;
 
-   } else if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeAudio ) {
-
-    if ( !lpAudioBuffer ) {
+    } else if ( lpStm -> m_pCodec -> m_Type == SMS_CodecTypeAudio ) {
 
      if (  SMS_CodecOpen ( lpStm -> m_pCodec )  ) {
 
-      s_Player.m_pAudioCodec = lpStm -> m_pCodec -> m_pCodec;
+      SMS_CodecContext* lpCtx = lpStm -> m_pCodec;
+      SMS_Codec*        lpCod = lpCtx -> m_pCodec;
+
       _check_ac3 ( lpStm );
-      s_Player.m_pAudioCodec -> Init ( lpStm -> m_pCodec );
+      lpCod -> Init ( lpCtx );
 
-      s_Player.m_AudioIdx        = i;
-      s_Player.m_AudioChannels   = lpStm -> m_pCodec -> m_Channels;
-      s_Player.m_AudioSampleRate = lpStm -> m_pCodec -> m_SampleRate;
-
-      lpStm -> m_pPktBuf = lpAudioBuffer = SMS_RingBufferInit (  s_APBuff, sizeof ( s_APBuff )  );
+      if ( !lpAudioBuffer ) {
+       s_Player.m_pAudioCodec     = lpCod;
+       s_Player.m_pAudioCodecCtx  = lpCtx;
+       s_Player.m_PrevAudioIdx    =
+       s_Player.m_AudioIdx        = i;
+       s_Player.m_AudioChannels   = lpCtx -> m_Channels;
+       s_Player.m_AudioSampleRate = lpCtx -> m_SampleRate;
+       s_pAPBuff = SMS_SyncMalloc ( SMS_AP_BUFFER_SIZE );
+       lpStm -> m_pPktBuf = lpAudioBuffer = SMS_RingBufferInit ( s_pAPBuff, SMS_AP_BUFFER_SIZE );
+      } else {
+       lpStm -> m_pPktBuf = lpAudioBuffer;
+       SMS_RingBufferAddRef ( lpAudioBuffer );
+      }  /* end else */
 
      }  /* end if */
 
-    } else {
+    }  /* end if */
 
-     _check_ac3 ( lpStm );
-     lpStm -> m_pPktBuf = lpAudioBuffer;
-     SMS_RingBufferAddRef ( lpAudioBuffer );
+   }  /* end for */
 
-    }  /* end else */
+   if ( s_Player.m_VideoIdx >= 0 ) {
 
-   }  /* end if */
+    lpAR = _sms_audio_renderer;
+    lpAD = _sms_audio_decoder;
+    lpVR = _sms_video_renderer;
 
-  }  /* end for */
+    if ( lSubIdx ) {
 
-  FlushCache ( 0 );
+     SMS_DXSB_Init (
+      s_Player.m_pCont -> m_pStm[  lSubStm[ 0 ]  ] -> m_pCodec -> m_Width,
+      s_Player.m_pCont -> m_pStm[  lSubStm[ 0 ]  ] -> m_pCodec -> m_Height,
+      &s_Player.m_SubIdx
+     );
 
-  if ( s_Player.m_VideoIdx >= 0 ) {
+     s_Player.m_SubIdx = lSubStm[ 0 ];
+     s_Player.m_Flags |= SMS_FLAGS_DXSB;
 
-   lpAR = _sms_audio_renderer;
-   lpAD = _sms_audio_decoder;
-   lpVR = _sms_video_renderer;
+     for ( i = 0; i < lSubIdx; ++i ) {
+      s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_Flags   |= SMS_STRM_FLAGS_SUBTL;
+      s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_pPktBuf  = lpVideoBuffer;
+      SMS_RingBufferAddRef ( lpVideoBuffer );
+     }  /* end for */
 
-   if ( lSubIdx ) {
+    }  /* end if */
 
-    SMS_DXSB_Init (
-     s_Player.m_pCont -> m_pStm[  lSubStm[ 0 ]  ] -> m_pCodec -> m_Width,
-     s_Player.m_pCont -> m_pStm[  lSubStm[ 0 ]  ] -> m_pCodec -> m_Height,
-     &s_Player.m_SubIdx
-    );
+   } else if ( s_Player.m_AudioIdx >= 0 ) {
 
-    s_Player.m_SubIdx = lSubStm[ 0 ];
-    s_Player.m_Flags |= SMS_FLAGS_DXSB;
+    lpAR = _sms_audio_only_renderer;
+    lpAD = _sms_audio_only_decoder;
+    lpVR = _sms_dummy_video_renderer;
 
-    for ( i = 0; i < lSubIdx; ++i ) {
-     s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_Flags   |= SMS_STRM_FLAGS_SUBTL;
-     s_Player.m_pCont -> m_pStm[  lSubStm[ i ]  ] -> m_pPktBuf  = lpVideoBuffer;
-     SMS_RingBufferAddRef ( lpVideoBuffer );
-    }  /* end for */
+    s_Player.m_PlayItemNr = 1;
+    PlayerControl_UpdateItemNr ();
 
-   }  /* end if */
+   } else {
+destroy:
+    s_Player.m_pCont -> Destroy ( s_Player.m_pCont, 1 );
+    s_Player.m_pCont = NULL;
+    goto error;
+   }  /* end else */
 
-  } else if ( s_Player.m_AudioIdx >= 0 ) {
+   _setup_video_pulldown22 ();
 
-   lpAR = _sms_audio_only_renderer;
-   lpAD = _sms_audio_only_decoder;
-   lpVR = _sms_dummy_video_renderer;
+   s_Player.m_pFileCtx    = s_Player.m_pCont -> m_pFileCtx;
+   s_Player.m_pSubFileCtx = apSubFileCtx;
+   s_Player.m_SubFormat   = aSubFormat;
+   s_Player.Destroy       = _Destroy;
+   s_Player.Play          = _sms_play;
 
-   s_Player.m_PlayItemNr = 1;
-   PlayerControl_UpdateItemNr ();
+   lThread.stack_size       = 16384;
+   lThread.stack            = g_VRStack;
+   lThread.initial_priority = SMS_THREAD_PRIORITY - 1;
+   lThread.gp_reg           = &_gp;
+   lThread.func             = lpVR;
+   THREAD_ID_VR = CreateThread ( &lThread );
 
-  } else {
+   lThread.stack_size       = 16384;
+   lThread.stack            = s_VDStack;
+   lThread.initial_priority = SMS_THREAD_PRIORITY;
+   lThread.gp_reg           = &_gp;
+   lThread.func             = _sms_video_decoder;
+   THREAD_ID_VD = CreateThread ( &lThread );
 
-   s_Player.m_pCont -> Destroy ( s_Player.m_pCont, 1 );
-   s_Player.m_pCont = NULL;
-   goto error;
+   lThread.stack_size       = 16384;
+   lThread.stack            = g_ARStack;
+   lThread.initial_priority = SMS_THREAD_PRIORITY;
+   lThread.gp_reg           = &_gp;
+   lThread.func             = lpAR;
+   THREAD_ID_AR = CreateThread ( &lThread );
+
+   lThread.stack_size       = 16384;
+   lThread.stack            = s_ADStack;
+   lThread.initial_priority = SMS_THREAD_PRIORITY;
+   lThread.gp_reg           = &_gp;
+   lThread.func             = lpAD;
+   THREAD_ID_AD = CreateThread ( &lThread );
+
+   _init_queues ( 1 );
+   _start_threads ();
+
+   s_Player.m_Flags        |= SMS_FLAGS_SUBS;
+   s_Player.m_OSD           = 0;
+   s_Player.m_PanScan       = g_Config.m_PlayerFlags >> 28;
+   s_Player.m_AVDelta       = g_Config.m_AVDelta;
+   s_Player.m_SVDelta       = g_Config.m_SVDelta;
+   s_Player.SetColors       = _set_colors;
+   s_Player.m_OSDPLPos      = g_GSCtx.m_Height - 96;
+   s_Player.m_pPlayItem     = NULL;
+   s_Player.m_pAudioSamples = NULL;
 
   }  /* end else */
-
-  s_Player.m_pFileCtx    = s_Player.m_pCont -> m_pFileCtx;
-  s_Player.m_pSubFileCtx = apSubFileCtx;
-  s_Player.m_SubFormat   = aSubFormat;
-  s_Player.Destroy       = _Destroy;
-  s_Player.Play          = _sms_play;
-
-  lThread.stack_size       = 16384;
-  lThread.stack            = g_VRStack;
-  lThread.initial_priority = SMS_THREAD_PRIORITY - 1;
-  lThread.gp_reg           = &_gp;
-  lThread.func             = lpVR;
-  THREAD_ID_VR = CreateThread ( &lThread );
-
-  lThread.stack_size       = sizeof ( s_VDStack );
-  lThread.stack            = s_VDStack;
-  lThread.initial_priority = SMS_THREAD_PRIORITY;
-  lThread.gp_reg           = &_gp;
-  lThread.func             = _sms_video_decoder;
-  THREAD_ID_VD = CreateThread ( &lThread );
-
-  lThread.stack_size       = 16384;
-  lThread.stack            = g_ARStack;
-  lThread.initial_priority = SMS_THREAD_PRIORITY;
-  lThread.gp_reg           = &_gp;
-  lThread.func             = lpAR;
-  THREAD_ID_AR = CreateThread ( &lThread );
-
-  lThread.stack_size       = sizeof ( s_ADStack );
-  lThread.stack            = s_ADStack;
-  lThread.initial_priority = SMS_THREAD_PRIORITY;
-  lThread.gp_reg           = &_gp;
-  lThread.func             = lpAD;
-  THREAD_ID_AD = CreateThread ( &lThread );
-
-  _init_queues ( 1 );
-  _start_threads ();
-
-  s_Player.m_Flags        |= SMS_PF_SUBS;
-  s_Player.m_OSD           = 0;
-  s_Player.m_PanScan       = g_Config.m_PlayerFlags >> 28;
-  s_Player.m_AVDelta       = 0;
-  s_Player.m_SVDelta       = 0;
-  s_Player.SetColors       = _set_colors;
-  s_Player.m_OSDPLPos      = g_GSCtx.m_Height - 96;
-  s_Player.m_pPlayItem     = NULL;
-  s_Player.m_pAudioSamples = NULL;
 
  } else {
 error:
   if (  ( int )apFileCtx > 0 && apSubFileCtx  ) apSubFileCtx -> Destroy ( apSubFileCtx );
 
  }  /* end else */
+
+ SMS_PgIndStop ();
 
  return s_Player.m_pCont ? &s_Player : NULL;
 

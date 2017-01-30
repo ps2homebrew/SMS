@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -24,22 +24,25 @@
 #include "SMS_SPU.h"
 #include "SMS_Sounds.h"
 #include "SMS_RC.h"
+#include "SMS_PgInd.h"
+#include "SMS_IOP.h"
+#include "SMS_ioctl.h"
 
 #include <kernel.h>
 #include <malloc.h>
 #include <string.h>
-#include <fileXio_rpc.h>
 #include <fileio.h>
 #include <fcntl.h>
 
-#define FA_FLAGS_AVI 0x00000001
-#define FA_FLAGS_SUB 0x00000002
+static unsigned char s_pPPHDL[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "PP.HDL.";
+static unsigned char s_pHDLdr[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "HDLoade";
 
-static unsigned char s_pPPHDL[] __attribute__(   (  section( ".data" )  )   ) = "PP.HDL.";
-static unsigned char s_pHDLdr[] __attribute__(   (  section( ".data" )  )   ) = "HDLoade";
+extern char g_SMSLng[ 12 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char g_SMSPal[ 13 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char g_SMSSMB[ 17 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 
 extern FileContext* GUI_MiniBrowser ( FileContext*, char*, void** );
-extern void         GUI_FileCtxMenu ( char*, char*                );
+extern void         GUI_FileCtxMenu ( char*, char*, int, int      );
 
 typedef struct _LevelInfo {
 
@@ -63,10 +66,18 @@ typedef struct GUIFileMenu {
  int            m_YOffset;
  unsigned long* m_pSelRect;
  int            m_Active;
+ int            m_ActiveY;
 
 } GUIFileMenu;
 
-static GSBitBltPacket s_BitBlt;
+typedef struct _FileMenuItem {
+
+ unsigned long  m_IconPack[ 32 ];
+ unsigned long* m_pTxtPack;
+
+} _FileMenuItem;
+
+static unsigned long s_BitBltPack[ sizeof ( GSLoadImage ) * 9 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
 
 static int _filter_item ( SMS_ListNode* apNode ) {
 
@@ -74,13 +85,13 @@ static int _filter_item ( SMS_ListNode* apNode ) {
 
  if (  lType == GUICON_PARTITION && (
         (  !( g_Config.m_BrowserFlags & SMS_BF_HDLP ) &&
-            (  !strncmp ( apNode -> m_pString, s_pPPHDL, 7 ) ||
-               !strncmp ( apNode -> m_pString, s_pHDLdr, 7 )
+            (  !strncmp (  _STR( apNode ), s_pPPHDL, 7  ) ||
+               !strncmp (  _STR( apNode ), s_pHDLdr, 7  )
             )
         ) ||
         (  g_Config.m_BrowserFlags & SMS_BF_SYSP &&
-           apNode -> m_pString[ 0 ] == '_' &&
-           apNode -> m_pString[ 1 ] == '_'
+           _STR( apNode )[ 0 ] == '_' &&
+           _STR( apNode )[ 1 ] == '_'
         )
        )
  ) return 1;
@@ -88,10 +99,11 @@ static int _filter_item ( SMS_ListNode* apNode ) {
  if ( lType == GUICON_PARTITION || lType == GUICON_FOLDER || lType == GUICON_SHARE ) return 0;
 
  if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) &&
-       !(  lType == GUICON_AVI ||
-           lType == GUICON_MP3 ||
-           lType == GUICON_M3U ||
-           lType == GUICON_AVIS
+       !(  lType == GUICON_AVI     ||
+           lType == GUICON_MP3     ||
+           lType == GUICON_M3U     ||
+           lType == GUICON_AVIS    ||
+           lType == GUICON_PICTURE
         )
  ) return 1;
 
@@ -99,13 +111,12 @@ static int _filter_item ( SMS_ListNode* apNode ) {
 
 }  /* end _filter_item */
 
-static unsigned long* GUIFileMenu_RenderItem ( SMS_ListNode* apNode, int anY, int aWidth, int afDim ) {
+static _FileMenuItem* GUIFileMenu_RenderItem ( SMS_ListNode* apNode, int anY, int aWidth, int afDim ) {
 
  int            lLen;
- int            lDWC;
- unsigned long* lpDMA;
+ _FileMenuItem* retVal;
 
- lLen = strlen ( apNode -> m_pString );
+ lLen = strlen (  _STR( apNode )  );
 
  if (  ( g_Config.m_BrowserFlags & SMS_BF_AVIF ) &&
        (  ( int )apNode -> m_Param == GUICON_AVI ||
@@ -115,32 +126,32 @@ static unsigned long* GUIFileMenu_RenderItem ( SMS_ListNode* apNode, int anY, in
        )
  ) {
 
-  if ( apNode -> m_pString[ lLen - 4 ] == '.' )
+  if (  _STR( apNode )[ lLen - 4 ] == '.'  )
    lLen -= 4;
   else lLen -= 5;
 
  }  /* end if */
 
- while (  GSFont_WidthEx ( apNode -> m_pString, lLen, -2 ) > aWidth  ) --lLen;
+ while (   GSFont_WidthEx (  _STR( apNode ), lLen, -2  ) > aWidth   ) --lLen;
 
- lDWC = GS_TSP_PACKET_SIZE() + GS_TXT_PACKET_SIZE( lLen );
+ retVal = ( _FileMenuItem* )SMS_SyncMalloc (  sizeof ( _FileMenuItem )  );
 
- lpDMA = GSContext_NewList ( lDWC );
  GUI_DrawIcon (
-  ( int )apNode -> m_Param + afDim, 8, anY, GUIcon_Browser, lpDMA
+  ( int )apNode -> m_Param + afDim, 8, anY, GUIcon_Browser,
+  UNCACHED_SEG( retVal -> m_IconPack )
  );
- GSFont_RenderEx (  apNode -> m_pString, lLen, 46, anY, lpDMA + GS_TSP_PACKET_SIZE(), -2, 0  );
+ retVal -> m_pTxtPack = GSContext_NewList (  GS_TXT_PACKET_SIZE( lLen )  );
+ GSFont_RenderEx (  _STR( apNode ), lLen, 46, anY, retVal -> m_pTxtPack, -2, 0  );
 
- lpDMA[ -1 ] = VIF_DIRECT( lDWC >> 1 );
-
- return lpDMA;
+ return retVal;
 
 }  /* end GUIFileMenu_RenderItem */
 
 static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
- GUIFileMenu*  lpMenu = ( GUIFileMenu* )apObj;
- SMS_ListNode* lpNode;
+ GUIFileMenu*   lpMenu = ( GUIFileMenu* )apObj;
+ SMS_ListNode*  lpNode;
+ _FileMenuItem* lpPack;
 
  if ( !lpMenu -> m_pGSPacket ) {
 
@@ -150,7 +161,6 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
   int            lnItems = ( lHeight - 2 ) / 34;
   int            lY      = 62;
   int            lSelY   = lY + 34 * lpMenu -> m_YOffset;
-  unsigned long* lpDMAItem;
 
   GS_RenderRoundRect (
    ( GSRoundRectPacket* )( lpDMA - 2 ), 0, 60, g_GSCtx.m_Width - 1, lHeight, -12,
@@ -163,11 +173,11 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
    if ( lpNode -> m_pPrev ) {
 
     g_GSCtx.m_TextColor = 2;
-    lpDMAItem = GUIFileMenu_RenderItem ( lpNode, lY, lWidth, 1 );
+    lpPack = GUIFileMenu_RenderItem ( lpNode, lY, lWidth, 1 );
 
     SMS_ListPushBack (
-     lpMenu -> m_pFileList, lpNode -> m_pString
-    ) -> m_Param = ( unsigned int )lpDMAItem;
+     lpMenu -> m_pFileList, _STR( lpNode )
+    ) -> m_Param = ( unsigned int )lpPack;
 
     lpMenu -> m_pLast = lpNode;
     lY += 34; --lnItems;
@@ -179,11 +189,11 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
    while ( lnItems > 1 && lpNode ) {
 
-    lpDMAItem = GUIFileMenu_RenderItem ( lpNode, lY, lWidth, 0 );
+    lpPack = GUIFileMenu_RenderItem ( lpNode, lY, lWidth, 0 );
 
     SMS_ListPushBack (
-     lpMenu -> m_pFileList, lpNode -> m_pString
-    ) -> m_Param = ( unsigned int )lpDMAItem;
+     lpMenu -> m_pFileList, _STR( lpNode )
+    ) -> m_Param = ( unsigned int )lpPack;
 
     lpMenu -> m_pLast = lpNode;
     lY += 34; --lnItems;
@@ -197,11 +207,11 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
     g_GSCtx.m_TextColor = lClr;
 
-    lpDMAItem = GUIFileMenu_RenderItem ( lpNode, lY, lWidth, lClr - 1 );
+    lpPack = GUIFileMenu_RenderItem ( lpNode, lY, lWidth, lClr - 1 );
 
     SMS_ListPushBack (
-     lpMenu -> m_pFileList, lpNode -> m_pString
-    ) -> m_Param = ( unsigned int )lpDMAItem;
+     lpMenu -> m_pFileList, _STR( lpNode )
+    ) -> m_Param = ( unsigned int )lpPack;
     lpMenu -> m_pLast = lpNode;
 
    }  /* end if */
@@ -224,12 +234,11 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
     4, lSelY, lW, 34, -12, lColor
    );
    lpMenu -> m_pSelRect[ -1 ] = VIF_DIRECT(  GS_RRT_PACKET_SIZE()  );
+   lpMenu -> m_ActiveY        = lSelY;
 
   }  /* end if */
 
-  GSContext_InitBitBlt (
-   &s_BitBlt, 0, 0, 60, g_GSCtx.m_Width, lHeight, g_GSCtx.m_VRAMPtr2, 0, 60
-  );
+  SMS_InitBitBlt ( s_BitBltPack, 9, 58, g_GSCtx.m_Height - 58 - 36 );
 
  }  /* end if */
 
@@ -239,7 +248,10 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
  while ( lpNode ) {
 
-  GSContext_CallList (  aCtx, ( unsigned long* )( unsigned int )lpNode -> m_Param  );
+  lpPack = ( _FileMenuItem* )( unsigned int )lpNode -> m_Param;
+
+  GSContext_CallList2 ( aCtx, lpPack -> m_IconPack );
+  GSContext_CallList  ( aCtx, lpPack -> m_pTxtPack );
 
   lpNode = lpNode -> m_pNext;
 
@@ -251,15 +263,18 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
 static void GUIFileMenu_Cleanup ( GUIObject* apObj ) {
 
- GUIFileMenu*  lpMenu = ( GUIFileMenu* )apObj;
- SMS_ListNode* lpNode = lpMenu -> m_pFileList -> m_pHead;
+ GUIFileMenu*   lpMenu = ( GUIFileMenu* )apObj;
+ SMS_ListNode*  lpNode = lpMenu -> m_pFileList -> m_pHead;
+ _FileMenuItem* lpPack;
 
- GSContext_DeleteList ( lpMenu -> m_pGSPacket );
- lpMenu -> m_pGSPacket = NULL;
+ GUIObject_Cleanup ( apObj );
 
  while ( lpNode ) {
 
-  GSContext_DeleteList (  ( unsigned long* )( unsigned int )lpNode -> m_Param  );
+  lpPack = ( _FileMenuItem* )( unsigned int )lpNode -> m_Param;
+
+  GSContext_DeleteList ( lpPack -> m_pTxtPack );
+  free ( lpPack );
 
   lpNode = lpNode -> m_pNext;
 
@@ -276,9 +291,9 @@ static void _redraw ( GUIFileMenu* apMenu, int afAll ) {
  if ( !afAll ) {
 
   GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
+  GSContext_CallList2 (  1, ( unsigned long* )&s_BitBltPack  );
   GUIFileMenu_Render (  ( GUIObject* )apMenu, 1  );
-  GS_VSync ();
-  GSContext_BitBlt ( &s_BitBlt );
+  GS_VSync2 ( g_GSCtx.m_DrawDelay );
   GSContext_Flush ( 1, GSFlushMethod_KeepLists );
 
  } else GUI_Redraw ( GUIRedrawMethod_Redraw );
@@ -311,14 +326,14 @@ static void _push_state ( GUIFileMenu* apMenu ) {
 
  _LevelInfo* lpInfo = ( _LevelInfo* )malloc (  sizeof ( _LevelInfo )  );
 
- lpInfo -> m_pCurrent = ( char* )malloc (  strlen ( apMenu -> m_pCurrent -> m_pString ) + 1  );
+ lpInfo -> m_pCurrent = ( char* )malloc (   strlen (  _STR( apMenu -> m_pCurrent )  ) + 1   );
  lpInfo -> m_YOffset  = apMenu -> m_YOffset;
  lpInfo -> m_Pos      = strlen ( g_CWD );
 
- strcpy ( lpInfo -> m_pCurrent, apMenu -> m_pCurrent -> m_pString );
+ strcpy (  lpInfo -> m_pCurrent, _STR( apMenu -> m_pCurrent )  );
 
  SMS_ListPushBack (
-  apMenu -> m_pLevels, apMenu -> m_pFirst -> m_pString
+  apMenu -> m_pLevels, _STR( apMenu -> m_pFirst )
  ) -> m_Param = ( unsigned int )lpInfo;
 
 }  /* end _push_state */
@@ -340,6 +355,7 @@ static void _fill ( GUIFileMenu* apMenu, char* apPath, int afAll ) {
 
  _reset ( apMenu, afAll );
 
+ SMS_PgIndStart ();
  SMS_FileDirInit ( apPath );
 
  lpNode = g_pFileList -> m_pHead;
@@ -347,7 +363,9 @@ static void _fill ( GUIFileMenu* apMenu, char* apPath, int afAll ) {
 
  while ( lpNode ) {
 
-  if (  !_filter_item ( lpNode )  ) SMS_ListPushBack ( apMenu -> m_pFiltList, lpNode -> m_pString ) -> m_Param = lpNode -> m_Param;
+  if (  !_filter_item ( lpNode )  ) SMS_ListPushBack (
+   apMenu -> m_pFiltList, _STR( lpNode )
+  ) -> m_Param = lpNode -> m_Param;
 
   lpNode = lpNode -> m_pNext;
 
@@ -356,11 +374,13 @@ static void _fill ( GUIFileMenu* apMenu, char* apPath, int afAll ) {
  apMenu -> m_pFirst   =
  apMenu -> m_pCurrent = apMenu -> m_pFiltList -> m_pHead;
 
+ SMS_PgIndStop ();
+
 }  /* end _fill */
 
 void RestoreFileDir ( void** apParam ) {
  
- apParam[ 0 ] = ( void* )(  ( unsigned int )apParam[ 0 ] & 0x7FFFFFFF  );
+ apParam[ 0 ] = ( void* )(  ( unsigned int )apParam[ 0 ] & 0x3FFFFFFF  );
 
  SMS_ListDestroy (  ( SMS_List* )apParam[ 0 ], 1  );
  g_pFileList = ( SMS_List* )apParam[ 1 ];
@@ -371,100 +391,50 @@ void RestoreFileDir ( void** apParam ) {
 
 }  /* end RestoreFileDir */
 
-static void _action_folder ( GUIFileMenu* apMenu, int afPopup ) {
-
- if ( !afPopup ) {
-
-  _push_state ( apMenu );
-  _fill ( apMenu, apMenu -> m_pCurrent -> m_pString, 0 );
-  _redraw ( apMenu, 0 );
-
- } else {
-
-  void**        lpParam = ( void** )malloc (  strlen ( g_CWD ) + (  sizeof ( SMS_List* ) << 1  ) + 1   );
-  SMS_ListNode* lpNode;
-
-  lpParam[ 0 ] = SMS_ListInit ();
-  lpParam[ 1 ] = g_pFileList;
-  strcpy (  ( char* )( lpParam + 2 ), g_CWD  );
-
-  g_pFileList = NULL;
-  SMS_FileDirInit ( apMenu -> m_pCurrent -> m_pString );
-
-  lpNode = g_pFileList -> m_pHead;
-
-  while ( lpNode ) {
-
-   if (  ( int )lpNode -> m_Param == GUICON_MP3  )
-
-    SMS_ListPushBack (  ( SMS_List* )lpParam[ 0 ], lpNode -> m_pString  );
-
-   lpNode = lpNode -> m_pNext;
-
-  }  /* end lpNode */
-
-  SMS_ListDestroy ( g_pFileList, 1 );
-
-  if (   (  ( SMS_List* )lpParam[ 0 ]  ) -> m_Size   ) {
-
-   unsigned long lEvent = GUI_MSG_FOLDER_MP3;
-
-   SMS_ListSort (  ( SMS_List* )lpParam[ 0 ]  );
-
-   lpParam[ 0 ] = ( void* )(  ( unsigned int )lpParam[ 0 ] | 0x80000000  );
-   lEvent      |= (  ( unsigned long )( unsigned int )lpParam  ) << 28;
-
-   STIO_SetIOMode ( g_CMedia == 2 ? STIOMode_Extended : STIOMode_Ordinary );
-
-   GUI_PostMessage ( lEvent );
-
-  } else RestoreFileDir ( lpParam );
-
- }  /* end else */
-
-}  /* end _action_folder */
-
-static void _make_path ( char* apBuff, char** appPathEnd, GUIFileMenu* apMenu ) {
+static void _make_path ( char* apBuff, char** appPathEnd, const char* apName ) {
 
  strcpy ( apBuff, g_CWD );
 
- if (  apBuff[ strlen ( apBuff ) - 1 ] != '/'  ) SMS_Strcat ( apBuff, g_SlashStr );
+ if (  apBuff[ strlen ( apBuff ) - 1 ] != '/'  ) strcat ( apBuff, g_SlashStr );
 
  *appPathEnd = apBuff + strlen ( apBuff );
- SMS_Strcat ( apBuff, apMenu -> m_pCurrent -> m_pString );
+ strcat ( apBuff, apName );
 
 }  /* end _make_path */
 
-static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
+void** SMS_OpenMediaFile ( const char* apName, int aFlags ) {
 
  char         lPath[ 1024 ];
  char*        lpPathEnd;
  FileContext* lpFileCtx;
+ void**       retVal = NULL;
 
- _make_path ( lPath, &lpPathEnd, apMenu );
+ SMS_PgIndStart ();
+
+ _make_path ( lPath, &lpPathEnd, apName );
 
  if ( g_CMedia == 1 && g_pCDDACtx )
 
   lpFileCtx = CDDA_InitFileContext (  &lPath[ 7 ], g_pCDDACtx );
 
- else {
-
-  STIO_SetIOMode ( g_CMedia == 2 ? STIOMode_Extended : STIOMode_Ordinary );
-  lpFileCtx = STIO_InitFileContext ( lPath, NULL );
-
- }  /* end else */
+ else lpFileCtx = STIO_InitFileContext ( lPath, NULL );
 
  if ( lpFileCtx ) {
 
-  unsigned long lEvent  = GUI_MSG_FILE;
-  void**        lpParam = malloc (   (  sizeof ( void* ) << 1  ) + sizeof ( void* )  );
+  unsigned long lEvent = GUI_MSG_FILE;
 
-  lpParam[ 0 ] = lpFileCtx;
-  lpParam[ 1 ] = NULL;
+  retVal = malloc (   (  sizeof ( void* ) << 1  ) + sizeof ( void* )  );
 
-  if ( aFlags & FA_FLAGS_SUB ) lpParam[ 1 ] = GUI_MiniBrowser ( lpFileCtx, lPath, &lpParam[ 2 ] );
+  retVal[ 0 ] = lpFileCtx;
+  retVal[ 1 ] = NULL;
 
-  if (  ( aFlags & FA_FLAGS_AVI ) && !lpParam[ 1 ] && !( aFlags & FA_FLAGS_SUB ) && ( g_Config.m_PlayerFlags & SMS_PF_SUBS )  ) {
+  if ( aFlags & SMS_FA_FLAGS_SUB ) {
+   SMS_PgIndStop  ();
+    retVal[ 1 ] = GUI_MiniBrowser ( lpFileCtx, lPath, &retVal[ 2 ] );
+   SMS_PgIndStart ();
+  }  /* end if */
+
+  if (  ( aFlags & SMS_FA_FLAGS_AVI ) && !retVal[ 1 ] && !( aFlags & SMS_FA_FLAGS_SUB ) && ( g_Config.m_PlayerFlags & SMS_PF_SUBS )  ) {
 
    int            i;
    char*          lpDot;
@@ -472,7 +442,7 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
    char*          lExt[ 3 ] = { g_pSrtStr,          g_pSubStr,          g_pTxtStr          };
    SubtitleFormat lFmt[ 3 ] = { SubtitleFormat_SRT, SubtitleFormat_SUB, SubtitleFormat_SUB };
 
-   strcpy ( lName, apMenu -> m_pCurrent -> m_pString );
+   strcpy ( lName, apName );
    lpDot = strrchr ( lName, '.' );
 
    if ( !lpDot ) {
@@ -497,13 +467,13 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
      FileContext* lpSubFileCtx;
      char*        lpName = g_CMedia == 1 && g_pCDDACtx ? &lPath[ 7 ] : lPath;
 
-     strcpy ( lpPathEnd, lpNode -> m_pString );
+     strcpy (  lpPathEnd, _STR( lpNode )  );
      lpSubFileCtx = lpFileCtx -> Open ( lpName, lpFileCtx -> m_pOpenParam );
 
      if ( lpSubFileCtx ) {
 
-      lpParam[ 1 ] = ( void* )lpSubFileCtx;
-      lpParam[ 2 ] = ( void* )lFmt[ i ];
+      retVal[ 1 ] = ( void* )lpSubFileCtx;
+      retVal[ 2 ] = ( void* )lFmt[ i ];
 
       break;
 
@@ -515,19 +485,32 @@ static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
 
   }  /* end if */
 
-  lEvent |= (  ( unsigned long )( unsigned int )lpParam  ) << 28;
+  if ( aFlags & SMS_FA_FLAGS_MSG ) {
 
-  GUI_PostMessage ( lEvent );
+   lEvent |= (  ( unsigned long )( unsigned int )retVal  ) << 28;
+   GUI_PostMessage ( lEvent );
+
+  }  /* end if */
 
  }  /* end if */
+
+ SMS_PgIndStop ();
+
+ return retVal;
+
+}  /* end SMS_OpenMediaFile */
+
+static void _perform_file_action ( GUIFileMenu* apMenu, int aFlags ) {
+
+ SMS_OpenMediaFile (  _STR( apMenu -> m_pCurrent ), aFlags | SMS_FA_FLAGS_MSG  );
 
 }  /* end _perform_file_action */
 
 static void _action_avi ( GUIFileMenu* apMenu, int afPopup ) {
 
- int lFlags = FA_FLAGS_AVI;
+ int lFlags = SMS_FA_FLAGS_AVI;
 
- if ( afPopup ) lFlags |= FA_FLAGS_SUB;
+ if ( afPopup ) lFlags |= SMS_FA_FLAGS_SUB;
 
  _perform_file_action ( apMenu, lFlags );
 
@@ -543,27 +526,20 @@ static void _action_partition ( GUIFileMenu* apMenu, int afPopup ) {
 
  int  lPD;
  char lPath[ 2 ] __attribute__(   (  aligned( 4 )  )   );
- char lMountPath[ strlen ( apMenu -> m_pCurrent -> m_pString ) + 6 ];
+ char lMountPath[ strlen (  _STR( apMenu -> m_pCurrent )  ) + 6 ];
 
- strcpy ( lMountPath, g_pDevName[ 2 ] );
- SMS_Strcat ( lMountPath, g_ColonStr                        );
- SMS_Strcat ( lMountPath, apMenu -> m_pCurrent -> m_pString );
+ strcpy (  lMountPath, g_pDevName[ 2 ]               );
+ strcat (  lMountPath, g_ColonStr                    );
+ strcat (  lMountPath, _STR( apMenu -> m_pCurrent )  );
+ strcpy (  g_CWD,      g_pPFS                        );
 
- *( unsigned int* )&g_CWD[ 0 ] = 0x30736670;
- *( unsigned int* )&g_CWD[ 4 ] = 0x0000003A;
+ if ( g_PD >= 0 ) g_PD = 0 - !SMS_IOCtl ( g_CWD, PFS_IOCTL_UMOUNT, NULL );
 
- if ( g_PD >= 0 ) {
-
-  fileXioUmount ( g_CWD );
-  g_PD = 0x80000000;
-
- }  /* end if */
-
- lPD = fileXioMount ( g_CWD, lMountPath, FIO_MT_RDWR );
+ lPD = SMS_HDDMount ( g_CWD, lMountPath, FIO_MT_RDWR );
 
  if ( lPD >= 0 ) {
 
-  strcpy ( g_Config.m_Partition, apMenu -> m_pCurrent -> m_pString );
+  strcpy (  g_Config.m_Partition, _STR( apMenu -> m_pCurrent )  );
 
   *( unsigned short* )&lPath[ 0 ] = 0x002F;
   _push_state ( apMenu );
@@ -580,32 +556,90 @@ static void _context_action_part ( GUIFileMenu* apMenu, int afPopup ) {
 
 }  /* end _context_action_part */
 
-static void _context_action_fold ( GUIFileMenu* apMenu, int afPopup ) {
-
-}  /* end _context_action_fold */
-
 static void _context_action_file ( GUIFileMenu* apMenu, int afPopup ) {
+#ifdef EMBEDDED
+ static char sl_SMSsms[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "SMS.sms";
+#endif  /* EMBEDDED */
+ int lAction = -1;
+ int lfPart  = g_Config.m_Partition[ 0 ] != '\x00';
 
- if ( g_CMedia != 2 && g_PD >= 0 ) {
+ if ( afPopup == 3 ) {
+  lAction =  9;
+ } else if ( afPopup == 4 ) {
+  lAction = 10;
+ } else if ( afPopup == 2 ) {
+  if ( g_CMedia == 2 )  /* HDD */
+   lAction = 3;         /* delete tree */
+  else if ( g_CMedia == 3 || g_CMedia == 4 ) return;  /* CDDA || HOST */
+  else if ( lfPart ) lAction = 1;  /* copy tree to HDD */
+ } else if ( afPopup == 1 && g_CMedia != 2 && lfPart ) {
+  lAction = 0;  /* copy file to HDD */
+ } else if ( g_CMedia == 2 && lfPart ) {  /* HDD */
+  lAction = 2;                            /* delete file */
+ } else lAction = 100;
+
+ if ( lAction >= 0 ) {
 
   char  lPath[ 1024 ];
   char* lpPathEnd;
+  char* lpCur      = _STR( apMenu -> m_pCurrent );
+  char  lRoot[ 2 ] = { '\x01', '\x00' };
 
-  _make_path ( lPath, &lpPathEnd, apMenu );
+  _make_path ( lPath, &lpPathEnd, lpCur );
 
-  STIO_SetIOMode ( STIOMode_Ordinary );
-  GUI_FileCtxMenu ( lPath, lpPathEnd );
+  if ( lAction == 10 ) lpCur = lRoot;
+
+  if ( lAction == 0 || lAction == 100 ) {
+   if (  !strcmp ( lpCur, &g_SMSLng[ 4 ] )  )
+    lAction = 4;  /* update language file */
+   else if (  !strcmp ( lpCur, &g_SMSPal[ 5 ] )  )
+    lAction = 5;  /* update palette file */
+#ifdef EMBEDDED
+   else if (  !strcmp ( lpCur, sl_SMSsms )  )
+    lAction = 6;  /* update SMS image */
+#endif  /* EMBEDDED */
+   else if (  !strcmp ( lpCur, &g_SMSSMB[ 9 ] )  )
+    lAction = 7;  /* update SMB server list */
+   else {
+    int lLen = strlen ( lpCur );
+    if ( lLen > 4 && lpCur[ lLen - 4 ] == '.' &&
+                     lpCur[ lLen - 3 ] == 's' &&
+                     lpCur[ lLen - 2 ] == 'm' &&
+                     lpCur[ lLen - 1 ] == 'i'
+    ) lAction = 8;  /* add background image */
+   }  /* end else */
+  }  /* end if */
+
+  GUI_FileCtxMenu ( lAction == 9 || lAction == 10 ? lpCur : lPath, lpPathEnd, lAction, apMenu -> m_ActiveY );
 
  }  /* end if */
 
 }  /* end _context_action_file */
+
+static void _action_folder ( GUIFileMenu* apMenu, int afPopup ) {
+
+ if ( !afPopup ) {
+
+  _push_state ( apMenu );
+  _fill (  apMenu, _STR( apMenu -> m_pCurrent ), 0  );
+  _redraw ( apMenu, 0 );
+
+ } else _context_action_file ( apMenu, 3 );
+
+}  /* end _action_folder */
+
+static void _context_action_fold ( GUIFileMenu* apMenu, int afPopup ) {
+
+ _context_action_file ( apMenu, 2 );
+
+}  /* end _context_action_fold */
 
 static void _action_share ( GUIFileMenu* apMenu, int afPopup ) {
 
  int          lSD;
  SMBMountInfo lMountInfo;
  char         lPath[ 2 ] __attribute__(   (  aligned( 4 )  )   );
- char*        lpPath = apMenu -> m_pCurrent -> m_pString;
+ char*        lpPath = _STR( apMenu -> m_pCurrent );
 
  lSD = fioDopen ( g_pSMBS );
 
@@ -646,31 +680,38 @@ static void _context_action_share ( GUIFileMenu* apMenu, int afPopup ) {
 
 }  /* end _context_action_share */
 
-static void ( *Action[ 8 ] ) ( GUIFileMenu*, int ) = {
- _action_folder, _action_avi,  _action_file,
- _action_file,   _action_file, _action_partition,
- _action_avi,    _action_share
+static void ( *Action[ 9 ] ) ( GUIFileMenu*, int ) = {
+ _action_folder, _action_avi,   _action_file,
+ _action_file,   _action_file,  _action_partition,
+ _action_avi,    _action_share, _action_file
 };
 
-static void ( *ContextAction[ 8 ] ) ( GUIFileMenu*, int ) = {
+static void ( *ContextAction[ 9 ] ) ( GUIFileMenu*, int ) = {
  _context_action_fold, _context_action_file, _context_action_file,
  _context_action_file, _context_action_file, _context_action_part,
- _context_action_file, _context_action_share
+ _context_action_file, _context_action_share, _context_action_file
 };
 
-static int _step_down ( GUIFileMenu* apMenu ) {
+static int _page_scroll (  int ( * ) ( GUIFileMenu*, int ), GUIFileMenu*  );
+static int _step_up     ( GUIFileMenu*, int                               );
+
+static int _step_down ( GUIFileMenu* apMenu, int afRoll ) {
 
  int retVal = 0;
 
- if ( apMenu -> m_pCurrent && apMenu -> m_pCurrent -> m_pNext ) {
+ if ( apMenu -> m_pCurrent ) {
 
-  apMenu -> m_pCurrent = apMenu -> m_pCurrent -> m_pNext;
+  if ( apMenu -> m_pCurrent -> m_pNext ) {
 
-  if ( apMenu -> m_pCurrent == apMenu -> m_pLast && apMenu -> m_pCurrent -> m_pNext )
-   apMenu -> m_pFirst = apMenu -> m_pFirst -> m_pNext;
-  else ++apMenu -> m_YOffset;
+   apMenu -> m_pCurrent = apMenu -> m_pCurrent -> m_pNext;
 
-  retVal = 1;
+   if ( apMenu -> m_pCurrent == apMenu -> m_pLast && apMenu -> m_pCurrent -> m_pNext )
+    apMenu -> m_pFirst = apMenu -> m_pFirst -> m_pNext;
+   else ++apMenu -> m_YOffset;
+
+   retVal = 1;
+
+  } else if ( afRoll ) while (  _page_scroll ( _step_up, apMenu )  );
 
  }  /* end if */
 
@@ -678,19 +719,23 @@ static int _step_down ( GUIFileMenu* apMenu ) {
 
 }  /* end _step_down */
 
-static int _step_up ( GUIFileMenu* apMenu ) {
+static int _step_up ( GUIFileMenu* apMenu, int afRoll ) {
 
  int retVal = 0;
 
- if ( apMenu -> m_pCurrent && apMenu -> m_pCurrent -> m_pPrev ) {
+ if ( apMenu -> m_pCurrent ) {
 
-  apMenu -> m_pCurrent = apMenu -> m_pCurrent -> m_pPrev;
+  if ( apMenu -> m_pCurrent -> m_pPrev ) {
 
-  if ( apMenu -> m_pCurrent == apMenu -> m_pFirst && apMenu -> m_pCurrent -> m_pPrev )
-   apMenu -> m_pFirst = apMenu -> m_pFirst -> m_pPrev;
-  else --apMenu -> m_YOffset;
+   apMenu -> m_pCurrent = apMenu -> m_pCurrent -> m_pPrev;
 
-  retVal = 1;
+   if ( apMenu -> m_pCurrent == apMenu -> m_pFirst && apMenu -> m_pCurrent -> m_pPrev )
+    apMenu -> m_pFirst = apMenu -> m_pFirst -> m_pPrev;
+   else --apMenu -> m_YOffset;
+
+   retVal = 1;
+
+  } else if ( afRoll ) while (  _page_scroll ( _step_down, apMenu )  );
 
  }  /* end if */
 
@@ -698,18 +743,24 @@ static int _step_up ( GUIFileMenu* apMenu ) {
 
 }  /* end _step_up */
 
-static void _page_scroll (  int ( *aFunc ) ( GUIFileMenu* ), GUIFileMenu* apMenu  ) {
+static int _page_scroll (  int ( *aFunc ) ( GUIFileMenu*, int ), GUIFileMenu* apMenu  ) {
 
  int           i, j;
  int           lHeight = g_GSCtx.m_Height - 101;
  int           lnItems = ( lHeight - 2 ) / 34;
+ int           retVal  = 1;
  SMS_ListNode* lpNode;
 
  for ( i = 0; i < 10; ++i ) {
 
   j = lnItems;
 
-  if (  !aFunc ( apMenu )  ) break;
+  if (  !aFunc ( apMenu, 0 )  ) {
+
+   retVal = 0;
+   break;
+
+  }  /* end if */
 
   lpNode = apMenu -> m_pFirst;
 
@@ -725,91 +776,85 @@ static void _page_scroll (  int ( *aFunc ) ( GUIFileMenu* ), GUIFileMenu* apMenu
 
  }  /* end for */
 
+ return retVal;
+
 }  /* end _page_scroll */
 
 static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
- int          retVal = GUIHResult_Void;
- GUIFileMenu* lpMenu = ( GUIFileMenu* )apObj;
+ int          retVal   = GUIHResult_Void;
+ GUIFileMenu* lpMenu   = ( GUIFileMenu* )apObj;
+ int          lObjType;
 
- if ( anEvent & GUI_MSG_PAD_MASK ) switch ( anEvent & GUI_MSG_PAD_MASK ) {
+ if ( lpMenu -> m_pCurrent )
+  lObjType = ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1;
+ else lObjType = 0x80000000;
 
-  case RC_TOP_MENU  :
-  case SMS_PAD_LEFT :
-  case SMS_PAD_RIGHT:
+ if ( anEvent & GUI_MSG_PAD_MASK ) {
+
+  int lBtn = anEvent & GUI_MSG_PAD_MASK;
+
+  if ( lBtn == RC_TOP_MENU || lBtn == SMS_PAD_LEFT || lBtn == SMS_PAD_RIGHT ) {
 
    retVal = GUIHResult_ChangeFocus;
 
-  break;
-
-  case SMS_PAD_L1:
+  } else if ( lBtn == RC_PREV || lBtn == SMS_PAD_L1 ) {
 
    _page_scroll (  _step_up, lpMenu );
+   goto redraw;
 
-  goto redraw;
-
-  case SMS_PAD_L2:
+  } else if ( lBtn == RC_NEXT || lBtn == SMS_PAD_L2 ) {
 
    _page_scroll (  _step_down, lpMenu );
+   goto redraw;
 
-  goto redraw;
+  } else if ( lBtn == SMS_PAD_DOWN ) {
 
-  case SMS_PAD_DOWN:
+   _step_down ( lpMenu, 1 );
+   goto redraw;
 
-   _step_down ( lpMenu );
+  } else if ( lBtn == SMS_PAD_UP ) {
 
-  goto redraw;
-
-  case SMS_PAD_UP: {
-
-   _step_up ( lpMenu );
+   _step_up ( lpMenu, 1 );
 redraw:
    _redraw ( lpMenu, 0 );
 
    retVal = GUIHResult_Handled;
 
-  } break;
+  } else if (  lBtn == RC_ENTER || ( lObjType > 0 && lBtn == RC_PLAY ) || lBtn == SMS_PAD_CROSS  ) {
 
-  case RC_ENTER     :
-  case RC_PLAY      :
-  case SMS_PAD_CROSS:
-
-   if ( lpMenu -> m_pCurrent ) {
-
+   if ( lObjType >= 0 ) {
     SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
-    Action[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 0 );
-
+    Action[ lObjType ] ( lpMenu, 0 );
    }  /* end if */
 
    retVal = GUIHResult_Handled;
 
-  break;
+  } else if (  lBtn == RC_SUBTITLE || lBtn == SMS_PAD_CIRCLE || ( lObjType == 0 && lBtn == RC_PLAY )  ) {
 
-  case RC_SUBTITLE:
-  case SMS_PAD_CIRCLE:
-
-   if ( lpMenu -> m_pCurrent ) {
-
+   if ( lObjType >= 0 ) {
     SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
-    Action[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 1 );
-
+    Action[ lObjType ] ( lpMenu, 1 );
    }  /* end if */
 
    retVal = GUIHResult_Handled;
 
-  break;
+  } else if (  lBtn == RC_DISPLAY || lBtn == ( SMS_PAD_R1 | SMS_PAD_CIRCLE )  ) {
 
-  case RC_PROGRAM    :
-  case SMS_PAD_SQUARE: {
-
-   ContextAction[ ( unsigned int )lpMenu -> m_pCurrent -> m_Param >> 1 ] ( lpMenu, 1 );
+   if (  ( g_CMedia == 2 && g_PD     >= 0 && g_CWD[ 0 ] != 'h' ) ||
+         ( g_CMedia == 6 && g_SMBU   >  0                      ) ||
+         ( g_CMedia != 2 && g_CMedia != 6                      )
+   ) _context_action_file ( lpMenu, 4 );
 
    retVal = GUIHResult_Handled;
 
-  } break;
+  } else if ( lBtn == RC_PROGRAM || lBtn == SMS_PAD_SQUARE ) {
 
-  case RC_RETURN       :
-  case SMS_PAD_TRIANGLE: {
+   if ( lObjType >= 0 ) ContextAction[ lObjType ] ( lpMenu, 1 );
+
+   retVal = GUIHResult_Handled;
+
+  } else if ( lBtn == RC_STOP || lBtn == RC_RETURN || lBtn == SMS_PAD_TRIANGLE ) {
 
    int lLevel = lpMenu -> m_pLevels -> m_Size;
 
@@ -837,7 +882,7 @@ redraw:
 
     _fill ( lpMenu, lpPtr, 0 );
 
-    lpNode = SMS_ListFind ( lpMenu -> m_pFiltList, lpState -> m_pString );
+    lpNode = SMS_ListFind (  lpMenu -> m_pFiltList, _STR( lpState )  );
 
     if ( lpNode ) {
 
@@ -860,7 +905,7 @@ redraw:
 
    }  /* end if */
 
-  } break;
+  }  /* end if */
 
  } else switch ( anEvent & GUI_MSG_USER_MASK ) {
 
@@ -915,6 +960,10 @@ redraw:
 
   } break;
 
+  case GUI_MSG_RELOAD_BROWSER:
+   _fill ( lpMenu, g_DotStr, 0 );
+  break;
+
   case GUI_MSG_REFILL_BROWSER: {
 
    if ( g_pFileList ) {
@@ -924,7 +973,9 @@ redraw:
 
     while ( lpNode ) {
 
-     if (  !_filter_item ( lpNode )  ) SMS_ListPushBack ( lpMenu -> m_pFiltList, lpNode -> m_pString ) -> m_Param = lpNode -> m_Param;
+     if (  !_filter_item ( lpNode )  ) SMS_ListPushBack (
+      lpMenu -> m_pFiltList, _STR( lpNode )
+     ) -> m_Param = lpNode -> m_Param;
 
      lpNode = lpNode -> m_pNext;
 

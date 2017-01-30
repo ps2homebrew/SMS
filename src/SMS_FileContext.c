@@ -33,7 +33,6 @@ typedef struct CDDAFileContext {
 
 # define IOCTL_CDROM_READ_TOC 0x00024000
 # define IOCTL_CDROM_RAW_READ 0x0002403E
-# define UNCACHED_SEG( p ) ( unsigned char* )( p )
 
 typedef enum TRACK_MODE_TYPE { YellowMode2, XAForm2, CDDA } TRACK_MODE_TYPE;
 
@@ -227,69 +226,10 @@ BOOL _find_signature ( CDDAContext* apCtx ) {
 #else  /* PS2 */
 # include <kernel.h>
 # include <fileio.h>
-# include <fileXio_rpc.h>
 # include <fcntl.h>
 # include "SMS_CDDA.h"
 
-# undef UNCACHED_SEG
-# define UNCACHED_SEG( p ) ( unsigned char* )( p )
-
 # define btoi( b ) (  ( b ) / 16 * 10 + ( b ) % 16  )
-
-static int _do_open ( const char* apFileName ) {
-
- return fioOpen ( apFileName, O_RDONLY );
-
-}  /* end _do_open */
-
-static int _do_xopen ( const char* apFileName ) {
-
- return fileXioOpen ( apFileName, O_RDONLY, 0666 );
-
-}  /* end _do_xopen */
-
-static int _do_seek ( int aFD, int anOffset, int aWhence ) {
-
- return fioLseek ( aFD, anOffset, aWhence );
-
-}  /* end _do_seek */
-
-static int _do_xseek ( int aFD, int anOffset, int aWhence ) {
-
- return fileXioLseek ( aFD, anOffset, aWhence );
-
-}  /* end _do_xseek */
-
-static int  ( *IO_Close        ) ( int             ) = fileXioClose;
-static void ( *IO_SetBlockMode ) ( int             ) = fileXioSetBlockMode;
-static int  ( *IO_LSeek        ) ( int, int, int   ) = _do_xseek;
-static int  ( *IO_Read         ) ( int, void*, int ) = (  int (*) ( int, void*, int )  )fileXioRead;
-static int  ( *IO_Wait         ) ( int, int*       ) = fileXioWaitAsync;
-static int  ( *IO_Open         ) ( const char*     ) = _do_xopen;
-
-void STIO_SetIOMode ( STIOMode aMode ) {
-
- if ( aMode == STIOMode_Extended ) {
-
-  IO_Close        = fileXioClose;
-  IO_SetBlockMode = fileXioSetBlockMode;
-  IO_LSeek        = _do_xseek;
-  IO_Read         = (  int (*) ( int, void*, int )  )fileXioRead;
-  IO_Wait         = fileXioWaitAsync;
-  IO_Open         = _do_xopen;
-
- } else if ( aMode == STIOMode_Ordinary ) {
-
-  IO_Close        = fioClose;
-  IO_SetBlockMode = fioSetBlockMode;
-  IO_LSeek        = _do_seek;
-  IO_Read         = fioRead;
-  IO_Wait         = fioSync;
-  IO_Open         = _do_open;
-
- }  /* end if */
-
-}  /* end STIO_SetIOMode */
 
 static int _start_sector ( CDDA_TOC* apTOC, int aTrack ) {
 
@@ -650,13 +590,10 @@ static int CDDA_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> m_BufSize = anSectors * 2352;
 
-  apCtx -> m_pBase[ 0 ] = realloc ( apCtx -> m_pBase[ 0 ], apCtx -> m_BufSize + 63 );
-  apCtx -> m_pBase[ 1 ] = realloc ( apCtx -> m_pBase[ 1 ], apCtx -> m_BufSize + 63 );
+  apCtx -> m_pBuff[ 0 ] = realloc64 (  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 1 ] = realloc64 (  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
 
-  if ( apCtx -> m_pBase[ 0 ] == NULL || apCtx -> m_pBase[ 1 ] == NULL ) return 0;
-
-  apCtx -> m_pBuff[ 0 ] = UNCACHED_SEG(    (   (  ( unsigned int )apCtx -> m_pBase[ 0 ]  ) + 63   ) & 0xFFFFFFC0    );
-  apCtx -> m_pBuff[ 1 ] = UNCACHED_SEG(    (   (  ( unsigned int )apCtx -> m_pBase[ 1 ]  ) + 63   ) & 0xFFFFFFC0    );
+  if ( apCtx -> m_pBuff[ 0 ] == NULL || apCtx -> m_pBuff[ 1 ] == NULL ) return 0;
 
   lOffset                   = aStartPos + lpPriv -> m_pCtx -> m_Offset;
   apCtx -> m_CurBuf         = 0;
@@ -740,9 +677,9 @@ static void CDDA_DestroyFileContext ( FileContext* apCtx ) {
   CDDA_Sync ( lpPriv -> m_pCtx );
 
   free ( apCtx -> m_pData      );
-  free ( apCtx -> m_pBase[ 0 ] );
+  free ( apCtx -> m_pBuff[ 0 ] );
 
-  if ( apCtx -> m_pBase[ 1 ] != NULL ) free ( apCtx -> m_pBase[ 1 ] );
+  if ( apCtx -> m_pBuff[ 1 ] != NULL ) free ( apCtx -> m_pBuff[ 1 ] );
 
   free ( apCtx -> m_pPath );
   free ( apCtx );
@@ -758,12 +695,10 @@ static FileContext* CDDA_InitFileContextInternal ( CDDAContext* apCtx, int aStar
 
  if ( retVal != NULL ) {
 
-  retVal -> m_pBase[ 0 ] = malloc ( 2352 + 63 );
+  retVal -> m_pBuff[ 0 ] = memalign (  64, ( 2352 + 63 ) & ~63  );
 
-  if ( retVal -> m_pBase[ 0 ] != NULL ) {
+  if ( retVal -> m_pBuff[ 0 ] != NULL ) {
 
-   retVal -> m_pBuff[ 0 ] = UNCACHED_SEG(    (   (  ( unsigned int )retVal -> m_pBase[ 0 ]  ) + 63   ) & 0xFFFFFFC0    );
-   retVal -> m_pBase[ 1 ] = NULL;
    retVal -> m_pBuff[ 1 ] = NULL;
    retVal -> m_CurBuf     = 0;
    retVal -> m_Size       = aSize;
@@ -793,7 +728,7 @@ static FileContext* CDDA_InitFileContextInternal ( CDDAContext* apCtx, int aStar
     
    }  /* end if */
 
-   if ( !lfSuccess ) free ( retVal -> m_pBase[ 0 ] );
+   if ( !lfSuccess ) free ( retVal -> m_pBuff[ 0 ] );
 
   }  /* end if */
 
@@ -1283,13 +1218,13 @@ static void STIO_DestroyFileContext ( FileContext* apCtx ) {
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_hFile         );
   CloseHandle (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_Ovlp.hEvent   );
 #else  /* PS2 */
-  IO_SetBlockMode ( 0 );
-  IO_Close (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
+  fioSetBlockMode ( FIO_WAIT );
+  fioClose (   (  ( STIOFilePrivate* )apCtx -> m_pData  ) -> m_FD   );
 #endif  /* _WIN32 */
   free ( apCtx -> m_pData      );
-  free ( apCtx -> m_pBase[ 0 ] );
+  free ( apCtx -> m_pBuff[ 0 ] );
 
-  if ( apCtx -> m_pBase[ 1 ] != NULL ) free ( apCtx -> m_pBase[ 1 ] );
+  if ( apCtx -> m_pBuff[ 1 ] != NULL ) free ( apCtx -> m_pBuff[ 1 ] );
 
   free ( apCtx -> m_pPath );
   free ( apCtx ); 
@@ -1314,7 +1249,13 @@ static int STIO_Read ( FileContext* apCtx, void* apBuf, unsigned int aSize ) {
 
    lLen = apCtx -> m_pEnd - apCtx -> m_pPos;
 
-   if ( lLen == 0 ) break;
+   if ( lLen == 0 ) {
+    if ( apCtx -> m_CurPos < apCtx -> m_Size ) {
+     apCtx -> m_CurPos = apCtx -> m_Size;
+     lSize = aSize;
+    }  /* end if */
+    break;
+   }  /* end if */
 
   } else {
 
@@ -1344,7 +1285,7 @@ static int STIO_Seek ( FileContext* apCtx, unsigned int aPos ) {
 #ifdef _WIN32
  aPos = SetFilePointer ( lpPriv -> m_hFile, aPos, NULL, FILE_BEGIN );
 #else  /* PS2 */
- aPos = IO_LSeek ( lpPriv -> m_FD, aPos, 0 );
+ aPos = fioLseek ( lpPriv -> m_FD, aPos, SEEK_SET );
 #endif  /* _WIN32 */
  return aPos;
 
@@ -1372,7 +1313,7 @@ static int STIO_Fill ( FileContext* apCtx ) {
             )
  ) lLen = lnRead;
 #else  /* PS2 */
- lLen = IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ apCtx -> m_CurBuf ], apCtx -> m_BufSize );
+ lLen = fioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ apCtx -> m_CurBuf ], apCtx -> m_BufSize );
 
  if ( lLen < 0 ) lLen = 0;
 #endif  /* _WIN32 */
@@ -1398,7 +1339,7 @@ static int STIO_FillStm ( FileContext* apCtx ) {
         )
   ) {
 #else  /* PS2 */
-  if (  IO_Wait ( 0, &lnRead )  ) {
+  if (  fioSync ( lpPriv -> m_FD, FIO_WAIT, &lnRead )  ) {
 #endif  /* _WIN32 */
    lOldBuf            = apCtx -> m_CurBuf;
    apCtx -> m_CurBuf  = !apCtx -> m_CurBuf;
@@ -1415,7 +1356,7 @@ static int STIO_FillStm ( FileContext* apCtx ) {
      &lnRead, &lpPriv -> m_Ovlp
     );
 #else
-    IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ lOldBuf ], apCtx -> m_BufSize );
+    fioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ lOldBuf ], apCtx -> m_BufSize );
 #endif  /* _WIN32 */
    }  /* end if */
 
@@ -1451,8 +1392,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
    lpPriv -> m_hFile, &lpPriv -> m_Ovlp, &lnRead, TRUE
   );
 #else  /* PS2 */
-  IO_Wait ( 0, &lnRead );
-  IO_SetBlockMode ( 0 );
+  fioSync ( lpPriv -> m_FD, FIO_WAIT, &lnRead );
+  fioSetBlockMode ( FIO_WAIT );
 #endif  /* _WIN32 */
   apCtx -> m_CurBuf = 0;
   apCtx -> Seek     = STIO_Seek;
@@ -1468,14 +1409,12 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> m_BufSize = anBlocks * 4096;
 
-  lpData                = realloc ( apCtx -> m_pBase[ 0 ], apCtx -> m_BufSize + 63 );
-  apCtx -> m_pBase[ 1 ] = realloc ( apCtx -> m_pBase[ 1 ], apCtx -> m_BufSize + 63 );
+  lpData                = realloc64 (  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 1 ] = realloc64 (  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
 
-  if ( lpData == NULL || apCtx -> m_pBase[ 1 ] == NULL ) return 0;
+  if ( lpData == NULL || apCtx -> m_pBuff[ 1 ] == NULL ) return 0;
 
-  apCtx -> m_pBase[ 0 ] = lpData;
-  apCtx -> m_pBuff[ 0 ] = UNCACHED_SEG(    (   (  ( unsigned int )apCtx -> m_pBase[ 0 ]  ) + 63   ) & 0xFFFFFFC0    );
-  apCtx -> m_pBuff[ 1 ] = UNCACHED_SEG(    (   (  ( unsigned int )apCtx -> m_pBase[ 1 ]  ) + 63   ) & 0xFFFFFFC0    );
+  apCtx -> m_pBuff[ 0 ] = lpData;
   apCtx -> m_CurPos     = aStartPos;
 
   apCtx -> Seek = STIO_SeekStm;
@@ -1494,8 +1433,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
              )
   ) retVal = lnRead;
 #else  /* PS2 */
-  IO_LSeek ( lpPriv -> m_FD, apCtx -> m_CurPos, 0 );
-  retVal = lnRead = IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ 0 ], apCtx -> m_BufSize );
+  fioLseek ( lpPriv -> m_FD, apCtx -> m_CurPos, SEEK_SET );
+  retVal = lnRead = fioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ 0 ], apCtx -> m_BufSize );
 #endif  /* _WIN32 */
   apCtx -> m_pPos = apCtx -> m_pBuff[ 0 ];
   apCtx -> m_pEnd = apCtx -> m_pPos + retVal;
@@ -1510,8 +1449,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
     apCtx -> m_BufSize, &lnRead, &lpPriv -> m_Ovlp
    );
 #else  /* PS2 */
-   IO_SetBlockMode ( 1 );
-   IO_Read ( lpPriv -> m_FD, apCtx -> m_pBuff[ 1 ], apCtx -> m_BufSize );
+   fioSetBlockMode ( FIO_NOWAIT );
+   fioRead ( lpPriv -> m_FD, apCtx -> m_pBuff[ 1 ], apCtx -> m_BufSize );
 #endif  /* _WIN32 */
   }  /* end if */
 
@@ -1541,13 +1480,11 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
 
    if ( retVal != NULL ) {
 
-    retVal -> m_pBase[ 0 ] = malloc ( 4096 + 63 );
+    retVal -> m_pBuff[ 0 ] = memalign (  64, ( 4096 + 63 ) & ~63  );
     retVal -> m_pData      = malloc (  sizeof ( STIOFilePrivate )  );
 
-    if ( retVal -> m_pData != NULL && retVal -> m_pBase[ 0 ] != NULL ) {
+    if ( retVal -> m_pData != NULL && retVal -> m_pBuff[ 0 ] != NULL ) {
 
-     retVal -> m_pBase[ 1 ] = NULL;
-     retVal -> m_pBuff[ 0 ] = UNCACHED_SEG(    (   (  ( unsigned int )retVal -> m_pBase[ 0 ]  ) + 63   ) & 0xFFFFFFC0    );
      retVal -> m_pBuff[ 1 ] = NULL;
      retVal -> m_CurBuf     = 0;
      retVal -> m_Size       = GetFileSize ( lhFile, NULL );
@@ -1586,7 +1523,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
    if ( retVal != NULL ) {
 
     if ( retVal -> m_pData      != NULL ) free ( retVal -> m_pData      );
-    if ( retVal -> m_pBase[ 0 ] != NULL ) free ( retVal -> m_pBase[ 0 ] );
+    if ( retVal -> m_pBuff[ 0 ] != NULL ) free ( retVal -> m_pBuff[ 0 ] );
 
     free ( retVal );
     retVal = NULL;
@@ -1601,7 +1538,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
 
  }  /* end if */
 #else  /* PS2 */
- int lFD = IO_Open ( aFileName );
+ int lFD = fioOpen ( aFileName, O_RDONLY );
 
  if ( lFD >= 0 ) {
 
@@ -1609,16 +1546,14 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
 
   if ( retVal != NULL ) {
 
-   retVal -> m_pBase[ 0 ] = malloc ( 4096 + 63 );
+   retVal -> m_pBuff[ 0 ] = memalign (  64, ( 4096 + 63 ) & ~63  );
    retVal -> m_pData      = malloc (  sizeof ( STIOFilePrivate )  );
 
-   if ( retVal -> m_pData != NULL && retVal -> m_pBase[ 0 ] != NULL ) {
+   if ( retVal -> m_pData != NULL && retVal -> m_pBuff[ 0 ] != NULL ) {
 
-    retVal -> m_pBase[ 1 ] = NULL;
-    retVal -> m_pBuff[ 0 ] = UNCACHED_SEG(    (   (  ( unsigned int )retVal -> m_pBase[ 0 ]  ) + 63   ) & 0xFFFFFFC0    );
     retVal -> m_pBuff[ 1 ] = NULL;
     retVal -> m_CurBuf     = 0;
-    retVal -> m_Size       = IO_LSeek ( lFD, 0, 2 );
+    retVal -> m_Size       = fioLseek ( lFD, 0, SEEK_END );
     retVal -> m_BufSize    = 4096;
     retVal -> m_Pos        = 0;
     retVal -> m_CurPos     = 0;
@@ -1638,7 +1573,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
     retVal -> Stream  = STIO_Stream;
     retVal -> Open    = STIO_InitFileContext;
  
-    IO_LSeek ( lFD, 0, 0 );
+    fioLseek ( lFD, 0, SEEK_SET );
 
     lfSuccess = 1;
 
@@ -1653,14 +1588,14 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
   if ( retVal != NULL ) {
 
    if ( retVal -> m_pData      != NULL ) free ( retVal -> m_pData      );
-   if ( retVal -> m_pBase[ 0 ] != NULL ) free ( retVal -> m_pBase[ 0 ] );
+   if ( retVal -> m_pBuff[ 0 ] != NULL ) free ( retVal -> m_pBuff[ 0 ] );
 
    free ( retVal );
    retVal = NULL;
 
   }  /* end if */
 
-  if ( lFD >= 0 ) IO_Close ( lFD );
+  if ( lFD >= 0 ) fioClose ( lFD );
 
  }  /* end if */
 #endif  /* _WIN32 */

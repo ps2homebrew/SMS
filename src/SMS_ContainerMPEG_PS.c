@@ -10,15 +10,20 @@
 # either version 2 of the License, or (at your option) any later version.
 #
 */
+#include "SMS_FourCC.h"
 #include "SMS_ContainerMPEG_PS.h"
 #include "SMS_Bitio.h"
 #include "SMS_MP123.h"
 #include "SMS_AC3.h"
+#include "SMS_DTS.h"
+#include "SMS_Data.h"
+#include "SMS_Locale.h"
 
 #include <malloc.h>
 #include <string.h>
 
-#define MAX_SYNC_SIZE 100000
+#define MAX_SYNC_SIZE   100000
+#define MAX_DETECT_SIZE 1024 * 1024
 
 #define PACK_START_CODE    (  ( unsigned int )0x000001BA  )
 #define SYSHDR_START_CODE  (  ( unsigned int )0x000001BB  )
@@ -107,7 +112,7 @@ static long _psm_parse ( _MPEGPSContainer* apCont, FileContext* apFileCtx ) {
 
  lMLen = File_GetShortBE ( apFileCtx );
 
- while ( lMLen >= 4 ){
+ while ( lMLen >= 4 ) {
 
   unsigned char lType = File_GetByte    ( apFileCtx );
   unsigned char lID   = File_GetByte    ( apFileCtx );
@@ -296,6 +301,8 @@ static int _fill_video_parameters ( SMS_Container* apCont, SMS_Stream* apStm, in
    apStm -> m_pCodec -> m_Width  = SMS_GetBits ( &lBitCtx, 12 );
    apStm -> m_pCodec -> m_Height = SMS_GetBits ( &lBitCtx, 12 );
 
+   if (  SMS_GetBits ( &lBitCtx, 4 ) == 3  ) apStm -> m_pCodec -> m_fWS = 1;
+
    free ( lpBuffer );
 
    retVal = 1;
@@ -348,7 +355,6 @@ static int _fill_audio_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, i
    case SMS_CodecID_MP3: {
 
     uint64_t lHeader = SMS_bswap32 (  SMS_unaligned32 ( lpPtr )  );
-    lHeader &= SMS_INT64( 0x00000000FFFFFFFF );
 
     if (   MP123_CheckHeader  (  ( uint32_t )lHeader          ) &&
           !MP123_DecodeHeader (  ( uint32_t )lHeader, &lInfo  )
@@ -381,6 +387,47 @@ static int _fill_audio_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, i
      goto end;
 
     }  /* end if */
+
+   } break;
+
+   case SMS_CodecID_DTS: {
+
+    int lFlags, lFrameLen;
+
+    if (  DTS_SyncInfo ( lpPtr, &lFlags, &apStm -> m_pCodec -> m_SampleRate, &apStm -> m_pCodec -> m_BitRate, &lFrameLen )  ) {
+
+     apStm -> m_SampleRate           = apStm -> m_pCodec -> m_SampleRate;
+     apStm -> m_pCodec -> m_Channels = DTS_Channels ( lFlags );
+
+     retVal = 1;
+     goto end;
+
+    }  /* end if */
+
+   } break;
+
+   case SMS_CodecID_PCM16BE: {
+
+    static const int sl_PCMFreq[ 4 ] __attribute__(   (  section( ".data" )  )   ) = {
+     48000, 96000, 44100, 32000
+    };
+
+    int lVal, lFreq;
+
+    if ( aLen > 2 ) {
+
+     lVal  = lpPtr[ 1 ];
+     lFreq = ( lVal >> 4 ) & 3;
+
+     apStm -> m_SampleRate           = apStm -> m_pCodec -> m_SampleRate = sl_PCMFreq[ lFreq ];
+     apStm -> m_pCodec -> m_Channels = 1 + ( lVal & 7 );
+     apStm -> m_pCodec -> m_BitRate  = apStm -> m_pCodec -> m_Channels * apStm -> m_pCodec -> m_SampleRate * 2;
+
+     retVal = 1;
+
+    }  /* end if */
+
+    goto end;
 
    } break;
 
@@ -469,6 +516,11 @@ static int _ReadPacket ( SMS_Container* apCont, int* apIdx ) {
 
    } else {
 
+    if ( lpStm -> m_pCodec -> m_ID == SMS_CodecID_PCM16BE ) {
+     File_Skip ( lpFileCtx, 3 );
+     lLen -= 3;
+    }  /* end if */
+
     lpPkt = apCont -> AllocPacket ( lpStm -> m_pPktBuf, lLen );
     lpFileCtx -> Read ( lpFileCtx, lpPkt -> m_pData, lLen );
 
@@ -501,8 +553,8 @@ static void _get_stm_pts ( SMS_Container* apCont, int anIdx, int afOverride, uin
 
   int lLen = _read_header ( apCont, &lStartCode, &lPTS, &lDTS );
 
-  if ( !lLen                 ) break;
-  if (  ( int64_t )lPTS <= 0 ) goto next;
+  if ( !lLen                  ) break;
+  if (  ( int64_t )lPTS <= 0  ) goto next;
 
   for (  lIt = lppStm; *lIt; ++lIt  ) if (  ( int )( *lIt ) -> m_ID == lStartCode  ) break;
 
@@ -532,7 +584,7 @@ static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
 
  aPos    /= 90;
  lBasePos = ( int64_t )( unsigned int )(
-  ( float )lpFileCtx -> m_Size * (  ( float )aPos / ( float )apCont -> m_Duration  )
+  ( float )lpFileCtx -> m_Size * (  ( float )aPos / ( float )( apCont -> m_Duration - apCont -> m_StartTime )  )
  );
 
  lpMyCont  -> m_BufLen = 0;
@@ -548,21 +600,30 @@ static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
 
   if ( lpStm && lpStm -> m_pPktBuf && lpStm -> m_pCodec -> m_Type == SMS_CodecTypeVideo ) {
 
-   int lCode = _next_start_code ( lpFileCtx );
+   unsigned int lEnd = lpFileCtx -> m_CurPos + retVal;
 
-   if ( lCode == 0x000001B8 || lCode == 0x000001B3 ) {
+   while ( lpFileCtx -> m_CurPos < lEnd ) {
 
-    lpFileCtx -> Seek ( lpFileCtx, lCurPos );
-    break;
+    int lCode = _next_start_code ( lpFileCtx );
 
-   } else continue;
+    if ( lCode == 0x000001B8 || lCode == 0x000001B3 || (
+          lCode == 0x00000100 && (
+           (  File_GetUInt ( lpFileCtx ) >> 19  ) & 3
+          ) == 1
+         )
+    ) {
+
+     lpFileCtx -> Seek ( lpFileCtx, lCurPos );
+     goto end;
+
+    }  /* end if */
+
+   }  /* end while */
 
   }  /* end if */
 
-  File_Skip ( lpFileCtx, retVal );
-
  }  /* end while */
-
+end:
  return retVal;
 
 }  /* end _Seek */
@@ -573,8 +634,9 @@ int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
  int               i, lfVideo, lfAudio, lfVideoParam, retVal = 0;
  FileContext*      lpFileCtx;
  _MPEGPSContainer* lpMyCont;
+ SMS_Stream**      lIt, **lppStm = apCont -> m_pStm;
 
- if (  ( int )apCont -> m_pFileCtx < 0  ) return retVal;
+ if (  ( int )apCont -> m_pFileCtx <= 0  ) return retVal;
 
  i            = 0;
  lfVideo      = 0;
@@ -588,7 +650,7 @@ int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
  while (  i++ < 1024 && !FILE_EOF( lpFileCtx )  ) {
 
   int                lStartCode, lType, lLen;
-  unsigned int       j, lID = SMS_CodecID_NULL;
+  unsigned int       j, lID = SMS_CodecID_NULL, lTag = 0;
   enum SMS_CodecType lCodecType = SMS_CodecTypeUnknown;
 
   lLen = _read_header ( apCont, &lStartCode, &lPTS, &lDTS );
@@ -609,12 +671,14 @@ int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
      lfVideo = 1;
      lCodecType = SMS_CodecTypeVideo;
      lID        = SMS_CodecID_MPEG1;
+     lTag       = SMS_MKTAG( 'm', 'p', 'g', '1' );
     } break;
 
     case STREAM_TYPE_VIDEO_MPEG2: if ( !lfVideo ) {
      lfVideo = 1;
      lCodecType = SMS_CodecTypeVideo;
      lID        = SMS_CodecID_MPEG2;
+     lTag       = SMS_MKTAG( 'm', 'p', 'g', '2' );
     } break;
 
     case STREAM_TYPE_AUDIO_MPEG1:
@@ -634,6 +698,7 @@ int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
 
    lCodecType = SMS_CodecTypeVideo;
    lID        = SMS_CodecID_MPEG2;
+   lTag       = SMS_MKTAG( 'm', 'p', 'g', '2' );
 
   } else if ( lStartCode >= 0x1C0 && lStartCode <= 0x1DF ) {
 
@@ -645,29 +710,48 @@ int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
    lCodecType = SMS_CodecTypeAudio;
    lID        = SMS_CodecID_AC3;
 
+  } else if (  ( lStartCode >= 0x088 && lStartCode <= 0x08F ) ||
+               ( lStartCode >= 0x098 && lStartCode <= 0x09F )
+  ) {
+
+   lCodecType = SMS_CodecTypeAudio;
+   lID        = SMS_CodecID_DTS;
+
+  } else if ( lStartCode >= 0xA0 && lStartCode <= 0xAF ) {
+
+   lCodecType = SMS_CodecTypeAudio;
+   lID        = SMS_CodecID_PCM16BE;
+
   }  /* end if */
 
   if ( lCodecType != SMS_CodecTypeUnknown ) {
 
-   SMS_Stream* lpStm = ( SMS_Stream* )calloc (  1, sizeof ( SMS_Stream )  );
+   for ( lIt = lppStm; *lIt; ++lIt ) if (  ( *lIt ) -> m_ID == lID  ) break;
 
-   if ( lpStm ) {
+   if (  !*lIt || ( lCodecType = SMS_CodecTypeVideo && !lfVideoParam )  ) {
 
-    lpStm -> m_pCodec = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
-    lpStm -> m_pCodec -> m_Type = lCodecType;
-    lpStm -> m_pCodec -> m_ID   = lID;
-    lpStm -> m_ID               = lStartCode;
+    SMS_Stream* lpStm = ( SMS_Stream* )calloc (  1, sizeof ( SMS_Stream )  );
 
-    apCont -> m_pStm[ apCont -> m_nStm++ ] = lpStm;
-    retVal = 1;
+    if ( lpStm ) {
 
-    SMSContainer_SetPTSInfo ( lpStm, 1, 90000 );
+     lpStm -> m_pCodec = ( SMS_CodecContext* )calloc (  1, sizeof ( SMS_CodecContext )  );
+     lpStm -> m_pCodec -> m_Type = lCodecType;
+     lpStm -> m_pCodec -> m_ID   = lID;
+     lpStm -> m_pCodec -> m_Tag  = lTag;
+     lpStm -> m_ID               = lStartCode;
 
-    if ( lCodecType == SMS_CodecTypeVideo ) {
+     apCont -> m_pStm[ apCont -> m_nStm++ ] = lpStm;
+     retVal = 1;
 
-     if ( !lfVideoParam ) lfVideoParam = _fill_video_parameters ( apCont, lpStm, lLen, lStartCode );
+     SMSContainer_SetPTSInfo ( lpStm, 1, 90000 );
 
-    } else lfAudio = _fill_audio_parameters ( lpFileCtx, lpStm, lLen );
+     if ( lCodecType == SMS_CodecTypeVideo ) {
+
+      if ( !lfVideoParam ) lfVideoParam = _fill_video_parameters ( apCont, lpStm, lLen, lStartCode );
+
+     } else lfAudio = _fill_audio_parameters ( lpFileCtx, lpStm, lLen );
+
+    }  /* end if */
 
    }  /* end if */
 
@@ -677,7 +761,7 @@ next:
 
   if (  apCont -> m_nStm < SMS_MAX_STREAMS && ( !lfAudio || !lfVideoParam )  )
    continue;
-  else break;
+  else if ( lpFileCtx -> m_CurPos >= MAX_DETECT_SIZE ) break;
 
  }  /* end while */
 
@@ -698,7 +782,7 @@ error:
 
   }  /* end if */
 
-  apCont -> m_pName    = "MPEG";
+  apCont -> m_pName    = g_pMPEGPS;
   apCont -> ReadPacket = _ReadPacket;
   apCont -> Seek       = _Seek;
   apCont -> m_Duration = 0x7FFFFFFFFFFFFFFFLL;
@@ -721,8 +805,8 @@ error:
 
    lStmIdx = 0;
    lpFileCtx -> Seek (
-    lpFileCtx, lpFileCtx -> m_Size > 0x0000FFFF ?
-               lpFileCtx -> m_Size - 0x0000FFFF : 0
+    lpFileCtx, lpFileCtx -> m_Size > 0x0001FFFF ?
+               lpFileCtx -> m_Size - 0x0001FFFF : 0
    );
 
    while (  !FILE_EOF( lpFileCtx )  ) {
@@ -738,9 +822,12 @@ error:
     if (  ( int64_t )lSEPTS[ i ] > ( int64_t )lDTS  ) lDTS = lSEPTS[ i ];
    }  /* end for */
 
-   apCont -> m_Duration = ( int )SMS_Rescale ( lDTS - lPTS, SMS_TIME_BASE, 90000 );
+   apCont -> m_StartTime = ( int )SMS_Rescale ( lPTS, SMS_TIME_BASE, 90000 );
+   apCont -> m_Duration  = ( int )SMS_Rescale ( lDTS, SMS_TIME_BASE, 90000 );
 
   }  /* end block */
+
+  g_pSynthBuffer = SMS_SYNTH_BUFFER;
 
   lpFileCtx -> Seek ( lpFileCtx, 0 );
 

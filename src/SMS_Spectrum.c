@@ -20,8 +20,11 @@
 
 extern SMS_Player s_Player;
 
+static int s_PrevH[ 16 ] __attribute__(   (  section( ".bss" )  )   );
+
 void SMS_SpectrumInit ( void ) {
 
+ int            i;
  int            lX       = (  ( g_GSCtx.m_Width - 480 ) >> 1  ) - 30;
  int            lYT      = g_GSCtx.m_Height - 196;
  int            lYB      = g_GSCtx.m_Height - 192;
@@ -61,20 +64,14 @@ void SMS_SpectrumInit ( void ) {
  s_Player.m_OSDQWC    [ 7 ] = 74;
  s_Player.m_OSDPackets[ 7 ] = g_SPCPkt;
 
+ for ( i = 0; i < 16; ++i ) s_PrevH[ i ] = 2;
+
 }  /* end SMS_SpectrumInit */
 
-void SMS_SpectrumUpdate ( short* apSamples ) {
+void SMS_SpectrumCalc ( short* apSamples ) {
 
- static int s_lIdx[ 16 ] = {
-  0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8
- };
-
- int            i;
- int*           lpH      = ( int* )0x70003800;
- int            lYB      = g_GSCtx.m_Height - 192;
- int            lX       = (  ( g_GSCtx.m_Width - 480 ) >> 1  ) - 30;
- unsigned long* lpDMA    = UNCACHED_SEG( g_SPCPkt + 6 );
- unsigned long* lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
+ int  i;
+ int* lpH = ( int* )0x70003800;
 
  if ( !apSamples ) {
 
@@ -88,12 +85,41 @@ void SMS_SpectrumUpdate ( short* apSamples ) {
 
  }  /* end else */
 
+}  /* end SMS_SpectrumCalc */
+
+void SMS_SpectrumUpdate ( void ) {
+
+ static int s_lIdx[ 16 ] = {
+  0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8
+ };
+
+ int            i;
+ int*           lpH      = ( int* )0x70003800;
+ int            lYB      = g_GSCtx.m_Height - 192;
+ int            lX       = (  ( g_GSCtx.m_Width - 480 ) >> 1  ) - 30;
+ unsigned long* lpDMA    = UNCACHED_SEG( g_SPCPkt + 6 );
+ unsigned long* lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
+
  i = 0;
 
  while ( lpDMA < lpDMAEnd ) {
 
-  unsigned lYT = lYB - lpH[  s_lIdx[ i++ ]  ];
+  unsigned lYT;
+  int*     lpPtr  = &s_PrevH[  s_lIdx[ i   ]  ];
+  int      lH     = lpH     [  s_lIdx[ i++ ]  ];
+  int      lPrevH = lpPtr[ 0 ];
+  int      lCurH;
 
+  if ( lPrevH <= lH ) {
+   lCurH = lPrevH + 16;
+   if ( lCurH > lH ) lCurH = lH;
+  } else {
+   lCurH = lPrevH - 6;
+   if ( lCurH < 2 ) lCurH = 2;
+  }  /* end else */
+
+  lpPtr[ 0 ] = lCurH;
+  lYT = lYB - lCurH;
   lX += 30;
 
   lpDMA[ 0 ] = GS_XYZ ( lX,      lYT, 0 );

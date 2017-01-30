@@ -61,6 +61,7 @@ void CDVD_Stop       ( void );
 void CDVD_FlushCache ( void );
 int  CDVD_SetDVDV    ( int  );
 int  CDVD_QueryDVDV  ( void );
+int  CDVD_SetSpeed   ( void );
 
 # ifdef __cplusplus
 }

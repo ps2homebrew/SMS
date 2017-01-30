@@ -33,12 +33,12 @@ typedef struct SPUContext {
 extern "C" {
 # endif  /* __cplusplus */
 
-void        SPU_Initialize   ( void          );
-SPUContext* SPU_InitContext  ( int, int, int );
-void        SPU_LoadData     ( void*, int    );
-void        SPU_PlaySound    ( SMSound*, int );
-int         SPU_Index2Volume ( int           );
-void        SPU_Shutdown     ( void          );
+void        SPU_Initialize   ( void                    );
+SPUContext* SPU_InitContext  ( int, int, int, int, int );
+void        SPU_LoadData     ( void*, int              );
+void        SPU_PlaySound    ( SMSound*, int           );
+int         SPU_Index2Volume ( int                     );
+void        SPU_Shutdown     ( void                    );
 
 # ifdef __cplusplus
 }

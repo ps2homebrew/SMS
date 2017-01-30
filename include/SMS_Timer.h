@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2005-2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -24,6 +24,7 @@ void  SMS_iTimerSet    (  unsigned int, unsigned long, void ( * ) ( void* ), voi
 void* SMS_TimerReset   ( unsigned int, void* );
 void  SMS_iTimerReset  ( unsigned int );
 void  SMS_TimerWait    ( unsigned long );
+void  SMS_SetAlarm     (  unsigned int, void ( * ) ( void* ), void*  );
 
 # ifdef __cplusplus
 }

@@ -1039,6 +1039,392 @@ Update (12-04-2007)
 
 Update (22-04-2007)
 -------------------
-- improved MPEG auto detection and playback for broken streams (thanks to the
-  'topshooter' for the sample clip);
+- improved MPEG1/2 auto detection and playback for broken streams (thanks to  'topshooter'
+  for the sample clip);
 - network adapter driver is updated again;
+- fixed bug in MPEG4 decoder (visible artifacts in some cases) (thanks to 'user112'
+  for the sample clips);
+
+Update (09-05-2007)
+-------------------
+- added menu option to modify display width (in 640-720 pixels range);
+- network drivers are reverted back to non-DMA version as latest proved to be quite
+  unreliable;
+- added some more functionality to file management:
+  1. copy directory tree to the "current" folder on internal HDD;
+  2. delete directory tree from internal HDD;
+  3. delete single file from internal HDD;
+  4. copy single file to the "current" folder on internal HDD;
+  This functionality is available via context menu ("square" gamepad button).
+  "Current" means last visited folder before switching to another media.
+  Note 1: point 1 is not implemented for 'host' and 'cddafs';
+  Note 2: not fully tested. Appears to be working here. Use it on your own risk.
+          'delete' operation is 'unix' style one, i.e. 'are you sure?' question
+          is not asked (though operation can be aborted using 'triangle' on the
+          gamepad (or 'stop' on the remote control));
+- ogg/vorbis audio decoder (floating point implementation with PS2 optimized MDCT)
+  is added. "mp3" and "ogg" files can be mixed in one "m3u" playlist. They can also
+  be placed to the same folder and played in sequence using "circle" button while
+  that folder is selected in the file browser;
+  Note: "mono" ogg files and files with sampling rate other than 44100Hz were not
+  tested as I don't have any;
+- added menu option to control CD/DVD speed (low/medium/high);
+- applied 'dave_t''s patch to handle remote control 'next'/'prev' buttons during
+  playback. Thanks Dave ;);
+- added code that stops rotation of the CD/DVD media during pause/scroll;
+- added menu option to configure display color resolotion (32/16bits). Not really
+  useful, just for fun :);
+
+Update (20-05-2007)
+-------------------
+- changed brightness control algorithm;
+- presumably fixed jerky .avi playback for DTV480P video mode (thanks to 'pitrz'
+  for help, patience, sample clips and inspiration ;));
+- added possibilty to change 'advanced display settings' for DTV480P/VESA modes;
+- added support for .avi files with multiple audio tracks that have different
+  audio formats (mp123/ac3). Thanks to 'cubi' for the sample clips;
+
+Update (23-05-2007)
+-------------------
+- added menu option to configure pad directional buttons (either gamepad or
+  remote control). Thanks to 'D1abo' for the code patch;
+- lots of internal changes due to possible future implementation of 720p/1080i
+  video modes and YUV -> RGB conversion using VU1. This could screw the things up,
+  so, backup the previous version first as I don't have it anymore :). Bug reports
+  are really appreciated. Points to pay attention on: DivX6 subtitles, overall font
+  display and player OSD (volume/brightness control appearance etc.);
+
+Update (08-06-2007)
+-------------------
+- fixed "crash" problem introduced with 'ogg' support for playlists;
+- fixed jerky mpeg1/2 video due to incorrect memory alignment for audio buffer caused
+  by some optimization tricks;
+- added 720p and 1080i video modes. Only 16 bit dithered framebuffer is currently
+  supported in these modes. Background image is not implemented in 1080i mode.
+  Not tested here as I don't have appropriate TV. Thanks to 'pitrz' for the implementation.
+- fixed issue that prevented .sub/.txt subtitles to be loaded if they contains empty
+  lines like '{3557}{3629}'. Thanks to 'grange' for the notes;
+- slightly changed remote control related code;
+
+Update (17-06-2007)
+-------------------
+- hopefully fixed display issues for 720p and 1080i video modes (background image is supported in all modes now)
+  (thanks to 'pitrz' for the implementation and 'D1abo' for the testing);
+- fixed crash issue for 'ogg' files (thanks to 'vectis' for the sample clip);
+
+Update (20-06-2007)
+-------------------
+- added functionality to launch applications from USB device ("mass:") upon exit;
+- network adapter driver is rewritten. Data transfer rate is reached ~2+MB/s;
+- new configuration options are added to the SMS menu:
+ - 'Device settings -> Network settings' to configure network adapter operation mode.
+   There're 3 options:
+   - autonegotiation;
+   - automatic (various modes are tried and first available is selected);
+   - manual (duplex mode (half or full) and protocol (10Base-T or 100Base-TX));
+ - 'Display settings -> Advanced settings' to fine tune video synchronization parameters
+   (to avoid display flickering in different video modes). 'Parameter 1' is for 'audio
+   playback' mode and 'Parameter 2' is for GUI/Browser mode. 
+- fixed 'crash' issue for 'ogg' files (thanks to 'vectis' for the sample clips);
+
+Update (01-SEP-2007)
+--------------------
+- added PS2 optimized DTS audio decoder. DTS passthrough mode (via S/PDIF optical output)
+  is also supported (tested only with SoundBlaster PC sound card);
+- added support for MPEG1/2 files with multiple audio tracks (selectable via player menu).
+  Tested only with one .vob file that contains DTS and AC3 audio tracks;
+- removed version number (now it is displayed only during initialization) from the GUI;
+- improved MPEG1/2 display (now SMS takes into account widescreen aspect ratio (if present)
+  from the original source for letterbox/pan-scan-1/2/3 display);
+- added possibility to select background image (skin) in SMS menu (Browser settings ->
+  Use background image option). Image file(s) should be in 'smi' format (i.e. produced by
+  SMS image generator utility) and have '.smi' extension (case sensitive and without quotes).
+  They should be placed inside 'mc0:/SMS/Skins' (case sensitive and without quotes) folder.
+  No format verification is performed, so use only files produced by SMS image generator
+  utility!!!
+- changed display synchronization procedure for audio AND video playback. This can be somewhat
+  model dependent, so if it won't work (black screen) then try to play with value for
+  'Synchronization parameter 1' in 'SMS Menu' -> 'Display settings' -> 'Advance settings';
+- fixed bug in SMS menu (thanks to 'elchevive' for the remark);
+- network initialization is made asynchronous and nonblocking (i.e. it is performed in
+  background even if the cable is not plugged in (it can be plugged in any time)). Maybe
+  it is confusing a bit as 'Initializing network...' message is displayed for a very short
+  time and further nothing seems to be happening;
+- updated seek functionality for MPEG1/2 files;
+
+Update (14-SEP-2007)
+--------------------
+- fixed screwed up audio spectrum display;
+- added functionality to switch between SMB servers dynamically.
+  SMS.smb file format is extended (it is still compatible with previous version)
+  as follows:
+  - first 5 lines remain the same as in the previous version (leave line
+    4 and 5 blank (i.e. containing only newline character (no spaces)) if no username
+    and password are used);
+  - sixth line contains arbitrary text that will be displayed in SMS menu. The purpose
+    of this line is to provide nice description for the SMB server defined in first
+    5 lines;
+  - aforementioned 6 lines can be further repeated to define more SMB servers;
+  How it works: SMS Menu -> Device settings -> Network settings menu contains new
+  item, namely 'SMB server' (note that this item will only appear if network protocol
+  is set to 'SMB/CIFS'. Activation of this menu brings a submenu filled with servers listed
+  in 'SMS.smb' file. There a new server connection can be selected. Note that if there is
+  already connection in progress to the server that is down then breaking that connection
+  can take a while (around 10 seconds here);
+- updated audio driver and communication protocol with it. Now SMS uses "undocumented"
+  SIF2 DMA channel to perform EE -> IOP data transfer. This will probably reduce chances
+  of spontaneous crashes as there is no clash in SifRpc mechanism due to multithreading
+  anymore. From the other side it can be model dependent, so it's possible that SMS won't
+  work at all.
+- user defined audio-video/subtitles-video offsets are made permanent and saved with
+  SMS configuration. Thanks to 'psi88' for the suggestion;
+
+Update (16-OCT-2007)
+--------------------
+- added forgotten brightness control for mpeg1/2 files. Thanks to 'elchevive' for the
+  remark;
+- improved compatibility with newer PS2 models;
+- changed SMS configuration policy. 'SMS' folder can now be located on 'mc0' or 'mc1'
+  depending on where SMS was launched from (if it was not launched from the memory card
+  then 'mc0' is default). Note: do not remove memory card where SMS was started from
+  after startup in order to save settings correctly;
+- added functionality to update language, palette and SMB server list directly from SMS. It is
+  accessible via file context menu ('square' pad button on file located on 'mass', 'cdfs' or
+  'smb' device). Note: file name must be one of the following: 'SMS.lng', 'SMS.pal' or 'SMS.smb';
+- added functionality to copy background images to 'SMS/Skins' folder directly from SMS.
+  This is also accessible via file context menu (file extension must be '.smi'). Note that
+  'Skins' subfolder is created automatically if it does not exists;
+
+Update (13-NOV-2007)
+--------------------
+- improved performance of ogg/vorbis audio decoder;
+- PS2 optimized windows media audio decoder is added;
+- raw PCM (16-bit) audio decoder is added (for .avi and .mpeg/.mpg files);
+- ASF (WMA only) container support is added. .wma files can also be included in .m3u playlists
+  or "folder-played" just like .mp3/.ogg files;
+- M3U playlist file parsing code is rewritten;
+- improved MP3 file autodetection;
+
+Update (23-NOV-2007)
+--------------------
+- attempt to fix various glitches with .m3u playlist stuff. Thanks to 'Thorsten Tietz' and
+  'lee99' for the remarks and sample files;
+- added functionality to play all video clips in the selected folder;
+- added a configuration parameter to control mp3 file autodetection process;
+- slightly speeded up network data transfer;
+- some other internal changes that can screw the thins up :D;
+- added 16 bit color resolution for mpeg1/2 files (can be useful to avoid image corruption
+  in HD video modes);
+
+Update (08-DEC-2007)
+--------------------
+- fixed quite nasty bug in the mpeg1/2 decoder (blocky artefacts in some cases). Thanks to
+  'orangpelupa' for the note and sample clips;
+- fixed incorrect inclusion of folders into playlist upon "Play all audio" action; Thanks
+  to 'vsub' and 'dlanor' for the research/note;
+- fixed stupid typo that prevented custom greek font to be loaded;
+- added functionality to convert DOS character encodeing to Windows one. This allows correct
+  display of localized filenames while using SMB networking. 4 default conversion tables are
+  provided: CP866 <-> CP1251 (DOSCyrilic <-> WinCyrillic), CP737 <-> CP1273 (DOSGreek <-> WinGreek),
+  CP850 <-> CP1252 (DOSLatin1 <-> WinLatin1) and CP852 <-> CP1250 (DOSLatin2 <-> WinLatin2).
+  Custom conversion tables are supported in form of 'cyrillic.mtx', 'greek.mtx', 'latin2.mtx' and
+  'latin1.mtx' files placed in mc<x>:/SMS folder. These can be generated by 'SMSCP.exe' Win32
+  command line application which is also provided. It's usage is pretty simple. For example to
+  generate 'cyrillic.mtx' file use following command: 'SMSCP 866 1252 cyrillic.mtx'. 866 means
+  codepage ID for DOS and 1252 - codepage ID for Windows. If character charset is changed while
+  browsing SMB share then manual directory rescan is required (leave and enter folder of interest
+  while in SMS browser). Apparently this stuff also depends on 'Regional setings' of the SMB server;
+- added '?' character replacement by appropriate region letter for 'mc0:/B?DATA-SYSTEM' string
+  for user defined language file (if that string is present);
+- implemented exception handler that is invoked if something goes terribly wrong with SMS.
+  It displays some technical information about the exception that can help to fix the problem.
+  There's a possibility either to reboot SMS (if it was launched from a memory card) or exit to
+  the PS2 browser;
+- fixed corrupted background image issue. Thanks to 'MrJiggles' for the semark and sample files;
+
+Update (22-DEC-2007)
+--------------------
+- fixed crash issue for .avi files with PCM audio. Thanks to "MrJiggles" for the sample clip.
+  (this is quite important fix as it affects all video/audio formats supported by SMS);
+- added support of RTL subtitles. Thanks to 'lior e' for the implementation;
+- added new menu option that controls exception handler activation. Default value is 'off'.
+  It can also be forcibly turned off at startup by pressing 'start-select' buttons on the gamepad
+  in slot 0 during startup (before SMS GUI screen appears);
+- new .elf loader code. Thanks to 'ffgriever' for help and testing;
+- attempt to fix problems with "Play all" functionality. Thanks to 'vsub' for the remarks;
+- added 'Play all' funtionality for the current folder. This is activated by 'R1-circle' gamepad
+  button combination or 'Display' button on the remote control. Only USB, SMB and HDD devices
+  are tested;
+- MPEG4 video decoder is redesigned a bit. Some decoding performance increase can be noted;
+
+Update (11-JAN-2008)
+--------------------
+- fixed bug related to localized folder names (impossible to browse) in SMB driver (thanks to
+  'Hikarudo' for the remark and sample;
+- changed font drawing algorithm;
+- slightly changed .avi parser in attempt to fix incorrect header data. Thanks to 'Startropic1'
+  for the sample clip;
+- added support for MBCS subtitles;
+- added support for big (max. 4GB) OpenDML .avi files. Thanks to 'KnoWei' for the sample clip.
+  Note: big files have a hudreds of thousands of indices. Each index entry consumes 16 bytes,
+  so system can simply run out of memory (SMS exception handler will be activated) under certain
+  conditions (big resolutoins, subtitles, multibyte fonts etc.);
+
+Update (26-JAN-2008)
+--------------------
+- slightly improved audio driver (removed noticeable 'clicks' for monaural sound data);
+- fixed incorrect subtitle handling for MBCS (thank to 'cybereye' for the note);
+- added OSD that provides various information for video clips. Available via "cross" gamepad
+  button during playback;
+- slightly changed expansion bay driver (dev9) and its load policy in order to decrease
+  fan noise when HDD and (or) network are not used;
+- AAC (LC and Main profiles) audio decoder is added (based on FAAD2 library, optimized for PS2);
+- M4A audio file format (produced by iTunes) support is added;
+- 'audio' remote control button is mapped to 'change audio track' action;
+- file browser selection is made "wrapable";
+- changed USB driver load policy. 'USBD.IRX' placed into 'mc<x>:/SMS' folder has precedence over
+  built-in one;
+
+Update (05-FEB-2008)
+--------------------
+- updated USB mass storage driver in attempt to raise data transfer speed. For my USB flash memory
+  stick there's improvement from ~500KB/s to ~700KB/s. This is quite experimental stuff, so if
+  this won't work then there's a possibility to load "old" version from 'mc<x>:/SMS' folder same
+  way as for 'USBD.IRX' described above. Driver name must be 'USBM.IRX', however :). Note, that
+  keeping filesystem on the USB device defragmented also improves performance !!!
+- added support for raw .aac files (ADTS only). Thanks to 'hip203' for the sample files;
+- added support for AAC audio in .avi files (codec ID 0x000000FF). Thanks to 'hip203' and 'MrJiggles'
+  for the sample clips;
+- updated SMS image generator. Added possibility to embed custom palette into generated image, so
+  SMS palette can be managed by background image;
+
+Update (01-MAR-2008)
+--------------------
+- Fixed problem with (S)VCD .DAT files. Thanks to 'Salacho' for the remark;
+- USB mass storage driver is rewritten from scratch (though some elements from 'ps2dev's' one were used).
+  Added support for up to 4 USB mass storage devices (FAT formatted) that are simultaneously connected
+  to the console. USB devices with multiple logical units (like <x>-in-1 cardreaders) should also work
+  (tested here with SWEEX CF004 53-in-1 cardreader with CF and SD cards)). Transfer speed varies
+  depending on filesystem fragmentation (peak rate exceeds 800KB/s sometimes (btw., maximum raw transfer
+  rate (without filesystem overhead) I've got here is around 950 KB/s which is the same as on my PC
+  (USB 1.1 slot). If this driver will cause problems then there's still a possibility to use older driver
+  as described in changelog from 05-FEB-2008;
+- Improved .aac file autodetection algorithm. Thanks to 'lee99' for the sample clip;
+- Added support for HE-AAC sound. Thanks to everybody who provided sample clips;
+
+Update (01-APR-2008)
+--------------------
+- added FLAC audio support;
+- added small (32 entries FIFO) history buffer for video clips. It is saved into 'SMS' folder on the memory
+  card. History is based on the absolute file name. Only clips that were ended by the user action (triangle
+  gamepad button) are added/updated to the history buffer and the buffer is saved automatically, so there
+  can be some pause when playback is ended by the user;
+- added support for raw .ac3 audio files;
+- added functionality to control vertical image position for video clips. It is available via player menu
+  during playback and may be useful to display subtitles more nicely;
+- updated USB mass storage driver (added device handling with sector sizes other than 512 bytes);
+- updated network driver;
+
+Update (12-APR-2008)
+--------------------
+- fixed small problem (repeat glitch at the end) related to FLAC decoder (thanks to 'vectis' for the
+  remark/sample clip);
+- added suport for FLAC files containing ID3 tags (these are currently ignored) (thanks to 'vectis' for
+  the remark/sample clip);
+- updated USB mass storage driver;
+
+Update (29-APR-2008)
+--------------------
+- fixed problem with .avi embedded subtitles. Thanks to 'KingFire' for the sample clip;
+- fixed bug related to SMB connectivity (probably this also fixes some other issues (freezing
+  at startup etc.)). Thanks to 'pastito' for the research and help;
+
+Update (17-MAY-2008)
+--------------------
+- updated .avi embedded subtitles handling. Thanks to 'KingFire' for sample clip, testing and patience.
+
+Update (01-JUL-2008)
+--------------------
+- updated OSD information panel (added available memory indication at IOP side);
+- video decoders are redesigned in order to reduce RAM usage;
+- implemented 32 bit color resolution for 720p (playback and browser modes) and
+  1080i (playback mode only) video modes. Note: synchronization parameter 1 and display
+  position adjustments might be necessary for these modes in order to avoid some
+  screen artefacts. Note: synchronization parameter 3 was added. This one affects audio
+  playback, so in total there're 3 parameters related to video synchronization:
+    - parameter 1 is for video clips;
+    - parameter 2 is for GUI;
+    - parameter 3 is for audio playback;
+  These parameters are quite important, so if there're some unwanted screen effects
+  (broken picture during scene motion), screen flickering etc. then adjusting these parameters
+  can remove aforementioned effects. Each video mode has its own independent parameter set.
+  For parameter 1 SMS can approximate its value automatically by choosing 'auto' (formerly '0')
+  value;
+- redesigned subtitle management code;
+- improved MPEG1/2 scrolling/positioning;
+- added 2 "eye candies" (clock and "please wait" indicator);
+- plan "B" loader/installer is published;
+
+Update (05-JUL-2008)
+--------------------
+- bugfixes;
+
+Update (02-SEP-2008)
+--------------------
+- some optimizations regarding avi indices;
+- fixed some bugs in the FAT (USB) filesystem driver;
+- fixed issues with .sub/.txt subtitles. Thanks to 'Karol Nowak'
+  for the research and sample files;
+
+Update (14-NOV-2008)
+--------------------
+- fixed incorect subtitle alignment when subtitle font horizontal size
+  is not equal to the default value of 32;
+- slightly changed file autodetection algorithm;
+- added baseline JPEG decoder (written from scratch) and rather primitive
+  JPEG viewer. Sequence of images can also be viewed using the same
+  button combinations as for audio/video playlists ("circle" for folder and
+  "R1-circle" for the current folder). While in viewer following gamepad and
+  remote control buttons can be used:
+  - left       : previous slide;
+  - right/cross: next slide;
+  - triangle   : exit;
+  - rectangle  : zoom-in/zoom-out (only for images with resolution lower
+                 than screen one);
+  Note: decoder supports only baseline JPEGs at the moment. Progressive,
+        loseless and other "exotic" files are not currently supported.
+        Maximum image resolution that has been tested is 6912x4608;
+
+Update (07-DEC-2008)
+--------------------
+- added "rotate image" function for JPEG viewer:
+  - "circle"/"angle" - rotate image counterclockwise;
+  - "R1"/"shuffle"   - rotate image clockwise;
+- fixed bug in MPEG4 decoder;
+
+Update (18-JAN-2009)
+--------------------
+- refactored I/O code (got rid of iomanX/fileXio stuff). This is actually
+  a first step to the new I/O subsystem that I am planning to implement;
+- fixed glitch in 1080i video mode;
+- fixed power off problem;
+- chnaged A/V synchronization code yet again in order to prevent application
+  lock-up for badly interleaved .avi files;
+- added functionality to configure "reset" button action (power-off/exit) in
+  "SMS menu -> Browser settings";
+
+Update (01-APR-2009)
+--------------------
+- updated USB/FAT driver. Thanks to Matzino for help in testing;
+- improved M3U playlist randomization;
+
+Update (11-SEP-2009)
+--------------------
+- implemented 576p video mode (thanks to HRGS for the implementation);
+- implemented 2:2 video pulldown (for smooth playback of 24fps video clips in
+  PAL/576p video modes) (thanks to HRGS for the implementation);
+- updated audio driver (modified upsampling algorithm that provides better
+  sound quality and more flexible handling)(thanks to HRGS for the implementation);
+- changed stereo downmixing algorithm for AC3 audio (using Dolby ProLogic II matrix);
+  (thanks to HRGS for the research/implementation);
+- significally changed USB/FAT driver (speed improvements etc.);

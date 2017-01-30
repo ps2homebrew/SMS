@@ -36,9 +36,3 @@ int SIF_BindRPC ( SifRpcClientData_t* apData, int anID ) {
  return retVal;
 
 }  /* end SIF_BindRPC */
-
-int SIF_SyncIOP ( void ) {
-
- return SifGetReg ( 4 ) & 0x00040000; 
-
-}  /* end SIF_SyncIOP */

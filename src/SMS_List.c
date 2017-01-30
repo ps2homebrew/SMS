@@ -18,8 +18,7 @@ void SMS_ListPush ( SMS_List* apList, const char* apString ) {
 
  SMS_ListNode* lpNode = ( SMS_ListNode* )calloc (  1, sizeof ( SMS_ListNode ) + strlen ( apString ) + 1  );
 
- lpNode -> m_pString = (  ( char* )lpNode  ) + sizeof ( SMS_ListNode );
- strcpy ( lpNode -> m_pString, apString );
+ strcpy (  _STR( lpNode ) , apString  );
 
  lpNode -> m_pNext = apList -> m_pHead;
 
@@ -38,8 +37,7 @@ SMS_ListNode* SMS_ListPushBack ( SMS_List* apList, const char* apString ) {
 
  SMS_ListNode* lpNode = ( SMS_ListNode* )calloc (  1, sizeof ( SMS_ListNode ) + strlen ( apString ) + 1  );
 
- lpNode -> m_pString = (  ( char* )lpNode  ) + sizeof ( SMS_ListNode );
- strcpy ( lpNode -> m_pString, apString );
+ strcpy (  _STR( lpNode ) , apString  );
 
  if ( apList -> m_pTail ) {
 
@@ -54,6 +52,24 @@ SMS_ListNode* SMS_ListPushBack ( SMS_List* apList, const char* apString ) {
  return apList -> m_pTail;
 
 }  /* end SMS_ListPushBack */
+
+SMS_ListNode* SMS_ListPushBackBuf ( SMS_List* apList, unsigned int aSize ) {
+
+ SMS_ListNode* lpNode = ( SMS_ListNode* )calloc (  1, sizeof ( SMS_ListNode ) + aSize  );
+
+ if ( apList -> m_pTail ) {
+
+  lpNode -> m_pPrev            = apList -> m_pTail;
+  apList -> m_pTail -> m_pNext = lpNode;
+  apList -> m_pTail            = lpNode;
+
+ } else apList -> m_pHead = apList -> m_pTail = lpNode;
+
+ ++apList -> m_Size;
+
+ return apList -> m_pTail;
+
+}  /* end SMS_ListPushBackBuf */
 
 void SMS_ListPop ( SMS_List* apList ) {
 
@@ -180,7 +196,7 @@ void SMS_ListSort ( SMS_List* apList ) {
      p = p -> m_pNext;
      --lPSize;
 
-    } else if (  strcmp ( p -> m_pString, q -> m_pString ) <= 0  ) {
+    } else if (  strcmp (  _STR( p ), _STR( q )  ) <= 0  ) {
 
      e = p;
      p = p -> m_pNext;
@@ -277,7 +293,7 @@ static SMS_ListNode* _find ( SMS_List* apList, const char* apStr, int ( *compare
 
  while ( lpNode ) {
 
-  if (  !compare ( lpNode -> m_pString, apStr )  ) break;
+  if (   !compare (  _STR( lpNode ), apStr  )   ) break;
 
   lpNode = lpNode -> m_pNext;
 
@@ -305,7 +321,7 @@ void SMS_ListAppend ( SMS_List* apDst, SMS_List* apSrc ) {
 
  while ( lpNode ) {
 
-  SMS_ListPushBack ( apDst, lpNode -> m_pString ) -> m_Param = lpNode -> m_Param;
+  SMS_ListPushBack (  apDst, _STR( lpNode )  ) -> m_Param = lpNode -> m_Param;
 
   lpNode = lpNode -> m_pNext;
 

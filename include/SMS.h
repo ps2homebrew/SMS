@@ -4,7 +4,7 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # Based on ffmpeg project (no copyright notes in the original source code)
-# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -13,6 +13,10 @@
 # define __SMS_H
 
 extern unsigned char* g_pSPRTop;
+extern void*          g_pSynthBuffer;
+extern int            g_XShift;
+extern int            g_MCSlot;
+extern int            g_RandSeed;
 
 typedef signed   char  int8_t;
 typedef unsigned char uint8_t;
@@ -26,6 +30,10 @@ typedef unsigned int uint32_t;
 typedef short SMS_DCTELEM;
 
 # define SMS_THREAD_PRIORITY 64
+
+# define SMS_FA_FLAGS_AVI 0x00000001
+# define SMS_FA_FLAGS_SUB 0x00000002
+# define SMS_FA_FLAGS_MSG 0x00000004
 
 # define SMS_FT_I_TYPE 1
 # define SMS_FT_P_TYPE 2
@@ -63,6 +71,7 @@ typedef short SMS_DCTELEM;
 
 # define SMS_PKT_FLAG_KEY 0x00000001
 # define SMS_PKT_FLAG_SUB 0x00000002
+# define SMS_PKT_FLAG_NWC 0x00000004
 
 # ifndef NULL
 #  define NULL (  ( void* )0  )
@@ -87,17 +96,22 @@ typedef struct SMS_Unaligned64 {
 #  define SMS_BSS_SECTION   __attribute__(   (  section( ".bss"  )  )   )
 #  define _U( p )           (    ( uint64_t* )(   (  ( uint32_t )( p )  ) | 0x20000000   )    )
 
-#  define SMS_MPEG_SPR_MB     (  ( SMS_MacroBlock* )0x70000280  )
-#  define SMS_DSP_SPR_CONST   (  ( uint16_t*       )0x70000400  )
-#  define SMS_MPEG_SPR_BLOCKS (  ( SMS_DCTELEM*    )0x70000570  )
-#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70000890  )
+#  define SMS_MPEG_SPR_MB_0   (  ( SMS_MacroBlock* )0x70000280  )
+#  define SMS_QM_INTRA        (  ( short*          )0x70000400  )
+#  define SMS_QM_NON_INTRA    (  ( short*          )0x70000500  )
+#  define SMS_MPEG_SPR_BLOCKS (  ( SMS_DCTELEM*    )0x70000580  )
+#  define SMS_AUD_SPR         (  ( void*           )0x700008B0  )
+#  define SMS_MPEG_SPR_MB_1   (  ( SMS_MacroBlock* )0x700019B0  )
+#  define SMS_SPR_FREE        (  ( uint8_t*        )0x70001B30  )
+
+typedef SMS_ALIGN( unsigned char SMS_GUID[ 16 ], 16 );
 
 static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
  uint32_t retVal;
- __asm__ __volatile__ (
-  "pextlb   %1, %1, %1\n\t"
+ __asm__(
+  "pextlb   %1, $zero, %1\n\t"
   "prevh    %1, %1\n\t"
-  "ppacb    %0, %1, %1\n\t"
+  "ppacb    %0, $zero, %1\n\t"
   : "=r"( retVal ) : "r"( aVal )
  );
  return retVal;
@@ -105,7 +119,7 @@ static inline uint32_t SMS_bswap32 ( uint32_t aVal ) {
 
 static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
  int retVal;
- __asm__ __volatile__ (
+ __asm__(
   "srl      $t0, %1, 1\n\t"		
   "addiu    $t1, $zero, 31\n\t"
   "plzcw    $t0, $t0\n\t"
@@ -113,7 +127,16 @@ static SMS_INLINE int SMS_log2 ( unsigned int aVal ) {
   : "=r"( retVal ) : "r"( aVal ) : "t0", "t1"
  );
  return retVal;
-}  /* end SMS_log2 */ 
+}  /* end SMS_log2 */
+
+static SMS_INLINE float SMS_sqrtf ( float aVal ) {
+ float retVal;
+ __asm__(
+  "sqrt.s %0, %1\n\t"
+  : "=f"( retVal ) : "f"( aVal )
+ );
+ return retVal;
+}  /* end SMS_sqrtf */
 
 static inline uint32_t SMS_unaligned32 ( const void* apData ) {
  return (  ( const SMS_Unaligned32* )apData  ) -> m_Val;
@@ -122,6 +145,20 @@ static inline uint32_t SMS_unaligned32 ( const void* apData ) {
 static inline uint64_t SMS_unaligned64 ( const void* apData ) {
  return (  ( const SMS_Unaligned64* )apData  ) -> m_Val;
 }  /* end SMS_unaligned64 */
+
+static inline int SMS_abs ( int aVal ) {
+ int retVal;
+ __asm__(
+  "pextlw  %0, $zero, %1\n\t" 
+  "pabsw   %0, %0\n"
+  : "=r"( retVal ) : "r"( aVal )
+ );
+ return retVal;
+}  /* end SMS_abs */
+
+static int inline SMS_rand ( void ) {
+ return g_RandSeed = ( 161140751 * g_RandSeed + 13 ) % 219441163;
+}  /* end SMS_rand */
 
 # define SMS_MAXINT64 SMS_INT64( 0x7FFFFFFFFFFFFFFF )
 # define SMS_MININT64 SMS_INT64( 0x8000000000000000 )
@@ -157,21 +194,15 @@ typedef struct SMS_Frame {
 
  int16_t                 ( *m_pMotionValBase[ 2 ] )[ 2 ];
  int16_t                 ( *m_pMotionVal    [ 2 ] )[ 2 ];
- int64_t                 m_PTS;
  int8_t*                 m_pRefIdx[ 2 ];
- int                     m_Width;
- int                     m_Height;
- int                     m_Type;
- int                     m_KeyFrame;
- int                     m_Ref;
- int                     m_CodedPicNr;
- int                     m_Linesize;
- int                     m_Age;
+ short                   m_Width;
+ short                   m_Height;
+ short                   m_Type;
+ short                   m_Ref;
  struct SMS_FrameBuffer* m_pBuf;
  uint32_t*               m_pMBType;
  uint8_t*                m_pMBSkipTbl;
  int8_t*                 m_pQScaleTbl;
- uint8_t                 m_MotionSubsampleLog2;
 
 } SMS_Frame;
 
@@ -193,16 +224,26 @@ typedef struct SMS_AVPacket {
  uint32_t m_StmIdx;
  uint32_t m_Flags;
  int32_t  m_Duration;
- void*    m_pCtx;
 
 } SMS_AVPacket;
 
+typedef struct SMS_AudioInfo {
+
+ int m_SampleRate;
+ int m_nChannels;
+ int m_BitRate;
+
+} SMS_AudioInfo;
+
 static SMS_INLINE int SMS_clip ( int aVal, int aMin, int aMax ) {
- if ( aVal < aMin )
-  return aMin;
- else if ( aVal > aMax )
-  return aMax;
- else return aVal;
+ int retVal;
+ __asm__(
+  "pmaxw    %0, %1, %2\n\t"
+  "pminw    %0, %0, %3\n\t"
+  "sra      %0, %0, 0\n\t"
+  : "=r"( retVal ) : "r"( aVal ), "r"( aMin ), "r"( aMax )
+ );
+ return retVal;
 }  /* end SMS_clip */
 
 static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
@@ -212,20 +253,34 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
  return aB;
 }  /* end SMS_mid_pred */
 
+typedef struct SMS_LZMAData {
+ unsigned int m_Size;
+ unsigned int m_PackSize;
+ const void*  m_pData;
+} SMS_LZMAData;
+
+struct DMAChannel;
+
 # ifdef __cplusplus
 extern "C" {
 # endif  /* __cplusplus */
-void     SMS_Initialize       ( void*                              );
-uint32_t SMS_Linesize         ( unsigned int, unsigned int*        );
-void*    SMS_Realloc          ( void*, unsigned int*, unsigned int );
-uint32_t SMS_Align            ( unsigned int, unsigned int         );
-void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int          );
-int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t          );
-void     SMS_StartNetwork     ( void*                              );
-void     SMS_ResetIOP         ( void                               );
-void     SMS_Strcat           ( char*, const char*                 );
-int      SMS_rand             ( void                               );
-char*    SMS_ReverseString    ( char*, int                         );
+void     SMS_Initialize       ( void*                                      );
+void*    SMS_Realloc          ( void*, unsigned int*, unsigned int         );
+uint32_t SMS_Align            ( unsigned int, unsigned int                 );
+void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int                  );
+int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t                  );
+void     SMS_StartNetwork     ( void*                                      );
+void     SMS_ResetIOP         ( void                                       );
+char*    SMS_ReverseString    ( char*, int                                 );
+void     SMS_SetDirButtons    ( void                                       );
+void     SMS_InitBitBlt       ( void*, int, int, int                       );
+void*    SMS_SyncMalloc       ( int                                        );
+void     SMS_SetExecPath      ( const char*                                );
+int      SMS_FileID           ( const char*                                );
+int      SMS_ContID           ( const char*                                );
+int      SMS_SubContID        ( const char*                                );
+void*    SMS_LZMADecompress   ( SMS_LZMAData*                              );
+int      SMS_InitVU           ( volatile struct DMAChannel*, SMS_LZMAData* );
 
 # ifdef __cplusplus
 }

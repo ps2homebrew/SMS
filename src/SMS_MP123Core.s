@@ -17,6 +17,8 @@
 .globl MP123_IMDCT12
 .globl MP123_Synth
 
+.extern g_pSynthBuffer, 4
+
 .sdata
 .align 4
 s_Cos64:    .word   0x3F002785, 0x3F01668B, 0x3F03F45B, 0x3F07F268
@@ -176,14 +178,13 @@ s_DecWin:   .word   0x80000000, 0x41680000, 0xC2D50000, 0x43658000
 
 .section ".sbss"
 .align 4
-s_SynthBuf: .space  4352
-s_Offset  : .space  4
+s_Offset   :    .space  4
 
 .text
 
 MP123_CoreInit:
+    lw      $a0, g_pSynthBuffer
     sw      $zero, s_Offset
-    la      $a0, s_SynthBuf
     addu    $a1, $zero, $zero
     j       memset
     addiu   $a2, $zero, 4352
@@ -220,7 +221,7 @@ MP123_IMDCT36:
     lqc2    $vf27, 48($at)
     lqc2    $vf28, 64($at)
     qmtc2   $t1, $vf05
-    .word   0x4A004938
+    .word   0x4A004B38
     ldl     $t1,   7($a3)
     ldr     $t1,   0($a3)
     ldl     $t2,  15($a3)
@@ -463,7 +464,7 @@ MP123_IMDCT12:
     qmtc2   $t3, $vf17
     qmtc2   $t5, $vf18
     qmtc2   $t7, $vf19
-    .word   0x4A003438
+    .word   0x4A003638
     lw      $t1,  0($a1)
     lw      $t2,  4($a1)
     lw      $t3,  8($a1)
@@ -529,18 +530,20 @@ MP123_IMDCT12:
     sw      $t8, 44($a2)
 
 MP123_Synth:
+    pcpyld  $ra, $ra, $ra
+    lw      $ra, g_pSynthBuffer
     addu    $t8, $zero, $a2
     addu    $a2, $zero, $a0
     lw      $v1, s_Offset
     bnel    $a1, $zero, 1f
     addu    $t8, $t8, 2
     addu    $v1, $v1, -1
-    la      $t4, s_SynthBuf
+    addu    $t4, $zero, $ra
     andi    $v1, $v1, 0x000F
     beq     $zero, $zero, 2f
     sw      $v1, s_Offset
 1:
-    la      $t4, s_SynthBuf + 2176
+    addiu   $t4, $ra, 2176
 2:
     andi    $t5, $v1, 0x0001
     beql    $t5, $zero, 1f
@@ -755,7 +758,7 @@ MP123_Synth:
     pcpyud  $t0, $t2, $t0
     qmtc2   $t0, $vf20
     qmtc2   $t1, $vf19
-    .word   0x4A002938
+    .word   0x4A002B38
     la      $v1, s_DecWin
     subu    $v1, $v1, $t6
     lui     $t7, 0x46FF
@@ -1027,6 +1030,7 @@ MP123_Synth:
     sh      $t4, 0($t8)
     bgtz    $t7, 1b
     addu    $t8, $t8, $a3
+    pcpyud  $ra, $ra, $ra
     addiu   $v0, $zero, 16
     srl     $a3, $a3, 1
     jr      $ra

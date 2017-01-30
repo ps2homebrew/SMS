@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -46,6 +46,9 @@ int                  PlayerControl_ScrollBar        (  void ( * ) ( int )       
 void                 PlayerControl_UpdateDuration   ( unsigned int, int64_t            );
 void                 PlayerControl_UpdateItemNr     ( void                             );
 void                 PlayerControl_AdjustBrightness ( int                              );
+void                 PlayerControl_UpdateInfo       ( void                             );
+void                 PlayerControl_ChangeLangOSD    ( int                              );
+void                 PlayerControl_FormatTime       ( char*, uint64_t                  );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

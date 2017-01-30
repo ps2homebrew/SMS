@@ -11,6 +11,10 @@
 #ifndef __SMS_FileContext_H
 # define __SMS_FileContext_H
 
+# ifndef __SMS_H
+#  include "SMS.h"
+# endif  /* __SMS_H */
+
 # ifndef INLINE
 #  ifdef _WIN32
 #   define INLINE __inline
@@ -63,7 +67,6 @@ typedef struct FileContext {
  unsigned int   m_Pos;
  unsigned int   m_CurPos;
  unsigned int   m_BufSize;
- unsigned char* m_pBase[ 2 ];
  unsigned char* m_pBuff[ 2 ];
  unsigned char* m_pPos;
  unsigned char* m_pEnd;
@@ -101,11 +104,24 @@ static INLINE int File_GetShortBE ( FileContext* apFileCtx ) {
 }  /* end File_GetShortBE */
 
 static INLINE unsigned int File_GetUInt ( FileContext* apCtx ) {
- unsigned int retVal = File_GetByte ( apCtx );
- retVal |= File_GetByte ( apCtx ) <<  8;
- retVal |= File_GetByte ( apCtx ) << 16;
- return retVal | File_GetByte ( apCtx ) << 24;
+ unsigned int retVal;
+ if (  apCtx -> m_pEnd - apCtx -> m_pPos >= 4  ) {
+  retVal = SMS_unaligned32 ( apCtx -> m_pPos );
+  apCtx -> m_pPos   += 4;
+  apCtx -> m_CurPos += 4;
+ } else apCtx -> Read ( apCtx, &retVal, 4 );
+ return retVal;
 }  /* end File_GetInt */
+
+static INLINE unsigned long File_GetULong ( FileContext* apCtx ) {
+ unsigned long retVal;
+ if (  apCtx -> m_pEnd - apCtx -> m_pPos >= 8  ) {
+  retVal = SMS_unaligned64 ( apCtx -> m_pPos );
+  apCtx -> m_pPos   += 8;
+  apCtx -> m_CurPos += 8;
+ } else apCtx -> Read ( apCtx, &retVal, 8 );
+ return retVal;
+}  /* end File_GetULong */
 
 void File_Skip      ( FileContext*, unsigned int        );
 void File_GetString ( FileContext*, char*, unsigned int );
@@ -119,7 +135,6 @@ int                  CDDA_GetPicture      ( CDDAContext*, int, void*           )
 int                  CDDA_GetDiskPicture  ( CDDAContext*, void*                );
 
 FileContext* CDDA_InitFileContext ( const char*, void* );
-void         STIO_SetIOMode       ( STIOMode           );
 FileContext* STIO_InitFileContext ( const char*, void* );
 # ifdef __cplusplus
 }

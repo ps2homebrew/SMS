@@ -8,6 +8,7 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include "SMS.h"
 #include "SMS_GUI.h"
 #include "SMS_GS.h"
 #include "SMS_Config.h"
@@ -35,6 +36,7 @@ typedef struct _DevMenuItem {
 
  int            m_XOffset;
  int            m_DevID;
+ int            m_UnitID;
  unsigned long* m_pGSPacket;
 
 } _DevMenuItem;
@@ -53,7 +55,7 @@ typedef struct GUIDevMenu {
 
 } GUIDevMenu;
 
-static GSBitBltPacket s_BitBlt;
+static GSLoadImage s_BitBlt;
 
 static void GUIDevMenu_RenderSelRect ( GUIDevMenu* apMenu, _DevMenuItem* apActive, _DevMenuItem* apSelected ) {
 
@@ -78,11 +80,14 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
 
   int            lPktSize = GS_RRT_PACKET_SIZE() + GS_TXT_PACKET_SIZE( STR_AVAILABLE_MEDIA.m_Len );
   int            lCumSize = lPktSize;
+  int            lX, lY, lW, lH;
+  unsigned long  lXYXY;
   unsigned long* lpDMA;
+  SMS_ListNode*  lpRNode = lpNode;
 
-  lpMenu -> m_XOffset = GSFont_WidthEx ( STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len, 4 );
+  lpMenu -> m_XOffset = GSFont_WidthEx ( STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len, 6 );
 
-  if ( !lpNode ) lCumSize += GS_TXT_PACKET_SIZE( STR_NONE.m_Len );
+  if ( !lpRNode ) lCumSize += GS_TXT_PACKET_SIZE( STR_NONE.m_Len );
 
   lpDMA = GSContext_NewList ( lCumSize );
 
@@ -94,22 +99,48 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
   g_GSCtx.m_TextColor = 0;
   GSFont_RenderEx (
    STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len,
-   8, 12, lpDMA + GS_RRT_PACKET_SIZE(), 4, 0
+   8, 12, lpDMA + GS_RRT_PACKET_SIZE(), 6, 0
   );
 
-  if ( !lpNode ) GSFont_Render (
-                  STR_NONE.m_pStr, STR_NONE.m_Len,
-                  lpMenu -> m_XOffset, 12, lpDMA + lPktSize
-                 );
+  if ( !lpRNode ) GSFont_Render (
+                   STR_NONE.m_pStr, STR_NONE.m_Len,
+                   lpMenu -> m_XOffset, 12, lpDMA + lPktSize
+                  );
 
   lpMenu -> m_pGSPacket = lpDMA;
 
   if ( lpMenu -> m_pActRect && lpMenu -> m_pActive ) GUIDevMenu_RenderSelRect (  lpMenu, ( _DevMenuItem* )( unsigned int )lpMenu -> m_pActive -> m_Param, ( _DevMenuItem* )( unsigned int )lpMenu -> m_pSelected -> m_Param  );
 
-  GSContext_InitBitBlt (
-   &s_BitBlt, 0, 0, 0, g_GSCtx.m_Width, 55,
-   g_GSCtx.m_VRAMPtr2, 0, 0
+  lXYXY = GS_L2P ( 0, 0, g_GSCtx.m_LWidth, 58 );
+  lX = ( lXYXY >>  0 ) & 0xFFFF;
+  lY = ( lXYXY >> 16 ) & 0xFFFF;
+  lW = ( lXYXY >> 32 ) & 0xFFFF;
+  lH = ( lXYXY >> 48 ) & 0xFFFF;
+  GS_InitLoadImage (
+   UNCACHED_SEG( &s_BitBlt ), 0, g_GSCtx.m_DrawCtx[ 0 ].m_FRAMEVal.FBW,
+   g_GSCtx.m_DrawCtx[ 0 ].m_FRAMEVal.PSM, lX, lY, lW, lH
   );
+
+  if ( lpRNode ) {
+
+   while ( lpRNode ) {
+
+    _DevMenuItem* lpItem = ( _DevMenuItem* )( unsigned int )lpRNode -> m_Param;
+
+    lpItem -> m_XOffset = lpMenu -> m_XOffset + 54 * lIdx++;
+
+    GUI_DrawIcon (
+     lpItem -> m_DevID, lpItem -> m_XOffset, 2, GUIcon_Device,
+     UNCACHED_SEG( lpItem -> m_pGSPacket )
+    );
+
+    lpRNode = lpRNode -> m_pNext;
+
+   }  /* end while */
+
+   GUIDevMenu_RenderSelRect (  lpMenu, ( _DevMenuItem* )( unsigned int )lpMenu -> m_pActive -> m_Param, ( _DevMenuItem* )( unsigned int )lpMenu -> m_pSelected -> m_Param  );
+
+  }  /* end if */
 
  }  /* end if */
 
@@ -121,15 +152,12 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
 
    _DevMenuItem* lpItem = ( _DevMenuItem* )( unsigned int )lpNode -> m_Param;
 
-   lpItem -> m_XOffset = lpMenu -> m_XOffset + 54 * lIdx++;
-   GUI_DrawIcon ( lpItem -> m_DevID, lpItem -> m_XOffset, 2, GUIcon_Device, lpItem -> m_pGSPacket );
-   GSContext_CallList ( aCtx, lpItem -> m_pGSPacket );
+   GSContext_CallList2 ( aCtx, lpItem -> m_pGSPacket );
 
    lpNode = lpNode -> m_pNext;
 
   }  /* end while */
 
-  GUIDevMenu_RenderSelRect (  lpMenu, ( _DevMenuItem* )( unsigned int )lpMenu -> m_pActive -> m_Param, ( _DevMenuItem* )( unsigned int )lpMenu -> m_pSelected -> m_Param  );
   GSContext_CallList ( aCtx, lpMenu -> m_pActRect );
   GSContext_CallList ( aCtx, lpMenu -> m_pSelRect );
 
@@ -137,32 +165,26 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
 
 }  /* end GUIDevMenu_Render */
 
-static void GUIDevMenu_Cleanup ( GUIObject* apObj ) {
-
- GSContext_DeleteList ( apObj -> m_pGSPacket );
- apObj -> m_pGSPacket = NULL;
-
-}  /* end GUIDevMenu_Cleanup */
-
 static int GUIDevMenu_Redraw ( GUIDevMenu* apMenu ) {
 
- GUIDevMenu_Cleanup (  ( GUIObject* )apMenu  );
+ GUIObject_Cleanup (  ( GUIObject* )apMenu  );
 
  GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
+ GSContext_CallList2 (  1, ( unsigned long* )&s_BitBlt  );
  GUIDevMenu_Render (  ( GUIObject* )apMenu, 1  );
-
- GS_VSync ();
- GSContext_BitBlt ( &s_BitBlt );
+ *( int* )UNCACHED_SEG(  ( char* )&s_BitBlt + 132  ) = ( int )g_GSCtx.m_pDBuf;
+ GS_VSync2 ( g_GSCtx.m_DrawDelay );
  GSContext_Flush ( 1, GSFlushMethod_KeepLists );
 
  return GUIHResult_Handled;
 
 }  /* end GUIDevMenu_Redraw */
 
-static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
+static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount, unsigned long aMsg ) {
 
  int       lDevID = (  aMount & ~( GUI_MSG_MOUNT_BIT >> 16 )  ) - 1;
  SMS_List* lpList = apMenu -> m_pDevList;
+ char      lDevName[ 16 ];
 
  if (  aMount & ( GUI_MSG_MOUNT_BIT >> 16 )  ) {
 
@@ -192,11 +214,17 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
     return GUIHResult_Handled;
 
-   } else g_IOPFlags |= SMS_IOPF_SMBLOGIN;
+   } else {
+
+    g_IOPFlags |= SMS_IOPF_SMBLOGIN;
+    SMS_IOPSetXLT ();
+
+   }  /* end else */
 
   }  /* end if */
 
   lpItem = ( _DevMenuItem* )malloc (  sizeof ( _DevMenuItem )  );
+  strcpy ( lDevName, g_pDevName[ lDevID ] );
 
   if ( lDevID == 3 ) {
 
@@ -206,11 +234,17 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
   }  /* end if */
 
-  SMS_ListPushBack ( lpList, g_pDevName[ lDevID ] ) -> m_Param = ( unsigned int )lpItem;
+  if ( !lDevID ) {
+   unsigned char lUnitID = ( aMsg >> 56 ) & 15;
+   lDevName[ 3 ]      = lUnitID + '0';
+   lpItem -> m_UnitID = lUnitID;
+  }  /* end if */
+
+  SMS_ListPushBack ( lpList, lDevName ) -> m_Param = ( unsigned int )lpItem;
 
   lpItem -> m_DevID     = lDevID;
   lpItem -> m_XOffset   = apMenu -> m_XOffset + 54 * ( lpList -> m_Size - 1 );
-  lpItem -> m_pGSPacket = GSContext_NewList (  GS_TSP_PACKET_SIZE()  );
+  lpItem -> m_pGSPacket = SMS_SyncMalloc ( 256 );
 
   if ( lpList -> m_Size == 1 ) {
 
@@ -223,6 +257,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
    apMenu -> m_pSelected = lpList -> m_pTail;
 
    g_CMedia = lDevID;
+   g_CUnit  = lpItem -> m_UnitID;
 
    GUI_PostMessage ( GUI_MSG_MEDIA_SELECTED );
 
@@ -256,6 +291,8 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
    if ( lpItem -> m_DevID == lDevID ) {
 
+    if (   lDevID == 0 && lpItem -> m_UnitID != (  ( aMsg >> 56 ) & 15  )   ) goto next;
+
     SMS_ListNode* lpCurNode = lpNode -> m_pNext;
 
     while ( lpCurNode ) {
@@ -266,7 +303,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
      GUI_DrawIcon (
       lpCurItem -> m_DevID,
       lpCurItem -> m_XOffset, 2, GUIcon_Device,
-      lpCurItem -> m_pGSPacket
+      UNCACHED_SEG( lpCurItem -> m_pGSPacket )
      );
      lpCurNode = lpCurNode -> m_pNext;
 
@@ -277,7 +314,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
     SMS_ListRemove ( lpList, lpNode );
 
-    GSContext_DeleteList ( lpItem -> m_pGSPacket );
+    free ( lpItem -> m_pGSPacket );
     free ( lpItem );
 
     if ( apMenu -> m_pActive ) {
@@ -288,6 +325,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
 
       lMsg     = GUI_MSG_MEDIA_SELECTED;
       g_CMedia = lNewMedia;
+      g_CUnit  = (  ( _DevMenuItem* )( unsigned int )apMenu -> m_pActive -> m_Param  ) -> m_UnitID;
 
      } else lMsg = 0UL;
 
@@ -304,7 +342,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount ) {
     break;
 
    }  /* end if */
-
+next:
    lpNode = lpNode -> m_pNext;
 
   }  /* end while */
@@ -330,15 +368,14 @@ static int GUIDevMenu_HandlePad ( GUIDevMenu* apMenu, unsigned int aPad ) {
  int retVal       = GUIHResult_Void;
  SMS_List* lpList = apMenu -> m_pDevList;
 
- if ( lpList -> m_Size ) switch ( aPad ) {
+ if ( lpList -> m_Size ) {
 
-  case SMS_PAD_LEFT:
+  if ( aPad == SMS_PAD_LEFT ) {
 
    apMenu -> m_pSelected = apMenu -> m_pSelected -> m_pPrev ? apMenu -> m_pSelected -> m_pPrev : lpList -> m_pTail;
+   goto redraw;
 
-  goto redraw;
-
-  case SMS_PAD_RIGHT:
+  } else if ( aPad == SMS_PAD_RIGHT ) {
 
    apMenu -> m_pSelected = apMenu -> m_pSelected -> m_pNext ? apMenu -> m_pSelected -> m_pNext : lpList -> m_pHead;
 redraw:
@@ -347,47 +384,63 @@ redraw:
 
    retVal = GUIHResult_Handled;
 
-  break;
+  }  /* end if */
 
  }  /* end if */
 
- switch ( aPad ) {
+ if ( aPad == SMS_PAD_UP || aPad == SMS_PAD_DOWN ) {
 
-  case SMS_PAD_UP  :
-  case SMS_PAD_DOWN:
+  retVal = GUIHResult_ChangeFocus;
 
-   retVal = GUIHResult_ChangeFocus;
+ } else if ( aPad == RC_PLAY || aPad == RC_ENTER || aPad == SMS_PAD_CROSS ) {
 
-  break;
+  if ( apMenu -> m_pSelected ) {
 
-  case RC_PLAY      :
-  case RC_ENTER     :
-  case SMS_PAD_CROSS:
+   _DevMenuItem* lpItem = ( _DevMenuItem* )( unsigned int )apMenu -> m_pSelected -> m_Param; 
 
-   if ( apMenu -> m_pSelected ) {
+   apMenu -> m_pActive = apMenu -> m_pSelected;
+   GUIDevMenu_RenderSelRect (  apMenu, ( _DevMenuItem* )( unsigned int )apMenu -> m_pActive -> m_Param, ( _DevMenuItem* )( unsigned int )apMenu -> m_pSelected -> m_Param  );
+   GUIDevMenu_Redraw ( apMenu );
 
-    _DevMenuItem* lpItem = ( _DevMenuItem* )( unsigned int )apMenu -> m_pSelected -> m_Param; 
+   g_CMedia = lpItem -> m_DevID;
+   g_CUnit  = lpItem -> m_UnitID;
 
-    apMenu -> m_pActive = apMenu -> m_pSelected;
-    GUIDevMenu_RenderSelRect (  apMenu, ( _DevMenuItem* )( unsigned int )apMenu -> m_pActive -> m_Param, ( _DevMenuItem* )( unsigned int )apMenu -> m_pSelected -> m_Param  );
-    GUIDevMenu_Redraw ( apMenu );
+   SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
+   GUI_PostMessage ( GUI_MSG_MEDIA_SELECTED );
 
-    g_CMedia = lpItem -> m_DevID;
+   retVal = GUIHResult_Handled;
 
-    SPU_PlaySound ( SMSound_PAD, g_Config.m_PlayerVolume );
-    GUI_PostMessage ( GUI_MSG_MEDIA_SELECTED );
+  }  /* end if */
 
-    retVal = GUIHResult_Handled;
-
-   }  /* end if */
-
-  break;
-
- }  /* end switch */
+ }  /* end if */
 
  return retVal;
 
 }  /* end GUIDevMenu_HandlePad */
+
+SMBLoginInfo* _lookup_login_info ( void ) {
+
+ SMBLoginInfo* retVal = NULL;
+ SMS_ListNode* lpNode = g_Config.m_pSMBList -> m_pHead;
+
+ if ( g_Config.m_SMBIP[ 0 ] ) while ( lpNode ) {
+
+  SMBLoginInfo* lpTestInfo = ( SMBLoginInfo* )( unsigned int )lpNode -> m_Param;
+
+  if (  !strcmp ( g_Config.m_SMBIP, lpTestInfo -> m_ServerIP )  ) {
+   retVal = lpTestInfo;
+   break;
+  }  /* end if */
+
+  lpNode = lpNode -> m_pNext;
+
+ }  /* end while */
+
+ if ( !retVal ) retVal = ( SMBLoginInfo* )( unsigned int )lpNode -> m_Param;
+
+ return retVal;
+
+}  /* end _lookup_login_info */
 
 static int GUIDevMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
@@ -400,19 +453,11 @@ static int GUIDevMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
   if ( lDevID == 0x18 ) {
 
-   int lFD = fioDopen ( g_pSMBS );
-
-   if ( lFD >= 0 ) {
-
-    g_SMBLoginInfo.m_fAsync = 1;
-    fioIoctl ( lFD, SMB_IOCTL_LOGIN, &g_SMBLoginInfo );
-    fioDclose ( lFD );
-
-   }  /* end if */
+   SMS_IOCtl (  g_pSMBS, SMB_IOCTL_LOGIN, _lookup_login_info ()  );
 
    retVal = GUIHResult_Handled;
 
-  } else retVal = GUIDevMenu_HandleMount ( lpMenu, lDevID );
+  } else retVal = GUIDevMenu_HandleMount ( lpMenu, lDevID, anEvent );
 
  } else if ( anEvent & GUI_MSG_PAD_MASK )
 
@@ -439,7 +484,7 @@ GUIObject* GUI_CreateDevMenu ( void ) {
  retVal -> Render      = GUIDevMenu_Render;
  retVal -> HandleEvent = GUIDevMenu_HandleEvent;
  retVal -> SetFocus    = GUIDevMenu_SetFocus;
- retVal -> Cleanup     = GUIDevMenu_Cleanup;
+ retVal -> Cleanup     = GUIObject_Cleanup;
  retVal -> m_pDevList  = SMS_ListInit ();
  retVal -> m_pColor    = &g_Config.m_BrowserIBCIdx;
 

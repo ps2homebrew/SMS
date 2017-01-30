@@ -35,16 +35,36 @@ typedef struct SMS_DSPGMCData {
 
 } SMS_DSPGMCData;
 
-typedef struct SMS_DSPContext {
+typedef struct SMS_DSPContext {                     // 528
 
- SMS_QPelMCFunc m_PutQPelPixTab     [ 2 ][ 16 ];
- SMS_QPelMCFunc m_PutNoRndQPelPixTab[ 2 ][ 16 ];
- SMS_QPelMCFunc m_AvgQPelPixTab     [ 2 ][ 16 ];
- SMS_OpPixFunc  m_PutPixTab         [ 3 ][  4 ];
- SMS_OpPixFunc  m_PutNoRndPixTab    [ 3 ][  4 ];
- SMS_OpPixFunc  m_AvgPixTab         [ 3 ][  4 ];
+ SMS_QPelMCFunc m_PutQPelPixTab     [ 2 ][ 16 ];    //   0
+ SMS_QPelMCFunc m_PutNoRndQPelPixTab[ 2 ][ 16 ];    // 128
+ SMS_QPelMCFunc m_AvgQPelPixTab     [ 2 ][ 16 ];    // 256
+ SMS_OpPixFunc  m_PutPixTab         [ 3 ][  4 ];    // 384
+ SMS_OpPixFunc  m_PutNoRndPixTab    [ 3 ][  4 ];    // 432
+ SMS_OpPixFunc  m_AvgPixTab         [ 3 ][  4 ];    // 480
 
 } SMS_DSPContext;
+
+typedef struct SMS_Complex {
+ float m_RE;
+ float m_IM;
+} SMS_Complex;
+
+typedef struct SMS_FFTContext {
+ int             m_nBits;
+ unsigned short* m_pRevTab;
+ SMS_Complex*    m_pExpTab;
+} SMS_FFTContext;
+
+typedef struct SMS_MDCTContext {
+ int            m_N;
+ int            m_nBits;
+ float*         m_pCos;
+ float*         m_pSin;
+ SMS_FFTContext m_FFT;
+ float*         m_pTmp;
+} SMS_MDCTContext;
 
 extern const uint8_t  g_SMS_DSP_zigzag_direct            [ 64 ];
 extern const uint8_t  g_SMS_DSP_alternate_horizontal_scan[ 64 ];
@@ -54,16 +74,15 @@ extern SMS_DSPGMCData g_GMCData;
 extern "C" {
 # endif  /* __cplusplus */
 
-void  SMS_DSP_Init       ( void                             );
-void  SMS_DSPContextInit ( SMS_DSPContext*                  );
-void  IDCT               ( uint8_t*, int, SMS_DCTELEM*, int );
-void  IDCT_ClrBlocks     ( void                             );
-void* DSP_FFTInit        ( short*, void*                    );
-void  DSP_FFTRun         ( void*                            );
-void  DSP_FFTGet         ( void*                            );
+void  SMS_DSP_Init       ( void            );
+void  SMS_DSPContextInit ( SMS_DSPContext* );
+void  IDCT_ClrBlocks     ( void            );
+void* DSP_FFTInit        ( short*, void*   );
+void  DSP_FFTRun         ( void*           );
+void  DSP_FFTGet         ( void*           );
 
-void DSP_GetMB  ( void* );
-void DSP_PackMB ( void* );
+void DSP_PackMB    ( void*         );
+void DSP_PackAddMB ( void*, short* );
 
 void DSP_GMC1_16 ( void*, void*, int, int, int, int, int, int );
 void DSP_GMC1_8  ( void*, void*, int, int, int, int, int, int );
@@ -202,7 +221,20 @@ void DSP_AvgQPel816MC03 ( uint8_t*, const uint8_t*, int, int, int );
 void DSP_AvgQPel816MC13 ( uint8_t*, const uint8_t*, int, int, int );
 void DSP_AvgQPel816MC23 ( uint8_t*, const uint8_t*, int, int, int );
 void DSP_AvgQPel816MC33 ( uint8_t*, const uint8_t*, int, int, int );
+
+void DSP_CosSin  ( float, float, float*                                  );
+void DSP_VecMULA ( float*, const float*, const float*, const float*, int );
+void DSP_VecMULR ( float*, const float*, const float*, int               );
+
+int  DSP_MDCTInit    ( SMS_MDCTContext*, int, float           );
+void DSP_IMDCT       ( SMS_MDCTContext*, float*, const float* );
+void DSP_MDCTDestroy ( SMS_MDCTContext*                       );
+
+void DSP_DCT4Kernel ( float*, float* );
+void DST4_32        ( float*, float* );
+void DCT4_32        ( float*, float* );
+
 # ifdef __cplusplus
-};
+}
 # endif  /* __cplusplus */
 #endif  /* __SMS_DSP_H */

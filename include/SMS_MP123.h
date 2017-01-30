@@ -5,7 +5,7 @@
 #----------------------------------------------------------
 # Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
 # Copyright 1995-2006 by the mpg123 project - free software under the terms of the LGPL 2.1
-#           2005-2006 Adopted for SMS by Eugene Plotnikov <e-plotnikov@operamail.com>
+#           2005-2007 Adopted for SMS by Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licensed (like the original mpg123 and ffmpeg source code) under the terms of the
 # GNU Lesser General Public License as published by the Free Software Foundation;
 # either version 2 of the License, or (at your option) any later version.

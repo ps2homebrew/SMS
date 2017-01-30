@@ -55,6 +55,7 @@
 .globl _MPEG_CSCImage
 .globl _MPEG_Suspend
 .globl _MPEG_Resume
+.globl _MPEG_Set16
 
 .sdata
 .align 4
@@ -72,9 +73,9 @@ s_SetDMA  : .space   8
 s_IPUState: .space  32
 s_pEOF    : .space   4
 s_Sema    : .space   4
-s_CSCParam: .space  12
 s_CSCID   : .space   4
-s_CSCFlag : .space   1
+s_CSCFlag : .space   8
+s_CSCParam: .space  12
 
 .text
 
@@ -252,12 +253,13 @@ _mpeg_dmac_handler:
     lw      $at, 8($a1)
     beql    $at, $zero, 1f
     addiu   $v1, $zero, -29
-    lw      $a0, 0($a1)
-    lw      $a2, 4($a1)
+    lw      $a0,  0($a1)
+    lw      $a2,  4($a1)
     addiu   $a3, $zero, 1023
     addiu   $v1, $zero,  384
     pminw   $a3, $a3, $at
     lui     $t1, 0x1001
+s_16_0:
     sll     $v0, $a3, 10
     mult    $v1, $v1, $a3
     subu    $at, $at, $a3
@@ -272,6 +274,7 @@ _mpeg_dmac_handler:
     lui     $t0, 0x1000
     sw      $at, 8($a1)
     sw      $v0, -20448($t1)
+s_16_1:
     lui     $v0, 0x7000
     sw      $v1, -19424($t1)
     addiu   $v1, $zero, 0x0101
@@ -310,8 +313,10 @@ _MPEG_CSCImage:
     pminw   $t0, $t0, $a2
     lw      $t4, 4($sp)
     lw      $a3, 8($sp)
+    lw      $v0, s_CSCParam + 16
     subu    $a2, $a2, $t0
     mult    $t3, $t3, $t0
+s_16_2:
     sll     $t5, $t0, 10
     sw      $a3, -20464($a1)
     sw      $t4, -19440($a1)
@@ -326,10 +331,11 @@ _MPEG_CSCImage:
     sw      $t5, -20448($a1)
     sw      $t0, 4($sp)
     syscall
+s_16_3:
+    lui     $v0, 0x7000
     lw      $t0, 4($sp)
     addiu   $v1, $zero, 0x0101
     lui     $at, 0x1001
-    lui     $v0, 0x7000
     lui     $a0, 0x1000
     or      $v0, $v0, $t0
     sw      $v1, -19456($at)
@@ -531,15 +537,15 @@ _MPEG_SetDefQM:
     addiu   $sp, $sp, -16
     sw      $ra, 0($sp)
     bgezal  $zero, _ipu_suspend
-    nop
+    addu    $t0, $zero, $a0
     lui     $v1, 0x1000
     la      $at, s_DefQM
+    bne     $t0, $zero, 2f
     sw      $zero, 0x2000($v1)
     lq      $a0,  0($at)
     lq      $a1, 16($at)
     lq      $a2, 32($at)
     lq      $a3, 48($at)
-    lq      $t0, 64($at)
     lui     $v0, 0x5000
 1:
     lw      $at, 0x2010($v1)
@@ -549,7 +555,10 @@ _MPEG_SetDefQM:
     sq      $a1, 0x7010($v1)
     sq      $a2, 0x7010($v1)
     sq      $a3, 0x7010($v1)
+    beq     $zero, $zero, 3f
     sw      $v0, 0x2000($v1)
+2:
+    lq      $t0, 64($at)
     lui     $v0, 0x5800
 1:
     lw      $at, 0x2010($v1)
@@ -560,9 +569,9 @@ _MPEG_SetDefQM:
     sq      $t0, 0x7010($v1)
     sq      $t0, 0x7010($v1)
     sw      $v0, 0x2000($v1)
-1:
+3:
     lw      $at, 0x2010($v1)
-    bltz    $at, 1b
+    bltz    $at, 3b
     nop
     lw      $ra, 0($sp)
     beq     $zero, $zero, _ipu_resume
@@ -2271,4 +2280,29 @@ _MPEG_avg_chroma_XY:
     addu    $at, $zero, $zero
     jr      $ra
     nop
+
+_MPEG_Set16:
+    addiu   $sp, $sp, -16
+    sw      $ra, 0($sp)
+    sw      $a0, 4($sp)
+    jal     FlushCache
+    addiu   $a0, $zero, 2
+    lw      $ra, 0($sp)
+    lw      $a0, 4($sp)
+    addiu   $v0, $zero, 0x80
+    addiu   $v1, $zero, 0x40
+    addiu   $t0, $zero, 0x70
+    addiu   $t1, $zero, 0x7C
+    lui     $at, 0x2000
+    movn    $v0, $v1, $a0
+    movn    $t0, $t1, $a0
+    lui     $a0, %hi( s_16_0 )
+    or      $a0, $a0, $at
+    sb      $v0, %lo( s_16_0 )($a0)
+    sb      $t0, %lo( s_16_1 ) + 1($a0)
+    sb      $v0, %lo( s_16_2 )($a0)
+    sb      $t0, %lo( s_16_3 ) + 1($a0)
+    sync.l
+    jr      $ra
+    addiu   $sp, $sp, 16
 

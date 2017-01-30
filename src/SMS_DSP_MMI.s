@@ -25,7 +25,6 @@
 .set noreorder
 .set nomacro
 
-.globl IDCT
 .globl DSP_PutPixels16
 .globl DSP_PutPixels8
 .globl DSP_PutPixels16X
@@ -61,10 +60,8 @@
 .globl DSP_AvgPixels8X_16
 .globl DSP_AvgPixels8Y_16
 .globl DSP_AvgPixels8XY_16
-.globl DSP_GetMB
 .globl DSP_PackMB
-
-.equ IDCT_CONST_OFFSET, 0x0400
+.globl DSP_PackAddMB
 
 .sdata
 .align  4
@@ -73,375 +70,242 @@ s_pVUData:  .half   0x0004, 0x0008, 0x000C, 0x0020
             .half   0x0044, 0x0048, 0x004C, 0x0000
             .half   0x0000, 0x0000, 0x0000, 0x0000
 
-IDCT:
-    lui     $t8, 0x7000
-    mtc1    $s0, $f00
-    lq      $t0, IDCT_CONST_OFFSET +  0($t8)
-    lq      $s0,  0($a2)
-    mtc1    $s1, $f01
-    mtc1    $s2, $f02
-    lq      $s1, IDCT_CONST_OFFSET + 32($t8)
-    pinth   $s0, $s0, $s0
-    mtc1    $s3, $f03
-    lq      $s2, IDCT_CONST_OFFSET + 48($t8)
-    pinth   $s0, $s0, $s0
-    mtc1    $s4, $f04
-    lq      $a3, IDCT_CONST_OFFSET + 16($t8)
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 64($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 80($t8)
-    phmadh  $s2, $s2, $v0
-    mtc1    $s5, $f05
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $t0
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    ppach   $t0, $s4, $s1
-    lq      $s0,  16($a2)
-    prevh   $v0, $t0
-    pcpyud  $v0, $v0, $v0
-    pinth   $s0, $s0, $s0
-    pcpyld  $t0, $v0, $t0
-# DCT_8_INV_ROW1
-    lq      $s1, IDCT_CONST_OFFSET +  96($t8)
-    pinth   $s0, $s0, $s0
-    lq      $s2, IDCT_CONST_OFFSET + 112($t8)
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 128($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 144($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $s0,  32($a2)
-    ppach   $t1, $s4, $s1
-    lq      $s1, IDCT_CONST_OFFSET + 160($t8)
-    pinth   $s0, $s0, $s0
-    prevh   $v0, $t1
-    lq      $s2, IDCT_CONST_OFFSET + 176($t8)
-    pinth   $s0, $s0, $s0
-    pcpyud  $v0, $v0, $v0
-    pcpyld  $t1, $v0, $t1
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 192($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 208($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $s0,  48($a2)
-    ppach   $t2, $s4, $s1
-    lq      $s1, IDCT_CONST_OFFSET + 224($t8)
-    pinth   $s0, $s0, $s0
-    prevh   $v0, $t2
-    lq      $s2, IDCT_CONST_OFFSET + 240($t8)
-    pinth   $s0, $s0, $s0
-    pcpyud  $v0, $v0, $v0
-    pcpyld  $t2, $v0, $t2
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 256($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 272($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $s0, 64($a2)
-    ppach   $t3, $s4, $s1
-    lq      $s1, IDCT_CONST_OFFSET + 32($t8)
-    pinth   $s0, $s0, $s0
-    prevh   $v0, $t3
-    lq      $s2, IDCT_CONST_OFFSET + 48($t8)
-    pinth   $s0, $s0, $s0
-    pcpyud  $v0, $v0, $v0
-    pcpyld  $t3, $v0, $t3
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 64($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 80($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $s0,  80($a2)
-    ppach   $t4, $s4, $s1
-    lq      $s1, IDCT_CONST_OFFSET + 224($t8)
-    pinth   $s0, $s0, $s0
-    prevh   $v0, $t4
-    lq      $s2, IDCT_CONST_OFFSET + 240($t8)
-    pinth   $s0, $s0, $s0
-    pcpyud  $v0, $v0, $v0
-    pcpyld  $t4, $v0, $t4
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 256($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 272($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $s0,  96($a2)
-    ppach   $t5, $s4, $s1
-    lq      $s1, IDCT_CONST_OFFSET + 160($t8)
-    pinth   $s0, $s0, $s0
-    prevh   $v0, $t5
-    lq      $s2, IDCT_CONST_OFFSET + 176($t8)
-    pinth   $s0, $s0, $s0
-    pcpyud  $v0, $v0, $v0
-    pcpyld  $t5, $v0, $t5
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 192($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 208($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $s0, 112($a2)
-    ppach   $t6, $s4, $s1
-    lq      $s1, IDCT_CONST_OFFSET +  96($t8)
-    pinth   $s0, $s0, $s0
-    prevh   $v0, $t6
-    lq      $s2, IDCT_CONST_OFFSET + 112($t8)
-    pinth   $s0, $s0, $s0
-    pcpyud  $v0, $v0, $v0
-    pcpyld  $t6, $v0, $t6
-# DCT_8_INV_ROW1
-    prevh   $v0, $s0
-    lq      $s3, IDCT_CONST_OFFSET + 128($t8)
-    phmadh  $s1, $s1, $s0
-    lq      $s4, IDCT_CONST_OFFSET + 144($t8)
-    phmadh  $s2, $s2, $v0
-    phmadh  $s3, $s3, $s0
-    phmadh  $s4, $s4, $v0
-    paddw   $s1, $s1, $s2
-    paddw   $s3, $s3, $s4
-    pcpyld  $s2, $s3, $s1
-    pcpyud  $s4, $s1, $s3
-    paddw   $s2, $s2, $a3
-    paddw   $s1, $s2, $s4
-    psubw   $s4, $s2, $s4
-    psraw   $s1, $s1, 11
-    psraw   $s4, $s4, 11
-    lq      $v0, IDCT_CONST_OFFSET + 320($t8)
-    ppach   $t7, $s4, $s1
-    pmulth  $s1, $t3, $v0
-    prevh   $v1, $t7
-    pcpyud  $v1, $v1, $v1
-    pcpyld  $t7, $v1, $t7
-# DCT_8_INV_COL8
-    psraw       $s1, $s1, 15
-    pmfhl.uw    $v1
-    pmulth      $s2, $t5, $v0
-    psraw       $v1, $v1, 15
-    pinteh      $s1, $v1, $s1
-    psubh       $s1, $s1, $t5
-    lq          $v0, IDCT_CONST_OFFSET + 288($t8)
-    psraw       $s2, $s2, 15
-    pmfhl.uw    $v1
-    pmulth      $s3, $t7, $v0
-    psraw       $v1, $v1, 15
-    pinteh      $s2, $v1, $s2
-    paddh       $s2, $s2, $t3
-    psraw       $s3, $s3, 15
-    pmfhl.uw    $v1
-    pmulth      $s4, $t1, $v0
-    psraw       $v1, $v1, 15
-    pinteh      $s3, $v1, $s3
-    paddh       $s3, $s3, $t1
-    psraw       $s4, $s4, 15
-    pmfhl.uw    $v1
-    psraw       $v1, $v1, 15
-    pinteh      $s4, $v1, $s4
-    psubh       $s4, $s4, $t7
-    lq          $v0, IDCT_CONST_OFFSET + 336($t8)
-    psubh       $v1, $s3, $s2
-    paddh       $s0, $s4, $s1
-    paddh       $s5, $v1, $s0
-    pmulth      $s5, $s5, $v0
-    psubh       $at, $s4, $s1
-    paddh       $s4, $s3, $s2
-    psubh       $t9, $v1, $s0
-    psraw       $s5, $s5, 15
-    pmfhl.uw    $v1
-    pmulth      $t9, $t9, $v0
-    lq          $v0, IDCT_CONST_OFFSET + 304($t8)
-    psraw       $v1, $v1, 15
-    pinteh      $s5, $v1, $s5
-    psraw       $t9, $t9, 15
-    pmfhl.uw    $v1
-    pmulth      $s1, $t2, $v0
-    psraw       $v1, $v1, 15
-    pinteh      $t9, $v1, $t9
-    psraw       $s1, $s1, 15
-    pmfhl.uw    $v1
-    pmulth      $s2, $t6, $v0
-    psraw       $v1, $v1, 15
-    pinteh      $s1, $v1, $s1
-    psubh       $s1, $s1, $t6
-    psraw       $s2, $s2, 15
-    pmfhl.uw    $v1
-    psraw       $v1, $v1, 15
-    pinteh      $s2, $v1, $s2
-    paddh       $s2, $s2, $t2
-    paddh       $v0, $t0, $t4
-    psubh       $v1, $t0, $t4
-    paddh       $s0, $v0, $s2
-    psubh       $s3, $v0, $s2
-    psubh       $s2, $v1, $s1
-    paddh       $s1, $v1, $s1
-    lq          $t3, IDCT_CONST_OFFSET + 352($t8)
-# DCT_8_INV_COL8_PMS
-    paddh   $v0, $s0, $s4
-    paddh   $v1, $s1, $s5
-    psubh   $s4, $s0, $s4
-    psubh   $s5, $s1, $s5
-    psrah   $s0, $v0, 6
-    psrah   $s4, $s4, 6
-    psrah   $s1, $v1, 6
-    psrah   $s5, $s5, 6
-    paddh   $v0, $s2, $t9
-    paddh   $v1, $s3, $at
-    psubh   $t9, $s2, $t9
-    psubh   $at, $s3, $at
-    psrah   $s2, $v0, 6
-    psrah   $t9, $t9, 6
-    psrah   $s3, $v1, 6
-    psrah   $at, $at, 6
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $s0
-    pminh   $v0, $v0, $t3
-    mfc1    $s0, $f00
-    pmaxh   $v0, $v0, $0
-    ppacb   $v0, $0, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $s1
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $0
-    mfc1    $s1, $f01
-    ppacb   $v0, $0, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $s2
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $0
-    mfc1    $s2, $f02
-    ppacb   $v0, $0, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $s3
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $zero
-    mfc1    $s3, $f03
-    ppacb   $v0, $zero, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $at
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $0
-    ppacb   $v0, $0, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $t9
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $0
-    ppacb   $v0, $0, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $s5
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $0
-    mfc1    $s5, $f05
-    ppacb   $v0, $0, $v0
-    sd      $v0, 0($a0)
-    add     $a0, $a1, $a0
-    ld      $v0, 0($a0)
-    pextlb  $v0, $0, $v0
-    paddh   $v0, $v0, $s4
-    pminh   $v0, $v0, $t3
-    pmaxh   $v0, $v0, $0
-    ppacb   $v0, $0, $v0
-    mfc1    $s4, $f04
+DSP_PackMB:
+    lui     $t0, 0x3000
+    la      $a1, s_pVUData
+    pnor    $a2, $zero, $zero
+    mtsah   $zero, 1
+    lq      $v1, 0($a1)
+    addiu   $at, $zero, 2
+    or      $a0, $a0, $t0
+    psrlh   $a2, $a2, 8
+2:
+    addiu   $at, $at, -1
+    addiu   $v0, $zero, 4
+1:
+    qmfc2.i $t0, $vf01
+    ctc2    $v1, $vi06
+    qfsrv   $v1, $v1, $v1
+    qmfc2   $t1, $vf02
+    qmfc2   $t2, $vf03
+    qmfc2   $t3, $vf04
+    qmfc2   $t4, $vf05
+    qmfc2   $t5, $vf06
+    qmfc2   $t6, $vf07
+    qmfc2   $t7, $vf08
+    .word   0x4A0028B8
+    ppach   $t0, $t1, $t0
+    ppach   $t2, $t3, $t2
+    ppach   $t4, $t5, $t4
+    ppach   $t6, $t7, $t6
+    pminh   $t0, $a2, $t0
+    pminh   $t2, $a2, $t2
+    pminh   $t4, $a2, $t4
+    pminh   $t6, $a2, $t6
+    pmaxh   $t0, $zero, $t0
+    pmaxh   $t2, $zero, $t2
+    pmaxh   $t4, $zero, $t4
+    pmaxh   $t6, $zero, $t6
+    ppacb   $t0, $t2, $t0
+    ppacb   $t4, $t6, $t4
+    addiu   $v0, $v0, -1
+    sq      $t0,  0($a0)
+    sq      $t4, 16($a0)
+    bgtz    $v0, 1b
+    addiu   $a0, $a0, 32
+    bgtzl   $at, 2b
+    nop
+    lq      $v1, 16($a1)
+    addiu   $v0, $zero, 4
+1:
+    qmfc2.i $t0, vf01
+    ctc2    $v1, $vi06
+    qfsrv   $v1, $v1, $v1
+    qmfc2   $t1, vf02
+    qmfc2   $t2, vf03
+    qmfc2   $t3, vf04
+    qmfc2   $t4, vf05
+    qmfc2   $t5, vf06
+    qmfc2   $t6, vf07
+    qmfc2   $t7, vf08
+    .word   0x4A0028B8
+    ppach   $t0, $t1, $t0
+    ppach   $t2, $t3, $t2
+    ppach   $t4, $t5, $t4
+    ppach   $t6, $t7, $t6
+    pminh   $t0, $a2, $t0
+    pminh   $t2, $a2, $t2
+    pminh   $t4, $a2, $t4
+    pminh   $t6, $a2, $t6
+    pmaxh   $t0, $zero, $t0
+    pmaxh   $t2, $zero, $t2
+    pmaxh   $t4, $zero, $t4
+    pmaxh   $t6, $zero, $t6
+    ppacb   $t0, $t4, $t0
+    ppacb   $t2, $t6, $t2
+    addiu   $v0, $v0, -1
+    sq      $t0,  0($a0)
+    sq      $t2, 64($a0)
+    bgtzl   $v0, 1b
+    addiu   $a0, $a0, 16
     jr      $ra
-    sd      $v0, 0($a0)
+
+_dsp_pack_addY:  # a0 - apDst, vi01 - vuMem, v0 - 255
+    addiu   $at, $zero, 2
+1:
+    vlqi    $vf01, ($vi01++)
+    vlqi    $vf02, ($vi01++)
+    vlqi    $vf03, ($vi01++)
+    vlqi    $vf04, ($vi01++)
+    vlqi    $vf05, ($vi01++)
+    vlqi    $vf06, ($vi01++)
+    vlqi    $vf07, ($vi01++)
+    vlqi    $vf08, ($vi01++)
+    qmfc2   $t0, $vf01
+    qmfc2   $t1, $vf02
+    qmfc2   $t2, $vf03
+    qmfc2   $t3, $vf04
+    qmfc2   $t4, $vf05
+    qmfc2   $t5, $vf06
+    qmfc2   $t6, $vf07
+    qmfc2   $t7, $vf08
+    ppach   $t0, $t1, $t0
+    ld      $t1,  0($a0)
+    ppach   $t2, $t3, $t2
+    pextlb  $t1, $zero, $t1
+    ld      $t3, 16($a0)
+    ppach   $t4, $t5, $t4
+    pextlb  $t3, $zero, $t3
+    ld      $t5, 32($a0)
+    ppach   $t6, $t7, $t6
+    pextlb  $t5, $zero, $t5
+    ld      $t7, 48($a0)
+    pextlb  $t7, $zero, $t7
+    paddh   $t0, $t1, $t0
+    paddh   $t2, $t3, $t2
+    paddh   $t4, $t5, $t4
+    paddh   $t6, $t7, $t6
+    pmaxh   $t0, $zero, $t0
+    pmaxh   $t2, $zero, $t2
+    pmaxh   $t4, $zero, $t4
+    pmaxh   $t6, $zero, $t6
+    pminh   $t0, $v0, $t0
+    pminh   $t2, $v0, $t2
+    pminh   $t4, $v0, $t4
+    pminh   $t6, $v0, $t6
+    ppacb   $t0, $zero, $t0
+    ppacb   $t2, $zero, $t2
+    ppacb   $t4, $zero, $t4
+    ppacb   $t6, $zero, $t6
+    sd      $t0,  0($a0)
+    sd      $t2, 16($a0)
+    addu    $at, $at, -1
+    sd      $t4, 32($a0)
+    sd      $t6, 48($a0)
+    bgtz    $at, 1b
+    addiu   $a0, $a0, 64
+    jr      $ra
+
+_dsp_pack_addC:  # a0 - apDst, vi01 - vuMem, v0 - 255
+    addiu   $at, $zero, 2
+1:
+    vlqi    $vf01, ($vi01++)
+    vlqi    $vf02, ($vi01++)
+    vlqi    $vf03, ($vi01++)
+    vlqi    $vf04, ($vi01++)
+    vlqi    $vf05, ($vi01++)
+    vlqi    $vf06, ($vi01++)
+    vlqi    $vf07, ($vi01++)
+    vlqi    $vf08, ($vi01++)
+    qmfc2   $t0, $vf01
+    qmfc2   $t1, $vf02
+    qmfc2   $t2, $vf03
+    qmfc2   $t3, $vf04
+    qmfc2   $t4, $vf05
+    qmfc2   $t5, $vf06
+    qmfc2   $t6, $vf07
+    qmfc2   $t7, $vf08
+    ppach   $t0, $t1, $t0
+    ld      $t1,  0($a0)
+    ppach   $t2, $t3, $t2
+    pextlb  $t1, $zero, $t1
+    ld      $t3,  8($a0)
+    ppach   $t4, $t5, $t4
+    pextlb  $t3, $zero, $t3
+    ld      $t5, 16($a0)
+    ppach   $t6, $t7, $t6
+    pextlb  $t5, $zero, $t5
+    ld      $t7, 24($a0)
+    pextlb  $t7, $zero, $t7
+    paddh   $t0, $t1, $t0
+    paddh   $t2, $t3, $t2
+    paddh   $t4, $t5, $t4
+    paddh   $t6, $t7, $t6
+    pmaxh   $t0, $zero, $t0
+    pmaxh   $t2, $zero, $t2
+    pmaxh   $t4, $zero, $t4
+    pmaxh   $t6, $zero, $t6
+    pminh   $t0, $v0, $t0
+    pminh   $t2, $v0, $t2
+    pminh   $t4, $v0, $t4
+    pminh   $t6, $v0, $t6
+    ppacb   $t0, $zero, $t0
+    ppacb   $t2, $zero, $t2
+    ppacb   $t4, $zero, $t4
+    ppacb   $t6, $zero, $t6
+    sd      $t0,  0($a0)
+    sd      $t2,  8($a0)
+    addu    $at, $at, -1
+    sd      $t4, 16($a0)
+    sd      $t6, 24($a0)
+    bgtz    $at, 1b
+    addiu   $a0, $a0, 32
+    jr      $ra
+   
+DSP_PackAddMB:
+    lui     $at, 0x1000
+1:
+    lw      $v0, 0x3800($at)
+    nop
+    nop
+    andi    $v0, $v0, 3
+    addu    $a2, $zero, $a0
+    bne     $v0, $zero, 1b
+    pnor    $v0, $zero, $zero
+    addu    $t8, $zero, $ra
+    psrlh   $v0, $v0, 8
+    lb      $at, 0x0890($a1)
+    addiu   $v1, $zero, 16
+    qmfc2.i $zero, $vf00
+    bgezall $at, _dsp_pack_addY
+    ctc2    $v1, $vi01
+    lb      $at, 0x0892($a1)
+    addiu   $v1, $zero, 32
+    addiu   $a0, $a2,   8
+    bgezall $at, _dsp_pack_addY
+    ctc2    $v1, $vi01
+    lb      $at, 0x0894($a1)
+    addiu   $v1, $zero, 48
+    addiu   $a0, $a2, 128
+    bgezall $at, _dsp_pack_addY
+    ctc2    $v1, $vi01
+    lb      $at, 0x0896($a1)
+    addiu   $v1, $zero, 64
+    addiu   $a0, $a2, 136
+    bgezall $at, _dsp_pack_addY
+    ctc2    $v1, $vi01
+    lb      $at, 0x0898($a1)
+    addiu   $v1, $zero, 80
+    addiu   $a0, $a2, 256
+    bgezall $at, _dsp_pack_addC
+    ctc2    $v1, $vi01
+    lb      $at, 0x089A($a1)
+    addiu   $v1, $zero, 96
+    addiu   $a0, $a2, 320
+    bgezall $at, _dsp_pack_addC
+    ctc2    $v1, $vi01
+    addu    $ra, $zero, $t8
+    jr      $ra
 
 DSP_PutPixels16:
     addiu   $v0, $zero, 16
@@ -2195,96 +2059,5 @@ DSP_AvgPixels8XY_16:
     bgtzl   $v1, 1b
     addu    $a3, $zero, $zero
 3:
-    jr      $ra
-
-DSP_GetMB:
-    lui     $a1, 0x7000
-    lui     $v1, 0x3000
-    ori     $a1, 0x0280
-    or      $a0, $a0, $v1
-    srl     $v1, $v1, 28
-1:
-    lq      $t0,   0($a0)
-    lq      $t1,  16($a0)
-    lq      $t2,  32($a0)
-    lq      $t3,  48($a0)
-    lq      $t4,  64($a0)
-    lq      $t5,  80($a0)
-    lq      $t6,  96($a0)
-    lq      $t7, 112($a0)
-    addiu   $a0, $a0, 128
-    addiu   $v1, $v1, -1
-    sq      $t0,   0($a1)
-    sq      $t1,  16($a1)
-    sq      $t2,  32($a1)
-    sq      $t3,  48($a1)
-    sq      $t4,  64($a1)
-    sq      $t5,  80($a1)
-    sq      $t6,  96($a1)
-    sq      $t7, 112($a1)
-    bgtzl   $v1, 1b
-    addiu   $a1, $a1, 128
-    jr      $ra
-
-DSP_PackMB:
-    lui     $t0, 0x3000
-    la      $a1, s_pVUData
-    mtsah   $zero, 1
-    lq      $v1, 0($a1)
-    addiu   $at, $zero, 2
-    or      $a0, $a0, $t0
-2:
-    addiu   $at, $at, -1
-    addiu   $v0, $zero, 4
-1:
-    qmfc2.i $t0, $vf01
-    ctc2    $v1, $vi06
-    qfsrv   $v1, $v1, $v1
-    qmfc2   $t1, $vf02
-    qmfc2   $t2, $vf03
-    qmfc2   $t3, $vf04
-    qmfc2   $t4, $vf05
-    qmfc2   $t5, $vf06
-    qmfc2   $t6, $vf07
-    qmfc2   $t7, $vf08
-    .word   0x4A0026F8
-    ppach   $t0, $t1, $t0
-    ppach   $t2, $t3, $t2
-    ppach   $t4, $t5, $t4
-    ppach   $t6, $t7, $t6
-    ppacb   $t0, $t2, $t0
-    ppacb   $t4, $t6, $t4
-    addiu   $v0, $v0, -1
-    sq      $t0,  0($a0)
-    sq      $t4, 16($a0)
-    bgtz    $v0, 1b
-    addiu   $a0, $a0, 32
-    bgtzl   $at, 2b
-    nop
-    lq      $v1, 16($a1)
-    addiu   $v0, $zero, 4
-1:
-    qmfc2.i $t0, vf01
-    ctc2    $v1, $vi06
-    qfsrv   $v1, $v1, $v1
-    qmfc2   $t1, vf02
-    qmfc2   $t2, vf03
-    qmfc2   $t3, vf04
-    qmfc2   $t4, vf05
-    qmfc2   $t5, vf06
-    qmfc2   $t6, vf07
-    qmfc2   $t7, vf08
-    .word   0x4A0026F8
-    ppach   $t0, $t1, $t0
-    ppach   $t2, $t3, $t2
-    ppach   $t4, $t5, $t4
-    ppach   $t6, $t7, $t6
-    ppacb   $t0, $t4, $t0
-    ppacb   $t2, $t6, $t2
-    addiu   $v0, $v0, -1
-    sq      $t0,  0($a0)
-    sq      $t2, 64($a0)
-    bgtzl   $v0, 1b
-    addiu   $a0, $a0, 16
     jr      $ra
     nop

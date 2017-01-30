@@ -19,6 +19,7 @@
 #include "SMS_DMA.h"
 #include "SMS_Data.h"
 #include "SMS_DXSB.h"
+#include "SMS_IPU.h"
 
 #include <malloc.h>
 #include <stdio.h>
@@ -54,8 +55,6 @@ static SMS_VLC s_dc_lum;
 static SMS_VLC s_dc_chrom;
 static SMS_VLC s_sprite_trajectory;
 static SMS_VLC s_mb_type_b_vlc;
-static SMS_VLC s_h263_mbtype_b_vlc;
-static SMS_VLC s_cbpc_b_vlc;
 
 const uint8_t g_IntraMCBPC_bits[  9 ] SMS_DATA_SECTION = { 1, 3, 3, 3, 4, 6, 6, 6, 9 };
 const uint8_t g_IntraMCBPC_code[  9 ] SMS_DATA_SECTION = { 1, 1, 2, 3, 1, 1, 2, 3, 1 };
@@ -394,67 +393,6 @@ static const uint8_t s_intra_rvlc_level[ 169 ] SMS_DATA_SECTION = {
 static SMS_RLTable s_rvlc_rl_intra = {
  169, 103, s_intra_rvlc, s_intra_rvlc_run, s_intra_rvlc_level
 };
-const uint16_t s_intra_vlc_aic[ 103 ][ 2 ] SMS_DATA_SECTION = {
-{  0x2,  2 }, {  0x6,  3 }, {  0xe,  4 }, {  0xc,  5 }, 
-{  0xd,  5 }, { 0x10,  6 }, { 0x11,  6 }, { 0x12,  6 }, 
-{ 0x16,  7 }, { 0x1b,  8 }, { 0x20,  9 }, { 0x21,  9 }, 
-{ 0x1a,  9 }, { 0x1b,  9 }, { 0x1c,  9 }, { 0x1d,  9 }, 
-{ 0x1e,  9 }, { 0x1f,  9 }, { 0x23, 11 }, { 0x22, 11 }, 
-{ 0x57, 12 }, { 0x56, 12 }, { 0x55, 12 }, { 0x54, 12 }, 
-{ 0x53, 12 }, {  0xf,  4 }, { 0x14,  6 }, { 0x14,  7 }, 
-{ 0x1e,  8 }, {  0xf, 10 }, { 0x21, 11 }, { 0x50, 12 }, 
-{  0xb,  5 }, { 0x15,  7 }, {  0xe, 10 }, {  0x9, 10 }, 
-{ 0x15,  6 }, { 0x1d,  8 }, {  0xd, 10 }, { 0x51, 12 }, 
-{ 0x13,  6 }, { 0x23,  9 }, {  0x7, 11 }, { 0x17,  7 }, 
-{ 0x22,  9 }, { 0x52, 12 }, { 0x1c,  8 }, {  0xc, 10 }, 
-{ 0x1f,  8 }, {  0xb, 10 }, { 0x25,  9 }, {  0xa, 10 }, 
-{ 0x24,  9 }, {  0x6, 11 }, { 0x21, 10 }, { 0x20, 10 }, 
-{  0x8, 10 }, { 0x20, 11 }, {  0x7,  4 }, {  0xc,  6 }, 
-{ 0x10,  7 }, { 0x13,  8 }, { 0x11,  9 }, { 0x12,  9 }, 
-{  0x4, 10 }, { 0x27, 11 }, { 0x26, 11 }, { 0x5f, 12 }, 
-{  0xf,  6 }, { 0x13,  9 }, {  0x5, 10 }, { 0x25, 11 }, 
-{  0xe,  6 }, { 0x14,  9 }, { 0x24, 11 }, {  0xd,  6 }, 
-{  0x6, 10 }, { 0x5e, 12 }, { 0x11,  7 }, {  0x7, 10 }, 
-{ 0x13,  7 }, { 0x5d, 12 }, { 0x12,  7 }, { 0x5c, 12 }, 
-{ 0x14,  8 }, { 0x5b, 12 }, { 0x15,  8 }, { 0x1a,  8 }, 
-{ 0x19,  8 }, { 0x18,  8 }, { 0x17,  8 }, { 0x16,  8 }, 
-{ 0x19,  9 }, { 0x15,  9 }, { 0x16,  9 }, { 0x18,  9 }, 
-{ 0x17,  9 }, {  0x4, 11 }, {  0x5, 11 }, { 0x58, 12 }, 
-{ 0x59, 12 }, { 0x5a, 12 }, {  0x3,  7 }
-};
-const int8_t s_intra_run_aic[ 102 ] SMS_DATA_SECTION = {
-  0,  0,  0,  0,  0,  0,  0,  0, 
-  0,  0,  0,  0,  0,  0,  0,  0, 
-  0,  0,  0,  0,  0,  0,  0,  0, 
-  0,  1,  1,  1,  1,  1,  1,  1, 
-  2,  2,  2,  2,  3,  3,  3,  3, 
-  4,  4,  4,  5,  5,  5,  6,  6, 
-  7,  7,  8,  8,  9,  9, 10, 11, 
- 12, 13,  0,  0,  0,  0,  0,  0, 
-  0,  0,  0,  0,  1,  1,  1,  1, 
-  2,  2,  2,  3,  3,  3,  4,  4, 
-  5,  5,  6,  6,  7,  7,  8,  9, 
- 10, 11, 12, 13, 14, 15, 16, 17, 
- 18, 19, 20, 21, 22, 23
-};
-const int8_t s_intra_level_aic[ 102 ] SMS_DATA_SECTION = {
-  1,  2,  3,  4,  5,  6,  7,  8, 
-  9, 10, 11, 12, 13, 14, 15, 16, 
- 17, 18, 19, 20, 21, 22, 23, 24, 
- 25,  1,  2,  3,  4,  5,  6,  7, 
-  1,  2,  3,  4,  1,  2,  3,  4, 
-  1,  2,  3,  1,  2,  3,  1,  2, 
-  1,  2,  1,  2,  1,  2,  1,  1, 
-  1,  1,  1,  2,  3,  4,  5,  6, 
-  7,  8,  9, 10,  1,  2,  3,  4, 
-  1,  2,  3,  1,  2,  3,  1,  2, 
-  1,  2,  1,  2,  1,  2,  1,  1, 
-  1,  1,  1,  1,  1,  1,  1,  1, 
-  1,  1,  1,  1,  1,  1
-};
-static SMS_RLTable s_rl_intra_aic = {
- 102, 58, s_intra_vlc_aic, s_intra_run_aic, s_intra_level_aic
-};
 const uint8_t g_DCtab_lum[ 13 ][ 2 ] SMS_DATA_SECTION = {
  { 3, 3 }, { 3, 2 }, { 2, 2 }, { 2, 3 }, { 1,  3 }, { 1,  4 }, { 1, 5 },
  { 1, 6 }, { 1, 7 }, { 1, 8 }, { 1, 9 }, { 1, 10 }, { 1, 11 }
@@ -471,14 +409,6 @@ static const uint16_t s_sprite_trajectory_tab[ 15 ][ 2 ] SMS_DATA_SECTION = {
 static const uint8_t s_mb_type_b_tab[ 4 ][ 2 ] SMS_DATA_SECTION = {
  { 1, 1 }, { 1, 2 }, { 1, 3 }, { 1, 4 }
 };
-static const uint8_t s_h263_mbtype_b_tab[ 15 ][ 2 ] SMS_DATA_SECTION = {
- { 1, 1 }, { 3, 3 }, { 1,  5 }, { 4, 4 }, { 5, 4 },
- { 6, 6 }, { 2, 4 }, { 3,  4 }, { 7, 6 }, { 4, 6 },
- { 5, 6 }, { 1, 6 }, { 1, 10 }, { 1, 7 }, { 1, 8 }
-};
-const uint8_t s_cbpc_b_tab[ 4 ][ 2 ] SMS_DATA_SECTION = {
- { 0, 1 }, { 2, 2 }, { 7, 3 }, { 6, 3 }
-};
 
 static const SMS_Rational s_pixel_aspect[ 16 ] = {
  {  0,  1 }, {  1,  1 }, { 12, 11 }, { 10, 11 },
@@ -487,7 +417,7 @@ static const SMS_Rational s_pixel_aspect[ 16 ] = {
  { 0,   1 }, {  0,  1 }, {  0,  1 }, {  0,  1 }
 };
 
-const int16_t s_default_intra_matrix[ 64 ] = {
+const int8_t s_default_intra_matrix[ 64 ] SMS_DATA_SECTION = {
   8, 17, 18, 19, 21, 23, 25, 27,
  17, 18, 19, 21, 23, 25, 27, 28,
  20, 21, 22, 23, 24, 26, 28, 30,
@@ -498,7 +428,7 @@ const int16_t s_default_intra_matrix[ 64 ] = {
  27, 28, 30, 32, 35, 38, 41, 45,
 };
 
-const int16_t s_default_non_intra_matrix[ 64 ] = {
+const int8_t s_default_non_intra_matrix[ 64 ] SMS_DATA_SECTION = {
  16, 17, 18, 19, 20, 21, 22, 23,
  17, 18, 19, 20, 21, 22, 23, 24,
  18, 19, 20, 21, 22, 23, 24, 25,
@@ -509,16 +439,16 @@ const int16_t s_default_non_intra_matrix[ 64 ] = {
  23, 24, 25, 27, 28, 30, 31, 33
 };
 
-static const uint8_t s_dc_threshold[ 8 ] = {
+static const uint8_t s_dc_threshold[ 8 ] SMS_DATA_SECTION = {
  99, 13, 15, 17, 19, 21, 23, 0
 };
 
-static uint8_t s_y_dc_scale_table[ 32 ] = {
+static const uint8_t s_y_dc_scale_table[ 32 ] SMS_DATA_SECTION = {
   0,  8,  8,  8,  8, 10, 12, 14, 16, 17, 18, 19, 20, 21, 22, 23,
  24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 36, 38, 40, 42, 44, 46
 };
 
-static uint8_t s_c_dc_scale_table[ 32 ] = {
+static const uint8_t s_c_dc_scale_table[ 32 ] SMS_DATA_SECTION = {
   0,  8,  8,  8,  8,  9,  9, 10, 10, 11, 11, 12, 12, 13, 13, 14,
  14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22, 23, 24, 25
 };
@@ -556,10 +486,11 @@ void SMS_Codec_MPEG4_Open ( SMS_CodecContext* apCtx ) {
 
 void MPEG4_CommonInit ( SMS_CodecContext* apCtx ) {
 
- int i;
- int lYSize  = BASECTX().m_B8Stride * (  2 * BASECTX().m_MBH + 1  );
- int lCSize  = BASECTX().m_MBStride * (      BASECTX().m_MBH + 1  );
- int lYCSize = lYSize + 2 * lCSize;
+ int   i;
+ int   lYSize  = BASECTX().m_B8Stride * (  2 * BASECTX().m_MBH + 1  );
+ int   lCSize  = BASECTX().m_MBStride * (      BASECTX().m_MBH + 1  );
+ int   lYCSize = lYSize + 2 * lCSize;
+ float lFrameRate;
 
  BASECTX().m_pACValBase = calloc (  1, lYCSize * sizeof ( int16_t ) * 16  );
  BASECTX().m_pACVal[ 0 ] = BASECTX().m_pACValBase + BASECTX().m_B8Stride + 1;
@@ -573,19 +504,24 @@ void MPEG4_CommonInit ( SMS_CodecContext* apCtx ) {
 
  for ( i = 0; i < lYCSize; ++i ) BASECTX().m_pDCValBase[ i ] = 1024;
 
+ BASECTX().m_H263Pred          = i;
  BASECTX().DCT_UnquantizeIntra = SMS_H263_DCTUnquantizeIntra;
  BASECTX().DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
  BASECTX().m_pChromaQScaleTbl  = g_chroma_qscale_table;
 
- g_MPEGCtx.m_LastPPTS   = 0;
- g_MPEGCtx.m_MSPerFrame = ( int )(
-  ( float )apCtx -> m_FrameRate /
-  ( float )apCtx -> m_FrameRateBase + 0.5F
- );
+ lFrameRate = ( float )apCtx -> m_FrameRate / ( float )apCtx -> m_FrameRateBase;
 
- memcpy ( SMS_DSP_SPR_CONST, &g_DataBuffer[ SMS_IDCT_CONST_OFFSET ], SMS_IDCT_CONST_SIZE );
+ g_MPEGCtx.m_MSPerFrame = ( int )( lFrameRate + 0.5F );
+
  memcpy (  ( void* )0x11000000, &g_DataBuffer[ SMS_VU0_MPG_OFFSET  ], SMS_VU0_MPG_SIZE   );
  memcpy (  ( void* )0x11004000, &g_DataBuffer[ SMS_VU0_DATA_OFFSET ], SMS_VU0_DATA_SIZE  );
+
+ apCtx -> HWCtl = MPEG4_CommonHWCtl;
+
+ __asm__ __volatile__(
+  "mtc0 %0, $11\n\t"
+  :: "r"(  ( uint32_t )(  ( 1000.0F / lFrameRate ) * 147456.0F + 0.5F )  )
+ );
 
 }  /* end MPEG4_CommonInit */
 
@@ -595,6 +531,66 @@ void MPEG4_CommonDestroy ( void ) {
  free (  BASECTX().m_pDCValBase  );
 
 }  /* end MPEG4_CommonDestroy */
+
+void MPEG4_CommonHWCtl ( SMS_CodecContext* apCtx, SMS_CodecHWCtl aCtl ) {
+
+ switch ( aCtl ) {
+
+  case SMS_HWC_Init: {
+
+   int          lf16    = g_IPUCtx.m_TexFmt == GSPixelFormat_PSMCT16;
+   SMS_MPEGCSC* lpParam = ( SMS_MPEGCSC* )calloc (  1, sizeof ( SMS_MPEGCSC )  );
+
+   apCtx -> m_pIntBuf = SMS_VideoBufferInit ( apCtx -> m_Width, lf16 ? -apCtx -> m_Height : apCtx -> m_Height );
+
+   SMS_FrameBufferInit (
+    lpParam -> m_Buf, sizeof ( lpParam -> m_Buf ) / sizeof ( lpParam -> m_Buf[ 0 ] ),
+    apCtx -> m_Width, apCtx -> m_Height, lf16
+   );
+   SMS_CSCResume ();
+
+   apCtx -> m_pHWData = lpParam;
+
+  } break;
+
+  case SMS_HWC_Destroy: {
+
+   SMS_MPEGCSC* lpParam = ( SMS_MPEGCSC* )apCtx -> m_pHWData;
+
+   SMS_CSCSync ();
+   SMS_FrameBufferDestroy (
+    lpParam -> m_Buf, sizeof ( lpParam -> m_Buf ) / sizeof ( lpParam -> m_Buf[ 0 ] )
+   );
+   SMS_VideoBufferDestroy (  ( SMS_VideoBuffer* )apCtx -> m_pIntBuf  );
+   free ( lpParam );
+
+  } break;
+
+  case SMS_HWC_Suspend: {
+
+   SMS_CSCSuspend ();
+
+  } break;
+
+  case SMS_HWC_Resume: {
+
+   SMS_CSCResume ();
+
+  } break;
+
+  case SMS_HWC_Reset: {
+
+   int          i;
+   SMS_MPEGCSC* lpParam = ( SMS_MPEGCSC* )apCtx -> m_pHWData;
+
+   for (  i = 0; i < sizeof ( lpParam -> m_Buf ) / sizeof ( lpParam -> m_Buf[ 0 ] ); ++i  )
+    lpParam -> m_Buf[ i ].m_FrameType = -1;
+
+  } break;
+
+ }  /* end switch */
+
+}  /* end MPEG4_CommonHWCtl */
 
 static int32_t MPEG4_Init ( SMS_CodecContext* apCtx ) {
 
@@ -626,13 +622,11 @@ static int32_t MPEG4_Init ( SMS_CodecContext* apCtx ) {
   SMS_RL_Init ( &s_rl_intra      );
   SMS_RL_Init ( &s_rvlc_rl_inter );
   SMS_RL_Init ( &s_rvlc_rl_intra );
-  SMS_RL_Init ( &s_rl_intra_aic  );
 
   SMS_VLC_RL_Init ( &s_rl_inter      );
   SMS_VLC_RL_Init ( &s_rl_intra      );
   SMS_VLC_RL_Init ( &s_rvlc_rl_inter );
   SMS_VLC_RL_Init ( &s_rvlc_rl_intra );
-  SMS_VLC_RL_Init ( &s_rl_intra_aic  );
 
   SMS_VLC_Init (
    &s_dc_lum, DC_VLC_BITS, 10,
@@ -653,16 +647,6 @@ static int32_t MPEG4_Init ( SMS_CodecContext* apCtx ) {
    &s_mb_type_b_vlc, MB_TYPE_B_VLC_BITS, 4,
    &s_mb_type_b_tab[ 0 ][ 1 ], 2, 1,
    &s_mb_type_b_tab[ 0 ][ 0 ], 2, 1
-  );
-  SMS_VLC_Init (
-   &s_h263_mbtype_b_vlc, H263_MBTYPE_B_VLC_BITS, 15,
-   &s_h263_mbtype_b_tab[ 0 ][ 1 ], 2, 1,
-   &s_h263_mbtype_b_tab[ 0 ][ 0 ], 2, 1
-  );
-  SMS_VLC_Init (
-   &s_cbpc_b_vlc, CBPC_B_VLC_BITS, 4,
-   &s_cbpc_b_tab[ 0 ][ 1 ], 2, 1,
-   &s_cbpc_b_tab[ 0 ][ 0 ], 2, 1
   );
 
   SMS_MPEGContext_Init ( apCtx -> m_Width, apCtx -> m_Height );
@@ -693,20 +677,16 @@ static void MPEG4_Destroy ( SMS_CodecContext* apCtx ) {
   SMS_RL_Free ( &s_rl_intra      );
   SMS_RL_Free ( &s_rvlc_rl_inter );
   SMS_RL_Free ( &s_rvlc_rl_intra );
-  SMS_RL_Free ( &s_rl_intra_aic  );
 
   SMS_VLC_RL_Free ( &s_rl_inter      );
   SMS_VLC_RL_Free ( &s_rl_intra      );
   SMS_VLC_RL_Free ( &s_rvlc_rl_inter );
   SMS_VLC_RL_Free ( &s_rvlc_rl_intra );
-  SMS_VLC_RL_Free ( &s_rl_intra_aic  );
 
   SMS_VLC_Free ( &s_dc_lum            );
   SMS_VLC_Free ( &s_dc_chrom          );
   SMS_VLC_Free ( &s_sprite_trajectory );
   SMS_VLC_Free ( &s_mb_type_b_vlc     );
-  SMS_VLC_Free ( &s_h263_mbtype_b_vlc );
-  SMS_VLC_Free ( &s_cbpc_b_vlc        );
 
   SMS_MPEGContext_Destroy ();
   MPEG4_CommonDestroy     ();
@@ -901,19 +881,14 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
 
   if (   (  g_MPEGCtx.m_MPEGQuant = SMS_GetBit ( apBitCtx )  )   ) {
 
-   int i, v;
+   int       i, v;
+   uint16_t* lpIntraMtx = ( uint16_t* )SMS_QM_INTRA;
+   uint16_t* lpInterMtx = ( uint16_t* )SMS_QM_NON_INTRA;
 
    for ( i = 0; i < 64; ++i ) {
 
-    v = s_default_intra_matrix[ i ];
-
-    g_MPEGCtx.m_IntraMatrix      [ i ] =
-    g_MPEGCtx.m_ChromaIntraMatrix[ i ] = v;
-                
-    v = s_default_non_intra_matrix[ i ];
-
-    g_MPEGCtx.m_InterMatrix      [ i ] =
-    g_MPEGCtx.m_ChromaInterMatrix[ i ] = v;
+    lpIntraMtx[ i ] = s_default_intra_matrix    [ i ];
+    lpInterMtx[ i ] = s_default_non_intra_matrix[ i ];
 
    }  /* end for */
 
@@ -923,28 +898,15 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
 
     for ( i = 0; i < 64; ++i ) {
 
-     int j;
-
      v = SMS_GetBits ( apBitCtx, 8 );
 
      if ( !v ) break;
                     
-     lLast = v;
-     j     = g_SMS_DSP_zigzag_direct[ i ];
-
-     g_MPEGCtx.m_IntraMatrix      [ j ] =
-     g_MPEGCtx.m_ChromaIntraMatrix[ j ] = v;
+     lpIntraMtx[  g_SMS_DSP_zigzag_direct[ i ]  ] = lLast = v;
 
     }  /* end for */
 
-    for ( ; i < 64; ++i ) {
-
-     int j = g_SMS_DSP_zigzag_direct[ i ];
-
-     g_MPEGCtx.m_IntraMatrix      [ j ] =
-     g_MPEGCtx.m_ChromaIntraMatrix[ j ] = lLast;
-
-    }  /* end for */
+    for ( ; i < 64; ++i ) lpIntraMtx[  g_SMS_DSP_zigzag_direct[ i ]  ] = lLast;
 
    }  /* end if */
 
@@ -954,28 +916,15 @@ static void _decode_vol_header ( SMS_BitContext* apBitCtx ) {
 
     for ( i = 0; i < 64; ++i ) {
 
-     int j;
-
      v = SMS_GetBits ( apBitCtx, 8 );
 
      if ( !v ) break;
 
-     lLast = v;
-     j     = g_SMS_DSP_zigzag_direct[ i ];
-
-     g_MPEGCtx.m_InterMatrix      [ j ] =
-     g_MPEGCtx.m_ChromaInterMatrix[ j ] = v;
+     lpInterMtx[  g_SMS_DSP_zigzag_direct[ i ]  ] = lLast = v;
 
     }  /* end for */
 
-    for ( ; i < 64; ++i ) {
-
-     int j = g_SMS_DSP_zigzag_direct[ i ];
-
-     g_MPEGCtx.m_InterMatrix      [ j ] =
-     g_MPEGCtx.m_ChromaInterMatrix[ j ] = lLast;
-
-    }  /* end for */
+    for ( ; i < 64; ++i ) lpInterMtx[  g_SMS_DSP_zigzag_direct[ i ]  ] = lLast;
 
    }  /* end if */
 
@@ -1677,7 +1626,7 @@ static SMS_INLINE int _mpeg4_pred_dc ( int aN, int aLevel, int *apDirPtr ) {
 
   if ( aN == 0 || aN == 4 || aN == 5 ) lB = 1024;
 
- if (  abs ( lA - lB ) < abs ( lB - lC )  ) {
+ if (  SMS_abs ( lA - lB ) < SMS_abs ( lB - lC )  ) {
 
   lPred     = lC;
   *apDirPtr = 1;
@@ -1843,9 +1792,9 @@ static SMS_INLINE int _mpeg4_decode_block (
 
    if ( aRVLC )
 
-    lpRLVLC = s_rvlc_rl_inter.m_pRLVLC[ g_MPEGCtx.m_QScale ];        
+    lpRLVLC = s_rvlc_rl_inter.m_pRLVLC[ ( int )g_MPEGCtx.m_QScale ];
 
-   else lpRLVLC = s_rl_inter.m_pRLVLC[ g_MPEGCtx.m_QScale ];        
+   else lpRLVLC = s_rl_inter.m_pRLVLC[ ( int )g_MPEGCtx.m_QScale ];        
 
   }  /* end else */
 
@@ -1925,9 +1874,9 @@ static SMS_INLINE int _mpeg4_decode_block (
 
        if ( lLevel > 0 )
 
-        lLevel= lLevel * lQMul + lQAdd;
+        lLevel = lLevel * lQMul + lQAdd;
 
-       else lLevel= lLevel * lQMul - lQAdd;
+       else lLevel = lLevel * lQMul - lQAdd;
 
        if (  ( unsigned )( lLevel + 2048 ) > 4095  ) {
 
@@ -2006,9 +1955,10 @@ not_coded:
 
   if ( g_MPEGCtx.m_ACPred ) i = 63;
 
- }  /* ed if */
+ }  /* end if */
 
  g_MPEGCtx.m_BlockLastIdx[ aN ] = i;
+ g_MPEGCtx.m_BlockSum          += ( i != -1 );
 
  return 0;
 
@@ -2034,10 +1984,17 @@ static int _mpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
 
     g_MPEGCtx.m_MBIntra = 0;
 
-    for ( i = 0; i < 6; ++i ) g_MPEGCtx.m_BlockLastIdx[ i ] = -1;
+    __asm__ __volatile__(
+     ".set noat\n\t"
+     "pnor  $at, $zero, $zero\n\t"
+     "sd    $at, %0\n\t"
+     "sw    $at, 8+%0\n\t"
+     ".set at\n\t"
+     :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+    );
 
-    g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
-    g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
+    g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
+    g_MPEGCtx.m_MVType   = SMS_MV_TYPE_16X16;
 
     if ( g_MPEGCtx.m_PicType == SMS_FT_S_TYPE && g_MPEGCtx.m_VolSpriteUsage == GMC_SPRITE ) {
 
@@ -2185,22 +2142,29 @@ static int _mpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
   g_MPEGCtx.m_MCSel   = 0;
 
   if ( g_MPEGCtx.m_MBX == 0 )
-
-   for ( i = 0; i < 2; ++i )
-
-    g_MPEGCtx.m_LastMV[ i ][ 0 ][ 0 ] = 
-    g_MPEGCtx.m_LastMV[ i ][ 0 ][ 1 ] = 
-    g_MPEGCtx.m_LastMV[ i ][ 1 ][ 0 ] = 
-    g_MPEGCtx.m_LastMV[ i ][ 1 ][ 1 ] = 0;
+   __asm__(
+    "sd     $zero,  0+%0\n\t"
+    "sd     $zero,  8+%0\n\t"
+    "sd     $zero, 16+%0\n\t"
+    "sd     $zero, 24+%0\n\t"
+    :: "g"( g_MPEGCtx.m_LastMV )
+   );
 
   g_MPEGCtx.m_MBSkiped = g_MPEGCtx.m_NextPic.m_pMBSkipTbl[ g_MPEGCtx.m_MBY * g_MPEGCtx.m_MBStride + g_MPEGCtx.m_MBX ];
 
   if ( g_MPEGCtx.m_MBSkiped ) {
 
-   for ( i = 0; i < 6; ++i ) g_MPEGCtx.m_BlockLastIdx [ i ] = -1;
+   __asm__ __volatile__(
+    ".set noat\n\t"
+    "pnor  $at, $zero, $zero\n\t"
+    "sd    $at, %0\n\t"
+    "sw    $at, 8+%0\n\t"
+    ".set at\n\t"
+    :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+   );
 
-   g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
-   g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
+   g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
+   g_MPEGCtx.m_MVType   = SMS_MV_TYPE_16X16;
    g_MPEGCtx.m_MV[ 0 ][ 0 ][ 0 ] =
    g_MPEGCtx.m_MV[ 0 ][ 0 ][ 1 ] =
    g_MPEGCtx.m_MV[ 1 ][ 0 ][ 0 ] =
@@ -2445,10 +2409,17 @@ static int _mpeg4_decode_partitioned_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
 
   if (  SMS_IS_SKIP( lMBType )  ) {
 
-   for ( i = 0; i < 6; ++i ) g_MPEGCtx.m_BlockLastIdx[ i ] = -1;
+   __asm__ __volatile__(
+    ".set noat\n\t"
+    "pnor  $at, $zero, $zero\n\t"
+    "sd    $at, %0\n\t"
+    "sw    $at, 8+%0\n\t"
+    ".set at\n\t"
+    :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+   );
 
-   g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
-   g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
+   g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
+   g_MPEGCtx.m_MVType   = SMS_MV_TYPE_16X16;
 
    if ( g_MPEGCtx.m_PicType == SMS_FT_S_TYPE && g_MPEGCtx.m_VolSpriteUsage == GMC_SPRITE ) {
 
@@ -2588,8 +2559,6 @@ static int _decode_vop_header ( SMS_BitContext* apBitCtx ) {
                             );
  }  /* end else */
 
- g_MPEGCtx.m_pCurPic -> m_PTS = g_MPEGCtx.m_Time * ( int64_t )SMS_TIME_BASE / g_MPEGCtx.m_TimeIncRes;
-
  SMS_GetBit ( apBitCtx );  // check marker
 
  if (  SMS_GetBit ( apBitCtx ) != 1  ) return SMS_FRAME_SKIPED;
@@ -2698,8 +2667,8 @@ static int _decode_vop_header ( SMS_BitContext* apBitCtx ) {
 
  ++g_MPEGCtx.m_PicNr;
 
- g_MPEGCtx.m_pY_DCScaleTbl = s_y_dc_scale_table;
- g_MPEGCtx.m_pC_DCScaleTbl = s_c_dc_scale_table;
+ g_MPEGCtx.m_pY_DCScaleTbl = ( uint8_t* )s_y_dc_scale_table;
+ g_MPEGCtx.m_pC_DCScaleTbl = ( uint8_t* )s_c_dc_scale_table;
 
  if ( g_MPEGCtx.m_Bugs & SMS_BUG_EDGE ) {
 
@@ -2786,7 +2755,7 @@ static int _mpeg4_decode_partition_a ( void ) {
 
     do {
 
-     if (  SMS_ShowBitsLong ( lpBitCtx, 19 ) == DC_MARKER  ) return lMBNum - 1;
+     if (  SMS_ShowBits ( lpBitCtx, 19 ) == DC_MARKER  ) return lMBNum - 1;
 
      lCBPC = SMS_GetVLC2 ( lpBitCtx, s_IntraMCBPC_vlc.m_pTable, INTRA_MCBPC_VLC_BITS, 2 );
 
@@ -3082,7 +3051,7 @@ int _mpeg4_decode_partitions ( void ) {
 
   while (  SMS_ShowBits ( lpBitCtx, 9 ) == 1  ) SMS_SkipBits ( lpBitCtx, 9 );
 
-   if (  SMS_GetBitsLong ( lpBitCtx, 19 ) != DC_MARKER  ) return -1;
+   if (  SMS_GetBits ( lpBitCtx, 19 ) != DC_MARKER  ) return -1;
 
  } else {
 
@@ -3121,8 +3090,6 @@ static void _mpeg4_decode_slice ( void ) {
 
  }  /* end if */
 
- g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
-
  for ( ; g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH; ++g_MPEGCtx.m_MBY ) {
 
   SMS_MPEG_InitBlockIdx ();
@@ -3137,8 +3104,9 @@ static void _mpeg4_decode_slice ( void ) {
         g_MPEGCtx.m_ResyncMBY + 1 == g_MPEGCtx.m_MBY
    ) g_MPEGCtx.m_FirstSliceLine = 0;
             
-   g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
-   g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
+   g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
+   g_MPEGCtx.m_MVType   = SMS_MV_TYPE_16X16;
+   g_MPEGCtx.m_BlockSum = 0;
 
    lRet = g_MPEGCtx.DecodeMB ( g_MPEGCtx.m_pBlock );
 
@@ -3159,9 +3127,7 @@ static void _mpeg4_decode_slice ( void ) {
 
      }  /* end if */
 
-     goto end; 
-
-    } else if ( lRet == SMS_SLICE_NOEND ) goto end;
+    }  /* end if */
 
     goto end;
 
@@ -3223,21 +3189,27 @@ end:
  while (   (  *( volatile unsigned int* )0x10003800  ) & 3   );
 
  g_MPEGCtx.MBCallback ( g_MPEGCtx.m_pDestCB );
+ g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
 }  /* end _mpeg4_decode_slice */
 
 static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
- uint8_t*         lpBuf;
- int32_t          lBufSize;
- SMS_FrameBuffer* lpFrame;
- SMS_BitContext*  lpBitCtx;
- int32_t          retVal = 0;
- SMS_AVPacket*    lpPck  = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
+ uint8_t*          lpBuf;
+ int32_t           lBufSize;
+ SMS_FrameBuffer*  lpFrame;
+ SMS_BitContext*   lpBitCtx;
+ int32_t           retVal = 0;
+ SMS_AVPacket*     lpPck  = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
+ SMS_FrameBuffer** lppFrame;
 
  if ( !lpPck ) return retVal;
 
- if (  !( lpPck -> m_Flags & SMS_PKT_FLAG_SUB )  ) {
+ if ( lpPck -> m_Flags & SMS_PKT_FLAG_SUB ) {
+
+  retVal = SMS_DXSB_Decode ( lpPck, apOutput );
+
+ } else {
 
   lpBitCtx = &g_MPEGCtx.m_BitCtx;
   lpBuf    = lpPck -> m_pData;
@@ -3252,15 +3224,9 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput,
 
   g_MPEGCtx.m_BSBufSize = 0;
 
-  if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pBuf )
-
-   g_MPEGCtx.m_pCurPic = &g_MPEGCtx.m_pPic[ SMS_MPEGContext_FindUnusedPic () ];
-
   retVal = Codec_MPEG4_DecodeHeader ();
 
   if ( retVal == SMS_FRAME_SKIPED || retVal < 0 ) goto end;
-
-  apCtx -> m_HasBFrames = !g_MPEGCtx.m_LowDelay;
 
   if ( g_MPEGCtx.m_XviDBuild == 0 && g_MPEGCtx.m_DivXVer == 0 )
 
@@ -3303,10 +3269,9 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput,
 
   }  /* end if */
 
-  g_MPEGCtx.m_CurPic.m_Type     = g_MPEGCtx.m_PicType;
-  g_MPEGCtx.m_CurPic.m_KeyFrame = g_MPEGCtx.m_PicType == SMS_FT_I_TYPE;
+  g_MPEGCtx.m_CurPic.m_Type = g_MPEGCtx.m_PicType;
 
-  if (  g_MPEGCtx.m_pLastPic == NULL && ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE || g_MPEGCtx.m_Dropable )  ) goto end;
+  if (  g_MPEGCtx.m_pLastPic == NULL && ( g_MPEGCtx.m_PicType == SMS_FT_B_TYPE )  ) goto end;
 
   if ( g_MPEGCtx.m_NextPFrameDamaged ) {
 
@@ -3316,10 +3281,9 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput,
 
   }  /* end if */
 
-  if (  SMS_MPEG_FrameStart () < 0  ) goto end;
+  lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
 
-  g_MPEGCtx.m_MBX = 0; 
-  g_MPEGCtx.m_MBY = 0;
+  SMS_MPEG_FrameStart ();
 
   _mpeg4_decode_slice ();
 
@@ -3342,11 +3306,7 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput,
 
     for ( i = lCurPos; i < lBufSize - 3; ++i ) {
 
-     if (  lpBuf[ i     ] == 0 &&
-           lpBuf[ i + 1 ] == 0 &&
-           lpBuf[ i + 2 ] == 1 &&
-           lpBuf[ i + 3 ] == 0xB6
-     ) {
+     if (  SMS_unaligned32 ( lpBuf ) == 0xB6010000  ) {
 
       lStartCodeFound = 1;
       break;
@@ -3380,32 +3340,37 @@ static int32_t MPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput,
    lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
   else lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
 
-  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
-
   if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
    lpFrame -> m_FrameType = g_MPEGCtx.m_PicType;
   else lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
 
-  if ( apCtx -> m_HasBFrames && lpFrame -> m_FrameType != SMS_FT_B_TYPE ) {
-   lpFrame -> m_PTS  = g_MPEGCtx.m_LastPPTS;
-   g_MPEGCtx.m_LastPPTS = lpPck -> m_PTS;
-  } else lpFrame -> m_PTS = lpPck -> m_PTS;
+  if ( !retVal )
 
-  lpFrame -> m_SPTS = lpPck -> m_PTS;
+   SMS_RingBufferUnalloc ( apOutput, 4 );
 
-  if ( retVal ) {
+  else {
 
-   SMS_FrameBuffer** lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
+   SMS_MPEGCSC*      lpCSC      = ( SMS_MPEGCSC* )apCtx -> m_pHWData;
+   int               lBufIdx    = lpCSC -> m_BufIdx;
+   SMS_FrameBuffer*  lpRGBFrame = &lpCSC -> m_Buf[ lBufIdx++ ];
+   SMS_CSCParam*     lpCSCParam = &(  ( SMS_VideoBuffer* )apCtx -> m_pIntBuf  ) -> m_CSCParam;
 
-   *lppFrame = lpFrame;
+   while ( lpRGBFrame -> m_FrameType >= 0 ) RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
+
+   lpRGBFrame -> m_FrameType = 0;
+
+   SMS_CSC ( lpCSCParam, lpFrame -> m_pCSCDma, lpRGBFrame -> m_pBase );
+
+   if (  lBufIdx == sizeof ( lpCSC -> m_Buf ) / sizeof ( lpCSC -> m_Buf[ 0 ] )  ) lBufIdx = 0;
+
+   lpRGBFrame -> m_StartPTS = lpPck -> m_PTS;
+
+   lpCSC -> m_BufIdx = lBufIdx;
+   *lppFrame         = lpRGBFrame;
 
    SMS_RingBufferPost ( apOutput );
 
-  }  /* end if */
-
- } else {
-
-  retVal = SMS_DXSB_Decode ( lpPck, apOutput );
+  }  /* end else */
 
  }  /* end else */
 end:

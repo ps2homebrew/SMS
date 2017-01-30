@@ -63,22 +63,6 @@ typedef struct SMS_DXSBDrawPack {
  unsigned long  m_TestOffID;
 } SMS_DXSBDrawPack __attribute__(   (  aligned( 64 )  )   );
 
-typedef struct SMS_DXSBErasePack {
- GIFTag         m_GIFTag;
- GSRegTEST      m_TestOff;
- unsigned long  m_TestOffID;
- GSRegPRIM      m_Prim;
- unsigned long  m_PrimID;
- GSRegRGBAQ     m_RGBAQ;
- unsigned long  m_RGBAQID;
- GSRegXYZ       m_XYZLeftTop;
- unsigned long  m_XYZLeftTopID;
- GSRegXYZ       m_XYZRightBottom;
- unsigned long  m_XYZRightBottomID;
- GSRegTEST      m_TestOn;
- unsigned long  m_TestOnID;
-} SMS_DXSBErasePack __attribute__(   ( aligned( 64 )  )   );
-
 # define SMS_DXSB_DP_BB_VRAM( p ) (   *( unsigned short* )(  ( p ) +  36  )   )
 # define SMS_DXSB_DP_BB_TBW( p )  (   *( unsigned char*  )(  ( p ) +  38  )   )
 # define SMS_DXSB_DP_TX_W( p )    (   *( unsigned short* )(  ( p ) +  64  )   )
@@ -91,9 +75,6 @@ typedef struct SMS_DXSBErasePack {
 # define SMS_DXSB_DP_UV_R( p )    (   *( unsigned short* )(  ( p ) + 256  )   )
 # define SMS_DXSB_DP_UV_B( p )    (   *( unsigned short* )(  ( p ) + 258  )   )
 # define SMS_DXSB_DP_XYZ_RB( p )  (   *( unsigned long*  )(  ( p ) + 264  )   )
-
-# define SMS_DXSB_EP_XYZ_LTE( p ) (   *( unsigned long*  )(  ( p ) + 64   )   )
-# define SMS_DXSB_EP_XYZ_RBE( p ) (   *( unsigned long*  )(  ( p ) + 80   )   )
 
 typedef struct SMS_DXSBFrame {
 
@@ -118,8 +99,9 @@ typedef struct SMS_DXSBFrame {
 extern "C" {
 # endif  /* __cplusplus */
 
-void  SMS_DXSB_Init   ( int, int, int*                 );
-int   SMS_DXSB_Decode ( SMS_AVPacket*, SMS_RingBuffer* );
+void  SMS_DXSB_Init     ( int, int, int*                 );
+int   SMS_DXSB_Decode   ( SMS_AVPacket*, SMS_RingBuffer* );
+void  SMS_DXSB_SetRatio ( int, int                       );
 
 # ifdef __cplusplus
 }

@@ -71,7 +71,7 @@ uint64_t* SMS_PlayerBallSim_Init ( uint32_t* apQWC ) {
  for ( i = 0; i < NBALLS; ++i ) {
 
   lpUDMA[ 10 + i * 4 ] = GS_SET_UV(   8,   8 );
-  lpUDMA[ 12 + i * 4 ] = GS_SET_UV( 504, 504 );
+  lpUDMA[ 12 + i * 4 ] = GS_SET_UV( 506, 506 );
 
   _create_ball ( i );
 
@@ -104,8 +104,8 @@ void SMS_PlayerBallSim_Update ( uint64_t* apDMA ) {
 
    _create_ball ( i );
 
-   lX = lW + s_BallPos[ i ].m_X;
-   lY = lH + s_BallPos[ i ].m_Y;
+   lX = lW + SMS_abs ( s_BallPos[ i ].m_X );
+   lY = lH + SMS_abs ( s_BallPos[ i ].m_Y );
 
   }  /* end if */
 

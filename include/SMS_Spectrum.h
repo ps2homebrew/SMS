@@ -16,7 +16,8 @@ extern "C" {
 # endif   /* __cplusplus */
 
 void SMS_SpectrumInit   ( void   );
-void SMS_SpectrumUpdate ( short* );
+void SMS_SpectrumCalc   ( short* );
+void SMS_SpectrumUpdate ( void   );
 
 # ifdef __cplusplus
 }

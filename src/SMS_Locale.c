@@ -4,10 +4,12 @@
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
 # (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2007 lior e
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include "SMS.h"
 #include "SMS_Locale.h"
 #include "SMS_Config.h"
 #include "SMS_MC.h"
@@ -16,7 +18,7 @@
 #include <fileio.h>
 #include <malloc.h>
 
-static char s_SMSLng[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMS/SMS.lng";
+char g_SMSLng[ 12 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMS/SMS.lng";
 
 char g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "";
 char g_SlashStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "/";
@@ -34,6 +36,7 @@ char g_pDefGW    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) 
 char g_pIPConf   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/SYS-CONF/IPCONFIG.DAT";
 char g_DotStr    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ".";
 char g_pAVIStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "AVI";
+char g_pASFStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "ASF";
 char g_pExtM3UStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "#EXTM3U";
 char g_pExtInfStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "#EXTINF";
 char g_pM3UStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "M3U";
@@ -44,6 +47,34 @@ char g_pSubStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) 
 char g_pSrtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "srt";
 char g_pTxtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "txt";
 char g_pBXDATASYS[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/B?DATA-SYSTEM/";
+char g_pOGGStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "OGG";
+char g_pSpaceStr [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = " ";
+char g_pVerStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "_VS_";
+char g_pSMSSkn   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/SMS/Skins";
+char g_pSMI      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ".smi";
+char g_pMPEG12Str[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mpeg12";
+char g_pExtSMI   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ".smi";
+char g_pExtMBF   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ".mbf";
+char g_pMC0SMS   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:SMS";
+char g_pMPEG12   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mpeg1/2";
+char g_pFmt0     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ", %d%s, %d%s, %d%s";
+char g_pFmt1     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "%.4s";
+char g_pFmt2     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "%.4s, %dx%d";
+char g_pQPel     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ", qpel";
+char g_pGMC      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = ", gmc";
+char g_pWMA      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "wma";
+char g_pAAC      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "aac";
+char g_pMPEGPS   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "MPEG(PS)";
+char g_pMOV      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "MOV";
+char g_pFmt3     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "%s%s%s";
+char g_pFLAC     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "FLAC";
+char g_pAC3      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "ac3";
+char g_pDEV9X    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "dev9x:";
+char g_pHDD      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "hdd:";
+char g_pPFS      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "pfs:";
+char g_pQuote    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "'";
+char g_pPeriod   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "...";
+char g_pJPEG     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "JPEG";
 
 static unsigned char s_pAvailableMedia [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Available media:  ";
 static unsigned char s_pNone           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "none";
@@ -52,9 +83,9 @@ static unsigned char s_pSavingConf     [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pLoading        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Loading %s...";
 static unsigned char s_pInitNet        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Initializing network...";
 static unsigned char s_pLocUSBD        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Locating USBD.IRX...";
-static unsigned char s_pWaitingFMedia  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Waiting for media (press \"start\" for menu)...";
+static unsigned char s_pWaitingFMedia  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Waiting for media (press 'start' for menu)...";
 static unsigned char s_pReadingDisk    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Reading disk...";
-static unsigned char s_pIllegalDisk    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Illegal disk (press \"cross\" to continue)...";
+static unsigned char s_pIllegalDisk    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Illegal disk (press 'cross' to continue)...";
 static unsigned char s_pReadingMedia   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Reading media...";
 static unsigned char s_pDisplaySettings[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Display settings...";
 static unsigned char s_pDispSettings1  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Display settings";
@@ -71,7 +102,7 @@ static unsigned char s_pExit2BB        [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pTVSystem       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "TV system";
 static unsigned char s_pPAL            [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "PAL";
 static unsigned char s_pNTSC           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "NTSC";
-static unsigned char s_pAuto           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Auto";
+static unsigned char s_pAuto           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "auto";
 static unsigned char s_pCharset        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Character set";
 static unsigned char s_pWinLatin1      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "WinLatin1";
 static unsigned char s_pWinLatin2      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "WinLatin2";
@@ -171,7 +202,7 @@ static unsigned char s_pHelp30         [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pHelp31         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMS menu:";
 static unsigned char s_pHelp32         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "cross/circle - action/next level";
 static unsigned char s_pHelp33         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "triangle - level up/exit menu";
-static unsigned char s_pError          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Error (press \"cross\" to continue)...";
+static unsigned char s_pError          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Error (press 'cross' to continue)...";
 static unsigned char s_pSavingIPConfig [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Saving IPCONFIG.DAT...";
 static unsigned char s_pSelBarClr      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Selection bar color";
 static unsigned char s_pAdvanced       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Advanced settings...";
@@ -184,7 +215,7 @@ static unsigned char s_pUDFStr         [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pLangStr        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Language";
 static unsigned char s_pLoadIdx        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Loading indices...";
 static unsigned char s_pLoadSub        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Loading subtitles...";
-static unsigned char s_pSubError       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Subtitle: %s error (%d), press \"cross\" to continue...";
+static unsigned char s_pSubError       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Subtitle: %s error (%d), press 'cross' to continue...";
 static unsigned char s_pFormat         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "format";
 static unsigned char s_pSequence       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "sequence";
 static unsigned char s_pBufferingFile  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Buffering %s file...";
@@ -198,7 +229,7 @@ static unsigned char s_pPlay           [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pFFwd           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "FFwd";
 static unsigned char s_pRew            [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Rew";
 static unsigned char s_pCurs           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Curs";
-static unsigned char s_pUnsupportedFile[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Unsupported file format (press \"cross\" to continue)...";
+static unsigned char s_pUnsupportedFile[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Unsupported file format (press 'cross' to continue)...";
 static unsigned char s_pRem            [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Rem";
 static unsigned char s_pPlayerMenu     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Player menu";
 static unsigned char s_pDisplay        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Display";
@@ -210,11 +241,11 @@ static unsigned char s_pFullscreen     [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pDisplaySubs    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Display subtitles";
 static unsigned char s_pSelectSubs     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Select subtitles";
 static unsigned char s_pBootBrowser    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "boot browser";
-static unsigned char s_pExec0          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/BOOT/BOOT.ELF";
-static unsigned char s_pExec1          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/BEDATA-SYSTEM/BOOT.ELF";
+       unsigned char g_pExec0          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/BOOT/BOOT.ELF";
+       unsigned char g_pExec1          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "mc0:/BEDATA-SYSTEM/BOOT.ELF";
 static unsigned char s_pExitTo         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Exit to";
 static unsigned char s_pSoundFX        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Sound FX";
-static unsigned char s_pSPDIFDD        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "S/PDIF - Dolby Digital";
+static unsigned char s_pSPDIFDD        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "S/PDIF - Dolby Digital/DTS";
 static unsigned char s_pMP3Settings    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "MP3 settings...";
 static unsigned char s_pRandomizePL    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Randomize playlist";
 static unsigned char s_pRepeat         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Repeat mode";
@@ -226,7 +257,7 @@ static unsigned char s_pSelectAction   [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pColorResolution[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Color resolution";
 static unsigned char s_p32Bit          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "32 bit";
 static unsigned char s_p16Bit          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "16 bit";
-static unsigned char s_pDTV480P        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DTV 480P";
+static unsigned char s_pDTV480P        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DTV 480p";
 static unsigned char s_pCPort2         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Controller port 2";
 static unsigned char s_pGamepad        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "gamepad";
 static unsigned char s_pRemoteControl  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "remote control";
@@ -240,11 +271,79 @@ static unsigned char s_pWidePanScan2   [] __attribute__(   (  aligned( 1 ), sect
 static unsigned char s_pNetProtocol    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Network protocol";
 static unsigned char s_pPS2DevHost     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "ps2dev/host";
 static unsigned char s_pSMB_CIFS       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMB/CIFS";
-static unsigned char s_pCommError      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Communication error (press \"cross\" to continue)...";
-static unsigned char s_pProtNegError   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Protocol negotiation error (%d) (press \"cross\" to continue)...";
-static unsigned char s_pLoginError     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Login error (%d) (press \"cross\" to continue)...";
+static unsigned char s_pCommError      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Communication error (press 'cross' to continue)...";
+static unsigned char s_pProtNegError   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Protocol negotiation error (%d) (press 'cross' to continue)...";
+static unsigned char s_pLoginError     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Login error (%d) (press 'cross' to continue)...";
 static unsigned char s_pSubtitles      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Subtitles";
 static unsigned char s_pDisableCDVD    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Disable CD/DVD";
+static unsigned char s_pDispWidth      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Display width";
+static unsigned char s_pReadingFmt     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Reading %s...";
+static unsigned char s_pOutOfMemory    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Error: out of memory";
+static unsigned char s_pCheckingFSpace [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Checking free space...";
+static unsigned char s_pNotEnoughSpace [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Error: not enough free space on HDD";
+static unsigned char s_pCreatingDirTree[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Creating directory tree...";
+static unsigned char s_pDelete         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Delete";
+static unsigned char s_pDeleting       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Deleting...";
+static unsigned char s_pCDVDSpeed      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "CD/DVD speed";
+static unsigned char s_pMedium         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "medium";
+static unsigned char s_pHigh           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "high";
+static unsigned char s_pLow            [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "low";
+static unsigned char s_pDirButtons     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Directional buttons";
+static unsigned char s_pDTV1080I       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DTV 1080i";
+static unsigned char s_pDTV720P        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DTV 720p";
+static unsigned char s_pOpMode         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Operating mode";
+static unsigned char s_pAutoNego       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "auto-negotiation";
+static unsigned char s_pAutomatic      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "automatic";
+static unsigned char s_pManual         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "manual";
+static unsigned char s_pDuplexMode     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Duplex mode";
+static unsigned char s_pFull           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "full";
+static unsigned char s_pHalf           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "half";
+static unsigned char s_pStandard       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Standard";
+static unsigned char s_p10BaseT        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "10Base-T";
+static unsigned char s_p100BaseTX      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "100Base-TX";
+static unsigned char s_pNetSettings    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Network settings...";
+static unsigned char s_pNetSettings1   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Network settings";
+static unsigned char s_pSyncPar1       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Synch. parameter 1 (video)";
+static unsigned char s_pSyncPar2       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Synch. parameter 2 (GUI)";
+static unsigned char s_pSMBServer      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMB server...";
+static unsigned char s_pSMBClosing     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Terminating pending connection...";
+static unsigned char s_pUpdateLngFile  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Update SMS language";
+static unsigned char s_pUpdatePalFile  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Update SMS palette";
+static unsigned char s_pUpdateSMS      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Update SMS";
+static unsigned char s_pUpdateSMB      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Update SMB server list";
+static unsigned char s_pAddBackImage   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Add background image";
+static unsigned char s_pProcessing     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Processing...";
+static unsigned char s_pCreatingBackup [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Creating SMS backup...";
+static unsigned char s_pPlayAll        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Play all";
+static unsigned char s_pAudio          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Audio";
+static unsigned char s_pVideo          [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Video";
+static unsigned char s_pMP3Par         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Autodetection parameter";
+static unsigned char s_pSelectFile     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Start playback from";
+static unsigned char s_pCenterRight    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "center-right";
+static unsigned char s_pUserXH         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Use exception handler";
+static unsigned char s_pSubMBCS        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Subtitle MBCS";
+static unsigned char s_pLoadingFont    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Loading font...";
+static unsigned char s_pLoadingODML    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Loading ODML indices %d...";
+static unsigned char s_pFileSize       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "File size: ";
+static unsigned char s_pGB             [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "GB";
+static unsigned char s_pMB             [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "KB";
+static unsigned char s_pFmt0           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "%d,%02d";
+static unsigned char s_pFmt1           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "%d,%03d";
+static unsigned char s_pKbS            [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Kb/s";
+static unsigned char s_pHz             [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Hz";
+static unsigned char s_pCh             [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "ch";
+static unsigned char s_pAvailMem       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Available memory: %.1fMB/%.2fMB";
+static unsigned char s_pResume         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Resume playback from %s ? ('cross'='yes', 'triangle'='no')";
+static unsigned char s_pImageOffset    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Image offset";
+static unsigned char s_pResolution2Big [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Video resolution is too big (press 'cross' to continue)...";
+static unsigned char s_pSyncPar3       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Synch. parameter 3 (Audio)";
+static unsigned char s_pImages         [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Images";
+static unsigned char s_pUCImage        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Unsupported or corrupted image";
+static unsigned char s_pResetButtonAct [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Reset button action";
+static unsigned char s_pPowerOff       [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "power off";
+static unsigned char s_pExit           [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "exit";
+static unsigned char s_pPulldown22     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "Video auto 2:2 pulldown";
+static unsigned char s_pDTV576P        [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "DTV 576p";
 
 static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = {
  { sizeof ( s_pAvailableMedia  ) - 1, s_pAvailableMedia  },
@@ -413,8 +512,8 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pDisplaySubs     ) - 1, s_pDisplaySubs     },
  { sizeof ( s_pSelectSubs      ) - 1, s_pSelectSubs      },
  { sizeof ( s_pBootBrowser     ) - 1, s_pBootBrowser     },
- { sizeof ( s_pExec0           ) - 1, s_pExec0           },
- { sizeof ( s_pExec1           ) - 1, s_pExec1           },
+ { sizeof ( g_pExec0           ) - 1, g_pExec0           },
+ { sizeof ( g_pExec1           ) - 1, g_pExec1           },
  { sizeof ( s_pExitTo          ) - 1, s_pExitTo          },
  { sizeof ( s_pSoundFX         ) - 1, s_pSoundFX         },
  { sizeof ( s_pSPDIFDD         ) - 1, s_pSPDIFDD         },
@@ -447,15 +546,169 @@ static SMString s_SMStringDef[] __attribute__(   (  section( ".data" )  )   ) = 
  { sizeof ( s_pProtNegError    ) - 1, s_pProtNegError    },
  { sizeof ( s_pLoginError      ) - 1, s_pLoginError      },
  { sizeof ( s_pSubtitles       ) - 1, s_pSubtitles       },
- { sizeof ( s_pDisableCDVD     ) - 1, s_pDisableCDVD     }
+ { sizeof ( s_pDisableCDVD     ) - 1, s_pDisableCDVD     },
+ { sizeof ( s_pDispWidth       ) - 1, s_pDispWidth       },
+ { sizeof ( s_pReadingFmt      ) - 1, s_pReadingFmt      },
+ { sizeof ( s_pOutOfMemory     ) - 1, s_pOutOfMemory     },
+ { sizeof ( s_pCheckingFSpace  ) - 1, s_pCheckingFSpace  },
+ { sizeof ( s_pNotEnoughSpace  ) - 1, s_pNotEnoughSpace  },
+ { sizeof ( s_pCreatingDirTree ) - 1, s_pCreatingDirTree },
+ { sizeof ( s_pDelete          ) - 1, s_pDelete          },
+ { sizeof ( s_pDeleting        ) - 1, s_pDeleting        },
+ { sizeof ( s_pCDVDSpeed       ) - 1, s_pCDVDSpeed       },
+ { sizeof ( s_pMedium          ) - 1, s_pMedium          },
+ { sizeof ( s_pHigh            ) - 1, s_pHigh            },
+ { sizeof ( s_pLow             ) - 1, s_pLow             },
+ { sizeof ( s_pDirButtons      ) - 1, s_pDirButtons      },
+ { sizeof ( s_pDTV1080I        ) - 1, s_pDTV1080I        },
+ { sizeof ( s_pDTV720P         ) - 1, s_pDTV720P         },
+ { sizeof ( s_pOpMode          ) - 1, s_pOpMode          },
+ { sizeof ( s_pAutoNego        ) - 1, s_pAutoNego        },
+ { sizeof ( s_pAutomatic       ) - 1, s_pAutomatic       },
+ { sizeof ( s_pManual          ) - 1, s_pManual          },
+ { sizeof ( s_pDuplexMode      ) - 1, s_pDuplexMode      },
+ { sizeof ( s_pFull            ) - 1, s_pFull            },
+ { sizeof ( s_pHalf            ) - 1, s_pHalf            },
+ { sizeof ( s_pStandard        ) - 1, s_pStandard        },
+ { sizeof ( s_p10BaseT         ) - 1, s_p10BaseT         },
+ { sizeof ( s_p100BaseTX       ) - 1, s_p100BaseTX       },
+ { sizeof ( s_pNetSettings     ) - 1, s_pNetSettings     },
+ { sizeof ( s_pNetSettings1    ) - 1, s_pNetSettings1    },
+ { sizeof ( s_pSyncPar1        ) - 1, s_pSyncPar1        },
+ { sizeof ( s_pSyncPar2        ) - 1, s_pSyncPar2        },
+ { sizeof ( s_pSMBServer       ) - 1, s_pSMBServer       },
+ { sizeof ( s_pSMBClosing      ) - 1, s_pSMBClosing      },
+ { sizeof ( s_pUpdateLngFile   ) - 1, s_pUpdateLngFile   },
+ { sizeof ( s_pUpdatePalFile   ) - 1, s_pUpdatePalFile   },
+ { sizeof ( s_pUpdateSMS       ) - 1, s_pUpdateSMS       },
+ { sizeof ( s_pUpdateSMB       ) - 1, s_pUpdateSMB       },
+ { sizeof ( s_pAddBackImage    ) - 1, s_pAddBackImage    },
+ { sizeof ( s_pProcessing      ) - 1, s_pProcessing      },
+ { sizeof ( s_pCreatingBackup  ) - 1, s_pCreatingBackup  },
+ { sizeof ( s_pPlayAll         ) - 1, s_pPlayAll         },
+ { sizeof ( s_pAudio           ) - 1, s_pAudio           },
+ { sizeof ( s_pVideo           ) - 1, s_pVideo           },
+ { sizeof ( s_pMP3Par          ) - 1, s_pMP3Par          },
+ { sizeof ( s_pSelectFile      ) - 1, s_pSelectFile      },
+ { sizeof ( s_pCenterRight     ) - 1, s_pCenterRight     },
+ { sizeof ( s_pUserXH          ) - 1, s_pUserXH          },
+ { sizeof ( s_pSubMBCS         ) - 1, s_pSubMBCS         },
+ { sizeof ( s_pLoadingFont     ) - 1, s_pLoadingFont     },
+ { sizeof ( s_pLoadingODML     ) - 1, s_pLoadingODML     },
+ { sizeof ( s_pFileSize        ) - 1, s_pFileSize        },
+ { sizeof ( s_pGB              ) - 1, s_pGB              },
+ { sizeof ( s_pMB              ) - 1, s_pMB              },
+ { sizeof ( s_pFmt0            ) - 1, s_pFmt0            },
+ { sizeof ( s_pFmt1            ) - 1, s_pFmt1            },
+ { sizeof ( s_pKbS             ) - 1, s_pKbS             },
+ { sizeof ( s_pHz              ) - 1, s_pHz              },
+ { sizeof ( s_pCh              ) - 1, s_pCh              },
+ { sizeof ( s_pAvailMem        ) - 1, s_pAvailMem        },
+ { sizeof ( s_pResume          ) - 1, s_pResume          },
+ { sizeof ( s_pImageOffset     ) - 1, s_pImageOffset     },
+ { sizeof ( s_pResolution2Big  ) - 1, s_pResolution2Big  },
+ { sizeof ( s_pSyncPar3        ) - 1, s_pSyncPar3        },
+ { sizeof ( s_pImages          ) - 1, s_pImages          },
+ { sizeof ( s_pUCImage         ) - 1, s_pUCImage         },
+ { sizeof ( s_pResetButtonAct  ) - 1, s_pResetButtonAct  },
+ { sizeof ( s_pPowerOff        ) - 1, s_pPowerOff        },
+ { sizeof ( s_pExit            ) - 1, s_pExit            },
+ { sizeof ( s_pPulldown22      ) - 1, s_pPulldown22      },
+ { sizeof ( s_pDTV576P         ) - 1, s_pDTV576P         }
 };
 
-static SMString s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );
-       SMString g_SMString   [ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );
+static unsigned char s_XLTLatin1[ 256 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = {
+ 0xC7, 0xFC, 0xE9, 0xE2, 0xE4, 0xE0, 0xE5, 0xE7, 0xEA, 0xEB, 0xE8, 0xEF, 0xEE, 0xEC, 0xC4, 0xC5, 
+ 0xC9, 0xE6, 0xC6, 0xF4, 0xF6, 0xF2, 0xFB, 0xF9, 0xFF, 0xD6, 0xDC, 0xF8, 0xA3, 0xD8, 0xD7, 0x83, 
+ 0xE1, 0xED, 0xF3, 0xFA, 0xF1, 0xD1, 0xAA, 0xBA, 0xBF, 0xAE, 0xAC, 0xBD, 0xBC, 0xA1, 0xAB, 0xBB, 
+ 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xC1, 0xC2, 0xC0, 0xA9, 0xA6, 0xA6, 0x2B, 0x2B, 0xA2, 0xA5, 0x2B, 
+ 0x2B, 0x2D, 0x2D, 0x2B, 0x2D, 0x2B, 0xE3, 0xC3, 0x2B, 0x2B, 0x2D, 0x2D, 0xA6, 0x2D, 0x2B, 0xA4, 
+ 0xF0, 0xD0, 0xCA, 0xCB, 0xC8, 0x69, 0xCD, 0xCE, 0xCF, 0x2B, 0x2B, 0xA6, 0x5F, 0xA6, 0xCC, 0xAF, 
+ 0xD3, 0xDF, 0xD4, 0xD2, 0xF5, 0xD5, 0xB5, 0xFE, 0xDE, 0xDA, 0xDB, 0xD9, 0xFD, 0xDD, 0xAF, 0xB4, 
+ 0xAD, 0xB1, 0x3D, 0xBE, 0xB6, 0xA7, 0xF7, 0xB8, 0xB0, 0xA8, 0xB7, 0xB9, 0xB3, 0xB2, 0xA6, 0xA0, 
+ 0x3F, 0x3F, 0x27, 0x9F, 0x22, 0x2E, 0xC5, 0xCE, 0x5E, 0x25, 0x53, 0x3C, 0x4F, 0x3F, 0x5A, 0x3F, 
+ 0x3F, 0x27, 0x27, 0x22, 0x22, 0x3F, 0x2D, 0x2D, 0x7E, 0x54, 0x73, 0x3E, 0x6F, 0x3F, 0x7A, 0x59, 
+ 0xFF, 0xAD, 0xBD, 0x9C, 0xCF, 0xBE, 0xDD, 0xF5, 0xF9, 0xB8, 0xA6, 0xAE, 0xAA, 0xF0, 0xA9, 0xEE, 
+ 0xF8, 0xF1, 0xFD, 0xFC, 0xEF, 0xE6, 0xF4, 0xFA, 0xF7, 0xFB, 0xA7, 0xAF, 0xAC, 0xAB, 0xF3, 0xA8, 
+ 0xB7, 0xB5, 0xB6, 0xC7, 0x8E, 0x8F, 0x92, 0x80, 0xD4, 0x90, 0xD2, 0xD3, 0xDE, 0xD6, 0xD7, 0xD8, 
+ 0xD1, 0xA5, 0xE3, 0xE0, 0xE2, 0xE5, 0x99, 0x9E, 0x9D, 0xEB, 0xE9, 0xEA, 0x9A, 0xED, 0xE8, 0xE1, 
+ 0x85, 0xA0, 0x83, 0xC6, 0x84, 0x86, 0x91, 0x87, 0x8A, 0x82, 0x88, 0x89, 0x8D, 0xA1, 0x8C, 0x8B, 
+ 0xD0, 0xA4, 0x95, 0xA2, 0x93, 0xE4, 0x94, 0xF6, 0x9B, 0x97, 0xA3, 0x96, 0x81, 0xEC, 0xE7, 0x98,
+};
+
+static unsigned char s_XLTLatin2[ 256 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = {
+ 0xC7, 0xFC, 0xE9, 0xE2, 0xE4, 0xF9, 0xE6, 0xE7, 0xB3, 0xEB, 0xD5, 0xF5, 0xEE, 0x8F, 0xC4, 0xC6, 
+ 0xC9, 0xC5, 0xE5, 0xF4, 0xF6, 0xBC, 0xBE, 0x8C, 0x9C, 0xD6, 0xDC, 0x8D, 0x9D, 0xA3, 0xD7, 0xE8, 
+ 0xE1, 0xED, 0xF3, 0xFA, 0xA5, 0xB9, 0x8E, 0x9E, 0xCA, 0xEA, 0xAC, 0x9F, 0xC8, 0xBA, 0xAB, 0xBB, 
+ 0x2D, 0x2D, 0x2D, 0x2D, 0x2B, 0xC1, 0xC2, 0xCC, 0xAA, 0xA6, 0xA6, 0xAC, 0x2D, 0xAF, 0xBF, 0xAC, 
+ 0x4C, 0x2B, 0x54, 0x2B, 0xA6, 0x2B, 0xC3, 0xE3, 0x4C, 0x2D, 0xA6, 0x54, 0xA6, 0x3D, 0x2B, 0xA4, 
+ 0xF0, 0xD0, 0xCF, 0xCB, 0xEF, 0xD2, 0xCD, 0xCE, 0xEC, 0x2D, 0x2D, 0x2D, 0x2D, 0xDE, 0xD9, 0x2D, 
+ 0xD3, 0xDF, 0xD4, 0xD1, 0xF1, 0xF2, 0x8A, 0x9A, 0xC0, 0xDA, 0xE0, 0xDB, 0xFD, 0xDD, 0xFE, 0xB4, 
+ 0xAD, 0xBD, 0xB2, 0xA1, 0xA2, 0xA7, 0xF7, 0xB8, 0xB0, 0xA8, 0xFF, 0xFB, 0xD8, 0xF8, 0xA6, 0xA0, 
+ 0x3F, 0x3F, 0x27, 0x3F, 0x22, 0x3F, 0xC5, 0xC5, 0x3F, 0x25, 0xE6, 0x3C, 0x97, 0x9B, 0xA6, 0x8D, 
+ 0x3F, 0x27, 0x27, 0x22, 0x22, 0x3F, 0x2D, 0x2D, 0x3F, 0x74, 0xE7, 0x3E, 0x98, 0x9C, 0xA7, 0xAB, 
+ 0xFF, 0xF3, 0xF4, 0x9D, 0xCF, 0xA4, 0x7C, 0xF5, 0xF9, 0x63, 0xB8, 0xAE, 0xAA, 0xF0, 0x52, 0xBD, 
+ 0xF8, 0x2B, 0xF2, 0x88, 0xEF, 0x75, 0x3F, 0x3F, 0xF7, 0xA5, 0xAD, 0xAF, 0x95, 0xF1, 0x96, 0xBE, 
+ 0xE8, 0xB5, 0xB6, 0xC6, 0x8E, 0x91, 0x8F, 0x80, 0xAC, 0x90, 0xA8, 0xD3, 0xB7, 0xD6, 0xD7, 0xD2, 
+ 0xD1, 0xE3, 0xD5, 0xE0, 0xE2, 0x8A, 0x99, 0x9E, 0xFC, 0xDE, 0xE9, 0xEB, 0x9A, 0xED, 0xDD, 0xE1, 
+ 0xEA, 0xA0, 0x83, 0xC7, 0x84, 0x92, 0x86, 0x87, 0x9F, 0x82, 0xA9, 0x89, 0xD8, 0xA1, 0x8C, 0xD4, 
+ 0xD0, 0xE4, 0xE5, 0xA2, 0x93, 0x8B, 0x94, 0xF6, 0xFD, 0x85, 0xA3, 0xFB, 0x81, 0xEC, 0xEE, 0xFA
+};
+
+static unsigned char s_XLTCyrillic[ 256 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = {
+ 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 
+ 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0xDF, 
+ 0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF, 
+ 0x2D, 0x2D, 0x2D, 0xA6, 0x2B, 0xA6, 0xA6, 0xAC, 0xAC, 0xA6, 0xA6, 0xAC, 0x2D, 0x2D, 0x2D, 0xAC, 
+ 0x4C, 0x2B, 0x54, 0x2B, 0x2D, 0x2B, 0xA6, 0xA6, 0x4C, 0xE3, 0xA6, 0x54, 0xA6, 0x3D, 0x2B, 0xA6, 
+ 0xA6, 0x54, 0x54, 0x4C, 0x4C, 0x2D, 0xE3, 0x2B, 0x2B, 0x2D, 0x2D, 0x2D, 0x2D, 0xA6, 0xA6, 0x2D, 
+ 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF, 
+ 0xA8, 0xB8, 0xAA, 0xBA, 0xAF, 0xBF, 0xA1, 0xA2, 0xB0, 0x95, 0xB7, 0x76, 0xB9, 0xA4, 0xA6, 0xA0, 
+ 0x3F, 0x3F, 0x27, 0x3F, 0x22, 0x3A, 0xC5, 0xD8, 0x3F, 0x25, 0x3F, 0x3C, 0x3F, 0x3F, 0x3F, 0x3F, 
+ 0x3F, 0x27, 0x27, 0x22, 0x22, 0x07, 0x2D, 0x2D, 0x3F, 0x54, 0x3F, 0x3E, 0x3F, 0x3F, 0x3F, 0x3F, 
+ 0xFF, 0xF6, 0xF7, 0x3F, 0xFD, 0x3F, 0xB3, 0x15, 0xF0, 0x63, 0xF2, 0x3C, 0xBF, 0x2D, 0x52, 0xF4, 
+ 0xF8, 0x2B, 0x3F, 0x3F, 0x3F, 0xE7, 0x14, 0xFA, 0xF1, 0xFC, 0xF3, 0x3E, 0x3F, 0x3F, 0x3F, 0xF5, 
+ 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 
+ 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F, 
+ 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 
+ 0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF
+};
+
+static unsigned char s_XLTGreek[ 256 ]  __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = {
+ 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 
+ 0xD1, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 
+ 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF, 0xF0, 0xF1, 0xF3, 0xF2, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 
+ 0x2D, 0x2D, 0x2D, 0xA6, 0x2B, 0x3F, 0x3F, 0x3F, 0x3F, 0xA6, 0xA6, 0xAC, 0x2D, 0x3F, 0x3F, 0xAC, 
+ 0x4C, 0x2B, 0x54, 0x2B, 0x2D, 0x2B, 0x3F, 0x3F, 0x4C, 0x2D, 0xA6, 0x54, 0xA6, 0x3D, 0x2B, 0x3F, 
+ 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x2D, 0x2D, 0x2D, 0x2D, 0x3F, 0x3F, 0x2D, 
+ 0xF9, 0xDC, 0xDD, 0xDE, 0xFA, 0xDF, 0xFC, 0xFD, 0xFB, 0xFE, 0xA2, 0xB8, 0xB9, 0xBA, 0xBC, 0xBE, 
+ 0xBF, 0xB1, 0x3F, 0x3F, 0xDA, 0xDB, 0x3F, 0x3F, 0xB0, 0x3F, 0xB7, 0x3F, 0x3F, 0xB2, 0xA6, 0xA0, 
+ 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 
+ 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 
+ 0xFF, 0x3F, 0xEA, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 
+ 0xF8, 0xF1, 0xFD, 0x3F, 0x3F, 0x3F, 0x3F, 0xFA, 0xEB, 0xEC, 0xED, 0x3F, 0xEE, 0x3F, 0xEF, 0xF0, 
+ 0x3F, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 
+ 0x8F, 0x90, 0x3F, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0xF4, 0xF5, 0xE1, 0xE2, 0xE3, 0xE5, 
+ 0x3F, 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 
+ 0xA7, 0xA8, 0xAA, 0xA9, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xE0, 0xE4, 0xE8, 0xE6, 0xE7, 0xE9, 0x3F
+};
+
+unsigned char* g_XLT[ 4 ] __attribute__(   (  section( ".data" )  )   ) = {
+ s_XLTLatin2, s_XLTCyrillic, s_XLTLatin1, s_XLTGreek
+};
+
+static unsigned char* s_pUDFBuf;
+static SMString       s_SMStringUDF[ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );
+       SMString       g_SMString   [ sizeof ( s_SMStringDef ) / sizeof ( s_SMStringDef[ 0 ] ) ] __attribute__(   (  section( ".bss" )  )   );
 
 void SMS_LocaleInit ( void ) {
 
- int lFD = MC_OpenS ( 0, 0, s_SMSLng, O_RDONLY );
+ int lFD = MC_OpenS ( g_MCSlot, 0, g_SMSLng, O_RDONLY );
+
+ if ( s_pUDFBuf ) {
+  free ( s_pUDFBuf );
+  s_pUDFBuf = NULL;
+ }  /* end if */
 
  if ( lFD >= 0 ) {
 
@@ -466,7 +719,8 @@ void SMS_LocaleInit ( void ) {
    unsigned int   lIdx;
    unsigned char* lpEnd;
    unsigned char* lpPtr;
-   unsigned char* lpBuff = lpPtr = ( unsigned char* )malloc ( lSize + 1 );
+   unsigned char* lpAlloc;
+   unsigned char* lpBuff = lpPtr = lpAlloc = ( unsigned char* )malloc ( lSize + 1 );
 
    lpEnd = lpBuff + lSize;
    lIdx  = 0;
@@ -494,11 +748,24 @@ void SMS_LocaleInit ( void ) {
 
    }  /* end while */
 
-   if (  lIdx != sizeof ( s_SMStringUDF ) / sizeof ( s_SMStringUDF[ 0 ] )  )
+   if (  lIdx != sizeof ( s_SMStringUDF ) / sizeof ( s_SMStringUDF[ 0 ] )  ) {
 
+    free ( lpAlloc );
     g_Config.m_BrowserFlags &= ~SMS_BF_UDFL;
 
-   else g_Config.m_BrowserFlags |= SMS_BF_UDFL;
+   } else {
+
+    char* lpUDF = s_SMStringUDF[ 167 ].m_pStr;
+
+    s_pUDFBuf = lpAlloc;
+    g_Config.m_BrowserFlags |= SMS_BF_UDFL;
+
+    if ( lpUDF[ 0 ] == 'm' && lpUDF[ 1 ] == 'c' &&
+         lpUDF[ 3 ] == ':' && lpUDF[ 4 ] == '/' &&
+         lpUDF[ 5 ] == 'B' && !strcmp ( &lpUDF[ 7 ], &s_SMStringDef[ 167 ].m_pStr[ 7 ] )
+    ) lpUDF[ 6 ] = s_SMStringDef[ 167 ].m_pStr[ 6 ];
+
+   }  /* end else */
 
   }  /* end if */
 

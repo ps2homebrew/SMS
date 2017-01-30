@@ -3,7 +3,8 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2007 lior e
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -221,6 +222,74 @@ typedef struct SMString {
 # define STR_LOGIN_ERROR          SMS_STRING( 198 )
 # define STR_SUBTITLES            SMS_STRING( 199 )
 # define STR_DISABLE_CDVD         SMS_STRING( 200 )
+# define STR_DISPLAY_WIDTH        SMS_STRING( 201 )
+# define STR_READING_FMT          SMS_STRING( 202 )
+# define STR_OUT_OF_MEMORY        SMS_STRING( 203 )
+# define STR_CHECKING_FREE_SPACE  SMS_STRING( 204 )
+# define STR_NOT_ENOUGH_SPACE     SMS_STRING( 205 )
+# define STR_CREATING_DIR_TREE    SMS_STRING( 206 )
+# define STR_DELETE               SMS_STRING( 207 )
+# define STR_DELETING             SMS_STRING( 208 )
+# define STR_CDVD_SPEED           SMS_STRING( 209 )
+# define STR_MEDIUM               SMS_STRING( 210 )
+# define STR_HIGH                 SMS_STRING( 211 )
+# define STR_LOW                  SMS_STRING( 212 )
+# define STR_DIRECTIONAL_BUTTONS  SMS_STRING( 213 )
+# define STR_DTV_1080I            SMS_STRING( 214 )
+# define STR_DTV_720P             SMS_STRING( 215 )
+# define STR_OPERATING_MODE       SMS_STRING( 216 )
+# define STR_AUTONEGOTIATION      SMS_STRING( 217 )
+# define STR_AUTOMATIC            SMS_STRING( 218 )
+# define STR_MANUAL               SMS_STRING( 219 )
+# define STR_DUPLEX_MODE          SMS_STRING( 220 )
+# define STR_FULL                 SMS_STRING( 221 )
+# define STR_HALF                 SMS_STRING( 222 )
+# define STR_STANDARD             SMS_STRING( 223 )
+# define STR_10_BASE_T            SMS_STRING( 224 )
+# define STR_100_BASE_TX          SMS_STRING( 225 )
+# define STR_NETWORK_SETTINGS     SMS_STRING( 226 )
+# define STR_NETWORK_SETTINGS1    SMS_STRING( 227 )
+# define STR_SYNC_PAR_1           SMS_STRING( 228 )
+# define STR_SYNC_PAR_2           SMS_STRING( 229 )
+# define STR_SMB_SERVER           SMS_STRING( 230 )
+# define STR_SMB_CLOSING          SMS_STRING( 231 )
+# define STR_UPDATE_LANGUAGE_FILE SMS_STRING( 232 )
+# define STR_UPDATE_PALETTE_FILE  SMS_STRING( 233 )
+# define STR_UPDATE_SMS           SMS_STRING( 234 )
+# define STR_UPDATE_SMB_FILE      SMS_STRING( 235 )
+# define STR_ADD_BACKGROUND_IMAGE SMS_STRING( 236 )
+# define STR_PROCESSING           SMS_STRING( 237 )
+# define STR_CREATING_BACKUP      SMS_STRING( 238 )
+# define STR_PLAY_ALL             SMS_STRING( 239 )
+# define STR_AUDIO                SMS_STRING( 240 )
+# define STR_VIDEO                SMS_STRING( 241 )
+# define STR_MP3_PARAMETER        SMS_STRING( 242 )
+# define STR_SELECT_FILE          SMS_STRING( 243 )
+# define STR_CENTER_RIGHT         SMS_STRING( 244 )
+# define STR_USE_XH               SMS_STRING( 245 )
+# define STR_SUBTITLE_MBCS        SMS_STRING( 246 )
+# define STR_LOADING_FONT         SMS_STRING( 247 )
+# define STR_LOADING_ODML         SMS_STRING( 248 )
+# define STR_FILE_SIZE            SMS_STRING( 249 )
+# define STR_GB                   SMS_STRING( 250 )
+# define STR_MB                   SMS_STRING( 251 )
+# define STR_FMT_0                SMS_STRING( 252 )
+# define STR_FMT_1                SMS_STRING( 253 )
+# define STR_KbS                  SMS_STRING( 254 )
+# define STR_Hz                   SMS_STRING( 255 )
+# define STR_Ch                   SMS_STRING( 256 )
+# define STR_AVAILABLE_MEMORY     SMS_STRING( 257 )
+# define STR_RESUME               SMS_STRING( 258 )
+# define STR_IMAGE_OFFSET         SMS_STRING( 259 )
+# define STR_RESOLUTION_TOO_BIG   SMS_STRING( 260 )
+# define STR_SYNC_PAR_3           SMS_STRING( 261 )
+# define STR_IMAGES               SMS_STRING( 262 )
+# define STR_UNSUPPORTED_IMAGE    SMS_STRING( 263 )
+# define STR_RESET_BUTTON_ACTION  SMS_STRING( 264 )
+# define STR_POWER_OFF            SMS_STRING( 265 )
+# define STR_EXIT                 SMS_STRING( 266 )
+# define STR_PULLDOWN22           SMS_STRING( 267 )
+# define STR_DTV_576P             SMS_STRING( 268 )
 
 extern SMString g_SMString  [] __attribute__(   (  section( ".bss" )  )   );
 extern char     g_EmptyStr  [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
@@ -240,6 +309,7 @@ extern char     g_pIPConf   [] __attribute__(   (  aligned( 1 ), section( ".data
 extern char     g_DotStr    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pDefStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pAVIStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pASFStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pExtM3UStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pExtInfStr[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pM3UStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
@@ -250,6 +320,39 @@ extern char     g_pSubStr   [] __attribute__(   (  aligned( 1 ), section( ".data
 extern char     g_pSrtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pTxtStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pBXDATASYS[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pOGGStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pSpaceStr [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pVerStr   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pSMSSkn   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pSMI      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pMPEG12Str[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pExtSMI   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pExtMBF   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pMC0SMS   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pMPEG12   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pFmt0     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pFmt1     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pFmt2     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pQPel     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pGMC      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pWMA      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pAAC      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pMPEGPS   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pMOV      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pFmt3     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pFLAC     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pAC3      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pDEV9X    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pHDD      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pPFS      [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pQuote    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pPeriod   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pJPEG     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+
+extern unsigned char g_pExec0[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern unsigned char g_pExec1[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+
+extern unsigned char* g_XLT[ 4 ] __attribute__(   (  section( ".data" )  )   );
 
 # ifdef __cplusplus
 extern "C" {

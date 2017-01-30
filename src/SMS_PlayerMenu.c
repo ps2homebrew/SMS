@@ -19,8 +19,10 @@
 #include "SMS_GUIcons.h"
 #include "SMS_DMA.h"
 #include "SMS_RC.h"
+#include "SMS_SubtitleContext.h"
 
 #include <kernel.h>
+#include <stdio.h>
 #include <string.h>
 
 extern SMS_Player s_Player;
@@ -43,6 +45,7 @@ static void _poff_handler    ( GUIMenu*, int );
 static void _dsub_handler    ( GUIMenu*, int );
 static void _rlvl_handler    ( GUIMenu*, int );
 static void _subs_handler    ( GUIMenu*, int );
+static void _ioff_handler    ( GUIMenu*, int );
 extern void _subclr_handler  ( GUIMenu*, int );
 extern void _subbclr_handler ( GUIMenu*, int );
 extern void _subiclr_handler ( GUIMenu*, int );
@@ -57,12 +60,13 @@ static GUIMenuItem s_OptItems[] __attribute__(   (  section( ".data" )  )   ) = 
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_ITL_COLOR,  0, 0, _subiclr_handler, 0, 0 },
  { MENU_ITEM_TYPE_PALIDX, &STR_SUBTITLE_UND_COLOR,  0, 0, _subu_handler,    0, 0 },
  { MENU_ITEM_TYPE_TEXT,   &STR_SUBTITLES,           0, 0, _subs_handler,    0, 0 },
+ { MENU_ITEM_TYPE_TEXT,   &STR_IMAGE_OFFSET,        0, 0, _ioff_handler,    0, 0 }
 };
 
-static GUIMenuItem s_PlayerMenu[ 10 ] __attribute__(   (  section( ".data" )  )   ) = {
- { MENU_ITEM_TYPE_TEXT,   &STR_LANGUAGE,            0, 0, _lang_handler,    0, 0 },
- { MENU_ITEM_TYPE_TEXT,   &STR_DISPLAY,             0, 0, _disp_handler,    0, 0 },
- { MENU_ITEM_TYPE_TEXT,   &STR_AUTO_POWER_OFF,      0, 0, _poff_handler,    0, 0 }
+static GUIMenuItem s_PlayerMenu[ 11 ] __attribute__(   (  section( ".data" )  )   ) = {
+ { MENU_ITEM_TYPE_TEXT, &STR_LANGUAGE,       0, 0, _lang_handler, 0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_DISPLAY,        0, 0, _disp_handler, 0, 0 },
+ { MENU_ITEM_TYPE_TEXT, &STR_AUTO_POWER_OFF, 0, 0, _poff_handler, 0, 0 }
 };
 
 static void GUIMenuPlayer_Redraw ( GUIMenu* apMenu ) {
@@ -72,8 +76,12 @@ static void GUIMenuPlayer_Redraw ( GUIMenu* apMenu ) {
  GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
  s_pMenu -> Render (  ( GUIObject* )s_pMenu, 1  );
 
- GS_VSync ();
+ if (  s_Player.m_pSubCtx && ( s_Player.m_Flags & SMS_FLAGS_SUBS )  )
+  s_Player.m_pSubCtx -> Display ( s_Player.m_VideoTime - s_Player.m_SVDelta );
+
+ GS_VSync2 ( g_IPUCtx.m_VSync );
  g_IPUCtx.Repaint ();
+ g_IPUCtx.Flush   ();
  GSContext_Flush ( 1, GSFlushMethod_KeepLists );
 
 }  /* end GUIMenuPlayer_Redraw */
@@ -94,7 +102,7 @@ int GUIMenuPlayer_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
 static void _update_lang ( void ) {
 
- char* lpLang = PlayerControl_GetLang () -> m_pString;
+ char* lpLang = _STR(  PlayerControl_GetLang ()  );
 
  s_Lang.m_pStr = lpLang;
  s_Lang.m_Len  = strlen ( lpLang );
@@ -103,7 +111,7 @@ static void _update_lang ( void ) {
 
 static void _update_sublang ( void ) {
 
- char* lpSubLang = PlayerControl_GetSubLang () -> m_pString;
+ char* lpSubLang = _STR(  PlayerControl_GetSubLang ()  );
 
  s_SubLang.m_pStr = lpSubLang;
  s_SubLang.m_Len  = strlen ( lpSubLang );
@@ -116,7 +124,10 @@ static void _lang_handler ( GUIMenu* apMenu, int aDir ) {
 
  _update_lang ();
 
- s_Player.m_AudioIdx = ( unsigned int )lpNode -> m_Param;
+ s_Player.m_PrevAudioIdx = s_Player.m_AudioIdx;
+ s_Player.m_AudioIdx     = ( unsigned int )lpNode -> m_Param;
+
+ PlayerControl_UpdateInfo ();
 
  apMenu -> Redraw ( apMenu );
 
@@ -152,14 +163,14 @@ static void _dsub_handler ( GUIMenu* apMenu, int aDir ) {
  SMS_ListNode* lpNode = apMenu -> m_pState -> m_pTail;
  GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpNode -> m_Param;
 
- if ( s_Player.m_Flags & SMS_PF_SUBS ) {
+ if ( s_Player.m_Flags & SMS_FLAGS_SUBS ) {
 
-  s_Player.m_Flags                 &= ~SMS_PF_SUBS;
+  s_Player.m_Flags                 &= ~SMS_FLAGS_SUBS;
   lpState -> m_pCurr -> m_IconRight = GUICON_OFF;
 
  } else {
 
-  s_Player.m_Flags                 |= SMS_PF_SUBS;
+  s_Player.m_Flags                 |= SMS_FLAGS_SUBS;
   lpState -> m_pCurr -> m_IconRight = GUICON_ON;
 
  }  /* end else */
@@ -172,6 +183,10 @@ static char     s_RLVLBuffer[ 2 ] __attribute__(   (  section( ".bss"  )  )   );
 static SMString s_StrRLVL         __attribute__(   (  section( ".data" )  )   ) = {
  1, s_RLVLBuffer
 };
+static char     s_OffsBuffer[ 5 ] __attribute__(   (  section( ".bss"  )  )   );
+static SMString s_StrOffs         __attribute__(   (  section( ".data" )  )   ) = {
+ 1, s_OffsBuffer
+};
 
 static void _rlvl_handler ( GUIMenu* apMenu, int aDir ) {
 
@@ -183,6 +198,28 @@ static void _rlvl_handler ( GUIMenu* apMenu, int aDir ) {
  apMenu -> Redraw ( apMenu );
 
 }  /* end _rlvl_handler */
+
+static void _update_offset ( void ) {
+
+ sprintf ( s_OffsBuffer, "%d", g_Config.m_ImgOffs );
+ s_StrOffs.m_Len = strlen ( s_OffsBuffer );
+
+}  /* end _update_offset */
+
+static void _ioff_handler ( GUIMenu* apMenu, int aDir ) {
+
+ g_Config.m_ImgOffs += aDir;
+
+ if ( g_Config.m_ImgOffs < -128 ) g_Config.m_ImgOffs = -128;
+ if ( g_Config.m_ImgOffs >  128 ) g_Config.m_ImgOffs =  128;
+
+ _update_offset ();
+
+ s_Player.m_pIPUCtx -> ChangeMode ( s_Player.m_PanScan );
+
+ apMenu -> Redraw ( apMenu );
+
+}  /* end _ioff_handler */
 
 static void _subs_handler ( GUIMenu* apMenu, int aDir ) {
 
@@ -260,8 +297,12 @@ void SMS_PlayerMenu ( void ) {
 
  }  /* end if */
 
+ s_PlayerMenu[ ++lIdx ] = s_OptItems[ 7 ];
+ s_PlayerMenu[   lIdx ].m_IconRight = ( unsigned int )&s_StrOffs;
+ _update_offset ();
+ 
  s_PlayerMenu[ lIdx + 1 ] = s_OptItems[ 1 ];
- s_PlayerMenu[ lIdx + 1 ].m_IconRight = s_Player.m_Flags & SMS_PF_SUBS ? GUICON_ON : GUICON_OFF;
+ s_PlayerMenu[ lIdx + 1 ].m_IconRight = s_Player.m_Flags & SMS_FLAGS_SUBS ? GUICON_ON : GUICON_OFF;
  s_PlayerMenu[ lIdx + 2 ] = s_OptItems[ 2 ];
  s_PlayerMenu[ lIdx + 2 ].m_IconRight = ( unsigned int )&g_Config.m_PlayerSCNIdx;
  s_PlayerMenu[ lIdx + 3 ] = s_OptItems[ 3 ];
@@ -277,14 +318,15 @@ void SMS_PlayerMenu ( void ) {
 
  s_pMenu = lpMenu;
 
- g_GSCtx.m_VRAMPtr = g_GSCtx.m_VRAMPtr2 << 5;
+ g_GSCtx.m_VRAMPtr += (  ( 1 << g_IPUCtx.m_TW ) * g_IPUCtx.m_Height  ) >> (  7 - ( g_IPUCtx.m_TexFmt != GSPixelFormat_PSMCT16 )  );
  GUI_LoadIcons ();
  GUI_SetColors ();
  GUI_AddObject (  STR_PLAYER_MENU.m_pStr, ( GUIObject* )lpMenu  );
  lpMenu -> Redraw ( lpMenu );
  GUI_Run ();
  GUI_DeleteObject ( STR_PLAYER_MENU.m_pStr );
- s_Player.SetColors ();
+ GUI_UnloadIcons ();
+ s_Player.SetColors ( &s_Player );
  g_GSCtx.m_TextColor = 0;
 
  lDMA[ 2 ] = GS_SET_TEST_1( 0, 1, 0x80, 0, 0, 0, 1, 1 );
@@ -298,6 +340,9 @@ void SMS_PlayerMenu ( void ) {
  GS_SetGC ( &g_GSCtx.m_DrawCtx[ 1 ] );
 
  g_GSCtx.m_VRAMPtr = lVRAMPtr;
+ g_IPUCtx.SetTEX ();
+
+ DMA_Wait ( DMAC_GIF );
 
  while (  GUI_ReadButtons ()  );
 

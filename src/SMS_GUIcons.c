@@ -8,14 +8,18 @@
 # Licenced under GNU LESSER GENERAL PUBLIC LICENSE
 #  Version 2.1, February 1999
 #
-# Adopted for SMS in 2005/6 by Eugene Plotnikov <e-plotnikov@operamail.com>
+# Adopted for SMS in 2005/6/7 by Eugene Plotnikov <e-plotnikov@operamail.com>
 #
 */
+#include "SMS.h"
 #include "SMS_GUIcons.h"
 #include "SMS_IPU.h"
 #include "SMS_GS.h"
+#include "SMS_DMA.h"
+#include "SMS_VIF.h"
 
 #include <kernel.h>
+#include <malloc.h>
 
 unsigned char g_IconBall[ 316 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   ) = {
 	0x00, 0x00, 0x01, 0xb2, 0x00, 0x20, 0x00, 0x20, 0x00, 0x00, 0x01, 0x01, 0x1b, 0xf8, 0x18, 0x15, 
@@ -1275,126 +1279,220 @@ static unsigned char s_IconSMB[ 1221 ] __attribute__(   (  aligned( 16 )  )   ) 
 	0xd0, 0x00, 0x00, 0x01, 0xb7
 };
 
-typedef struct _GUIconLoc {
+static unsigned char s_IconPicture[ 617 ] __attribute__(   (  aligned( 16 )  )   ) = {
+	0x00, 0x00, 0x01, 0xb2, 0x00, 0x20, 0x00, 0x20, 0x00, 0x00, 0x01, 0x01, 0x1b, 0xf8, 0x08, 0x68, 
+	0x69, 0x44, 0xc2, 0x92, 0x59, 0x69, 0x41, 0x48, 0x46, 0xfd, 0x29, 0x4f, 0xd9, 0x08, 0xd8, 0xff, 
+	0xff, 0x56, 0xd7, 0xac, 0x00, 0xd4, 0x10, 0x31, 0x00, 0x4d, 0xd2, 0x58, 0x60, 0x03, 0x80, 0x1d, 
+	0x13, 0x40, 0x1e, 0xa5, 0x0a, 0xe1, 0xbb, 0xe2, 0x60, 0x14, 0x71, 0x45, 0x96, 0xb2, 0xc0, 0x45, 
+	0x96, 0x67, 0xbb, 0xc0, 0x81, 0x7e, 0x00, 0xc4, 0x0a, 0x80, 0x84, 0x04, 0x29, 0x00, 0x70, 0x05, 
+	0x32, 0x4b, 0x26, 0x00, 0xc0, 0x06, 0xc9, 0x02, 0xa1, 0x88, 0xfd, 0x83, 0x52, 0x4d, 0x42, 0x53, 
+	0x86, 0xe4, 0x7d, 0xfa, 0x0a, 0xdb, 0x2b, 0x84, 0x0d, 0x4a, 0xef, 0x5a, 0x4c, 0x00, 0x76, 0x4d, 
+	0x00, 0x74, 0x01, 0x41, 0x30, 0x06, 0xc9, 0x75, 0x96, 0x52, 0x70, 0x19, 0xc1, 0x85, 0x9c, 0x10, 
+	0x97, 0xcb, 0x6d, 0x86, 0xe7, 0xfb, 0x35, 0xe6, 0x80, 0x68, 0x00, 0xf1, 0x01, 0xa1, 0x88, 0x21, 
+	0x86, 0xaf, 0x25, 0xc6, 0x15, 0xbb, 0x3b, 0x1f, 0xf9, 0xa4, 0x6b, 0x64, 0x80, 0xc4, 0x31, 0x04, 
+	0xdc, 0x52, 0x7a, 0x76, 0xc0, 0x39, 0x4a, 0x36, 0x4a, 0x72, 0x94, 0xdb, 0xfd, 0x8f, 0x37, 0xdf, 
+	0x8a, 0x21, 0x02, 0x06, 0x40, 0x02, 0x90, 0x2b, 0xd2, 0x90, 0x03, 0x60, 0x0d, 0x09, 0x85, 0x21, 
+	0x3d, 0x1f, 0x17, 0xc9, 0xbb, 0xbe, 0x3d, 0x0e, 0xee, 0xf8, 0x45, 0xe5, 0x80, 0x11, 0x00, 0x14, 
+	0x81, 0x40, 0x05, 0xbc, 0xb2, 0x12, 0x4a, 0x00, 0xa8, 0x06, 0x24, 0xc4, 0x64, 0x96, 0x4c, 0x1a, 
+	0x35, 0x09, 0x47, 0x38, 0xb0, 0xc4, 0xb6, 0x1a, 0x81, 0xef, 0xb7, 0xc6, 0xdf, 0x50, 0x00, 0x58, 
+	0x18, 0x00, 0xfc, 0x01, 0x98, 0x0e, 0xc0, 0xaa, 0x4a, 0x02, 0xa8, 0x29, 0x0a, 0x49, 0x0f, 0x97, 
+	0x86, 0x95, 0xc6, 0xa9, 0x1b, 0x13, 0x32, 0xbf, 0x6c, 0xa6, 0x66, 0xd8, 0xfb, 0xcf, 0x80, 0x14, 
+	0x00, 0x3c, 0x00, 0xcc, 0x03, 0x40, 0x02, 0x52, 0x67, 0x26, 0xfc, 0x9c, 0x92, 0x10, 0x69, 0x60, 
+	0x64, 0xac, 0x30, 0xa4, 0x86, 0x0c, 0x18, 0x30, 0x61, 0x8d, 0xf6, 0xcc, 0x23, 0xcc, 0x86, 0x01, 
+	0x92, 0x40, 0xc8, 0x15, 0xff, 0x80, 0xe9, 0x04, 0xc4, 0x13, 0x3a, 0x43, 0x31, 0x58, 0xbc, 0x4d, 
+	0xc9, 0xdb, 0x76, 0x2f, 0xa7, 0xf4, 0x27, 0x7c, 0xe2, 0xce, 0x55, 0xd0, 0x00, 0x23, 0x02, 0x84, 
+	0xb2, 0x88, 0x48, 0x2c, 0x35, 0x20, 0x54, 0x96, 0x12, 0x84, 0xe2, 0xb2, 0x38, 0x67, 0xed, 0xbe, 
+	0xc8, 0xcf, 0x92, 0xbc, 0xa7, 0xe6, 0xc0, 0x00, 0x00, 0x01, 0x02, 0x1b, 0xf0, 0x80, 0x04, 0xe0, 
+	0x80, 0x6c, 0x01, 0xa8, 0x02, 0xf0, 0x02, 0xd4, 0x81, 0x52, 0x67, 0xc5, 0x00, 0xc0, 0x07, 0x64, 
+	0x20, 0xc4, 0x93, 0x49, 0xbc, 0x04, 0x85, 0x86, 0x62, 0x57, 0x46, 0x16, 0x94, 0x37, 0x36, 0xf5, 
+	0xa0, 0x81, 0xa4, 0x00, 0x60, 0x42, 0x00, 0x2a, 0x00, 0x7a, 0x05, 0x00, 0x60, 0x05, 0x09, 0xa5, 
+	0x93, 0x50, 0x1a, 0x03, 0x0c, 0x43, 0x48, 0xdc, 0xdf, 0x70, 0x32, 0x92, 0x94, 0xbe, 0x7b, 0x01, 
+	0xcb, 0xe1, 0xb7, 0xb0, 0x04, 0x0d, 0x20, 0x40, 0x32, 0x0d, 0x00, 0x2f, 0x00, 0xd4, 0x06, 0x00, 
+	0x21, 0x21, 0x01, 0x54, 0x13, 0x12, 0x18, 0x4c, 0x00, 0xa8, 0xbc, 0x5e, 0xff, 0x72, 0x89, 0x7c, 
+	0xbd, 0xf3, 0x1b, 0xba, 0x7d, 0xc2, 0x02, 0x00, 0x0d, 0x53, 0x8b, 0x26, 0x14, 0x94, 0xe2, 0x83, 
+	0x10, 0xee, 0x2c, 0xf3, 0xfd, 0xd0, 0x4d, 0x21, 0x6c, 0x80, 0xd2, 0xc2, 0x52, 0x9f, 0xb0, 0xcd, 
+	0x9d, 0x4b, 0xc6, 0x63, 0xef, 0xe9, 0xe0, 0x0e, 0x88, 0x60, 0x1a, 0x90, 0x80, 0xaa, 0x00, 0x0e, 
+	0x0b, 0x0d, 0x41, 0x34, 0xb0, 0x8d, 0x8a, 0x3d, 0x2e, 0x67, 0xcb, 0xdf, 0x09, 0xd7, 0xc8, 0x00, 
+	0x08, 0x00, 0x17, 0x00, 0xc4, 0x02, 0xe0, 0x29, 0xc0, 0x76, 0x01, 0x88, 0x69, 0x64, 0x30, 0x10, 
+	0x81, 0x5d, 0x86, 0xf2, 0xfb, 0x81, 0x82, 0x8f, 0xc1, 0x88, 0xc7, 0x65, 0xaf, 0xed, 0xa6, 0x00, 
+	0x30, 0x04, 0x02, 0xe0, 0x0c, 0x80, 0x13, 0x6c, 0x5b, 0x00, 0x5a, 0x05, 0x4d, 0x0d, 0x49, 0x80, 
+	0x2a, 0xd7, 0x9d, 0xa0, 0x02, 0xf0, 0x0c, 0x50, 0x4d, 0xc0, 0x60, 0x99, 0x94, 0x07, 0xcb, 0x65, 
+	0xa4, 0x56, 0x35, 0x88, 0xf6, 0xa0, 0x30, 0x01, 0x03, 0x16, 0x03, 0x72, 0xd1, 0xb7, 0x33, 0x29, 
+	0xc4, 0xa4, 0x41, 0x98, 0xc8, 0x00, 0x00, 0x01, 0xb7
+};
 
- unsigned int m_TX;
- unsigned int m_TY;
+static unsigned char* s_pBrowserIcons[ 9 ] __attribute__(   (  section( ".data" )  )   ) = {
+ s_IconFolder, s_IconAVI,   s_IconMP3,
+ s_IconM3U,    s_IconFile,  s_IconPart,
+ s_IconAVIS,   s_IconShare, s_IconPicture
+};
 
-} _GUIconLoc;
+static int s_SizeBrowserIcons[ 9 ] __attribute__(   (  section( ".data" )  )   ) = {
+ sizeof ( s_IconFolder ), sizeof ( s_IconAVI   ), sizeof ( s_IconMP3     ),
+ sizeof ( s_IconM3U    ), sizeof ( s_IconFile  ), sizeof ( s_IconPart    ),
+ sizeof ( s_IconAVIS   ), sizeof ( s_IconShare ), sizeof ( s_IconPicture )
+};
 
-static _GUIconLoc g_BrowserFileIcons  [ 16 ];
-static _GUIconLoc g_BrowserDeviceIcons[  8 ];
-static _GUIconLoc g_MiscIcons         [ 12 ];
+static unsigned char* s_pMiscIcons[ 12 ] __attribute__(   (  section( ".data" )  )   ) = {
+ s_IconError,   s_IconDisplay, s_IconHelp,   s_IconNetwork,
+ s_IconBrowser, s_IconPlayer,  s_IconOn,     s_IconOff,
+ s_IconSave,    s_IconExit,    s_IconFinish, g_IconBall
+};
+
+static int s_SizeMiscIcons[ 12 ] __attribute__(   (  section( ".data" )  )   ) = {
+ sizeof ( s_IconError   ), sizeof ( s_IconDisplay ), sizeof ( s_IconHelp   ), sizeof ( s_IconNetwork ),
+ sizeof ( s_IconBrowser ), sizeof ( s_IconPlayer  ), sizeof ( s_IconOn     ), sizeof ( s_IconOff     ),
+ sizeof ( s_IconSave    ), sizeof ( s_IconExit    ), sizeof ( s_IconFinish ), sizeof ( g_IconBall    )
+};
+
+static unsigned char* s_pBrowserDevIcons[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
+ s_IconUSB,  s_IconCDROM, s_IconHDD, s_IconCDDA,
+ s_IconHost, s_IconDVD,   s_IconSMB, s_IconDVD
+};
+
+static int s_SizeBrowserDevIcons[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
+ sizeof ( s_IconUSB  ), sizeof ( s_IconCDROM ), sizeof ( s_IconHDD ), sizeof ( s_IconCDDA ),
+ sizeof ( s_IconHost ), sizeof ( s_IconDVD   ), sizeof ( s_IconSMB ), sizeof ( s_IconDVD  )
+};
+
+static void*  s_BrowserFileIcons  [ 18 ];
+static void*  s_MiscIcons         [ 12 ];
+static void*  s_BrowserDeviceIcons[  8 ];
+static char*  s_pIconData;
 
 void GUI_LoadIcons ( void ) {
 
- int            i, j, lTX;
- static unsigned char* lpBrowserIcons[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
-  s_IconFolder, s_IconAVI,  s_IconMP3,
-  s_IconM3U,    s_IconFile, s_IconPart,
-  s_IconAVIS,   s_IconShare
- };
- static int lSizeBrowserIcons[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
-  sizeof ( s_IconFolder ), sizeof ( s_IconAVI   ), sizeof ( s_IconMP3  ),
-  sizeof ( s_IconM3U    ), sizeof ( s_IconFile  ), sizeof ( s_IconPart ),
-  sizeof ( s_IconAVIS   ), sizeof ( s_IconShare )
- };
- static unsigned char* lpMiscIcons[ 12 ] __attribute__(   (  section( ".data" )  )   ) = {
-  s_IconError,   s_IconDisplay, s_IconHelp,   s_IconNetwork,
-  s_IconBrowser, s_IconPlayer,  s_IconOn,     s_IconOff,
-  s_IconSave,    s_IconExit,    s_IconFinish, g_IconBall
- };
- static int lSizeMiscIcons[ 12 ] __attribute__(   (  section( ".data" )  )   ) = {
-  sizeof ( s_IconError   ), sizeof ( s_IconDisplay ), sizeof ( s_IconHelp   ), sizeof ( s_IconNetwork ),
-  sizeof ( s_IconBrowser ), sizeof ( s_IconPlayer  ), sizeof ( s_IconOn     ), sizeof ( s_IconOff     ),
-  sizeof ( s_IconSave    ), sizeof ( s_IconExit    ), sizeof ( s_IconFinish ), sizeof ( g_IconBall    )
- };
- static unsigned char* lpBrowserDevIcons[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
-  s_IconUSB,  s_IconCDROM, s_IconHDD, s_IconCDDA,
-  s_IconHost, s_IconDVD,   s_IconSMB, s_IconDVD
- };
- static int lSizeBrowserDevIcons[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
-  sizeof ( s_IconUSB  ), sizeof ( s_IconCDROM ), sizeof ( s_IconHDD ), sizeof ( s_IconCDDA ),
-  sizeof ( s_IconHost ), sizeof ( s_IconDVD   ), sizeof ( s_IconSMB ), sizeof ( s_IconDVD  )
- };
- IPULoadImage lLoadImage[ 2 ];
+ if ( !s_pIconData ) {
 
- g_GSCtx.m_VRAMTexPtr = g_GSCtx.m_VRAMPtr;
- g_GSCtx.m_TBW        = 15;
- g_GSCtx.m_TW         = 10;
- g_GSCtx.m_TH         =  6;
+  int   i, j;
+  char* lpPtr = s_pIconData = ( char* )SMS_SyncMalloc ( i = 18 * 4096 + 12 * 4096 + 9216 * 8 );
 
- IPU_InitLoadImage ( &lLoadImage[ 0 ], 48, 48 );
- IPU_InitLoadImage ( &lLoadImage[ 1 ], 32, 32 );
+  for ( i = 0, j = 0; i < 9; ++i, j += 2 ) {
 
- lTX = 0;
+   IPU_UnpackImage ( lpPtr, s_pBrowserIcons[ i ], s_SizeBrowserIcons[ i ], 32, 32, 0, 1, 16 );
+   s_BrowserFileIcons[ j + 0 ] = lpPtr;
+   lpPtr += 4096;
+   IPU_UnpackImage ( lpPtr, s_pBrowserIcons[ i ], s_SizeBrowserIcons[ i ], 32, 32, 1, 1, 16 );
+   s_BrowserFileIcons[ j + 1 ] = lpPtr;
+   lpPtr += 4096;
 
- for ( i = 0, j = 0; i < 8; ++i, j += 2, lTX += 32 ) {
+  }  /* end for */
 
-  IPU_LoadImage (
-   &lLoadImage[ 1 ], lpBrowserIcons[ i ], lSizeBrowserIcons[ i ], lTX, 0, 0, 1, 16
-  );
+  for ( i = 0; i < 12; ++i ) {
 
-  g_BrowserFileIcons[ j + 0 ].m_TX = lTX;
-  g_BrowserFileIcons[ j + 1 ].m_TX = lTX;
-  g_BrowserFileIcons[ j + 0 ].m_TY =   0;
-  g_BrowserFileIcons[ j + 1 ].m_TY =  32;
+   IPU_UnpackImage ( lpPtr, s_pMiscIcons[ i ], s_SizeMiscIcons[ i ], 32, 32, 0, 1, 16 );
+   s_MiscIcons[ i ] = lpPtr;
+   lpPtr += 4096;
 
-  IPU_LoadImage (
-   &lLoadImage[ 1 ], lpBrowserIcons[ i ], lSizeBrowserIcons[ i ], lTX, 32, 1, 1, 16
-  );
+  }  /* end for */
 
- }  /* end for */
+  for ( i = 0; i < 8; ++i ) {
 
- for ( i = 0; i < 12; i += 2, lTX += 32 ) {
+   IPU_UnpackImage ( lpPtr, s_pBrowserDevIcons[ i ], s_SizeBrowserDevIcons[ i ], 48, 48, 0, 1, 16 );
+   s_BrowserDeviceIcons[ i ] = lpPtr;
+   lpPtr += 9216;
 
-  IPU_LoadImage (  &lLoadImage[ 1 ], lpMiscIcons[ i ], lSizeMiscIcons[ i ], lTX, 0, 0, 1, 16 );
+  }  /* end for */
 
-  g_MiscIcons[ i + 0 ].m_TX = lTX;
-  g_MiscIcons[ i + 1 ].m_TX = lTX;
-  g_MiscIcons[ i + 0 ].m_TY =   0;
-  g_MiscIcons[ i + 1 ].m_TY =  32;
-
-  IPU_LoadImage (  &lLoadImage[ 1 ], lpMiscIcons[ i + 1 ], lSizeMiscIcons[ i + 1 ], lTX, 32, 0, 1, 16 );
-
- }  /* end for */
-
- for ( i = 0; i < 8; i += 2, lTX += 64 ) {
-
-  IPU_LoadImage ( &lLoadImage[ 0 ], lpBrowserDevIcons[ i ], lSizeBrowserDevIcons[ i ], lTX, 0, 0, 1, 16 );
-
-  g_BrowserDeviceIcons[ i + 0 ].m_TX = lTX; lTX += 64;
-  g_BrowserDeviceIcons[ i + 1 ].m_TX = lTX;
-  g_BrowserDeviceIcons[ i + 0 ].m_TY =   0;
-  g_BrowserDeviceIcons[ i + 1 ].m_TY =   0;
-
-  IPU_LoadImage ( &lLoadImage[ 0 ], lpBrowserDevIcons[ i + 1 ], lSizeBrowserDevIcons[ i + 1 ], lTX, 0, 0, 1, 16 );
-
- }  /* end for */
-
- g_GSCtx.m_VRAMPtr += 960;
-
- lLoadImage[ 0 ].Destroy ( &lLoadImage[ 0 ] );
- lLoadImage[ 1 ].Destroy ( &lLoadImage[ 1 ] );
+ }  /* end if */
 
 }  /* end GUI_LoadIcons */
 
+void GUI_UnloadIcons ( void ) {
+
+ if ( s_pIconData ) {
+
+  free ( s_pIconData );
+  s_pIconData = NULL;
+
+ }  /* end if */
+
+}  /* end GUI_UnloadIcons */
+
 void GUI_DrawIcon ( unsigned int anIndex, int aX, int anY, GUIcon aType, unsigned long* apDMA ) {
 
- static _GUIconLoc* sl_IconGroup[ 3 ] = {
-  g_BrowserFileIcons, g_MiscIcons, g_BrowserDeviceIcons
+ static int          sl_ISize[ 3 ] = {  32,  32,  48 };
+ static unsigned int sl_QWC  [ 3 ] = { 256, 256, 576 };
+ static void**       sl_pIcon[ 3 ] = {
+  s_BrowserFileIcons, s_MiscIcons, s_BrowserDeviceIcons
  };
- static int sl_IconSize[ 3 ] = { 32, 32, 48 };
 
- int         lSize  = sl_IconSize [ aType ];
- _GUIconLoc* lpIcon = sl_IconGroup[ aType ];
+ int   lSize  = sl_ISize[ aType ];
+ int   lQWC   = sl_QWC  [ aType ];
+ void* lpData = sl_pIcon[ aType ][ anIndex ];
 
- if ( !apDMA ) apDMA = GSContext_NewPacket (  0, GS_TSP_PACKET_SIZE(), GSPaintMethod_Continue  );
+ unsigned long lXYZ0;
+ unsigned long lXYZ1;
 
- GSContext_RenderTexSprite (
-  ( GSTexSpritePacket* )( apDMA - 2 ),
-  aX, anY, lSize, lSize,
-  lpIcon[ anIndex ].m_TX, lpIcon[ anIndex ].m_TY, lSize, lSize
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set noat\n\t"
+  "pcpyld   $ra, $ra, $ra\n\t"
+  "pcpyld   %4, %4, %4\n\t"
+  "addu     $v0, %3, %4\n\t"
+  "move     $a0, %2\n\t"
+  "dsll32   $v0, $v0, 0\n\t"
+  "move     $a1, %3\n\t"
+  "move     $a2, $zero\n\t"
+  "jal      GS_XYZ\n\t"
+  "or       $a1, $a1, $v0\n\t"
+  "lw       $at, g_XShift\n\t"
+  "dsrl32   $a1, $a1, 0\n\t"
+  "srav     %2, %2, $at\n\t"
+  "srav     %4, %4, $at\n\t"
+  "addu     $v1, %2, %4\n\t"
+  "move     %0, $v0\n\t"
+  "sll      $v1, $v1, 4\n\t"
+  "or       %1, $v1, $a1\n\t"
+  "pcpyud   %4, %4, %4\n\t"
+  "pcpyud   $ra, $ra, $ra\n\t"
+  ".set at\n\t"
+  ".set reorder\n\t"
+  : "=r"( lXYZ0 ), "=r"( lXYZ1 ) : "r"( aX ), "r"( anY ), "r"( lSize ) : "a0", "a1", "a2", "v0", "v1"
  );
+
+ apDMA[  0 ] = DMA_TAG( 6, 0, DMATAG_ID_CNT, 0, 0, 0 );
+ apDMA[  1 ] = VIF_DIRECT( 6 );
+ apDMA[  2 ] = GIF_TAG( 4, 0, 0, 0, GIFTAG_FLG_PACKED, 1 );
+ apDMA[  3 ] = GIFTAG_REGS_AD;
+ apDMA[  4 ] = GS_SET_BITBLTBUF( 0, 0, 0, 0x3FC0, 1, GSPixelFormat_PSMCT32 );
+ apDMA[  5 ] = GS_BITBLTBUF;
+ apDMA[  6 ] = GS_SET_TRXPOS( 0, 0, 0, 0, 0 );
+ apDMA[  7 ] = GS_TRXPOS;
+ apDMA[  8 ] = GS_SET_TRXREG( lSize, lSize );
+ apDMA[  9 ] = GS_TRXREG;
+ apDMA[ 10 ] = GS_SET_TRXDIR( GS_TRXDIR_HOST_TO_LOCAL );
+ apDMA[ 11 ] = GS_TRXDIR;
+ apDMA[ 12 ] = GIF_TAG( lQWC, 0, 0, 0, GIFTAG_FLG_IMAGE, 0 );
+ apDMA[ 13 ] = 0;
+ apDMA[ 14 ] = DMA_TAG( lQWC, 0, DMATAG_ID_REF, 0, lpData, 0 );
+ apDMA[ 15 ] = VIF_DIRECT( lQWC );
+
+ lSize <<= 4;
+ lSize  -= 6;
+
+ apDMA[ 16 ] = DMA_TAG( 7, 0, DMATAG_ID_RET, 0, 0, 0 );
+ apDMA[ 17 ] = VIF_DIRECT( 7 );
+ apDMA[ 18 ] = GIF_TAG( 3, 0, 0, 0, 0, 1 );
+ apDMA[ 19 ] = GIFTAG_REGS_AD;
+ apDMA[ 20 ] = GS_SET_TEXFLUSH( 0 );
+ apDMA[ 21 ] = GS_TEXFLUSH;
+ apDMA[ 22 ] = GS_SET_TEX0(
+                0x3FC0, 1, GSPixelFormat_PSMCT32, 6, 6, GS_TEX_TCC_RGBA,
+                GS_TEX_TFX_DECAL, 0, 0, 0, 0, 0
+               );
+ apDMA[ 23 ] = GS_TEX0_1;
+ apDMA[ 24 ] = GS_SET_PRIM(
+                GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON,
+                GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_OFF, GS_PRIM_FST_UV,
+                GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED
+               );
+ apDMA[ 25 ] = GS_PRIM;
+ apDMA[ 26 ] = GIF_TAG( 2, 1, 0, 0, 1, 2 );
+ apDMA[ 27 ] = GS_UV | ( GS_XYZ2 << 4 );
+ apDMA[ 28 ] = GS_SET_UV( 8, 8 );
+ apDMA[ 29 ] = lXYZ0;
+ apDMA[ 30 ] = GS_SET_UV( lSize, lSize );
+ apDMA[ 31 ] = lXYZ1;
 
 }  /* end GUI_DrawIcon */

@@ -15,7 +15,6 @@
 */
 #include "SMS_MPEG.h"
 #include "SMS_H263.h"
-#include "SMS_MPEG2.h"
 #include "SMS_VideoBuffer.h"
 #include "SMS_DMA.h"
 
@@ -23,23 +22,22 @@
 #include <string.h>
 #include <limits.h>
 
-#define MAX_PICTURE_COUNT           15
-#define PREV_PICT_TYPES_BUFFER_SIZE 256
-#define BITSTREAM_BUFFER_SIZE       1024 * 256
+void SMS_MPEG2_DCTUnquantizeIntra ( SMS_DCTELEM* );
+void SMS_MPEG2_DCTUnquantizeInter ( SMS_DCTELEM* );
 
-SMS_MPEGContext g_MPEGCtx;
+SMS_MPEGContext g_MPEGCtx __attribute__(   (  aligned( 64 )  )   );
 
-static void _mpeg_alloc_picture ( SMS_Frame* apPic ) {
-
- const int lBigMBNr   = g_MPEGCtx.m_MBStride * ( g_MPEGCtx.m_MBH + 1 ) + 1;
- const int lMBArrSize = g_MPEGCtx.m_MBStride * g_MPEGCtx.m_MBH;
- const int lB8ArrSize = g_MPEGCtx.m_B8Stride * g_MPEGCtx.m_MBH * 2;
+static SMS_INLINE void _mpeg_alloc_picture ( SMS_Frame* apPic ) {
 
  int i;
 
  SMS_CodecGetBuffer ( g_MPEGCtx.m_pParentCtx, apPic );
 
  if ( apPic -> m_pQScaleTbl == NULL ) {
+
+  const int lBigMBNr   = g_MPEGCtx.m_MBStride * ( g_MPEGCtx.m_MBH + 1 ) + 1;
+  const int lMBArrSize = g_MPEGCtx.m_MBStride * g_MPEGCtx.m_MBH;
+  const int lB8ArrSize = g_MPEGCtx.m_B8Stride * g_MPEGCtx.m_MBH * 2;
 
   apPic -> m_pMBSkipTbl = calloc (  1, lMBArrSize * sizeof ( uint8_t  ) + 2  );
   apPic -> m_pQScaleTbl = calloc (  1, lMBArrSize * sizeof ( uint8_t  )      );
@@ -53,52 +51,102 @@ static void _mpeg_alloc_picture ( SMS_Frame* apPic ) {
 
   }  /* end for */
 
-  apPic -> m_MotionSubsampleLog2 = 3;
-
  }  /* end if */
-
- memmove (
-  g_MPEGCtx.m_pPrevPicTypes + 1, g_MPEGCtx.m_pPrevPicTypes, PREV_PICT_TYPES_BUFFER_SIZE - 1
- );
-
- g_MPEGCtx.m_pPrevPicTypes[ 0 ] = g_MPEGCtx.m_PicType;
-
- if ( apPic -> m_Age < PREV_PICT_TYPES_BUFFER_SIZE &&
-      g_MPEGCtx.m_pPrevPicTypes[ apPic -> m_Age ] == SMS_FT_B_TYPE
- ) apPic -> m_Age = INT_MAX;
 
  apPic -> m_Width  = g_MPEGCtx.m_Width;
  apPic -> m_Height = g_MPEGCtx.m_Height;
 
 }  /* end _mpeg_alloc_picture */
 
+void SMS_MPEG_SetQScale ( int aQScale ) {
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "addiu    $v0, $zero,  1\n\t"
+  "addiu    $v1, $zero, 31\n\t"
+  "pmaxw    $a0, $a0, $v0\n\t"
+  "pminw    $a0, $a0, $v1\n\t"
+  "lw       $v0, %2\n\t"
+  "sb       $a0, %0\n\t"
+  "addu     $v0, $v0, $a0\n\t"
+  "lw       $a1, %4\n\t"
+  "lbu      $v1, 0($v0)\n\t"
+  "addu     $a1, $a1, $a0\n\t"
+  "lw       $v0, %6\n\t"
+  "sb       $v1, %1\n\t"
+  "lbu      $a1, 0($a1)\n\t"
+  "addu     $v0, $v0, $v1\n\t"
+  "lbu      $v0, 0($v0)\n\t"
+  "sb       $a1, %3\n\t"
+  "sb       $v0, %5\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "m"( g_MPEGCtx.m_QScale           ),
+     "m"( g_MPEGCtx.m_ChromaQScale     ),
+     "m"( g_MPEGCtx.m_pChromaQScaleTbl ),
+     "m"( g_MPEGCtx.m_Y_DCScale        ),
+     "m"( g_MPEGCtx.m_pY_DCScaleTbl    ),
+     "m"( g_MPEGCtx.m_C_DCScale        ),
+     "m"( g_MPEGCtx.m_pC_DCScaleTbl    ),
+     "m"( g_MPEGCtx.m_MPEGQuant        )
+ );
+}  /* end SMS_MPEG_SetQScale */
+
 void SMS_MPEG_CleanIntraTblEntries ( void ) {
 
  int lWrap = g_MPEGCtx.m_B8Stride;
- int lXY   = g_MPEGCtx.m_BlockIdx[ 0 ];
-    
- g_MPEGCtx.m_pDCVal[ 0 ][ lXY             ] = 
- g_MPEGCtx.m_pDCVal[ 0 ][ lXY + 1         ] = 
- g_MPEGCtx.m_pDCVal[ 0 ][ lXY + lWrap     ] =
- g_MPEGCtx.m_pDCVal[ 0 ][ lXY + 1 + lWrap ] = 1024;
+ int lXY0  = g_MPEGCtx.m_BlockIdx[ 0 ];
+ int lXY1  = g_MPEGCtx.m_MBX + g_MPEGCtx.m_MBY * g_MPEGCtx.m_MBStride;
 
- memset (  g_MPEGCtx.m_pACVal[ 0 ][ lXY         ], 0, 32 * sizeof ( int16_t )  );
- memset (  g_MPEGCtx.m_pACVal[ 0 ][ lXY + lWrap ], 0, 32 * sizeof ( int16_t )  );
+ g_MPEGCtx.m_pDCVal[ 0 ][ lXY0             ] = 1024;
+ g_MPEGCtx.m_pDCVal[ 0 ][ lXY0 + 1         ] = 1024;
+ g_MPEGCtx.m_pDCVal[ 0 ][ lXY0 + lWrap     ] = 1024;
+ g_MPEGCtx.m_pDCVal[ 0 ][ lXY0 + 1 + lWrap ] = 1024;
+ g_MPEGCtx.m_pDCVal[ 1 ][ lXY1             ] = 1024;
+ g_MPEGCtx.m_pDCVal[ 2 ][ lXY1             ] = 1024;
 
- lWrap = g_MPEGCtx.m_MBStride;
- lXY   = g_MPEGCtx.m_MBX + g_MPEGCtx.m_MBY * lWrap;
-
- g_MPEGCtx.m_pDCVal[ 1 ][ lXY ] =
- g_MPEGCtx.m_pDCVal[ 2 ][ lXY ] = 1024;
-
- memset (  g_MPEGCtx.m_pACVal[ 1 ][ lXY ], 0, 16 * sizeof ( int16_t )  );
- memset (  g_MPEGCtx.m_pACVal[ 2 ][ lXY ], 0, 16 * sizeof ( int16_t )  );
-    
- g_MPEGCtx.m_pMBIntraTbl[ lXY ] = 0;
+ __asm__(
+  "sq   $zero,  0(%0)\n\t"
+  "sq   $zero, 16(%0)\n\t"
+  "sq   $zero, 32(%0)\n\t"
+  "sq   $zero, 48(%0)\n\t"
+  "sq   $zero,  0(%1)\n\t"
+  "sq   $zero, 16(%1)\n\t"
+  "sq   $zero, 32(%1)\n\t"
+  "sq   $zero, 48(%1)\n\t"
+  "addu %4, %4, %5\n\t"
+  "sq   $zero,  0(%2)\n\t"
+  "sq   $zero, 16(%2)\n\t"
+  "sq   $zero,  0(%3)\n\t"
+  "sq   $zero, 16(%3)\n\t"
+  "sb   $zero,  0(%4)\n\t"
+  :: "r"( g_MPEGCtx.m_pACVal[ 0 ][ lXY0 ] ), "r"( g_MPEGCtx.m_pACVal[ 0 ][ lXY0 + lWrap ] ),
+     "r"( g_MPEGCtx.m_pACVal[ 1 ][ lXY1 ] ), "r"( g_MPEGCtx.m_pACVal[ 2 ][ lXY1 ] ),
+     "r"( g_MPEGCtx.m_pMBIntraTbl ), "r"( lXY1 )
+ );
 
 }  /* end SMS_MPEG_CleanIntraTblEntries */
 
-int SMS_MPEG_FrameStart ( void ) {
+static SMS_INLINE SMS_Frame* SMS_MPEGContext_FindUnusedPic ( void ) {
+
+ int i;
+    
+ for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
+
+  if ( g_MPEGCtx.m_pPic[ i ].m_pBuf  == NULL &&
+       g_MPEGCtx.m_pPic[ i ].m_Type  != 0
+  ) return &g_MPEGCtx.m_pPic[ i ];
+
+ for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
+  if ( g_MPEGCtx.m_pPic[ i ].m_pBuf == NULL ) return &g_MPEGCtx.m_pPic[ i ];
+
+ return NULL;
+
+}  /* end SMS_MPEGContext_FindUnusedPic */
+
+void SMS_MPEG_FrameStart ( void ) {
 
  int        i;
  SMS_Frame* lpPic;
@@ -121,7 +169,7 @@ int SMS_MPEG_FrameStart ( void ) {
    ) SMS_CodecReleaseBuffer ( g_MPEGCtx.m_pParentCtx, &g_MPEGCtx.m_pPic[ i ] );
 
  }  /* end if */
-alloc:
+
  for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
 
   if (  g_MPEGCtx.m_pPic[ i ].m_pBuf &&
@@ -132,51 +180,42 @@ alloc:
 
   lpPic = g_MPEGCtx.m_pCurPic;
 
- else lpPic = &g_MPEGCtx.m_pPic[ SMS_MPEGContext_FindUnusedPic () ];
+ else lpPic = SMS_MPEGContext_FindUnusedPic ();
 
- lpPic -> m_Ref = g_MPEGCtx.m_PicType != SMS_FT_B_TYPE && !g_MPEGCtx.m_Dropable ? 3 : 0;
-
- lpPic -> m_CodedPicNr = g_MPEGCtx.m_CodedPicNr++;
+ lpPic -> m_Ref = g_MPEGCtx.m_PicType != SMS_FT_B_TYPE;
 
  _mpeg_alloc_picture ( lpPic );
 
  g_MPEGCtx.m_pCurPic = lpPic;
-
- g_MPEGCtx.m_pCurPic -> m_Type     = g_MPEGCtx.m_PicType;
- g_MPEGCtx.m_pCurPic -> m_KeyFrame = g_MPEGCtx.m_PicType == SMS_FT_I_TYPE;
+ lpPic -> m_Type     = g_MPEGCtx.m_PicType;
 
  g_MPEGCtx.m_CurPic = *g_MPEGCtx.m_pCurPic;
 
  if ( g_MPEGCtx.m_PicType != SMS_FT_B_TYPE ) {
 
   g_MPEGCtx.m_pLastPic = g_MPEGCtx.m_pNextPic;
-
-  if ( !g_MPEGCtx.m_Dropable ) g_MPEGCtx.m_pNextPic = g_MPEGCtx.m_pCurPic;
+  g_MPEGCtx.m_pNextPic = g_MPEGCtx.m_pCurPic;
 
  }  /* end if */
 
  if ( g_MPEGCtx.m_pLastPic ) g_MPEGCtx.m_LastPic = *g_MPEGCtx.m_pLastPic;
  if ( g_MPEGCtx.m_pNextPic ) g_MPEGCtx.m_NextPic = *g_MPEGCtx.m_pNextPic;
 
- if (  g_MPEGCtx.m_PicType != SMS_FT_I_TYPE &&
-       ( g_MPEGCtx.m_pLastPic           == NULL ||
-         g_MPEGCtx.m_pLastPic -> m_pBuf == NULL
-       )
- ) goto alloc;
-
  if ( !g_MPEGCtx.m_MPEGQuant ) {
 
-  g_MPEGCtx.DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
   g_MPEGCtx.DCT_UnquantizeIntra = SMS_H263_DCTUnquantizeIntra;
+  g_MPEGCtx.DCT_UnquantizeInter = SMS_H263_DCTUnquantizeInter;
 
  } else {
 
-  g_MPEGCtx.DCT_UnquantizeInter = SMS_MPEG2_DCTUnquantizeInter;
   g_MPEGCtx.DCT_UnquantizeIntra = SMS_MPEG2_DCTUnquantizeIntra;
+  g_MPEGCtx.DCT_UnquantizeInter = SMS_MPEG2_DCTUnquantizeInter;
 
  }  /* end else */
 
- return 0;
+ __asm__(  "sd   $zero, %0\n\t" :: "m"( g_MPEGCtx.m_MBX )  );
+
+ g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
 }  /* end SMS_MPEG_FrameStart */
 
@@ -202,8 +241,8 @@ void SMS_MPEG_FrameEnd ( void ) {
 
   for ( i = 0; i < g_MPEGCtx.m_MBW; ++i ) {
 
-   lpDstY =  ( u128* )&lpMBDstL -> m_Y[ 0 ][ 0 ];
    lSrcY  = *( u128* )&lpMBSrcL -> m_Y[ 0 ][ 0 ];
+   lpDstY =  ( u128* )&lpMBDstL -> m_Y[ 0 ][ 0 ];
 
    lpDstY[  0 ] = lSrcY;
    lpDstY[  1 ] = lSrcY;
@@ -222,29 +261,33 @@ void SMS_MPEG_FrameEnd ( void ) {
    lpDstY[ 14 ] = lSrcY;
    lpDstY[ 15 ] = lSrcY;
 
-   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cb[ 0 ][ 0 ];
    lSrcUV  = *( uint64_t* )&lpMBSrcL -> m_Cb[ 0 ][ 0 ];
+   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cb[ 0 ][ 0 ];
 
-   lpDstUV[ 0 ] = lSrcUV;
-   lpDstUV[ 1 ] = lSrcUV;
-   lpDstUV[ 2 ] = lSrcUV;
-   lpDstUV[ 3 ] = lSrcUV;
-   lpDstUV[ 4 ] = lSrcUV;
-   lpDstUV[ 5 ] = lSrcUV;
-   lpDstUV[ 6 ] = lSrcUV;
-   lpDstUV[ 7 ] = lSrcUV;
+   __asm__(
+    ".set noat\n\t"
+    "pcpyld $at, %1, %1\n\t"
+    "sq     $at,  0(%0)\n\t"
+    "sq     $at, 16(%0)\n\t"
+    "sq     $at, 32(%0)\n\t"
+    "sq     $at, 48(%0)\n\t"
+    ".set at\n\t"
+    :: "r"( lpDstUV ), "r"( lSrcUV ) : "at"
+   );
 
-   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cr[ 0 ][ 0 ];
    lSrcUV  = *( uint64_t* )&lpMBSrcL -> m_Cr[ 0 ][ 0 ];
+   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cr[ 0 ][ 0 ];
 
-   lpDstUV[ 0 ] = lSrcUV;
-   lpDstUV[ 1 ] = lSrcUV;
-   lpDstUV[ 2 ] = lSrcUV;
-   lpDstUV[ 3 ] = lSrcUV;
-   lpDstUV[ 4 ] = lSrcUV;
-   lpDstUV[ 5 ] = lSrcUV;
-   lpDstUV[ 6 ] = lSrcUV;
-   lpDstUV[ 7 ] = lSrcUV;
+   __asm__(
+    ".set noat\n\t"
+    "pcpyld $at, %1, %1\n\t"
+    "sq     $at,  0(%0)\n\t"
+    "sq     $at, 16(%0)\n\t"
+    "sq     $at, 32(%0)\n\t"
+    "sq     $at, 48(%0)\n\t"
+    ".set at\n\t"
+    :: "r"( lpDstUV ), "r"( lSrcUV ) : "at"
+   );
 
    ++lpMBSrcL;
    ++lpMBDstL;
@@ -281,16 +324,16 @@ void SMS_MPEG_FrameEnd ( void ) {
 
    }  /* end for */
 
-   lpMBDstL += g_MPEGCtx.m_CurPic.m_Linesize;
+   lpMBDstL += g_MPEGCtx.m_LineSize;
    lpMBSrcL  = lpMBDstL + 1;
 
-   lpMBDstR += g_MPEGCtx.m_CurPic.m_Linesize;
+   lpMBDstR += g_MPEGCtx.m_LineSize;
    lpMBSrcR  = lpMBDstR - 1;
 
   }  /* end for */
 
-  lpMBSrcL -= g_MPEGCtx.m_CurPic.m_Linesize;
-  lpMBSrcR -= g_MPEGCtx.m_CurPic.m_Linesize;
+  lpMBSrcL -= g_MPEGCtx.m_LineSize;
+  lpMBSrcR -= g_MPEGCtx.m_LineSize;
 /* left bottom */
   memset ( &lpMBDstL -> m_Y [ 0 ][ 0 ], lpMBSrcL -> m_Y [ 15 ][ 0 ], 256 );
   memset ( &lpMBDstL -> m_Cb[ 0 ][ 0 ], lpMBSrcL -> m_Cb[  7 ][ 0 ],  64 );
@@ -300,8 +343,8 @@ void SMS_MPEG_FrameEnd ( void ) {
 
   for ( i = 0; i < g_MPEGCtx.m_MBW; ++i ) {
 
-   lpDstY =  ( u128* )&lpMBDstL -> m_Y[  0 ][ 0 ];
    lSrcY  = *( u128* )&lpMBSrcL -> m_Y[ 15 ][ 0 ];
+   lpDstY =  ( u128* )&lpMBDstL -> m_Y[  0 ][ 0 ];
 
    lpDstY[  0 ] = lSrcY;
    lpDstY[  1 ] = lSrcY;
@@ -320,29 +363,33 @@ void SMS_MPEG_FrameEnd ( void ) {
    lpDstY[ 14 ] = lSrcY;
    lpDstY[ 15 ] = lSrcY;
 
-   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cb[ 0 ][ 0 ];
    lSrcUV  = *( uint64_t* )&lpMBSrcL -> m_Cb[ 7 ][ 0 ];
+   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cb[ 0 ][ 0 ];
 
-   lpDstUV[ 0 ] = lSrcUV;
-   lpDstUV[ 1 ] = lSrcUV;
-   lpDstUV[ 2 ] = lSrcUV;
-   lpDstUV[ 3 ] = lSrcUV;
-   lpDstUV[ 4 ] = lSrcUV;
-   lpDstUV[ 5 ] = lSrcUV;
-   lpDstUV[ 6 ] = lSrcUV;
-   lpDstUV[ 7 ] = lSrcUV;
+   __asm__(
+    ".set noat\n\t"
+    "pcpyld $at, %1, %1\n\t"
+    "sq     $at,  0(%0)\n\t"
+    "sq     $at, 16(%0)\n\t"
+    "sq     $at, 32(%0)\n\t"
+    "sq     $at, 48(%0)\n\t"
+    ".set at\n\t"
+    :: "r"( lpDstUV ), "r"( lSrcUV ) : "at"
+   );
 
-   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cr[ 0 ][ 0 ];
    lSrcUV  = *( uint64_t* )&lpMBSrcL -> m_Cr[ 7 ][ 0 ];
+   lpDstUV =  ( uint64_t* )&lpMBDstL -> m_Cr[ 0 ][ 0 ];
 
-   lpDstUV[ 0 ] = lSrcUV;
-   lpDstUV[ 1 ] = lSrcUV;
-   lpDstUV[ 2 ] = lSrcUV;
-   lpDstUV[ 3 ] = lSrcUV;
-   lpDstUV[ 4 ] = lSrcUV;
-   lpDstUV[ 5 ] = lSrcUV;
-   lpDstUV[ 6 ] = lSrcUV;
-   lpDstUV[ 7 ] = lSrcUV;
+   __asm__(
+    ".set noat\n\t"
+    "pcpyld $at, %1, %1\n\t"
+    "sq     $at,  0(%0)\n\t"
+    "sq     $at, 16(%0)\n\t"
+    "sq     $at, 32(%0)\n\t"
+    "sq     $at, 48(%0)\n\t"
+    ".set at\n\t"
+    :: "r"( lpDstUV ), "r"( lSrcUV ) : "at"
+   );
 
    ++lpMBSrcL;
    ++lpMBDstL;
@@ -361,7 +408,7 @@ void SMS_MPEG_FrameEnd ( void ) {
 
 void SMS_MPEG_InitBlockIdx ( void ) {
 
- const int lLinesize = g_MPEGCtx.m_CurPic.m_Linesize;
+ const int lLinesize = g_MPEGCtx.m_LineSize;
         
  g_MPEGCtx.m_BlockIdx[ 0 ] = g_MPEGCtx.m_B8Stride * ( g_MPEGCtx.m_MBY * 2     ) - 2 + g_MPEGCtx.m_MBX * 2;
  g_MPEGCtx.m_BlockIdx[ 1 ] = g_MPEGCtx.m_B8Stride * ( g_MPEGCtx.m_MBY * 2     ) - 1 + g_MPEGCtx.m_MBX * 2;
@@ -374,122 +421,6 @@ void SMS_MPEG_InitBlockIdx ( void ) {
  g_MPEGCtx.m_pDest += g_MPEGCtx.m_MBY * lLinesize;
 
 }  /* end SMS_MPEG_InitBlockIdx */
-
-void SMS_MPEGContext_Init ( int aWidth, int aHeight ) {
-
- int lX, lY;
-
- memset (  &g_MPEGCtx, 0, sizeof ( g_MPEGCtx )  );
-
- SMS_DSPContextInit ( &g_MPEGCtx.m_DSPCtx );
-
- g_MPEGCtx.m_Bugs           = SMS_BUG_AUTODETECT;
- g_MPEGCtx.m_Width          = aWidth;
- g_MPEGCtx.m_Height         = aHeight;
- g_MPEGCtx.m_MBW            = ( aWidth  + 15 ) / 16;
- g_MPEGCtx.m_MBH            = ( aHeight + 15 ) / 16;
- g_MPEGCtx.m_MBStride       = g_MPEGCtx.m_MBW     + 1;
- g_MPEGCtx.m_B8Stride       = g_MPEGCtx.m_MBW * 2 + 1;
- g_MPEGCtx.m_B4Stride       = g_MPEGCtx.m_MBW * 4 + 1;
- g_MPEGCtx.m_HEdgePos       = g_MPEGCtx.m_MBW - 1;
- g_MPEGCtx.m_VEdgePos       = g_MPEGCtx.m_MBH - 1;
- g_MPEGCtx.m_MBNum          = g_MPEGCtx.m_MBW * g_MPEGCtx.m_MBH;
- g_MPEGCtx.m_BlockWrap[ 0 ] =
- g_MPEGCtx.m_BlockWrap[ 1 ] =
- g_MPEGCtx.m_BlockWrap[ 2 ] =
- g_MPEGCtx.m_BlockWrap[ 3 ] = g_MPEGCtx.m_B8Stride;
- g_MPEGCtx.m_BlockWrap[ 4 ] =
- g_MPEGCtx.m_BlockWrap[ 5 ] = g_MPEGCtx.m_MBStride;
- g_MPEGCtx.m_PicStruct      = SMS_PICT_FRAME;
- g_MPEGCtx.m_ProgSeq        = 
- g_MPEGCtx.m_ProgFrm        =
- g_MPEGCtx.m_FCode          =
- g_MPEGCtx.m_BCode          = 1;
- g_MPEGCtx.m_QuantPrec      = 5;
- g_MPEGCtx.m_pMBIdx2XY      = calloc (  1, ( g_MPEGCtx.m_MBNum + 1 ) * sizeof ( int )  );
-
- for ( lY = 0; lY < g_MPEGCtx.m_MBH; ++lY )
-
-  for ( lX = 0; lX < g_MPEGCtx.m_MBW; ++lX )
-
-   g_MPEGCtx.m_pMBIdx2XY[ lX + lY * g_MPEGCtx.m_MBW ] = lX + lY * g_MPEGCtx.m_MBStride;
-
- g_MPEGCtx.m_pMBIdx2XY[ g_MPEGCtx.m_MBNum ] = ( g_MPEGCtx.m_MBH - 1 ) * g_MPEGCtx.m_MBStride + g_MPEGCtx.m_MBW;
-
- g_MPEGCtx.m_pPic          = calloc (  1, MAX_PICTURE_COUNT * sizeof ( SMS_Frame )  );
- g_MPEGCtx.m_pErrStatTbl   = calloc (  1, ( lX = g_MPEGCtx.m_MBH * g_MPEGCtx.m_MBStride ) * sizeof ( uint8_t )  );
- g_MPEGCtx.m_pMBSkipTbl    = calloc (  1, lX + 2 );
- g_MPEGCtx.m_pPrevPicTypes = calloc (  1, PREV_PICT_TYPES_BUFFER_SIZE );
- g_MPEGCtx.m_pBSBuf        = calloc ( 1, BITSTREAM_BUFFER_SIZE );
-
- g_MPEGCtx.m_pBlocks     = ( void* )( SMS_MPEG_SPR_BLOCKS + 8 );
- g_MPEGCtx.m_pBlock      = g_MPEGCtx.m_pBlocks[ 0 ];
- g_MPEGCtx.m_pMBIntraTbl = g_pSPRTop;
-
- g_pSPRTop += lX;
- g_pSPRTop  = ( unsigned char* )(  ( unsigned int )( g_pSPRTop + 15 ) & 0xFFFFFFF0  );
-
- SMS_Linesize ( g_MPEGCtx.m_Width, &g_MPEGCtx.m_LineStride );
- g_MPEGCtx.m_LineStride *= 384;
-
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   0 ] = 0x00000000;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   1 ] = 0x00000000;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   2 ] = 0x01000404;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[   3 ] = 0x6D600010;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 196 ] = 0x00000000;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 197 ] = 0x00000000;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 198 ] = 0x00000000;
- (  ( unsigned int* )SMS_MPEG_SPR_BLOCKS  )[ 199 ] = 0x14000000;
-
-}  /* end SMS_MPEGContext_Init */
-
-void SMS_MPEGContext_Destroy ( void ) {
-
- int i, j;
-
- for ( i = 0; i < MAX_PICTURE_COUNT; ++i ) {
-
-  SMS_Frame* lpFrame = &g_MPEGCtx.m_pPic[ i ];
-
-  if ( lpFrame -> m_pMBSkipTbl != NULL ) free ( lpFrame -> m_pMBSkipTbl );
-  if ( lpFrame -> m_pQScaleTbl != NULL ) free ( lpFrame -> m_pQScaleTbl );
-  if ( lpFrame -> m_pMBType    != NULL ) free ( lpFrame -> m_pMBType    );
-
-  for ( j = 0; j < 2; ++j ) {
-
-   if ( lpFrame -> m_pMotionVal[ j ] != NULL ) free ( lpFrame -> m_pMotionValBase[ j ] );
-   if ( lpFrame -> m_pRefIdx   [ j ] != NULL ) free ( lpFrame -> m_pRefIdx       [ j ] );
-
-  }  /* end for */
-
- }  /* end for */
-
- free ( g_MPEGCtx.m_pMBIdx2XY     );
- free ( g_MPEGCtx.m_pPic          );
- free ( g_MPEGCtx.m_pErrStatTbl   );
- free ( g_MPEGCtx.m_pMBSkipTbl    );
- free ( g_MPEGCtx.m_pPrevPicTypes );
- free ( g_MPEGCtx.m_pBSBuf        );
-
-}  /* end SMS_MPEGContext_Destroy */
-
-int SMS_MPEGContext_FindUnusedPic ( void ) {
-
- int i;
-    
- for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
-
-  if ( g_MPEGCtx.m_pPic[ i ].m_pBuf  == NULL &&
-       g_MPEGCtx.m_pPic[ i ].m_Type   != 0
-  ) return i;
-
- for ( i = 0; i < MAX_PICTURE_COUNT; ++i )
-
-  if ( g_MPEGCtx.m_pPic[ i ].m_pBuf == NULL ) return i;
-
- return -1;
-
-}  /* end SMS_MPEGContext_FindUnusedPic */
 
 void SMS_MPEG_InitScanTable ( SMS_ScanTable* apTbl, const uint8_t* apSrc ) {
 
@@ -508,43 +439,6 @@ void SMS_MPEG_InitScanTable ( SMS_ScanTable* apTbl, const uint8_t* apSrc ) {
  }  /* end for */
 
 }  /* end SMS_MPEG_InitScanTable */
-
-void SMS_MPEG_SetQScale ( int aQScale ) {
-
- if ( aQScale < 1 )
-
-  aQScale = 1;
-
- else if ( aQScale > 31 ) aQScale = 31;
-        
- g_MPEGCtx.m_QScale = aQScale;
- g_MPEGCtx.m_ChromaQScale = g_MPEGCtx.m_pChromaQScaleTbl[ aQScale ];
-
- g_MPEGCtx.m_Y_DCScale = g_MPEGCtx.m_pY_DCScaleTbl[ aQScale                  ];
- g_MPEGCtx.m_C_DCScale = g_MPEGCtx.m_pC_DCScaleTbl[ g_MPEGCtx.m_ChromaQScale ];
-
-}  /* end SMS_MPEG_SetQScale */
-
-static SMS_INLINE void _add_dct (
-                        SMS_DCTELEM* apBlock, int anIdx, uint8_t* apDst, int aLineSize
-                       ) {
-
- if ( g_MPEGCtx.m_BlockLastIdx[ anIdx ] >= 0 ) IDCT ( apDst, aLineSize, apBlock, 1 );
-
-}  /* end _add_dct */
-
-static SMS_INLINE void _add_dequant_dct (
-                        SMS_DCTELEM* apBlock, int anI, uint8_t* apDest, int aLineSize, int aQScale
-                       ) {
-
- if ( g_MPEGCtx.m_BlockLastIdx[ anI ] >= 0 ) {
-
-  g_MPEGCtx.DCT_UnquantizeInter ( apBlock, anI, aQScale );
-  IDCT ( apDest, aLineSize, apBlock, 1 );
-
- }  /* end if */
-
-}  /* end _add_dequant_dct */
 
 #define CLIP_MV() if ( lMBX < -1 ) {                          \
                    lMBX  = -1;                                \
@@ -578,8 +472,8 @@ static SMS_INLINE void _add_dequant_dct (
 
 static void _gmc_motion ( SMS_MacroBlock* apDst, SMS_MacroBlock* apRefPic ) {
 
- DSP_GMCn_16 ( &apDst -> m_Y [ 0 ][ 0 ], apRefPic, g_MPEGCtx.m_MBX, g_MPEGCtx.m_MBY, g_MPEGCtx.m_NoRounding, g_MPEGCtx.m_CurPic.m_Linesize );
- DSP_GMCn_8  ( &apDst -> m_Cb[ 0 ][ 0 ], apRefPic, g_MPEGCtx.m_MBX, g_MPEGCtx.m_MBY, g_MPEGCtx.m_NoRounding, g_MPEGCtx.m_CurPic.m_Linesize );
+ DSP_GMCn_16 ( &apDst -> m_Y [ 0 ][ 0 ], apRefPic, g_MPEGCtx.m_MBX, g_MPEGCtx.m_MBY, g_MPEGCtx.m_NoRounding, g_MPEGCtx.m_LineSize );
+ DSP_GMCn_8  ( &apDst -> m_Cb[ 0 ][ 0 ], apRefPic, g_MPEGCtx.m_MBX, g_MPEGCtx.m_MBY, g_MPEGCtx.m_NoRounding, g_MPEGCtx.m_LineSize );
 
 }  /* end _gmc_motion */
 
@@ -613,7 +507,7 @@ static void _gmc1_motion ( SMS_MacroBlock* apDest, SMS_MacroBlock* apRefPic ) {
  lSrcY &= 0xF;
 
  apRefPic += lMBX;
- apRefPic += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+ apRefPic += lMBY * g_MPEGCtx.m_LineSize;
     
  if (  ( lMotionX | lMotionY ) & 7  )
 
@@ -656,9 +550,7 @@ static void _gmc1_motion ( SMS_MacroBlock* apDest, SMS_MacroBlock* apRefPic ) {
 }  /* end _gmc1_motion */
 
 static SMS_INLINE void _qpel_motion (
-                        uint8_t*                  apDestY,
-                        uint8_t*                 apDestCb,
-                        uint8_t*                 apDestCr,
+                        SMS_MacroBlock*          apDestMB,
                         SMS_MacroBlock*          apRefPic,
                         SMS_OpPixFunc  ( *aPicOp  )[  4 ],
                         SMS_QPelMCFunc ( *aQPelOp )[ 16 ],
@@ -684,16 +576,18 @@ static SMS_INLINE void _qpel_motion (
  CLIP_MV()
 
  lpMB  = apRefPic + lMBX;
- lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+ lpMB += lMBY * g_MPEGCtx.m_LineSize;
 
  lSrcX &= 0xF;
  lSrcY &= 0xF;
 
- aQPelOp[ 0 ][ lDXY ] ( apDestY, &lpMB -> m_Y[ 0 ][ 0 ], lSrcX, lSrcY, g_MPEGCtx.m_LineStride );
+ aQPelOp[ 0 ][ lDXY ] (
+  &apDestMB -> m_Y[ 0 ][ 0 ], &lpMB -> m_Y[ 0 ][ 0 ], lSrcX, lSrcY, g_MPEGCtx.m_LineStride
+ );
 
  if ( g_MPEGCtx.m_Bugs & SMS_BUG_QPEL_CHROMA2 ) {
 
-  static const int lRTab[ 8 ]= { 0, 0, 1, 1, 0, 0, 0, 1 };
+  static const char lRTab[ 8 ]= { 0, 0, 1, 1, 0, 0, 0, 1 };
 
   lMX = ( aMotionX >> 1 ) + lRTab[ aMotionX & 7 ];
   lMY = ( aMotionY >> 1 ) + lRTab[ aMotionY & 7 ];
@@ -724,12 +618,14 @@ static SMS_INLINE void _qpel_motion (
  CLIP_MVC()
 
  apRefPic += lMBX;
- apRefPic += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+ apRefPic += lMBY * g_MPEGCtx.m_LineSize;
 
  lSrcX &= 7;
  lSrcY &= 7;
 
- aPicOp[ 1 ][ lDXY ] ( apDestCb, &apRefPic -> m_Cb[ 0 ][ 0 ], lSrcX, lSrcY, g_MPEGCtx.m_LineStride );
+ aPicOp[ 1 ][ lDXY ] (
+  &apDestMB -> m_Cb[ 0 ][ 0 ], &apRefPic -> m_Cb[ 0 ][ 0 ], lSrcX, lSrcY, g_MPEGCtx.m_LineStride
+ );
 
 }  /* end _qpel_motion */
 
@@ -756,7 +652,7 @@ static SMS_INLINE void _mpeg_motion (
  CLIP_MV()
 
  apRefPic += lMBX;
- apRefPic += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+ apRefPic += lMBY * g_MPEGCtx.m_LineSize;
 
  lSrcX &= 0xF;
  lSrcY &= 0xF;
@@ -798,16 +694,14 @@ static SMS_INLINE void _chroma_4mv_motion (
  CLIP_MVC()
 
  apRefPic += lMBX;
- apRefPic += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+ apRefPic += lMBY * g_MPEGCtx.m_LineSize;
   
  aPixOp[ lDXY ] ( apDestCb, &apRefPic -> m_Cb[ 0 ][ 0 ], lSrcX & 7, lSrcY & 7, g_MPEGCtx.m_LineStride );
 
 }  /* end _chroma_4mv_motion */
 
 static SMS_INLINE void _MPEG_Motion (
-                        uint8_t*                   aDestY,
-                        uint8_t*                  aDestCb,
-                        uint8_t*                  aDestCr,
+                        SMS_MacroBlock*          apDestMB,
                         int                          aDir,
                         SMS_MacroBlock*          apRefPic, 
                         SMS_OpPixFunc  ( *aPixOp  )[  4 ],
@@ -828,22 +722,20 @@ static SMS_INLINE void _MPEG_Motion (
 
     if ( g_MPEGCtx.m_RealSpriteWarpPts == 1 )
 
-     _gmc1_motion (  ( SMS_MacroBlock* )aDestY, apRefPic  );
+     _gmc1_motion ( apDestMB, apRefPic );
 
-    else _gmc_motion (  ( SMS_MacroBlock* )aDestY, apRefPic  );
+    else _gmc_motion ( apDestMB, apRefPic );
 
    } else if ( g_MPEGCtx.m_QuarterSample ) {
 
     _qpel_motion (
-     aDestY, aDestCb, aDestCr,
-     apRefPic, aPixOp, aQPelOp,
+     apDestMB, apRefPic, aPixOp, aQPelOp,
      g_MPEGCtx.m_MV[ aDir ][ 0 ][ 0 ],
      g_MPEGCtx.m_MV[ aDir ][ 0 ][ 1 ], 16
     );
 
    } else _mpeg_motion (
-           ( SMS_MacroBlock* )aDestY,
-           apRefPic, aPixOp,
+           apDestMB, apRefPic, aPixOp,
            g_MPEGCtx.m_MV[ aDir ][ 0 ][ 0 ],
            g_MPEGCtx.m_MV[ aDir ][ 0 ][ 1 ]
           );
@@ -878,9 +770,9 @@ static SMS_INLINE void _MPEG_Motion (
      CLIP_MV()
 
      lpMBSrc  = apRefPic + lMBX;
-     lpMBSrc += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+     lpMBSrc += lMBY * g_MPEGCtx.m_LineSize;
 
-     lpDest = aDestY + (  ( i & 1 ) * 8  ) + ( i >> 1 ) * 8 * 16;
+     lpDest = (  ( uint8_t* )apDestMB  ) + (  ( i & 1 ) * 8  ) + ( i >> 1 ) * 8 * 16;
 
      aQPelOp[ 1 ][ lDXY ] ( lpDest, &lpMBSrc -> m_Y[ 0 ][ 0 ], lSrcX & 0xF, lSrcY & 0xF, g_MPEGCtx.m_LineStride );
 
@@ -905,9 +797,9 @@ static SMS_INLINE void _MPEG_Motion (
     CLIP_MV()
 
     lpMBSrc  = apRefPic + lMBX;
-    lpMBSrc += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
+    lpMBSrc += lMBY * g_MPEGCtx.m_LineSize;
 
-    lpDest = aDestY + (  ( i & 1 ) * 8  ) + ( i >> 1 ) * 8 * 16;
+    lpDest = (  ( uint8_t* )apDestMB  ) + (  ( i & 1 ) * 8  ) + ( i >> 1 ) * 8 * 16;
 
     aPixOp[ 2 ][ lDXY ] ( lpDest, &lpMBSrc -> m_Y[ 0 ][ 0 ], lSrcX & 0xF, lSrcY & 0xF, g_MPEGCtx.m_LineStride );
 
@@ -916,7 +808,7 @@ static SMS_INLINE void _MPEG_Motion (
 
    }  /* end for */
 
-   _chroma_4mv_motion ( aDestCb, apRefPic, aPixOp[ 1 ], lMX, lMY );
+   _chroma_4mv_motion ( &apDestMB -> m_Cb[ 0 ][ 0 ], apRefPic, aPixOp[ 1 ], lMX, lMY );
 
   } break;
 
@@ -924,19 +816,312 @@ static SMS_INLINE void _MPEG_Motion (
 
 }  /* end _MPEG_Motion */
 
+void SMS_H263_DCTUnquantizeIntra ( SMS_DCTELEM* apBlock ) {
+
+ int lQMul   = g_MPEGCtx.m_QScale << 1;
+ int lQAdd   = ( g_MPEGCtx.m_QScale - 1 ) | 1;
+ int lLevel0 = apBlock[   0 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel1 = apBlock[  64 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel2 = apBlock[ 128 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel3 = apBlock[ 192 ] * g_MPEGCtx.m_Y_DCScale;
+ int lLevel4 = apBlock[ 256 ] * g_MPEGCtx.m_C_DCScale;
+ int lLevel5 = apBlock[ 320 ] * g_MPEGCtx.m_C_DCScale;
+
+ __asm__ __volatile__ (
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "addiu    $at, $zero, 32\n\t"
+  "pcpyld   %0, %0, %0\n\t"	
+  "pcpyld   %1, %1, %1\n\t"
+  "pcpyh    %0, %0\n\t"
+  "pcpyh    %1, %1\n\t"
+  "1:\n\t"
+  "lq       $t0, 0(%2)\n\t"
+  "addiu    %2, %2, 16\n\t"
+  "addiu    $at, $at, -1\n\t"
+  "pmulth   $zero, $t0, %0\n\t"	
+  "pcgth    $t1, $t0, $zero\n\t"
+  "pcgth    $t0, $zero, $t0\n\t"
+  "por      $t1, $t0, $t1\n\t"
+  "paddh    $t2, %1, $t0\n\t"
+  "pxor     $t2, $t2, $t0\n\t"
+  "pmfhl.lh $t0\n\t"
+  "paddh    $t0, $t0, $t2\n\t"
+  "pand     $t0, $t0, $t1\n\t"
+  "bgtz     $at, 1b\n\t"
+  "sq       $t0, -16(%2)\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "r"( lQMul ), "r"( lQAdd ), "r"( apBlock )
+   : "t0", "t1", "t2", "memory"
+ );
+
+ apBlock[ -256 ] = lLevel0;
+ apBlock[ -192 ] = lLevel1;
+ apBlock[ -128 ] = lLevel2;
+ apBlock[  -64 ] = lLevel3;
+
+ lQMul = g_MPEGCtx.m_ChromaQScale << 1;
+ lQAdd = ( g_MPEGCtx.m_ChromaQScale - 1 ) | 1;
+
+ __asm__ __volatile__ (
+
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "addiu    $at, $zero, 16\n\t"
+  "pcpyld   %0, %0, %0\n\t"	
+  "pcpyld   %1, %1, %1\n\t"
+  "pcpyh    %0, %0\n\t"
+  "pcpyh    %1, %1\n\t"
+  "1:\n\t"
+  "lq       $t0, 0(%2)\n\t"
+  "addiu    %2, %2, 16\n\t"
+  "addiu    $at, $at, -1\n\t"
+  "pmulth   $zero, $t0, %0\n\t"
+  "pcgth    $t1, $t0, $zero\n\t"
+  "pcgth    $t0, $zero, $t0\n\t"
+  "por      $t1, $t0, $t1\n\t"
+  "paddh    $t2, %1, $t0\n\t"
+  "pxor     $t2, $t2, $t0\n\t"
+  "pmfhl.lh $t0\n\t"
+  "paddh    $t0, $t0, $t2\n\t"
+  "pand     $t0, $t0, $t1\n\t"
+  "bgtz     $at, 1b\n\t"
+  "sq       $t0, -16(%2)\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "r"( lQMul ), "r"( lQAdd ), "r"( apBlock )
+   : "t0", "t1", "t2", "memory"
+ );
+
+ apBlock[ -128 ] = lLevel4;
+ apBlock[  -64 ] = lLevel5;
+
+}  /* end SMS_H263_DCTUnquantizeIntra */
+
+void SMS_H263_DCTUnquantizeInter ( SMS_DCTELEM* apBlock ) {
+#if 0
+ const int lQAdd    = ( aQScale - 1 ) | 1;
+ const int lQMul    = aQScale << 1;
+ const int lnCoeffs = g_MPEGCtx.m_InterScanTbl.m_RasterEnd[  g_MPEGCtx.m_BlockLastIdx[ aN ]  ];
+
+ __asm__ __volatile__ (
+
+  "pcpyld   %0, %0, %0\n\t"	
+  "pcpyld   %1, %1, %1\n\t"
+  "pcpyh    %0, %0\n\t"
+  "pcpyh    %1, %1\n\t"
+  "1:\n\t"
+  "lq       $t0, 0(%3)\n\t"
+  "addi     %3, %3, 16\n\t"
+  "addi     %2, %2, -8\n\t"
+  "pmulth   $zero, $t0, %0\n\t"	
+  "pcgth    $t1, $t0, $zero\n\t"
+  "pcgth    $t0, $zero, $t0\n\t"
+  "por      $t1, $t0, $t1\n\t"
+  "paddh    $t2, %1, $t0\n\t"
+  "pxor     $t2, $t2, $t0\n\t"
+  "pmfhl.lh $t0\n\t"
+  "paddh    $t0, $t0, $t2\n\t"
+  "pand     $t0, $t0, $t1\n\t"
+  "sq       $t0, -16(%3)\n\t"
+  "bgez     %2, 1b\n\t"
+  :: "r"( lQMul ), "r"( lQAdd ), "r"( lnCoeffs ), "r"( apBlock )
+   : "t0", "t1", "t2", "memory"
+ );
+#endif
+}  /* end SMS_H263_DCTUnquantizeInter */
+
+void SMS_MPEG2_DCTUnquantizeIntra ( short* apBlock ) {
+
+ short lLevel0;
+ short lLevel1;
+
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "lb       $v1, %2\n\t"
+  "lui      $a3, 0x7000\n\t"
+  "lh       $t5,   0($a0)\n\t"
+  "lh       $t6, 128($a0)\n\t"
+  "mult     $t8, $t5, $v1\n\t"
+  "lh       $a1, 256($a0)\n\t"
+  "mult     $t7, $t6, $v1\n\t"
+  "lh       $a2, 384($a0)\n\t"
+  "mult     $a1, $a1, $v1\n\t"
+  "lb       $v0, %4\n\t"
+  "mult     $a2, $a2, $v1\n\t"
+  "pcpyld   $v0, $v0, $v0\n\t"
+  "pcpyh    $v0, $v0\n\t"
+  "lui      $t4, 0xFFFF\n\t"
+  "addiu    $at, $zero, 32\n\t"
+  "ori      $t4, $t4, 0xFF7F\n\t"
+  "1:\n\t"
+  "lq       $t0, 0($a0)\n\t"
+  "lq       $t1, 0x0400($a3)\n\t"
+  "pcgth    $t2, $t0, $zero\n\t"
+  "pmulth   $zero, $t1, $v0\n\t"
+  "pcgth    $t3, $zero, $t0\n\t"
+  "por      $t2, $t3, $t2\n\t"
+  "paddh    $t0, $t0, $t3\n\t"
+  "pxor     $t0, $t0, $t3\n\t"
+  "pmfhl.lh $t1\n\t"
+  "pmulth   $zero, $t0, $t1\n\t"
+  "addiu    $a3, $a3, 16\n\t"
+  "addiu    $a0, $a0, 16\n\t"
+  "addiu    $at, $at, -1\n\t"
+  "and      $a3, $a3, $t4\n\t"
+  "pmfhl.lh $t0\n\t"
+  "paddh    $t0, $t0, $t3\n\t"
+  "pxor     $t0, $t0, $t3\n\t"
+  "pand     $t0, $t0, $t2\n\t"
+  "psrah    $t0, $t0, 3\n\t"
+  "bgtz     $at, 1b\n\t"
+  "sq       $t0, -16($a0)\n\t"
+  "sh       $t8, -512($a0)\n\t"
+  "sh       $t7, -384($a0)\n\t"
+  "sh       $a1, -256($a0)\n\t"
+  "sh       $a2, -128($a0)\n\t"
+  "lb       $t0, %3\n\t"
+  "lb       $t5, %5\n\t"
+  "lh       $t1,   0($a0)\n\t"
+  "lh       $t2, 128($a0)\n\t"
+  "mult     %0, $t1, $t0\n\t"
+  "mult1    %1, $t2, $t0\n\t"
+  "pcpyld   $t5, $t5, $t5\n\t"
+  "pcpyh    $t5, $t5\n\t"
+  "addiu    $at, $zero, 16\n\t"
+  "1:\n\t"
+  "lq       $t0, 0($a0)\n\t"
+  "lq       $t1, 0x0400($a3)\n\t"
+  "pcgth    $t2, $t0, $zero\n\t"
+  "pmulth   $zero, $t1, $t5\n\t"
+  "pcgth    $t3, $zero, $t0\n\t"
+  "por      $t2, $t3, $t2\n\t"
+  "paddh    $t0, $t0, $t3\n\t"
+  "pxor     $t0, $t0, $t3\n\t"
+  "pmfhl.lh $t1\n\t"
+  "pmulth   $zero, $t0, $t1\n\t"
+  "addiu    $a3, $a3, 16\n\t"
+  "addiu    $a0, $a0, 16\n\t"
+  "addiu    $at, $at, -1\n\t"
+  "and      $a3, $a3, $t4\n\t"
+  "pmfhl.lh $t0\n\t"
+  "paddh    $t0, $t0, $t3\n\t"
+  "pxor     $t0, $t0, $t3\n\t"
+  "pand     $t0, $t0, $t2\n\t"
+  "psrah    $t0, $t0, 3\n\t"
+  "bgtz     $at, 1b\n\t"
+  "sq       $t0, -16($a0)\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  : "=r"( lLevel0 ),                    // 0
+    "=r"( lLevel1 )                     // 1
+  : "m"( g_MPEGCtx.m_Y_DCScale    ),    // 2
+    "m"( g_MPEGCtx.m_C_DCScale    ),    // 3
+    "m"( g_MPEGCtx.m_QScale       ),    // 4
+    "m"( g_MPEGCtx.m_ChromaQScale )     // 5
+ );
+
+ apBlock[  -64 ] = lLevel1;
+ apBlock[ -128 ] = lLevel0;
+
+}  /* end SMS_MPEG2_DCTUnquantizeIntra */
+
+void SMS_MPEG2_DCTUnquantizeInter ( SMS_DCTELEM* apBlock ) {
+
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set nomacro\n\t"
+  ".set noat\n\t"
+  "la       $v1, %2\n\t"
+  "lbu      $t6, %0\n\t"
+  "addiu    $a3, $v1, 12\n\t"
+  "lbu      $t7, %1\n\t"
+  "mtsah    $zero, 1\n\t"
+  "pcpyld   $t6, $t7, $t6\n\t"
+  "pcpyh    $t6, $t6\n\t"
+  "lui      $t4, 0xFFFF\n\t"
+  "lui      $a1, 0x7000\n\t"
+  "pnor     $t5, $zero, $zero\n\t"
+  "ori      $t4, $t4, 0xFF7F\n\t"
+  "psrlh    $t5, $t5, 15\n\t"
+  "3:\n\t"
+  "lb       $t7, 0($v1)\n\t"
+  "pcpyld   $a2, $t6, $t6\n\t"
+  "bltzl    $t7, 2f\n\t"
+  "addiu    $a0, $a0, 128\n\t"
+  "pxor     $v0, $v0, $v0\n\t"
+  "pcpyh    $a2, $a2\n\t"
+  "addiu    $at, $zero, 8\n\t"
+  "1:\n\t"
+  "lq       $t0, 0($a0)\n\t"
+  "lq       $t1, 0x0500($a1)\n\t"
+  "pcgth    $t2, $t0, $zero\n\t"
+  "pmulth   $zero, $t1, $a2\n\t"
+  "pcgth    $t3, $zero, $t0\n\t"
+  "por      $t2, $t3, $t2\n\t"
+  "paddh    $t0, $t0, $t3\n\t"
+  "pxor     $t0, $t0, $t3\n\t"
+  "psllh    $t0, $t0, 1\n\t"
+  "paddh    $t0, $t0, $t5\n\t"
+  "pmfhl.lh $t1\n\t"
+  "pmulth   $zero, $t0, $t1\n\t"
+  "addiu    $a0, $a0, 16\n\t"
+  "addiu    $a1, $a1, 16\n\t"
+  "addiu    $at, $at, -1\n\t"
+  "and      $a1, $a1, $t4\n\t"
+  "pmfhl.lh $t0\n\t"
+  "psrah    $t0, $t0, 4\n\t"
+  "paddh    $t0, $t0, $t3\n\t"
+  "pxor     $t0, $t0, $t3\n\t"
+  "pand     $t0, $t0, $t2\n\t"
+  "paddh    $v0, $v0, $t0\n\t"
+  "bgtz     $at, 1b\n\t"
+  "sq       $t0, -16($a0)\n\t"
+  "pcpyud   $at, $v0, $at\n\t"
+  "paddh    $v0, $v0, $at\n\t"
+  "dsrl32   $at, $v0, 0\n\t"
+  "paddh    $v0, $v0, $at\n\t"
+  "srl      $at, $v0, 16\n\t"
+  "paddh    $v0, $v0, $at\n\t"
+  "psubh    $v0, $v0, $t5\n\t"
+  "lh       $at, -2($a0)\n\t"
+  "andi     $v0, $v0, 1\n\t"
+  "xor      $v0, $at, $v0\n\t"
+  "sh       $v0, -2($a0)\n\t"
+  "2:\n\t"
+  "addiu    $v1, $v1, 2\n\t"
+  "bne      $v1, $a3, 3b\n\t"
+  "qfsrv    $t6, $t6, $t6\n\t"
+  ".set at\n\t"
+  ".set macro\n\t"
+  ".set reorder\n\t"
+  :: "m"( g_MPEGCtx.m_QScale ), "m"( g_MPEGCtx.m_ChromaQScale ), "g"( g_MPEGCtx.m_BlockLastIdx )
+ );
+
+}  /* end SMS_MPEG2_DCTUnquantizeInter */
+
+static uint8_t* s_pDest;
+
 void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
 
  static unsigned long s_DMATag[ 2 ] __attribute__(   (  aligned( 16 )  )   ) = {
-  0x8000057004000032LL, 0x0000000000000000LL
+  0x8000058004000033UL, 0x0000000000000000UL
  };
 
- const int lMBXY = g_MPEGCtx.m_MBY * g_MPEGCtx.m_MBStride + g_MPEGCtx.m_MBX;
- const int lAge  = g_MPEGCtx.m_CurPic.m_Age;
+ const int     lMBXY = g_MPEGCtx.m_MBY * g_MPEGCtx.m_MBStride + g_MPEGCtx.m_MBX;
+ unsigned long lDword;
+ unsigned int  lWord;
 
- uint8_t* lpDestY;
- uint8_t* lpDestCb;
- uint8_t* lpDestCr;
- uint8_t* lpMBSkip = &g_MPEGCtx.m_pMBSkipTbl[ lMBXY ];
+ SMS_MacroBlock* lpDestMB;
+ uint8_t*        lpMBSkip = &g_MPEGCtx.m_pMBSkipTbl[ lMBXY ];
 
  SMS_OpPixFunc  ( *lOpPix  )[  4 ];
  SMS_QPelMCFunc ( *lOpQPel )[ 16 ];
@@ -952,38 +1137,27 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
  g_MPEGCtx.MBCallback ( g_MPEGCtx.m_pDestCB );
  g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
+ lDword   = (  ( unsigned long* )&g_MPEGCtx.m_BlockLastIdx  )[ 0 ];
+ lWord    = (  ( unsigned int*  )&g_MPEGCtx.m_BlockLastIdx  )[ 2 ];
+ lpDestMB = g_MPEGCtx.m_pMCBlk[ g_MPEGCtx.m_MCBlkIdx ];
+ (  ( unsigned long* )SMS_MPEG_SPR_BLOCKS  )[  98 ] = lDword;
+ (  ( unsigned int*  )SMS_MPEG_SPR_BLOCKS  )[ 198 ] = lWord;
+
  if ( g_MPEGCtx.m_MBSkiped ) {
 
   g_MPEGCtx.m_MBSkiped = 0;
  
-  if ( ++*lpMBSkip > 99 ) *lpMBSkip = 99;
-
-  if ( *lpMBSkip >= lAge && g_MPEGCtx.m_CurPic.m_Ref ) {
-
-   int             lMBX = g_MPEGCtx.m_MBX;
-   int             lMBY = g_MPEGCtx.m_MBY;
-   SMS_MacroBlock* lpMB;
-
-   lpMB  = g_MPEGCtx.m_LastPic.m_pBuf -> m_pData + lMBX;
-   lpMB += lMBY * g_MPEGCtx.m_CurPic.m_Linesize;
-
-   DSP_GetMB ( lpMB );
-
-   goto end;
-
-  }  /* end if */
-
- } else if ( !g_MPEGCtx.m_CurPic.m_Ref ) {
-
-  if ( ++*lpMBSkip > 99 ) *lpMBSkip = 99;
-
  } else *lpMBSkip = 0;
 
- lpDestY  = &SMS_MPEG_SPR_MB -> m_Y [ 0 ][ 0 ];
- lpDestCb = &SMS_MPEG_SPR_MB -> m_Cb[ 0 ][ 0 ];
- lpDestCr = &SMS_MPEG_SPR_MB -> m_Cr[ 0 ][ 0 ];
-
  if ( !g_MPEGCtx.m_MBIntra ) {
+
+  if ( g_MPEGCtx.m_BlockSum ) {
+   if ( g_MPEGCtx.m_MPEGQuant ) SMS_MPEG2_DCTUnquantizeInter ( g_MPEGCtx.m_pBlock[ 0 ] );
+   DMA_SendChainA ( DMAC_VIF0, s_DMATag );
+   g_MPEGCtx.MBCallback = SMS_MPEG_MCB;
+   g_MPEGCtx.m_pDestCB  = g_MPEGCtx.m_pMCBlk[ g_MPEGCtx.m_MCBlkIdx ];
+   s_pDest = ( uint8_t* )g_MPEGCtx.m_pDest;
+  }  /* end if */
 
   if ( !g_MPEGCtx.m_NoRounding || g_MPEGCtx.m_PicType == SMS_FT_B_TYPE ) {
 
@@ -1000,8 +1174,7 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
   if ( g_MPEGCtx.m_MVDir & SMS_MV_DIR_FORWARD ) {
 
    _MPEG_Motion (
-    lpDestY, lpDestCb, lpDestCr, 0,
-    g_MPEGCtx.m_LastPic.m_pBuf -> m_pData, lOpPix, lOpQPel
+    lpDestMB, 0, g_MPEGCtx.m_LastPic.m_pBuf -> m_pData, lOpPix, lOpQPel
    );
 
    lOpPix  = g_MPEGCtx.m_DSPCtx.m_AvgPixTab;
@@ -1012,33 +1185,13 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
   if ( g_MPEGCtx.m_MVDir & SMS_MV_DIR_BACKWARD )
 
    _MPEG_Motion (
-    lpDestY, lpDestCb, lpDestCr, 1,
-    g_MPEGCtx.m_NextPic.m_pBuf -> m_pData, lOpPix, lOpQPel
+    lpDestMB, 1, g_MPEGCtx.m_NextPic.m_pBuf -> m_pData, lOpPix, lOpQPel
    );
 
-  if ( g_MPEGCtx.m_MPEGQuant ) {
+  if ( g_MPEGCtx.m_BlockSum ) return;
 
-   _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 0 ], 0, lpDestY,       16, g_MPEGCtx.m_QScale );
-   _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 1 ], 1, lpDestY + 8,   16, g_MPEGCtx.m_QScale );
-   _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 2 ], 2, lpDestY + 128, 16, g_MPEGCtx.m_QScale );
-   _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 3 ], 3, lpDestY + 136, 16, g_MPEGCtx.m_QScale );
-
-   _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 4 ], 4, lpDestCb, 8, g_MPEGCtx.m_ChromaQScale );
-   _add_dequant_dct (  g_MPEGCtx.m_pBlock[ 5 ], 5, lpDestCr, 8, g_MPEGCtx.m_ChromaQScale );
-
-  } else {
-
-   _add_dct (  g_MPEGCtx.m_pBlock[ 0 ], 0, lpDestY,       16 );
-   _add_dct (  g_MPEGCtx.m_pBlock[ 1 ], 1, lpDestY + 8,   16 );
-   _add_dct (  g_MPEGCtx.m_pBlock[ 2 ], 2, lpDestY + 128, 16 );
-   _add_dct (  g_MPEGCtx.m_pBlock[ 3 ], 3, lpDestY + 136, 16 );
-
-   _add_dct (  g_MPEGCtx.m_pBlock[ 4 ], 4, lpDestCb, 8 );
-   _add_dct (  g_MPEGCtx.m_pBlock[ 5 ], 5, lpDestCr, 8 );
-
-  }  /* end else */
-end:
-  DMA_SendS( DMAC_FROM_SPR, ( uint8_t* )g_MPEGCtx.m_pDest, SMS_MPEG_SPR_MB, 24 );
+  DMA_SendS( DMAC_FROM_SPR, ( uint8_t* )g_MPEGCtx.m_pDest, lpDestMB, 24 );
+  g_MPEGCtx.m_MCBlkIdx ^= 1;
 
  } else {
 
@@ -1054,3 +1207,31 @@ end:
 }  /* end SMS_MPEG_DecodeMB */
 
 void SMS_MPEG_DummyCB ( void* apMB ) {}
+
+void SMS_MPEG_MCB ( void* apParam ) {
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set noat\n\t"
+  "pcpyld   $ra, $ra, $ra\n\t"
+  "pcpyld   $s0, $s0, $s0\n\t"
+  "lui      $a1, 0x7000\n\t"
+  "jal      DSP_PackAddMB\n\t"
+  "addu     $s0, $zero, $a0\n\t"
+  "lh       $v0, %1\n\t"
+  "lui      $at, 0x1001\n\t"
+  "lw       $a1, %0\n\t"
+  "addiu    $v1, $zero, 0x0100\n\t"
+  "addiu    $a2, $zero, 24\n\t"
+  "sw       $a1, -0x2FF0($at)\n\t"
+  "sw       $a2, -0x2FE0($at)\n\t"
+  "xori     $v0, $v0, 1\n\t"
+  "sw       $s0, -0x2F80($at)\n\t"
+  "sw       $v1, -0x3000($at)\n\t"
+  "sh       $v0, %1\n\t"
+  "pcpyud   $ra, $ra, $ra\n\t"
+  "pcpyud   $s0, $s0, $s0\n\t"
+  ".set reorder\n\t"
+  ".set at\n\t"
+  :: "g"( s_pDest ), "g"( g_MPEGCtx.m_MCBlkIdx )
+ );
+}  /* end SMS_MPEG_MCB */

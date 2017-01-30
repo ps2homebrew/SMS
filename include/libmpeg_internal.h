@@ -191,4 +191,5 @@ void         _MPEG_add_block_frfr ( _MPEGMotions*                               
 void         _MPEG_add_block_frfl ( _MPEGMotions*                                     );
 void         _MPEG_Suspend        ( void                                              );
 void         _MPEG_Resume         ( void                                              );
+void         _MPEG_Set16          ( unsigned char                                     );
 #endif  /* __libmpeg_internal_H */

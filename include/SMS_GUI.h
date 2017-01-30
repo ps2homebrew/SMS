@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -33,6 +33,7 @@
 # define GUI_MSG_QUIT           0x4000000000000000L
 # define GUI_MSG_FILE           0x3000000000000000L
 # define GUI_MSG_FOLDER_MP3     0x2000000000000000L
+# define GUI_MSG_RELOAD_BROWSER 0x1000000000000000L
 
 # define DECLARE_GUI_OBJECT()                                \
  void ( *Render      ) ( struct GUIObject*, int           ); \
@@ -55,12 +56,15 @@ typedef struct GUIObject {
 
 } GUIObject;
 
+void GUIObject_Cleanup ( GUIObject* );
+
 typedef enum GUIRedrawMethod {
 
  GUIRedrawMethod_InitClearAll = 0,
  GUIRedrawMethod_InitClearObj = 1,
  GUIRedrawMethod_Redraw       = 2,
- GUIRedrawMethod_RedrawClear  = 3
+ GUIRedrawMethod_RedrawClear  = 3,
+ GUIRedrawMethod_ClearScreen  = 4
 
 } GUIRedrawMethod;
 
@@ -85,6 +89,7 @@ void          GUI_AddObject    ( const char*, GUIObject*  );
 void          GUI_Redraw       ( GUIRedrawMethod          );
 void          GUI_Status       ( unsigned char*           );
 void          GUI_Error        ( unsigned char*           );
+int           GUI_Question     ( unsigned char*           );
 void          GUI_Progress     ( unsigned char*, int, int );
 void          GUI_Run          ( void                     );
 void          GUI_Suspend      ( void                     );
@@ -94,7 +99,7 @@ void          GUI_PostMessage  ( unsigned long            );
 void          GUI_DeleteObject ( const unsigned char*     );
 void          GUI_UpdateStatus ( void                     );
 void          GUI_SetColors    ( void                     );
-
+int           GUI_QuitPosted   ( void                     );
 # ifdef __cplusplus
 }
 # endif  /* __cplusplus */

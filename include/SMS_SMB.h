@@ -17,6 +17,8 @@
 # define SMB_IOCTL_UMOUNT 0x00000003
 # define SMB_IOCTL_SENUM  0x00000004
 # define SMB_IOCTL_ECHO   0x00000005
+# define SMB_IOCTL_STOPC  0x00000006
+# define SMB_IOCTL_SETCP  0x00000007
 
 # define SMB_ERROR_NEGOTIATE 0x00000001
 # define SMB_ERROR_LOGIN     0x00000002
@@ -31,7 +33,7 @@ typedef struct SMBLoginInfo {
  char m_ClientName[ 16 ] __attribute__(  ( packed )  );
  char m_UserName  [ 32 ] __attribute__(  ( packed )  );
  char m_Password  [ 64 ] __attribute__(  ( packed )  );
- int  m_fAsync           __attribute__(  ( packed )  );
+ char m_fAsync           __attribute__(  ( packed )  );
 
 } SMBLoginInfo;
 

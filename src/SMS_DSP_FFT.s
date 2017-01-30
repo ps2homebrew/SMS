@@ -222,7 +222,7 @@ s_BitRev:   .half 0x0000, 0x0100, 0x0080, 0x0180, 0x0040, 0x0140, 0x00C0, 0x01C0
 .align 4
 s_Scale:    .float 0.000015, 0.000061, 0.000122, 0.000244
             .float 0.000488, 0.000488, 0.000977, 0.000977
-            .float 0.000031, 0.000122, 0.000132, 0.000244
+            .float 0.000031, 0.000122, 0.000244, 0.000244
             .float 0.000488, 0.000488, 0.000977, 0.000977
             .float    128.0,    128.0,    128.0,    128.0
             .float      2.0,      2.0,      2.0,      2.0
@@ -330,8 +330,10 @@ DSP_FFTRun:
     nop
 
 DSP_FFTGet:
-    addiu       $sp, $sp, -256
+    addiu       $sp, $sp, -272
+    ctc2        $zero, $21
     sqc2        $vf01,   0($sp)
+    vmaddi      $vf01, $vf01, I
     sqc2        $vf02,  16($sp)
     sqc2        $vf03,  32($sp)
     sqc2        $vf04,  48($sp)
@@ -347,6 +349,7 @@ DSP_FFTGet:
     sqc2        $vf14, 208($sp)
     sqc2        $vf15, 224($sp)
     sqc2        $vf16, 240($sp)
+    sqc2        $vf01, 256($sp)
     lui         $a1, 0x7000
     addiu       $v0, $v0, 32
 1:
@@ -511,10 +514,12 @@ DSP_FFTGet:
     vftoi0.xyzw $vf08, $vf08
     vftoi0.xyzw $vf09, $vf09
     vftoi0.xyzw $vf10, $vf10
+    lqc2        $vf16, 256($sp)
     sqc2        $vf07, 0x3800($a1)
     sqc2        $vf08, 0x3810($a1)
     sqc2        $vf09, 0x3820($a1)
     sqc2        $vf10, 0x3830($a1)
+    vaddai      ACC, $vf16, I
     lqc2        $vf01,   0($sp)
     lqc2        $vf02,  16($sp)
     lqc2        $vf03,  32($sp)
@@ -532,6 +537,6 @@ DSP_FFTGet:
     lqc2        $vf15, 224($sp)
     lqc2        $vf16, 240($sp)
     jr          $ra
-    addiu       $sp, $sp, 256
+    addiu       $sp, $sp, 272
     
 

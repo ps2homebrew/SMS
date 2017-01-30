@@ -37,10 +37,13 @@ int CtxMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
+  case RC_RETURN       :
   case RC_RESET        :
   case SMS_PAD_TRIANGLE:
+
+   (  ( GUIMenu* )apObj  ) -> m_pUserData = ( void* )1;
 quit:
-   GUI_PostMessage ( GUI_MSG_QUIT );
+   if (  !GUI_QuitPosted ()  ) GUI_PostMessage ( GUI_MSG_QUIT );
 
   return GUIHResult_Handled;
 
@@ -68,9 +71,9 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
 
  strcpy ( lPath, g_CWD );
 
- if (  lPath[ strlen ( lPath ) - 1 ] != '/'  ) SMS_Strcat ( lPath, g_SlashStr );
+ if (  lPath[ strlen ( lPath ) - 1 ] != '/'  ) strcat ( lPath, g_SlashStr );
 
- SMS_Strcat ( lPath, lpState -> m_pCurr -> m_pOptionName -> m_pStr );
+ strcat ( lPath, lpState -> m_pCurr -> m_pOptionName -> m_pStr );
 
  s_pFileCtxSub = s_pFileCtx -> Open ( lpName, s_pFileCtx -> m_pOpenParam );
 
@@ -92,12 +95,12 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
 
 static int _is_sub ( SMS_ListNode* apNode ) {
 
- int lLen = strlen ( apNode -> m_pString );
+ int lLen = strlen (  _STR( apNode )  );
 
- return lLen > 4 && apNode -> m_pString[ lLen - 4 ] == '.' &&
-        (  !stricmp ( apNode -> m_pString + lLen - 3, g_pSubStr ) ||
-           !stricmp ( apNode -> m_pString + lLen - 3, g_pSrtStr ) ||
-           !stricmp ( apNode -> m_pString + lLen - 3, g_pTxtStr )
+ return lLen > 4 && _STR( apNode )[ lLen - 4 ] == '.' &&
+        (  !stricmp (  _STR( apNode ) + lLen - 3, g_pSubStr  ) ||
+           !stricmp (  _STR( apNode ) + lLen - 3, g_pSrtStr  ) ||
+           !stricmp (  _STR( apNode ) + lLen - 3, g_pTxtStr  )
         ) && apNode -> m_Param == GUICON_FILE;
 
 }  /* end _is_sub */
@@ -134,8 +137,8 @@ FileContext* GUI_MiniBrowser ( FileContext* apCtx, char* apPath, void** appType 
 
   if (  _is_sub ( lpNode )  ) {
 
-   lpNames[ i ].m_pStr = lpNode -> m_pString;
-   lpNames[ i ].m_Len  = strlen ( lpNode -> m_pString );
+   lpNames[ i ].m_pStr = _STR( lpNode );
+   lpNames[ i ].m_Len  = strlen (  _STR( lpNode )  );
 
    lpMenuItems[ i ].m_IconLeft    = GUICON_FILE;
    lpMenuItems[ i ].Handler       = _handler;
@@ -180,7 +183,11 @@ FileContext* GUI_MiniBrowser ( FileContext* apCtx, char* apPath, void** appType 
  GUI_DeleteObject ( STR_SELECT_SUBTITLES.m_pStr );
  GUI_Redraw ( GUIRedrawMethod_Redraw );
 
- free ( lpNames     );
+ free ( lpNames );
+
+ for ( i = 0; i < lnSubs; ++i )
+  if ( lpMenuItems[ i ].m_pIconLeftPack ) free ( lpMenuItems[ i ].m_pIconLeftPack );
+
  free ( lpMenuItems );
 
  *appType = ( void* )s_SubFmt;

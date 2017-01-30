@@ -44,6 +44,7 @@ void IPU_InitLoadImage ( IPULoadImage* apLoadImg, int aWidth, int aHeight ) {
  apLoadImg -> m_Width  = aWidth;
  apLoadImg -> m_Height = aHeight;
  apLoadImg -> m_QWC    = aWidth << 2;
+ apLoadImg -> m_fPal   = 0;
  apLoadImg -> Destroy  = _destroy;
 
  for ( aHeight = 0; aHeight < aWidth; aHeight += 16, lpData += 1024, lpDMA += 12 ) {
@@ -132,7 +133,19 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
    unsigned int lSlice = 0x00000101;
    unsigned int lQSC;
 
-   if (  IPU_FDEC( 32 ) == lSlice  ) {
+   lCode = IPU_FDEC( 32 );
+
+   if ( lCode == 0x000001B2 ) {
+
+    apLoadImg -> m_fPal = 1;
+
+    for ( i = 0; i < 16; ++i ) apLoadImg -> m_Pal[ i ] = IPU_FDEC( 32 ) | 0x60000000;
+
+    IPU_FDEC( 32 );
+
+   }  /* end if */
+
+   if (  IPU_FDEC( 0 ) == lSlice  ) {
 
     unsigned long* lpPos;
 
@@ -174,9 +187,9 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
 
 }  /* end IPU_LoadImage */
 
-unsigned int IPU_ImageInfo ( void* apData, unsigned int* apHeight ) {
+unsigned short IPU_ImageInfo ( void* apData, unsigned short* apHeight ) {
 
- unsigned int retVal = 0;
+ unsigned short retVal = 0;
 
  if (  SMS_unaligned32 ( apData ) == 0xB2010000  ) {
 
@@ -190,3 +203,109 @@ unsigned int IPU_ImageInfo ( void* apData, unsigned int* apHeight ) {
  return retVal;
 
 }  /* end IPU_ImageInfo */
+
+void IPU_UnpackImage ( void* apDst, void* apSrc, int aSize, int aWidth, int aHeight, int afDarken, int aTH0, int aTH1 ) {
+
+ int lCode, lMBW, lMBH, lMBS;
+
+ DMAC -> m_SQWC = (  ( aWidth - 16 ) >> 2  ) | 0x00040000;
+
+ lMBW = aWidth  >> 4;
+ lMBH = aHeight >> 4;
+ lMBS = lMBW << 10;
+
+ IPU_RESET();
+ IPU -> m_CTRL |= 1 << 23;
+ IPU_CMD_SETTH( aTH0, aTH1 );
+
+ DMA_Send (  DMAC_TO_IPU, apSrc, ( aSize + 15 ) >> 4  );
+
+ lCode = IPU_FDEC ( 0 );
+
+ if ( lCode == 0x000001B2 ) {
+
+  lCode = IPU_FDEC ( 32 );
+
+  if (  ( lCode >> 16 ) == aWidth && ( lCode & 0xFFFF ) == aHeight  ) {
+
+   unsigned int lSlice = 0x00000101;
+   unsigned int lQSC;
+
+   if (  IPU_FDEC( 32 ) == lSlice  ) {
+
+    char* lpRunDst = apDst;
+
+    lQSC = IPU_FDEC ( 32 ) >> 27;
+    ++lSlice;
+
+    while ( lMBH-- ) {
+
+     char* lpDst = ( char* )lpRunDst;
+
+     if (  !IPU_IDEC ( 7, lQSC, 0, 0, 0, 0 )  ) break;
+
+     __asm__ __volatile__(
+      ".set noreorder\n\t"
+      ".set noat\n\t"
+      "move    $v0, %2\n\t"
+      "lui     $at, 0x1001\n\t"
+      "2:\n\t"
+      "addiu   $v0, $v0, -1\n\t"
+      "1:\n\t"
+      "lw      $ra, -12288($at)\n\t"
+      "andi    $ra, 0x100\n\t"
+      "bgtz    $ra, 1b\n\t"
+      "nop\n\t"
+      "lui     $ra, 0x8000\n\t"
+      "ori     $ra, 0x3C00\n\t"
+      "sw      $ra, -20464($at)\n\t"
+      "addiu   $ra, $zero, 64\n\t"
+      "sw      $ra, -20448($at)\n\t"
+      "addiu   $ra, $zero, 0x0100\n\t"
+      "sw      $ra, -20480($at)\n\t"
+      "addiu   $ra, $zero, 64\n\t"
+      "sw      %0,  -12272($at)\n\t"
+      "sw      $ra, -12256($at)\n\t"
+      "addiu   $ra, $zero, 0x3C00\n\t"
+      "sw      $ra, -12160($at)\n\t"
+      "1:\n\t"
+      "lw      $ra, -20480($at)\n\t"
+      "andi    $ra, 0x0100\n\t"
+      "bgtz    $ra, 1b\n\t"
+      "nop\n\t"
+      "beq     %3, $zero, 1f\n\t"
+      "lui     $a0, 0x7000\n\t"
+      "ori     $a0, 0x3C00\n\t"
+      "jal     _darken_image\n\t"
+      "addiu   $a1, $zero, 64\n\t"
+      "1:\n\t"
+      "addiu   $ra, $zero, 0x108\n\t"
+      "sw      $ra, -12288($at)\n\t"
+      "bgtz    $v0, 2b\n\t"
+      "addiu   %0, %0, 64\n\t"
+      ".set reorder\n\t"
+      ".set at\n\t"
+      : "=r"( lpDst )
+      : "0"( lpDst ), "r"( lMBW ), "r"( afDarken )
+      : "at", "v0", "v1", "a0", "a1", "t0", "t1", "t2", "t3", "t4", "t5", "t6"
+     );
+
+     if (  IPU_FDEC ( 0 ) != lSlice++  ) break;
+
+     IPU_FDEC ( 32 );
+
+     lpRunDst = ( char* )lpRunDst + lMBS;
+
+    }  /* end while */
+
+   }  /* end if */
+
+  }  /* end if */
+
+ }  /* end if */
+
+ DMA_Stop ( DMAC_FROM_IPU );
+ DMA_Stop ( DMAC_TO_IPU   );
+ IPU_RESET();
+
+}  /* end IPU_UnpackImage */

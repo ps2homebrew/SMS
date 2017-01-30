@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2005 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2005-2007 Eugene Plotnikov <e-plotnikov@operamail.com>
 # (c) 2006 hjx (widescreen support)
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
@@ -59,9 +59,11 @@ typedef struct IPULoadImage {
 
  unsigned long* m_pDMA;
  unsigned char* m_pData;
- unsigned int   m_Width;
- unsigned int   m_Height;
- unsigned int   m_QWC;
+ unsigned short m_Width;
+ unsigned short m_Height;
+ unsigned short m_QWC;
+ unsigned short m_fPal;
+ unsigned int   m_Pal[ 16 ];
 
  void ( *Destroy ) ( struct IPULoadImage* );
 
@@ -69,12 +71,9 @@ typedef struct IPULoadImage {
 
 typedef struct IPUContext {
 
- unsigned long int      m_DMAGIFDraw[ 28 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAVIFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAViFDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAVIPDraw[  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAGIFTX  [  4 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAGIFPack[  6 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAGIFBgtn[ 16 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAGIFTX  [  8 ] __attribute__(   ( aligned( 16 )  )   );
+ unsigned long int      m_DMAGIFPack[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned int           m_ImgLeft   [  8 ];
  unsigned int           m_ImgTop    [  8 ];
  unsigned int           m_ImgRight  [  8 ];
@@ -83,23 +82,11 @@ typedef struct IPUContext {
  unsigned int           m_TxtTop    [  8 ];
  unsigned int           m_TxtRight  [  8 ];
  unsigned int           m_TxtBottom [  8 ];
- unsigned long int      m_DestY;
- unsigned int           m_Slice;
- unsigned int           m_MB;
- unsigned int           m_nMBSlice;
- unsigned int           m_nMBSlices;
- unsigned int           m_MBStride;
- unsigned int           m_QWCToIPUSlice;
- unsigned int           m_QWCFromIPUSlice;
- unsigned int           m_fAlloc;
  unsigned int           m_DMAHandlerID_GIF;
- unsigned int           m_CSCmd;
  unsigned int           m_PixFmt;
  unsigned int           m_TexFmt;
- unsigned int           m_VBlankStartHandlerID;
  unsigned int           m_fDraw;
  unsigned int           m_VRAM;
- unsigned int           m_SVRAM;
  unsigned int           m_TBW;
  unsigned int           m_TW;
  unsigned int           m_TH;
@@ -107,27 +94,23 @@ typedef struct IPUContext {
  unsigned int           m_Height;
  unsigned int           m_ScrRight;
  unsigned int           m_ScrBottom;
- unsigned int           m_VIFQueueSize;
- unsigned int           m_ViFQueueSize;
- unsigned int           m_VIPQueueSize;
- unsigned int           m_GIFQueueSize;
  unsigned int           m_ModeIdx;
- unsigned char*         m_pResult;
+ unsigned short         m_fWS;
+ unsigned char          m_fPG;
+ unsigned char          m_fFL;
  unsigned long int*     m_pDMAPacket;
- struct SMS_MacroBlock* m_pMB;
  unsigned long          m_BRGBAQ;
+ unsigned long          m_Alpha;
  long*                  m_pAudioPTS;
  long                   m_VideoPTS;
+ int                    m_VSync;
  
  void ( *Sync          ) ( void         );
  void ( *Display       ) ( void*, long  );
  void ( *Destroy       ) ( void         );
  void ( *SetTEX        ) ( void         );
- void ( *GIFHandler    ) ( void         );
  void ( *Reset         ) ( void         );
  void ( *QueuePacket   ) ( int, void*   );
- void ( *PQueuePacket  ) ( int, void*   );
- void ( *iQueuePacket  ) ( int, void*   );
  void ( *Suspend       ) ( void         );
  void ( *Resume        ) ( void         );
  void ( *Repaint       ) ( void         );
@@ -147,13 +130,14 @@ extern "C" {
 
 IPUContext* IPU_InitContext ( int, int, long*, int );
 
-unsigned int IPU_FDEC    ( unsigned                                                   );
-unsigned int IPU_IDEC    ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );
-void         IPU_FRST    ( void                                                       );
+unsigned int IPU_FDEC ( unsigned                                                   );
+unsigned int IPU_IDEC ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );
+void         IPU_FRST ( void                                                       );
 
-void         IPU_InitLoadImage ( IPULoadImage*, int, int                            );
-void         IPU_LoadImage     ( IPULoadImage*, void*, int, int, int, int, int, int );
-unsigned int IPU_ImageInfo     ( void*, unsigned int*                               );
+void           IPU_InitLoadImage ( IPULoadImage*, int, int                            );
+void           IPU_LoadImage     ( IPULoadImage*, void*, int, int, int, int, int, int );
+unsigned short IPU_ImageInfo     ( void*, unsigned short*                             );
+void           IPU_UnpackImage   ( void*, void*, int, int, int, int, int, int         );
 
 # ifdef __cplusplus
 }

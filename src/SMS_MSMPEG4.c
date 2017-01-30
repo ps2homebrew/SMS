@@ -1415,7 +1415,7 @@ static int32_t MSMPEG4_Init ( SMS_CodecContext* apCtx ) {
 
    int lL;
    int lSize = 0;
-   int lV    = abs ( lLevel );
+   int lV    = SMS_abs ( lLevel );
 
    while ( lV ) {
 
@@ -1576,21 +1576,21 @@ static int32_t MSMPEG4_Init ( SMS_CodecContext* apCtx ) {
 
   MPEG4_CommonInit ( apCtx );
 
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_zigzag_direct             );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_zigzag_direct             );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_horizontal_scan );
+  SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan   );
+
+  BASECTX().m_pY_DCScaleTbl = s_y_dc_scale_table;
+  BASECTX().m_pC_DCScaleTbl = s_c_dc_scale_table;
+  BASECTX().DecodeMB        = _msmpeg4_decode_mb;
+
+  BASECTX().m_pCodedBlockBase = calloc (
+   1, BASECTX().m_B8Stride * (  2 * BASECTX().m_MBH + 1  )
+  );
+  BASECTX().m_pCodedBlock     = g_MPEGCtx.m_pCodedBlockBase + g_MPEGCtx.m_B8Stride + 1;
+
  }  /* end if */
-
- SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_InterScanTbl,  g_SMS_DSP_zigzag_direct             );
- SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraScanTbl,  g_SMS_DSP_zigzag_direct             );
- SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraHScanTbl, g_SMS_DSP_alternate_horizontal_scan );
- SMS_MPEG_InitScanTable ( &g_MPEGCtx.m_IntraVScanTbl, g_SMS_DSP_alternate_vertical_scan   );
-
- BASECTX().m_pY_DCScaleTbl = s_y_dc_scale_table;
- BASECTX().m_pC_DCScaleTbl = s_c_dc_scale_table;
- BASECTX().DecodeMB        = _msmpeg4_decode_mb;
-
- BASECTX().m_pCodedBlockBase = calloc (
-  1, BASECTX().m_B8Stride * (  2 * BASECTX().m_MBH + 1  )
- );
- BASECTX().m_pCodedBlock     = g_MPEGCtx.m_pCodedBlockBase + g_MPEGCtx.m_B8Stride + 1;
 
  ++s_Init;
 
@@ -1670,7 +1670,7 @@ static SMS_INLINE int _msmpeg4_pred_dc (
 
  }  /* end else */
 
- if (  abs ( lA - lB ) <= abs ( lB - lC )  ) {
+ if (  SMS_abs ( lA - lB ) <= SMS_abs ( lB - lC )  ) {
 
   lPred  = lC;
   *apDir = 1;
@@ -1817,7 +1817,7 @@ static SMS_INLINE int _msmpeg4_decode_block (
   lRunDiff     = 0;
   i            = 0;
 
-  if ( ! aCoded ) goto not_coded;
+  if ( !aCoded ) goto not_coded;
 
   if ( g_MPEGCtx.m_ACPred )
 
@@ -1836,16 +1836,14 @@ static SMS_INLINE int _msmpeg4_decode_block (
   lpRL     = &s_rl_table[ 3 + g_MPEGCtx.m_RLTblIdx ];
   lRunDiff = 1;
 
-  if ( ! aCoded ) {
-
+  if ( !aCoded ) {
    g_MPEGCtx.m_BlockLastIdx[ aN ] = i;
    return 0;
-
   }  /* end if */
 
   if ( !apScanTbl ) apScanTbl = g_MPEGCtx.m_InterScanTbl.m_pScantable;
 
-  lpRLVLC = lpRL -> m_pRLVLC[ g_MPEGCtx.m_QScale ];
+  lpRLVLC = lpRL -> m_pRLVLC[ ( int )g_MPEGCtx.m_QScale ];
 
  }  /* end else */
 
@@ -1960,6 +1958,7 @@ not_coded:
  }  /* end if */
 
  g_MPEGCtx.m_BlockLastIdx[ aN ] = i;
+ g_MPEGCtx.m_BlockSum          += ( i != -1 );
 
  return 0;
 
@@ -2008,10 +2007,17 @@ static int _msmpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
 
     g_MPEGCtx.m_MBIntra = 0;
 
-    for ( i = 0; i < 6; ++i ) g_MPEGCtx.m_BlockLastIdx[ i ] = -1;
+    __asm__ __volatile__(
+     ".set noat\n\t"
+     "pnor  $at, $zero, $zero\n\t"
+     "sd    $at, %0\n\t"
+     "sw    $at, 8+%0\n\t"
+     ".set at\n\t"
+     :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+    );
 
-    g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
-    g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
+    g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
+    g_MPEGCtx.m_MVType   = SMS_MV_TYPE_16X16;
 
     g_MPEGCtx.m_MV[ 0 ][ 0 ][ 0 ] = 0;
     g_MPEGCtx.m_MV[ 0 ][ 0 ][ 1 ] = 0;
@@ -2163,7 +2169,7 @@ static int _msmpeg4_decode_picture_header ( void ) {
 
 }  /* end _msmpeg4_decode_picture_header */
 
-static int _msmpeg4_decode_ext_header ( int aBufSize ) {
+static void _msmpeg4_decode_ext_header ( int aBufSize ) {
 
  SMS_BitContext* lpBitCtx = &g_MPEGCtx.m_BitCtx;
  int             lLeft    = aBufSize * 8 - SMS_BitCount ( lpBitCtx );
@@ -2178,8 +2184,6 @@ static int _msmpeg4_decode_ext_header ( int aBufSize ) {
 
  } else if ( lLeft < lLength + 8 ) g_MPEGCtx.m_FlipFlopRnd = 0;
 
- return 0;
-
 }  /* end _msmpeg4_decode_ext_header */
 
 static void _msmpeg4_decode_slice ( void ) {
@@ -2189,8 +2193,6 @@ static void _msmpeg4_decode_slice ( void ) {
  g_MPEGCtx.m_ResyncMBY      = g_MPEGCtx.m_MBY;
 
  SMS_MPEG_SetQScale ( g_MPEGCtx.m_QScale );
-
- g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
  for ( ; g_MPEGCtx.m_MBY < g_MPEGCtx.m_MBH; ++g_MPEGCtx.m_MBY ) {
 
@@ -2208,8 +2210,9 @@ static void _msmpeg4_decode_slice ( void ) {
         g_MPEGCtx.m_ResyncMBY + 1 == g_MPEGCtx.m_MBY
    ) g_MPEGCtx.m_FirstSliceLine = 0;
 
-   g_MPEGCtx.m_MVDir  = SMS_MV_DIR_FORWARD;
-   g_MPEGCtx.m_MVType = SMS_MV_TYPE_16X16;
+   g_MPEGCtx.m_BlockSum = 0;
+   g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
+   g_MPEGCtx.m_MVType   = SMS_MV_TYPE_16X16;
 
    lRet = g_MPEGCtx.DecodeMB ( g_MPEGCtx.m_pBlock );
 
@@ -2230,9 +2233,7 @@ static void _msmpeg4_decode_slice ( void ) {
 
      }  /* end if */
 
-     goto end;
-
-    } else if ( lRet == SMS_SLICE_NOEND ) goto end;
+    }  /* end if */
 
     goto end;
 
@@ -2264,17 +2265,35 @@ end:
  while (   (  *( volatile unsigned int* )0x10003800  ) & 3   );
 
  g_MPEGCtx.MBCallback ( g_MPEGCtx.m_pDestCB );
+ g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
 }  /* end _msmpeg4_decode_slice */
 
+static SMS_INLINE void SMS_MPEG_CleanBuffers ( void ) {
+ int lCWrap, lCXY, lWrap, lXY;
+ lWrap  = g_MPEGCtx.m_B8Stride;
+ lXY    = ( 2 * g_MPEGCtx.m_MBY - 1 ) * lWrap  + g_MPEGCtx.m_MBX * 2 - 1;
+ lCWrap = g_MPEGCtx.m_MBStride;
+ lCXY   = (     g_MPEGCtx.m_MBY - 1 ) * lCWrap + g_MPEGCtx.m_MBX     - 1;
+ memset (  g_MPEGCtx.m_pACVal[ 0 ] + lXY,  0, ( lWrap * 2 + 1 ) * 16 * sizeof ( int16_t )  );
+ memset (  g_MPEGCtx.m_pACVal[ 1 ] + lCXY, 0, ( lCWrap    + 1 ) * 16 * sizeof ( int16_t )  );
+ memset (  g_MPEGCtx.m_pACVal[ 2 ] + lCXY, 0, ( lCWrap    + 1 ) * 16 * sizeof ( int16_t )  );
+ __asm__ __volatile__(
+  "sw   $zero, %0\n\t"
+  "sw   $zero, %1\n\t"
+  :: "m"( g_MPEGCtx.m_LastMV[ 0 ][ 0 ][ 0 ] ), "m"( g_MPEGCtx.m_LastMV[ 1 ][ 0 ][ 0 ] )
+ );
+}  /* end SMS_MPEG_CleanBuffers */
+
 static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
- uint8_t*         lpBuf;
- int32_t          lBufSize;
- SMS_FrameBuffer* lpFrame;
- SMS_BitContext*  lpBitCtx;
- int              retVal   = 0;
- SMS_AVPacket*    lpPkt    = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
+ uint8_t*          lpBuf;
+ int32_t           lBufSize;
+ SMS_FrameBuffer*  lpFrame;
+ SMS_BitContext*   lpBitCtx;
+ int               retVal   = 0;
+ SMS_AVPacket*     lpPkt    = ( SMS_AVPacket* )SMS_RingBufferWait ( apInput );
+ SMS_FrameBuffer** lppFrame;
 
  if ( !lpPkt ) return retVal;
 
@@ -2288,22 +2307,14 @@ static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutpu
   SMS_InitGetBits ( lpBitCtx, lpBuf, lBufSize << 3 );
   g_MPEGCtx.m_BSBufSize = 0;
 
-  if ( g_MPEGCtx.m_pCurPic == NULL || g_MPEGCtx.m_pCurPic -> m_pBuf )
-
-   g_MPEGCtx.m_pCurPic = &g_MPEGCtx.m_pPic[ SMS_MPEGContext_FindUnusedPic () ];
-
   if (  _msmpeg4_decode_picture_header () < 0  ) goto end;
 
-  apCtx -> m_HasBFrames = 0;
+  g_MPEGCtx.m_Bugs         |= SMS_BUG_NO_PADDING;
+  g_MPEGCtx.m_CurPic.m_Type = g_MPEGCtx.m_PicType;
 
-  g_MPEGCtx.m_Bugs             |= SMS_BUG_NO_PADDING;
-  g_MPEGCtx.m_CurPic.m_Type     = g_MPEGCtx.m_PicType;
-  g_MPEGCtx.m_CurPic.m_KeyFrame = g_MPEGCtx.m_PicType == SMS_FT_I_TYPE;
+  lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
 
-  if (  SMS_MPEG_FrameStart () < 0  ) goto end;
-
-  g_MPEGCtx.m_MBX = 0; 
-  g_MPEGCtx.m_MBY = 0;
+  SMS_MPEG_FrameStart ();
 
   _msmpeg4_decode_slice ();
 
@@ -2328,30 +2339,39 @@ static int32_t MSMPEG4_Decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutpu
    lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
   else lpFrame = g_MPEGCtx.m_LastPic.m_pBuf;
 
-  apCtx -> m_FrameNr = g_MPEGCtx.m_PicNr - 1;
-
   if (  ( retVal = g_MPEGCtx.m_pLastPic || g_MPEGCtx.m_LowDelay )  )
    lpFrame -> m_FrameType = g_MPEGCtx.m_PicType;
   else lpFrame = g_MPEGCtx.m_CurPic.m_pBuf;
 
-  if ( apCtx -> m_HasBFrames && lpFrame -> m_FrameType != SMS_FT_B_TYPE ) {
+  lpFrame -> m_StartPTS = lpPkt -> m_PTS;
 
-   lpFrame -> m_PTS  = g_MPEGCtx.m_LastPPTS + g_MPEGCtx.m_MSPerFrame;
-   g_MPEGCtx.m_LastPPTS = lpPkt -> m_PTS;
+  if ( !retVal )
 
-  } else lpFrame -> m_PTS = lpPkt -> m_PTS;
+   SMS_RingBufferUnalloc ( apOutput, 4 );
 
-  lpFrame -> m_SPTS = lpPkt -> m_PTS;
+  else {
 
-  if ( retVal ) {
+   SMS_MPEGCSC*      lpCSC      = ( SMS_MPEGCSC* )apCtx -> m_pHWData;
+   int               lBufIdx    = lpCSC -> m_BufIdx;
+   SMS_FrameBuffer*  lpRGBFrame = &lpCSC -> m_Buf[ lBufIdx++ ];
+   SMS_CSCParam*     lpCSCParam = &(  ( SMS_VideoBuffer* )apCtx -> m_pIntBuf  ) -> m_CSCParam;
 
-   SMS_FrameBuffer** lppFrame = ( SMS_FrameBuffer** )SMS_RingBufferAlloc ( apOutput, 4 );
+   while ( lpRGBFrame -> m_FrameType >= 0 ) RotateThreadReadyQueue ( SMS_THREAD_PRIORITY );
 
-   *lppFrame = lpFrame;
+   lpRGBFrame -> m_FrameType = 0;
+
+   SMS_CSC ( lpCSCParam, lpFrame -> m_pCSCDma, lpRGBFrame -> m_pBase );
+
+   if (  lBufIdx == sizeof ( lpCSC -> m_Buf ) / sizeof ( lpCSC -> m_Buf[ 0 ] )  ) lBufIdx = 0;
+
+   lpRGBFrame -> m_StartPTS = lpPkt -> m_PTS;
+
+   lpCSC -> m_BufIdx = lBufIdx;
+   *lppFrame         = lpRGBFrame;
 
    SMS_RingBufferPost ( apOutput );
 
-  }  /* end if */
+  }  /* end else */
 
  } else {
 

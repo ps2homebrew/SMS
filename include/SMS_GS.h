@@ -3,13 +3,18 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
 #ifndef __SMS_GS_H
 # define __SMS_GS_H
+
+# define GS_BGCOLOR() (  *( volatile unsigned long* )0x120000E0  )
+
+# define GIF_MODE() (  *( volatile unsigned int* )0x10003010  )
+# define GIF_STAT() (  *( volatile unsigned int* )0x10003020  )
 
 typedef enum GSFieldMode {
 
@@ -27,12 +32,15 @@ typedef enum GSInterlaceMode {
 
 typedef enum GSVideoMode {
 
- GSVideoMode_NTSC         = 0x02,
- GSVideoMode_PAL          = 0x03,
- GSVideoMode_DTV_720x480P = 0x50,
- GSVideoMode_VESA_60Hz    = 0x1A,
- GSVideoMode_VESA_75Hz    = 0x1C,
- GSVideoMode_Default      = 0xFF
+ GSVideoMode_NTSC           = 0x02,
+ GSVideoMode_PAL            = 0x03,
+ GSVideoMode_DTV_720x480P   = 0x50,
+ GSVideoMode_DTV_1920x1080I = 0x51,
+ GSVideoMode_DTV_1280x720P  = 0x52,
+ GSVideoMode_DTV_640x576P   = 0x53,
+ GSVideoMode_VESA_60Hz      = 0x1A,
+ GSVideoMode_VESA_75Hz      = 0x1C,
+ GSVideoMode_Default        = 0xFF
 
 } GSVideoMode;
 
@@ -86,7 +94,8 @@ typedef enum GSPaintMethod {
 typedef enum GSFlushMethod {
 
  GSFlushMethod_KeepLists,
- GSFlushMethod_DeleteLists
+ GSFlushMethod_DeleteLists,
+ GSFlushMethod_DeleteListsOnly
 
 } GSFlushMethod;
 
@@ -171,6 +180,7 @@ typedef union GIFTag {
 # define GS_ALPHA_2    0x43
 # define GS_BITBLTBUF  0x50
 # define GS_COLCLAMP   0x46
+# define GS_DIMX       0x44
 # define GS_DTHE       0x45
 # define GS_FBA_1      0x4A
 # define GS_FBA_2      0x4B
@@ -215,6 +225,8 @@ typedef union GIFTag {
      (  ( unsigned long )( spsm ) << 24  ) | (  ( unsigned long )( dbp  ) << 32  ) | \
      (  ( unsigned long )( dbw  ) << 48  ) | (  ( unsigned long )( dpsm ) << 56  )   \
  )
+
+# define GS_SET_DTHE( v ) ( v )
 
 # define GS_SET_FBA_1 GS_SET_FBA
 # define GS_SET_FBA_2 GS_SET_FBA
@@ -333,6 +345,20 @@ typedef union GIFTag {
  (   (  ( unsigned long )( zbp  ) <<  0  ) | \
      (  ( unsigned long )( psm  ) << 24  ) | \
      (  ( unsigned long )( zmsk ) << 32  )   \
+ )
+
+#define GS_SET_DIMX(                                                                 \
+         dm00, dm01, dm02, dm03, dm10, dm11, dm12, dm13,                             \
+         dm20, dm21, dm22, dm23, dm30, dm31, dm32, dm33                              \
+        )                                                                            \
+ (   (  ( unsigned long )( dm00 ) <<  0  ) | (  ( unsigned long )( dm01 ) <<  4  ) | \
+     (  ( unsigned long )( dm02 ) <<  8  ) | (  ( unsigned long )( dm03 ) << 12  ) | \
+     (  ( unsigned long )( dm10 ) << 16  ) | (  ( unsigned long )( dm11 ) << 20  ) | \
+     (  ( unsigned long )( dm12 ) << 24  ) | (  ( unsigned long )( dm13 ) << 28  ) | \
+     (  ( unsigned long )( dm20 ) << 32  ) | (  ( unsigned long )( dm21 ) << 36  ) | \
+     (  ( unsigned long )( dm22 ) << 40  ) | (  ( unsigned long )( dm23 ) << 44  ) | \
+     (  ( unsigned long )( dm30 ) << 48  ) | (  ( unsigned long )( dm31 ) << 52  ) | \
+     (  ( unsigned long )( dm32 ) << 56  ) | (  ( unsigned long )( dm33 ) << 60  )   \
  )
 
 # define GS_PMODE_EN_OFF   0
@@ -965,7 +991,7 @@ typedef struct GSRegTEXFLUSH {
 
 typedef union GSRegUV {
 
- union {
+ struct {
 
   unsigned long U     : 14 __attribute__(  ( packed )  );
   unsigned long m_Pad0:  2 __attribute__(  ( packed )  );
@@ -977,6 +1003,47 @@ typedef union GSRegUV {
  unsigned long m_Value __attribute__(  ( packed )  );
 
 } GSRegUV;
+
+typedef union GSRegDIMX {
+
+ struct {
+  unsigned long m_DIMX00 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad00  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX01 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad01  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX02 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad02  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX03 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad03  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX10 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad10  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX11 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad11  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX12 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad12  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX13 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad13  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX20 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad20  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX21 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad21  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX22 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad22  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX23 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad23  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX30 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad30  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX31 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad31  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX32 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad32  : 1 __attribute__(  ( packed )  );
+  unsigned long m_DIMX33 : 3 __attribute__(  ( packed )  );
+  unsigned long m_Pad33  : 1 __attribute__(  ( packed )  );
+ } __attribute__(  ( packed )  );
+
+ unsigned long m_Value __attribute__(  ( packed )  );
+
+} GSRegDIMX;
 
 typedef struct GSDC {
 
@@ -1012,6 +1079,8 @@ typedef struct GSGC {
  unsigned long   m_PABETag;
  GSRegTEX1       m_TEX1Val;
  unsigned long   m_TEX1Tag;
+ GSRegDIMX       m_DIMXVal;
+ unsigned long   m_DIMXTag;
 
 } GSGC __attribute__(   (  aligned( 16 )  )   );
 
@@ -1034,7 +1103,7 @@ typedef struct GSClearPacket {
 
 } GSClearPacket __attribute__(   (  aligned( 16 )  )   );
 
-typedef struct GSBitBltPacket {
+typedef struct GSStoreImage {
 
  unsigned long  m_VIFCodes[ 2 ];
  GIFTag         m_Tag;
@@ -1044,12 +1113,12 @@ typedef struct GSBitBltPacket {
  unsigned long  m_TRXREGTag;
  GSRegTRXPOS    m_TRXPOSVal;
  unsigned long  m_TRXPOSTag;
- GSRegTRXDIR    m_TRXDIRVal;
- unsigned long  m_TRXDIRTag;
  GSRegFINISH    m_FINISHVal;
  unsigned long  m_FINISHTag;
+ GSRegTRXDIR    m_TRXDIRVal;
+ unsigned long  m_TRXDIRTag;
 
-} GSBitBltPacket __attribute__(   (  aligned( 16 )  )   );
+} GSStoreImage __attribute__(   (  aligned( 16 )  )   );
 
 typedef struct GSRoundRectPacket {
 
@@ -1095,8 +1164,9 @@ typedef struct GSLoadImage {
  unsigned long  m_TrxDirTag;
  GIFTag         m_Tag2;
  unsigned long  m_DMATag2[ 2 ];
+ unsigned long  m_DMATag3[ 2 ];
 
-} GSLoadImage __attribute__(   (  aligned( 16 )  )   );
+} GSLoadImage __attribute__(   (  aligned( 64 )  )   );
 
 typedef struct GSParams {
 
@@ -1109,16 +1179,12 @@ typedef struct GSParams {
  float          m_AspectRatio[ 4 ];
  float          m_PARNTSC;
  float          m_PARPAL;
+ float          m_PAR480P;
  float          m_PARVESA;
+ float          m_PAR720P;
+ float          m_PAR1080I;
 
 } GSParams __attribute__(   (  aligned( 16 )  )   );
-
-typedef struct GSCharIndent {
-
- char m_Left [ 32 ] __attribute__(  ( packed )  );
- char m_Right[ 32 ] __attribute__(  ( packed )  );
-
-} GSCharIndent __attribute__(   (  aligned( 8 )  )   );
 
 typedef struct GSContext {
 
@@ -1138,7 +1204,6 @@ typedef struct GSContext {
  GSDC           m_DispCtx;
  GSGC           m_DrawCtx[ 2 ];
  GSClearPacket  m_ClearPkt;
- unsigned int   m_CLUT[ 4 ];
  GSCodePage     m_CodePage;
  unsigned int   m_VRAMFontPtr;
           int   m_TextColor;
@@ -1146,11 +1211,31 @@ typedef struct GSContext {
  unsigned int   m_TBW;
  unsigned int   m_TW;
  unsigned int   m_TH;
+          int   m_FontTexFmt;
+ unsigned char* m_pDBuf;
+          int   m_LWidth;
+          int   m_PixSize;
+          int   m_DrawDelay;
+          int   m_DrawDelay2;
 
 } GSContext;
 
-extern GSContext    g_GSCtx;
-extern GSCharIndent g_GSCharIndent[ 224 ];
+typedef struct GSMTKFontHeader {
+
+ char           m_ID [ 3 ]    __attribute__(  ( packed )  );
+ char           m_ClrType     __attribute__(  ( packed )  );
+ char           m_Unk[ 3 ]    __attribute__(  ( packed )  );
+ unsigned short m_nGlyphs     __attribute__(  ( packed )  );
+ unsigned char  m_GlyphWidth  __attribute__(  ( packed )  );
+ unsigned char  m_GlyphHeight __attribute__(  ( packed )  );
+
+} GSMTKFontHeader;
+
+extern GSContext        g_GSCtx;
+extern char             g_GSCharWidth[ 224 ];
+extern unsigned int*    g_MBFont;
+extern GSMTKFontHeader* g_pASCII;
+extern GSMTKFontHeader* g_Fonts[ 4 ];
 
 # define GS_CSR      (  ( volatile unsigned long* )0x12001000  )
 # define GS_PMODE    (  ( volatile unsigned long* )0x12000000  )
@@ -1159,11 +1244,12 @@ extern GSCharIndent g_GSCharIndent[ 224 ];
 # define GS_DISPFB2  (  ( volatile unsigned long* )0x12000090  )
 # define GS_DISPLAY2 (  ( volatile unsigned long* )0x120000A0  )
 
-# define GS_TXT_PACKET_SIZE( n ) (  ( n << 2 ) + 6  )
-# define GS_RRT_PACKET_SIZE()    ( 34               )
-# define GS_BBT_PACKET_SIZE()    ( 12               )
-# define GS_TSP_PACKET_SIZE()    ( 14               )
-# define GS_VGR_PACKET_SIZE()    ( 12               )
+# define GS_TXT_PACKET_SIZE( n ) (   ( n << 2 ) + 6 + (  ( g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL ) << 3  )   )
+# define GS_RRT_PACKET_SIZE()    ( 34 )
+# define GS_BBT_PACKET_SIZE()    ( 12 )
+# define GS_TSP_PACKET_SIZE()    ( 14 )
+# define GS_VGR_PACKET_SIZE()    ( 10 )
+# define GS_LDI_PACKET_SIZE()    ( 22 )
 
 # ifdef __cplusplus
 extern "C" {
@@ -1185,26 +1271,37 @@ void          GS_LoadImage       ( GSLoadImage*, void*                          
 void          GS_RRV             ( unsigned long*, int, int, int, int, int                                     );
 void          GS_RenderRoundRect ( GSRoundRectPacket*, int, int, int, int, int, long                           );
 void          GS_VSync           ( void                                                                        );
-void          GS_TWTH            ( int, int, void*, void*                                                      );
+void          GS_InitStoreImage  ( GSStoreImage*, unsigned int, int, int, int, int                             );
+void          GS_StoreImage      ( GSStoreImage*, void*                                                        );
+unsigned long GS_L2P             ( int, int, int, int                                                          );
+void          GS_VSync2          ( int                                                                         );
+int           GS_VMode2Index     ( GSVideoMode                                                                 );
 
-void           GSContext_Init            ( GSVideoMode, GSZTest, GSDoubleBuffer                                      );
-unsigned long* GSContext_NewPacket       ( int, int, GSPaintMethod                                                   );
-void           GSContext_Flush           ( int, GSFlushMethod                                                        );
-unsigned long* GSContext_NewList         ( unsigned int                                                              );
-void           GSContext_DeleteList      ( unsigned long*                                                            );
-void           GSContext_CallList        ( int, unsigned long*                                                       );
-void           GSContext_SetTextColor    ( unsigned int, unsigned long                                               );
-void           GSContext_InitBitBlt      ( GSBitBltPacket*, unsigned int, int, int, int, int, unsigned int, int, int );
-void           GSContext_BitBlt          ( GSBitBltPacket*                                                           );
-void           GSContext_RenderTexSprite ( GSTexSpritePacket*, int, int, int, int, int, int, int, int                );
-void           GSContext_RenderVGRect    ( unsigned long*, int, int, int, int, unsigned long, unsigned long          );
+void           GSContext_Init            ( GSVideoMode, GSZTest, GSDoubleBuffer                             );
+unsigned long* GSContext_NewPacket       ( int, int, GSPaintMethod                                          );
+void           GSContext_Flush           ( int, GSFlushMethod                                               );
+unsigned long* GSContext_NewList         ( unsigned int                                                     );
+void           GSContext_DeleteList      ( unsigned long*                                                   );
+void           GSContext_CallList        ( int, unsigned long*                                              );
+void           GSContext_CallList2       ( int, unsigned long*                                              );
+void           GSContext_SetTextColor    ( unsigned int, unsigned long                                      );
+void           GSContext_RenderTexSprite ( GSTexSpritePacket*, int, int, int, int, int, int, int, int       );
+void           GSContext_RenderVGRect    ( unsigned long*, int, int, int, int, unsigned long, unsigned long );
 
-void GSFont_Init     ( void                                                    );
-int  GSFont_Width    ( unsigned char*, int                                     );
-int  GSFont_WidthEx  ( unsigned char*, int, int                                );
-void GSFont_Render   ( unsigned char*, int, int, int, unsigned long*           );
-void GSFont_RenderEx ( unsigned char*, int, int, int, unsigned long*, int, int );
-void GSFont_Set      ( unsigned int, void*                                     );
+void  GSFont_Init      ( void                                                    );
+int   GSFont_Width     ( unsigned char*, int                                     );
+int   GSFont_WidthEx   ( unsigned char*, int, int                                );
+void  GSFont_Render    ( unsigned char*, int, int, int, unsigned long*           );
+void  GSFont_RenderEx  ( unsigned char*, int, int, int, unsigned long*, int, int );
+void  GSFont_Set       ( unsigned int, void*                                     );
+void* GSFont_Get       ( unsigned int, unsigned int*                             );
+int   GSFont_UnpackChr ( GSMTKFontHeader*, unsigned int, void*                   );
+void* GSFont_Load      ( const char*                                             );
+void  GSFont_Unload    ( void                                                    );
+
+static int inline GSFont_CharWidth ( GSMTKFontHeader* apHdr, unsigned int aChr ) {
+ return (   (  ( unsigned char* )apHdr  ) + 11   )[ aChr ];
+}  /* end GSFont_CharWidth */
 
 # ifdef __cplusplus
 }

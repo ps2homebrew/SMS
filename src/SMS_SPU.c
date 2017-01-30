@@ -11,21 +11,25 @@
 #include "SMS.h"
 #include "SMS_SPU.h"
 #include "SMS_SIF.h"
+#include "SMS_DMA.h"
 #include "SMS_Config.h"
 
 #include <kernel.h>
 #include <iopheap.h>
 
+#define USE_SIF2
 #define SMS_AUDIO_RPC_ID  0x41534D53
 #define SMS_VOLUME_RPC_ID 0x56534D53
 
 static SPUContext         s_SPUCtx;
 static SifRpcClientData_t s_ClientDataA __attribute__(   (  aligned( 64 )  )   );
 static SifRpcClientData_t s_ClientDataV __attribute__(   (  aligned( 64 )  )   );
-static unsigned int       s_Buffer[ 4 ] __attribute__(   (  aligned( 64 )  )   );
+static unsigned int       s_Buffer[ 8 ] __attribute__(   (  aligned( 64 )  )   );
 static int                s_SemaPCM;
 static int                s_SemaVol;
-
+#ifdef USE_SIF2
+void SPU_DMAHandler ( int );
+#endif  /* USE_SIF2 */
 static int _Init ( void ) {
 
  ee_sema_t lSema;
@@ -34,53 +38,102 @@ static int _Init ( void ) {
  lSema.max_count  = 1;
  s_SemaPCM = CreateSema ( &lSema );
  s_SemaVol = CreateSema ( &lSema );
-
+#ifdef USE_SIF2
+ AddSbusIntcHandler ( 15, SPU_DMAHandler );
+#endif  /* USE_SIF2 */
  return SIF_BindRPC ( &s_ClientDataA, SMS_AUDIO_RPC_ID  ) &&
         SIF_BindRPC ( &s_ClientDataV, SMS_VOLUME_RPC_ID );
 
 }  /* end _Init */
-
-static void _audio_callback ( void* apArg ) {
-
- iSignalSema (  *( int* )apArg  );
-
-}  /* end _audio_callback */
-
+#ifdef USE_SIF2
+__asm__(
+ ".set noreorder\n\t"
+ ".set nomacro\n\t"
+ ".set noat\n\t"
+ ".text\n\t"
+ "SPU_DMAHandler:\n\t"
+ "addiu     $sp, $sp, -16\n\t"
+ "sw        $ra, 0($sp)\n\t"
+ "lui       $a0, %hi( s_SemaPCM )\n\t"
+ "jal       iSignalSema\n\t"
+ "lw        $a0, %lo( s_SemaPCM )($a0)\n\t"
+ "lw        $ra, 0($sp)\n\t"
+ "jr        $ra\n\t"
+ "nor       $v0, $zero, $zero\n\t"
+ ".set at\n\t"
+ ".set macro\n\t"
+ ".set reorder\n\t"
+);
+#endif  /* USE_SIF2 */
 static void SPU_SetVolume ( int aVol ) {
 
  s_Buffer[ 0 ] = aVol;
 
- SifCallRpc ( &s_ClientDataV, 0, SIF_RPC_M_NOWAIT, s_Buffer, 4, NULL, 0, _audio_callback, &s_SemaVol );
+ SifCallRpc (
+  &s_ClientDataV, 0, SIF_RPC_M_NOWAIT, s_Buffer, 4, NULL, 0, (  void ( * )( void* )  )iSignalSema, ( void* )s_SemaVol
+ );
  WaitSema ( s_SemaVol );
 
 }  /* end SPU_SetVolume */
 
 static void SPU_Silence ( void ) {
 
- SifCallRpc ( &s_ClientDataV, 1, SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, _audio_callback, &s_SemaVol );
+ SifCallRpc (
+  &s_ClientDataV, 1, SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, (  void ( * ) ( void* )  )iSignalSema, ( void* )s_SemaVol
+ );
  WaitSema ( s_SemaVol );
 
 }  /* end Silence */
 
 void SPU_Shutdown ( void ) {
 
- SifCallRpc ( &s_ClientDataV, 2, SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, _audio_callback, &s_SemaVol );
+ SifCallRpc (
+  &s_ClientDataV, 2, SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, (  void ( * ) ( void* )  )iSignalSema, ( void* )s_SemaVol
+ );
  WaitSema ( s_SemaVol );
 
 }  /* end SPU_Shutdown */
+#ifdef USE_SIF2
+static void SPU_PlayPCM ( void* apData ) {
 
+ unsigned int lSize = *( unsigned int* )apData + 16U;
+
+ lSize = (
+  (    (   (  ( lSize + 15 ) >> 4  ) + 1  ) >> 1   ) << 1
+ ) - 2;
+
+ ( unsigned int )apData <<= 4;
+ ( unsigned int )apData >>= 4;
+
+ DMA_SendA ( DMAC_SIF2, apData, 2 );
+ Interrupt2Iop ( 1 );
+ WaitSema ( s_SemaPCM );
+
+ if ( lSize ) {
+
+  DMA_SendA (   DMAC_SIF2, (  ( char* )apData  ) + 32, lSize   );
+  WaitSema ( s_SemaPCM );
+
+ }  /* end if */
+
+}  /* end SPU_PlayPCM */
+#else
 static void SPU_PlayPCM ( void* apBuf ) {
 
  SifCallRpc (
-  &s_ClientDataA, 2, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, apBuf, *( int* )apBuf + 4, NULL, 0, _audio_callback, &s_SemaPCM
+  &s_ClientDataA, 2, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT,
+  apBuf, *( int* )apBuf + 16, NULL, 0,
+  (  void ( * ) ( void* )  )iSignalSema, ( void* )s_SemaPCM
  );
  WaitSema ( s_SemaPCM );
 
 }  /* end SPU_PlayPCM */
-
+#endif  /* USE_SIF2 */
 static void SPU_Destroy ( void ) {
 
- SifCallRpc ( &s_ClientDataA, 1, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, _audio_callback, &s_SemaPCM );
+ SifCallRpc (
+  &s_ClientDataA, 1, SIF_RPC_M_NOWBDC | SIF_RPC_M_NOWAIT, NULL, 0, NULL, 0, (  void ( * ) ( void* )  )iSignalSema, ( void* )s_SemaPCM
+ );
  WaitSema ( s_SemaPCM );
 
 }  /* end SPU_Destroy */
@@ -104,7 +157,7 @@ void SPU_LoadData ( void* apData, int aSize ) {
  while (  SifDmaStat ( lID ) >= 0  );
 
  SifCallRpc (
-  &s_ClientDataA, 3, SIF_RPC_M_NOWAIT, s_Buffer, 8, NULL, 0, _audio_callback, &s_SemaPCM
+  &s_ClientDataA, 3, SIF_RPC_M_NOWAIT, s_Buffer, 8, NULL, 0, (  void ( * ) ( void* )  )iSignalSema, ( void* )s_SemaPCM
  );
  WaitSema ( s_SemaPCM );
 
@@ -135,7 +188,7 @@ void SPU_PlaySound ( SMSound* apSound, int aVol ) {
   s_Buffer[ 2 ] = apSound -> m_Size;
 
   SifCallRpc (
-   &s_ClientDataA, 4, SIF_RPC_M_NOWAIT, s_Buffer, 12, NULL, 0, _audio_callback, &s_SemaPCM
+   &s_ClientDataA, 4, SIF_RPC_M_NOWAIT, s_Buffer, 12, NULL, 0, (  void ( * ) ( void* )  )iSignalSema, ( void* )s_SemaPCM
   );
   WaitSema ( s_SemaPCM );
 
@@ -149,7 +202,7 @@ void SPU_Initialize ( void ) {
 
 }  /* end SPU_Initialize */
 
-SPUContext* SPU_InitContext ( int anChannels, int aFreq, int aVolume ) {
+SPUContext* SPU_InitContext ( int anChannels, int aFreq, int aVolume, int aBase, int aRatio ) {
 
  SPU_Destroy ();
 
@@ -157,8 +210,10 @@ SPUContext* SPU_InitContext ( int anChannels, int aFreq, int aVolume ) {
  s_Buffer[ 1 ] = 16;
  s_Buffer[ 2 ] = anChannels;
  s_Buffer[ 3 ] = aVolume;
+ s_Buffer[ 4 ] = aBase;
+ s_Buffer[ 5 ] = aRatio;
 
- SifCallRpc ( &s_ClientDataA, 0, 0, s_Buffer, 16, s_Buffer, 4, NULL, NULL );
+ SifCallRpc ( &s_ClientDataA, 0, 0, s_Buffer, 32, s_Buffer, 4, NULL, NULL );
 
  s_SPUCtx.m_BufTime = (  ( float )s_Buffer[ 0 ] * 1000.0F  ) / (  ( aFreq << 1 ) * anChannels  );
  s_SPUCtx.PlayPCM   = SPU_PlayPCM;

@@ -3,7 +3,7 @@
 #    |    | | |    |
 # ___|    |   | ___|    PS2DEV Open Source Project.
 #----------------------------------------------------------
-# (c) 2006 Eugene Plotnikov <e-plotnikov@operamail.com>
+# (c) 2006/7 Eugene Plotnikov <e-plotnikov@operamail.com>
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
@@ -276,6 +276,13 @@ static void inline DMA_SendS ( volatile DMAChannel* apChan, void* apDst, void* a
  __asm__ __volatile__(
   ".set noreorder\n\t"
   ".set noat\n\t"
+  "1:\n\t"
+  "lw   $at, 0(%0)\n\t"
+  "nop\n\t"
+  "nop\n\t"
+  "andi $at, $at, 0x0100\n\t"
+  "nop\n\t"
+  "bne  $at, $zero, 1b\n\t"
   "li   $at, 0x0100\n\t"
   "sw   %1,  16(%0)\n\t"
   "sw   %3,  32(%0)\n\t"
@@ -286,6 +293,21 @@ static void inline DMA_SendS ( volatile DMAChannel* apChan, void* apDst, void* a
   ::"r"( apChan ), "r"( apDst ), "r"( apSrc ), "r"( aQWC ) : "at"
  );
 }  /* end DMA_SendS */
+
+static void inline DMA_SendSA ( volatile DMAChannel* apChan, void* apDst, void* apSrc, unsigned int aQWC ) {
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set noat\n\t"
+  "addiu    $at, $zero, 0x0100\n\t"
+  "sw       %1,  16(%0)\n\t"
+  "sw       %3,  32(%0)\n\t"
+  "sw       %2, 128(%0)\n\t"
+  "sw       $at,  0(%0)\n\t"
+  ".set at\n\t"
+  ".set reorder\n\t"
+  ::"r"( apChan ), "r"( apDst ), "r"( apSrc ), "r"( aQWC ) : "at"
+ );
+}  /* end DMA_SendSA */
 
 void DMA_Stop ( volatile DMAChannel* );
 

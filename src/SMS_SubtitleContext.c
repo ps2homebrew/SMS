@@ -8,47 +8,205 @@
 # (c) 2006 Voldemar_u2
 # (c) 2006 ffgriever
 # (c) 2006 Npl
+# (c) 2007 lior e
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
 #include "SMS_SubtitleContext.h"
 #include "SMS_FileContext.h"
-#include "SMS_List.h"
 #include "SMS_GS.h"
 #include "SMS_VIF.h"
 #include "SMS_IPU.h"
+#include "SMS_DMA.h"
+#include "SMS_GUI.h"
 #include "SMS_Config.h"
+#include "SMS_Locale.h"
 
 #include <kernel.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <mbstring.h>
 
-#define SUB_GSP_SIZE( n )  (  ( n << 2 ) + 8  )
-#define SUB_GSP_OSIZE( n ) (  ( n << 2 ) + 10  )
-#define SUB_MAXLEN         512
-#define SUB_DEF_LINE_LEN   4.0F
+#define SUB_MAXLEN       512
+#define SUB_DEF_LINE_LEN 4.0F
 
 extern int TranslateUTF8 ( int, char*, int, const char* );
 
-typedef struct SubNode {
+static SubtitleContext s_SubCtx __attribute__(   (  section( ".bss" )  )   );
 
- struct SubNode* m_pNext;
+static char*          ( *_strtok_func        ) ( char*, const char*                                   );
+static unsigned int   ( *_strlen_func        ) ( const char*                                          );
+static unsigned long* ( *_render_string_func ) ( const char*, int, int, int, unsigned long*, int, int );
+static int            ( *_string_width_func  ) ( unsigned char*, int, int                             );
 
- SMS_List* m_pList;
- int64_t   m_Begin;
- int64_t   m_End;
+static unsigned long* _sb_render_string (
+                       const char* apStr, int aLen,
+                       int aX, int anY, unsigned long* apDMA,
+                       int aDW, int aDH
+                      ) {
 
-} SubNode;
+ const char*      lpEnd  = apStr + aLen;
+ float            lARX   = ( 32 + aDW ) / 32.0F;
+ float            lARY   = ( 32 + aDH ) / 32.0F;
+ int              lW     = ( int )( 32.0F * lARX + 0.5F );
+ int              lH     = anY + ( int )( 32.0F * lARY + 0.5F );
+ GSMTKFontHeader* lpXHdr = g_Fonts[ g_GSCtx.m_CodePage ];
 
-static SubtitleContext s_SubCtx;
-static SubNode*        s_pHead;
-static SubNode*        s_pTail;
-static unsigned int    s_nAlloc;
+ while ( apStr < lpEnd ) {
 
-static unsigned int ( *_update_size_func ) ( SMS_List*, unsigned int );
+  char             lChr = apStr[ 0 ];
+  int              lCW;
+  GSMTKFontHeader* lpHdr;
+
+  if ( lChr < 0 ) {
+   lpHdr = lpXHdr;
+   lChr += 128;
+  } else {
+   lpHdr  = g_pASCII;
+   lChr  -= ' ';
+  }  /* end else */
+
+  lCW = ( int )(  ( float )GSFont_UnpackChr ( lpHdr, ( unsigned char )lChr, &apDMA[ 6 ] ) * lARX + 0.5F  );
+
+  apDMA[  0 ] = GIF_TAG( 1, 0, 0, 0, GIFTAG_FLG_PACKED, 1 );
+  apDMA[  1 ] = GIFTAG_REGS_AD;
+  apDMA[  2 ] = GS_SET_TRXDIR( GS_TRXDIR_HOST_TO_LOCAL );
+  apDMA[  3 ] = GS_TRXDIR;
+  apDMA[  4 ] = GIF_TAG( 32, 0, 0, 0, GIFTAG_FLG_IMAGE, 0 );
+  apDMA[  5 ] = 0L;
+  apDMA[ 70 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 );
+  apDMA[ 71 ] = GIFTAG_REGS_AD;
+  apDMA[ 72 ] = GS_SET_TEXFLUSH( 0 );
+  apDMA[ 73 ] = GS_TEXFLUSH;
+  apDMA[ 74 ] = GIF_TAG( 2, 0, 0, 0, 1, 2 );
+  apDMA[ 75 ] = GS_UV | ( GS_XYZ2 << 4 );
+  apDMA[ 76 ] = GS_SET_UV( 8, 8 );
+  apDMA[ 77 ] = GS_XYZ ( aX, anY, 0 );
+  apDMA[ 78 ] = GS_SET_UV( 506, 506 );
+  apDMA[ 79 ] = GS_XYZ ( aX + lW, lH, 0 );
+
+  aX      += lCW;
+  apDMA   +=  80;
+  apStr   +=   1;
+
+ }  /* end while */
+
+ return apDMA;
+
+}  /* end _sb_render_string */
+
+static int _sb_string_width ( unsigned char* apStr, int aLen, int aDW ) {
+
+ int                  retVal = 0;
+ const unsigned char* lpEnd  = apStr + aLen;
+ float                lAR    = ( 32 + aDW ) / 32.0F;
+ GSMTKFontHeader*     lpXHdr = g_Fonts[ g_GSCtx.m_CodePage ];
+
+ while ( apStr <= lpEnd ) {
+
+  char             lChr  = (  ( char* )apStr  )[ 0 ];
+  GSMTKFontHeader* lpHdr;
+
+  if ( lChr < 0 ) {
+   lpHdr = lpXHdr;
+   lChr += 128;
+  } else {
+   lpHdr  = g_pASCII;
+   lChr  -= ' ';
+  }  /* end else */
+
+  retVal += ( int )(    ( float )GSFont_CharWidth (  lpHdr, ( unsigned char )lChr  ) * lAR + 0.5F   );
+  apStr  += 1;
+
+ }  /* end while */
+
+ return retVal;
+
+}  /* end _sb_string_width */
+
+static unsigned long* _mb_render_string (
+                       const char* apStr, int aLen,
+                       int aX, int anY, unsigned long* apDMA,
+                       int aDW, int aDH
+                      ) {
+
+ const char* lpEnd = apStr + aLen;
+ float       lARX  = ( 32 + aDW ) / 32.0F;
+ float       lARY  = ( 32 + aDH ) / 32.0F;
+ int         lW    = ( int )( 32.0F * lARX + 0.5F );
+ int         lH    = anY + ( int )( 32.0F * lARY + 0.5F );
+
+ while ( apStr < lpEnd ) {
+
+  char             lChr  = apStr[ 0 ];
+  int              lOff  = ( lChr & 0x7F ) + 1;
+  int              lCW;
+  GSMTKFontHeader* lpHdr;
+
+  lCW    = lChr < 0;
+  lOff   = lCW ? lOff : 0;
+  apStr += lCW;
+  lpHdr  = ( GSMTKFontHeader* )(   (  ( unsigned char* )g_MBFont  ) + g_MBFont[ lOff ]   );
+  lCW    = ( int )(   ( float )GSFont_UnpackChr (
+   lpHdr, (  ( unsigned char* )apStr  )[ 0 ], &apDMA[ 6 ]  ) * lARX + 0.5F
+  );
+
+  apDMA[  0 ] = GIF_TAG( 1, 0, 0, 0, GIFTAG_FLG_PACKED, 1 );
+  apDMA[  1 ] = GIFTAG_REGS_AD;
+  apDMA[  2 ] = GS_SET_TRXDIR( GS_TRXDIR_HOST_TO_LOCAL );
+  apDMA[  3 ] = GS_TRXDIR;
+  apDMA[  4 ] = GIF_TAG( 32, 0, 0, 0, GIFTAG_FLG_IMAGE, 0 );
+  apDMA[  5 ] = 0L;
+  apDMA[ 70 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 );
+  apDMA[ 71 ] = GIFTAG_REGS_AD;
+  apDMA[ 72 ] = GS_SET_TEXFLUSH( 0 );
+  apDMA[ 73 ] = GS_TEXFLUSH;
+  apDMA[ 74 ] = GIF_TAG( 2, 0, 0, 0, 1, 2 );
+  apDMA[ 75 ] = GS_UV | ( GS_XYZ2 << 4 );
+  apDMA[ 76 ] = GS_SET_UV( 8, 8 );
+  apDMA[ 77 ] = GS_XYZ ( aX, anY, 0 );
+  apDMA[ 78 ] = GS_SET_UV( 506, 506 );
+  apDMA[ 79 ] = GS_XYZ ( aX + lW, lH, 0 );
+
+  aX      += lCW;
+  apDMA   +=  80;
+  apStr   +=   1;
+
+ }  /* end while */
+
+ return apDMA;
+
+}  /* end _mb_render_string */
+
+static int _mb_string_width ( unsigned char* apStr, int aLen, int aDW ) {
+
+ int                  retVal = 0;
+ const unsigned char* lpEnd  = apStr + aLen;
+ float                lAR    = ( 32 + aDW ) / 32.0F;
+
+ while ( apStr <= lpEnd ) {
+
+  char             lChr  = (  ( char* )apStr  )[ 0 ];
+  int              lOff  = ( lChr & 0x7F ) + 1;
+  int              lCW;
+  GSMTKFontHeader* lpHdr;
+
+  lCW    = lChr < 0;
+  lOff   = lCW ? lOff : 0;
+  apStr += lCW;
+  lpHdr  = ( GSMTKFontHeader* )(   (  ( unsigned char* )g_MBFont  ) + g_MBFont[ lOff ]   );
+
+  retVal += ( int )(  ( float )GSFont_CharWidth ( lpHdr, apStr[ 0 ] ) * lAR + 0.5F );
+  apStr  += 1;
+
+ }  /* end while */
+
+ return retVal;
+
+}  /* end _mb_string_width */
 
 static void sub_gets ( char* apStr, FileContext* apFileCtx ) {
 
@@ -60,47 +218,32 @@ static void sub_gets ( char* apStr, FileContext* apFileCtx ) {
 
 static unsigned int _update_size ( SMS_List* apList, unsigned int aLen ) {
 
- SMS_ListNode* lpNode = apList -> m_pHead;
-
- aLen += SUB_GSP_SIZE(  strlen ( lpNode -> m_pString )  );
-
- lpNode = lpNode -> m_pNext;
+ SMS_ListNode* lpNode   = apList -> m_pHead;
+ unsigned int  lPackLen = s_SubCtx.m_nPreAlloc;
+ int           lfOSub   = g_Config.m_PlayerFlags & SMS_PF_OSUB;
 
  while ( lpNode ) {
 
-  aLen += strlen ( lpNode -> m_pString ) << 2;
-  lpNode = lpNode -> m_pNext;
+  if ( lfOSub ) lPackLen += 64;
+
+  lPackLen += _strlen_func (  _STR( lpNode )  ) * 640;
+  lpNode    = lpNode -> m_pNext;
 
  }  /* end while */
+
+ if ( lPackLen > aLen ) aLen = lPackLen;
 
  return aLen;
 
 }  /* end _update_size */
 
-static unsigned int _update_osize ( SMS_List* apList, unsigned int aLen ) {
-
- SMS_ListNode* lpNode = apList -> m_pHead;
-
- aLen += 6;
-
- while ( lpNode ) {
-
-  aLen += SUB_GSP_OSIZE(  strlen ( lpNode -> m_pString )  );
-  lpNode = lpNode -> m_pNext;
-
- }  /* end while */
-
- return aLen;
-
-}  /* end _update_osize */
-
-static char* strrchrx ( const char* apLine, char* apPos, int aChr ) {
+static char* strrspc ( const char* apLine, char* apPos ) {
 
  char* retVal = NULL;
 
  while ( apPos >= apLine ) {
 
-  if ( *apPos == aChr ) {
+  if ( *apPos == ' ' ) {
 
    retVal = apPos;
    break;
@@ -113,7 +256,7 @@ static char* strrchrx ( const char* apLine, char* apPos, int aChr ) {
 
  return retVal;
 
-}  /* end strrchrx */
+}  /* end strrspc */
 
 static void _add_line ( SMS_List* apList, char* apLine, unsigned int aColorIdx ) {
 
@@ -123,11 +266,14 @@ static void _add_line ( SMS_List* apList, char* apLine, unsigned int aColorIdx )
  int lTxtW;
 next:
  lLen  = strlen ( apLine );
- lTxtW = GSFont_WidthEx ( apLine, lLen, lDW );
+ lTxtW = _string_width_func ( apLine, lLen, lDW );
 
  if ( lTxtW < lScrW ) {
 
-  if ( g_Config.m_PlayerSAlign == 2 ) SMS_ReverseString ( apLine, lLen );
+  if (  ( g_Config.m_PlayerSAlign == 2 ||
+          g_Config.m_PlayerSAlign == 3
+        ) && !g_MBFont
+  ) SMS_ReverseString ( apLine, lLen );
 
   SMS_ListPushBack ( apList, apLine );
   apList -> m_pTail -> m_Param = ( unsigned int )( void* )aColorIdx;
@@ -142,13 +288,13 @@ next:
 
    if ( lpSpace ) {
 
-    lTxtW = GSFont_WidthEx ( apLine, lpSpace - apLine, lDW );
+    lTxtW = _string_width_func ( apLine, lpSpace - apLine, lDW );
 
     if ( lTxtW < lScrW ) {
 
      *lpSpace = '\x00';
 
-     if ( g_Config.m_PlayerSAlign == 2 ) {
+     if (  g_Config.m_PlayerSAlign == 2 && !g_MBFont  ) {
 
       int lX, lLen = strlen ( apLine );
 
@@ -156,9 +302,27 @@ next:
 
       while ( 1 ) {
 
-       lX = g_GSCtx.m_Width - GSFont_WidthEx ( apLine, lLen, g_Config.m_SubHIncr ) - 32;
+       lX = g_GSCtx.m_Width - _string_width_func ( apLine, lLen, g_Config.m_SubHIncr ) - 32;
 
        if ( lX >= 0 ) break;
+
+       ++apLine;
+       --lLen;
+
+      }  /* end while */
+
+     } else if ( g_Config.m_PlayerSAlign == 3 && !g_MBFont ) {
+
+      int lX, lLen = strlen ( apLine );
+
+      SMS_ReverseString ( apLine, lpSpace - apLine );
+
+      while ( 1 ) {
+
+       lX = (  g_GSCtx.m_Width - _string_width_func ( apLine, lLen, g_Config.m_SubHIncr )  ) >> 1;
+
+       if ( lX > g_GSCtx.m_Width ) lX = 0;
+       if ( lX >= 0              ) break;
 
        ++apLine;
        --lLen;
@@ -173,13 +337,19 @@ next:
      apLine = ++lpSpace;
      goto next;
 
-    } else lpSpace = strrchrx ( apLine, lpSpace - 1, ' ' );
+    } else lpSpace = strrspc ( apLine, lpSpace - 1 );
 
    } else {
 
-    if ( g_Config.m_PlayerSAlign == 2 )
-     ++apLine;
-    else apLine[ lLen - 1 ] = '\x00';
+    char lChr;
+
+    if ( g_Config.m_PlayerSAlign == 2 || g_Config.m_PlayerSAlign == 3 ) {
+     lChr = apLine[ 0 ];
+     apLine += 1 + ( g_MBFont && lChr < 0 );
+    } else {
+     lChr = apLine[ lLen - 1 ];
+     apLine[ lLen - 1 - ( g_MBFont && lChr < 0 ) ] = '\x00';
+    }  /* end else */
 
     goto next;
 
@@ -191,14 +361,16 @@ next:
 
 }  /* end _add_line */
 
-static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
+static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio ) {
 
- char     lLine[ SUB_MAXLEN ];
- float    lMSPerFrame = 1000.0F / aFPS;
- int      retVal      = 0;
- int      lfUTF8      = 0;
- unsigned lPos        = apFileCtx -> m_CurPos;
- SubNode* lpNode;
+ char             lLine[ SUB_MAXLEN ];
+ float            lMSPerFrame = 1000.0F / aFPS;
+ int              retVal      = 0;
+ int              lfUTF8      = 0;
+ unsigned         lPos        = apFileCtx -> m_CurPos;
+ SubtitleContext* lpCtx       = &s_SubCtx;
+ int              lnLines;
+ SubNode*         lpNode;
 
  if (  File_GetByte ( apFileCtx ) == 0xEF &&
        File_GetByte ( apFileCtx ) == 0xBB &&
@@ -213,7 +385,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
  while ( 1 ) {
 
-  int64_t lTime [ 2 ];
+  long    lTime [ 2 ];
   int     lFrame[ 2 ];
   int     i;
   int     lHour   = 0;
@@ -227,6 +399,8 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
 
   if ( lLine[ 0 ] == '\x00' ) {
 
+   if (  !FILE_EOF( apFileCtx )  ) continue;
+
    retVal = 1;
    break;
 
@@ -237,29 +411,35 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
    if ( lFrame[ 0 ] == 0 ) continue;
    if ( lFrame[ 1 ] == 0 ) lFrame[ 1 ] = lFrame[ 0 ] + ( int )(  ( SUB_DEF_LINE_LEN * aFPS ) + 0.5F  );
 
-   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( int64_t )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
+   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( long )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
 
    lpPtr = strchr ( lLine, '}' ) + 1;
    lpPtr = strchr ( lpPtr, '}' ) + 1;
+
+   if (  lpPtr == ( char* )1  ) continue;
 
   } else if (   (  sscanf ( lLine, "[%d][%d]", &lFrame[ 0 ], &lFrame[ 1 ] ) == 2  )   ) {
 
    if ( lFrame[ 0 ] == 0 ) continue;
    if ( lFrame[ 1 ] == 0 ) lFrame[ 1 ] = lFrame[ 0 ] + ( int )( SUB_DEF_LINE_LEN * 10.0F );
 
-   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( int64_t )( lFrame[ i ] * 100  );
+   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( long )( lFrame[ i ] * 100  );
 
    lpPtr = strchr ( lLine, ']' ) + 1;
    lpPtr = strchr ( lpPtr, ']' ) + 1;
 
+   if (  lpPtr == ( char* )1  ) continue;
+
   } else if (   (  sscanf ( lLine, "%d:%d:%d:", &lHour, &lMinute, &lSecond ) == 3  )   ) {
 
-   lTime[ 0 ] = ( int64_t )(   ( lSecond + ( lMinute * 60 ) + ( lHour * 3600 )  ) * 1000   );
-   lTime[ 1 ] = lTime[ 0 ] + ( int64_t )( SUB_DEF_LINE_LEN * 1000.0F );
+   lTime[ 0 ] = ( long )(   ( lSecond + ( lMinute * 60 ) + ( lHour * 3600 )  ) * 1000   );
+   lTime[ 1 ] = lTime[ 0 ] + ( long )( SUB_DEF_LINE_LEN * 1000.0F );
 
    lpPtr = strchr ( lLine, ':' ) + 1;
    lpPtr = strchr ( lpPtr, ':' ) + 1;
    lpPtr = strchr ( lpPtr, ':' ) + 1;
+
+   if (  lpPtr == ( char* )1  ) continue;
 
   } else {
 
@@ -272,18 +452,19 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
   lpNode -> m_pList = SMS_ListInit ();
   lpNode -> m_pNext = NULL;
 
-  if ( !s_pHead )
+  if ( !lpCtx -> m_pHead )
 
-   s_pHead = s_pTail = lpNode;
+   lpCtx -> m_pHead = lpCtx -> m_pTail = lpNode;
 
   else {
 
-   s_pTail -> m_pNext = lpNode;
-   s_pTail            = lpNode;
+   lpCtx -> m_pTail -> m_pNext = lpNode;
+   lpCtx -> m_pTail            = lpNode;
 
   }  /* end else */
 
-  lpPtr = strtok ( lpPtr, "|" );
+  lpPtr   = _strtok_func ( lpPtr, "|" );
+  lnLines = 0;
 
   while ( lpPtr ) {
 // skip tag (I didn't find any clear specs about them)
@@ -303,19 +484,17 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS ) {
     _add_line ( lpNode -> m_pList, lBuff, 0 );
    } else _add_line ( lpNode -> m_pList, lpPtr, 0 );
 
-   lpPtr = strtok ( NULL, "|" );
+   lpPtr = _strtok_func ( NULL, "|" );
+   ++lnLines;
 
   }  /* end while */
 
-  if ( !lpNode -> m_pList -> m_Size ) {
+  if ( !lnLines ) _add_line ( lpNode -> m_pList, " ", 0 );
 
-   s_SubCtx.m_ErrorCode = SubtitleError_Format;
-   break;
+  lpCtx -> m_nAlloc = _update_size ( lpNode -> m_pList, lpCtx -> m_nAlloc );
 
-  } else s_nAlloc = _update_size_func ( lpNode -> m_pList, s_nAlloc );
-
-  lpNode -> m_Begin = lTime[ 0 ];
-  lpNode -> m_End   = lTime[ 1 ];
+  lpNode -> m_Begin = SMS_Rescale ( lTime[ 0 ], aBase, aRatio );
+  lpNode -> m_End   = SMS_Rescale ( lTime[ 1 ], aBase, aRatio );
 
   ++s_SubCtx.m_Cnt;
 
@@ -333,13 +512,14 @@ static int _blank_line ( char* apStr ) {
 
 }  /* end _blank_line */
 
-static int _load_srt ( FileContext* apFileCtx ) {
+static int _load_srt ( FileContext* apFileCtx, int aBase, int aRatio ) {
 
- char     lLine[ SUB_MAXLEN ];
- int      lTotSerial;
- int      retVal = 0;
- unsigned lPos   = apFileCtx -> m_CurPos;
- int      lfUTF8 = 0;
+ char             lLine[ SUB_MAXLEN ];
+ int              lTotSerial;
+ int              retVal = 0;
+ unsigned int     lPos   = apFileCtx -> m_CurPos;
+ int              lfUTF8 = 0;
+ SubtitleContext* lpCtx  = &s_SubCtx;
 
  if (  File_GetByte ( apFileCtx ) == 0xEF &&
        File_GetByte ( apFileCtx ) == 0xBB &&
@@ -355,7 +535,6 @@ static int _load_srt ( FileContext* apFileCtx ) {
  if (  !sscanf ( lLine, "%d", &lTotSerial )  ) {
   s_SubCtx.m_ErrorCode = SubtitleError_Sequence;
   return retVal;
-
  }  /* end if */
 
  lTotSerial = 0;
@@ -414,14 +593,14 @@ static int _load_srt ( FileContext* apFileCtx ) {
   lpNode -> m_pList = SMS_ListInit ();
   lpNode -> m_pNext = NULL;
 
-  if ( !s_pHead )
+  if ( !lpCtx -> m_pHead )
 
-   s_pHead = s_pTail = lpNode;
+   lpCtx -> m_pHead = lpCtx -> m_pTail = lpNode;
 
   else {
 
-   s_pTail -> m_pNext = lpNode;
-   s_pTail            = lpNode;
+   lpCtx -> m_pTail -> m_pNext = lpNode;
+   lpCtx -> m_pTail            = lpNode;
 
   }  /* end else */
 
@@ -487,10 +666,10 @@ static int _load_srt ( FileContext* apFileCtx ) {
 
   if ( !lpNode -> m_pList -> m_Size ) _add_line ( lpNode -> m_pList, " ", lColorIdx );
 
-  s_nAlloc = _update_size_func ( lpNode -> m_pList, s_nAlloc );
+  lpCtx -> m_nAlloc = _update_size ( lpNode -> m_pList, lpCtx -> m_nAlloc );
 
-  lpNode -> m_Begin = lTime[ 0 ];
-  lpNode -> m_End   = lTime[ 1 ];
+  lpNode -> m_Begin = SMS_Rescale ( lTime[ 0 ], aBase, aRatio );
+  lpNode -> m_End   = SMS_Rescale ( lTime[ 1 ], aBase, aRatio );
 
   if ( retVal ) break;
 
@@ -502,7 +681,8 @@ static int _load_srt ( FileContext* apFileCtx ) {
 
 static void _clear_nodes ( void ) {
 
- SubNode* lpNode = s_pHead;
+ SubtitleContext* lpCtx  = &s_SubCtx;
+ SubNode*         lpNode = lpCtx -> m_pHead;
 
  while ( lpNode ) {
 
@@ -515,318 +695,179 @@ static void _clear_nodes ( void ) {
 
  }  /* end while */
 
- s_pHead = s_pTail = NULL;
+ lpCtx -> m_pHead = lpCtx -> m_pTail = NULL;
 
 }  /* end _clear_nodes */
 
 static void _produce_packets ( void ) {
 
- unsigned int i;
- uint64_t*    lpDMA;
- SubNode*     lpNode = s_pHead;
- int          lDW    = g_Config.m_SubHIncr << 4;
- float        lAR    = ( 32.0F + g_Config.m_SubHIncr ) / 32.0F;
- int          lDH    = g_Config.m_SubVIncr;
- int          lChrH  = 32 + lDH;
+ SubtitleContext* lpCtx = &s_SubCtx;
+ int              i, lf16, lfTSub = !( g_Config.m_PlayerFlags & SMS_PF_OSUB ), lnAlloc = ( lpCtx -> m_nAlloc + 63 ) & ~63;
+ unsigned long*   lpDMA0, *lpDMA1;
+ SubNode*         lpNode = lpCtx -> m_pHead;
 
- s_SubCtx.m_pDMA     = ( uint64_t*       )calloc (  s_nAlloc,       sizeof ( uint64_t       )  );
- s_SubCtx.m_pPackets = ( SubtitlePacket* )calloc (  s_SubCtx.m_Cnt, sizeof ( SubtitlePacket )  );
+ if ( lfTSub ) {
+  lpCtx -> m_nAlloc    += 16;
+  lpCtx -> m_nPreAlloc += 16;
+ }  /* end if */
 
- lpDMA = s_SubCtx.m_pDMA;
+ s_SubCtx.m_pDMA[ 0 ] = ( unsigned long* )memalign ( 64, lnAlloc << 1 );
+ s_SubCtx.m_pDMA[ 1 ] = s_SubCtx.m_pDMA[ 0 ] + ( lnAlloc >> 3 );
+ s_SubCtx.m_pPackets  = ( SubtitlePacket* )calloc (  s_SubCtx.m_Cnt, sizeof ( SubtitlePacket )  );
+
+ lf16   = g_Config.m_ColorDepth;
+ lpDMA0 = s_SubCtx.m_pDMA[ 0 ];
+ lpDMA1 = s_SubCtx.m_pDMA[ 1 ];
+
+ *lpDMA0++ = *lpDMA1++ = 0L;
+ *lpDMA0++ = *lpDMA1++ = 0L;
+ *lpDMA0++ = *lpDMA1++ = GIF_TAG( 4 + lf16 + lfTSub, 0, 0, 0, GIFTAG_FLG_PACKED, 1 );
+ *lpDMA0++ = *lpDMA1++ = GIFTAG_REGS_AD;
+ *lpDMA0++ = *lpDMA1++ = GS_SET_BITBLTBUF( 0, 0, 0, 0x3FC0, 1, GSPixelFormat_PSMT4 );
+ *lpDMA0++ = *lpDMA1++ = GS_BITBLTBUF;
+ *lpDMA0++ = *lpDMA1++ = GS_SET_TRXPOS( 0, 0, 0, 0, 0 );
+ *lpDMA0++ = *lpDMA1++ = GS_TRXPOS;
+ *lpDMA0++ = *lpDMA1++ = GS_SET_TRXREG( 32, 32 );
+ *lpDMA0++ = *lpDMA1++ = GS_TRXREG;
+ *lpDMA0++ = *lpDMA1++ = 0L;
+ *lpDMA0++ = *lpDMA1++ = GS_TEX0_1;
+ if ( lf16 ) {
+  *lpDMA0++ = *lpDMA1++ = GS_SET_DTHE( 0 );
+  *lpDMA0++ = *lpDMA1++ = GS_DTHE;
+ }  /* end if */
+
+ if ( lfTSub ) {
+
+  *lpDMA0++ = *lpDMA1++ = GS_SET_PRIM(
+                           GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON,
+                           GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_OFF, GS_PRIM_FST_UV,
+                           GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED
+                          );
+  *lpDMA0++ = *lpDMA1++ = GS_PRIM;
+
+ }  /* end if */
+
+ lf16 = lpDMA0 - s_SubCtx.m_pDMA[ 0 ];
 
  for ( i = 0; i < s_SubCtx.m_Cnt; ++i, lpNode = lpNode -> m_pNext ) {
 
-  unsigned int    j, k     = 8;
-  SMS_ListNode*   lpSNode  = lpNode -> m_pList -> m_pHead;
   SubtitlePacket* lpPacket = &s_SubCtx.m_pPackets[ i ];
-  unsigned int    lY       = g_GSCtx.m_Height - lChrH * ( lpNode -> m_pList -> m_Size - 1 ) - g_Config.m_PlayerSubOffset;
-  unsigned int    lLen     = strlen ( lpSNode -> m_pString );
-  unsigned int    lCumLen  = lLen;
 
-  lpPacket -> m_Begin = lpNode -> m_Begin;
-  lpPacket -> m_End   = lpNode -> m_pNext ? ( lpNode -> m_End > lpNode -> m_pNext -> m_Begin ? lpNode -> m_pNext -> m_Begin - 1 : lpNode -> m_End ) : lpNode -> m_End;
-  lpPacket -> m_pDMA  = lpDMA;
-  lpPacket -> m_QWC   = SUB_GSP_SIZE( lLen ) >> 1;
+  lpPacket -> m_Begin    = lpNode -> m_Begin;
+  lpPacket -> m_End      = lpNode -> m_pNext ? ( lpNode -> m_End > lpNode -> m_pNext -> m_Begin ? lpNode -> m_pNext -> m_Begin - 1 : lpNode -> m_End ) : lpNode -> m_End;
+  lpPacket -> m_pDMA     = ( uint64_t* )lf16;
+  lpPacket -> m_Pad[ 0 ] = (  ( unsigned int )lpNode  ) | 0x80000000;
 
-  lpDMA[ 0 ] = 0;
-  lpDMA[ 2 ] = GIF_TAG( 1, 0, 0, 0, 1, 2 );
-  lpDMA[ 3 ] = GS_TEX0_1 | ( GS_PRIM << 4 );
-  lpDMA[ 4 ] = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, GSPixelFormat_PSMT4, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, g_GSCtx.m_CLUT[ ( unsigned int )lpSNode -> m_Param ], GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 0, GS_TEX_CLD_LOAD );
-  lpDMA[ 5 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 );
-  lpDMA[ 7 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
-
-  while ( 1 ) {
-
-   unsigned int lVX[ 32 ];
-   unsigned int lX;
-   unsigned int lY1, lY2;
-   unsigned int lU, lV;
-   unsigned int lTxtWidth = GSFont_WidthEx ( lpSNode -> m_pString, lLen, g_Config.m_SubHIncr );
-   int          lCurX;
-
-   switch ( g_Config.m_PlayerSAlign ) {
-
-    default:
-    case 0 :  /* center alignment */
-
-     lX = ( g_GSCtx.m_Width - lTxtWidth ) >> 1;
-
-     if ( lX > g_GSCtx.m_Width ) lX = 0;
-
-    break;
-
-    case 1:  /* left alignment */
-
-     lX = 32;
-
-    break;
-
-    case 2:  /* right alignment */
-
-     lX = g_GSCtx.m_Width - lTxtWidth - 32;
-
-    break;
-
-   }  /* end switch */
-
-   __asm__ __volatile__ (
-    ".set noreorder\n\t"
-    "move     $t9, $ra\n\t"
-    "addiu    $v0, %2, 32\n\t"
-    "addu     $v0, $v0, %3\n\t"
-    "move     $a1, %2\n\t"
-    "move     $a0, $zero\n\t"
-    "dsll32   $v0, $v0, 0\n\t"
-    "move     $a2, $zero\n\t"
-    "jal      GS_XYZ\n\t"
-    "or       $a1, $a1, $v0\n\t"
-    "srl      $v0, $v0, 16\n\t"
-    "dsrl32   $a1, $a1, 0\n\t"
-    "sll      $v0, $v0, 16\n\t"
-    "move     %0, $v0\n\t"
-    "move     %1, $a1\n\t"
-    "move     $ra, $t9\n\t"
-    ".set reorder\n\t"
-    : "=r"( lY1 ), "=r"( lY2 ) : "r"( lY ), "r"( lDH ) : "a0", "a1", "a2", "v0", "v1", "t9"
-   );
-
-   for ( j = 0; j < 32; ++j ) lVX[ j ] = lX;
-
-   for ( j = 0; j < lLen; ++j, k += 4 ) {
-
-    unsigned int  l;
-    unsigned char lChr = lpSNode -> m_pString[ j ] - ' ';
-
-    lCurX = -INT_MAX;
-
-    for ( l = 0; l < 32; ++l ) {
-
-     int lOffset = lVX[ l ] - g_GSCharIndent[ lChr ].m_Left[ l ] * lAR;
-
-     __asm__ __volatile__(
-      "pmaxw %0, %1, %2\n\t"
-      : "=r"( lCurX ) : "r"( lCurX ), "r"( lOffset )
-     );
-
-    }  /* end for */
-
-    lX = lCurX << 4;
-
-    for ( l = 0; l < 32; ++l ) lVX[ l ] = lCurX + ( 31 - g_GSCharIndent[ lChr ].m_Right[ l ] ) * lAR;
-
-    lU = ( lChr & 0x0000000F ) << 9;
-    lV = ( lChr & 0xFFFFFFF0 ) << 5;
-
-    lpDMA[ k + 0 ] = GS_SET_UV( lU + 8, lV + 8 );
-    lpDMA[ k + 1 ] = lX | lY1;
-    lpDMA[ k + 2 ] = GS_SET_UV( lU + 504, lV + 504 );
-    lpDMA[ k + 3 ] = ( lX + 512 + lDW ) | lY2;
-
-   }  /* end for */
-
-   if (  !( lpSNode = lpSNode -> m_pNext )  ) break;
-
-   lLen               = strlen ( lpSNode -> m_pString );
-   lpPacket -> m_QWC += lLen << 1;
-   lY                += 32 + lDH;
-   lCumLen           += lLen;
-
-  }  /* end while */
-
-  lpDMA[ 1 ] = VIF_DIRECT( lpPacket -> m_QWC - 1 );
-  lpDMA[ 6 ] = GIF_TAG( lCumLen, 1, 0, 0, 1, 4 );
-
-  lpDMA += lpPacket -> m_QWC << 1;
+  if ( i ) lpPacket -> m_Pad[ 1 ] = ( unsigned int )&lpPacket[ -1 ];
 
  }  /* end for */
 
- SyncDCache ( s_SubCtx.m_pDMA, s_SubCtx.m_pDMA + s_nAlloc );
-
- _clear_nodes ();
+ SyncDCache (  s_SubCtx.m_pDMA[ 0 ], ( char* )s_SubCtx.m_pDMA[ 0 ] + ( lnAlloc << 1 )  );
 
 }  /* end _produce_packets */
 
-static void _produce_opackets ( void ) {
+static void _create_gs_packet ( SubtitlePacket* apPacket ) {
 
- unsigned int i;
- uint64_t*    lpDMA;
- SubNode*     lpNode = s_pHead;
- int          lDW    = g_Config.m_SubHIncr << 4;
- float        lAR    = ( 32.0F + g_Config.m_SubHIncr ) / 32.0F;
- int          lDH    = g_Config.m_SubVIncr;
- int          lChrH  = 32 + lDH;
+ SubNode*         lpSNode = ( SubNode* )(  ( apPacket -> m_Pad[ 0 ] << 1 ) >> 1  );
+ SubtitleContext* lpCtx   = &s_SubCtx;
+ int              lSize   = lpSNode -> m_pList -> m_Size;
+ SMS_ListNode*    lpNode  = lpSNode -> m_pList -> m_pHead;
+ int              lDH     = g_Config.m_SubVIncr;
+ int              lDW     = g_Config.m_SubHIncr;
+ int              lChrH   = 32 + lDH;
+ unsigned int     lY      = g_GSCtx.m_Height - lChrH * ( lSize - 1 ) - g_Config.m_PlayerSubOffset;
+ unsigned int     lQWC    = lpCtx -> m_nPreAlloc >> 4;
+ unsigned long*   lpDMA;
 
- s_SubCtx.m_pDMA     = ( uint64_t*       )calloc (  s_nAlloc,       sizeof ( uint64_t       )  );
- s_SubCtx.m_pPackets = ( SubtitlePacket* )calloc (  s_SubCtx.m_Cnt, sizeof ( SubtitlePacket )  );
+ s_SubCtx.m_DMAIdx ^= 1;
 
- lpDMA = s_SubCtx.m_pDMA;
+ lpDMA = UNCACHED_SEG( s_SubCtx.m_pDMA[ s_SubCtx.m_DMAIdx ] );
 
- for ( i = 0; i < s_SubCtx.m_Cnt; ++i, lpNode = lpNode -> m_pNext ) {
+ apPacket -> m_Pad[ 0 ] = ( unsigned int )lpSNode;
 
-  unsigned int    j, k;
-  SMS_ListNode*   lpSNode  = lpNode -> m_pList -> m_pHead;
-  SubtitlePacket* lpPacket = &s_SubCtx.m_pPackets[ i ];
-  unsigned int    lY       = g_GSCtx.m_Height - lChrH * ( lpNode -> m_pList -> m_Size - 1 ) - g_Config.m_PlayerSubOffset;
-  unsigned int    lLen     = strlen ( lpSNode -> m_pString );
-  uint64_t*       lpVIF    = &lpDMA[ 1 ];
+ lpDMA[ 10 ] = GS_SET_TEX0(
+                0x3FC0, 1, GSPixelFormat_PSMT4, 6, 6, GS_TEX_TCC_RGBA,
+                GS_TEX_TFX_DECAL, 0, GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, ( unsigned int )lpNode -> m_Param, GS_TEX_CLD_NOUPDATE
+               );
 
-  lpPacket -> m_Begin = lpNode -> m_Begin;
-  lpPacket -> m_End   = lpNode -> m_pNext ? ( lpNode -> m_End > lpNode -> m_pNext -> m_Begin ? lpNode -> m_pNext -> m_Begin - 1 : lpNode -> m_End ) : lpNode -> m_End;
-  lpPacket -> m_pDMA  = lpDMA;
-  lpPacket -> m_QWC   = (  6 + SUB_GSP_OSIZE( lLen )  ) >> 1;
+ lpDMA = lpDMA + ( unsigned int )apPacket -> m_pDMA;
 
-  lpDMA[ 0 ] = 0;
-  lpDMA[ 2 ] = GIF_TAG( 1, 0, 0, 0, 0, 1 );
-  lpDMA[ 3 ] = GIFTAG_REGS_AD;
-  lpDMA[ 4 ] = GS_SET_TEX1( 0, 0, 1, 1, 0, 0, 0 );
-  lpDMA[ 5 ] = GS_TEX1_1;
-  lpDMA     += 6;
+ while ( lpNode ) {
 
-  while ( 1 ) {
+  unsigned int   lX;
+  unsigned long* lpDMANext;
+  int            lLen = strlen (  _STR( lpNode )  );
+  unsigned int   lW   = _string_width_func (  _STR( lpNode ), lLen, lDW  );
 
-   unsigned int lVX[ 32 ];
-   unsigned int lX;
-   unsigned int lY1, lY2;
-   unsigned int lU, lV;
-   int          lCurX;
-   unsigned int lTxtWidth = GSFont_WidthEx ( lpSNode -> m_pString, lLen, g_Config.m_SubHIncr );
+  switch ( g_Config.m_PlayerSAlign ) {
 
-   switch ( g_Config.m_PlayerSAlign ) {
+   default:
+   case 0 :  /* center alignment */
+    lX = (  g_GSCtx.m_Width - lW  ) >> 1;
+    if ( lX > g_GSCtx.m_Width ) lX = 0;
+   break;
 
-    default:
-    case 0 :  /* center alignment */
+   case 1:  /* left alignment */
+    lX = 32;
+   break;
 
-     lX = (  g_GSCtx.m_Width - lTxtWidth  ) >> 1;
+   case 2:  /* right alignment */
+    lX = g_GSCtx.m_Width - lW - 32;
+   break;
 
-     if ( lX > g_GSCtx.m_Width ) lX = 0;
+  }  /* end switch */
 
-    break;
+  if ( g_Config.m_PlayerFlags & SMS_PF_OSUB ) {
 
-    case 1:  /* left alignment */
+   *lpDMA++ = GIF_TAG( 1, 0, 0, 0, 1, 6 );
+   *lpDMA++ = GIFTAG_REGS_PRIM | ( GIFTAG_REGS_RGBAQ  <<  4 ) |
+                                 ( GIFTAG_REGS_XYZ2   <<  8 ) |
+                                 ( GIFTAG_REGS_XYZ2   << 12 ) |
+                                 ( GIFTAG_REGS_PRIM   << 16 ) |
+                                 ( GIFTAG_REGS_NOP    << 20 );
+   *lpDMA++ = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
+   *lpDMA++ = GS_SET_RGBAQ( 0x00, 0x00, 0x00, 0x80, 0x00 );
+   *lpDMA++ = GS_XYZ ( lX,      lY,         0 );
+   *lpDMA++ = GS_XYZ ( lX + lW, lY + lChrH, 0 );
+   *lpDMA++ = GS_SET_PRIM(
+              GS_PRIM_PRIM_SPRITE, GS_PRIM_IIP_FLAT, GS_PRIM_TME_ON,
+              GS_PRIM_FGE_OFF, GS_PRIM_ABE_ON, GS_PRIM_AA1_OFF, GS_PRIM_FST_UV,
+              GS_PRIM_CTXT_1, GS_PRIM_FIX_UNFIXED
+             );
+   *lpDMA++ = 0L;
+   lQWC    += 4;
 
-     lX = 32;
+  }  /* end if */
 
-    break;
+  lpDMANext = _render_string_func (  _STR( lpNode ), lLen, lX, lY, lpDMA, lDW, lDH  );
+  lQWC     += ( lpDMANext - lpDMA ) >> 1;
+  lpDMA     = lpDMANext;
+  lpNode    = lpNode -> m_pNext;
+  lY       += 32 + lDH;
 
-    case 2:  /* right alignment */
+ }  /* end while */
 
-     lX = g_GSCtx.m_Width - lTxtWidth - 32;
+ if ( g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL ) {
 
-    break;
+  *lpDMA++ = GIF_TAG( 1, 1, 0, 0, 0, 1 ); 
+  *lpDMA++ = GIFTAG_REGS_AD;
+  *lpDMA++ = GS_SET_DTHE( 1 );
+  *lpDMA   = GS_DTHE;
 
-   }  /* end switch */
+ } else lpDMA[ -6 ] = GIF_TAG( 2, 1, 0, 0, 1, 2 );
 
-   __asm__ __volatile__ (
-    ".set noreorder\n\t"
-    "move     $t9, $ra\n\t"
-    "addiu    $v0, %2, 32\n\t"
-    "addu     $v0, $v0, %3\n\t"
-    "move     $a1, %2\n\t"
-    "move     $a0, $zero\n\t"
-    "dsll32   $v0, $v0, 0\n\t"
-    "move     $a2, $zero\n\t"
-    "jal      GS_XYZ\n\t"
-    "or       $a1, $a1, $v0\n\t"
-    "srl      $v0, $v0, 16\n\t"
-    "dsrl32   $a1, $a1, 0\n\t"
-    "sll      $v0, $v0, 16\n\t"
-    "move     %0, $v0\n\t"
-    "move     %1, $a1\n\t"
-    "move     $ra, $t9\n\t"
-    ".set reorder\n\t"
-    : "=r"( lY1 ), "=r"( lY2 ) : "r"( lY ), "r"( lDH ) : "a0", "a1", "a2", "v0", "v1", "t9"
-   );
+ lpDMA             = UNCACHED_SEG( s_SubCtx.m_pDMA[ s_SubCtx.m_DMAIdx ] );
+ apPacket -> m_QWC = lQWC;
+ lpDMA[ 1 ]        = VIF_DIRECT( lQWC - 1 );
 
-   for ( j = 0; j < 32; ++j ) lVX[ j ] = lX;
+ if (  ( int )apPacket -> m_Pad[ 1 ]  ) {
+  apPacket = ( SubtitlePacket* )apPacket -> m_Pad[ 1 ];
+  apPacket -> m_Pad[ 0 ] |= 0x80000000;
+ }  /* end if */
 
-   lpDMA[ 0 ] = GIF_TAG( 1, 0, 0, 0, 1, 6 );
-   lpDMA[ 1 ] = GS_PRIM | ( GS_RGBAQ  <<  4 ) |
-                          ( GS_XYZ2   <<  8 ) |
-                          ( GS_XYZ2   << 12 ) |
-                          ( GS_TEX0_1 << 16 ) |
-                          ( GS_PRIM   << 20 );
-   lpDMA[ 2 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0 );
-   lpDMA[ 3 ] = GS_SET_RGBAQ( 0x00, 0x00, 0x00, 0x00, 0x00 );
-   lpDMA[ 4 ] = ( lX << 4 ) | lY1;
-   lpDMA[ 5 ] = (  ( lX + lTxtWidth ) << 4  ) | lY2;
-   lpDMA[ 6 ] = GS_SET_TEX0( g_GSCtx.m_VRAMFontPtr, 8, GSPixelFormat_PSMT4, 9, 9, GS_TEX_TCC_RGBA, GS_TEX_TFX_DECAL, g_GSCtx.m_CLUT[ ( unsigned int )lpSNode -> m_Param ], GSPixelFormat_PSMCT32, GS_TEX_CSM_CSM1, 0, GS_TEX_CLD_LOAD );
-   lpDMA[ 7 ] = GS_SET_PRIM( GS_PRIM_PRIM_SPRITE, 0, 1, 0, 1, 1, 1, 0, 0 );
-   lpDMA[ 8 ] = GIF_TAG( lLen, 1, 0, 0, 1, 4 );
-   lpDMA[ 9 ] = GS_UV | ( GS_XYZ2 << 4 ) | ( GS_UV << 8 ) | ( GS_XYZ2 << 12 );
+}  /* end _create_gs_packet */
 
-   for ( j = 0, k = 10; j < lLen; ++j, k += 4 ) {
-
-    unsigned int  l;
-    unsigned char lChr = lpSNode -> m_pString[ j ] - ' ';
-
-    lCurX = -INT_MAX;
-
-    for ( l = 0; l < 32; ++l ) {
-
-     int lOffset = lVX[ l ] - g_GSCharIndent[ lChr ].m_Left[ l ] * lAR;
-
-     __asm__ __volatile__(
-      "pmaxw %0, %1, %2\n\t"
-      : "=r"( lCurX ) : "r"( lCurX ), "r"( lOffset )
-     );
-
-    }  /* end for */
-
-    lX = lCurX << 4;
-
-    for ( l = 0; l < 32; ++l ) lVX[ l ] = lCurX + ( 31 - g_GSCharIndent[ lChr ].m_Right[ l ] ) * lAR;
-
-    lU = ( lChr & 0x0000000F ) << 9;
-    lV = ( lChr & 0xFFFFFFF0 ) << 5;
-
-    lpDMA[ k + 0 ] = GS_SET_UV( lU + 8, lV + 8 );
-    lpDMA[ k + 1 ] = lX | lY1;
-    lpDMA[ k + 2 ] = GS_SET_UV( lU + 504, lV + 504 );
-    lpDMA[ k + 3 ] = ( lX + 512 + lDW ) | lY2;
-
-   }  /* end for */
-
-   lpDMA += SUB_GSP_OSIZE( lLen );
-
-   if (  !( lpSNode = lpSNode -> m_pNext )  ) break;
-
-   lLen               = strlen ( lpSNode -> m_pString );
-   lpPacket -> m_QWC += SUB_GSP_OSIZE( lLen ) >> 1;
-   lY                += 32 + lDH;
-
-  }  /* end while */
-
-  *lpVIF = VIF_DIRECT( lpPacket -> m_QWC - 1 );
-
- }  /* end for */
-
- SyncDCache ( s_SubCtx.m_pDMA, s_SubCtx.m_pDMA + s_nAlloc );
-
- _clear_nodes ();
-
-}  /* end _produce_opackets */
-
-static void _display ( int64_t aPTS ) {
+static void _display ( long aPTS ) {
 
  SubtitlePacket* lpPacket = s_SubCtx.m_pPackets;
 
@@ -838,8 +879,10 @@ static void _display ( int64_t aPTS ) {
        aPTS <  lpPacket[ s_SubCtx.m_Idx ].m_End
   ) {
 
-   g_IPUCtx.PQueuePacket (
-    lpPacket[ s_SubCtx.m_Idx ].m_QWC, lpPacket[ s_SubCtx.m_Idx ].m_pDMA
+   if (  ( int )lpPacket[ s_SubCtx.m_Idx ].m_Pad[ 0 ] < 0  ) _create_gs_packet ( &lpPacket[ s_SubCtx.m_Idx ] );
+
+   g_IPUCtx.QueuePacket (
+    lpPacket[ s_SubCtx.m_Idx ].m_QWC, s_SubCtx.m_pDMA[ s_SubCtx.m_DMAIdx ]
    );
    break;
 
@@ -862,51 +905,87 @@ static void _destroy ( void ) {
 
  }  /* end if */
 
- if ( s_SubCtx.m_pDMA ) {
+ if ( s_SubCtx.m_pDMA[ 0 ] ) {
 
-  free ( s_SubCtx.m_pDMA );
-  s_SubCtx.m_pDMA = NULL;
+  free ( s_SubCtx.m_pDMA[ 0 ] );
+  s_SubCtx.m_pDMA[ 0 ] = NULL;
 
  }  /* end if */
 
 }  /* end _destroy */
 
-SubtitleContext* SubtitleContext_Init ( FileContext* apFileCtx, SubtitleFormat aFmt, float aFPS ) {
+static void _reset ( void ) {
 
- int lSts = 0;
+ s_SubCtx.m_pPackets[ s_SubCtx.m_Idx ].m_Pad[ 0 ] |= 0x80000000;
+ s_SubCtx.m_Idx                                    = 0;
 
- s_pHead  = NULL;
- s_pTail  = NULL;
- s_nAlloc =    0;
+}  /* end _reset */
 
- s_SubCtx.m_ErrorCode = 0;
- s_SubCtx.m_ErrorLine = 0;
+SubtitleContext* SubtitleContext_Init ( FileContext* apFileCtx, SubtitleFormat aFmt, float aFPS, int aBase, int aRatio ) {
 
- if ( g_Config.m_PlayerFlags & SMS_PF_OSUB ) {
+ int              lSts  = 0;
+ SubtitleContext* lpCtx = &s_SubCtx;
+ int              lf16  = g_Config.m_ColorDepth;
 
-  _update_size_func = _update_osize;
-  s_SubCtx.Prepare  = _produce_opackets;
+ lpCtx -> m_pHead  = NULL;
+ lpCtx -> m_pTail  = NULL;
+ lpCtx -> m_nAlloc =    0;
+
+ lpCtx -> m_ErrorCode = 0;
+ lpCtx -> m_ErrorLine = 0;
+
+ if ( g_Config.m_MBFName[ 0 ] && !g_MBFont ) {
+
+  char lPath[ strlen ( g_pMC0SMS ) + strlen ( g_Config.m_MBFName ) + 6 ];
+
+  GUI_Progress ( STR_LOADING_FONT.m_pStr, 50, 0 );
+
+  strcpy ( lPath, g_pMC0SMS          );
+  strcat ( lPath, g_SlashStr         );
+  strcat ( lPath, g_Config.m_MBFName );
+  strcat ( lPath, g_pExtMBF          );
+
+  if (  !GSFont_Load ( lPath )  ) GUI_Error ( STR_ERROR.m_pStr );
+
+  GUI_Progress ( STR_LOADING_SUBTITLES.m_pStr, 100, 0 );
+
+ }  /* end if */
+
+ lpCtx -> m_nPreAlloc = lf16 ? 144 : 96;
+
+ if ( g_MBFont ) {
+
+  _strtok_func        = _mbstrtok;
+  _strlen_func        = _mbstrlen;
+  _render_string_func = _mb_render_string;
+  _string_width_func  = _mb_string_width;
 
  } else {
 
-  _update_size_func = _update_size;
-  s_SubCtx.Prepare  = _produce_packets;
+  _strtok_func        = strtok;
+  _strlen_func        = strlen;
+  _render_string_func = _sb_render_string;
+  _string_width_func  = _sb_string_width;
 
  }  /* end else */
 
+ s_SubCtx.Prepare = _produce_packets;
+ s_SubCtx.Display = _display;
+ s_SubCtx.Reset   = _reset;
+
  switch ( aFmt ) {
 
-  case SubtitleFormat_SRT: lSts = _load_srt ( apFileCtx       ); break;
-  case SubtitleFormat_SUB: lSts = _load_sub ( apFileCtx, aFPS ); break;
+  case SubtitleFormat_SRT: lSts = _load_srt ( apFileCtx, aBase, aRatio       ); break;
+  case SubtitleFormat_SUB: lSts = _load_sub ( apFileCtx, aFPS, aBase, aRatio ); break;
 
  }  /* end switch */
 
  if ( !lSts ) _clear_nodes ();
 
- s_SubCtx.m_Idx   = 0;
- s_SubCtx.Display = _display;
- s_SubCtx.Destroy = _destroy;
+ s_SubCtx.m_Idx    = 0;
+ s_SubCtx.m_DMAIdx = 0;
+ s_SubCtx.Destroy  = _destroy;
 
- return &s_SubCtx;
+ return lpCtx;
 
 }  /* end SubtitleContext_Init */

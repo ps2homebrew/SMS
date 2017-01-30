@@ -17,9 +17,9 @@
 #include <string.h>
 #include <kernel.h>
 
-static _MPEGContext s_MPEG12Ctx;
-static long*        s_pCurPTS;
-static int          s_fSeq;
+static _MPEGContext  s_MPEG12Ctx;
+static long*         s_pCurPTS;
+static unsigned char s_fSeq;
 
 static void ( *LumaOp[ 8 ] ) ( _MPEGMotion* ) = {
  _MPEG_put_luma, _MPEG_put_luma_X, _MPEG_put_luma_Y, _MPEG_put_luma_XY,
@@ -164,9 +164,13 @@ static void* _init_seq ( void ) {
 
   lSize = lMBWidth * ( lMBHeight + 1 ) * sizeof ( _MPEGMacroBlock8 ) + sizeof ( _MPEGMacroBlock8 );
 
-  s_MPEG12Ctx.m_pFwdFrame = ( _MPEGMacroBlock8* )memalign ( 64, lSize );
-  s_MPEG12Ctx.m_pBckFrame = ( _MPEGMacroBlock8* )memalign ( 64, lSize );
-  s_MPEG12Ctx.m_pAuxFrame = ( _MPEGMacroBlock8* )memalign ( 64, lSize );
+  s_MPEG12Ctx.m_pFwdFrame = ( _MPEGMacroBlock8* )memalign ( 128, lSize );
+  s_MPEG12Ctx.m_pBckFrame = ( _MPEGMacroBlock8* )memalign ( 128, lSize );
+  s_MPEG12Ctx.m_pAuxFrame = ( _MPEGMacroBlock8* )memalign ( 128, lSize );
+
+  memset ( s_MPEG12Ctx.m_pFwdFrame, 0, lSize );
+  memset ( s_MPEG12Ctx.m_pBckFrame, 0, lSize );
+  memset ( s_MPEG12Ctx.m_pAuxFrame, 0, lSize );
 
   s_MPEG12Ctx.m_pMBXY = ( _MPEGMBXY* )malloc (
    sizeof ( _MPEGMBXY ) * ( s_MPEG12Ctx.m_MBCount = s_MPEG12Ctx.m_MBWidth * s_MPEG12Ctx.m_MBHeight )
@@ -253,13 +257,32 @@ static int _get_hdr ( void ) {
 
 static void _seq_header ( void ) {
 
+ float        lFrameRate;
+ unsigned int lFrameRateInt;
+
  s_MPEG12Ctx.m_SI.m_Width  = _MPEG_GetBits ( 12 );
  s_MPEG12Ctx.m_SI.m_Height = _MPEG_GetBits ( 12 );
 
- _MPEG_GetBits (  4 );  /* aspect_ratio_information    */
- s_MPEG12Ctx.m_SI.m_MSPerFrame = ( int )(
-  (  1000.0F / s_FrameRate[ s_MPEG12Ctx.m_FRCode = _MPEG_GetBits ( 4 ) ]  ) + 0.5F
+ _MPEG_GetBits ( 4 );  /* aspect_ratio_information    */
+
+ lFrameRate = (
+  1000.0F / s_FrameRate[ s_MPEG12Ctx.m_FRCode = _MPEG_GetBits ( 4 ) ]
  );
+ lFrameRateInt = ( unsigned )( lFrameRate * 147456.0F + 0.5F );
+
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set noat\n\t"
+  "mfc0 $at, $11\n\t"
+  "bnel $at, %0, 1f\n\t"
+  "mtc0 %0, $11\n\t"
+  "1:\n\t"
+  ".set at\n\t"
+  ".set reorder\n\t"
+  :: "r"( lFrameRateInt )
+ );
+
+ s_MPEG12Ctx.m_SI.m_MSPerFrame = ( int )( lFrameRate + 0.5F );
  _MPEG_GetBits ( 18 );  /* bit_rate_value              */
  _MPEG_GetBits (  1 );  /* marker_bit                  */
  _MPEG_GetBits ( 10 );  /* vbv_buffer_size             */
@@ -400,10 +423,12 @@ static void _ext_unknown ( void ) {
 
 static void _ext_seq ( void ) {
 
- int lHSzX;
- int lVSzX;
- int lProfLevel;
- int lFRXn, lFRXd;
+ int          lHSzX;
+ int          lVSzX;
+ int          lProfLevel;
+ int          lFRXn, lFRXd;
+ unsigned int lFrameRateInt;
+ float        lFrameRate;
 
  s_MPEG12Ctx.m_fMPEG2 = 1;
 
@@ -426,11 +451,23 @@ static void _ext_seq ( void ) {
  lFRXn = _MPEG_GetBits ( 2 );
  lFRXd = _MPEG_GetBits ( 5 );
 #endif  /* _DEBUG */
- s_MPEG12Ctx.m_SI.m_MSPerFrame = ( int )(
-  (  1000.0F / (
-      s_FrameRate[ s_MPEG12Ctx.m_FRCode ] * (  ( lFRXn + 1.0F ) / ( lFRXd + 1.0F )  )
-     )
-  ) + 0.5F
+ lFrameRate = 1000.0F / (
+  s_FrameRate[ s_MPEG12Ctx.m_FRCode ] * (  ( lFRXn + 1.0F ) / ( lFRXd + 1.0F )  )
+ );
+ lFrameRateInt = ( unsigned )( lFrameRate * 1000.0F * 148.0F + 0.5F );
+
+ s_MPEG12Ctx.m_SI.m_MSPerFrame = ( int )( lFrameRate + 0.5F );
+
+ __asm__ __volatile__(
+  ".set noreorder\n\t"
+  ".set noat\n\t"
+  "mfc0 $at, $11\n\t"
+  "bnel $at, %0, 1f\n\t"
+  "mtc0 %0, $11\n\t"
+  "1:\n\t"
+  ".set at\n\t"
+  ".set reorder\n\t"
+  :: "r"( lFrameRateInt )
  );
 
  if(  ( lProfLevel >> 7 ) & 1  ) {

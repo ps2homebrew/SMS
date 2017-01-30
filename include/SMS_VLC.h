@@ -22,10 +22,10 @@
 
 typedef struct SMS_VLC {
 
- int32_t m_Bits;
  int16_t ( *m_pTable )[ 2 ];
- int32_t m_TableSize;
- int32_t m_TableAlloc;
+ int16_t m_Bits;
+ int16_t m_TableSize;
+ int16_t m_TableAlloc;
 
 } SMS_VLC;
 
@@ -99,7 +99,7 @@ static SMS_INLINE int SMS_GetVLC ( SMS_BitContext* apCtx, SMS_VLC* apVLC ) {
  int16_t ( *lpTbl )[ 2 ] = apVLC -> m_pTable;
  SMS_OPEN_READER( re, apCtx )
   SMS_UPDATE_CACHE( re, apCtx )
-  SMS_GET_VLC( lCode, re, apCtx, lpTbl, apVLC-> m_Bits, 3 )
+  SMS_GET_VLC( lCode, re, apCtx, lpTbl, apVLC -> m_Bits, 3 )
  SMS_CLOSE_READER( re, apCtx )
  return lCode;
 }  /* end SMS_GetVLC */
