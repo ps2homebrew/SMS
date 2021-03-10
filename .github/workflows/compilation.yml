@@ -18,5 +18,5 @@ jobs:
         git fetch --prune --unshallow
     - name: Compile project
       run: |
-        make all
+        make clean
     # commands for compiling your project
