@@ -9,7 +9,7 @@
 #
 */
 #ifndef __SMS_DirTree_H
-# define __SMS_DirTree_H
+#define __SMS_DirTree_H
 
 typedef struct SMS_DirNode {
 
@@ -39,16 +39,16 @@ typedef struct SMS_DirTree {
 
 } SMS_DirTree;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_DirTree* SMS_DirTreeInit    ( const char* );
 void         SMS_DirTreeScan    ( SMS_DirTree*, SMS_Dir*, const char* );
 void         SMS_DirTreeWalk    ( SMS_DirTree*, SMS_Dir*, const char*, void ( *Callback ) ( SMS_DirTree*, const char*, int, unsigned )  );
 void         SMS_DirTreeDestroy ( void* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_DirTree_H */

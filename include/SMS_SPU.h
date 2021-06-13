@@ -9,7 +9,7 @@
 #
 */
 #ifndef __SPU_H
-# define __SPU_H
+#define __SPU_H
 
 typedef struct SMSound {
 
@@ -29,9 +29,9 @@ typedef struct SPUContext {
 
 } SPUContext;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void        SPU_Initialize   ( void                    );
 SPUContext* SPU_InitContext  ( int, int, int, int, int );
@@ -40,7 +40,7 @@ void        SPU_PlaySound    ( SMSound*, int           );
 int         SPU_Index2Volume ( int                     );
 void        SPU_Shutdown     ( void                    );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SPU_H */

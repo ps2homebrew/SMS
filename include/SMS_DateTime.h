@@ -9,19 +9,19 @@
 #
 */
 #ifndef __SMS_DateTime_H
-# define __SMS_DateTime_H
+#define __SMS_DateTime_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 int  SMS_TimeZone   ( void  );
 int  SMS_SummerTime ( void  );
 int  SMS_TimeFormat ( void  );
 void SMS_LocalTime  ( void* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 #endif  /* __SMS_DateTime_H */

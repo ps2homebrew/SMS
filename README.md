@@ -1,14 +1,13 @@
-    ___  _ _      ___
-   |    | | |    |
-___|    |   | ___|    PS2DEV Open Source Project.
----------------------------------------------------------
- Copyright 2001-2005, ps2dev - http://www.ps2dev.org
- All rights reserved.
- Created by Eugene Plotnikov <e-plotnikov@operamail.com>
------------------------------------------------------------------------
+# Simple Media System (SMS)
 
-Introduction
------------------------------------------------------------------------
+Copyright 2001-2005, ps2dev - http://www.ps2dev.org
+All rights reserved.
+Created by Eugene Plotnikov <e-plotnikov@operamail.com>
+
+[![CI](https://github.com/ps2homebrew/SMS/workflows/CI/badge.svg)](https://github.com/ps2homebrew/SMS/actions?query=workflow%3ACI)
+
+## Introduction
+
 Simple Media System (SMS) is a result of my curiosity about Sony's Playstation2,
 MIPS, DivX and MP3. My original goal was to create a simplest DivX player able
 to play good resolution movies at good frame rate on the unmodded PS2 without
@@ -27,8 +26,8 @@ to put all this stuff to the CVS at ps2dev in hope that it could be interesting 
 PS2 enthusiasts who use it as base for their development. This "document" provides
 basic info about SMS.
 
- CDDAFS
- ----------------------------------------------------------------------
+## CDDAFS
+
 It's just a method of storing a data on audio CD, so PS2 hardware can authenticate
 such a CD as "valid" one. Logical structure of such a CD is quite simple. Audio tracks
 are "directories". Track 0 is a control track, which stores global disk information.
@@ -76,8 +75,8 @@ and in FileContext.c (logical read operations). I've also started implementation
 "standard" I/O (STIO_xxx routines). Well, for me CDDA is enough. So anyone can
 finish "standard" I/O (perhaps, using asynchronous fileXio routines from ps2sdk).
 
- PC program
- ----------------------------------------------------------------------
+## PC program
+
 I've called it CDXplorer. Not fully completed yet, but it does its job of
 making cue/bin pair. This program is uses Win32 API, so it is not compatible with
 linux (even WINE has troubles running it). I'm using Nero's Disk-At-Once/96 burning
@@ -85,8 +84,8 @@ option. It is also possible to read CDDAFS using this proggy. Just insert CDDAFS
 in the drive and run the program. Maybe someone would like to create fs driver to
 support it :)?
 
- SMS Player
- ----------------------------------------------------------------------
+## SMS Player
+
 Just a test program for now and PS2 optimized ffmpeg. No GUI. It is possible to
 benchmark video/audio decoding process (I've got sometimes peak ~70 fps with
 640x464 movie (~60fps is average)). I was able to play 720x528 DivX with sound
@@ -95,8 +94,8 @@ lot of motions (mainly "global" ones). Just watching a movie is also possible.
 Modify main's source at your taste. For sound output I'm using 'audsrv' 0.75
 (magnificent work of gawd).
 
- ffmpeg modifications
- ----------------------------------------------------------------------
+## ffmpeg modifications
+
 Two things here. Using IPU for colorspace conversion (interrupt driven process that
 performs CSC->Display sequence for 640x464 picture in just ~4ms). This process goes
 in parallel with video/audio decoding. Second, I've made a transition from planar
@@ -106,7 +105,7 @@ heavily used in conjunction with DMA transfers. This things gave ~300% performan
 boost (comparing to the original ffmpeg) in video decoding. MP3 decoder is virtually
 unmodified.
 
- Things to do
+## Things to do
  ----------------------------------------------------------------------
 There still a lot to do. As I'm a professional programmer, I just can't do this
 alone quickly. SMS is just a working skeleton of the future player. I've created it
@@ -132,7 +131,7 @@ in my own free time. The following things I'd like to do with it:
 - btw, can somebody modify Makefile in order to make whole project more structured
   (all these 'ee', 'iop' etc. directories)? 
 
- Restrictions
+## Restrictions
  ----------------------------------------------------------------------
 - no support for interlaced movies;
 - no support for non-interleaved avi files;
@@ -140,7 +139,7 @@ in my own free time. The following things I'd like to do with it:
   these 'MP4S', 'BLZ0' etc. (what are they?)) and MP3;
 - other possible restrictions due to lack of detailed knowledge about things :);
 
- How to compile
+## How to compile
  ----------------------------------------------------------------------
 I'm using latest toolchain/ps2sdk from ps2dev and Win32 platform. Just 'make'.
 Do not use 'old' ps2sdk (earlier than january 2005), since there's a bug in
@@ -150,13 +149,13 @@ so even changing link order in Makefile can get more than 10% penalty (
 Currently Makefile contains 'best' link order (I think so). Pay attention to
 the location of 'audsrv.irx' (currently 'host:audsrv.irx').
 
- How to debug
+## How to debug
  ----------------------------------------------------------------------
 Crazy enough, but I've made the code Win32 compatible (with exception of some
 files). So, I'm using MSVC6 to debug major bugs, memory leaks and to understand
 ffmpeg's code. 'printf' does debug for PS2 :);
 
- How to make modifications
+## How to make modifications
  ----------------------------------------------------------------------
 At your taste (be careful, any alignment failure causes a crash (especially with
 structures allocated dynamically)). But first compile and run existing code (the only
@@ -168,7 +167,7 @@ limit of 99 (only one level), and number of files is restricted by the CD capaci
 (I've put a 800MB movie, for example, on the ordinary 700MB disk without any problem).
 I have SCPH-30004R PAL unit, so it works at least on this model.
 
- Modified ps2sdk code
+## Modified ps2sdk code
  ----------------------------------------------------------------------
 It could be noted that there's a lot of modified ps2sdk code here. Why?
 I wanted maximum performance. For 'audsrv' for example there's an unnecessary
@@ -178,13 +177,13 @@ for video decoding. Instead, I decode MP3 stream directly to the uncached, 64 by
 aligned memory, I'm using 64 byte aligned buffers for disk I/O, and GS kit was
 modified to avoid SPR usage. Maybe I'm just a stupid person :o).
 
- License
+## License
  ----------------------------------------------------------------------
 For my code it is the same as for ps2sdk (AFL). For ffmpeg -
 "GNU Lesser General Public License as published by the Free Software Foundation;
 either version 2 of the License, or (at your option) any later version" :).
 
- Miscellaneous
+## Miscellaneous
  ----------------------------------------------------------------------
 I've made this just for myself. I don't want to make any profit from it.
 Anyone is free to make anything with it (according to aforementioned licenses).
@@ -193,12 +192,12 @@ I just hope that it will help PS2 enthusiasts to make their programs quicker.
 I will continue slowly to make it more like a real system, but for me alone
 it will take ages to finish it :).
 
- Questions
+## Questions
  ----------------------------------------------------------------------
 - by email (see beginning of file);
 - using private messages at ps2dev's forums;
 
- Thanks (in no particular order) ;o)
+## Thanks (in no particular order) ;o)
  ----------------------------------------------------------------------
 - Sony for PS2 and Linux for it;
 - Marcus R. Brown for discovering an exploit (without it I would never begin);
@@ -211,6 +210,7 @@ it will take ages to finish it :).
 - gawd for 'audsrv' (virgin version was enough :));
 - all others whose posts in the forums helped me in development;
 
+## Changelog
 
 Update (16-JUN-2005)
 --------------------

@@ -9,32 +9,32 @@
 #
 */
 #ifndef __SMS_Player_H
-# define __SMS_Player_H
+#define __SMS_Player_H
 
-# ifndef __SMS_Container_H
-#  include "SMS_Container.h"
-# endif  /* __SMS_Container_H */
+#ifndef __SMS_Container_H
+#include "SMS_Container.h"
+#endif  /* __SMS_Container_H */
 
-# ifndef __SMS_Locale_H
-#  include "SMS_Locale.h"
-# endif  /* __SMS_Locale_H */
+#ifndef __SMS_Locale_H
+#include "SMS_Locale.h"
+#endif  /* __SMS_Locale_H */
 
-# define SMS_FLAGS_STOP      0x00000001
-# define SMS_FLAGS_PAUSE     0x00000002
-# define SMS_FLAGS_MENU      0x00000004
-# define SMS_FLAGS_EXIT      0x00000008
-# define SMS_FLAGS_VSCROLL   0x00000010
-# define SMS_FLAGS_ASCROLL   0x00000020
-# define SMS_FLAGS_AASCROLL  0x00000040
-# define SMS_FLAGS_ABSCROLL  0x00000080
-# define SMS_FLAGS_USER_STOP 0x00000100
-# define SMS_FLAGS_DISPCTL   0x00000200
-# define SMS_FLAGS_SPDIF     0x00000400
-# define SMS_FLAGS_AC3       0x00000800
-# define SMS_FLAGS_DXSB      0x00001000
-# define SMS_FLAGS_SUBS      0x00002000
-# define SMS_FLAGS_PDW22     0x00004000
-# define SMS_FLAGS_DYNMSK    ( SMS_FLAGS_STOP      | SMS_FLAGS_PAUSE   | SMS_FLAGS_MENU     | SMS_FLAGS_EXIT     | \
+#define SMS_FLAGS_STOP      0x00000001
+#define SMS_FLAGS_PAUSE     0x00000002
+#define SMS_FLAGS_MENU      0x00000004
+#define SMS_FLAGS_EXIT      0x00000008
+#define SMS_FLAGS_VSCROLL   0x00000010
+#define SMS_FLAGS_ASCROLL   0x00000020
+#define SMS_FLAGS_AASCROLL  0x00000040
+#define SMS_FLAGS_ABSCROLL  0x00000080
+#define SMS_FLAGS_USER_STOP 0x00000100
+#define SMS_FLAGS_DISPCTL   0x00000200
+#define SMS_FLAGS_SPDIF     0x00000400
+#define SMS_FLAGS_AC3       0x00000800
+#define SMS_FLAGS_DXSB      0x00001000
+#define SMS_FLAGS_SUBS      0x00002000
+#define SMS_FLAGS_PDW22     0x00004000
+#define SMS_FLAGS_DYNMSK    ( SMS_FLAGS_STOP      | SMS_FLAGS_PAUSE   | SMS_FLAGS_MENU     | SMS_FLAGS_EXIT     | \
                                SMS_FLAGS_VSCROLL   | SMS_FLAGS_ASCROLL | SMS_FLAGS_AASCROLL | SMS_FLAGS_ABSCROLL | \
                                SMS_FLAGS_USER_STOP | SMS_FLAGS_DISPCTL                                             \
                              )
@@ -83,13 +83,13 @@ typedef struct SMS_Player {
  void ( *SetColors ) ( void* );
 
 } SMS_Player;
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_Player* SMS_InitPlayer ( struct FileContext*, struct FileContext*, unsigned int );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_Player_H */

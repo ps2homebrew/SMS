@@ -10,40 +10,40 @@
 #
 */
 #ifndef __SMS_Bitio_H
-# define __SMS_Bitio_H
+#define __SMS_Bitio_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# define SMS_MIN_CACHE_BITS 25
+#define SMS_MIN_CACHE_BITS 25
 
-# define SMS_OPEN_READER( name, gb ) \
+#define SMS_OPEN_READER( name, gb ) \
  int name##_index = ( gb ) -> m_Idx; \
  int name##_cache = 0;
 
-# define SMS_CLOSE_READER( name, gb ) \
+#define SMS_CLOSE_READER( name, gb ) \
  ( gb ) -> m_Idx = name##_index;
 
-# define SMS_UPDATE_CACHE( name, gb )                 \
+#define SMS_UPDATE_CACHE( name, gb )                 \
  name##_cache = SMS_unaligned32_be (                  \
                  (  ( uint8_t* )( gb ) -> m_pBuf  ) + \
                  ( name##_index >> 3 )                \
                 ) << ( name##_index & 0x07 );
 
-# define SMS_SKIP_COUNTER( name, num )       name##_index += ( num );
-# define SMS_SHOW_UBITS( name, gb, num )     SMS_NEG_USR32( name##_cache, num )
-# define SMS_SHOW_SBITS( name, gb, num )     SMS_NEG_SSR32( name##_cache, num )
-# define SMS_LAST_SKIP_BITS( name, gb, num ) SMS_SKIP_COUNTER( name, num )
-# define SMS_SKIP_CACHE( name, num )         name##_cache <<= ( num );
-# define SMS_LAST_SKIP_CACHE( name, gb, num )
+#define SMS_SKIP_COUNTER( name, num )       name##_index += ( num );
+#define SMS_SHOW_UBITS( name, gb, num )     SMS_NEG_USR32( name##_cache, num )
+#define SMS_SHOW_SBITS( name, gb, num )     SMS_NEG_SSR32( name##_cache, num )
+#define SMS_LAST_SKIP_BITS( name, gb, num ) SMS_SKIP_COUNTER( name, num )
+#define SMS_SKIP_CACHE( name, num )         name##_cache <<= ( num );
+#define SMS_LAST_SKIP_CACHE( name, gb, num )
 
-# define SMS_SKIP_BITS( name, gb, num ) { \
+#define SMS_SKIP_BITS( name, gb, num ) { \
  SMS_SKIP_CACHE( name, num )              \
  SMS_SKIP_COUNTER( name, num )            \
 }
 
-# define SMS_GET_CACHE( name, gb ) (  ( uint32_t )name##_cache  )
+#define SMS_GET_CACHE( name, gb ) (  ( uint32_t )name##_cache  )
 
 typedef struct SMS_BitContext {
 
@@ -53,15 +53,15 @@ typedef struct SMS_BitContext {
 
 } SMS_BitContext;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 //void SMS_InitGetBits ( SMS_BitContext*, const uint8_t*, uint32_t );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 static SMS_INLINE int SMS_unaligned32_be ( const void* apVal ) {
  return SMS_bswap32 (  SMS_unaligned32 ( apVal )  );

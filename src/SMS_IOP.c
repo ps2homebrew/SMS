@@ -13,6 +13,7 @@
 #
 */
 #define NO_DEBUG 1
+#include "SMS.h"
 #include "SMS_IOP.h"
 #include "SMS_Data.h"
 #include "SMS_Config.h"
@@ -36,6 +37,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
+
+#include <lzma2.h>
 
 #define SMSUTILS_RPC_ID 0x6D737573
 
@@ -98,7 +101,7 @@ void SMS_IOPSetSifCmdHandler (  void ( *apFunc ) ( void* ), int aCmd  ) {
 
 static void _sif_cmd_handler ( void* apPkt, void* apArg ) {
 
- s_SMS_SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> unknown ] ( apPkt );
+ s_SMS_SIFCmdHandler[ (  ( SifCmdHeader_t* )apPkt  ) -> opt ] ( apPkt );
 
 }  /* end _sif_cmd_handler */
 
@@ -126,9 +129,28 @@ static void _load_module ( int anIndex, int afStatus ) {
 #include "SMS_GS.h"
 #include <slib.h>
 #include <sbv_patches.h>
-#include "s_iop_image.h"
+//#include "s_iop_image.h"
 
 extern slib_exp_lib_list_t _slib_cur_exp_lib_list __attribute__(   (  section( ".data" )  )   );
+
+int SifExecDecompModuleBuffer(void *ptr, u32 size, u32 arg_len, const char *args, int *mod_res)
+{
+	char *irx_data;
+	int irx_size, ret = -1;
+	
+	if((irx_size = lzma2_get_uncompressed_size(ptr, size)) > 0)
+	{
+		irx_data = (char *)memalign(64, irx_size);
+		ret = lzma2_uncompress(ptr, size, irx_data, irx_size);
+		
+		if(ret > 0)
+			ret = SifExecModuleBuffer( irx_data, irx_size, arg_len, args, mod_res );
+		
+		free(irx_data);	
+	}
+
+	return ret;
+}
 
 void SMS_IOPReset ( int afExit ) {
 
@@ -140,9 +162,13 @@ void SMS_IOPReset ( int afExit ) {
  SifExitIopHeap ();
  SifLoadFileExit(); 
  SifExitRpc     (); 
- SifIopReset ( s_pUDNL, 0 );
 
- while (  !SifIopSync ()  );
+ while(!SifIopReset(s_pUDNL, 0)){};
+
+ FlushCache(0);
+ FlushCache(2);
+
+ while (!SifIopSync()) {;}
 
  SifInitRpc ( 0 );
 
@@ -151,7 +177,12 @@ void SMS_IOPReset ( int afExit ) {
  sbv_patch_enable_lmb           ();
  sbv_patch_disable_prefix_check ();
 
- SifUpdateIop ( s_iop_image, size_s_iop_image );
+ //while(!SifIopReset(s_iop_image, 0)){};
+
+ FlushCache(0);
+ FlushCache(2);
+
+ while (!SifIopSync()) {;}
 
  SifInitRpc ( 0 );
  _slib_cur_exp_lib_list.tail = NULL;
@@ -163,11 +194,14 @@ void SMS_IOPReset ( int afExit ) {
  RCX_Start ();
  RCX_Open  ();
 
+#if 0
  while ( 1 ) {
   unsigned int lColor = RC_Read ();
   GS_VSync ();
   GS_BGCOLOR() = lColor + 0x00000030;
  }
+#endif
+
 #else
  afExit = 1;
 #endif  /* NO_DEBUG */
@@ -181,6 +215,9 @@ void SMS_IOPReset ( int afExit ) {
  for ( i = 1 - afExit; i < 4; ++i ) SifLoadModule ( lpModules[ i ], 0, NULL );
 
  SIF_BindRPC ( &s_SMSUClt, SMSUTILS_RPC_ID );
+
+ DisableIntc(INTC_TIM0);
+ DisableIntc(INTC_TIM1);
 
 }  /* end SMS_IOPReset */
 
@@ -378,6 +415,8 @@ void SMS_IOPowerOff ( void ) {
  WakeupThread ( s_PwrOffThreadID );
 }  /* end SMS_IOPowerOff */
 
+static SifCmdHandlerData_t handlerdata[32];
+
 void SMS_IOPInit ( void ) {
 
  int         i, lFD;
@@ -446,6 +485,7 @@ void SMS_IOPInit ( void ) {
  StartThread (  s_PwrOffThreadID = CreateThread ( &lThreadParam ), NULL  );
 
  DI();
+  SifSetCmdBuffer(&handlerdata[0], 32);
   SifAddCmdHandler ( 18, _sif_cmd_handler, NULL );
  EI();
 

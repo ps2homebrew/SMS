@@ -9,9 +9,9 @@
 #
 */
 #ifndef __SMS_RingBuffer_H
-# define __SMS_RingBuffer_H
+#define __SMS_RingBuffer_H
 
-# include <kernel.h>
+#include <kernel.h>
 
 typedef struct SMS_RingBuffer {
 
@@ -36,9 +36,9 @@ typedef struct SMS_RingBuffer {
 
 } SMS_RingBuffer;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_RingBuffer* SMS_RingBufferInit    ( void*, int           );
 SMS_RingBuffer* SMS_RingBufferAddRef  ( SMS_RingBuffer*      );
@@ -53,7 +53,7 @@ int             SMS_RingBufferCount   ( SMS_RingBuffer*      );
 static void inline SMS_RingBufferPost ( SMS_RingBuffer* apRB ) {
  SignalSema ( apRB -> m_Sema[ 1 ] );
 }
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_RingBuffer_H */

@@ -9,9 +9,9 @@
 #
 */
 #ifndef __SMS_List_H
-# define __SMS_List_H
+#define __SMS_List_H
 
-# define _STR( n ) (   ( char* )( n + 1 )  )
+#define _STR( n ) (   ( char* )( n + 1 )  )
 
 typedef struct SMS_ListNode {
 
@@ -29,9 +29,9 @@ typedef struct SMS_List {
 
 } SMS_List;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_List*     SMS_ListInit        ( void                     );
 void          SMS_ListPush        ( SMS_List*, const char*   );
@@ -47,7 +47,7 @@ SMS_ListNode* SMS_ListFindI       ( SMS_List*, const char*   );
 SMS_ListNode* SMS_ListAt          ( SMS_List*, int           );
 void          SMS_ListAppend      ( SMS_List*, SMS_List*     );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __StringList_H */

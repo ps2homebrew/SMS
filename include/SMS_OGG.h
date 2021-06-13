@@ -9,21 +9,21 @@
 #
 */
 #ifndef __SMS_OGG_H
-# define __SMS_OGG_H
+#define __SMS_OGG_H
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# include <string.h>
+#include <string.h>
 
-# define OV_EFAULT     -129
-# define OV_EINVAL     -131
-# define OV_ENOTVORBIS -132
-# define OV_EBADHEADER -133
-# define OV_EVERSION   -134
-# define OV_ENOTAUDIO  -135
-# define OV_EBADPACKET -136
+#define OV_EFAULT     -129
+#define OV_EINVAL     -131
+#define OV_ENOTVORBIS -132
+#define OV_EBADHEADER -133
+#define OV_EVERSION   -134
+#define OV_ENOTAUDIO  -135
+#define OV_EBADPACKET -136
 
 typedef void vorbis_info_floor;
 typedef void vorbis_info_mapping;
@@ -242,9 +242,9 @@ typedef struct alloc_chain {
 } alloc_chain;
 
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 char* ogg_sync_buffer       ( ogg_sync_state*, int                );
 int   ogg_sync_wrote        ( ogg_sync_state*, int                );
@@ -301,7 +301,7 @@ static void inline vorbis_comment_init ( vorbis_comment* apComent ) {
 
 void SMS_Codec_OGGV_Open ( SMS_CodecContext* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_OGG_H */

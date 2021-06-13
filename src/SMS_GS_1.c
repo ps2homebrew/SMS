@@ -157,7 +157,7 @@ unsigned long* GSContext_NewPacket ( int aCtx, int aDWC, GSPaintMethod aMethod )
 
   g_GSCtx.m_nAlloc[ aCtx ] = aDWC + g_GSCtx.m_nAlloc[ aCtx ] + 512;
 
- g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( unsigned long* )realloc64 (
+ g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( unsigned long* )realloc64(
   lpList, (  g_GSCtx.m_nAlloc[ aCtx ] * sizeof ( unsigned long ) + 63  ) & ~63
  );
 

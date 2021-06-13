@@ -9,20 +9,20 @@
 #
 */
 #ifndef __SMS_ContainerAAC_H
-# define __SMS_ContainerAAC_H
+#define __SMS_ContainerAAC_H
 
-# ifndef __SMS_Container_H
-#  include "SMS_Container.h"
-# endif  /* __SMS_Container_H */
+#ifndef __SMS_Container_H
+#include "SMS_Container.h"
+#endif  /* __SMS_Container_H */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 int      SMS_GetContainerAAC ( SMS_Container*               );
 uint64_t SMS_AACProbe        ( FileContext*, SMS_AudioInfo* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_ContainerAAC_H */

@@ -590,8 +590,8 @@ static int CDDA_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> m_BufSize = anSectors * 2352;
 
-  apCtx -> m_pBuff[ 0 ] = realloc64 (  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
-  apCtx -> m_pBuff[ 1 ] = realloc64 (  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 0 ] = realloc64(  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 1 ] = realloc64(  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
 
   if ( apCtx -> m_pBuff[ 0 ] == NULL || apCtx -> m_pBuff[ 1 ] == NULL ) return 0;
 
@@ -1339,7 +1339,7 @@ static int STIO_FillStm ( FileContext* apCtx ) {
         )
   ) {
 #else  /* PS2 */
-  if (  fioSync ( lpPriv -> m_FD, FIO_WAIT, &lnRead )  ) {
+  if (  fioSync ( FIO_WAIT, &lnRead )  ) {
 #endif  /* _WIN32 */
    lOldBuf            = apCtx -> m_CurBuf;
    apCtx -> m_CurBuf  = !apCtx -> m_CurBuf;
@@ -1392,7 +1392,7 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
    lpPriv -> m_hFile, &lpPriv -> m_Ovlp, &lnRead, TRUE
   );
 #else  /* PS2 */
-  fioSync ( lpPriv -> m_FD, FIO_WAIT, &lnRead );
+  fioSync ( FIO_WAIT, &lnRead );
   fioSetBlockMode ( FIO_WAIT );
 #endif  /* _WIN32 */
   apCtx -> m_CurBuf = 0;
@@ -1409,8 +1409,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> m_BufSize = anBlocks * 4096;
 
-  lpData                = realloc64 (  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
-  apCtx -> m_pBuff[ 1 ] = realloc64 (  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  lpData                = realloc64(  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 1 ] = realloc64(  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
 
   if ( lpData == NULL || apCtx -> m_pBuff[ 1 ] == NULL ) return 0;
 

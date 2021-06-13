@@ -10,7 +10,12 @@
 #
 */
 #ifndef __SMS_H
-# define __SMS_H
+#define __SMS_H
+
+#ifndef _SIZE_T_DEFINED
+typedef unsigned int size_t;
+#define _SIZE_T_DEFINED
+#endif
 
 extern unsigned char* g_pSPRTop;
 extern void*          g_pSynthBuffer;
@@ -29,53 +34,53 @@ typedef unsigned int uint32_t;
 
 typedef short SMS_DCTELEM;
 
-# define SMS_THREAD_PRIORITY 64
+#define SMS_THREAD_PRIORITY 64
 
-# define SMS_FA_FLAGS_AVI 0x00000001
-# define SMS_FA_FLAGS_SUB 0x00000002
-# define SMS_FA_FLAGS_MSG 0x00000004
+#define SMS_FA_FLAGS_AVI 0x00000001
+#define SMS_FA_FLAGS_SUB 0x00000002
+#define SMS_FA_FLAGS_MSG 0x00000004
 
-# define SMS_FT_I_TYPE 1
-# define SMS_FT_P_TYPE 2
-# define SMS_FT_B_TYPE 3
-# define SMS_FT_S_TYPE 4
-# define SMS_FT_T_TYPE 0x80000000
+#define SMS_FT_I_TYPE 1
+#define SMS_FT_P_TYPE 2
+#define SMS_FT_B_TYPE 3
+#define SMS_FT_S_TYPE 4
+#define SMS_FT_T_TYPE 0x80000000
 
-# define SMS_ROUND( v ) (    ( int )(  ( v ) + (  ( v ) > 0 ? 0.5F : -0.5F  )   )    )
+#define SMS_ROUND( v ) (    ( int )(  ( v ) + (  ( v ) > 0 ? 0.5F : -0.5F  )   )    )
 
-# define SMS_FASTDIV( a, b ) (  ( a ) / ( b )  )
+#define SMS_FASTDIV( a, b ) (  ( a ) / ( b )  )
 
-# define SMS_MAX( a, b ) (  ( a ) > ( b ) ? ( a ) : ( b )  )
-# define SMS_MIN( a, b ) (  ( a ) > ( b ) ? ( b ) : ( a )  )
+#define SMS_MAX( a, b ) (  ( a ) > ( b ) ? ( a ) : ( b )  )
+#define SMS_MIN( a, b ) (  ( a ) > ( b ) ? ( b ) : ( a )  )
 
-# define SMS_ROUNDED_DIV( a, b ) (   (  ( a ) > 0 ? ( a ) + (  ( b ) >> 1  ) : ( a ) - (  ( b ) >> 1  )  ) / ( b )   )
+#define SMS_ROUNDED_DIV( a, b ) (   (  ( a ) > 0 ? ( a ) + (  ( b ) >> 1  ) : ( a ) - (  ( b ) >> 1  )  ) / ( b )   )
 
-# define SMS_RSHIFT( a, b ) (     ( a ) > 0 ? (    ( a ) + (   (  1 << ( b )  ) >> 1   )    ) >> ( b ) : (    ( a ) + (   (  1 << ( b )  ) >> 1   ) - 1    ) >> ( b )     )
+#define SMS_RSHIFT( a, b ) (     ( a ) > 0 ? (    ( a ) + (   (  1 << ( b )  ) >> 1   )    ) >> ( b ) : (    ( a ) + (   (  1 << ( b )  ) >> 1   ) - 1    ) >> ( b )     )
 
-# define SMS_NEG_USR32( a, s ) (   (  ( uint32_t )( a )  ) >> (  32 - ( s )  )   )
-# define SMS_NEG_SSR32( a, s ) (   (  ( int32_t  )( a )  ) >> (  32 - ( s )  )   )
+#define SMS_NEG_USR32( a, s ) (   (  ( uint32_t )( a )  ) >> (  32 - ( s )  )   )
+#define SMS_NEG_SSR32( a, s ) (   (  ( int32_t  )( a )  ) >> (  32 - ( s )  )   )
 
-# define SMS_BUG_AUTODETECT       0x00000001
-# define SMS_BUG_OLD_MSMPEG4      0x00000002
-# define SMS_BUG_XVID_ILACE       0x00000004
-# define SMS_BUG_UMP4             0x00000008
-# define SMS_BUG_NO_PADDING       0x00000010
-# define SMS_BUG_AMV              0x00000020
-# define SMS_BUG_QPEL_CHROMA      0x00000040
-# define SMS_BUG_STD_QPEL         0x00000080
-# define SMS_BUG_QPEL_CHROMA2     0x00000100
-# define SMS_BUG_DIRECT_BLOCKSIZE 0x00000200
-# define SMS_BUG_EDGE             0x00000400
-# define SMS_BUG_HPEL_CHROMA      0x00000800
-# define SMS_BUG_DC_CLIP          0x00001000
+#define SMS_BUG_AUTODETECT       0x00000001
+#define SMS_BUG_OLD_MSMPEG4      0x00000002
+#define SMS_BUG_XVID_ILACE       0x00000004
+#define SMS_BUG_UMP4             0x00000008
+#define SMS_BUG_NO_PADDING       0x00000010
+#define SMS_BUG_AMV              0x00000020
+#define SMS_BUG_QPEL_CHROMA      0x00000040
+#define SMS_BUG_STD_QPEL         0x00000080
+#define SMS_BUG_QPEL_CHROMA2     0x00000100
+#define SMS_BUG_DIRECT_BLOCKSIZE 0x00000200
+#define SMS_BUG_EDGE             0x00000400
+#define SMS_BUG_HPEL_CHROMA      0x00000800
+#define SMS_BUG_DC_CLIP          0x00001000
 
-# define SMS_PKT_FLAG_KEY 0x00000001
-# define SMS_PKT_FLAG_SUB 0x00000002
-# define SMS_PKT_FLAG_NWC 0x00000004
+#define SMS_PKT_FLAG_KEY 0x00000001
+#define SMS_PKT_FLAG_SUB 0x00000002
+#define SMS_PKT_FLAG_NWC 0x00000004
 
-# ifndef NULL
+#ifndef NULL
 #  define NULL (  ( void* )0  )
-# endif  /* NULL */
+#endif  /* NULL */
 
 typedef signed   long int  int64_t;
 typedef unsigned long int uint64_t;
@@ -160,12 +165,12 @@ static int inline SMS_rand ( void ) {
  return g_RandSeed = ( 161140751 * g_RandSeed + 13 ) % 219441163;
 }  /* end SMS_rand */
 
-# define SMS_MAXINT64 SMS_INT64( 0x7FFFFFFFFFFFFFFF )
-# define SMS_MININT64 SMS_INT64( 0x8000000000000000 )
+#define SMS_MAXINT64 SMS_INT64( 0x7FFFFFFFFFFFFFFF )
+#define SMS_MININT64 SMS_INT64( 0x8000000000000000 )
 
-# define SMS_NOPTS_VALUE SMS_INT64( 0x8000000000000000 )
-# define SMS_STPTS_VALUE SMS_INT64( 0xC000000000000000 )
-# define SMS_TIME_BASE   1000
+#define SMS_NOPTS_VALUE SMS_INT64( 0x8000000000000000 )
+#define SMS_STPTS_VALUE SMS_INT64( 0xC000000000000000 )
+#define SMS_TIME_BASE   1000
 
 typedef struct SMS_HuffTable {
 
@@ -253,36 +258,36 @@ static SMS_INLINE int SMS_mid_pred ( int anA, int aB, int aC ) {
  return aB;
 }  /* end SMS_mid_pred */
 
-typedef struct SMS_LZMAData {
- unsigned int m_Size;
- unsigned int m_PackSize;
+typedef struct SMS_LZMA2Data {
+ size_t m_Size;
+ size_t m_PackSize;
  const void*  m_pData;
-} SMS_LZMAData;
+} SMS_LZMA2Data;
 
 struct DMAChannel;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
-void     SMS_Initialize       ( void*                                      );
-void*    SMS_Realloc          ( void*, unsigned int*, unsigned int         );
-uint32_t SMS_Align            ( unsigned int, unsigned int                 );
-void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int                  );
-int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t                  );
-void     SMS_StartNetwork     ( void*                                      );
-void     SMS_ResetIOP         ( void                                       );
-char*    SMS_ReverseString    ( char*, int                                 );
-void     SMS_SetDirButtons    ( void                                       );
-void     SMS_InitBitBlt       ( void*, int, int, int                       );
-void*    SMS_SyncMalloc       ( int                                        );
-void     SMS_SetExecPath      ( const char*                                );
-int      SMS_FileID           ( const char*                                );
-int      SMS_ContID           ( const char*                                );
-int      SMS_SubContID        ( const char*                                );
-void*    SMS_LZMADecompress   ( SMS_LZMAData*                              );
-int      SMS_InitVU           ( volatile struct DMAChannel*, SMS_LZMAData* );
+#endif  /* __cplusplus */
+void     SMS_Initialize       ( void*                                       );
+void*    SMS_Realloc          ( void*, unsigned int*, unsigned int          );
+uint32_t SMS_Align            ( unsigned int, unsigned int                  );
+void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int                   );
+int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t                   );
+void     SMS_StartNetwork     ( void*                                       );
+void     SMS_ResetIOP         ( void                                        );
+char*    SMS_ReverseString    ( char*, int                                  );
+void     SMS_SetDirButtons    ( void                                        );
+void     SMS_InitBitBlt       ( void*, int, int, int                        );
+void*    SMS_SyncMalloc       ( int                                         );
+void     SMS_SetExecPath      ( const char*                                 );
+int      SMS_FileID           ( const char*                                 );
+int      SMS_ContID           ( const char*                                 );
+int      SMS_SubContID        ( const char*                                 );
+void*    SMS_LZMA2Decompress  ( SMS_LZMA2Data*                              );
+int      SMS_InitVU           ( volatile struct DMAChannel*, SMS_LZMA2Data* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_H */

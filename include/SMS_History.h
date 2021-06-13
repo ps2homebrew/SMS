@@ -9,11 +9,11 @@
 #
 */
 #ifndef __SMS_History_H
-# define __SMS_History_H
+#define __SMS_History_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_HistoryLoad   ( void                );
 long SMS_HistoryLook   ( const char*, void** );
@@ -21,7 +21,7 @@ void SMS_HistoryAdd    ( const char*, long   );
 int  SMS_HistoryRemove ( const char*         );
 void SMS_HistorySave   ( void                );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_History_H */

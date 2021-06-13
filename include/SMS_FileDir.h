@@ -9,11 +9,11 @@
 #
 */
 #ifndef __SMS_FileDir_H
-# define __SMS_FileDir_H
+#define __SMS_FileDir_H
 
-# ifndef __SMS_List_H
-#  include "SMS_List.h"
-# endif  /* __SMS_List_H */
+#ifndef __SMS_List_H
+#include "SMS_List.h"
+#endif  /* __SMS_List_H */
 
 struct CDDAContext;
 
@@ -35,13 +35,13 @@ extern int                 g_PD;
 extern int                 g_SMBU;
 extern struct CDDAContext* g_pCDDACtx;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_FileDirInit ( unsigned char* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_FileDir_H */

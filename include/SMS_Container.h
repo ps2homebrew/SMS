@@ -9,46 +9,46 @@
 #
 */
 #ifndef __SMS_Container_H
-# define __SMS_Container_H
+#define __SMS_Container_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# ifndef __SMS_FileContext_H
-#  include "SMS_FileContext.h"
-# endif  /* __SMS_FileContext_H */
+#ifndef __SMS_FileContext_H
+#include "SMS_FileContext.h"
+#endif  /* __SMS_FileContext_H */
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# ifndef __SMS_RingBuffer_H
-#  include "SMS_RingBuffer.h"
-# endif  /* __SMS_RingBuffer_H */
+#ifndef __SMS_RingBuffer_H
+#include "SMS_RingBuffer.h"
+#endif  /* __SMS_RingBuffer_H */
 
 struct SMS_List;
 struct SMS_ListNode;
 
-# define SMS_CONTAINER_AVI     0
-# define SMS_CONTAINER_ASF     1
-# define SMS_CONTAINER_OGG     2
-# define SMS_CONTAINER_M4A     3
-# define SMS_CONTAINER_FLAC    4
-# define SMS_CONTAINER_AAC     5
-# define SMS_CONTAINER_MP3     6
-# define SMS_CONTAINER_AC3     7
-# define SMS_CONTAINER_MPEG_PS 8
-# define SMS_CONTAINER_JPG     9
-# define SMS_CONTAINER_M3U    10
+#define SMS_CONTAINER_AVI     0
+#define SMS_CONTAINER_ASF     1
+#define SMS_CONTAINER_OGG     2
+#define SMS_CONTAINER_M4A     3
+#define SMS_CONTAINER_FLAC    4
+#define SMS_CONTAINER_AAC     5
+#define SMS_CONTAINER_MP3     6
+#define SMS_CONTAINER_AC3     7
+#define SMS_CONTAINER_MPEG_PS 8
+#define SMS_CONTAINER_JPG     9
+#define SMS_CONTAINER_M3U    10
 
-# define SMS_CONT_FLAGS_SEEKABLE 0x00000001
+#define SMS_CONT_FLAGS_SEEKABLE 0x00000001
 
-# define SMS_STRM_FLAGS_AUDIO 0x00000001
-# define SMS_STRM_FLAGS_VIDEO 0x00000002
-# define SMS_STRM_FLAGS_SUBTL 0x00000004
+#define SMS_STRM_FLAGS_AUDIO 0x00000001
+#define SMS_STRM_FLAGS_VIDEO 0x00000002
+#define SMS_STRM_FLAGS_SUBTL 0x00000004
 
-# define SMS_MAX_STREAMS 8
+#define SMS_MAX_STREAMS 8
 
 typedef struct SMS_Stream {
 
@@ -91,9 +91,9 @@ typedef struct SMS_Container {
 
 } SMS_Container;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_Container* SMS_GetContainer           ( FileContext*, int                    );
 void           SMS_DestroyContainer       ( SMS_Container*, int                  );
@@ -104,7 +104,7 @@ int            SMSContainer_DefReadPacket ( SMS_Container*, int*                
 void           SMSContainer_GetWAVHeader  ( FileContext*, SMS_CodecContext*, int );
 int            SMSContainer_SkipID3       ( FileContext*                         );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_Container_H */

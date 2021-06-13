@@ -9,7 +9,7 @@
 #
 */
 #ifndef __SMS_Rescale_H
-# define __SMS_Rescale_H
+#define __SMS_Rescale_H
 
 typedef struct _res_param {
 
@@ -47,15 +47,15 @@ typedef struct SMS_RescaleContext {
 
 } SMS_RescaleContext;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SMS_RescaleContext* SMS_RescaleInit    ( SMS_RescaleContext*, int, int, int, int );
 void                SMS_RescaleDestroy ( SMS_RescaleContext*                     );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 #endif  /* __SMS_Rescale_H */

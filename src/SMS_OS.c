@@ -9,12 +9,12 @@
 #
 */
 #ifndef EMBEDDED
-# include "SMS.h"
-# include "SMS_OS.h"
-# include "SMS_Locale.h"
+#include "SMS.h"
+#include "SMS_OS.h"
+#include "SMS_Locale.h"
 
-# include <kernel.h>
-# include <string.h>
+#include <kernel.h>
+#include <string.h>
 
 unsigned char g_OS[ 32768 ] __attribute__(   (  aligned( 16 )  )   ) = {
 	0xe0, 0xff, 0xbd, 0x27, 0x09, 0x00, 0x02, 0x3c, 0x10, 0x00, 0xbf, 0xff, 0x00, 0x00, 0xb0, 0xff, 

@@ -9,23 +9,23 @@
 #
 */
 #ifndef __SMS_DTS_H
-# define __SMS_DTS_H
+#define __SMS_DTS_H
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_Codec_DTS_Open ( SMS_CodecContext* );
 
 int DTS_SyncInfo ( uint8_t*, int*, int*, int*, int* );
 int DTS_Channels ( int                              );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 };
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_DTS_H */
 

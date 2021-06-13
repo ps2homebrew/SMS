@@ -26,7 +26,7 @@
 #include "SMS_GUI.h"
 #include "SMS_RC.h"
 #include "SMS_PAD.h"
-#include "SMS_GUICons.h"
+#include "SMS_GUIcons.h"
 #include "SMS_VIF.h"
 #include "SMS_PgInd.h"
 
@@ -73,7 +73,7 @@
 #define BLK_RB_PUSHADVANCE( c )  (   ( c ) -> m_pBlkIn  = BLK_RB_SLOT(  ( c ), ( c ) -> m_pBlkIn  + 80  )   )
 #define BLK_RB_POPADVANCE( c )   (   ( c ) -> m_pBlkOut = BLK_RB_SLOT(  ( c ), ( c ) -> m_pBlkOut + 80  )   )
 
-extern SMS_LZMAData g_JPEGData[ 5 ] __attribute__(   (  section( ".rodata" )  )   );
+extern SMS_LZMA2Data g_JPEGData[ 5 ] __attribute__(   (  section( ".rodata" )  )   );
 
 static void         _reset_pred   ( SMS_JPEGContext*               );
 static int          _ceil_div     ( int, int                       );
@@ -532,7 +532,7 @@ int SMS_JPEGLoad ( SMS_JPEGContext* apCtx, void* apData, unsigned int aDataSize 
     apCtx -> m_nBitmapQWC   = (  ( lnAlloc + 15 ) & ~15  ) >> 4;
     apCtx -> m_nBitmapBytes = lnAlloc;
 
-    if ( apCtx -> m_nAlloc < lnAlloc ) apCtx -> m_pBitmap = ( unsigned char* )realloc64 (   apCtx -> m_pBitmap, (  ( apCtx -> m_nAlloc = lnAlloc ) + 64  ) & ~63   );
+    if ( apCtx -> m_nAlloc < lnAlloc ) apCtx -> m_pBitmap = ( unsigned char* )realloc64(   apCtx -> m_pBitmap, (  ( apCtx -> m_nAlloc = lnAlloc ) + 64  ) & ~63   );
 
     lpRC -> ProcessBuffer (  lpRC, UNCACHED_SEG( apCtx -> m_pBitmap )  );
 

@@ -356,7 +356,7 @@ error:
      while (  GUI_ReadButtons ()  ); break;
     }  /* end if */
 
-    fioSync ( lFD, FIO_WAIT, &lnWrite );
+    fioSync ( FIO_WAIT, &lnWrite );
 
     if ( lnWrite != lnRead ) goto error;
 

@@ -10,55 +10,55 @@
 #
 */
 #ifndef __SMS_AC3_H
-# define __SMS_AC3_H
+#define __SMS_AC3_H
 
-# ifndef __SMS_Bitio_H
-#  include "SMS_Bitio.h"
-# endif  /* __SMS_Bitio_H */
+#ifndef __SMS_Bitio_H
+#include "SMS_Bitio.h"
+#endif  /* __SMS_Bitio_H */
 
-# ifndef __SMS_Codec_H
-#  include "SMS_Codec.h"
-# endif  /* __SMS_Codec_H */
+#ifndef __SMS_Codec_H
+#include "SMS_Codec.h"
+#endif  /* __SMS_Codec_H */
 
-# define AC3_CHANNEL       0
-# define AC3_MONO          1
-# define AC3_STEREO        2
-# define AC3_3F            3
-# define AC3_2F1R          4
-# define AC3_3F1R          5
-# define AC3_2F2R          6
-# define AC3_3F2R          7
-# define AC3_CHANNEL1      8
-# define AC3_CHANNEL2      9
-# define AC3_DOLBY        10
-# define AC3_CHANNEL_MASK 15
-# define AC3_LFE          16
-# define AC3_ADJUST_LEVEL 32
+#define AC3_CHANNEL       0
+#define AC3_MONO          1
+#define AC3_STEREO        2
+#define AC3_3F            3
+#define AC3_2F1R          4
+#define AC3_3F1R          5
+#define AC3_2F2R          6
+#define AC3_3F2R          7
+#define AC3_CHANNEL1      8
+#define AC3_CHANNEL2      9
+#define AC3_DOLBY        10
+#define AC3_CHANNEL_MASK 15
+#define AC3_LFE          16
+#define AC3_ADJUST_LEVEL 32
 
-# define LEVEL_3DB     0.7071067811865476
-# define LEVEL_PLUS3DB 1.4142135623730951
-# define LEVEL_45DB    0.5946035575013605
-# define LEVEL_6DB     0.5
-# define LEVEL_PLUS6DB 2.0
-# define LEVEL_SSUM    1.9318516525781364
-# define LEVEL_SA      1.2247448713915889
-# define LEVEL_SB      0.7071067811865474
+#define LEVEL_3DB     0.7071067811865476
+#define LEVEL_PLUS3DB 1.4142135623730951
+#define LEVEL_45DB    0.5946035575013605
+#define LEVEL_6DB     0.5
+#define LEVEL_PLUS6DB 2.0
+#define LEVEL_SSUM    1.9318516525781364
+#define LEVEL_SA      1.2247448713915889
+#define LEVEL_SB      0.7071067811865474
 
-# define DELTA_BIT_REUSE    0
-# define DELTA_BIT_NEW      1
-# define DELTA_BIT_NONE     2
-# define DELTA_BIT_RESERVED 3
+#define DELTA_BIT_REUSE    0
+#define DELTA_BIT_NEW      1
+#define DELTA_BIT_NONE     2
+#define DELTA_BIT_RESERVED 3
 
-# define EXP_REUSE 0
-# define EXP_D15   1
-# define EXP_D25   2
-# define EXP_D45   3
+#define EXP_REUSE 0
+#define EXP_D15   1
+#define EXP_D25   2
+#define EXP_D45   3
 
-# define HEADER_SIZE 7
+#define HEADER_SIZE 7
 
-# define SAMPLE( x ) ( sample_t )(  ( x ) * ( 1 << 30 )  )
-# define LEVEL( x )  ( level_t  )(  ( x ) * ( 1 << 26 )  )
-# define CONVERT( acmod, output ) (   (  ( output ) << 3 ) + ( acmod )   )
+#define SAMPLE( x ) ( sample_t )(  ( x ) * ( 1 << 30 )  )
+#define LEVEL( x )  ( level_t  )(  ( x ) * ( 1 << 26 )  )
+#define CONVERT( acmod, output ) (   (  ( output ) << 3 ) + ( acmod )   )
 
 typedef int32_t sample_t;
 typedef int32_t level_t;
@@ -168,20 +168,20 @@ static int32_t __inline MUL_L ( int32_t a, int32_t b ) {
  if ( aSlowLeak > lPSD + lSGain ) aSlowLeak = lPSD + lSGain; \
 }
 
-# define MUL_C( a, b ) MUL_L(  a, LEVEL( b )  )
-# define DIV( a, b )   (    (   (  ( int64_t )LEVEL( a )  ) << 26   ) / ( b )    )
+#define MUL_C( a, b ) MUL_L(  a, LEVEL( b )  )
+#define DIV( a, b )   (    (   (  ( int64_t )LEVEL( a )  ) << 26   ) / ( b )    )
 
 extern const int g_AC3Channels[ 8 ];
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void SMS_Codec_AC3_Open ( SMS_CodecContext* );
 
 int AC3_SyncInfo ( uint8_t*, int*, int*, int* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_AC3_H */

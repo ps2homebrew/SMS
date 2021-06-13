@@ -9,33 +9,33 @@
 #
 */
 #ifndef __SMS_GUI_H
-# define __SMS_GUI_H
+#define __SMS_GUI_H
 
-# define GUI_MSG_MOUNT_BIT  0x0000000000100000L
-# define GUI_MSG_MOUNT_MASK 0x00000000001F0000L
-# define GUI_MSG_PAD_MASK   0x000000000000FFFFL
-# define GUI_MSG_MENU_BIT   0x0000000000200000L
-# define GUI_MSG_USER_MASK  0xFFFFFFFFFFC00000L
+#define GUI_MSG_MOUNT_BIT  0x0000000000100000L
+#define GUI_MSG_MOUNT_MASK 0x00000000001F0000L
+#define GUI_MSG_PAD_MASK   0x000000000000FFFFL
+#define GUI_MSG_MENU_BIT   0x0000000000200000L
+#define GUI_MSG_USER_MASK  0xFFFFFFFFFFC00000L
 
-# define GUI_MSG_USB    0x0000000000010000L
-# define GUI_MSG_CDROM  0x0000000000020000L
-# define GUI_MSG_HDD    0x0000000000030000L
-# define GUI_MSG_CDDA   0x0000000000040000L
-# define GUI_MSG_HOST   0x0000000000050000L
-# define GUI_MSG_DVD    0x0000000000060000L
-# define GUI_MSG_SMB    0x0000000000070000L
-# define GUI_MSG_LOGIN  0x0000000000080000L
+#define GUI_MSG_USB    0x0000000000010000L
+#define GUI_MSG_CDROM  0x0000000000020000L
+#define GUI_MSG_HDD    0x0000000000030000L
+#define GUI_MSG_CDDA   0x0000000000040000L
+#define GUI_MSG_HOST   0x0000000000050000L
+#define GUI_MSG_DVD    0x0000000000060000L
+#define GUI_MSG_SMB    0x0000000000070000L
+#define GUI_MSG_LOGIN  0x0000000000080000L
 
-# define GUI_MSG_MEDIA_SELECTED 0x8000000000000000L
-# define GUI_MSG_MEDIA_REMOVED  0x7000000000000000L
-# define GUI_MSG_UPDATE_STATUS  0x6000000000000000L
-# define GUI_MSG_REFILL_BROWSER 0x5000000000000000L
-# define GUI_MSG_QUIT           0x4000000000000000L
-# define GUI_MSG_FILE           0x3000000000000000L
-# define GUI_MSG_FOLDER_MP3     0x2000000000000000L
-# define GUI_MSG_RELOAD_BROWSER 0x1000000000000000L
+#define GUI_MSG_MEDIA_SELECTED 0x8000000000000000L
+#define GUI_MSG_MEDIA_REMOVED  0x7000000000000000L
+#define GUI_MSG_UPDATE_STATUS  0x6000000000000000L
+#define GUI_MSG_REFILL_BROWSER 0x5000000000000000L
+#define GUI_MSG_QUIT           0x4000000000000000L
+#define GUI_MSG_FILE           0x3000000000000000L
+#define GUI_MSG_FOLDER_MP3     0x2000000000000000L
+#define GUI_MSG_RELOAD_BROWSER 0x1000000000000000L
 
-# define DECLARE_GUI_OBJECT()                                \
+#define DECLARE_GUI_OBJECT()                                \
  void ( *Render      ) ( struct GUIObject*, int           ); \
  int  ( *HandleEvent ) ( struct GUIObject*, unsigned long ); \
  void ( *SetFocus    ) ( struct GUIObject*, int           ); \
@@ -79,9 +79,9 @@ extern int        g_SMBServerError;
 
 extern int ( *GUI_ReadButtons  ) ( void );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 void          GUI_Initialize   ( int                      );
 int           GUI_WaitButtons  ( int, unsigned*, int      );
@@ -100,7 +100,7 @@ void          GUI_DeleteObject ( const unsigned char*     );
 void          GUI_UpdateStatus ( void                     );
 void          GUI_SetColors    ( void                     );
 int           GUI_QuitPosted   ( void                     );
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_GUI_H */

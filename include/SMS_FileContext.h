@@ -9,19 +9,19 @@
 #
 */
 #ifndef __SMS_FileContext_H
-# define __SMS_FileContext_H
+#define __SMS_FileContext_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# ifndef INLINE
+#ifndef INLINE
 #  ifdef _WIN32
 #   define INLINE __inline
 #  else  /* PS2 */
 #   define INLINE inline
 #  endif  /* WIN32 */
-# endif  /* INLINE */
+#endif  /* INLINE */
 
 #define FILE_EOF( f ) (  ( f ) -> m_CurPos >= ( f ) -> m_Size  )
 
@@ -84,9 +84,9 @@ typedef struct FileContext {
  struct FileContext* ( *Open ) ( const char*, void* );
 
 } FileContext;
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 static INLINE int File_GetByte ( FileContext* apCtx ) {
  return apCtx -> m_pPos < apCtx -> m_pEnd || apCtx -> Fill ( apCtx ) > 0 ? ++apCtx -> m_CurPos, *apCtx -> m_pPos++ : 0;
@@ -136,7 +136,7 @@ int                  CDDA_GetDiskPicture  ( CDDAContext*, void*                )
 
 FileContext* CDDA_InitFileContext ( const char*, void* );
 FileContext* STIO_InitFileContext ( const char*, void* );
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_FileContext_H */

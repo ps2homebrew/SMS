@@ -1,3 +1,5 @@
+.SILENT:
+
 EE_OBJ_DIR = obj/
 EE_INC_DIR = include/
 EE_BIN_DIR = bin/
@@ -5,10 +7,9 @@ EE_SRC_DIR = src/
 
 EE_BIN = $(EE_BIN_DIR)SMS.elf
 
-EE_INCS     = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
-EE_INCS    := -I$(EE_INC_DIR) $(EE_INCS) -I$(PS2SDK)/sbv/include
-EE_LIBS     = -lpatches -lc -lkernel -lmf -llzma
-EE_LDFLAGS  = -L$(PS2SDK)/sbv/lib -L$(PS2SDK)/ee/lib -LD:/Eugene/MYDOCU~1/Projects/SMSPS2
+EE_INCS    = -I$(EE_INC_DIR) -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
+EE_LDFLAGS = -L$(PS2SDK)/sbv/lib -L$(PS2SDK)/ee/lib -L$(PS2SDK)/ports/lib -L$(EE_SRC_DIR)/lzma2
+EE_LIBS    = -lpatches -lc -lkernel -lmf -lxz
 
 EE_OBJS  = main.o SMS_OS.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_Timer.o           \
            SMS_MP123Core.o SMS_FileContext.o  SMS_H263.o                          \
@@ -79,7 +80,7 @@ $(EE_BIN) : $(EE_OBJS) $(PS2SDK)/ee/startup/crt0.o
 rebuild: clean all
 
 clean:
-	@rm -rf $(EE_BIN_DIR)*.elf $(EE_OBJ_DIR)*.o
+	@rm -f -r $(EE_BIN_DIR) $(EE_OBJ_DIR)
 
 include $(PS2SDK)/Defs.make
 

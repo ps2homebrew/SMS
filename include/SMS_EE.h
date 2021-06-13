@@ -9,9 +9,9 @@
 #
 */
 #ifndef __SMS_EE_H
-# define __SMS_EE_H
+#define __SMS_EE_H
 
-# define SMS_TLB_VALID( v ) (  ( v ) & 2  )
+#define SMS_TLB_VALID( v ) (  ( v ) & 2  )
 
 typedef struct SMS_EETlbEntry {
  unsigned int m_PageMask;
@@ -22,9 +22,9 @@ typedef struct SMS_EETlbEntry {
 
 struct SMS_List;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 static unsigned int inline SMS_EECp0Wired ( void ) {
  unsigned int retVal;
@@ -65,7 +65,7 @@ int  SMS_EETlbAlloc  ( void                                       );
 void SMS_EETlbFree   ( int                                        );
 int  SMS_EEDIntr     ( void                                       );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_EE_H */

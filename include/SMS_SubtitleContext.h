@@ -10,15 +10,15 @@
 #
 */
 #ifndef __SubtitleContext_H
-# define __SubtitleContext_H
+#define __SubtitleContext_H
 
-# ifndef __SMS_H
-#  include "SMS.h"
-# endif  /* __SMS_H */
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
 
-# ifndef __SMS_List_H
-#  include "SMS_List.h"
-# endif  /* __SMS_List_H */
+#ifndef __SMS_List_H
+#include "SMS_List.h"
+#endif  /* __SMS_List_H */
 
 struct IPUContext;
 struct FileContext;
@@ -76,13 +76,13 @@ typedef enum SubtitleError {
  SubtitleError_Sequence = 2
 } SubtitleError;
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 SubtitleContext* SubtitleContext_Init ( struct FileContext*, SubtitleFormat, float, int, int );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SubtitleContext_H */

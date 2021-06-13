@@ -10,45 +10,45 @@
 #
 */
 #ifndef __SMS_PAD_H
-# define __SMS_PAD_H
+#define __SMS_PAD_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
-# define SMS_PAD_LEFT      0x0080
-# define SMS_PAD_DOWN      0x0040
-# define SMS_PAD_RIGHT     0x0020
-# define SMS_PAD_UP        0x0010
-# define SMS_PAD_START     0x0008
-# define SMS_PAD_R3        0x0004
-# define SMS_PAD_L3        0x0002
-# define SMS_PAD_SELECT    0x0001
-# define SMS_PAD_SQUARE    0x8000
-# define SMS_PAD_CROSS     0x4000
-# define SMS_PAD_CIRCLE    0x2000
-# define SMS_PAD_TRIANGLE  0x1000
-# define SMS_PAD_R1        0x0800
-# define SMS_PAD_L1        0x0400
-# define SMS_PAD_R2        0x0200
-# define SMS_PAD_L2        0x0100
+#define SMS_PAD_LEFT      0x0080
+#define SMS_PAD_DOWN      0x0040
+#define SMS_PAD_RIGHT     0x0020
+#define SMS_PAD_UP        0x0010
+#define SMS_PAD_START     0x0008
+#define SMS_PAD_R3        0x0004
+#define SMS_PAD_L3        0x0002
+#define SMS_PAD_SELECT    0x0001
+#define SMS_PAD_SQUARE    0x8000
+#define SMS_PAD_CROSS     0x4000
+#define SMS_PAD_CIRCLE    0x2000
+#define SMS_PAD_TRIANGLE  0x1000
+#define SMS_PAD_R1        0x0800
+#define SMS_PAD_L1        0x0400
+#define SMS_PAD_R2        0x0200
+#define SMS_PAD_L2        0x0100
 
-# define SMS_PAD_STATE_DISCONN  0x00
-# define SMS_PAD_STATE_FINDPAD  0x01
-# define SMS_PAD_STATE_FINDCTP1 0x02
-# define SMS_PAD_STATE_EXECCMD  0x05
-# define SMS_PAD_STATE_STABLE   0x06
-# define SMS_PAD_STATE_ERROR    0x07
+#define SMS_PAD_STATE_DISCONN  0x00
+#define SMS_PAD_STATE_FINDPAD  0x01
+#define SMS_PAD_STATE_FINDCTP1 0x02
+#define SMS_PAD_STATE_EXECCMD  0x05
+#define SMS_PAD_STATE_STABLE   0x06
+#define SMS_PAD_STATE_ERROR    0x07
 
-# define SMS_PAD_RSTAT_COMPLETE 0x00
-# define SMS_PAD_RSTAT_FAILED   0x01
-# define SMS_PAD_RSTAT_BUSY     0x02
+#define SMS_PAD_RSTAT_COMPLETE 0x00
+#define SMS_PAD_RSTAT_FAILED   0x01
+#define SMS_PAD_RSTAT_BUSY     0x02
 
-# define SMS_PAD_MMODE_DIGITAL   0
-# define SMS_PAD_MMODE_DUALSHOCK 1
+#define SMS_PAD_MMODE_DIGITAL   0
+#define SMS_PAD_MMODE_DUALSHOCK 1
 
-# define SMS_PAD_MMODE_UNLOCK 0
-# define SMS_PAD_MMODE_LOCK   3
+#define SMS_PAD_MMODE_UNLOCK 0
+#define SMS_PAD_MMODE_LOCK   3
 
 typedef struct SMS_PadButtonStatus {
 
@@ -87,7 +87,7 @@ int            PAD_State       ( int, int           );
 unsigned short PAD_Read        ( int, int           );
 int            PAD_SetMainMode ( int, int, int, int );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_PAD_H */

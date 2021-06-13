@@ -9,7 +9,9 @@
 #
 */
 #ifndef __SMS_DMA_H
-# define __SMS_DMA_H
+#define __SMS_DMA_H
+
+#include <kernel.h>
 
 typedef struct DMAChannel {
 
@@ -34,16 +36,16 @@ typedef struct DMACRegs {
 
 } DMACRegs;
 
-# define DMAC (  ( volatile DMACRegs* )0x1000E000  )
+#define DMAC (  ( volatile DMACRegs* )0x1000E000  )
 
-# define DMATAG_ID_REFE 0x0
-# define DMATAG_ID_CNT  0x1
-# define DMATAG_ID_NEXT 0x2
-# define DMATAG_ID_REF  0x3
-# define DMATAG_ID_REFS 0x4
-# define DMATAG_ID_CALL 0x5
-# define DMATAG_ID_RET  0x6
-# define DMATAG_ID_END  0x7
+#define DMATAG_ID_REFE 0x0
+#define DMATAG_ID_CNT  0x1
+#define DMATAG_ID_NEXT 0x2
+#define DMATAG_ID_REF  0x3
+#define DMATAG_ID_REFS 0x4
+#define DMATAG_ID_CALL 0x5
+#define DMATAG_ID_RET  0x6
+#define DMATAG_ID_END  0x7
 
 typedef union DMATag {
 
@@ -63,89 +65,89 @@ typedef union DMATag {
 
 } DMATag __attribute__(   (  aligned( 16 )  )   );
 
-# define DMA_TAG( QWC, PCE, ID, IRQ, ADDR, SPR ) (                                                \
+#define DMA_TAG( QWC, PCE, ID, IRQ, ADDR, SPR ) (                                                \
  (  ( unsigned long )(                  QWC   ) <<  0  ) | (  ( unsigned long )( PCE ) << 26  ) | \
  (  ( unsigned long )(                  ID    ) << 28  ) | (  ( unsigned long )( IRQ ) << 31  ) | \
  (  ( unsigned long )(  ( unsigned int )ADDR  ) << 32  ) | (  ( unsigned long )( SPR ) << 63  )   \
 )
 
-# define DMA_SET_CTRL( A, B, C, D, E, F )                                                        \
+#define DMA_SET_CTRL( A, B, C, D, E, F )                                                        \
  ( unsigned int )( A ) << 0 | ( unsigned int )( B ) << 1 | \
  ( unsigned int )( C ) << 2 | ( unsigned int )( D ) << 4 | \
  ( unsigned int )( E ) << 6 | ( unsigned int )( F ) << 8
 
-# define D_CTRL_RELE_OFF 0
-# define D_CTRL_RELE_ON  1
+#define D_CTRL_RELE_OFF 0
+#define D_CTRL_RELE_ON  1
 
-# define D_CTRL_MFD_OFF 0
-# define D_CTRL_MFD_RES 1
-# define D_CTRL_MFD_VIF 2
-# define D_CTRL_MFD_GIF 3
+#define D_CTRL_MFD_OFF 0
+#define D_CTRL_MFD_RES 1
+#define D_CTRL_MFD_VIF 2
+#define D_CTRL_MFD_GIF 3
 
-# define D_CTRL_STS_UNSPEC 0
-# define D_CTRL_STS_SIF    1
-# define D_CTRL_STS_SPR    2
-# define D_CTRL_STS_IPU    3
+#define D_CTRL_STS_UNSPEC 0
+#define D_CTRL_STS_SIF    1
+#define D_CTRL_STS_SPR    2
+#define D_CTRL_STS_IPU    3
 
-# define D_CTRL_STD_OFF 0
-# define D_CTRL_STD_VIF 1
-# define D_CTRL_STD_GIF 2
-# define D_CTRL_STD_SIF 3
+#define D_CTRL_STD_OFF 0
+#define D_CTRL_STD_VIF 1
+#define D_CTRL_STD_GIF 2
+#define D_CTRL_STD_SIF 3
 
-# define D_CTRL_RCYC_8   0
-# define D_CTRL_RCYC_16  1
-# define D_CTRL_RCYC_32  2
-# define D_CTRL_RCYC_64  3
-# define D_CTRL_RCYC_128 4
-# define D_CTRL_RCYC_256 5
+#define D_CTRL_RCYC_8   0
+#define D_CTRL_RCYC_16  1
+#define D_CTRL_RCYC_32  2
+#define D_CTRL_RCYC_64  3
+#define D_CTRL_RCYC_128 4
+#define D_CTRL_RCYC_256 5
 
-# define D_PCR_CPC_VIF0         0x00000001
-# define D_PCR_CPC_VIF1         0x00000002
-# define D_PCR_CPC_GIF          0x00000004
-# define D_PCR_CPC_FROM_IPU     0x00000008
-# define D_PCR_CPC_TO_IPU       0x00000010
-# define D_PCR_CPC_FROM_SIF0    0x00000020
-# define D_PCR_CPC_TO_SIF1      0x00000040
-# define D_PCR_CPC_SIF2         0x00000080
-# define D_PCR_CPC_FROM_SPR     0x00000100
-# define D_PCR_CPC_TO_SPR       0x00000200
+#define D_PCR_CPC_VIF0         0x00000001
+#define D_PCR_CPC_VIF1         0x00000002
+#define D_PCR_CPC_GIF          0x00000004
+#define D_PCR_CPC_FROM_IPU     0x00000008
+#define D_PCR_CPC_TO_IPU       0x00000010
+#define D_PCR_CPC_FROM_SIF0    0x00000020
+#define D_PCR_CPC_TO_SIF1      0x00000040
+#define D_PCR_CPC_SIF2         0x00000080
+#define D_PCR_CPC_FROM_SPR     0x00000100
+#define D_PCR_CPC_TO_SPR       0x00000200
 
-# define D_PCR_CDE_VIF0         0x80010000
-# define D_PCR_CDE_VIF1         0x80020000
-# define D_PCR_CDE_GIF          0x80040000
-# define D_PCR_CDE_FROM_IPU     0x80080000
-# define D_PCR_CDE_TO_IPU       0x80100000
-# define D_PCR_CDE_FROM_SIF0    0x80200000
-# define D_PCR_CDE_TO_SIF1      0x80400000
-# define D_PCR_CDE_SIF2         0x80800000
-# define D_PCR_CDE_FROM_SPR     0x81000000
-# define D_PCR_CDE_TO_SPR       0x82000000
+#define D_PCR_CDE_VIF0         0x80010000
+#define D_PCR_CDE_VIF1         0x80020000
+#define D_PCR_CDE_GIF          0x80040000
+#define D_PCR_CDE_FROM_IPU     0x80080000
+#define D_PCR_CDE_TO_IPU       0x80100000
+#define D_PCR_CDE_FROM_SIF0    0x80200000
+#define D_PCR_CDE_TO_SIF1      0x80400000
+#define D_PCR_CDE_SIF2         0x80800000
+#define D_PCR_CDE_FROM_SPR     0x81000000
+#define D_PCR_CDE_TO_SPR       0x82000000
 
-# define DMAC_VIF0      (  ( volatile DMAChannel* )0x10008000  )
-# define DMAC_VIF1      (  ( volatile DMAChannel* )0x10009000  )
-# define DMAC_GIF       (  ( volatile DMAChannel* )0x1000A000  )
-# define DMAC_FROM_IPU  (  ( volatile DMAChannel* )0x1000B000  )
-# define DMAC_TO_IPU    (  ( volatile DMAChannel* )0x1000B400  )
-# define DMAC_FROM_SIF0 (  ( volatile DMAChannel* )0x1000C000  )
-# define DMAC_TO_SIF1   (  ( volatile DMAChannel* )0x1000C400  )
-# define DMAC_SIF2      (  ( volatile DMAChannel* )0x1000C800  )
-# define DMAC_FROM_SPR  (  ( volatile DMAChannel* )0x1000D000  )
-# define DMAC_TO_SPR    (  ( volatile DMAChannel* )0x1000D400  )
+#define DMAC_VIF0      (  ( volatile DMAChannel* )0x10008000  )
+#define DMAC_VIF1      (  ( volatile DMAChannel* )0x10009000  )
+#define DMAC_GIF       (  ( volatile DMAChannel* )0x1000A000  )
+#define DMAC_FROM_IPU  (  ( volatile DMAChannel* )0x1000B000  )
+#define DMAC_TO_IPU    (  ( volatile DMAChannel* )0x1000B400  )
+#define DMAC_FROM_SIF0 (  ( volatile DMAChannel* )0x1000C000  )
+#define DMAC_TO_SIF1   (  ( volatile DMAChannel* )0x1000C400  )
+#define DMAC_SIF2      (  ( volatile DMAChannel* )0x1000C800  )
+#define DMAC_FROM_SPR  (  ( volatile DMAChannel* )0x1000D000  )
+#define DMAC_TO_SPR    (  ( volatile DMAChannel* )0x1000D400  )
 
-# define DMAC_I_VIF0      0
-# define DMAC_I_VIF1      1
-# define DMAC_I_GIF       2
-# define DMAC_I_FROM_IPU  3
-# define DMAC_I_TO_IPU    4
-# define DMAC_I_FROM_SIF0 5
-# define DMAC_I_TO_SIF1   6
-# define DMAC_I_SIF2      7
-# define DMAC_I_FROM_SPR  8
-# define DMAC_I_TO_SPR    9
+#define DMAC_I_VIF0      0
+#define DMAC_I_VIF1      1
+#define DMAC_I_GIF       2
+#define DMAC_I_FROM_IPU  3
+#define DMAC_I_TO_IPU    4
+#define DMAC_I_FROM_SIF0 5
+#define DMAC_I_TO_SIF1   6
+#define DMAC_I_SIF2      7
+#define DMAC_I_FROM_SPR  8
+#define DMAC_I_TO_SPR    9
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 
 static void inline DMA_Wait ( volatile DMAChannel* apChan ) {
  while ( apChan -> m_CHCR & 0x00000100 );
@@ -311,7 +313,7 @@ static void inline DMA_SendSA ( volatile DMAChannel* apChan, void* apDst, void* 
 
 void DMA_Stop ( volatile DMAChannel* );
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif  /* __cplusplus */
+#endif  /* __cplusplus */
 #endif  /* __SMS_DMA_H */
