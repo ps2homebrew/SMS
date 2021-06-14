@@ -96,7 +96,7 @@ clean-zip:
 
 .PHONY: releaseclean distclean clean
 releaseclean: clean-temp $(addprefix releaseclean-,$(SUBDIRS))
-	-rm -f html-chunk.xsl html-single.xsl xsltproc.sh xmllint.sh
+	-rm -f stylesheets/html-chunk.xsl stylesheets/html-single.xsl stylesheets/profile.xsl xsltproc.sh xmllint.sh
 
 distclean: clean releaseclean
 

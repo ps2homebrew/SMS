@@ -36,7 +36,7 @@
     <xref linkend="usage-usb"/>).
   </para>
   <para lang="ru">
-    SMS (начиная с версии v1.5) включает в себя плейер MP3 с поддержкой 
+    SMS (начиная с версии v1.5) включает в себя плейер MP3 с поддержкой
     плейлистов в формате M3U. Доступ к аудио файлам осуществляется точно
     так же, как и к видео файлам, через
     <xref linkend="usage-network"/>,
@@ -64,9 +64,9 @@
       <emphasis role="bold">X</emphasis> para começar a tocar.
     </para>
     <para lang="ru">
-      Воспроизведение одного отдельного MP3 файла включается аналогично 
-      AVI видео файлам. Найдите, с помощью браузера, нужный 
-      вам файл и нажмите <emphasis role="bold">X</emphasis> для начала 
+      Воспроизведение одного отдельного MP3 файла включается аналогично
+      AVI видео файлам. Найдите, с помощью браузера, нужный
+      вам файл и нажмите <emphasis role="bold">X</emphasis> для начала
       воспроизведения.
     </para>
 
@@ -93,7 +93,7 @@
       <title>
         <phrase lang="en">Screenshot showing MP3 playback.</phrase>
         <phrase lang="pt">Screenshot mostrando MP3 a tocar.</phrase>
-        <phrase lang="ru">Экран при воспроизведении MP3 файла.</phrase>        
+        <phrase lang="ru">Экран при воспроизведении MP3 файла.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -112,17 +112,17 @@
     <title>
       <phrase lang="en">Playing multiple MP3 files without a Playlist</phrase>
       <phrase lang="pt">#Playing multiple MP3 files without a Playlist#</phrase>
-      <phrase lang="ru">Воспроизведение нескольких МР3 файлов без плейлиста</phrase>      
+      <phrase lang="ru">Воспроизведение нескольких МР3 файлов без плейлиста</phrase>
     </title>
 
     <para lang="en">
       You can play the contents of a folder as an automatic playlist by
-      pressing '<emphasis role="bold">O</emphasis>' on the folder name.  The 
+      pressing '<emphasis role="bold">O</emphasis>' on the folder name.  The
       files will be played in alphabetical order.
     </para>
     <para lang="pt">
       #You can play the contents of a folder as an automatic playlist by
-      pressing '<emphasis role="bold">O</emphasis>' on the folder name.  The 
+      pressing '<emphasis role="bold">O</emphasis>' on the folder name.  The
       files will be played in alphabetical order.#
     </para>
     <para lang="ru">
@@ -137,29 +137,29 @@
       <phrase lang="en">Playing multiple MP3 files using a Playlist</phrase>
       <phrase lang="pt">Tocando múltiplos ficheiros MP3 numa
       'Playlist'</phrase>
-      <phrase lang="ru">Воспроизведение нескольких МР3 файлов с помощью плейлиста</phrase>            
+      <phrase lang="ru">Воспроизведение нескольких МР3 файлов с помощью плейлиста</phrase>
     </title>
 
     <para lang="en">
-      
+
       Multiple MP3 files can be played using an <filename>.m3u</filename>
-      playlist. You may need to modify the <filename>.m3u</filename> file 
-      to make sure it only contains 
-      <emphasis role="bold">relative paths</emphasis> and not 
+      playlist. You may need to modify the <filename>.m3u</filename> file
+      to make sure it only contains
+      <emphasis role="bold">relative paths</emphasis> and not
       <emphasis role="bold">absolute paths</emphasis>.
     </para>
     <para lang="pt">
       Múltiplos ficheiros MP3 podem ser tocados usando uma 'playlist'
-      <filename>.m3u</filename>. Poderá ter de editar o ficheiro 
+      <filename>.m3u</filename>. Poderá ter de editar o ficheiro
       <filename>.m3u</filename> para se certificar que este só contém
-      <emphasis role="bold">caminhos relativos</emphasis> e não 
+      <emphasis role="bold">caminhos relativos</emphasis> e não
       <emphasis role="bold">caminhos absolutos</emphasis>.
     </para>
     <para lang="ru">
       Список из нескольких МР3 файлов может быть воспроизведен с помощью
-      плейлиста <filename>.m3u</filename>. Вам, возможно, придется 
+      плейлиста <filename>.m3u</filename>. Вам, возможно, придется
       отредактировать файл <filename>.m3u</filename> с тем, чтобы он включал
-      в себя только <emphasis role="bold">относительные пути</emphasis> а не 
+      в себя только <emphasis role="bold">относительные пути</emphasis> а не
       <emphasis role="bold">абсолютные</emphasis>.
     </para>
     <itemizedlist>
@@ -172,45 +172,45 @@
           type a filename.
         </para>
         <para lang="pt">
-          <emphasis role="bold">No seu PC</emphasis>, utilizando o 
+          <emphasis role="bold">No seu PC</emphasis>, utilizando o
           Windows Media Player/Winamp/etc. poderá criar um ficheiro .m3u.
           (no WMP basta fazer: File->Save Playlist As), navegue até ao
           directório onde os ficheiros MP3 estão localizados, seleccione
           o formato <filename>.m3u</filename> e insira um nome.
         </para>
         <para lang="ru">
-          Создайте плейлист, используя Windows Media Player или Winamp на 
-          <emphasis role="bold">вашем компьютере</emphasis>. Для того, чтобы 
-          создать такой файл в Windows Media Player-e, выберите 
+          Создайте плейлист, используя Windows Media Player или Winamp на
+          <emphasis role="bold">вашем компьютере</emphasis>. Для того, чтобы
+          создать такой файл в Windows Media Player-e, выберите
           File->Save Playlist As, затем укажите папку, в которой хранятся
           МР3 файлы, выберите <filename>.m3u</filename> формат и наберите
           имя файла будущего плейлиста.
         </para>
-        
+
       </listitem>
 
       <listitem>
         <para lang="en">
-          Open the m3u file in a text editor (e.g. 
-          <application>Notepad</application> and delete the path names. 
-          (i.e. Convert '<filename>c:\my music\myfile.mp3</filename>' to 
+          Open the m3u file in a text editor (e.g.
+          <application>Notepad</application> and delete the path names.
+          (i.e. Convert '<filename>c:\my music\myfile.mp3</filename>' to
           '<filename>myfile.mp3</filename>'). If you saved the m3u file in
           the right place, windows media player should have removed these for
           you, if not, manually remove them yourself, and save the file.
         </para>
         <para lang="pt">
-          Abra o ficheiro m3u num editor de texto (i.e. 
-          <application>Notepad</application>) e apague os caminhos. 
-          (i.e. Converta '<filename>c:\my music\myfile.mp3</filename>' para 
+          Abra o ficheiro m3u num editor de texto (i.e.
+          <application>Notepad</application>) e apague os caminhos.
+          (i.e. Converta '<filename>c:\my music\myfile.mp3</filename>' para
           '<filename>myfile.mp3</filename>'). Se tiver gravado o ficheiro
           m3u no local correcto, o WMP deverá ter removido os caminhos, caso
           contrário terá de os remover manualmente e salvar o ficheiro.
         </para>
         <para lang="ru">
-          Откройте файл .m3u в текстовом редакторе (например, 
-          в <application>Блокноте</application>) и удалите пути к файлам. 
-          Например, поменяйте <filename>c:\my music\myfile.mp3</filename> на 
-          <filename>myfile.mp3</filename>. Вообще-то, если вы записали файл 
+          Откройте файл .m3u в текстовом редакторе (например,
+          в <application>Блокноте</application>) и удалите пути к файлам.
+          Например, поменяйте <filename>c:\my music\myfile.mp3</filename> на
+          <filename>myfile.mp3</filename>. Вообще-то, если вы записали файл
           m3u в правильное место, но Windows Media Player должен был проделать
           эту работу за вас. Если это не произошло, отредактируйте файл
           вручную, как показано выше, и запишите плейлист.
@@ -229,11 +229,11 @@
           Os nomes podem conter um directório relativo ao local onde o
           ficheiro m3u se encontra (e.g. .m3u pode apontar para ficheiros
           num sub-directório), mas não pode conter caminhos completos
-          (porque o SMS não saberia o que fazer quando vê 
+          (porque o SMS não saberia o que fazer quando vê
           <filename>C:\...</filename>!).
         </para>
         <para lang="ru">
-          Имена файлов могут включать в себя поддиректории, относительно 
+          Имена файлов могут включать в себя поддиректории, относительно
           той папки, в которой находится плейлист m3u. Но он не должен
           содержать полного полного пути к файлу. Это требование связано с тем,
           что SMS не имеет никакого понятия что делать, когда ей говорят,
@@ -251,7 +251,7 @@
           backwards. (you can only skip once a file is playing).
         </para>
         <para lang="pt">
-          Na PS2, ligue o SMS e navegue até ao ficheiro 
+          Na PS2, ligue o SMS e navegue até ao ficheiro
           <filename>.m3u</filename> que criou. Pressione
           <emphasis role="bold">X</emphasis> para começar a tocar. Use
           <emphasis role="bold">ESQUERDA</emphasis> e
@@ -259,7 +259,7 @@
           (só pode mudar assim que a faixa estiver a tocar).
         </para>
         <para lang="ru">
-          Запустите SMS на вашей PS2 и выберите файл 
+          Запустите SMS на вашей PS2 и выберите файл
           <filename>.m3u</filename> который вы создали ранее. Нажмите кнопку
           <emphasis role="bold">X</emphasis> для начала воспроизведения.
           Используйте кнопки <emphasis role="bold">ВЛЕВО</emphasis> и
@@ -274,7 +274,7 @@
       <title>
         <phrase lang="en">Screenshot showing M3U file loading.</phrase>
         <phrase lang="pt">Screenshot o carregamento de um M3U.</phrase>
-        <phrase lang="ru">Загрузка файла M3U.</phrase>        
+        <phrase lang="ru">Загрузка файла M3U.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -291,7 +291,7 @@
       <title>
         <phrase lang="en">Screenshot showing M3U playlist playing.</phrase>
         <phrase lang="en">Screenshot mostrando uma 'playlist' M3U a tocar.</phrase>
-        <phrase lang="ru">Воспроизведение файлов из плейлиста M3U.</phrase>        
+        <phrase lang="ru">Воспроизведение файлов из плейлиста M3U.</phrase>
       </title>
       <mediaobject>
         <imageobject>
@@ -314,7 +314,7 @@
       <para lang="pt">
         Suporte para ficheiros M3U ainda está em desenvolvimento; alguns
         utilizadores tiveram 'crashes'. Manter os nomes dos MP3 o mais curto
-        possivel ajudará a evitar estes problemas até que eles sejam 
+        possivel ajudará a evitar estes problemas até que eles sejam
         corrigidos permanentemente. Se tiver qualquer problema, experimente
         encurtar os nomes dos seus MP3.
       </para>
@@ -325,7 +325,7 @@
         решить проблему до того момента, пока не будет найдена причина
         возникновения таковых ошибок.
       </para>
-      
+
     </warning>
 
     <note>
@@ -341,8 +341,8 @@
         Изменять плейлист на PS2 невозможно. Вы должны отредактировать его
         на компьютере, а затем скопировать его в PS2.
       </para>
-      
+
     </note>
-    
+
   </sect2>
 </sect1>

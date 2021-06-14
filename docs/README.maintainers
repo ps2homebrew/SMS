@@ -36,11 +36,11 @@ General information
  - The prefered procedure for submitting translations or translation updates
    is:
    1) Download latest version of SMS source from SVN
-      (svn://svn.ps2dev.org/ps2ware/trunk/SMS) This includes the 
+      (svn://svn.ps2dev.org/ps2ware/trunk/SMS) This includes the
       documentation source.
 
    2) Modify your local copy
-   
+
    3) If possible, revalidate and generate the output (requires linux or
       cygwin) to do this.  A good quick test is
       $ make html-single-xx
@@ -51,12 +51,12 @@ General information
       $ make help
 
    4) Create a patchfile of your changes and email it back to the maintainer:
-      ps2(á)davet.org.
+      ps2(ï¿½)davet.org.
 
- - The ./configure script, css stylesheet and part of the makefile for this 
+ - The ./configure script, css stylesheet and part of the makefile for this
    documentation were based on the MPlayer documentation
    (http://www.mplayerhq.hu).
-   Many thanks to them for the info which helped to get this whole DocBook 
+   Many thanks to them for the info which helped to get this whole DocBook
    thing figured out in my head!  Technically, this means that the build
    scripts  are under the GPL license version 2 as well:
    (http://www.gnu.org/licenses/gpl.txt) for details.
@@ -83,7 +83,7 @@ File organistaion/structure
    xml files.  Generated translations are stored in subdirectories:
    docs/HTML/xx/ and docs/HTML-single/xx/
 
- - The html stylesheet (default.css) is the same for all languages.  It is 
+ - The html stylesheet (default.css) is the same for all languages.  It is
    copied from the stylesheet folder
 
  - Image files must be stored in the main images directory (docs/images) or
@@ -98,7 +98,7 @@ Rules & notation
 ----------------
  - The primary language for the documentation is english (and will be english
    for the forseeable future).  Other translations into different languages
-   will be translations of the english text into other languages, not the 
+   will be translations of the english text into other languages, not the
    other way round.
 
  - The order of the languages in the source xml files is always:
@@ -109,7 +109,7 @@ Rules & notation
    es Spanish
    pt Portuguese
 
- - Lines should always be kept 78 characters long or less, unless a url or 
+ - Lines should always be kept 78 characters long or less, unless a url or
    particular language forbids line breaks.
 
  - Block indentation in the XML is two spaces and is preferably done with
@@ -172,8 +172,8 @@ the content - you will notice XML tags, many of which start with
 These are the original english phrases that need to be translated.  In order
 to create a translation, copy the whole section (from
 <para lang="en"> to </para>):
-And paste it all directly below the first english paragraph.  Now change 
-the 'en' to the ISO639 language code you are tranlsating to.  You should now 
+And paste it all directly below the first english paragraph.  Now change
+the 'en' to the ISO639 language code you are tranlsating to.  You should now
 have two copies of the english text, one starting with lang="en", the other
 starting with lang="de" (for example - German).
 
@@ -182,14 +182,14 @@ Modify the second english copy and translate it into your chosen language.
 Now repeat for all other <para> and <phrase> tags in the xml document.
 
 If this is the first time you've done this, i suggest you submit the first
-page back to me (use svn client to create a patch file from your local copy 
-and email it to ps2(á)davet.org).  I can then check that what you've done is
+page back to me (use svn client to create a patch file from your local copy
+and email it to ps2(ï¿½)davet.org).  I can then check that what you've done is
 ok before you attempt the rest of the xml files.  (This should reduce the
 ammount of time you might waste!)
 
 The process needs to ultimately be repeated for all the .xml files in
 the docs/src directory & subdirectories.
-Once the bulk of the translation is complete, the xml patch files should be 
+Once the bulk of the translation is complete, the xml patch files should be
 submitted back to me (preferably after validating them), then
 i'll put it back into SVN.  Remember, only valid xml should go back into
 SVN, so if you can't run the validation tool, you shouldn't commit to svn,

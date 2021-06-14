@@ -4,7 +4,9 @@ Copyright 2001-2005, ps2dev - http://www.ps2dev.org
 All rights reserved.
 Created by Eugene Plotnikov <e-plotnikov@operamail.com>
 
-[![CI](https://github.com/ps2homebrew/SMS/workflows/CI/badge.svg)](https://github.com/ps2homebrew/SMS/actions?query=workflow%3ACI)
+[SMS Documentation](https://ps2homebrew.github.io/SMS/)
+
+[![CI](https://github.com/ps2homebrew/SMS/actions/workflows/compilation.yml/badge.svg)](https://github.com/ps2homebrew/SMS/actions?query=workflow%3ACI-compile)
 
 ## Introduction
 
@@ -129,7 +131,7 @@ in my own free time. The following things I'd like to do with it:
 - error checking (there're minimal checks only, so if, for example, press
   'eject' CD button, then...a very interesting effect can be achieved :);
 - btw, can somebody modify Makefile in order to make whole project more structured
-  (all these 'ee', 'iop' etc. directories)? 
+  (all these 'ee', 'iop' etc. directories)?
 
 ## Restrictions
  ----------------------------------------------------------------------
@@ -600,7 +602,7 @@ Update (19-FEB-2006)
   are "mc0:/BOOT/BOOT.ELF" and "mc0:/B?DATA-SYSTEM/BOOT.ELF). This feature is still
   experimental one, so, results are not guaranteed and the only supported media for
   launched programs is memory card and CD-ROM (not tested).
-  (thanks to "Marcus R. Brown" for the loader code example); 
+  (thanks to "Marcus R. Brown" for the loader code example);
 - some new configuration options are added (thanks to "bix64" for IPCONFIG.DAT
   "editor");
 - some other "cosmetic" changes are made;
@@ -922,7 +924,7 @@ Update (24-DEC-2006)
   to establish connection to the server approximately each 5-10 seconds).
   It's possible to shut down SMB server while SMS browser is active. In this
   case SMB device icon will disappear and connection attempts are resumed again.
-  This can however cause hang, so use this functionaliy at your own risk; 
+  This can however cause hang, so use this functionaliy at your own risk;
   In case of problems use 'ethereal'/'wireshark' software to trace activity on
   the server's TCP port 139. New SMB device is browseable starting from share
   level (note that shares with '$' suffix in their name (like 'C$', 'ADMIN$'
@@ -1124,7 +1126,7 @@ Update (20-06-2007)
    - manual (duplex mode (half or full) and protocol (10Base-T or 100Base-TX));
  - 'Display settings -> Advanced settings' to fine tune video synchronization parameters
    (to avoid display flickering in different video modes). 'Parameter 1' is for 'audio
-   playback' mode and 'Parameter 2' is for GUI/Browser mode. 
+   playback' mode and 'Parameter 2' is for GUI/Browser mode.
 - fixed 'crash' issue for 'ogg' files (thanks to 'vectis' for the sample clips);
 
 Update (01-SEP-2007)

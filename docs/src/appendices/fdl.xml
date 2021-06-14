@@ -25,10 +25,10 @@
       of this license document, but changing it is not allowed.
     </para>
   </blockquote>
-  
+
   <simplesect id="gfdl-0" role="NotInToc">
     <title>PREAMBLE</title>
-    
+
     <para>
       The purpose of this License is to make a manual, textbook, or other
       functional and useful document "free" in the sense of freedom: to
@@ -38,14 +38,14 @@
       way to get credit for their work, while not being considered
       responsible for modifications made by others.
     </para>
-    
+
     <para>
       This License is a kind of "copyleft", which means that derivative
       works of the document must themselves be free in the same sense.  It
       complements the GNU General Public License, which is a copyleft
       license designed for free software.
     </para>
-    
+
     <para>
       We have designed this License in order to use it for manuals for free
       software, because free software needs free documentation: a free
@@ -56,10 +56,10 @@
       principally for works whose purpose is instruction or reference.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-1" role="NotInToc">
     <title>APPLICABILITY AND DEFINITIONS</title>
-    
+
     <para id="gfdl-doc">
       This License applies to any manual or other work, in any medium, that
       contains a notice placed by the copyright holder saying it can be
@@ -71,13 +71,13 @@
       copy, modify or distribute the work in a way requiring permission
       under copyright law.
     </para>
-    
+
     <para id="gfdl-mod-ver">
       A "Modified Version" of the Document means any work containing the
       Document or a portion of it, either copied verbatim, or with
       modifications and/or translated into another language.
     </para>
-    
+
     <para id="gfdl-secnd-sect">
       A "Secondary Section" is a named appendix or a front-matter section
       of the Document that deals exclusively with the relationship of the
@@ -90,7 +90,7 @@
       commercial, philosophical, ethical or political position regarding
       them.
     </para>
-    
+
     <para id="gfdl-inv-sect">
       The "Invariant Sections" are certain Secondary Sections whose titles
       are designated, as being those of Invariant Sections, in the notice
@@ -100,7 +100,7 @@
       Invariant Sections.  If the Document does not identify any Invariant
       Sections then there are none.
     </para>
-    
+
     <para id="gfdl-cov-text">
       The "Cover Texts" are certain short passages of text that are listed,
       as Front-Cover Texts or Back-Cover Texts, in the notice that says
@@ -108,7 +108,7 @@
       may be at most 5 words, and a Back-Cover Text may be at most 25
       words.
     </para>
-    
+
     <para id="gfdl-transparent">
       A "Transparent" copy of the Document means a machine-readable copy,
       represented in a format whose specification is available to the
@@ -124,7 +124,7 @@
       any substantial amount of text.  A copy that is not "Transparent" is
       called "Opaque".
     </para>
-    
+
     <para>
       Examples of suitable formats for Transparent copies include plain
       ASCII without markup, Texinfo input format, LaTeX input format, SGML
@@ -137,7 +137,7 @@
       machine-generated HTML, PostScript or PDF produced by some word
       processors for output purposes only.
     </para>
-    
+
     <para id="gfdl-title-page">
       The "Title Page" means, for a printed book, the title page itself,
       plus such following pages as are needed to hold, legibly, the
@@ -146,7 +146,7 @@
       Page" means the text near the most prominent appearance of the work's
       title, preceding the beginning of the body of the text.
     </para>
-    
+
     <para id="gfdl-entitled">
       A section "Entitled XYZ" means a named subunit of the Document whose
       title either is precisely XYZ or contains XYZ in parentheses
@@ -157,7 +157,7 @@
       means that it remains a section "Entitled XYZ" according to this
       definition.
     </para>
-    
+
     <para>
       The Document may include Warranty Disclaimers next to the notice
       which states that this License applies to the Document.  These
@@ -167,10 +167,10 @@
       no effect on the meaning of this License.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-2" role="NotInToc">
     <title>VERBATIM COPYING</title>
-    
+
     <para>
       You may copy and distribute the Document in any medium, either
       commercially or noncommercially, provided that this License, the
@@ -183,16 +183,16 @@
       large enough number of copies you must also follow the conditions in
       section3.
     </para>
-    
+
     <para>
       You may also lend copies, under the same conditions stated above,
       and you may publicly display copies.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-3" role="NotInToc">
     <title>COPYING IN QUANTITY</title>
-    
+
     <para>
       If you publish printed copies (or copies in media that commonly have
       printed covers) of the Document, numbering more than 100, and the
@@ -207,14 +207,14 @@
       the title of the Document and satisfy these conditions, can be
       treated as verbatim copying in other respects.
     </para>
-    
+
     <para>
       If the required texts for either cover are too voluminous to fit
       legibly, you should put the first ones listed (as many as fit
       reasonably) on the actual cover, and continue the rest onto adjacent
       pages.
     </para>
-    
+
     <para>
       If you publish or distribute Opaque copies of the Document numbering
       more than 100, you must either include a machine-readable Transparent
@@ -229,7 +229,7 @@
       an Opaque copy (directly or through your agents or retailers) of that
       edition to the public.
     </para>
-    
+
     <para>
       It is requested, but not required, that you contact the authors of
       the Document well before redistributing any large number of copies,
@@ -237,10 +237,10 @@
       Document.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-4" role="NotInToc">
     <title>MODIFICATIONS</title>
-    
+
     <para>
       You may copy and distribute a Modified Version of the Document under
       the conditions of sections 2 and 3 above, provided that you release
@@ -250,7 +250,7 @@
       of it.  In addition, you must do these things in the
       Modified Version:
     </para>
-    
+
     <orderedlist id="gfdl-modif-cond" numeration="upperalpha">
       <title />
       <listitem>
@@ -364,7 +364,7 @@
         </simpara>
       </listitem>
     </orderedlist>
-    
+
     <para>
       If the Modified Version includes new front-matter sections or
       appendices that qualify as Secondary Sections and contain no material
@@ -373,7 +373,7 @@
       the list of Invariant Sections in the Modified Version's license
       notice.  These titles must be distinct from any other section titles.
     </para>
-    
+
     <para>
       You may add a section Entitled "Endorsements", provided it contains
       nothing but endorsements of your Modified Version by various
@@ -381,7 +381,7 @@
       been approved by an organization as the authoritative definition of a
       standard.
     </para>
-    
+
     <para>
       You may add a passage of up to five words as a Front-Cover Text, and
       a passage of up to 25 words as a Back-Cover Text, to the end of the
@@ -394,17 +394,17 @@
       on explicit permission from the previous publisher that added the old
       one.
     </para>
-    
+
     <para>
       The author(s) and publisher(s) of the Document do not by this License
       give permission to use their names for publicity for orto assert or
       imply endorsement of any Modified Version.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-5" role="NotInToc">
     <title>COMBINING DOCUMENTS</title>
-    
+
     <para>
       You may combine the Document with other documents released under this
       License, under the terms defined in <link linkend="gfdl-4">section 4
@@ -414,7 +414,7 @@
       your combined work in its license notice, and that you preserve all
       their Warranty Disclaimers.
     </para>
-    
+
     <para>
       The combined work need only contain one copy of this License, and
       multiple identical Invariant Sections may be replaced with a single
@@ -425,7 +425,7 @@
       number.  Make the same adjustment to the section titles in the list
       of Invariant Sections in the license notice of the combined work.
     </para>
-    
+
     <para>
       In the combination, you must combine any sections Entitled "History"
       in the various original documents, forming one section Entitled
@@ -434,10 +434,10 @@
       sections Entitled "Endorsements".
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-6" role="NotInToc">
     <title>COLLECTIONS OF DOCUMENTS</title>
-    
+
     <para>
       You may make a collection consisting of the Document and other
       documents released under this License, and replace the individual
@@ -446,7 +446,7 @@
       rules of this License for verbatim copying of each of the documents
       in allother respects.
     </para>
-    
+
     <para>
       You may extract a single document from such a collection, and
       distribute it individually under this License, provided you insert a
@@ -455,10 +455,10 @@
       document.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-7" role="NotInToc">
     <title>AGGREGATION WITH INDEPENDENT WORKS</title>
-    
+
     <para>
       A compilation of the Document or its derivatives with other separate
       and independent documents or works, in or on a volume of a storage or
@@ -469,7 +469,7 @@
       apply to the other works in the aggregate which are not themselves
       derivative works of the Document.
     </para>
-    
+
     <para>
       If the Cover Text requirement of section 3 is applicable to these
       copies of the Document, then if the Document is less than one half of
@@ -480,10 +480,10 @@
       whole aggregate.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-8" role="NotInToc">
     <title>TRANSLATION</title>
-    
+
     <para>
       Translation is considered a kind of modification, so you may
       distribute translations of the Document under the terms of section 4.
@@ -498,7 +498,7 @@
       between the translation and the original version of this License or a
       notice or disclaimer, the original version will prevail.
     </para>
-    
+
     <para>
       If a section in the Document is Entitled "Acknowledgements",
       "Dedications", or "History", the requirement (section 4) to Preserve
@@ -506,10 +506,10 @@
       title.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-9" role="NotInToc">
     <title>TERMINATION</title>
-    
+
     <para>
       You may not copy, modify, sublicense, or distribute the Document
       except as expressly provided for under this License.  Any other
@@ -520,10 +520,10 @@
       long as such parties remain in full compliance.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-10" role="NotInToc">
     <title>FUTURE REVISIONS OF THIS LICENSE</title>
-    
+
     <para>
       The Free Software Foundation may publish new, revised versions of the
       GNU Free Documentation License from time to time.  Such new versions
@@ -531,7 +531,7 @@
       detail to address new problems or concerns.  See
       http://www.gnu.org/copyleft/.
     </para>
-    
+
     <para>
       Each version of the License is given a distinguishing version number.
       If the Document specifies that a particular numbered version of this
@@ -543,18 +543,18 @@
       published (not as a draft) by the Free Software Foundation.
     </para>
   </simplesect>
-  
+
   <simplesect id="gfdl-addendum" role="NotInToc">
     <title>
       ADDENDUM: How to use this License for your documents
     </title>
-    
+
     <para>
       To use this License in a document you have written, include a copy of
       the License in the document and put the following copyrightand
       license notices just after the title page:
     </para>
-    
+
     <blockquote id="copyright-sample">
       <title />
       <para>
@@ -567,12 +567,12 @@
         Documentation License".
       </para>
     </blockquote>
-    
+
     <para>
       If you have Invariant Sections, Front-Cover Texts and Back-Cover
       Texts, replace the "with...Texts." line with this:
     </para>
-    
+
     <blockquote id="inv-cover-sample">
       <title />
       <para>
@@ -581,13 +581,13 @@
         being LIST.
       </para>
     </blockquote>
-    
+
     <para>
       If you have Invariant Sections without Cover Texts, or some other
       combination of the three, merge those two alternatives to suitthe
       situation.
     </para>
-    
+
     <para>
       If your document contains nontrivial examples of program code, we
       recommend releasing these examples in parallel under your choice of

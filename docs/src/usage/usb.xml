@@ -10,7 +10,7 @@
       Correndo ficheiros de video a partir de um dispositivo USB ligado à PS2.
     </phrase>
     <phrase lang="ru">
-      Воспроизведение файлов с устройств хранения данных USB, подключенных к PS2 
+      Воспроизведение файлов с устройств хранения данных USB, подключенных к PS2
     </phrase>
   </title>
 
@@ -23,13 +23,13 @@
     videos ou tocar os seus MP3.
   </para>
   <para lang="ru">
-    Вы можете проигрывать аудио- и видеофайлы с устройств хранения данных  
-    USB (например, жесткий диск или флешдрайв), подключенных к порту на 
+    Вы можете проигрывать аудио- и видеофайлы с устройств хранения данных
+    USB (например, жесткий диск или флешдрайв), подключенных к порту на
     лицевой панели PS2.
   </para>
 
   <para lang="en">
-    SMS reads files from a USB drive using a <emphasis role="bold">USB driver 
+    SMS reads files from a USB drive using a <emphasis role="bold">USB driver
     built-in to the SMS application</emphasis>.  There's no need to install
     any additional files to enable USB support in new versions of SMS (V1.7
     or later).  Older versions required a 3rd party
@@ -43,23 +43,23 @@
     <filename>USBD.IRX</filename> file.#
   </para>
   <para lang="ru">
-    SMS читает файлы с USB диска, используя <emphasis role="bold">встроенный 
+    SMS читает файлы с USB диска, используя <emphasis role="bold">встроенный
     в программу драйвер USB</emphasis>.  Нет необходимости устанавливать
     какие-либо дополнительные драйвера для поддержки USB в новых версиях
-    программы (начиная с версии 1.7). Для старых версий требуется 
+    программы (начиная с версии 1.7). Для старых версий требуется
     драйвер <filename>USBD.IRX</filename>.
   </para>
 
   <para lang="en">
     When you plug a compatible USB drive into the front USB port on the PS2,
-    you will see a new icon as shown below. Press <emphasis 
-    role="bold">RIGHT</emphasis> to select this icon and browse the USB 
+    you will see a new icon as shown below. Press <emphasis
+    role="bold">RIGHT</emphasis> to select this icon and browse the USB
     drive.
   </para>
   <para lang="pt">
     #When you plug a compatible USB drive into the front USB port on the PS2,
-    you will see a new icon as shown below.# Pressione 
-    <emphasis role="bold">DIREITA</emphasis> para seleccionar este icon e 
+    you will see a new icon as shown below.# Pressione
+    <emphasis role="bold">DIREITA</emphasis> para seleccionar este icon e
     navegar no dispositivo USB.
   </para>
   <para lang="ru">
@@ -73,7 +73,7 @@
     <title>
       <phrase lang="en">SMS with USB activated.</phrase>
       <phrase lang="pt">SMS com USB activado.</phrase>
-      <phrase lang="ru">SMS с подключенным к PS2 USB устройством.</phrase>      
+      <phrase lang="ru">SMS с подключенным к PS2 USB устройством.</phrase>
     </title>
     <mediaobject>
       <imageobject>
@@ -87,7 +87,7 @@
   </figure>
 
   <para lang="en">
-    As usual, press <emphasis role="bold">X</emphasis> to play the selected 
+    As usual, press <emphasis role="bold">X</emphasis> to play the selected
     media file.
   </para>
   <para lang="pt">
@@ -95,7 +95,7 @@
     correr o ficheiro seleccionado.
   </para>
   <para lang="ru">
-    Как обычно, для воспроизведения выбранного файла, нажмите 
+    Как обычно, для воспроизведения выбранного файла, нажмите
     кнопку <emphasis role="bold">X</emphasis>.
   </para>
 

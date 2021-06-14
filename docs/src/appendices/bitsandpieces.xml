@@ -29,12 +29,12 @@
     <listitem>
       <para lang="en">640x480@60Hz (press select+L1 during startup)</para>
       <para lang="pt">640x480@60Hz (pressione select+L1 ao iniciar)</para>
-      <para lang="ru">640x480@60Гц (во время загрузки SMS нажать Select и L1)</para>      
+      <para lang="ru">640x480@60Гц (во время загрузки SMS нажать Select и L1)</para>
     </listitem>
     <listitem>
       <para lang="en">640x480@75Hz (press select+L2 during startup)</para>
       <para lang="pt">640x480@75Hz (pressione select+L2 ao iniciar)</para>
-      <para lang="ru">640x480@75Гц (во время загрузки SMS нажать Select и L2)</para>            
+      <para lang="ru">640x480@75Гц (во время загрузки SMS нажать Select и L2)</para>
     </listitem>
   </itemizedlist>
   <para lang="en">
@@ -42,14 +42,14 @@
     they can only be set at startup.
   </para>
   <para lang="pt">
-    Estes modos não estão disponíveis no menu de configuração do SMS - só 
+    Estes modos não estão disponíveis no menu de configuração do SMS - só
     podem ser ligados ao iniciar o SMS.
   </para>
   <para lang="ru">
     Эти режимы недоступны из обычного меню настроек SMS - их можно включить
     только во время загрузки и инициализации программы.
   </para>
-  
+
   <note>
     <para lang="en">
       These have only been tested using a viewsonic VX910 TFT monitor with
@@ -60,7 +60,7 @@
       oficial da Sony.
     </para>
     <para lang="ru">
-     Эти режимы тестировались с помощью монитора viewsonic VX910, 
+     Эти режимы тестировались с помощью монитора viewsonic VX910,
      подключенного к PS2 через стандартный кабель Sony.
     </para>
   </note>

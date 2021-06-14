@@ -11,10 +11,10 @@
     explica tudo o que você precisa de saber.
   </para>
   <para lang="ru">
-    Теперь, когда SMS была успешно установлена на вашей PS2 (см <xref linkend="installation"/>), 
+    Теперь, когда SMS была успешно установлена на вашей PS2 (см <xref linkend="installation"/>),
     как заставить её восроизводить фильмы? Этот раздел поможет понять, как это сделать.
   </para>
-  
+
   <para lang="en">
     To run SMS you first need to run your exploit or start up your PS2 with
     the modchip installed.  Then use the appropriate technique to start the
@@ -36,11 +36,11 @@
   <para lang="ru">
     Чтобы начать пользоваться SMS, необходимо использовать программную модификацию PS2 или
     включить чип модификации. После чего, запустить SMS.
-    Если используется  <xref linkend="faq-independence"/>, то надо вставить 
-    оригинальный PS1 диск и нажать на кнопку сброса. Таким образом, PS2 запустит 
+    Если используется  <xref linkend="faq-independence"/>, то надо вставить
+    оригинальный PS1 диск и нажать на кнопку сброса. Таким образом, PS2 запустит
     программу-загрузчик, в которой можно выбирать ELF, который вы хотите выполнить.
   </para>
-  
+
   <para lang="en">
     Next, if you're using LaunchELF/uLaunchELF as your boot application, you
     can run SMS by navigating to SMS.ELF and pressing O. You may want to
@@ -92,7 +92,7 @@
     документе, не зависят от типа модификации игровой приставки.
   </para>
 
-  
+
   <figure>
     <title>
        <phrase lang="en">
@@ -142,10 +142,10 @@
     pressionando <emphasis role="bold">start</emphasis>.
   </para>
   <para lang="ru">
-    Это окно, из которого можно получить доступ к большинству функций программы. 
+    Это окно, из которого можно получить доступ к большинству функций программы.
     Здесь можно перемещаться по файлам, используя кнопки влево/вправо/вверх/вниз на
     контроллерах 1 или 2. Также, можно начать воспроизведение выбранного файла с помощью
     кнопки <emphasis role="bold">X</emphasis>.
-    Меню настроек программы может быть вызвано с помощью кнопки 
+    Меню настроек программы может быть вызвано с помощью кнопки
     <emphasis role="bold">start</emphasis>.
   </para>

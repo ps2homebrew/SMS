@@ -10,11 +10,11 @@
   equipment such as HDD and network adapter.
 </para>
 <para lang="pt">
-  Simple Media System (<application>SMS</application>) é o resultado 
-  da curiosidade do autor (Eugene Plotnikov) acerca da Playstation 2, MIPS, 
-  DivX e MP3. 
-  O objectivo inicial era criar um simples leitor de DivX, capaz  de correr 
-  filmes com boa resolução e bom 'frame rate' numa PS2 não-modificada sem 
+  Simple Media System (<application>SMS</application>) é o resultado
+  da curiosidade do autor (Eugene Plotnikov) acerca da Playstation 2, MIPS,
+  DivX e MP3.
+  O objectivo inicial era criar um simples leitor de DivX, capaz  de correr
+  filmes com boa resolução e bom 'frame rate' numa PS2 não-modificada sem
   qualquer equipamento extra tal como o HDD ou o Adaptador de Rede.
 </para>
 <para lang="ru">
@@ -34,18 +34,18 @@
   be read on (hopefully) any PS2.
 </para>
 <para lang="pt">
-  Porquê criar um 'sistema' completo? Simplesmente porque ter apenas um 
-  programa de leitura não é suficiente. Visto que a PS2 normalmente ignora 
+  Porquê criar um 'sistema' completo? Simplesmente porque ter apenas um
+  programa de leitura não é suficiente. Visto que a PS2 normalmente ignora
   discos "ilegais", ele usou a ideia do Drakonite e do seu UMCDR e desenvolveu
-  o seu próprio "UMCDR" (chamado CDDAFS). Basicamente os dados são gravados 
+  o seu próprio "UMCDR" (chamado CDDAFS). Basicamente os dados são gravados
   num CD de áudio, que pode ser lido em qualquer PS2.
 </para>
 <para lang="ru">
-  Зачем создавать "систему"? Просто потому, что одной только программы-плейера 
+  Зачем создавать "систему"? Просто потому, что одной только программы-плейера
   недостаточно. Поскольку PS2 была создана так, чтобы игнорировать "неправильные"
   диски, он воспользовался идеей UMCDR от Drakonite и разработал свою собственную
   систему UMCDR (которая называется CDDAFS). Эта система позволяет записывать данные
-  на диск в аудио CD формате, который может быть воспроизведен (при удачной фазе луны) 
+  на диск в аудио CD формате, который может быть воспроизведен (при удачной фазе луны)
   на любой PS2.
 </para>
 
@@ -60,11 +60,11 @@
   methods and it seems to be working.
 </para>
 <para lang="pt">
-  Este é o primeiro componente do SMS. O segundo componente é um programa de 
+  Este é o primeiro componente do SMS. O segundo componente é um programa de
   PC que cria ficheiros cue/bin para serem gravados num CD. E, finalmente, vem
-  o leitor propriamente dito. Este sistema ainda não está completo, mas já é 
-  capaz de correr filmes DivX com boa qualidade de som e bom 'frame rate'. A 
-  base do leitor é o famoso projecto ffmpeg. O autor (EEUG) tirou algumas 
+  o leitor propriamente dito. Este sistema ainda não está completo, mas já é
+  capaz de correr filmes DivX com boa qualidade de som e bom 'frame rate'. A
+  base do leitor é o famoso projecto ffmpeg. O autor (EEUG) tirou algumas
   partes do projecto e efectuou algumas alterações especificas para o hardware
   da PS2. O programa já foi testado com vários filmes Xvid/DivX com diferentes
   resoluções e 'frame rates' e parece funcionar às mil maravilhas.
@@ -72,12 +72,12 @@
 <para lang="ru">
   Но это только первая составляющая SMS. Вторая составляющая - это компьютерная
   программа, которая создает файлы cue/bin, для того, чтобы записать такой диск.
-  И, наконец, сама программа плейера. Система еще не завершена, но она уже может 
+  И, наконец, сама программа плейера. Система еще не завершена, но она уже может
   воспроизводить фильмы в DivX со звуком с приличной частотой кадров. Плейер основан
   на известном проекте ffmpeg. EEUG использовал  некоторые принципы из этого проекта,
   как, например, поддержка DivX 5.xx и MP3, а также, сделал несколько изменений, которые
   требовала специфика "железа" PS2. Система была проверена на многих DivX/XViD фильмах,
-  с различными разрешениями и закодированными разными методами и, похоже, что она 
+  с различными разрешениями и закодированными разными методами и, похоже, что она
   вполне работоспособна.
 </para>
 
@@ -91,20 +91,20 @@
   development.
 </para>
 <para lang="pt">
-  Desde o conceito inicial, o projecto SMS tem crescido bastante. Neste 
+  Desde o conceito inicial, o projecto SMS tem crescido bastante. Neste
   momento já suporta dispositivos USB, ficheiros por rede, disco rigido (HDD).
-  Neste momento existe também suporte para legendas e um leitor completo para 
-  ficheiros de áudio MP3. O software está disponivel no 'subversion' (SVN) no 
-  ps2dev.org. O código fonte foi disponilizado com o intuito de chamar a 
-  atenção de entusiastas da PS2 que queiram usá-lo como base do seu próprio 
+  Neste momento existe também suporte para legendas e um leitor completo para
+  ficheiros de áudio MP3. O software está disponivel no 'subversion' (SVN) no
+  ps2dev.org. O código fonte foi disponilizado com o intuito de chamar a
+  atenção de entusiastas da PS2 que queiram usá-lo como base do seu próprio
   trabalho.
 </para>
 <para lang="ru">
-  По сравнению с первоначальной концепцией, проект SMS вырос настолько, что, на 
-  сегодняшний момент, он включает в себя поддержку сетевого окружения, USB дисков, 
+  По сравнению с первоначальной концепцией, проект SMS вырос настолько, что, на
+  сегодняшний момент, он включает в себя поддержку сетевого окружения, USB дисков,
   а также жестких дисков. Кроме того, появилась поддержка субтитров и полнофункциональный
-  MP3-плейер. Все файлы проекта доступны в системе контроля версий "subversion" (SVN) 
-  на сайте PS2dev.org. Эти файлы были выложены в свободный доступ в надежде, что 
+  MP3-плейер. Все файлы проекта доступны в системе контроля версий "subversion" (SVN)
+  на сайте PS2dev.org. Эти файлы были выложены в свободный доступ в надежде, что
   система окажется интересной для "фанатов" PS2, которые смогут использовать их в
   качестве базиса для своих собственных проектов.
 </para>
@@ -117,10 +117,10 @@
   format as well.
 </para>
 <para lang="pt">
-  Este documento contém intruções para instalação e modo de usar. Neste 
-  momento, é escrito e mantido em formato DocBook XML, e processado para 
-  distribuição em vários formatos incluindo simples HTML e grupo de páginas 
-  HTML agrupadas em secções. Mais tarde passará a ser distribuido em formato 
+  Este documento contém intruções para instalação e modo de usar. Neste
+  momento, é escrito e mantido em formato DocBook XML, e processado para
+  distribuição em vários formatos incluindo simples HTML e grupo de páginas
+  HTML agrupadas em secções. Mais tarde passará a ser distribuido em formato
   PDF também.
 </para>
 <para lang="ru">
