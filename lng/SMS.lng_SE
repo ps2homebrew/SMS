@@ -1,0 +1,269 @@
+Tillgängliga enheter:  
+ingen
+Förbereder SMS...
+Sparar konfiguration...
+Laddar %s...
+Förbereder nätverk...
+Söker USBD.IRX...
+Inväntar media (tryck "start" för meny)...
+Läser skiva...
+Ogiltig skiva (tryck "kryss" för att gå vidare)...
+Läser media...
+Inställningar för bildskärm...
+Inställningar för enheter...
+Inställningar för browsern...
+Inställningar för spelaren...
+Hjälp...
+Spara inställningar
+Stäng av konsollen
+Lämna SMS (extern browser)
+TV-system
+PAL
+NTSC
+Auto
+Teckenuppsättning
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Inställningar för bildskärm
+SMS Meny
+Justera bilden åt vänster
+Justera bilden åt höger
+Justera bilden uppåt
+Justera bilden nedåt
+Autostarta nätverket
+Autostarta USB
+Autostarta HDD
+Inställningar för enheter
+Starta nätverket
+Starta HDD
+Starta USB
+Editera IPCONFIG.DAT...
+Editera IPCONFIG.DAT
+IP-Adress (oktett 1)
+IP-Adress (oktett 2)
+IP-Adress (oktett 3)
+IP-Adress (oktett 4)
+Nätmask (oktett 1)
+Nätmask (oktett 2)
+Nätmask (oktett 3)
+Nätmask (oktett 4)
+Gateway-Adress (oktett 1)
+Gateway-Adress (oktett 2)
+Gateway-Adress (oktett 3)
+Gateway-Adress (oktett 4)
+Spara/Updatera IPCONFIG.DAT
+Inställningar för browsern
+Använd bakgrundsbild
+Sortera filsystemsobjekt
+Filtrera mediafiler
+Visa HDL-partitioner
+Göm systempartitioner
+Aktiv ramfärg
+Inaktiv ramfärg
+Textfärg
+Statusradens textfärg
+Inställningar för spelaren
+Normal volym
+Undertexts sidledes låsning
+Undertexts offset
+Autoladda undertexter
+Ogenomskinliga undertexter
+Undertextfärg
+Undertextfärg fetstil
+Undertextfärg italisk stil
+Undertextfärg understruket
+Automatisk frånslagning
+Hopplistens stegantal
+Hopplistens placering
+Visa hopplistens tidsposition
+Hopplistens färg
+Volymlistens färg
+Visa animering vid ljudspelning
+Hög
+Låg
+Inaktiv
+centrerad
+vänster
+%d min
+%d steg
+Undertexts teckenbredd
+Undertexts teckenhöjd
+Snabb hjälp
+ 
+Vid uppstart:
+select+R1 - NTSC mode
+select+R2 - PAL mode
+Browser:
+triangel - högre foldernivå
+vänster/höger - enhetsval
+upp/ned - navigera i folder
+kryss - aktivera
+select+cirkel - power off
+select+R1 - justera bilden åt höger
+select+L1 - justera bilden åt vänster
+select+R2 - justera bilden nedåt
+select+L2 - justera bilden uppåt
+select+fyrkant - spara inställningar
+select+triangle - lämna SMS (extern browser)
+L1+L2+R1+R2 - visa SMS-info (copyright etc)
+Spelare:
+upp/ned - Ändra volym
+höger/vänster - snabb fram/back-spolning
+kryss - avbryt snabb-spolning
+triangel - avbryt uppspelning
+select - paus/hopplist
+start - resume/menu
+kryss - OSD tidsvisning
+fyrkant - pan-scan läge
+L1 - panorera åt vänster
+R1 - panorera åt höger
+circle - Bild/Ljud synkroniseringsläge
+L2 - minska synkvärdet
+R2 - öka synkvärder
+SMS meny:
+kryss/cirkel - aktivera/nästa nivå
+triangel - nivå upp/lämna meny
+Fel! (tryck "kryss" för att gå vidare)...
+Sparar IPCONFIG.DAT...
+Färg för selekterade objekt
+Avancerade inställningar...
+Bildhöjd
+Aktivera inställningarna
+Avancerade inställningar
+Exempel
+Engelska
+Svenska
+Språk
+Laddar index...
+Laddar undertext...
+Undertext: %s error (%d), tryck "kryss" för att gå vidare...
+format
+sekvens
+Buffrar fil %s...
+Identifierar fil-format...
+Paus
+Stannar
+default
+V/A:
+S/V:
+Play 
+FFwd 
+ Rev 
+Curs
+Ej understött filformat (tryck "kryss" för att gå vidare)...
+Rem
+Spelarmeny
+Bildskärm
+'brevlåda'
+pan-scan 1
+pan-scan 2
+pan-scan 3
+fullskärm
+Visa undertext
+Välj undertext
+Sony browser
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Extern browser
+Ljudeffekter
+S/PDIF - Dolby Digital/DTS
+MP3 inställningar...
+Slumpmässig spelföjd
+Repetitionsläge
+Visa ljudspektrum
+Kopiera till HDD
+Kopierar
+KB/s
+Välj handling
+Färgupplösning
+32 bit
+16 bit
+DTV 480P
+Spelkontroll-port 2
+spelkontroll
+fjärrkontroll
+AC3 range level
+höger
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Nätverksprotokoll
+ps2dev/host
+SMB/CIFS
+Kommunikationsfel (tryck "kryss" för att gå vidare)...
+Protokollfel (%d) (tryck "kryss" för att gå vidare)...
+Login-fel (%d) (tryck "kryss" för att gå vidare)...
+Undertext
+Deaktivera CD/DVD
+Bildbredd
+Läser %s...
+Fel: minnet tog slut
+Kontrollerar fritt utrymme...
+Fel: För lite fritt utrymme på HDD
+Skapar katalog-träd...
+Radera
+Raderar...
+CD/DVD hastighet
+medium
+hög
+låg
+Riktningsknappar
+DTV 1080I
+DTV 720P
+Arbetsläge
+auto-förhandling
+automatiskt
+manuellt
+Duplex läge
+full
+halv
+Standard
+10Base-T
+100Base-TX
+Inställningar för nätverk...
+Inställningar för nätverk
+Synkroniseringsparameter 1 (video)
+Synkroniseringsparameter 2 (GUI)
+SMB server...
+Avbryter väntande förbindelse...
+Updatera SMS språk
+Updatera SMS palett
+Updatera SMS
+Updatera SMB server lista
+Lägg till backgrundsbild
+Bearbetar...
+Skapar SMS backup...
+Spela allt
+Audio
+Video
+Parameter för Autodetektering
+Börja spela från
+centrera-höger
+Använd 'exception handler'
+Undertext MBCS
+Laddar font...
+Laddar ODML index %d...
+Filstorlek: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+ch
+Tillgängligt minne: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

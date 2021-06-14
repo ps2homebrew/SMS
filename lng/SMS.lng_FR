@@ -1,0 +1,269 @@
+Medias disponibles:  
+aucun
+Initialisation de SMS...
+Sauvegarde configuration...
+Chargement %s...
+Initialisation du réseau...
+Chargement du module USBD.IRX...
+En attente d'un media (appuyer sur "start" pour le menu)...
+Lecture du disque...
+Mauvais format de disque (appuyer sur "X" pour continuer)...
+Lecture...
+Options d'affichage...
+Options périphérique...
+Options explorateur...
+Options du lecteur...
+Aide...
+Sauvegarder les changements
+Eteindre la console
+Quitter SMS
+Norme TV
+PAL
+NTSC
+Auto
+Police
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Options d'affichage
+Menu SMS
+Ajuster l'image à gauche
+Ajuster l'image à droite
+Ajuster l'image en haut
+Ajuster l'image en bas
+Démarrage auto du réseau
+Démarrage auto de l'USB
+Démarrage auto du DD
+Options périphérique
+Démarrer le support du réseau
+Démarrer le support du DD
+Démarrer le support de l'USB
+Editer IPCONFIG.DAT...
+Editer IPCONFIG.DAT
+Addresse IP (octet 1)
+Address IP (octet 2)
+Addresse IP (octet 3)
+Addresse IP (octet 4)
+Masque (octet 1)
+Masque (octet 2)
+Masque (octet 3)
+Masque (octet 4)
+Passerelle (octet 1)
+Passerelle (octet 2)
+Passerelle (octet 3)
+Passerelle (octet 4)
+Sauvegarder/remplacer IPCONFIG.DAT
+Options explorateur
+Utiliser fond d'écran
+Trier
+Filtrer
+Afficher les partitions HDL
+Cacher les partitions système
+Couleur bordure active
+Couleur bordure inactive
+Couleur du texte
+Couleur texte 2
+Options du lecteur
+Volume par défaut
+Alignement sous-titres
+Position sous-titres
+Chargement auto des sous-titres
+Sous-titres opaques
+Couleur des sous-titres
+Couleur des sous-titres(gras)
+Couleur des sous-titres(italique)
+Couleur des sous-titres(souligné)
+Arrêt automatique
+Longueur du curseur
+Position du curseur
+Afficher le temps sur le curseur
+Couleur de la barre du curseur
+Couleur barre de volume
+Animation audio
+haut
+bas
+off
+centre
+gauche
+%d min
+%d pts
+largeur sous-titres
+hauteur sous-titres
+Aide rapide
+ 
+Au démarrage:
+select+R1 - mode NTSC
+select+R2 - mode PAL
+Explorateur:
+triangle - dossier parent
+gauche/droite - menu périphérique
+haut/bas - navigation
+croix - action
+select+cercle - éteindre la console
+select+R1 - ajustement image droite
+select+L1 - ajustement image gauche
+select+R2 - ajustement image bas
+select+L2 - ajustement image haut
+select+carré - sauvegarder
+select+triangle - Navigateur PS2
+L1+L2+R1+R2 - Crédits
+Lecteur:
+haut/bas - ajuster volume
+droite/gauche - avancer/reculer
+croix - sortir du mode avancer/reculer
+triangle - stop
+select - pause/curseur
+start - reprendre/menu
+croix - temps
+carré - pan-scan 
+L1 - déplacer à gauche
+R1 - déplacer à droite
+rond - V/A (S/V) synchronisation
+L2 - synchronisation -
+R2 - synchronisation +
+Menu SMS:
+X/O - action/validation
+triangle - dossier parent/sortie
+Erreur (pressez "X" pour continuer)...
+Sauvegarde IPCONFIG.DAT...
+Couleur barre de sélection
+Options avancées...
+Hauteur d'affichage
+Appliquer les changements
+Options avancées
+Sample
+English
+Français
+Langage
+Chargement des indices...
+Chargenment des sous-titres...
+Sous-titres: %s erreur (%d), appuyez sur "X" pour continuer...
+format
+séquence
+Bufferisation %s fichier...
+Détection du format...
+Pause
+Arrêt
+défaut
+V/A:
+S/V:
+Lecture 
+avance rapide >> 
+<< retour
+Position
+Format non supporté (pressez "X" pour continuer)...
+temps restant
+Menu lecteur
+Affichage
+format respecté
+pan-scan 1
+pan-scan 2
+pan-scan 3
+plein écran
+Afficher sous-titres
+Sélection sous-titres
+Navigateur PS2
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Sortir vers
+Sound FX
+S/PDIF - Dolby Digital/DTS
+Réglages MP3...
+Playlist aléatoire
+Mode répétition
+Afficher le spectre audio
+Copier vers DD
+Copie en cours
+Ko/s
+Choisir une action
+Résolution des couleurs
+32 bits
+16 bits
+DTV 480P
+Controleur port 2
+joystick
+télécommande
+Sélection de niveau AC3
+droite
+VESA (60Hz)
+VESA (75Hz)
+Ecran large
+Large pan-scan 1
+Large pan-scan 2
+Protocole réseau
+ps2dev/host
+SMB/CIFS
+Erreur de communication (appuyer sur "X" pour continuer)...
+Erreur de négociation de protocole (%d) (appuyer sur "X" pour continuer)...
+Erreur de connection (%d) (appuyer sur "X" pour continuer)...
+Sous-titres
+Désactiver CD/DVD
+Afficher la longueur
+Lecture %s...
+Erreur: Plus de mémoire
+Vérification de l'espace libre...
+Erreur: espace libre HDD insuffisant
+Création du répertoire...
+Effacer
+Effaçage...
+Vitesse CD/DVD
+moyenne
+rapide
+basse
+Boutons directionnels
+DTV 1080I
+DTV 720P
+Mode d'opération
+Autonégociation
+Automatique
+Manuel
+Mode Duplex
+Full
+Half
+Standard
+10Base-T
+100Base-TX
+Réglages réseau...
+Réglages réseau
+Paramètre 1 de synch. (video)
+Paramètre 2 de synch. (GUI)
+Serveur SMB...
+Interrompre la connection en attente...
+Rafraichir la langue de SMS
+Rafraichir la palette de SMS
+Rafraichir SMS
+Rafraichir Liste du Serveur SMB
+Ajouter l'image de fond
+Traitement...
+Création Sauvegarde SMS...
+Lire la totalité
+Audio
+Vidéo
+Paramètre Autodétection
+Démarrer la lecture depuis
+centre-droit
+Utiliser le Gestionnaire d'exception
+Sous-Titres MBCS
+Chargement de la police...
+Chargement indices ODML %d...
+Taille du Fichier: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+ch
+Mémoire disponible: %.1fMo/%.2fMo
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

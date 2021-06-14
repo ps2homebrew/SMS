@@ -1,0 +1,269 @@
+Dostêpne media:   
+Brak
+Inicjalizacja programu...
+Zapisywanie ustawieñ...
+Wczytywanie %s...
+Inicjalizacja sieci...
+Lokalizacja USBD.IRX...
+Oczekiwanie na media (naciœnij START, aby zobaczyæ menu)...
+Odczyt dysku...
+Nieprawid³owy dysk (naciœnij X, aby kontynuowaæ)...
+Odczyt mediów...
+Ustawienia obrazu...
+Ustawienia urz¹dzeñ...
+Ustawienia browsera...
+Ustawienia odtwarzacza...
+Pomoc...
+Zapisz ustawienia
+Wy³¹cz konsolê
+WyjdŸ do browsera
+System TV
+PAL
+NTSC
+Auto
+Zestaw znaków:
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Ustawienia obrazu
+Menu programu
+Przesuñ obraz w lewo
+Przesuñ obraz w prawo
+Przesuñ obraz w górê
+Przesuñ obraz w dó³
+Automatycznie uruchom sieæ
+Automatycznie uruchom USB
+Automatycznie uruchom HDD
+Ustawienia urz¹dzeñ
+Uruchom obs³ugê sieci
+Uruchom obs³ugê HDD
+Uruchom obs³ugê USB
+Edytuj IPCONFIG.DAT...
+Edytuj IPCONFIG.DAT
+Adres IP 1
+Adres IP 2
+Adres IP 3
+Adres IP 4
+Maska podsieci 1
+Maska podsieci 2
+Maska podsieci 3
+Maska podsieci 4
+Brama domyœlna 1
+Brama domyœlna 2
+Brama domyœlna 3
+Brama domyœlna 4
+Zapisz ustawienia IPCONFIG.DAT
+Ustawienia browsera
+Wstaw obraz jako t³o
+Sortuj obiekty systemowe
+Filtruj pliki multimedialne
+Wyœwietlaj partycje HDL
+Ukryj partycje systemowe
+Kolor aktywnego okna
+Kolor nieaktywnego okna
+Kolor czcionki
+Kolor paska statusu
+Ustawienia odtwarzacza
+Domyœlna g³oœnoœæ
+Wyrównanie napisów
+Wysokoœæ napisów
+Automatycznie ³aduj napisy
+Nieprzezroczyste napisy
+Kolor napisów
+Kolor pogrubienia
+Kolor kursywy
+Kolor podkreœlenia
+Automat. wy³¹cz konsolê
+D³ugoœæ paska przewijania
+Pozycja paska przewijania
+Poka¿ czas na pasku przewij.
+Kolor paska przewijania
+Kolor paska g³oœnoœci
+Animacja przy odtwarz. mp3
+góra 
+dó³
+wy³¹cz
+œrodek
+lewo
+%d minut(y)
+%d pkt
+Szerokoœæ czcionki napisów
+Wysokoœæ czcionki napisów
+Szybka pomoc
+ 
+Podczas uruchamiania:
+SELECT+R1 - tryb NTSC
+SELECT+R2 - tryb PAL
+Browser:
+TRÓJK¥T - w górê
+lewo/prawo - menu urz¹dzeñ
+góra/dó³ - nawigacja
+X - wykonaj
+SELECT+O - wy³¹cz konsolê
+SELECT+R1 - przesuñ obraz w prawo
+SELECT+L1 - przesuñ obraz w lewo
+SELECT+R2 - przesuñ obraz w dó³
+SELECT+L2 - przesuñ obraz w górê
+SELECT+KWADRAT - zapisz ustawienia
+SELECT+TRÓJK¥T - wyjdŸ do browsera
+L1+L2+R1+R2 - o programie
+Odtwarzacz:
+góra/dó³ - dostosuj g³oœnoœæ
+prawo/lewo - przewijanie w przód/w ty³
+X - wyjœcie z trybu przewijania
+TRÓJK¥T - stop
+SELECT - pauza/pasek postêpu
+START - wznów/menu
+X - timer/czas/pozosta³o
+KWADRAT - tryb pan-scan
+L1 - pan w lewo
+R1 - pan w prawo
+O - tryb synchronizacji V/A (S/V)
+L2 - zmniejsz wartoœæ synchronizacji
+R2 - zwiêksz wartoœæ synchronizacji
+Menu SMSa:
+X/KÓ£KO - wykonaj/dalej
+TRÓJK¥T - w górê/wyjœcie
+Wyst¹pi³ b³¹d (naciœnij X, aby kontynuowaæ)...
+Zapisujê IPCONFIG.DAT... 
+Kolor paska wyboru
+Zaawansowane ustawienia...
+Wyœwietl obraz na wysokoœci
+Zastosuj zmiany
+Zaawansowane ustawienia
+Tekst przyk³adowy
+Angielski
+Polski
+Jêzyk
+£adowanie filmu...
+£adowanie napisów...
+Napisy: %s b³¹d (%d), naciœnij X, aby kontynuowaæ...
+format
+sekwencja
+Buforowanie %s pliku...
+Wykrywanie formatu pliku...
+Pauza
+Zatrzymywanie
+domyœlny
+V/A:
+S/V:
+Odtwarzanie
+W przód
+Wstecz
+Pauza
+Nieobs³ugiwany format pliku (naciœnij X, aby kontynuowaæ)...
+Pozosta³o
+Menu odtwarzacza
+Wyœwietlanie
+letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+pe³ny ekran
+Wyœwietlaj napisy
+Wybierz napisy
+browsera PS2
+mc0:/BOOT/BOOT.ELF
+mc0:/BEDATA-SYSTEM/BOOT.ELF
+WyjdŸ z SMSa do
+Efekty dŸwiêkowe
+S/PDIF - Dolby Digital/DTS
+Ustawienia MP3...
+Losowe odtwarzanie
+Powtarzanie
+Wyœwietlaj widmo audio
+Kopiuj na HDD
+Kopiowanie
+KB/s
+Wybierz akcjê
+Jakoœæ kolorów
+32 bity
+16 bity
+Progresywne skanowanie 480p
+Drugi port kontrolera
+pad
+pilot
+poziom zasiêgu AC3
+prawo
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Network protocol
+ps2dev/host
+SMB/CIFS
+B³¹d komunikacji (naciœnij X, aby kontynuowaæ)...
+B³¹d negocjacji  protoko³u (%d) (naciœnij X, aby kontynuowaæ)...
+B³¹d logowania (%d) (naciœnij X, aby kontynuowaæ)...
+Napisy
+Wy³¹cz CD/DVD
+Szerokoœæ ekranu
+Odczyt %s...
+B³¹d: brak miejsca
+Sprawdzanie dostêpnego miejsca...
+B³¹d: za ma³o wolnego miejsca na HDD
+Tworzenie drzewa katalogu...
+Usuñ
+Usuwanie...
+Prêdkoœæ CD/DVD
+œrednia
+wysoka
+ma³a
+Przyciski kierunkowe
+DTV 1080I
+DTV 720P
+Tryb pracy
+auto-negocjacja
+automatyczny
+rêczny
+Typ duplexu
+pe³ny
+po³owiczny
+Standard
+10Base-T
+100Base-TX
+Ustawienia sieciowe...
+Ustawienia sieciowe
+Parametr synch. 1 (video)
+Parametr synch. 2 (GUI)
+Serwer SMB...
+Zrywanie oczekuj¹cego po³¹czenia...
+Aktualizacja jêzyka SMS'a
+Aktualizacja palety SMS'a
+Aktualizacja SMS'a
+Aktualizacja listy serwerów SMB
+Dodaj obraz t³a
+Przetwarzam...
+Tworzê kopiê SMS'a...
+Odtwórz wszystko
+DŸwiêk
+Obraz
+Auto detektor parametrów
+Rozpocznij odtwarzanie od
+Wyœrodkowanie od prawej
+U¿yj wyj¹tków handler
+Napisy MBCS
+£adowanie czcionki...
+£adowanie indeksów ODML %d...
+Rozmiar pliku: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+kana³(y)
+Dostêpna pamiêæ: %.1fMB/%.2fMB
+Wznów odtwarzanie z %s ? ('krzy¿yk'='tak', 'trójk¹t'='nie')
+Offset obrazu
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

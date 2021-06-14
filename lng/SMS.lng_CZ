@@ -1,0 +1,269 @@
+Dostupna media:  
+zadna
+Inicializace SMS...
+Ukladani konfigurace...
+Nacitani %s...
+Inicializace site...
+Hledani USBD.IRX...
+Cekani na medium (stisknete "START" pro Menu)...
+Cteni disku...
+Neplatny disk (stisknete "KRIZEK" pro pokracovani)...
+Cteni media...
+Nastaveni Zobrazeni...
+Nastaveni Zarizeni...
+Nastaveni Prohlizece...
+Nastaveni Prehravace...
+Napoveda...
+Ulozit nastaveni
+Vypnout konzoli
+Ukoncit SMS
+TV system
+PAL
+NTSC
+Auto
+Znakova sada
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Nastaveni Zobrazeni
+SMS Menu
+Posunout obraz doleva
+Posunout obraz doprava
+Posunout obraz nahoru
+Posunout obraz dolu
+Automaticka inicializace site
+Automaticka inicializace USB
+Automaticka inicializace HDD
+Nastaveni Zarizeni
+Spustit inicializaci site
+Spustit inicializaci HDD
+Spustit inicializaci USB
+Editovat IPCONFIG.DAT...
+Editace IPCONFIG.DAT
+IP adresa (prvni cislo)
+IP adresa (druhe cislo)
+IP adresa (treti cislo)
+IP adresa (ctvrte cislo)
+Sitova maska (prvni cislo)
+Sitova maska (druhe cislo)
+Sitova maska (treti cislo)
+Sitova maska (ctvrte cislo)
+Adresa brany (prvni cislo)
+Adresa brany (druhe cislo)
+Adresa brany (treti cislo)
+Adresa brany (ctvrte cislo)
+Ulozit/Aktualizovat IPCONFIG.DAT
+Nastaveni Prohlizece
+Pouzivat obrazek na pozadi
+Tridit objekty soubor.systemu
+Filtrovat soubory medii
+Zobrazovat oddily HDL
+Skryvat systemove oddily
+Barva aktivniho ramecku
+Barva neaktivniho ramecku
+Barva textu
+Barva textu ve stavovem radku
+Nastaveni Prehravace
+Vychozi hlasitost
+Zarovnavani titulku
+Odsazeni titulku
+Automaticke nacitani titulku
+Nepruhledne titulky
+Barva titulku
+Barva tucnych titulku
+Barva titulku kurzivou
+Barva podtrzeni titulku
+Automaticke vypnuti konzole
+Delka posuvniku
+Pozice posuvniku
+Zobrazovat cas u posuvniku
+Barva posuvniku
+Barva posuvniku hlasitosti
+Zobrazovat animaci u audia
+nahore
+dole
+neaktivni
+na stred
+vlevo
+%d minut
+%d bodu
+Sirka fontu titulku
+Vyska fontu titulku
+Rychla napoveda
+ 
+Pri startu:
+SELECT+R1 - NTSC mod
+SELECT+R2 - PAL mod
+Prohlizec:
+TROJUHELNIK - Nadrazena slozka
+VLEVO/VPRAVO - Menu zarizeni
+NAHORU/DOLU - Pohyb slozkou
+KRIZEK - Akce
+SELECT+KROUZEK - Vypnout konzoli
+SELECT+R1 - Posunout obraz doprava
+SELECT+L1 - Posunout obraz doleva
+SELECT+R2 - Posunout obraz dolu
+SELECT+L2 - Posunout obraz nahoru
+SELECT+CTVEREC - Ulozit nastaveni
+SELECT+TROJUHELNIK - Prohlizec boot sekce
+L1+L2+R1+R2 - Zobrazit "O programu"
+Prehravac:
+NAHORU/DOLU - Nastaveni hlasitosti
+VPRAVO/VLEVO - Mod rychleho previjeni
+KRIZEK - Ukonceni modu rychleho previjeni
+TROJUHELNIK - Stop
+SELECT - Pauza/Casovy prehled
+START - Pokracovat/Menu
+KRIZEK - Zobrazeni casu
+CTVEREC - Mod pan-scan
+L1 - leva cast pan-scan
+R1 - prava cast pan-scan
+KRUH - Synchronizacni mod A/V (Titulky/V)
+L2 - zmensi synchronizacni hodnotu
+R2 - zvetsi synchronizacni hodnotu
+SMS menu:
+KRIZEK/KROUZEK-Akce/Presunuti do slozky
+TROJUHELNIK-Nadrazena slozka/Ukonceni menu
+Chyba (stisknete "KRIZEK" pro pokracovani)...
+Ukladani IPCONFIG.DAT...
+Barva pasu vyberu
+Pokrocile nastaveni...
+Vyska displeje
+Pouzit nastaveni
+Pokrocile nastaveni
+Vzorek
+Anglictina
+Cestina (Uzivatelska)
+Jazyk
+Nacitani indexu...
+Nacitani titulku...
+Titulky: %s chyba (%d), stisknete "KRIZEK" pro pokracovani...
+format
+sekvence
+Nacitani souboru %s do vyrovnavaci pameti...
+Detekce formatu souboru...
+Pauza
+Zastavovani
+vychozi
+V/A:
+T/V:
+Prehravani
+Rychle previjeni vpred
+Rychle previjeni vzad
+Pozice
+Nepodporovany format souboru (stisknete "KRIZEK" pro pokracovani)...
+Zbyvajici cas
+Menu prehravace
+Zobrazeni
+Letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+cela obrazovka
+Zobrazovat titulky
+Vybrat titulky
+prohlizece boot sekce
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Po ukonceni jit do
+Zvukove efekty
+S/PDIF - Dolby Digital/DTS
+Nastaveni MP3...
+Nahodny playlist
+Mod opakovani
+Zobrazovat audio spektrum
+Zkopirovat na HDD
+Kopirovani
+KB/s
+Vyberte akci
+Barevna hloubka
+32 bitu
+16 bitu
+DTV 480P
+Port ovladace 2
+joystick
+dalkovy ovladac
+Uroven rozsahu AC3
+vpravo
+VESA (60Hz)
+VESA (75Hz)
+16:9
+siroky pan-scan 1
+siroky pan-scan 2
+Sitovy protokol
+ps2dev/host
+SMB/CIFS
+Chyba komunikace (stisknete "KRIZEK" pro pokracovani)...
+Chyba jednani protokolu (%d) (stisknete "KRIZEK" pro pokracovani)...
+Chyba prihlaseni (%d) (stisknete "KRIZEK" pro pokracovani)...
+Titulky
+Zakazat CD/DVD?
+Sirka displeje
+Nacitani %s...
+Chyba: Plna pamet
+Kontrola volneho mista...
+Chyba: neni dost volneho mista na HDD
+Vytvareni stromu slozek...
+Vymazat
+Mazani...
+Rychlost CD/DVD
+stredni
+vysoka
+nizka
+Smerova tlacitka
+DTV 1080i
+DTV 720p
+Operacni mod
+auto-negotiation
+automaticky
+rucne
+Duplexni mod
+full
+half
+Standard
+10Base-T
+100Base-TX
+Nastavovani site...
+Nastaveni site
+Synchronizacni parameter 1 (video)
+Synchronizacni parameter 2 (GUI)
+SMB server...
+Ukoncovani nevyrizeneho spojeni...
+Aktualizace jazyka SMS
+Aktualizace palety SMS
+Aktualizace SMS
+Aktualizace seznamu serveru SMB
+Pridat obrazek pozadi
+Zpracovani...
+Vytvareni zalohy SMS...
+Prehrat vse
+Audio
+Video
+Parametr Autodetekce
+Start prehravani od
+stred-doprava
+Pouzit obsluhu vyjimky
+?Subtitle MBCS
+?Loading font...
+?Loading ODML indices %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

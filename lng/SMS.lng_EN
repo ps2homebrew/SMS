@@ -1,0 +1,269 @@
+Available media:  
+none
+Initializing SMS...
+Saving configuration...
+Loading %s...
+Initializing network...
+Locating USBD.IRX...
+Waiting for media (press "start" for menu)...
+Reading disk...
+Illegal disk (press "cross" to continue)...
+Reading media...
+Display settings...
+Device settings...
+Browser settings...
+Player settings...
+Help...
+Save settings
+Shutdown console
+Exit SMS
+TV system
+PAL
+NTSC
+Auto
+Character set
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Display settings
+SMS Menu
+Adjust image left
+Adjust image right
+Adjust image up
+Adjust image down
+Autostart network
+Autostart USB
+Autostart HDD
+Device settings
+Start network support
+Start HDD support
+Start USB support
+Edit IPCONFIG.DAT...
+Edit IPCONFIG.DAT
+IP Address (octet 1)
+IP Address (octet 2)
+IP Address (octet 3)
+IP Address (octet 4)
+Net Mask (octet 1)
+Net Mask (octet 2)
+Net Mask (octet 3)
+Net Mask (octet 4)
+Gateway Address (octet 1)
+Gateway Address (octet 2)
+Gateway Address (octet 3)
+Gateway Address (octet 4)
+Save/Update IPCONFIG.DAT
+Browser settings
+Use background image
+Sort filesystem objects
+Filter media files
+Display HDL partitions
+Hide system partitions
+Active border color
+Inactive border color
+Text color
+Status line text color
+Player settings
+Default volume
+Subtitle alignment
+Subtitle offset
+Autoload subtitles
+Opaque subtitles
+Subtitle color
+Subtitle bold color
+Subtitle italic color
+Subtitle underline color
+Auto power-off
+Scroll bar length
+Scroll bar position
+Display scroll bar time
+Scroll bar color
+Volume bar color
+Audio animation display
+top
+bottom
+off
+center
+left
+%d min
+%d pts
+Subtitle font width
+Subtitle font height
+Quick help
+ 
+At startup:
+select+R1 - NTSC mode
+select+R2 - PAL mode
+Browser:
+triangle - parent directory
+left/right - device menu
+up/down - navigate directory
+cross - action
+select+circle - power off
+select+R1 - adjust image right
+select+L1 - adjust image left
+select+R2 - adjust image down
+select+L2 - adjust image up
+select+square - save settings
+select+triangle - boot browser
+L1+L2+R1+R2 - display about
+Player:
+up/down - adjust volume
+right/left - FFWD/REW mode
+cross - exit FFWD/REW mode
+triangle - stop
+select - pause/timeline
+start - resume/menu
+cross - OSD timer
+rectangle - pan-scan mode
+L1 - pan left
+R1 - pan right
+circle - V/A (S/V) sync mode
+L2 - derease sync value
+R2 - increase sync value
+SMS menu:
+cross/circle - action/next level
+triangle - level up/exit menu
+Error (press "cross" to continue)...
+Saving IPCONFIG.DAT...
+Selection bar color
+Advanced settings...
+Display height
+Apply settings
+Advanced settings
+Sample
+English
+English (User)
+Language
+Loading indices...
+Loading subtitles...
+Subtitle: %s error (%d), press "cross" to continue...
+format
+sequence
+Buffering %s file...
+Detecting file format...
+Pause
+Stopping
+default
+V/A:
+S/V:
+Play 
+FFwd 
+ Rev 
+Curs
+Unsupported file format (press "cross" to continue)...
+Rem
+Player menu
+Display
+letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+fullscreen
+Display subtitles
+Select subtitles
+boot browser
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Exit to
+Sound FX
+S/PDIF - Dolby Digital/DTS
+MP3 settings...
+Randomize playlist
+Repeat mode
+Audio spectrum display
+Copy to HDD
+Copying
+KB/s
+Select action
+Color resolution
+32 bit
+16 bit
+DTV 480P
+Controller port 2
+gamepad
+remote control
+AC3 range level
+right
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Network protocol
+ps2dev/host
+SMB/CIFS
+Communication error (press "cross" to continue)...
+Protocol negotiation error (%d) (press "cross" to continue)...
+Login error (%d) (press "cross" to continue)...
+Subtitles
+Disable CD/DVD
+Display width
+Reading %s...
+Error: out of memory
+Checking free space...
+Error: not enough free space on HDD
+Creating directory tree...
+Delete
+Deleting...
+CD/DVD speed
+medium
+high
+low
+Directional buttons
+DTV 1080I
+DTV 720P
+Operating mode
+auto-negotiation
+automatic
+manual
+Duplex mode
+full
+half
+Standard
+10Base-T
+100Base-TX
+Network settings...
+Network settings
+Synch. parameter 1 (video)
+Synch. parameter 2 (GUI)
+SMB server...
+Terminating pending connection...
+Update SMS language
+Update SMS palette
+Update SMS
+Update SMB server list
+Add background image
+Processing...
+Creating SMS backup...
+Play all
+Audio
+Video
+Autodetection parameter
+Start playback from
+center-right
+Use exception handler
+Subtitle MBCS
+Loading font...
+Loading ODML indices %d...
+File size: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+ch
+Available memory: %.1fMB/%.2fMB
+Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+Image offset
+Video resolution is too big (press 'cross' to continue)...
+Synch. parameter 3 (audio)
+Images
+Unsupported or corrupted image
+Reset button action
+power off
+exit
+Video auto 2:2 pulldown
+DTV 576p

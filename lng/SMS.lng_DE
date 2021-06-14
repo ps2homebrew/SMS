@@ -1,0 +1,269 @@
+Verfügbare Medien:  
+keine
+Initialisiere SMS...
+Konfiguration sichern...
+Lade %s...
+Initialisiere Netzwerk...
+Finde USBD.IRX...
+Warte auf Datenträger (drücke "Start" für Menü)...
+Lese Datenträger...
+Unerlaubter Datenträger (drücke "Kreuz" zum Fortsetzen)...
+Lese Medium...
+Bildschirm Einstellungen...
+Geräte Einstellungen...
+Browser Einstellungen...
+Player Einstellungen...
+Hilfe...
+Einstellungen sichern
+Konsole ausschalten
+SMS verlassen
+Fernsehnorm
+PAL
+NTSC
+Auto
+Zeichensatz
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Bildschirm Einstellungen
+SMS Menü
+verschiebe Bild nach links
+verschiebe Bild nach rechts
+verschiebe Bild noch oben
+verschiebe Bild nach unten
+Autostart Netzwerk
+Autostart USB
+Autostart HDD
+Geräte Einstellungen
+Starte Netzwerk Unterstützung
+Starte HDD Unterstützung
+Starte USB Unterstützung
+IPCONFIG.DAT bearbeiten...
+IPCONFIG.DAT bearbeiten
+IP Adresse (Oktett 1)
+IP Adresse (Oktett 2)
+IP Adresse (Oktett 3)
+IP Adresse (Oktett 4)
+Netzwerk Maske (Oktett 1)
+Netzwerk Maske (Oktett 2)
+Netzwerk Maske (Oktett 3)
+Netzwerk Maske (Oktett 4)
+Gateway Adresse (Oktett 1)
+Gateway Adresse (Oktett 2)
+Gateway Adresse (Oktett 3)
+Gateway Adresse (Oktett 4)
+IPCONFIG.DAT sichern/aktualisieren
+Browser Einstellungen
+Hintergrundbild anzeigen
+Dateisystem sortiert anzeigen
+Nur Medien Dateien anzeigen
+HDL Partitionen anzeigen
+System Partitionen verbergen
+Farbe für aktive Rahmen
+Farbe für inaktive Rahmen
+Textfarbe
+Textfarbe der Statuszeile
+Player Einstellungen
+Voreinstellung für Lautstärke
+Untertitel Ausrichtung
+Untertitel Versatz
+Untertitel automatisch laden
+Untertitel undurchsichtig
+Farbe für Untertitel
+Farbe für fette Untertitel
+Farbe für kursive Untertitel
+Farbe für unterstrichene Untertitel
+Automatisch ausschalten
+Länge der Bildlaufleiste
+Position der Bildlaufleiste
+Zeitleiste anzeigen
+Farbe der Bildlaufleiste
+Farbe der Lautstärkenleiste
+Audio Bildschirmanimation an
+Anfang
+Ende
+Aus
+Mitte
+Links
+%d min
+%d pts
+Untertitel Zeichensatzweite
+Untertitel Zeichensatzhöhe
+schnelle Hilfe
+ 
+Beim Starten:
+Select + R1 - NTSC Modus
+Select + R2 - PAL Modus
+Browser:
+Dreieck - vorheriges Verzeichnis
+Links/Rechts - Gerätemenü
+Oben/Unten - Verzeichnis Navigation
+Kreuz - ausführen
+Select + Kreis - ausschalten
+Select + R1 - verschiebt Bild nach rechts
+Select + L1 - verschiebt Bild nach links
+Select + R2 - verschiebt Bild nach unten
+Select + L2 - verschiebt Bild nach oben
+Select + Viereck - Einstellungen sichern
+Select + Dreieck - Browser booten
+L1 + L2 + R1 + R2 - About... Bildschirm anzeigen
+Player:
+Oben/Unten - Lautstärke einstellen
+Rechts/Links - schneller Vor-/Rücklauf
+Kreuz - schnellen Vor-/Rücklauf stoppen
+Dreieck - Stopp
+Select - Pause/Zeitlinie
+Start - Fortsetzen/Menü
+Kreuz - Zeitanzeige
+Viereck - pan-scan Modus
+L1 - pan links
+R1 - pan rechts
+Kreis - V/A (S/V) Sync. Modus
+L2 - Sync. Wert herabsetzen
+R2 - Sync. Wert heraufsetzen
+SMS Menü:
+Kreuz/Kreis - ausführen/nächste Ebene
+Dreieck - Ebene nach oben/Menü verlassen
+Fehler (drücke "Kreuz" zum Fortfahren)...
+sichere IPCONFIG.DAT...
+Auswahlleisten Farbe
+Erweiterte Einstellungen...
+Bildschirmhöhe
+Einstellungen übernehmen
+Erweiterte Einstellungen
+Beispiel
+Englisch
+Deutsch
+Sprache
+Lade Indices...
+Lade Untertitel...
+Untertitel: %s Fehler (%d), drücke "Kreuz" zum Fortfahren...
+Format
+Sequenz
+Puffern %s Datei...
+Untersuche Dateiformat...
+Pause
+Stoppen
+Voreinstellung
+V/A:
+S/V:
+Play 
+FFwd 
+ Rev 
+Curs
+Nicht unterstütztes Dateiformat (drücke "Kreuz" zum Fortfahren)...
+Rem
+Player Menü
+Bildschirm
+briefkasten
+pan-scan 1
+pan-scan 2
+pan-scan 3
+Vollbild
+Untertitel anzeigen
+Untertitel Auswahl
+PS2 Browser
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Verlasse zu
+Sound Effekte
+S/PDIF - Dolby Digital/DTS
+MP3 Einstellungen...
+Zufällige Reihenfolge
+Wiederholung
+Audio Spektrum anzeigen
+Kopie zur HDD
+kopiere
+KB/s
+Wähle Aktion
+Farbauflösung
+32 bit
+16 bit
+DTV 480P
+Kontrolleranschluss 2
+Gamepad
+Fernbedienung
+AC3 Bereichshöhe
+rechts
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Netzwerk Protokoll
+ps2dev/host
+SMB/CIFS
+Kommunikationsfehler (drücke "Kreuz" zum Fortfahren)...
+Protokoll Aushandlungsfehler (%d) (drücke "Kreuz" zum Fortfahren)...
+Anmeldefehler (%d) (drücke "Kreuz" zum Fortfahren)...
+Untertitel
+Deaktiviere CD/DVD
+Bildschirmbreite
+Lese %s...
+Fehler: zu wenig Speicher
+Überprüfe freien Speicherplatz...
+Fehler: nicht genügend freier Speicherplatz auf HDD
+Erstelle Verzeichnisbaum...
+Löschen
+Lösche...
+CD/DVD Geschwindigkeit
+mittel
+hoch
+niedrig
+Richtungstasten
+DTV 1080I
+DTV 720P
+Betriebsmodus
+auto-negotiation
+automatisch
+manuell
+Duplex Modus
+voll
+halb
+Standard
+10Base-T
+100Base-TX
+Netzwerk Einstellungen...
+Netzwerk Einstellungen
+Synchronisationsparameter 1 (video)
+Synchronisationsparameter 2 (GUI)
+SMB Server...
+Trenne bestehende Verbindung...
+SMS-Sprachdatei aktualisieren
+SMS-Farbpalette aktualisieren
+SMS aktualisieren
+SMB-Serverliste aktualisieren
+Hintergrundbild hinzufügen
+Bearbeite...
+Erstelle SMS Sicherung...
+Alle Abspielen
+Audio
+Video
+Parameter für autom. Erkennung
+Starte Wiedergabe von
+rechts-zentriert
+Fehlerbehandlung benutzen
+Untertitel MBCS
+Lade Schriftart...
+Lade ODML Indexe %d...
+Dateigröße: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+ch
+Verfügbarer Speicher: %.1fMB/%.2fMB
+Wiedergabe von %s fortsetzen? ('Kreuz'='Ja', 'Dreieck'='Nein')
+Bildposition
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

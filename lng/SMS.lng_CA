@@ -1,0 +1,269 @@
+Interfície:  
+cap
+Engegant SMS...
+Guardant la configuració...
+Carregant %s...
+Engegant la Xarxa...
+Trobant USBD.IRX...
+Esperant el medi (prem "Start" pel Menú)...
+Llegint el Disc...
+Disc Il·legal (prem "Creu" per continuar)...
+Llegint el medi...
+Opcions de Pantalla...
+Opcions de Dispositiu...
+Opcions de Navegador...
+Opcions de Reproductor...
+Ajuda...
+Guardar Configuració
+Apagar Consola
+Sortir de SMS
+Sistema TV
+PAL
+NTSC
+Automàtic
+Mapa de Caràcters
+Llatí 1
+Llatí 2
+Ciríl·lic
+Grec
+Opcions de Pantalla
+Menú SMS
+Moure Imatge a l'Esquerra
+Moure Imatge a la Dreta
+Moure Imatge Amunt
+Moure Imatge Avall
+Autoengegar Xarxa
+Autoengegar USB
+Autoengegar HDD
+Opcions de Dispositius
+Engegar Suport de Xarxa
+Engegar Suport de HDD
+Engegar Suport de USB
+Editar IPCONFIG.DAT...
+Editar IPCONFIG.DAT
+Direcció IP (octet 1)
+Direcció IP (octet 2)
+Direcció IP (octet 3)
+Direcció IP (octet 4)
+Màscara (octet 1)
+Màscara (octet 2)
+Màscara (octet 3)
+Màscara (octet 4)
+Porta d'Enllaç (octet 1)
+Porta d'Enllaç (octet 2)
+Porta d'Enllaç (octet 3)
+Porta d'Enllaç (octet 4)
+Guardar/Actualitzar IPCONFIG.DAT
+Opcions de Navegador
+Usar Imatge de Fons
+Ordenar Arxius
+Filtrar Arxius Multimèdia
+Ensenyar Particions HDL
+Amagar Particions de Sistema
+Color de Contorn Actiu
+Color de Contorn Inactiu
+Color de Texte
+Color de Línia d'Estat
+Opcions de Reproductor
+Volum Predeterminat
+Aliniament de Subtítol
+Alçada de Subtítol
+Autocarregar Subtítol
+Fons Opac de Subtítol
+Color Subtítol Normal
+Color Subtítol Negreta
+Color Subtítol Itàlica
+Color Subtítol Subratllat
+Apagat Automàtic
+Longitud de Cursor
+Posició de Cursor
+Mostrar Temps en Cursor
+Color de Cursor
+Color de Barra de Volum
+Animació d'Àudio
+Amunt
+Avall
+no
+Centrat
+Esq.
+%d min
+%d pts
+Amplada Font Subtítol
+Alçada Font Subtítol
+Ajuda Ràpida
+ 
+A l'Inici:
+Select+R1 - Mode NTSC
+Select+R2 - Mode PAL
+Navegador:
+Triangle - Directori Amunt
+Esquerra/Dreta - Seleccinar Dispositiu
+Amunt/Avall - Navegar Directori
+Creu - Acció
+Select+Cercle - Apagar
+Select+R1 - Ajustar Imatge Dreta
+Select+L1 - Ajustar Imatge Esquerra
+Select+R2 - Ajustar Imatge Amunt
+Select+L2 - Ajustar Imatge Abaix
+Select+Quadrat - Guardar Config.
+Select+Triangle - Navegador PS2
+L1+L2+R1+R2 - Crèdits
+Reproductor:
+Amunt/Avall - Ajustar Volum
+Dreta/Esquerra - Mode Avanç/Retr.
+Creu - Sortir Mode Avanç/Retrocés
+Triangle - Aturar
+Select - Pausa/Cursor
+Start - Continuar/Menú
+Creu - Ensenya temps
+Quadrat - Mode Zoom
+L1 - Moure Esquerra
+R1 - Moure Dreta
+Cercle - V/A (S/V) Sincronització
+L2 - Decrementar Sincronització
+R2 - Augmentar Sincronització
+Menú SMS:
+Creu/Cercle - Acció/Següent Nivell
+Triàngle - Pujar Nivell/Sortir Menú
+Error (prem "Creu" per a continuar)...
+Guardant IPCONFIG.DAT...
+Color de Barra Selecció
+Opcions Avançades...
+Alçada de Pantalla
+Aplicar Configuració
+Opcions Avançades
+Exemple d'Ajust
+English
+Català
+Idioma
+Carregant Índexs...
+Carregant Subtítols...
+Subtítol: %s error (%d), prem "Creu" per continuar...
+Format
+Seqüència
+Guardant Arxiu %s...
+Detectant Format d' Arxiu...
+Pausa
+Aturar
+Pista 1
+V/A:
+S/V:
+Reproduir 
+Avançar 
+Retrocedir 
+Cursor
+Format no Suportat (prem "Creu" per continuar)...
+Restant
+Menú de Reproductor
+Ajust de Pantalla
+Original
+Zoom 1
+Zoom 2
+Zoom 3
+Pantalla Completa
+Mostrar Subtítols
+Seleccionar Subtítols
+Navegador PS2
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Reiniciar i Carregar
+Efectes de So
+S/PDIF - Dolby Digital/DTS
+Configuració MP3
+Llista a l'Atzar
+Mode de Repetició
+Mostrar Espectre d'Àudio
+Copiar al HDD
+copiant
+KB/s
+Seleccionar Acció
+Resolució de Color
+32 bit
+16 bit
+DTV 480P
+Control Port 2
+Comandament de Joc
+Control Remot
+Rang de nivell AC3
+Dreta
+VESA (60Hz)
+VESA (75Hz)
+Pantalla Ampla
+Pantalla Ampla Zoom 1
+Pantalla Ampla Zoom 2
+Protocol de Xarxa
+ps2dev/host
+SMB/CIFS
+Error de comunicació (prem "Creu" per continuar)...
+Error de negociació de Protocol (%d) (prem "creu" per continuar)...
+Error d'Identificació (%d) (prem "Creu" per continuar)...
+Subtítols
+Desactivar CD/DVD
+Ample de visualització
+Llegint %s...
+Error: memòria esgotada
+Comprovant espai lliure...
+Error: no hi ha suficient espai lliure al HDD
+Creant arbre de directoris...
+Eliminar
+Eliminant...
+Velocitat CD/DVD
+mitjana
+alta
+baixa
+Botons direccionals
+DTV 1080I
+DTV 720P
+Mode d'operació
+auto-negociació
+automàtic
+manual
+mode Duplex
+senser
+mig
+Estàndard
+10Base-T
+100Base-TX
+Ajustos de Xarxa...
+Ajustos de Xarxa
+Paràmetre de sincronització 1 (video)
+Paràmetre de sincronització 2 (GUI)
+Servidor SMB...
+Acabant connexió pendent...
+Actualitzar idioma de SMS
+Actualitzar paleta de SMS
+Actualitzar SMS
+Actualitzar llista de servidors SMB
+Afegir fons de pantalla
+Processant...
+Creant còpia de seguretat de SMS...
+Reproduir tot
+Àudio
+Vídeo
+Paràmetre d'autodetecció
+Començar reproducció des de
+?center-right
+?Use exception handler
+?Subtitle MBCS
+?Loading font...
+?Loading ODML indices %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

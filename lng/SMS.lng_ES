@@ -1,0 +1,269 @@
+Interfaz:  
+ninguna
+Inicializando SMS...
+Guardando configuración...
+Cargando %s...
+Inicializando Red...
+Localizando USBD.IRX...
+Esperando Medio (presionar "Start" para Menú)...
+Leyendo Disco...
+Disco Ilegal (presionar "Cruz" para continuar)...
+Leyendo Medio...
+Opciones de Pantalla...
+Opciones de Dispositivo...
+Opciones de Navegador...
+Opciones de Reproductor...
+Ayuda...
+Guardar Configuración
+Apagar Consola
+Salir de SMS
+Sistema TV
+PAL
+NTSC
+Automático
+Mapa de Caracteres
+Latino 1
+Latino 2
+Cirilico
+Griego
+Opciones de Pantalla
+Menú SMS
+Mover Imagen hacia Izquierda
+Mover Imagen hacia Derecha
+Mover Imagen hacia Arriba
+Mover Imagen hacia Abajo
+Autoiniciar Red
+Autoiniciar USB
+Autoiniciar HDD
+Opciones de Dispositivos
+Iniciar Soporte de Red
+Iniciar Soporte de HDD
+Iniciar Soporte de USB
+Editar IPCONFIG.DAT...
+Editar IPCONFIG.DAT
+Dirección IP (octeto 1)
+Dirección IP (octeto 2)
+Dirección IP (octeto 3)
+Dirección IP (octeto 4)
+Máscara (octeto 1)
+Máscara (octeto 2)
+Máscara (octeto 3)
+Máscara (octeto 4)
+Puerta Enlace (octeto 1)
+Puerta Enlace (octeto 2)
+Puerta Enlace (octeto 3)
+Puerta Enlace (octeto 4)
+Guardar/Actualizar IPCONFIG.DAT
+Opciones de Navegador
+Usar Imágen de Fondo
+Ordenar Archivos
+Filtrar Archivos Multimedia
+Mostrar Particiones HDL
+Ocultar Particiones Sistema
+Color de Borde Activo
+Color de Borde Inactivo
+Color de Texto
+Color de Línea de Estado
+Opciones de Reproductor
+Volumen Predeterminado
+Alineamiento de Subtítulo
+Altura de Subtítulo
+Autocargar Subtítulo
+Fondo Opaco de Subtítulo
+Color Subtítulo Normal
+Color Subtítulo Negrita
+Color Subtítulo Itálica
+Color Subtítulo Subrayado
+Apagado Automático
+Largo de Cursor
+Posición de Cursor
+Mostrar Tiempo en Cursor
+Color de Cursor
+Color de Barra de Volumen
+Animación de Audio
+Arriba
+Abajo
+no
+Centrado
+Izq.
+%d min
+%d pts
+Ancho Fuente Subtítulo
+Altura Fuente Subtítulo
+Ayuda Rápida
+ 
+Al Inicio:
+Select+R1 - Modo NTSC
+Select+R2 - Modo PAL
+Navegador:
+Triángulo - Subir Directorio
+Izquierda/Derecha - Selección Interfaz
+Arriba/Abajo - Navegar Directorio
+Cruz - Acción
+Select+Círculo - Apagar
+Select+R1 - Ajustar Imágen Derecha
+Select+L1 - Ajustar Imágen Izquierda
+Select+R2 - Ajustar Imágen Arriba
+Select+L2 - Ajustar Imágen Abajo
+Select+Cuadrado - Guardar Config.
+Select+Triángulo - Navegador PS2
+L1+L2+R1+R2 - Créditos
+Reproductor:
+Arriba/Abajo - Ajustar Volumen
+Derecha/Izquierda - Modo Avance/Retr.
+Cruz - Salir Modo Avance/Retroceso
+Triángulo - Detener
+Select - Pausa/Cursor
+Start - Continuar/Menú
+Cruz - Mostrar tiempo
+Cuadrado - Modo Zoom
+L1 - Mover Izquierda
+R1 - Mover Derecha
+Círculo - V/A (S/V) Sincronización
+L2 - Decrementar Sincronización
+R2 - Aumentar Sincronización
+Menú SMS:
+Cruz/Círculo - Acción/Siguiente Nivel
+Triángulo - Subir Nivel/Salir Menú
+Error (presionar "Cruz" para continuar)...
+Guardando IPCONFIG.DAT...
+Color de Barra Selección
+Opciones Avanzadas...
+Altura de Pantalla
+Aplicar Configuración
+Opciones Avanzadas
+Ejemplo Ajuste
+Inglés
+Español
+Idioma
+Cargando Índices...
+Cargando Subtítulos...
+Subtítulo: %s error (%d), presionar "Cruz" para continuar...
+Formato
+Secuencia
+Almacenando Archivo %s...
+Detectando Formato de Archivo...
+Pausa
+Detener
+Pista 1
+V/A:
+S/V:
+Reproducir 
+Avanzar 
+Retroceder 
+Cursor
+Formato no Soportado (presionar "Cruz" para continuar)...
+Restante
+Menú de Reproductor
+Ajuste de Pantalla
+Original
+Zoom 1
+Zoom 2
+Zoom 3
+Pantalla Completa
+Mostrar Subtítulos
+Seleccionar Subtítulos
+Navegador PS2
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Reiniciar y Cargar
+Efectos de Sonido
+S/PDIF - Dolby Digital/DTS
+Configuración MP3
+Lista al Azar
+Modo de Repetición
+Mostrar Espectro de Audio
+Copiar al Disco
+copiando
+KB/s
+Seleccionar Acción
+Resolución de Color
+32 bit
+16 bit
+DTV 480P
+Control Puerto 2
+Comando de Juego
+Control Remoto
+Nivel de ragon AC3
+Derecha
+VESA (60Hz)
+VESA (75Hz)
+Pantalla Ancha
+Pantalla Ancha Zoom 1
+Pantalla Ancha Zoom 2
+Protocolo de Red
+ps2dev/host
+SMB/CIFS
+Error de Comunicación (presione "X"  para continuar)...
+Error de Negociación de Protocolo (%d) (presione "X" para continuar)...
+Error de Logueo (%d) (presione "X" para continuar)...
+Subtítulos
+Deshabilitar CD/DVD
+Ancho de visualización
+Leyendo %s...
+Error: memoria acabada
+Comprobando espacio libre...
+Error: no hay suficiente espacio libre en el HDD
+Creando árbol de directorios...
+Eliminar
+Eliminando...
+Velocidad CD/DVD
+mediana
+alta
+baja
+Botones direccionales
+DTV 1080I
+DTV 720P
+Modo de operación
+auto-negociación
+automático
+manual
+Modo Duplex
+entero
+medio
+Estandard
+10Base-T
+100Base-TX
+Ajustes de red...
+Ajustes de red
+Parámetro de sinc. 1 (video)
+Parámetro de sinc. 2 (GUI)
+Servidor SMB...
+Acabando conexión pendiente...
+Actualizar idioma de SMS
+Actualizar paleta de SMS
+Actualizar SMS
+Actualizar lista de servidores SMB
+Añadir fondo de pantalla
+Procesando...
+Creando copia de seguridad de SMS...
+Reproducir todo
+Audio
+Vídeo
+Parámetro de autodetección
+Empezar reproducción desde
+Centrado-Derecha
+Manejador de excepciones
+Subtítulo MBCS
+Cargando letra...
+Cargando índices ODML %d...
+Tamaño: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+ch
+Memoria disponible: %.1fMB/%.2fMB
+Continuar reproducción desde %s ? ('cruz'='si', 'triangulo'='no')
+Desplazamiento de imágen
+Resolución de Video muy grande ('cruz' para continuar)...
+Parámtero de sinc. 3 (audio)
+Imágenes
+Imágen no soportada o corrupta
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

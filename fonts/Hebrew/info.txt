@@ -1,0 +1,17 @@
+Many people asked me for an SMS hebrew font, so I made it.
+
+latin1.mtf - Hebrew font, BIG and very clear font, even on 14" TV. (Most people here have huge plasma TV now, but I am a poor college student....)
+ascii.mtf - This is Mr. Worm bigger ascii font, I use it since my hebrew font is big.
+
+Extra tools only for users using hebrew:
+SUBS 1.1 - tool to reverse srt and sub files needed in Hebrew language.
+HebMTK - tool to reverse subs needed in Hebrew language. Check only reverse option for most subs.
+
+
+Rami.
+
+email: 
+rami1@hotmail.com
+
+
+Thanks to Mr. EEUG for the great SMS player.

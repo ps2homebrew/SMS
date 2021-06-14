@@ -19,9 +19,11 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Docbook documentation generation
+      working-directory: docs
       run: |
-        make -C docs
-        cp -f docs/index.html docs/HTML/
+        make
+        cp -f index.html HTML/
+        cp -rf pitrz HTML/
 
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3

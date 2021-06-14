@@ -1,0 +1,269 @@
+Fontes disponíveis:
+Nenhuma
+A iniciar o SMS...
+A guardar a configuração...
+A carregar %s...
+A iniciar a rede...
+A procurar o USBD.IRX...
+A aguardar a fonte (pressione "start" para o menu)...
+A ler o disco...
+Disco inválido (pressione "X" para continuar)...
+A ler o dispositivo...
+Configurações de exibição...
+Configurações da fonte...
+Configurações do navegador...
+Configurações do player...
+Ajuda...
+Salvar configurações
+Desligar a consola
+Sair do SMS
+Sistema de TV
+PAL
+NTSC
+Auto
+Tipo de Caracteres
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Configurações de exibição
+Menu do SMS
+Ajustar o ecrã para a esquerda
+Ajustar o ecrã para a direita
+Ajustar o ecrã para cima
+Ajustar o ecrã para baixo
+Autoiniciar a rede
+Autoiniciar o USB
+Autoiniciar o HDD
+Configurações do dispositivo
+Iniciar suporte de rede
+Iniciar suporte para HDD
+Iniciar suporte para USB
+Editar IPCONFIG.DAT...
+Editar IPCONFIG.DAT
+Endereço IP (1º byte)
+Endereço IP (2º byte)
+Endereço IP (3º byte)
+Endereço IP (4º byte)
+Máscara de Rede (1º byte)
+Máscara de Rede (2º byte)
+Máscara de Rede (3º byte)
+Máscara de Rede (4º byte)
+Endereço da Gateway (1º byte)
+Endereço da Gateway (2º byte)
+Endereço da Gateway (3º byte)
+Endereço da Gateway (4º byte)
+Salvar/Alterar IPCONFIG.DAT
+Configurações do navegador
+Usar imagem de fundo
+Organizar sistema de ficheiros
+Filtrar ficheiros de som/vídeo
+Exibir partições HDL
+Ocultar partições do sistema
+Cor de contorno ativa
+Cor de contorno inativa
+Cor do texto
+Cor do texto do status
+Configurações do player
+Volume padrão
+Alinhamento da legenda
+Offset da legenda
+Autocarregar legendas
+Legenda opaca
+Cor da legenda
+Cor da legenda em negrito
+Cor da legenda em itálico
+Cor da legenda sublinhada
+Desligar automaticamente
+Tamanho da barra de scroll
+Posição da barra de scroll
+Tempo da barra de scroll
+Cor da barra de scroll
+Cor da barra de volume
+Exibir animação de áudio
+topo
+rodapé
+desligado
+centro
+esquerda
+%d min
+%d pts
+Largura da fonte da legenda
+Altura da fonte da legenda
+Ajuda rápida
+ 
+Iniciando:
+select+R1 - modo NTSC
+select+R2 - modo PAL
+Navegador:
+triângulo - directoria anterior
+esquerda/direita - menu de dispositivos
+cima/baixo - navegar na directória
+cruz - acção
+select+círculo - desligar
+select+R1 - ajustar o ecrã para a direita
+select+L1 - ajustar o ecrã para a esquerda
+select+R2 - ajustar o ecrã para baixo
+select+L2 - ajustar o ecrã para cima
+select+quadrado - salvar configurações
+select+triângulo - executar o navegador
+L1+L2+R1+R2 - mostrar "sobre"
+Player:
+cima/baixo - ajustar o volume
+direita/esquerda - modo Avançar/Retroceder
+cruz - sair do modo Avançar/Retroceder
+triângulo - parar
+select - pausa/linha de tempo
+start - continuar/menu
+cruz - temporizador OSD
+rectângulo - modo pan-scan
+L1 - pan para a esquerda
+R1 - pan para a direita
+círculo - modo sinc. (Som/Vídeo)
+L2 - diminuir valor sinc.
+R2 - aumentar valor sinc.
+Menu do SMS:
+cruz/círculo - acção/próximo nível
+triângulo - nível anterior/sair do menu
+Erro (pressione "X" para continuar)...
+A guardar o IPCONFIG.DAT...
+Cor da barra de selecção
+Configurações avançadas...
+Altura da ecrã
+Aplicar configurações
+Configurações avançadas
+Exemplo
+Inglês
+Português
+Idioma
+A carregar os índices...
+A carregar as legendas...
+Legenda: %s erro (%d), pression "X" para continuar...
+formato
+sequência
+A carregar o ficheiro %s...
+A detectar o formato do ficheiro...
+Pausa
+A parar
+padrão
+Vídeo/Áudio:
+Som/Vídeo:
+Tocar
+Avançar
+Retroceder
+Cursor
+Formato não suportado (pressione "X" para continuar)...
+Rem
+Menu do player
+ecrã
+letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+ecrã inteiro
+Exibir legendas
+Selecionar legendas
+executar navegador
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Sair para
+Efeitos de som
+S/PDIF - Dolby Digital/DTS
+Configurações de MP3...
+Lista aleatória
+Modo de repetição
+Mostrar espectro do áudio
+Copiar para o HDD
+A copiar
+KB/s
+Seleccionar acção
+Resolução da cor
+32 bit
+16 bit
+DTV 480P
+Porta do controlador 2
+joystick
+controlo remoto
+Nível do AC3
+direita
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Protocolo de rede
+ps2dev/host
+SMB/CIFS
+Erro de comunicação (pressione "X" para continuar)...
+Erro de negociação de protocolo (%d) (pressione "X" para continuar)...
+Erro de login (%d) (pressione "X" para continuar)...
+Legendas
+Desativar CD/DVD
+Largura da ecrã
+A ler %s...
+Erro: falta de memória
+A verificar o espaço livre...
+Erro: não há espaço suficiente no HD
+A criar árvore de diretorias...
+Apagar
+A apagar...
+Velocidade do CD/DVD
+média
+alta
+baixa
+Botões direccionais
+DTV 1080I
+DTV 720P
+Modo de operação
+autonegociação
+automático
+manual
+Modo duplex
+full
+half
+Padrão
+10Base-T
+100Base-TX
+Configurações de rede...
+Configurações de rede
+Parametro de sincr. 1 (video)
+Parametro de sincr. 2 (GUI)
+Servidor SMB...
+A terminar a ligação pendente...
+Actualizar o idioma do SMS
+Actualizar a paleta de cores do SMS
+Actualizar o SMS
+Actualizar a lista de servidores de SMB
+Adicionar imagem de fundo
+Em processamento...
+A criar backup do SMS...
+Tocar todos
+Áudio
+Vídeo
+Parâmetro de auto detecção
+Começar a tocar a partir de
+centro-direita
+Usar o manipulador de excepções
+Legendas MBCS (chinês, japonês,etc)
+A carregar fonte...
+A carregar índices ODML %d...
+Tamanho do ficheiro: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+ch
+Memória disponível: %.1fMB/%.2fMB
+Recomeçar apartir de %s ? ('cruz'='sim', 'triangulo'='não')
+Deslocamento da imagem
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

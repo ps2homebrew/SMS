@@ -1,0 +1,269 @@
+Elérhetõ eszköz:  
+nincs
+SMS inicializálása..
+Beállítások mentése...
+Betöltés %s...
+Hálózat inicializálása...
+USBD.IRX meghatározása...
+Eszközre várakozás ("START" gomb a menübe lépéshez)...
+Lemez beolvasása...
+Nem támogatott lemez ("KERESZT" gomb a folytatáshoz)...
+Adatok beolvasása...
+Kijelzõ beállítások...
+Eszköz beállítások...
+Tallózási beállítások...
+Lejátszó beállítások...
+Súgó...
+Beállítások mentése
+Konzol kikapcsolása
+Kilépés a lejátszóból
+TV rendszer
+PAL
+NTSC
+automatikus
+Betû készlet
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Kijelzõ beállítások
+SMS menü
+Képernyõ igazítása balra
+Képernyõ igazítása jobbra
+Képernyõ igazítása fel
+Képernyõ igazítása le
+Hálózat automatikus indítása
+USB automatikus indítása
+HDD automatikus indítása
+Eszköz beállítások
+Hálózat támogatás indítása
+HDD támogatás indítása
+USB támogatás indítása
+IPCONFIG.DAT szerkesztése...
+IPCONFIG.DAT szerkesztése
+IP cím (oktett 1)
+IP cím (oktett 2)
+IP cím (oktett 3)
+IP cím (oktett 4)
+Hálózati maszk (oktett 1)
+Hálózati maszk (oktett 2)
+Hálózati maszk (oktett 3)
+Hálózati maszk (oktett 4)
+Átjáró cím (oktett 1)
+Átjáró cím (oktett 2)
+Átjáró cím (oktett 3)
+Átjáró cím (oktett 4)
+IPCONFIG.DAT mentése/frissítése
+Tallózási beállítások
+Háttérkép használata
+Fájlrendszer objektumok rendezése
+Média fájlok szûrése
+HDL partíciók megjelenítése
+Rendszer partíciók elrejtése
+Menü ablak körvonal szín
+Állapot ablak körvonal szín
+Szöveg szín
+Állapot sor szöveg szín
+Lejátszó beállítások
+Alapértelmezett hangerõ
+Felirat igazítás
+Felirat helyzete
+Automata felirat betöltés
+Nem átlátszó feliratok
+Feliratszín
+Félkövér feliratszín
+Dõlt feliratszín
+Aláhúzott feliratszín
+Automatikus kikapcsolás
+Navigációs sáv hossza
+Navigációs sáv helyzete
+Navigációs idõ megjelenítés
+Navigációs sáv színe
+Hangerõ sáv szín
+Hang animáció megjelenítése
+felül
+lent
+nem
+középre
+balra
+%d perc múlva
+%d vonal
+Felirat betû szélesség
+Felirat betû magasság
+Gyors súgó
+ 
+Indításkor:
+select+R1 - NTSC mód
+select+R2 - PAL mód
+Tallózó:
+háromszög - gyökér könyvtár
+bal/jobb - eszköz menü
+fel/le - könyvtár navigáció
+kereszt - alkalmaz
+select+kör - kikapcsolás
+select+R1 - képernyõ igazítása jobbra
+select+L1 - képernyõ igazítása balra
+select+R2 - képernyõ igazítása le
+select+L2 - képernyõ igazítása fel
+select+négyszög - beállítások mentése
+select+háromszög - tallózó indítása
+L1+L2+R1+R2 - súgó megjelenítése
+Lejátszó:
+fel/le - hangerõ szabályozás
+jobb/bal - Elõre/Vissza mód
+kereszt - kilépés az Elõre/Vissza módból
+háromszög - leállítás
+select - szünet/idõrend
+start - folytatás/menü
+kereszt - képernyõ feliratok váltása
+négyszög - pan-scan mód
+L1 - pászta balra
+R1 - pászta jobbra
+kör - V/A (S/V) szinkron mód
+L2 - szinkron érték csökkentése
+R2 - szinkron érték növelése
+SMS menü:
+kereszt/kör - alkalmazás/következõ szint
+háromszög - feljebb/kilépés a menübe
+Hiba ("KERESZT" gomb a folytatáshoz)...
+IPCONFIG.DAT mentése...
+Kijelölt sor színe
+Haladó beállítások...
+Kijelzõ magassága
+Beállítások alkalmazása
+Haladó beállítások
+Minta
+English
+Magyar
+Nyelv
+Jelzõszám betöltés...
+Felirat betöltés...
+Felirat: %s hiba (%d), "KERESZT" gomb a folytatáshoz...
+formátum
+sorozat
+Pufferelés %s fájl...
+Fájl formátum ellenõrzése...
+Szünet
+Leállítás
+alap
+V/A:
+S/V:
+Lejátszás
+Elõre >>
+<< Vissza
+Léptetés
+Nem támogatott fájl formátum ("KERESZT" gomb a folytatáshoz)...
+Hátralévõ idõ
+Lejátszó menü
+Kijelzõ
+letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+teljes képernyõ
+Felirat megjelenítés
+Felirat kiválasztás
+tallózó indítása
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Kilépés ide
+Sound FX
+S/PDIF - Dolby Digital/DTS
+MP3 beállítások...
+Véletlenszerû lejátszási lista
+Folytonos lejátszás
+Hang spektrum megjelenítése
+Másolás merevlemezre
+Másolás
+ KB/s
+Mûvelet kiválasztása
+Színmélység
+32 bit
+16 bit
+DTV 480P
+Második játékvezérlõ bemenet
+játékvezérlõ
+távirányító
+AC3 terjedelem szintje
+jobbra
+VESA (60Hz)
+VESA (75Hz)
+szélesvászon
+széles pan-scan 1
+széles pan-scan 2
+Hálózati protokoll
+ps2dev/host
+SMB/CIFS
+Kommunikációs hiba ("KERESZT" gomb a folytatáshoz)...
+Párbeszéd protokoll hiba (%d) ("KERESZT" gomb a folytatáshoz)...
+Bejelentkezési hiba (%d) ("KERESZT" gomb a folytatáshoz)...
+Feliratok
+CD/DVD kikapcsolás
+Kijelzõ szélessége
+Olvasás %s...
+Hiba: nincs elegendõ memória
+Szabad hely ellenõrzése...
+Hiba: nincs elég szabad hely a merevlemezen
+Könyvtár szerkezet létrehozása...
+Törlés
+Törlés...
+CD/DVD sebesség
+közepes
+magas
+alacsony
+Irány gombok
+DTV 1080I
+DTV 720P
+Üzemmód
+automata-párbeszéd
+automata
+kézi
+Duplex mód
+teljes
+fél
+Standard
+10Base-T
+100Base-TX
+Hálózat beállítások...
+Hálózat beállítások
+Szinkron jellemzõ 1 (kép)
+Szinkron jellemzõ 2 (felület)
+SMB szerver...
+Függõ kapcsolatok lezárása...
+SMS nyelv frissítése
+SMS paletta frissítése
+SMS frissítése
+SMB szerver lista frissítése
+Háttérkép megadása
+Feldolgozás...
+SMS mentés létrehozása...
+Összes lejátszása
+Hang
+Kép
+Automata paraméter felismerés
+Lejátszás indítása innen:
+középre jobbról
+Kivétel kezelõ használata
+MBCS felirat
+Betûtípus betöltése...
+ODML jelzõszám betöltés %d...
+Fájl méret: 
+ GB
+ KB
+%d.%02d
+%d.%03d
+ Kb/s
+ Hz
+ cs
+Rendelkezésre álló memória: %.1fMB/%.2fMB
+Folytatódjon a visszajátszás innen: %s? ('KERESZT'='IGEN', 'HÁROMSZÖG'='NEM')
+Kép helyzete
+Képfelbontás túl nagy ("KERESZT" gomb a folytatáshoz)...
+Szinkron jellemzõ 3 (hang)
+Képek
+Nem támogatott vagy sérült kép
+Nullázó gomb használata
+Kikapcsolás
+Kilépés
+?Video auto 2:2 pulldown
+?DTV 576p

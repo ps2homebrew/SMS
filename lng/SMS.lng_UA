@@ -1,0 +1,269 @@
+Наявні медіа:  
+немає
+Ініціалізація SMS...
+Запис конфігурації...
+Завантаження %s...
+Ініціалізація мережі...
+Пошук USBD.IRX...
+Очікування на медіа (натисніть "start" для меню)...
+Зчитування диска...
+Нелегальний диск (натисніть "cross" для продовження)...
+Зчитування медіа...
+Настроювання екрану...
+Настроювання пристрою...
+Настроювання браузера...
+Настроювання програвача...
+Допомога...
+Запис настроювань
+Вимкнення консолі
+Вихід з SMS
+Телевізійна система
+PAL
+NTSC
+Auto
+Набір символів
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Настроювання екрану
+Меню SMS
+Зсув зображення вліво
+Зсув зображення вправо
+Зсув зображення вгору
+Зсув зображення донизу
+Автозапуск мережі
+Автозапуск USB
+Автозапуск HDD
+Настроювання пристрою
+Запуск підтримки мережі
+Запуск HDD підтримки
+Запуск USB підтримки
+Редагування IPCONFIG.DAT...
+Редагування IPCONFIG.DAT
+IP Адреса (1)
+IP Адреса (2)
+IP Адреса (3)
+IP Адреса (4)
+Маска мережі (1)
+Маска мережі (2)
+Маска мережі (3)
+Маска мережі (4)
+Адреса шлюзу (1)
+Адреса шлюзу (2)
+Адреса шлюзу (3)
+Адреса шлюзу (4)
+Запис/оновлення IPCONFIG.DAT
+Настроювання браузера
+Фонове зображення
+Сортування файлів
+Тільки медіа-дані
+Відображення HDL розділів
+Сховати системні розділи
+Колір активної рамки
+Колір неактивної рамки
+Колір тексту
+Колір тексту рядка статуса
+Настроювання програвача
+Гучність по-замовченню
+Вирівнювання субтитрів
+Зміщення субтитрів
+Автозавантаження субтитрів
+Непрозорі субтитри
+Колір субтитрів
+Колір субтитру:жирний
+Колір субтитру:похилий
+Колір субтитру:підкреслений
+Автовимкнення
+Довжина смужки прокрутки
+Розташування смужки прокрутки
+Відображення шкали часу
+Колір смужки прокрутки
+Колір смужки гучності
+Аудіовізуалізація
+зверху
+знизу
+вимкнути
+по центру
+зліва
+%d хв.
+%d pts
+Ширина шрифту субтитру
+Висота шрифту  субтитру
+Швидка допомога
+ 
+Підчас завантаження:
+select+R1 - NTSC режим
+select+R2 - PAL режим
+Браузер:
+triangle - на рівень вгору
+left/right - меню пристроїв
+up/down - навігація
+cross - дія
+select+circle - вимкнення
+select+R1 - зсув зображення вправо
+select+L1 - зсув зображення вліво
+select+R2 - зсув зображення донизу
+select+L2 - зсув зображення вгору
+select+square - запис настроювань
+select+triangle - перехід до boot browser
+L1+L2+R1+R2 - про програму
+Програвач:
+up/down - регулювати гучність
+right/left - режим ВПЕРЕД/НАЗАД
+cross - вихід з режиму ВПЕРЕД/НАЗАД
+triangle - стоп
+select - пауза/шкала часу
+start - выдновлення/меню
+cross - таймер
+rectangle - режим pan-scan
+L1 - pan вліво
+R1 - pan вправо
+circle - V/A (S/V) Режим синхронізації
+L2 - зменшити значення синхронізації
+R2 - збільшити значення синхронізації
+SMS меню:
+cross/circle - дія/далі
+triangle - на рівень вверх/вихід з меню
+Помилка (натисніть "cross" для продовження)...
+Запис IPCONFIG.DAT...
+Колір рамки вибору
+Прогресивні настроювання...
+Висота екрану
+Застосувати настроювання
+Прогресивні настроювання
+Зразок
+English
+Українська
+Мова
+Завантаження індексів...
+Завантаження субтитрів...
+Субтитр: %s помилка (%d), натисніть "cross" для продовження...
+формат
+послідовність
+Буферизація %s файлу...
+Визначення формату файлу...
+Пауза
+Зупинка
+по-замовченню
+V/A:
+S/V:
+Відтворення 
+Вперед 
+ Назад 
+Курсор
+Формат файлу не підтримується (натисніть "cross" для продовження)...
+Залишилось
+Меню програвача
+Екран
+letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+на весь екран
+Відображати субтитри
+Вибір субтитрів
+boot browser
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Вихід до
+Звуковий супровід
+S/PDIF - Dolby Digital/DTS
+MP3 настроювання...
+Випадкове відтворення
+Режим повторення
+Відображення аудіоспектру
+Копіювати до HDD
+Копіювання
+КБ/сек
+Вибір дії
+Роздільна здатність кольору
+32 bit
+16 bit
+DTV 480P
+Controller port 2
+gamepad
+пульт дистанційного керування
+?AC3 range level?
+праворуч
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Мережевий протокол
+ps2dev/host
+SMB/CIFS
+Помилка зв’язку (натисніть "cross" для продовження)...
+Помилка протоколу узгоджень (%d) (натисніть "cross" для продовження)...
+Помилка логіну (%d) (натисніть "cross" для продовження)...
+?Subtitles?
+?Disable CD/DVD?
+?Display width
+?Reading %s...
+?Error: out of memory
+?Checking free space...
+?Error: not enough free space on HDD
+?Creating directory tree...
+?Delete
+?Deleting...
+?CD/DVD speed
+?medium
+?high
+?low
+?Directional buttons
+DTV 1080I
+DTV 720P
+?Operating mode
+?auto-negotiation
+?automatic
+?manual
+?Duplex mode
+?full
+?half
+?Standard
+?10Base-T
+?100Base-TX
+?Network settings...
+?Network settings
+?Synchronization parameter 1 (video)
+?Synchronization parameter 2 (GUI)
+?SMB server...
+?Terminating pending connection...
+?Update SMS language
+?Update SMS palette
+?Update SMS
+?Update SMB server list
+?Add background image
+?Processing...
+?Creating SMS backup...
+?Play all
+?Audio
+?Video
+?Autodetection parameter
+?Start playback from
+?center-right
+?Use exception handler
+?Subtitle MBCS
+?Loading font...
+?Loading ODML indices %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

@@ -1,0 +1,269 @@
+Risorse:  
+nessun supporto
+Inizializzazione SMS...
+Salvataggio configurazione...
+Caricamento %s...
+Inizializzazione rete...
+Localizzazione USBD.IRX...
+In attesa (premi "START" per il menu)...
+Lettura disco...
+Disco illegale (premi "X" per continuare)...
+Lettura media...
+Impostazioni schermo
+Impostazioni dispositivo
+Impostazioni browser
+Impostazioni player
+Guida
+Salva le impostazioni
+Spegni console
+Esci da SMS
+Sistema TV
+PAL
+NTSC
+Auto
+Set caratteri
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Impostazioni schermo
+SMS Menu
+Sposta immagine a sinistra
+Sposta immagine a destra
+Sposta immagine in alto
+Sposta immagine in basso
+Avvio automatico rete
+Avvio automatico USB
+Avvio automatico HDD
+Impostazioni dispositivo
+Avvio supporto rete
+Avvio supporto HDD
+Avvio supporto USB
+Modifica IPCONFIG.DAT
+Modifica IPCONFIG.DAT
+Indirizzo IP (octet 1)
+Indirizzo IP (octet 2)
+Indirizzo IP (octet 3)
+Indirizzo IP (octet 4)
+Net Mask (octet 1)
+Net Mask (octet 2)
+Net Mask (octet 3)
+Net Mask (octet 4)
+Gateway Indirizzo (octet 1)
+Gateway Indirizzo (octet 2)
+Gateway Indirizzo (octet 3)
+Gateway Indirizzo (octet 4)
+Salva/Aggiorna IPCONFIG.DAT
+Opzioni Browser
+Usa immagine come sfondo
+Ordina i file
+Filtra i file multimediali
+Visualizza partizioni HDL
+Nascondi partizioni di sistema
+Colore bordo attivo
+Colore bordo inattivo
+Colore testo
+Colore barra di stato
+Impostazioni player
+Volume Default 
+Allineamento sottotitoli
+Distanza sottotitoli
+Carica automaticamente sottotitoli
+Opacizzare sottotitoli
+Colore sottotitoli
+Colore sottotitoli in grassetto
+Colore sottotitoli in corsivo
+Colore sottotitoli sottolineati
+Autospegnimento
+Lunghezza barra scorrimento
+Posizione barra scorrimento
+Tempo barra di scorrimento
+Colore barra di scorrimento
+Colore barra del volume
+Animazione dell'audio
+In alto
+In basso
+off
+centro
+sinistra
+%d min
+%d pts
+Larghezza caratteri sottotitoli
+Altezza caratteri sottotitoli
+Aiuto veloce
+ 
+Schermata di avvio:
+SELECT+R1 - Modo NTSC 
+SELECT+R2 - Modo PAL
+Browser:
+triangolo - cartella superiore
+sinistra/destra - menu supporti
+sopra/sotto - navigazione cartelle
+X - azione
+SELECT+cerchio - spegnimento
+SELECT+R1 - sposta immagine a destra
+SELECT+L1 - sposta immagine a sinistra
+SELECT+R2 - sposta immagine in basso
+SELECT+L2 - sposta immagine in alto
+SELECT+quadrato - salva impostazioni
+SELECT+triangolo - accensione browser
+L1+L2+R1+R2 - mostra info
+Player:
+sopra/sotto - regolazione volume
+destra/sinistra - modo FFWD/REW
+X - esci modo FFWD/REW
+triangolo - stop
+SELECT - pausa/cronologia
+START - ripristina/menu
+X - OSD timer
+quadrato - modo pan-scan
+L1 - pan sinistra
+R1 - pan destra
+cerchio - V/A (S/V) sync mode
+L2 - abbassa valore sync
+R2 - alza valore sync
+SMS menu:
+croce/cerchio - azione/livello successivo
+triangolo - livello superiore/esci dal menu
+Error (premi "X" per continuare)...
+Salva IPCONFIG.DAT...
+Colore barra selezione
+Impostazioni avanzate
+Altezza schermo
+Applica impostazioni
+Opzioni avanzate
+Esempio
+Inglese
+Italiano
+Lingua
+Caricamento indice...
+Caricamento sottotitoli...
+Sottotitoli: %s error (%d), premi "X" per continuare...
+Formato
+Sequenza
+Memorizzazione %s file...
+Controllo formato file...
+Pausa
+Stop
+default
+V/A:
+S/V:
+Play 
+FFW 
+REW
+Pausa
+Formato non supportato (premi "X" per continuare)...
+-
+Player menu
+Schermo
+Letterbox
+Zoom 1
+Zoom 2
+Zoom 3
+Schermo intero
+Mostra sottotitoli
+Seleziona sottotitoli
+Browser PS2
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Uscita da SMS
+Sound FX
+S/PDIF - Dolby Digital/DTS
+Impostazioni MP3
+Riproduzione casuale
+Ripeti playlist
+Mostra spettro audio
+Copia su HDD
+Copia in corso
+KB/s
+Seleziona comando
+Profondità colore
+32 bit
+16 bit
+DTV 480p
+Porta controller 2
+gamepad
+telecomando
+AC3 range level
+destra
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Protocollo Rete
+ps2dev/host
+SMB/CIFS
+Comunicazione interrotta (premi "X" per continuare)...
+Negoziazione protocollo fallita (%d) (premi "X" per continuare)...
+Accesso errato (%d) (premi "X" per continuare)...
+Sottotitoli
+Disattivare CD/DVD
+Larghezza display
+Lettura %s...
+Errore: fuori dalla memoria
+Controllo spazio libero...
+Errore: spazio libero insufficiente su HDD
+Creazione struttura directory...
+Elimina
+Eliminazione in corso...
+Velocità CD/DVD
+medio
+alto
+basso
+Tasti direzionali
+DTV 1080I
+DTV 720P
+Modalità di funzionamento
+auto-negoziazione
+automatica
+manuale
+Modalità Duplex
+full
+half
+Standard
+10Base-T
+100Base-TX
+Impostazioni Rete...
+Impostazioni Rete
+Parametro sincron. 1 (video)
+Parametro sincron. 2 (GUI)
+Server SMB...
+Chiusura connessione in corso...
+Aggiorna lingua SMS
+Aggiorna tavolozza SMS
+Aggiorna SMS
+Aggiorna lista server SMB
+Aggiungi immagine di sfondo
+Esecuzione in corso...
+Creazione backup SMS...
+Esegui tutto
+Audio
+Video
+Rilevamento autom. parametri
+Riproduci da
+Centro-destra
+Usa gestione delle eccezioni
+Sottotitolo MBCS
+Caricamento carattere...
+Caricamento indici ODML %d...
+Dimensione file: 
+GB
+KB
+%d.%02d
+%d.%03d
+Kb/s
+Hz
+Canali
+Memoria disponibile: %.1fMB/%.2fMB
+Riprendi riproduzione da %s ? ('X'='si', 'triangolo'='no')
+Offset verticale immagine
+Risoluzione video troppo grande (premi 'X' per continuare)...
+Parametro sincron. 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

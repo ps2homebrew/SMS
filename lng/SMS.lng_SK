@@ -1,0 +1,269 @@
+Dostupné media:  
+ziadne
+Inicializacia SMS...
+Ukladanie konfiguracie...
+Nacitanie %s...
+Inicializacia siete...
+Hladanie USBD.IRX...
+Cakanie na medium (stlacte "START" pre Menu)...
+Citanie disku...
+Neplatny disk (stlacte "KRIZIK" pre pokracovanie)...
+Citenie media...
+Nastavenie Zobrazenia...
+Nastavenie Zariadenia...
+Nastavenie Prehliadaca...
+Nastavenie Prehravaca...
+Napoveda...
+Ulozit nastavenia
+Vypnut konzolu
+Ukoncit SMS
+TV system
+PAL
+NTSC
+Auto
+Znakova sada
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Nastavenie Zobrazenia
+SMS Menu
+Posunut obraz dolava
+Posunut obraz doprava
+Posunut obraz hore
+Posunut obraz dole
+Automaticka inicializacia siete
+Automaticka inicializacia USB
+Automaticka inicializacia HDD
+Nastavenie Zaridenia
+Spustit inicializaciu siete
+Spustit inicializaciu HDD
+Spustit inicializaciu USB
+Editovat IPCONFIG.DAT...
+Editacia IPCONFIG.DAT
+IP adresa (prve cislo)
+IP adresa (druhe cislo)
+IP adresa (tretie cislo)
+IP adresa (stvrte cislo)
+Sietova maska (prve cislo)
+Sietova maska (druhe cislo)
+Sietova maska (tretie cislo)
+Sietova maska (stvrte cislo)
+Adresa brany (prve cislo)
+Adresa brany (druhe cislo)
+Adresa brany (tretie cislo)
+Adresa brany (stvrte cislo)
+Ulozit/Aktualizovat IPCONFIG.DAT
+Nastavenie Prehliadaca
+Pouzivat obrazok na pozadi
+Triedit objekty subor.systemu
+Filtrovat subory medii
+Zobrazovat oddiely HDL
+Skryvat systemove oddiely
+Farba aktivneho ramecku
+Farba neaktivneho ramecku
+Farba textu
+Farba textu v stavovom riadku
+Nastavenie Prehravaca
+Vychodzia hlasitost
+Zarovnavanie titulkov
+Odsadenie titulkov
+Automaticke nacitanie titulkov
+Nepriehladne titulky
+Farba titulkov
+Farba hrubych titulkov
+Farba titulkov kurzivou
+Farba podtrhnutia titulkov
+Automaticke vypnutie konzoly
+Dlzka posuvniku
+Pozicia posuvniku
+Zobrazovat cas u posuvniku
+Farba posuvniku
+Farba posuvniku hlasitosti
+Zobrazenie animacie u audia
+hore
+dole
+neaktivni
+na stred
+vlavo
+%d minut
+%d bodov
+Sirka fontu titulkov
+Vyska fontu titulkov
+Rychla napoveda
+ 
+Pri starte:
+SELECT+R1 - NTSC mod
+SELECT+R2 - PAL mod
+Prehliadac:
+TROJUHoLNIK - Nadradena slozka
+VLAVO/VPRAVO - Menu zaridenia
+NAHORU/DOLU - Pohyb slozkou
+KRIZIK - Akcia
+SELECT+KRUZOK - Vypnut konzolu
+SELECT+R1 - Posunut obraz doprava
+SELECT+L1 - Posunut obraz dolava
+SELECT+R2 - Posunut obraz dolu
+SELECT+L2 - Posunut obraz horu
+SELECT+STVOREC - Ulozit nastavenia
+SELECT+TROJUHOLNIK - Prehliadac boot sekcie
+L1+L2+R1+R2 - Zobrazit "O programe"
+Prehravac:
+NAHOR/DOLE - Nastavenie hlasitosti
+VPRAVO/VLAVO - Mod rychleho previjania
+KRIZIK - Ukoncenie modu rychleho previjania
+TROJUHOLNIK - Stop
+SELECT - Pauza/Casovy prehlad
+START - Pokracovat/Menu
+KRIZIK - Zobrazenie casu
+STVOREC - Mod pan-scan
+L1 - lava cast pan-scan
+R1 - prava cast pan-scan
+KRUH - Synchronizacny mod A/V (Titulky/V)
+L2 - zmensi synchronizacnu hodnotu
+R2 - zvetsi synchronizacnu hodnotu
+SMS menu:
+KRIZIK/KRUZOK-Akcia/Presunutie do adresara
+TROJUHOLNIK-Nadradena zlozka/Ukoncenie menu
+Chyba (stlacte "KRIZIK" pre pokracovanie)...
+Ukladanie IPCONFIG.DAT...
+Farba pasu vyberu
+Pokrocile nastavenia...
+Displej - vyska
+Pouzit nastavenia
+Pokrocile nastaveni
+Vzorek
+Anglictina
+Slovencina 
+Jazyk
+Nacitanie indexu...
+Nacitanie titulkov...
+Titulky: %s chyba (%d), stisknete "KRIZIK" pre pokracovanie...
+format
+sekvencia
+Nacitanie souboru %s do vyrovnavacej pamete...
+Detekce formatu suboru...
+Pauza
+Zastavovanie
+vychodzie
+V/A:
+T/V:
+Prehravanie
+Rychle previjenie vpred
+Rychle previjenie vzad
+Pozicia
+Nepodporovany format suboru (stlacte "KRIZIK" pre pokracovanie)...
+Zbyvajuci cas
+Menu prehravaca
+Zobrazenie
+Letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+cela obrazovka
+Zobrazovat titulky
+Vybrat titulky
+prehliadace boot sekce
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Po ukonceni ist do
+Zvukove efekty
+S/PDIF - Dolby Digital/DTS
+Nastaveni MP3...
+Nahodny playlist
+Mod opakovania
+Zobrazovat audio spektrum
+Zkopirovat na HDD
+Kopirovanie
+KB/s
+Vyberte akciu
+Farebna hlbka
+32 bitov
+16 bitov
+DTV 480P
+Port ovladaca 2
+joystick
+dialkovy ovladac
+?AC3 range level?
+vpravo
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+siroky pan-scan 1
+siroky pan-scan 2
+Sietovy protokol
+ps2dev/host
+SMB/CIFS
+Chyba komunikacie (stlacte "KRIZIK" pre pokracovanie)...
+Chyba jednania protokolu (%d) (stlacte "KRIZIK" pre pokracovanie)...
+Chyba prihlasenia (%d) (stlacte "KRIZIK" pre pokracovanie)...
+?Subtitles?
+?Disable CD/DVD?
+?Display width
+?Reading %s...
+?Error: out of memory
+?Checking free space...
+?Error: not enough free space on HDD
+?Creating directory tree...
+?Delete
+?Deleting...
+?CD/DVD speed
+?medium
+?high
+?low
+?Directional buttons
+DTV 1080I
+DTV 720P
+?Operating mode
+?auto-negotiation
+?automatic
+?manual
+?Duplex mode
+?full
+?half
+?Standard
+?10Base-T
+?100Base-TX
+?Network settings...
+?Network settings
+?Synchronization parameter 1 (video)
+?Synchronization parameter 2 (GUI)
+?SMB server...
+?Terminating pending connection...
+?Update SMS language
+?Update SMS palette
+?Update SMS
+?Update SMB server list
+?Add background image
+?Processing...
+?Creating SMS backup...
+?Play all
+?Audio
+?Video
+?Autodetection parameter
+?Start playback from
+?center-right
+?Use exception handler
+?Subtitle MBCS
+?Loading font...
+?Loading ODML indices %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

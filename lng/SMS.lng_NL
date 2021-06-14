@@ -1,0 +1,269 @@
+Beschikbare media:  
+Geen
+SMS opstarten...
+Configuratie opslaan...
+Laden %s...
+Netwerk opstarten...
+Localiseren van USBD.IRX...
+Wacht op media (Druk "start" voor menu)...
+Disc lezen...
+Verkeerde disc (Druk "kruis" om door te gaan)...
+Media lezen...
+Beeld instellingen:
+Apparaat instellingen:
+Verkenner instellingen:
+Speler instellingen:
+Help...
+Instellingen opslaan
+PS2 uitschakelen
+SMS afsluiten
+TV systeem
+PAL
+NTSC
+Autom.
+Teken set
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Beeld instellingen
+SMS Menu
+Beeld naar links
+Beeld naar rechts
+Beeld omhoog
+Beeld omlaag
+Autostart netwerk
+Autostart USB
+Autostart HDD
+Apparaat instellingen
+Start netwerk nu
+Start HDD nu
+Start USB nu
+IPCONFIG.DAT aanpassen...
+IPCONFIG.DAT aanpassen
+IP Adres (reeks 1)
+IP Adres (reeks 2)
+IP Adres (reeks 3)
+IP Adres (reeks 4)
+Net Mask (reeks 1)
+Net Mask (reeks 2)
+Net Mask (reeks 3)
+Net Mask (reeks 4)
+Gateway Adres (reeks 1)
+Gateway Adres (reeks 2)
+Gateway Adres (reeks 3)
+Gateway Adres (reeks 4)
+Bewaar/Update IPCONFIG.DAT
+Verkenner instellingen
+Achtergrond foto
+Bestanden sorteren
+Media bestanden filteren
+Toon HDL partities
+Verberg systeem partities
+Actieve rand kleur
+Inactieve rand kleur
+Tekst kleur
+Tekstkleur status titel
+Speler instellingen
+Standaard volume
+Ondertit. locatie
+Ondertit. hoogte
+Ondertit. Autom. laden
+niet-transparante ondertit.
+Ondertit. kleur
+Ondertit. vet kleur
+schuine ondertit. kleur
+Onderlijnde ondertit. kleur
+Autom. uitzetten
+Schuifbalk lengte
+Schuifbalk positie
+Toon schuifbalk tijdlijn
+Schuifbalk kleur
+Volumebalk kleur
+Audio animatie tonen
+Boven
+Onder
+Uit
+Midden
+links
+%d min
+%d pts
+Ondertitel letter breedte
+Ondertitel letter hoogte
+Help
+ 
+Tijdens starten:
+select+R1 - NTSC modus
+select+R2 - PAL modus
+Verkenner:
+Driehoek - Vorige map
+links/rechts - Apparaat menu
+Omhoog/Omlaag - Kies map
+Kruis - actie
+select+cirkel - Uitschakelen
+select+R1 - Beeld naar rechts
+select+L1 - Beeld naar links
+select+R2 - Beeld omlaag
+select+L2 - Beeld omhoog
+select+vierkant - Instellingen opslaan
+select+driehoek - Herstart verkenner
+L1+L2+R1+R2 - Toon info
+Speler:
+Omhoog/Omlaag - Verander volume
+Rechts/links - Vooruit/Achteruit modus
+Kruis - Stop vooruit/achteruit modus
+Driehoek - Stop
+select - Pauze/Tijdlijn
+start - Doorgaan/Menu
+Kruis - OSD timer
+Vierkant - pan-scan modus
+L1 - pan links
+R1 - pan rechts
+cirkel - V/A (S/V) sync modus
+L2 - Verlaag sync waarde
+R2 - Verhoog sync waarde
+SMS menu:
+Kruis/cirkel - Actie/Volgende
+Driehoek - Pagina terug/Stop menu
+Fout (Druk "kruis" om door te gaan)...
+IPCONFIG.DAT opslaan...
+Selectiebalk kleur
+Geavanceerde instellingen...
+beeld hoogte
+Instellingen toepassen
+Geavanceerde instellingen
+Voorbeeld
+English
+Nederlands
+Taal
+Index laden...
+Ondertiteling laden...
+Ondertiteling: %s fout (%d), druk "kruis" om door te gaan...
+formaat
+Volgorde
+Bufferen van %s bestand...
+Bestands formaat detecteren...
+Pauze
+Stoppen
+Standaard
+V/A:
+S/V:
+Afspelen 
+Vooruit
+Achteruit 
+Curs
+Onbekend bestands formaat (druk "kruis" om door te gaan)...
+Remaining
+Speler menu
+Beeld
+Letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+Volledig beeld
+Toon Ondertiteling
+Kies Ondertiteling
+Herstart verkenner
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Herstart naar
+FX geluiden
+S/PDIF - Dolby Digital/DTS
+MP3 instellingen...
+Willekeurige afspeellijst
+Herhaal modus
+Toon audio spectrum animatie
+Kopieer naar HDD
+Kopieren
+KB/s
+Maak keuze
+Kleur resolutie
+32 bit
+16 bit
+DTV 480P
+Controller poort 2
+gamepad
+Afstandsbediening
+AC3 bereik niveau
+Rechts
+VESA (60Hz)
+VESA (75Hz)
+widescreen
+wide pan-scan 1
+wide pan-scan 2
+Netwerk protocol
+ps2dev/host
+SMB/CIFS
+Communicatie fout (druk "kruis" om door te gaan)...
+Protocol onderhandelings fout (%d) (druk "kruis" om door te gaan)...
+Login fout (%d) (druk "kruis" om door te gaan)...
+Ondertiteling?
+CD/DVD uitschakelen
+Beeld breedte
+Lezen %s...
+Fout: geen geheugen meer
+Controleer vrije ruimte...
+Fout: niet genoeg vrije ruimte op HDD
+directory tree maken...
+Verwijder
+Verwijderen...
+CD/DVD snelheid
+midden
+hoog
+laag
+Bediening via
+DTV 1080I
+DTV 720P
+werk modus
+auto-onderhandeling
+automatisch
+Handmatig
+Duplex mode
+full
+half
+Standard
+10Base-T
+100Base-TX
+Netwerk instellingen...
+Netwerk instellingen
+Synchronizatie waarde 1 (video)
+Synchronizatie waarde 2 (GUI)
+SMB server...
+Huidige connectie beeindigen...
+Update SMS taal
+Update SMS palette
+Update SMS
+Update SMB server list
+Voeg achtergrond foto toe
+Verwerken...
+SMS backup maken...
+Speel alles
+Geluid
+Video
+Auto detectie waarde
+Start afspelen vanaf
+midden-rechts
+Fout rapportage (let op MI)
+?Subtitle MBCS
+?Loading font...
+?Loading ODML indices %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

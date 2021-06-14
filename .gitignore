@@ -5,18 +5,22 @@
 #
 # Normal rules
 #
+
 *.a
+!/src/lzma2/
+!/src/lzma2/libxz.a
+
+*.o
+!/vu/*.o
+
 *.diff
 *.elf
 *.ELF
 *.erl
-*.exe
 *.irx
 *.map
-*.o
 *.patch
 *.rej
-*.s
 *.DS_Store
 
 docs/temp
