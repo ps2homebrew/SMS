@@ -4,9 +4,9 @@
 <sect1 id="usage-cddafs" xreflabel="CDDAFS CD-R">
   <title>
     <phrase lang="en">Playing video files from a CD-R (without a modchip)</phrase>
-    <phrase lang="pt">Correndo ficheiros de video a partir de um CD-R 
+    <phrase lang="pt">Correndo ficheiros de video a partir de um CD-R
     (without a modchip)</phrase>
-    <phrase lang="ru">Воспроизведение видеофайлов с CD-R на системе без модчипа</phrase>    
+    <phrase lang="ru">Воспроизведение видеофайлов с CD-R на системе без модчипа</phrase>
   </title>
 
   <note>
@@ -22,9 +22,9 @@
       o CDXplorer.exe.
     </para>
     <para lang="ru">
-      Для того, чтобы воспроизводить видеофайлы с CD, вы должны записать его 
+      Для того, чтобы воспроизводить видеофайлы с CD, вы должны записать его
       в специальном формате, так как PS2 не умеет читать диски в формате ISO.
-      Для создания такого <quote>специального диска</quote> воспользуйтесь 
+      Для создания такого <quote>специального диска</quote> воспользуйтесь
       CDXplorer.exe.
     </para>
   </note>
@@ -33,18 +33,18 @@
     <title>
       <phrase lang="en">Instructions in Short</phrase>
       <phrase lang="pt">Instruções curtas</phrase>
-      <phrase lang="ru">Краткое описание необходимых действий</phrase>      
+      <phrase lang="ru">Краткое описание необходимых действий</phrase>
     </title>
 <itemizedlist>
 <listitem>
   <para lang="en">Download CDXplorer.exe from SVN;</para>
   <para lang="pt">Faça o download do CDXplorer.exe do SVN;</para>
-  <para lang="ru">Скачайте CDXplorer.exe с SVN.</para>  
+  <para lang="ru">Скачайте CDXplorer.exe с SVN.</para>
 </listitem>
 <listitem>
   <para lang="en">Launch it on Windows;</para>
   <para lang="pt">Execute-o no Windows;</para>
-  <para lang="ru">Запустите его на компьютере с Windows.</para>  
+  <para lang="ru">Запустите его на компьютере с Windows.</para>
 </listitem>
 <listitem>
   <para lang="en">Drag/drop the files you want from Windows explorer to the
@@ -161,25 +161,25 @@ Eugene
     <title>
       <phrase lang="en">Instructions in detail</phrase>
       <phrase lang="pt">Instruções detalhadas</phrase>
-      <phrase lang="ru">Детальное описание</phrase>           
+      <phrase lang="ru">Детальное описание</phrase>
     </title>
 
     <para lang="en">
-      The unmodified PS2 cannot load data from a normal CDR. This is due to 
-      built in copy protection. To get around this, the developer of SMS 
+      The unmodified PS2 cannot load data from a normal CDR. This is due to
+      built in copy protection. To get around this, the developer of SMS
       designed a clever trick that fools the PS2 into thinking that the CD-R
-      is an <emphasis role="bold">audio CD</emphasis>. 
+      is an <emphasis role="bold">audio CD</emphasis>.
       The PS2 is allowed to load a CDR if it's an audio CD.
       The basic principle relies on creating a disc in the so called CDDAFS
       format, which is essentially a disc that looks enough like an audio CD
       for the PS2 to accept it. The disc contains your .avi file data hidden
-      inside audio tracks, and SMS converts these as it reads them. 
+      inside audio tracks, and SMS converts these as it reads them.
       Clever huh?
     </para>
     <para lang="pt">
       A PS2 não modificada não consegue ler data de um CD-R normal. Isto deve-
       se a um mecanismo de protecção anti-cópia interno. Para dar a volta a
-      isto, o criador do SMS desenvolveu um pequeno truque que leva a PS2 a 
+      isto, o criador do SMS desenvolveu um pequeno truque que leva a PS2 a
       pensar que o CD-R é um <emphasis role="bold">CD de áudio</emphasis>.
       A PS2 consegue ler o CD-R se este for um CD de áudio.
       O principio básico consiste em criar um disco no formato CDDAFS, que é
@@ -189,19 +189,19 @@ Eugene
       Esperto huh?
     </para>
     <para lang="ru">
-      Немодифицированная PS2 не может загружать данные с нормального CDR из-за 
-      встроенной защиты от копирования. Чтобы обойти это, разработчик SMS 
-      придумал такую уловку, в результате которой, PS2 считает диск CD-R за 
-      диск Аудио CD, а с такими дисками PS2 работать умеет. Основной принцип 
-      уловки состоит в создании диска в так называемом CDDAFS формате, 
+      Немодифицированная PS2 не может загружать данные с нормального CDR из-за
+      встроенной защиты от копирования. Чтобы обойти это, разработчик SMS
+      придумал такую уловку, в результате которой, PS2 считает диск CD-R за
+      диск Аудио CD, а с такими дисками PS2 работать умеет. Основной принцип
+      уловки состоит в создании диска в так называемом CDDAFS формате,
       который, воспринимается PS2 как аудиодиск. Диск содержит ваш файл .avi,
-      скрытый внутри аудио трека и SMS конвертирует его во время чтения. 
-      Умно придумано, а? 
+      скрытый внутри аудио трека и SMS конвертирует его во время чтения.
+      Умно придумано, а?
     </para>
     <para lang="en">
-      The developer has written a utility (CDXplorer.exe) to create the 
-      .cue/.bin files from your .avi files, ready to burn to CDR. Then, 
-      provided your CD burning software knows how to read .cue/.bin files, 
+      The developer has written a utility (CDXplorer.exe) to create the
+      .cue/.bin files from your .avi files, ready to burn to CDR. Then,
+      provided your CD burning software knows how to read .cue/.bin files,
       you can burn them to CD.
     </para>
     <para lang="pt">
@@ -211,8 +211,8 @@ Eugene
       .cue/.bin, pode gravar esses ficheiros num CD-R.
     </para>
     <para lang="ru">
-      Разработчик написал небольшую программу (CDXplorer.exe) для создания 
-      файлов .cue/.bin из ваших файлов .avi. После чего, вы можете записать их 
+      Разработчик написал небольшую программу (CDXplorer.exe) для создания
+      файлов .cue/.bin из ваших файлов .avi. После чего, вы можете записать их
       на CD (если программа записи дисков, установленная на вашем компьютере,
       умеет работать с  .cue/.bin).
     </para>
@@ -220,39 +220,39 @@ Eugene
       <para lang="en">
         You must not simply write the .cue and .bin files to an ISO (data) CD
         format. This will not work. You must use a CD burning application
-        which understands .cue and .bin files. The only two known at present 
+        which understands .cue and .bin files. The only two known at present
         are Nero 5 and, cdrdao.
       </para>
       <para lang="pt">
         Não basta copiar os ficheiros .cue/.bin para um CD em formato ISO.
-        Isto não funciona. Tem de usar um software de gravação de CD que 
-        funcione com ficheiros .cue/.bin. Os únicos conhecidos de momento 
+        Isto não funciona. Tem de usar um software de gravação de CD que
+        funcione com ficheiros .cue/.bin. Os únicos conhecidos de momento
         são o Nero e o cdrdao.
       </para>
       <para lang="ru">
         Нельзя просто записать файлы .cue и .bin в формате данных (ISO). Такой
         диск PS2 не прочтет. Для того, чтобы правильно записать диск вы должны
-        использовать программу, которая умеет работать с файлами cue/bin. На 
+        использовать программу, которая умеет работать с файлами cue/bin. На
         момент написания данного руководства, таких программ есть несколько,
         например Nero или cdrdao.
       </para>
     </important>
     <para lang="en">
-      Download CDXplorer.exe from 
+      Download CDXplorer.exe from
       <ulink url="http://ps2dev.org/ps2/Projects/Softwares"/>
       (<filename>CDXplorer.exe</filename> can be found in
       <filename>SMS.zip</filename> file on the page).
     </para>
     <para lang="pt">
-      Faça o download do CDXplorer.exe a partir de 
+      Faça o download do CDXplorer.exe a partir de
       <ulink url="http://ps2dev.org/ps2/Projects/Softwares"/>
       (<filename>CDXplorer.exe</filename> pode ser encontrado dentro do
       ficheiro <filename>SMS.zip</filename> nesta página).
     </para>
     <para lang="ru">
-      Скачайте CDXplorer.exe с сайта 
+      Скачайте CDXplorer.exe с сайта
       <ulink url="http://ps2dev.org/ps2/Projects/Softwares"/>. Вы можете найти
-      (<filename>CDXplorer.exe</filename> в архиве <filename>SMS.zip</filename> 
+      (<filename>CDXplorer.exe</filename> в архиве <filename>SMS.zip</filename>
       на той странице.
     </para>
     <para lang="en">
@@ -294,21 +294,21 @@ Eugene
     </para>
     <para lang="pt">
       Assim que o CDXplorer esteja a correr, arraste 1 ou mais ficheiros
-      AVI para a janela. 
+      AVI para a janela.
     </para>
     <para lang="ru">
-      После того как CDXplorer был успешно запущен, перетащите один (или 
+      После того как CDXplorer был успешно запущен, перетащите один (или
       несколько) AVI файлов в правую часть окна программы.
     </para>
     <figure>
       <title>
         <phrase lang="en">
-          Screenshot of CDXplorer showing avi file 
+          Screenshot of CDXplorer showing avi file
           <filename>testvid.avi</filename>
           after dragging and dropping from Windows Explorer.
         </phrase>
         <phrase lang="pt">
-          Screenshot do CDXplorer mostrando ficheiro AVI 
+          Screenshot do CDXplorer mostrando ficheiro AVI
           <filename>testvid.avi</filename>
           depois de este ser arrastado do Explorador do Windows.
         </phrase>
@@ -329,20 +329,20 @@ Eugene
     </figure>
 
     <para lang="en">
-      Click file->SaveAs, then type in a name (e.g. 'test') then press 
-      &lt;enter&gt;. This will automatically save two files 
-      <filename>test.cue</filename> and <filename>test.bin</filename> 
+      Click file->SaveAs, then type in a name (e.g. 'test') then press
+      &lt;enter&gt;. This will automatically save two files
+      <filename>test.cue</filename> and <filename>test.bin</filename>
       in the current folder.
     </para>
     <para lang="pt">
-      Clique file->SaveAs, insira um nome (e.g. 'test') e pressione 
+      Clique file->SaveAs, insira um nome (e.g. 'test') e pressione
       &lt;enter&gt;. Isto salvará dois ficheiros: <filename>test.cue</filename>
       e <filename>test.bin</filename> no directório actual.
     </para>
     <para lang="ru">
-      В меню выберите File->SaveAs, после чего наберите имя файла (например, 
+      В меню выберите File->SaveAs, после чего наберите имя файла (например,
       'test' - без кавычек, разумеется) а затем, нажмите
-      &lt;Ввод&gt;. В текущей папке будут созданы 2 файла  
+      &lt;Ввод&gt;. В текущей папке будут созданы 2 файла
       <filename>test.cue</filename> и <filename>test.bin</filename>.
     </para>
 
@@ -364,20 +364,20 @@ Eugene
       software que permita carregar ficheiros .cue. Carregue o ficheiro .cue.
     </para>
     <para lang="ru">
-      Откройте программу записи дисков. Еще раз напоминаю, что программа эта 
+      Откройте программу записи дисков. Еще раз напоминаю, что программа эта
       должна уметь работать с файлами CUE/BIN! Откройте файл .cue
     </para>
     <para lang="en">
-      (unconfirmed): It may be necessary to use a CDR (rather than a 
-      CD-RW) - I only suspect this because i've not yet managed to get a 
+      (unconfirmed): It may be necessary to use a CDR (rather than a
+      CD-RW) - I only suspect this because i've not yet managed to get a
       CD-RW to work.
     </para>
     <para lang="pt">
-      (não confirmado): pode ser necessário usar CD-R (em vez de CD-RW) - 
+      (não confirmado): pode ser necessário usar CD-R (em vez de CD-RW) -
       suspeito disto porque ainda não consegui pôr um CD-RW a funcionar.
     </para>
     <para lang="ru">
-      (Неподтверждено): Возможно, вам придется обязательно пользоваться 
+      (Неподтверждено): Возможно, вам придется обязательно пользоваться
       дисками CDR, а не CD-RW - но я в этом не уверен, просто мне не удалось
       заставить работать систему с CD-RW.
     </para>
@@ -391,12 +391,12 @@ Eugene
     <para lang="ru">
 
     </para>
-    
+
     <sect3>
       <title>
         <phrase lang="en">Nero 5</phrase>
         <phrase lang="pt">Nero 5</phrase>
-        <phrase lang="ru">Nero 5</phrase>        
+        <phrase lang="ru">Nero 5</phrase>
       </title>
       <para lang="en">
         If you are using Nero 5, select
@@ -409,7 +409,7 @@ Eugene
         e grave o CD-R
       </para>
       <para lang="ru">
-        Если вы используете Nero 5, то выберите опцию 
+        Если вы используете Nero 5, то выберите опцию
         '<emphasis role="bold">Disk-at-once/96</emphasis>', затем
         запишите диск.
       </para>
@@ -419,39 +419,39 @@ Eugene
       <title>
         <phrase lang="en">If You've Not Got Nero 5</phrase>
         <phrase lang="pt">Se não tiver o Nero 5</phrase>
-        <phrase lang="ru">Если у вас нет Nero 5</phrase>        
+        <phrase lang="ru">Если у вас нет Nero 5</phrase>
       </title>
       <para lang="en">
-        If you've not got Nero 5 (I haven't got it), then it is possible to 
-        use another (free) application to burn CDs in disc-at-once mode. The 
-        only program I've used successfully is 
-        <application>cdrdao</application> (CDR Disc At Once), which is a 
-        command line cd burning application. It is available for linux and 
+        If you've not got Nero 5 (I haven't got it), then it is possible to
+        use another (free) application to burn CDs in disc-at-once mode. The
+        only program I've used successfully is
+        <application>cdrdao</application> (CDR Disc At Once), which is a
+        command line cd burning application. It is available for linux and
         windows. If you find any other applications that are easier to use,
-        please post the details on the SMS support forum. Installation of 
+        please post the details on the SMS support forum. Installation of
         <application>cdrdao</application> is as follows:
       </para>
       <para lang="pt">
-        Se você não tiver o Nero 5 (eu não tenho), pode utilizar outro 
-        software (grátis) para gravar CD's em modo disc-at-once. O único 
+        Se você não tiver o Nero 5 (eu não tenho), pode utilizar outro
+        software (grátis) para gravar CD's em modo disc-at-once. O único
         porgrama que eu consegui usar com sucesso foi o
         <application>cdrdao</application> (CDR Disc At Once), que é uma
         aplicação de linha de comando para gravar CD's. Está disponivel para
         Linux e para Windows. Se encontrar outras aplicações que sejam mais
         fáceis de utilizar, por favor refira os detalhes no forum do SMS.
         Instalação do <application>cdrdao</application> pode ser feita da
-        seguinte maneira: 
+        seguinte maneira:
       </para>
       <para lang="ru">
-        Если у вас нет Nero 5 (у меня, например, ее тоже нет), то вы можете 
+        Если у вас нет Nero 5 (у меня, например, ее тоже нет), то вы можете
         воспользоваться другой (да еще и бесплатной) программой, которая
         также позволяет записывать диски в режиме disc-at-once. Единственной
-        программой такого рода, которой я пользовался, является 
+        программой такого рода, которой я пользовался, является
         <application>cdrdao</application> (CDR Disc At Once)
         которая запускается из командной строки. Эта программа существует в
-        вариантах для Windows и Linux. Если вы знаете о существовании 
+        вариантах для Windows и Linux. Если вы знаете о существовании
         какой-либо другой программы такого рода, пожалуйста, напишите об этом
-        в форуме техподдержки SMS. Установка 
+        в форуме техподдержки SMS. Установка
         <application>cdrdao</application> производится следующим образом:
       </para>
 
@@ -462,7 +462,7 @@ Eugene
               <entry>
                 <para lang="en">Linux (Fedora Core 4)</para>
                 <para lang="pt">Linux (Fedora Core 4)</para>
-                <para lang="ru">Linux (Fedora Core 4)</para>                
+                <para lang="ru">Linux (Fedora Core 4)</para>
               </entry>
               <entry>
                 <para lang="en">
@@ -500,10 +500,10 @@ Eugene
           </tbody>
         </tgroup>
       </informaltable>
-      
+
       <para lang="en">
-        The CD is written with the following command: (Note the -–force 
-        option which is is needed to make the burn continue despite the 
+        The CD is written with the following command: (Note the -–force
+        option which is is needed to make the burn continue despite the
         'shorter than 4 seconds' warning.)
       </para>
       <para lang="pt">
@@ -512,8 +512,8 @@ Eugene
         ao aviso 'mais curto que 4 segundos')
       </para>
       <para lang="ru">
-        CD записывается с помощью следующей команды (обратите внимание на 
-        опцию --force которая нужна для продолжения записи, несмотря на 
+        CD записывается с помощью следующей команды (обратите внимание на
+        опцию --force которая нужна для продолжения записи, несмотря на
         предупреждение 'короче 4х секунд' (shorter than 4 seconds)):
       </para>
       <para lang="en">
@@ -530,7 +530,7 @@ Eugene
         The output will hopefully look something like this:
       </para>
       <para lang="pt">
-        Deverá aparecer algo como isto: 
+        Deverá aparecer algo como isto:
       </para>
       <para lang="ru">
         Если все было сделано правильно, то программа выдаст примерно такой
@@ -563,15 +563,15 @@ Writing finished successfully.
 [dave@blue ~]$]]></screen>
 
       <para lang="en">
-        And there you have it. You should now have a CD with the SMS 
-        compatible AVI file on it. This CD won't work in your PC. In fact, 
-        if you put it in, it will probably try to play it as an audio file 
+        And there you have it. You should now have a CD with the SMS
+        compatible AVI file on it. This CD won't work in your PC. In fact,
+        if you put it in, it will probably try to play it as an audio file
         and you'll just hear 'noise'.  Start up SMS, then put the disc in
         your PS2, and you should see the following:
       </para>
       <para lang="pt">
         E pronto. Deverá ter um CD com um ficheiro AVI compativel com o SMS.
-        Este Cd não funcionará no seu PC. Aliás, se o colocar no PC, ele 
+        Este Cd não funcionará no seu PC. Aliás, se o colocar no PC, ele
         provavelmente tentará tocá-lo como se fosse um CD de áudio e apenas
         ouvirá 'ruido'. Inicie o SMS, depois coloque o CD na PS2 e deverá ver
         o seguinte:
@@ -580,7 +580,7 @@ Writing finished successfully.
         Ну, вот и все. Теперь у вас должен быть диск с AVI файлом, пригодным
         для использования с SMS. Этот диск не будет работать на вашем
         компьютере, так что даже не пытайтесь. Вернее, работать-то он будет,
-        но компьютер постарается воспроизвести его как аудиодиск, так что 
+        но компьютер постарается воспроизвести его как аудиодиск, так что
         вы услышите различные шумы в колонках. Запустите SMS, после чего
         вставьте диск в трей и вы должны увидеть примерно следующее:
       </para>
@@ -651,9 +651,9 @@ Writing finished successfully.
         You've probably got a coaster (i.e. wasted CDR), and will need to
         try again. Check the instructions and try a lower burn speed. If you
         were using a CD-RW, try a CD-R.
-      </para> 
+      </para>
       <para lang="pt">
-        Se não vir o ficheiro, e a sua PS2 fizer um barulho constante, ou o 
+        Se não vir o ficheiro, e a sua PS2 fizer um barulho constante, ou o
         seguinte icon 'vermelho', então existe um problema com o disco.
         Provavelmente você tem um CD-R queimado (estragado), e terá de tentar
         novamente. Repita as instruções mas com uma velocidade de gravação
@@ -663,9 +663,9 @@ Writing finished successfully.
         Если файл в списке не появился, а PS2 продолжает крутить диск, или
         иконка диска в SMS стала красной, то диск не может быть прочитан.
         Возможно, он был плохо записан, так что попытайтесь создать диск
-        еще раз. Проверьте, что вы все делаете правильно и, возможно, 
-        попробуйте снизить скорость записи. Если вы пользовались CD-RW, 
-        то попробуйте записать файл CD-R. 
+        еще раз. Проверьте, что вы все делаете правильно и, возможно,
+        попробуйте снизить скорость записи. Если вы пользовались CD-RW,
+        то попробуйте записать файл CD-R.
       </para>
 
       <figure>

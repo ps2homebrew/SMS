@@ -32,7 +32,7 @@ On Debian Sarge you will need these packages:
 libxml2, libxml2-utils, docbook-xsl, libxslt1.1, docbook, docbook-utils
 
 On Cygwin, you need to run setup.exe click keep, and add these packages:
-devel->make, text->docbook-xml43, text->docbook-xsl, text->libxml2, 
+devel->make, text->docbook-xml43, text->docbook-xsl, text->libxml2,
 text->libxslt. You can do this while cygwin is running.
 
 Installing the required tools from source
@@ -87,7 +87,7 @@ The general procedure is:
 
    sh ./configure
    make html-single-en
-   
+
 This will build the 'big html file' version of the english documentation.
 'make help' describes more options.
 

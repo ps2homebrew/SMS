@@ -1,0 +1,31 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/**'
+      - '.github/workflows/gh-pages.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get -y install xsltproc docbook-xml docbook-xsl
+
+    - uses: actions/checkout@v2
+
+    - name: Docbook documentation generation
+      run: |
+        make -C docs
+        cp -f docs/index.html docs/HTML/
+
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/HTML/
+        force_orphan: true

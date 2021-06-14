@@ -7,13 +7,13 @@
     <phrase lang="el">#Controls#</phrase>
     <phrase lang="es">#Controls#</phrase>
     <phrase lang="pt">Controlos</phrase>
-    <phrase lang="ru">Управление программой</phrase>    
+    <phrase lang="ru">Управление программой</phrase>
   </title>
   <sect2>
     <title>
       <phrase lang="en">During Startup</phrase>
       <phrase lang="pt">Durante a Iniciação</phrase>
-      <phrase lang="ru">Во время загрузки программы</phrase>      
+      <phrase lang="ru">Во время загрузки программы</phrase>
     </title>
     <informaltable frame='none'>
       <tgroup cols='2'>
@@ -22,12 +22,12 @@
             <entry>
               <para lang="en">Button</para>
               <para lang="pt">Butão</para>
-              <para lang="ru">Кнопка</para>              
+              <para lang="ru">Кнопка</para>
             </entry>
             <entry>
               <para lang="en">Action</para>
               <para lang="pt">Acção</para>
-              <para lang="ru">Действие</para>              
+              <para lang="ru">Действие</para>
             </entry>
           </row>
         </thead>
@@ -36,7 +36,7 @@
           <entry>
             <para lang="en">Select + R1</para>
             <para lang="pt">Select + R1</para>
-            <para lang="ru">Select + R1</para>            
+            <para lang="ru">Select + R1</para>
           </entry>
           <entry>
             <para>NTSC</para>
@@ -46,7 +46,7 @@
           <entry>
             <para lang="en">Select + R2</para>
             <para lang="pt">Select + R2</para>
-            <para lang="ru">Select + R2</para>            
+            <para lang="ru">Select + R2</para>
           </entry>
           <entry>
             <para>PAL</para>
@@ -56,24 +56,24 @@
           <entry>
             <para lang="en">Select + R1 + SQUARE</para>
             <para lang="pt">Select + R1 + QUADRADO</para>
-            <para lang="ru">Select + R1 + КВАДРАТ</para>            
+            <para lang="ru">Select + R1 + КВАДРАТ</para>
           </entry>
           <entry>
             <para lang="en">Non-interlaced NTSC</para>
             <para lang="pt">NTSC Não-Entrelaçado</para>
-            <para lang="ru">Прогрессивная развертка NTSC</para>            
+            <para lang="ru">Прогрессивная развертка NTSC</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">Select + R2 + SQUARE</para>
             <para lang="pt">Select + R2 + QUADRADO</para>
-            <para lang="ru">Select + R2 + КВАДРАТ</para>                        
+            <para lang="ru">Select + R2 + КВАДРАТ</para>
           </entry>
           <entry>
             <para lang="en">Non-Interlaced PAL</para>
             <para lang="pt">PAL Não-Entrelaçado</para>
-            <para lang="ru">Прогрессивная развертка PAL</para>                        
+            <para lang="ru">Прогрессивная развертка PAL</para>
           </entry>
         </row>
         </tbody>
@@ -85,7 +85,7 @@
     <title>
       <phrase lang="en">During Navigation</phrase>
       <phrase lang="pt">Durante a Navegação</phrase>
-      <phrase lang="ru">Режим выбора файла</phrase>      
+      <phrase lang="ru">Режим выбора файла</phrase>
     </title>
     <informaltable frame='none'>
       <tgroup cols='2'>
@@ -94,12 +94,12 @@
             <entry>
               <para lang="en">Button</para>
               <para lang="pt">Butão</para>
-              <para lang="ru">Кнопка</para>              
+              <para lang="ru">Кнопка</para>
             </entry>
             <entry>
               <para lang="en">Action</para>
               <para lang="pt">Acção</para>
-              <para lang="ru">Действие</para>              
+              <para lang="ru">Действие</para>
             </entry>
           </row>
         </thead>
@@ -108,19 +108,19 @@
           <entry>
             <para lang="en">UP/DOWN</para>
             <para lang="pt">CIMA/BAIXO</para>
-           <para lang="ru">ВВЕРХ/ВНИЗ</para>            
+           <para lang="ru">ВВЕРХ/ВНИЗ</para>
           </entry>
           <entry>
             <para lang="en">Navigate Files</para>
             <para lang="pt">Navegar Ficheiros</para>
-            <para lang="ru">Перемещение по списку файлов</para>            
+            <para lang="ru">Перемещение по списку файлов</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">LEFT/RIGHT</para>
             <para lang="pt">ESQUERDA/DIREITA</para>
-            <para lang="ru">ВПРАВО/ВЛЕВО</para>            
+            <para lang="ru">ВПРАВО/ВЛЕВО</para>
           </entry>
           <entry>
             <para lang="en">
@@ -140,19 +140,19 @@
           <entry>
             <para lang="en">START</para>
             <para lang="pt">START</para>
-            <para lang="ru">START</para>            
+            <para lang="ru">START</para>
           </entry>
           <entry>
             <para lang="en">Accesses special configuration menu</para>
             <para lang="pt">Acede ao menu de configuração</para>
-            <para lang="ru">Открывает окно настроек программы</para>            
+            <para lang="ru">Открывает окно настроек программы</para>
           </entry>
         </row>
         <row>
           <entry>
             <para lang="en">SELECT</para>
             <para lang="pt">SELECT</para>
-            <para lang="ru">SELECT</para>            
+            <para lang="ru">SELECT</para>
           </entry>
           <entry>
             <para>-</para>
@@ -165,16 +165,16 @@
           <entry>
             <para lang="en">Navigate into selected directory</para>
             <para lang="pt">Navegar para o directório seleccionado</para>
-            <para lang="ru">Зайти в выбранную директорию</para>            
+            <para lang="ru">Зайти в выбранную директорию</para>
             <para lang="en">OR</para>
             <para lang="pt">OU</para>
-            <para lang="ru">ИЛИ</para>            
+            <para lang="ru">ИЛИ</para>
             <para lang="en">Start playback of selected file</para>
             <para lang="pt">Iniciar vizualização do ficheiro seleccionado</para>
-            <para lang="ru">Начать воспроизведение выбранного файла</para>            
+            <para lang="ru">Начать воспроизведение выбранного файла</para>
             <para lang="en">OR</para>
             <para lang="pt">OU</para>
-            <para lang="ru">ИЛИ</para>                        
+            <para lang="ru">ИЛИ</para>
             <para lang="en">Increase numerical value</para>
             <para lang="pt">Aumentar valor numérico</para>
             <para lang="ru">Увеличить цифровое значение</para>
@@ -187,7 +187,7 @@
           <entry>
             <para lang="en">Decrease numerical value</para>
             <para lang="pt">Diminuir valor numérico</para>
-            <para lang="ru">Уменьшить цифровое значение</para>            
+            <para lang="ru">Уменьшить цифровое значение</para>
             <para lang="en">OR</para>
             <para lang="pt">OU</para>
             <para lang="ru">ИЛИ</para>
@@ -209,18 +209,18 @@
           <entry>
             <para lang="en">TRIANGLE</para>
             <para lang="pt">TRIÂNGULO</para>
-            <para lang="ru">ТРЕУГОЛЬНИК</para>            
+            <para lang="ru">ТРЕУГОЛЬНИК</para>
           </entry>
           <entry>
             <para lang="en">Up one directory level</para>
             <para lang="pt">Um directório para trás</para>
-            <para lang="ru">Переместиться на одну директорию вверх</para>            
+            <para lang="ru">Переместиться на одну директорию вверх</para>
             <para lang="en">OR</para>
             <para lang="pt">OU</para>
             <para lang="ru">ИЛИ</para>
             <para lang="en">Quit current menu</para>
             <para lang="pt">Sair do menu actual</para>
-            <para lang="ru">Выйти из меню</para>            
+            <para lang="ru">Выйти из меню</para>
           </entry>
         </row>
         <row>
@@ -335,12 +335,12 @@
             <entry>
               <para lang="en">Button</para>
               <para lang="pt">Butão</para>
-              <para lang="ru">Кнопка</para>              
+              <para lang="ru">Кнопка</para>
             </entry>
             <entry>
               <para lang="en">Action</para>
               <para lang="pt">Acção</para>
-              <para lang="ru">Действие</para>              
+              <para lang="ru">Действие</para>
             </entry>
           </row>
         </thead>
@@ -382,7 +382,7 @@
               (После нажатия на SELECT) Перемещение по полосе прокрутки к
               нужному месту в фильме.
             </para>
-            
+
           </entry>
         </row>
         <row>
@@ -424,7 +424,7 @@
             navigate progress bar to required point in film.#</para>
             <para lang="ru">Поставить воспроизведение на паузу, а также
             показать полосу прокрутки (нажмите еще раз, чтобы скрыть текст).
-            Используйте клавиши ВЛЕВО/ВПРАВО для перемещения по полосе 
+            Используйте клавиши ВЛЕВО/ВПРАВО для перемещения по полосе
             прокрутки к требуемому месту в фильме.</para>
           </entry>
         </row>
@@ -439,7 +439,7 @@
             - cycles between [time | remaining time | off].#</para>
             <para lang="ru">(Во время воспроизведения) Включить/выключить
             показ информации на экране. Повторные нажатия переключают показ
-            в такой последовательности: [ время | оставшееся время | отключить 
+            в такой последовательности: [ время | оставшееся время | отключить
             показ ].</para>
             <para lang="en">OR</para>
             <para lang="pt">OU</para>
@@ -447,8 +447,8 @@
             <para lang="en">(After pressing SELECT) Terminate scrolling and
             continue playback</para>
             <para lang="pt">Terminar busca e resumir vizualização</para>
-            <para lang="ru">(После нажатия на SELECT) Прекратить 
-            перемещение по полосе прокрутки и вернуться в режим 
+            <para lang="ru">(После нажатия на SELECT) Прекратить
+            перемещение по полосе прокрутки и вернуться в режим
             воспроизведения.</para>
           </entry>
         </row>
@@ -469,7 +469,7 @@
             </para>
             <para lang="ru">
               Переключает режим показа информации о синхронизации видео
-              и аудио (V/A), а также, если есть, режима синхронизации 
+              и аудио (V/A), а также, если есть, режима синхронизации
               видео и субтитров (S/V).
             </para>
           </entry>
@@ -514,7 +514,7 @@
               (veja O) Ajustar offset da sincronização de audio/video (+/-250ms)
             </para>
             <para lang="ru">
-              (см. O) Настроить смещение синхронизации аудио относительно 
+              (см. O) Настроить смещение синхронизации аудио относительно
               видео. (+/-250мс)
             </para>
             <para lang="en">OR</para>
@@ -527,7 +527,7 @@
               Ajustar o offset da sincronização de legendas/video. (+/-250ms)
             </para>
             <para lang="ru">
-              (см. O) Настроить смещение синхронизации субтитров относительно 
+              (см. O) Настроить смещение синхронизации субтитров относительно
               видео. (+/-250мс)
             </para>
           </entry>
@@ -573,15 +573,15 @@
       </tgroup>
     </informaltable>
   </sect2>
-  
+
   <sect2 id="usage-controls-playermenu" xreflabel="Player Menu">
     <title>
       <phrase lang="en">Player Menu</phrase>
       <phrase lang="pt">Menu do Leitor</phrase>
-      <phrase lang="ru">Меню настроек плейера</phrase>      
+      <phrase lang="ru">Меню настроек плейера</phrase>
     </title>
     <para lang="en">
-      The player menu (SMS v1.5 and above), allows you to change settings 
+      The player menu (SMS v1.5 and above), allows you to change settings
       mid-way through playback. Press START during playback to access the
       player menu.
     </para>
@@ -642,7 +642,7 @@
           </entry>
           <entry>
             <para lang="en">
-              <emphasis role="bold">X</emphasis> to change the audio 
+              <emphasis role="bold">X</emphasis> to change the audio
               language (for avi files with multiple audio streams)
             </para>
             <para lang="pt">
@@ -650,8 +650,8 @@
               audio (para ficheiros avi com múltiplas pistas de áudio).
             </para>
             <para lang="ru">
-              <emphasis role="bold">X</emphasis> для смены языка звуковой 
-              дорожки (только для файлов avi с несколькими звуковыми 
+              <emphasis role="bold">X</emphasis> для смены языка звуковой
+              дорожки (только для файлов avi с несколькими звуковыми
               дорожками).
             </para>
 
@@ -666,50 +666,50 @@
           <entry>
             <para lang="en">
               <emphasis role="bold">X</emphasis> to cycle between 5 display
-              modes: letterbox, pan-scan 1, pan-scan 2, pan-scan 3, 
+              modes: letterbox, pan-scan 1, pan-scan 2, pan-scan 3,
               fullscreen.
             </para>
             <para lang="pt">
-              <emphasis role="bold">X</emphasis> para rodar entre os 5 modos 
-              de vizualização disponíveis: 'letterbox', 'pan-scan 1/2/3', e 
+              <emphasis role="bold">X</emphasis> para rodar entre os 5 modos
+              de vizualização disponíveis: 'letterbox', 'pan-scan 1/2/3', e
               ecrã completo.
             </para>
            <para lang="ru">
               <emphasis role="bold">X</emphasis> переключает между следующими
-              режимами: letterbox, pan-scan 1, pan-scan 2, pan-scan 3, 
+              режимами: letterbox, pan-scan 1, pan-scan 2, pan-scan 3,
               полноэкранное воспроизведение (Fullscreen).
             </para>
             <para lang="en">
-              Letterbox display mode shows the full width of the original 
+              Letterbox display mode shows the full width of the original
               video with black bands at top and bottom of screen. Pan-scan
               zooms in on the video, using more vertical lines of the
-              screen, showing a larger image in the centre. The downside is 
+              screen, showing a larger image in the centre. The downside is
               that the left and right edges of the picture are cropped.
               Higher pan-scan modes zoom in more (and crop more).
-              Fullscreen mode stretches the image to fit the TV screen - 
+              Fullscreen mode stretches the image to fit the TV screen -
               this is useful when playing a widescreen movie file on
               a widescreen TV.
             </para>
             <para lang="pt">
               O modo 'letterbox' mostra o video com o seu comprimento original
-              com bandas pretas no topo e fundo do ecrã. 'Pan-Scan' amplia 
+              com bandas pretas no topo e fundo do ecrã. 'Pan-Scan' amplia
               o video, utilizando mais linhas verticais do ecrã, mostrando uma
               imagem maior no centro. O aspecto negativo é que os lados esq. e
               dir. da imagem são cortados. Quanto maior o nivel de 'pan-scan',
-              maior a ampliação e o corte. O modo de ecrã completo estica a 
+              maior a ampliação e o corte. O modo de ecrã completo estica a
               imagem para que esta caiba o ecrã da TV - isto é útil ao
               vizualizar um video em formato 'widescreen' numa TV 'widescreen'.
             </para>
             <para lang="ru">
-              Режим Letterbox показывает фильм в полную ширину с черными 
-              полосами вверху и внизу  экрана. Режим Pan-scan показывает 
-              картинку, используя вертикальный размер изображения, показывая 
-              бОльшую часть изображения в центре. Недостаток этого режима в 
-              том, что левый и правый края изображения обрезаются. Остальные 
-              режимы pan-scan увеличивают картинку (по вертикали) и обрезают 
-              (по горизонтали) ее еще больше. Режим Fullscreen растягивает 
-              изображение в размер экрана телевизора - это полезно, когда 
-              воспроизводится широкоэкранный фильм на широкоформатном 
+              Режим Letterbox показывает фильм в полную ширину с черными
+              полосами вверху и внизу  экрана. Режим Pan-scan показывает
+              картинку, используя вертикальный размер изображения, показывая
+              бОльшую часть изображения в центре. Недостаток этого режима в
+              том, что левый и правый края изображения обрезаются. Остальные
+              режимы pan-scan увеличивают картинку (по вертикали) и обрезают
+              (по горизонтали) ее еще больше. Режим Fullscreen растягивает
+              изображение в размер экрана телевизора - это полезно, когда
+              воспроизводится широкоэкранный фильм на широкоформатном
               телевизоре.
             </para>
           </entry>
@@ -730,8 +730,8 @@
               tempo começa a contar a partir do último butão pressionado.
             </para>
             <para lang="ru">
-              Автоматическое отключение PS2 после заданного времени. Отсчет 
-              времени начинается с момента последнего нажатия на кнопку. 
+              Автоматическое отключение PS2 после заданного времени. Отсчет
+              времени начинается с момента последнего нажатия на кнопку.
             </para>
             <para lang="en">
               <emphasis role="bold">X</emphasis> to increase
@@ -740,7 +740,7 @@
               <emphasis role="bold">X</emphasis> para aumentar
             </para>
             <para lang="ru">
-              <emphasis role="bold">X</emphasis> для увеличения значения 
+              <emphasis role="bold">X</emphasis> для увеличения значения
               таймера
             </para>
             <para lang="en">
@@ -750,7 +750,7 @@
               <emphasis role="bold">O</emphasis> para diminuir
             </para>
             <para lang="ru">
-              <emphasis role="bold">O</emphasis> для уменьшения значения 
+              <emphasis role="bold">O</emphasis> для уменьшения значения
               таймера
             </para>
             <para lang="en">
@@ -762,7 +762,7 @@
               acabar.
             </para>
             <para lang="ru">
-              <emphasis role="bold">auto</emphasis> = отключить питание, когда 
+              <emphasis role="bold">auto</emphasis> = отключить питание, когда
               воспроизведение фильма завершится.
             </para>
           </entry>
@@ -771,7 +771,7 @@
       </tgroup>
     </informaltable>
   </sect2>
-  
+
   <sect2 id="usage-controls-scrollbar">
     <title>
       <phrase lang="en">Scrollbar</phrase>
@@ -790,21 +790,21 @@
     <para lang="pt">
       Novo na versão 1.5 é a Barra de Busca, acessível durante a vizualização
       pressionando <emphasis role="bold">SELECT</emphasis>. Quando activada, a
-      barra de busca mostra a posição corrente do video. Isto pode ser 
+      barra de busca mostra a posição corrente do video. Isto pode ser
       ajustado pressionando <emphasis role="bold">ESQUERDA/DIREITA</emphasis>,
-      depois a vizualização pode ser resumida desse ponto pressionando 
+      depois a vizualização pode ser resumida desse ponto pressionando
       <emphasis role="bold">X</emphasis> ou
       <emphasis role="bold">START</emphasis>.
     </para>
     <para lang="ru">
-      Начиная с версии 1.5, в программе появилась полоса прокрутки, 
+      Начиная с версии 1.5, в программе появилась полоса прокрутки,
       появляющаяся в режиме воспроизведения при нажатии на кнопку
       <emphasis role="bold">SELECT</emphasis>. При появлении на экране,
       полоса прокрутки показывает текущую позицию в видеофайле. Эту позицию
-      можно изменить, нажимая на кнопки 
-      <emphasis role="bold">ВЛЕВО/ВПРАВО</emphasis>, после чего, 
-      воспроизведение продолжитсч с выбранной позиции при нажатии на кнопку 
-      <emphasis role="bold">X</emphasis> или 
+      можно изменить, нажимая на кнопки
+      <emphasis role="bold">ВЛЕВО/ВПРАВО</emphasis>, после чего,
+      воспроизведение продолжитсч с выбранной позиции при нажатии на кнопку
+      <emphasis role="bold">X</emphasis> или
       <emphasis role="bold">START</emphasis>.
     </para>
 
@@ -837,7 +837,7 @@
     Sim, isso é tudo muito bonito, mas como é k vejo os meus filmes DivX?
   </para>
   <para lang="ru">
-   Это все, конечно, хорошо, но как я могу посмотреть мой фильм, записанный в 
+   Это все, конечно, хорошо, но как я могу посмотреть мой фильм, записанный в
    DivX?
   </para>
   <para lang="en">
@@ -847,7 +847,7 @@
     Existem várias maneiras de vizualizar ficheiros de video:
   </para>
   <para lang="ru">
-    Существуют несколько способов воспроизведения видео файлов: 
+    Существуют несколько способов воспроизведения видео файлов:
   </para>
   <itemizedlist mark='bullet'>
     <listitem>
@@ -896,7 +896,7 @@
     </listitem>
     <listitem>
       <para lang="en">
-        <link linkend="usage-usb">From a USB drive attached to the 
+        <link linkend="usage-usb">From a USB drive attached to the
         PS2</link> (also called USB mass storage device).
       </para>
       <para lang="pt">

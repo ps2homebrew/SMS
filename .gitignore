@@ -1,0 +1,30 @@
+#
+# NOTE! Please use 'git ls-files -i --exclude-standard'
+# command after changing this file, to see if there are
+# any tracked files which get ignored after the change.
+#
+# Normal rules
+#
+*.a
+*.diff
+*.elf
+*.ELF
+*.erl
+*.exe
+*.irx
+*.map
+*.o
+*.patch
+*.rej
+*.s
+*.DS_Store
+
+docs/temp
+docs/HTML
+docs/HTML-single
+docs/zip
+docs/stylesheets/html-chunk.xsl
+docs/stylesheets/html-single.xsl
+docs/stylesheets/profile.xsl
+docs/xsltproc.sh
+docs/xmllint.sh

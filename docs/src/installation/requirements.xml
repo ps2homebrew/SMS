@@ -7,11 +7,11 @@
     <phrase lang="el">#Requirements#</phrase>
     <phrase lang="es">#Requirements#</phrase>
     <phrase lang="pt">Requerimentos</phrase>
-    <phrase lang="ru">Системные требования</phrase>        
+    <phrase lang="ru">Системные требования</phrase>
   </title>
-  
+
   <para lang="en">
-    In order to run SMS you will need a working technique to run homebrew 
+    In order to run SMS you will need a working technique to run homebrew
     PS2 <filename>.ELF</filename> applications, e.g. a working boot manager
     such as <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=37242">uLaunchELF</ulink>.
     The options you have available to you depend mainly on which PS2 variant you have:
@@ -23,9 +23,9 @@
     The options you have available to you depend mainly on which PS2 variant you have:#
   </para>
   <para lang="ru">
-    Для установки SMS необходим какой-либо способ запускать сторонние (не 
+    Для установки SMS необходим какой-либо способ запускать сторонние (не
     авторизованные Sony) программы <filename>.ELF</filename>. Например,
-    вы можете воспользоваться каким-либо менеджером загрузки, таким как 
+    вы можете воспользоваться каким-либо менеджером загрузки, таким как
     <ulink url="http://www.ps2-scene.org/forums/showthread.php?t=37242">uLaunchELF</ulink>.
     В любом случае, все зависит от типа имеющейся у вас PS2.
   </para>
@@ -126,10 +126,10 @@
     you've got <application>uLaunchELF</application> on your TV screen.#
   </para>
   <para lang="ru">
-    Если у вас нет возможности запускать <filename>.ELF</filename> файлы на 
+    Если у вас нет возможности запускать <filename>.ELF</filename> файлы на
     вашей консоли, то работать с SMS у вас не получится. На немодифицированной
     консоли запустить SMS напрямую с CD/DVD невозможно. Если у вас есть
-    немодифицированная "тонкая" PS2 и модчип вы ставить не хотите, то 
+    немодифицированная "тонкая" PS2 и модчип вы ставить не хотите, то
     единственным вариантом запуска SMS будет способ <ulink
     url="http://forums.afterdawn.com/thread_view.cfm/337567">смены диска</ulink>,
     требующий терпения. Когда вы увидите на экране своего телевизора окно
@@ -180,7 +180,7 @@
     Если ваша система отвечает требованиям, изложенным выше, выберите способ,
     с помощью которого вы хотите установить SMS на вашей PS2:
   </para>
-  
+
   <itemizedlist>
     <listitem>
       <para>
