@@ -1,0 +1,271 @@
+Mevcut medya:
+yok
+SMS baþlatýlýyor...
+Ayarlar kaydediliyor...
+Yükleniyor %s...
+Að arayüzü baþlatýlýyor...
+USBD.IRX aranýyor...
+Medya bekleniyor (menü için "start" a basýn)...
+Disk okunuyor...
+Geçersiz disk (devam etmek için X e basýn)...
+Medya okunuyor...
+Görüntü ayarlarý...
+Aygýt ayarlarý...
+Tarayýcý ayarlarý...
+Oynatýcý ayarlarý...
+Yardým...
+Ayarlarý kaydet
+Konsolu kapat
+SMS den çýk
+TV sistemi
+PAL
+NTSC
+Otomatik
+Karakter seti
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Görüntü ayarlarý
+SMS Menüsü
+Görüntüyü sola kaydýr
+Görüntüyü saða kaydýr
+Görüntüyü yukarý kaydýr
+Görüntüyü aþaðý kaydýr
+Aðý otomatik baþlat
+USB yi otomatik baþlat
+HDD yi otomatik baþlat
+Aygýt ayarlarý
+Að desteðini baþlat
+HDD desteðini baþlat
+USB desteðini baþlat
+IPCONFIG.DAT düzenle...
+IPCONFIG.DAT düzenle
+IP Adresi (kýsým 1)
+IP Adresi (kýsým 2)
+IP Adresi (kýsým 3)
+IP Adresi (kýsým 4)
+Að Maskesi (kýsým 1)
+Að Maskesi (kýsým 2)
+Að Maskesi (kýsým 3)
+Að Maskesi (kýsým 4)
+Að geçidi Adresi (kýsým 1)
+Að geçidi Adresi (kýsým 2)
+Að geçidi Adresi (kýsým 3)
+Að geçidi Adresi (kýsým 4)
+IPCONFIG.DAT Kaydet/Güncelle
+Tarayýcý ayarlarý
+Arka plan resmi kullan
+Dosyalarý sýrala
+Medya dosyalarýný filtrele
+HDL kýsýmlarýný göster
+Sistem kýsýmlarýný gizle
+Aktif sýnýr rengi
+Ýnaktif sýnýr rengi
+Font rengi
+Seçim çubuðu rengi
+Oynatýcý ayarlarý
+Varsayýlan ses
+Altyazý hizalama
+Altyazý yeri
+Otomatik altyazý yükleme
+Saydamsýz altyazýlar
+Altyazý rengi
+Altyazý kalýn rengi
+Altyazý italik rengi
+Altyazý altý çizili rengi
+Otomatik kapanma
+Çubuk uzunluðu
+Çubuk pozisyonu
+Çubuk zamanýný göster
+Çubuk rengi
+Ses çubuðu rengi
+Ses animasyon gösterimi
+üst
+alt
+kapalý
+orta
+sol
+%d dk
+%d birim
+Altyazý font geniþliði
+Altyazý font yüksekliði
+Hýzlý yardým
+ 
+Baþlarken:
+select+R1 - NTSC modu
+select+R2 - PAL modu
+Tarayýcý:
+üçgen - ana klasör
+sol/sað - aygýt menüsü
+yukarý/aþaðý - klasörü dolaþ
+çarpý - aksiyon
+select+yuvarlak - makineyi kapat
+select+R1 - görüntüyü saða hizala
+select+L1 - görüntüyü sola hizala
+select+R2 - görüntüyü aþaðý hizala
+select+L2 - görüntüyü yukarý hizala
+select+kare - ayarlarý kaydet
+select+üçgen - ana tarayýcý
+L1+L2+R1+R2 - hakkýnda menüsü
+Oynatýcý:
+yukarý/aþaðý - sesi ayarla
+sol/sað - ÝLERÝ/GERÝ modu
+çarpý - ÝLERÝ/GERÝ modunu kapat
+üçgen - dur
+select - durakla/zaman çizgisi
+start - devam/menü
+çarpý - OSD zaman
+kare - pan-scan modu
+L1 - pan sol
+R1 - pan sað
+yuvarlak - V/A (S/V) sync modu
+L2 - sync deðerini azalt
+R2 - sync deðerini artýr
+SMS menüsü:
+çarpý/yuvarlak - aksiyon/ileri
+üçgen - yukarý/çýkýþ
+Hata (devam etmek için X e basýn)...
+IPCONFIG.DAT kaydediliyor...
+Seçim çubuðu rengi
+Geliþmiþ ayarlar...
+Görüntü boyutu
+Ayarlarý uygula
+Geliþmiþ ayarlar
+Örnek
+Ýngilizce
+Türkçe
+Dil
+Parçalar yükleniyor...
+Altyazýlar yükleniyor...
+Altyazý: %s hata (%d), devam etmek için X e basýn...
+format
+sekans
+Yüklenen dosya %s ...
+Dosya tipi saptanýyor...
+Durakla
+Durduruluyor
+varsayýlan
+V/A:
+S/V:
+Oynat 
+Ýleri 
+ Geri 
+Posizyon
+Desteklenmeyen dosya tipi (devam etmek için "X" e basýn)...
+Kalan
+Oynatýcý menüsü
+Görüntü
+letterbox
+pan-scan 1
+pan-scan 2
+pan-scan 3
+tam ekran
+Altyazýlarý göster
+Altyazýlarý seç
+ana tarayýcý
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Çýkýþta
+Ses Efekti
+S/PDIF - Dolby Digital/DTS
+MP3 ayarlarý...
+Rasgele playlist
+Tekrar modu
+Ses spektrum gösterimi
+HDD'ye kopyala
+Kopyalanýyor
+KB/s
+Eylemi seçiniz
+Görüntü çözünürlüðü
+32 bit
+16 bit
+32 bit
+16 bit
+DTV 480P
+Kontrol port 2
+gamepad
+uzaktan kumanda
+AC3 menzil seviyesi level
+sað
+VESA (60Hz)
+VESA (75Hz)
+geniþ ekran
+geniþ pan-scan 1
+geniþ pan-scan 2
+Að protokolü
+ps2dev/host
+SMB/CIFS
+Baðlantý hatasý (devam etmek için "X" e basýn)...
+Protokol hatasý (%d) (devam etmek için "X" e basýn)...
+Giriþ hatasý (%d) (devam etmek için "X" e basýn)...
+Altyazýlar?
+CD/DVD yi menet?
+Görüntü geniþliði
+Okunuyor %s...
+Hata: hafýza yetersiz
+Boþ yer kontrol ediliyor...
+Hata: HDD yeterli boþ yer yok
+Klasör dizini oluþturuluyor...
+Sil
+Siliniyor...
+CD/DVD hýzý
+orta
+yüksek
+düþük
+Yön butonlarý
+DTV 1080I
+DTV 720P
+Çalýþma modu
+oto-haberleþme
+otomatik
+manuel
+Duplex modu
+tam
+yarým
+Standart
+10Base-T
+100Base-TX
+Að ayarlarý...
+Að ayarlarý
+Senkronizasyon parametresi 1 (video)
+Senkronizasyon parametresi 2 (GUI)
+SMB sunucusu...
+Askýdaki baðlantý koparlýyor...
+SMS dilini güncelle
+SMS paletini güncelle
+SMS yi güncelle
+SMB sunucu listesini güncelle
+Arka plan görüntüsü ekle
+Ýþleniyor...
+SMS yedeði oluþturuluyor...
+Hepsini oynat
+Ses
+Video
+Otomatik tanýma parametresi
+Oynatmaya þuradan baþlat
+merkez-sað
+Hata denetleyicisi kullan
+Altyazý MBCS
+Font yükleniyor...
+ODML indeksi yükleniyor %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

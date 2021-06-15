@@ -1,0 +1,269 @@
+Pilih media:  
+Tidak ada
+Loading SMS...
+Menyimpan konfigurasi...
+Loading %s...
+Menyalakan jaringan...
+Mencari USBD.IRX...
+Masukan media! ("start" untuk menu)...
+Membaca disk...
+Disk ilegal("X" untuk lanjut)...
+Membaca media...
+Atur Tampilan...
+Atur Perangkat...
+Atur Browser...
+Atur Player...
+Bantuan...
+Simpan pengaturan
+Matikan PS2
+Keluar
+Sistem TV
+PAL
+NTSC
+Auto
+Jenis Karakter
+WinLatin1
+WinLatin2
+WinCyrillic
+WinGreek
+Pengaturan Tampilan
+Menu SMS
+Geser gambar ke kiri
+Geser gambar ke kanan
+Geser gambar ke atas
+Geser gambar ke bawah
+LAN aktif otomatis
+USB aktif otomatis
+HDD aktif otomatis
+Pengaturan peralatan
+Aktifkan LAN
+Aktifkan HDD
+Aktifkan USB
+Edit IPCONFIG.DAT...
+Edit IPCONFIG.DAT
+Alamat IP (bagian 1)
+Alamat IP (bagian 2)
+Alamat IP (bagian 3)
+Alamat IP (bagian 4)
+Net Mask (bagian 1)
+Net Mask (bagian 2)
+Net Mask (bagian 3)
+Net Mask (bagian 4)
+Alamat Gateway (bagian 1)
+Alamat Gateway (bagian 2)
+Alamat Gateway (bagian 3)
+Alamat Gateway (bagian 4)
+Simpan IPCONFIG.DAT
+Pengaturan Browser
+Gambar latar
+Urutkan file
+Sembunyikan file tdk didukung
+Tampilkan partisi HDL
+Sembunyikan partisi sistem
+Warna border aktif
+Warna border tidak aktif
+Warna teks
+Warna teks Status
+Pengaturan Player
+Volume
+Posisi Teks
+Geser Teks
+Pasang teks dgn otomatis
+Teks dikotaki
+Warna teks
+Warna teks tebal
+Warna teks miring
+Warna teks bergaris bwh
+Mati otomatis
+Panjang Scroll bar
+Posisi Scroll bar
+Tampilkan waktu scroll bar
+Warna Scroll bar
+Warna Volume
+Animasi Audio
+atas
+bawah
+mati
+tengah
+kiri
+%d menit
+%d pts
+Lebar font teks
+tinggi font teks
+Bantuan Ringkas
+ 
+Ketika startup:
+select+R1 - mode NTSC
+select+R2 - mode PAL
+Browser:
+Segitiga - folder atas
+kiri/kanan - menu perangkat
+atas/bawah - bernavigasi di folder
+X - eksekusi/pilih
+select+O - Matikan
+select+R1 - geser gambar ke kanan
+select+L1 - geser gambar ke kiri
+select+R2 - geser gambar ke bawah
+select+L2 - geser gambar ke atas
+select+kotak - simpan setting
+select+segitiga - kembali ke browser
+L1+L2+R1+R2 - "tentang SMS"
+Player:
+atas/bawah - atur volume
+kanan/kiri - FFWD/REW
+X - PLAY
+segitiga - stop
+select - pause/garis waktu
+start - lanjut/menu
+X - timer OSD
+kotak - atur aspect ratio
+L1 - ke kiri
+R1 - ke kanan
+O - V/A (S/V) sync mode
+L2 - kurangi sync value
+R2 - tambah sync value
+Menu SMS:
+X/O - aksi/ke level bawah
+segitiga - ke level atas/keluar
+Error (X untuk lanjut)...
+Menyimpan IPCONFIG.DAT...
+Warna seleksi
+Pengaturan lanjut...
+Tinggi tampilan
+aktifkan pengaturan
+Pengaturan lanjut
+contoh
+Indonesia
+Indonesia
+Bahasa
+Loading indices...
+Loading teks...
+Teks: %s error (%d), "X" untuk lanjut...
+format
+Urutan
+Loading %s file...
+Memeriksa format file...
+Pause
+Berhenti....
+awal
+V/A:
+S/V:
+Play 
+Percepat 
+ Mundur 
+Kursor
+File tidak didukung("X" untuk lanjut)...
+sisa
+Menu player
+Tampilan
+Lebar
+paskan 1
+paskan 2
+paskan 3
+layar-penuh
+Tampilkan teks
+Pilih teks
+jalankan browser
+mc0:/BOOT/BOOT.ELF
+mc0:/B?DATA-SYSTEM/BOOT.ELF
+Keluar ke
+Efek Suara
+S/PDIF - Dolby Digital/DTS
+Pengaturan MP3...
+Acak playlist
+Pengulangan
+Tampilkan spektrum suara
+Copy ke HDD
+men-copy...
+KB/s
+pilih
+Kedalaman warna
+32 bit
+16 bit
+DTV 480P
+Kontrol ke 2
+gamepad
+remote control
+Jangkauan suara AC3
+kanan
+VESA (60Hz)
+VESA (75Hz)
+layarlebar
+paskan melebar 1
+paskan melebar 2
+Protokol jaringan
+ps2dev/host
+SMB/CIFS
+Kesalahan komunikasi ("X"untuk lanjut)...
+Negosiasi protokol salah (%d) ("X" untuk lanjut)...
+Kesalahan Login (%d) ("X" untuk lanjut)...
+Teks
+Matikan CD/DVD
+Lebar tampilan
+Membaca %s...
+Error: memori habis
+Memeriksa ruang kosong...
+Error: tidak cukup ruang di HDD
+Membuat direktori...
+Hapus
+Menghapus...
+Kecepatan CD/DVD
+Normal
+Cepat
+Pelan
+Tombol arah
+DTV 1080i
+DTV 720p
+Mode operasi
+Negosiasi-otomatis
+Otomatis
+Manual
+Mode dupleks
+Penuh
+Setengah
+Standart
+10Base-T
+100Base-TX
+Pengaturan jaringan...
+Pengaturan jaringan
+Parameter sinkron 1 (video)
+Parameter sinkron 2 (GUI)
+Server SMB...
+Mematikan koneksi tertunda...
+Perbaharui bahasa SMS
+Perbaharui palet sms
+Perbaharui SMS
+Perbaharui daftar server SMB
+Tambahkan gambar latar
+memproses...
+Membuat cadangan SMS...
+Play semua
+Audio
+Video
+parameter deteksi otomatis
+Mulai play dari
+Tangah-kanan
+Gunakan pengurus kesalahan
+?Subtitle MBCS
+?Loading font...
+?Loading ODML indices %d...
+?File size: 
+?GB
+?KB
+%d.%02d
+%d.%03d
+?Kb/s
+?Hz
+?ch
+?Available memory: %.1fMB/%.2fMB
+?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
+?Image offset
+?Video resolution is too big (press 'cross' to continue)...
+?Synch. parameter 3 (audio)
+?Images
+?Unsupported or corrupted image
+?Reset button action
+?power off
+?exit
+?Video auto 2:2 pulldown
+?DTV 576p

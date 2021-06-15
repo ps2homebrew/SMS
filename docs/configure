@@ -140,7 +140,7 @@ else
 fi
 
 cat > stylesheets/profile.xsl << EOF
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version='1.0'>
 <!-- **************************************************
      This file is generated automatically. DO NOT EDIT.
@@ -157,7 +157,7 @@ cat > stylesheets/profile.xsl << EOF
 EOF
 
 cat > stylesheets/html-chunk.xsl << EOF
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- **************************************************
      This file is generated automatically. DO NOT EDIT.
      ************************************************** -->
@@ -172,7 +172,7 @@ cat > stylesheets/html-chunk.xsl << EOF
 EOF
 
 cat > stylesheets/html-single.xsl << EOF
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- **************************************************
      This file is generated automatically. DO NOT EDIT.
      ************************************************** -->

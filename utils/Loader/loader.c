@@ -44,6 +44,6 @@ void _start (  char* apProgName, void ( *error ) ( void )  ) {
 
 int SIF_SyncIOP ( void ) {
 
- return SifGetReg ( 4 ) & 0x00040000; 
+ return SifGetReg ( 4 ) & 0x00040000;
 
 }  /* end SIF_SyncIOP */

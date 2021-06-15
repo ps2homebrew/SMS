@@ -1,11 +1,9 @@
-----------------------------------------------------------------------------
-This file is based on the equivalent file of the MPlayer documentation
-(hhtp://www.mplayerhq.hu).  It is therefore covered by the GPL license
-version 2.
-----------------------------------------------------------------------------
+This file is based on the equivalent file of the MPlayer documentation (hhtp://www.mplayerhq.hu). It is therefore covered by the GPL license version 2.
+
+---
 
 Tools required for building the documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---
 
 * GNU make 3.80 or later
 * DocBook 4.1.2 or later
@@ -19,7 +17,7 @@ ones successfully, so they are required:
 * xsltproc (part of libxslt1) is used for transforming XML files into HTML
   files. Version 1.0.18 or later is recommended.
 
-It's also possible to use the Saxon XSLT Processor. The Russian translator
+It `s also possible to use the Saxon XSLT Processor. The Russian translator
 used it (version 6.4.4) for a while. If you have a suitable JavaVM and a
 saxon.jar installed somewhere, configure will try to detect them. If
 autodetection fails, try to tweak DOCS/xml/configure to get it working and
@@ -36,7 +34,7 @@ devel->make, text->docbook-xml43, text->docbook-xsl, text->libxml2,
 text->libxslt. You can do this while cygwin is running.
 
 Installing the required tools from source
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 1) Download libxslt AND libxml2 packages from
    http://xmlsoft.org/XSLT/downloads.html
@@ -53,8 +51,10 @@ Installing the required tools from source
    Extract this package into a directory, enter it, and execute the following
    commands:
 
-	mkdir -p /usr/share/sgml/docbook/dtd/xml/4.2/
+	```sh
+   mkdir -p /usr/share/sgml/docbook/dtd/xml/4.2/
 	cp -r * /usr/share/sgml/docbook/dtd/xml/4.2/
+   ```
 
 
 3) Download the docbook-xsl package from
@@ -67,13 +67,15 @@ Installing the required tools from source
    Extract this package into a directory, enter it, and execute the following
    commands:
 
-	mkdir -p /usr/share/sgml/docbook/stylesheet/xsl/nwalsh
+	```sh
+   mkdir -p /usr/share/sgml/docbook/stylesheet/xsl/nwalsh
 	cp -r VERSION common html lib \
 		/usr/share/sgml/docbook/stylesheet/xsl/nwalsh
+   ```
 
 
 Building the documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+---
 
 Before trying to build the documentation, run
 
@@ -85,11 +87,12 @@ variables.
 
 The general procedure is:
 
-   sh ./configure
-   make html-single-en
+	sh ./configure
+	make html-single-en
 
-This will build the 'big html file' version of the english documentation.
-'make help' describes more options.
+This will build the `big html file` version of the english documentation.
+
+`make help` describes more options.
 
 Please look at the output of the configure script, it can help to figure
 out what the problems are, if any.
