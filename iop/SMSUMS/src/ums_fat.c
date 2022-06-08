@@ -912,7 +912,7 @@ static int _fat_dclose ( iop_file_t* apFile ) {
 
 static int _fat_dread ( iop_file_t* apFile, void* apBuf ) {
 
- fio_dirent_t*   lpEntry  = ( fio_dirent_t*   )apBuf;
+ io_dirent_t*   lpEntry  = ( io_dirent_t*   )apBuf;
  find_file_info* lpFFInfo = ( find_file_info* )apFile -> privdata;
  USBMDevice*     lpDev;
  int             lfCont;

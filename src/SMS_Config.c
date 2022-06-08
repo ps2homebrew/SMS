@@ -18,8 +18,12 @@
 #include "SMS_IOP.h"
 
 #include <malloc.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
+#include <sjis.h>
 
 extern void _check_dc_offset ( void );
 extern unsigned char g_IconSMS[ 2020 ] __attribute__(   (  section( ".data" )  )   );

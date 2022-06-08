@@ -27,6 +27,9 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
 
 #define BUF_SIZE ( 4096 * 96 )
 

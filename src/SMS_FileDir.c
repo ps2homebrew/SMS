@@ -26,7 +26,10 @@
 
 #include <kernel.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
+#include <iox_stat.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <malloc.h>
@@ -222,7 +225,7 @@ void SMS_FileDirInit ( char* apPath ) {
  SMS_List*     lpDirList;
  SMS_List*     lpFileList;
  SMS_List*     lpList;
- fio_dirent_t  lEntry;
+ io_dirent_t  lEntry;
  char          lPath[ 1024 ] __attribute__(   (  aligned( 4 )  )   );
  char*         lpPtr;
  SMS_ListNode* lpNode;

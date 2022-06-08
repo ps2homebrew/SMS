@@ -15,7 +15,8 @@
 #include "SMS_MC.h"
 
 #include <string.h>
-#include <fileio.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <malloc.h>
 
 char g_SMSLng[ 12 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   ) = "SMS/SMS.lng";

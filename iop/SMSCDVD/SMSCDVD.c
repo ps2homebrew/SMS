@@ -894,7 +894,7 @@ static int CDVD_dopen ( iop_io_file_t* apFile, const char* apName ) {
 
 static int ISO_DRead ( iop_io_file_t* apFile, void* apRetVal ) {
 
- fio_dirent_t* lpBuf = ( fio_dirent_t* )apRetVal;
+ io_dirent_t* lpBuf = ( io_dirent_t* )apRetVal;
 
  if ( !s_tocEntryPointer ) return -EPROTO;
 

@@ -16,7 +16,9 @@
 #include <malloc.h>
 #include <string.h>
 #include <sys/stat.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
+#include <iox_stat.h>
 
 #define STRING( n ) (   (  ( char* )( n )  ) + sizeof ( SMS_DirNode )   )
 
@@ -94,7 +96,7 @@ void SMS_DirTreeScan ( SMS_DirTree* apTree, SMS_Dir* apRoot, const char* apPath 
  if ( lDD >= 0 ) {
 
   SMS_DirNode* lpNode;
-  fio_dirent_t lEntry;
+  io_dirent_t lEntry;
 
   if ( apTree -> DirCB ) {
    apTree -> m_Error = apTree -> DirCB ( lpPath );

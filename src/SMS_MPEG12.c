@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <kernel.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef struct MPEGState {
 

@@ -30,6 +30,7 @@
 #include <kernel.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
 #include <libhdd.h>
 

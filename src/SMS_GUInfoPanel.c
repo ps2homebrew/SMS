@@ -22,6 +22,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 extern SMS_Player s_Player;
 
@@ -121,7 +122,7 @@ GUIObject* SMS_GUInfo ( SMS_Container* apCont ) {
   sprintf ( lpPtr, g_pFmt0, lpCodec -> m_BitRate / 1000, STR_KbS.m_pStr, lpCodec -> m_SampleRate, STR_Hz.m_pStr, lpCodec -> m_Channels, STR_Ch.m_pStr );
  }  /* end if */
 
- sprintf ( lMemory, STR_AVAILABLE_MEMORY.m_pStr, (  32 * 1024 * 1024 - ( int )ps2_sbrk ( 0 )  ) / ( 1024.0F * 1024.0F ), ( float )SMS_IOPQueryTotalFreeMemSize () / ( 1024.0F * 1024.0F )  );
+ sprintf ( lMemory, STR_AVAILABLE_MEMORY.m_pStr, (  32 * 1024 * 1024 - ( int )sbrk ( 0 )  ) / ( 1024.0F * 1024.0F ), ( float )SMS_IOPQueryTotalFreeMemSize () / ( 1024.0F * 1024.0F )  );
 
  lGB   = strlen ( lVideo  );
  lMB   = strlen ( lAudio  );

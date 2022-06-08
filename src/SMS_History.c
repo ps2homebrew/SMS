@@ -13,8 +13,11 @@
 #include "SMS_List.h"
 #include "SMS_MC.h"
 
-#include <fileio.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
 
 #define HIST_SIZE 32
 

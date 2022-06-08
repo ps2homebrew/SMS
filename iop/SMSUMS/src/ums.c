@@ -441,9 +441,9 @@ static int _ums_dread ( iop_file_t* apFile, void* apData ) {
 
    else {
 
-    fio_dirent_t* lpEntry = ( fio_dirent_t* )apData;
+    io_dirent_t* lpEntry = ( io_dirent_t* )apData;
 
-    mips_memset (  apData, 0, sizeof ( fio_dirent_t )  );
+    mips_memset (  apData, 0, sizeof ( io_dirent_t )  );
     strcpy ( lpEntry -> name, lpDev -> m_LUName[ lIdx ] );
     lIdx                += 1;
     lpEntry -> stat.mode = FIO_SO_IFDIR;

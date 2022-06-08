@@ -31,8 +31,12 @@
 
 #include <kernel.h>
 #include <malloc.h>
+#include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <stdio.h>
+#include <fcntl.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
 
 unsigned char* g_pSPRTop;
@@ -751,7 +755,7 @@ __asm__(
 
 void SMS_EEScanDir ( const char* apPath, const char* apExt, SMS_List* apList ) {
 
- fio_dirent_t lEntry;
+ io_dirent_t lEntry;
  int          lDD;
 
  lDD = fioDopen ( apPath );

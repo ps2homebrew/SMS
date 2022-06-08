@@ -26,7 +26,8 @@
 #include "SMS_FLAC.h"
 #include "SMS_VideoBuffer.h"
 
-#include <malloc.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 
 static SMS_CodecTag s_CodecVideoTags[] = {
