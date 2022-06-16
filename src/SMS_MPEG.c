@@ -62,7 +62,6 @@ void SMS_MPEG_SetQScale ( int aQScale ) {
  __asm__ __volatile__(
   ".set noreorder\n\t"
   ".set nomacro\n\t"
-  ".set noat\n\t"
   "addiu    $v0, $zero,  1\n\t"
   "addiu    $v1, $zero, 31\n\t"
   "pmaxw    $a0, $a0, $v0\n\t"
@@ -80,7 +79,6 @@ void SMS_MPEG_SetQScale ( int aQScale ) {
   "lbu      $v0, 0($v0)\n\t"
   "sb       $a1, %3\n\t"
   "sb       $v0, %5\n\t"
-  ".set at\n\t"
   ".set macro\n\t"
   ".set reorder\n\t"
   :: "m"( g_MPEGCtx.m_QScale           ),
@@ -1211,27 +1209,25 @@ void SMS_MPEG_DummyCB ( void* apMB ) {}
 void SMS_MPEG_MCB ( void* apParam ) {
  __asm__ __volatile__(
   ".set noreorder\n\t"
-  ".set noat\n\t"
   "pcpyld   $ra, $ra, $ra\n\t"
   "pcpyld   $s0, $s0, $s0\n\t"
   "lui      $a1, 0x7000\n\t"
   "jal      DSP_PackAddMB\n\t"
   "addu     $s0, $zero, $a0\n\t"
   "lh       $v0, %1\n\t"
-  "lui      $at, 0x1001\n\t"
+  "lui      " ASM_REG_T0 ", 0x1001\n\t"
   "lw       $a1, %0\n\t"
   "addiu    $v1, $zero, 0x0100\n\t"
   "addiu    $a2, $zero, 24\n\t"
-  "sw       $a1, -0x2FF0($at)\n\t"
-  "sw       $a2, -0x2FE0($at)\n\t"
+  "sw       $a1, -0x2FF0(" ASM_REG_T0 ")\n\t"
+  "sw       $a2, -0x2FE0(" ASM_REG_T0 ")\n\t"
   "xori     $v0, $v0, 1\n\t"
-  "sw       $s0, -0x2F80($at)\n\t"
-  "sw       $v1, -0x3000($at)\n\t"
+  "sw       $s0, -0x2F80(" ASM_REG_T0 ")\n\t"
+  "sw       $v1, -0x3000(" ASM_REG_T0 ")\n\t"
   "sh       $v0, %1\n\t"
   "pcpyud   $ra, $ra, $ra\n\t"
   "pcpyud   $s0, $s0, $s0\n\t"
   ".set reorder\n\t"
-  ".set at\n\t"
   :: "g"( s_pDest ), "g"( g_MPEGCtx.m_MCBlkIdx )
  );
 }  /* end SMS_MPEG_MCB */

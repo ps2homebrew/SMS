@@ -1985,12 +1985,10 @@ static int _mpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
     g_MPEGCtx.m_MBIntra = 0;
 
     __asm__ __volatile__(
-     ".set noat\n\t"
-     "pnor  $at, $zero, $zero\n\t"
-     "sd    $at, %0\n\t"
-     "sw    $at, 8+%0\n\t"
-     ".set at\n\t"
-     :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+     "pnor  " ASM_REG_T0 ", $zero, $zero\n\t"
+     "sd    " ASM_REG_T0 ", %0\n\t"
+     "sw    " ASM_REG_T0 ", 8+%0\n\t"
+     :: "g"( g_MPEGCtx.m_BlockLastIdx ) : ASM_REG_T0
     );
 
     g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
@@ -2155,12 +2153,10 @@ static int _mpeg4_decode_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
   if ( g_MPEGCtx.m_MBSkiped ) {
 
    __asm__ __volatile__(
-    ".set noat\n\t"
-    "pnor  $at, $zero, $zero\n\t"
-    "sd    $at, %0\n\t"
-    "sw    $at, 8+%0\n\t"
-    ".set at\n\t"
-    :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+    "pnor  " ASM_REG_T0 ", $zero, $zero\n\t"
+    "sd    " ASM_REG_T0 ", %0\n\t"
+    "sw    " ASM_REG_T0 ", 8+%0\n\t"
+    :: "g"( g_MPEGCtx.m_BlockLastIdx ) : ASM_REG_T0
    );
 
    g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
@@ -2410,12 +2406,10 @@ static int _mpeg4_decode_partitioned_mb ( SMS_DCTELEM aBlock[ 6 ][ 64 ] ) {
   if (  SMS_IS_SKIP( lMBType )  ) {
 
    __asm__ __volatile__(
-    ".set noat\n\t"
-    "pnor  $at, $zero, $zero\n\t"
-    "sd    $at, %0\n\t"
-    "sw    $at, 8+%0\n\t"
-    ".set at\n\t"
-    :: "g"( g_MPEGCtx.m_BlockLastIdx ) : "at"
+    "pnor  " ASM_REG_T0 ", $zero, $zero\n\t"
+    "sd    " ASM_REG_T0 ", %0\n\t"
+    "sw    " ASM_REG_T0 ", 8+%0\n\t"
+    :: "g"( g_MPEGCtx.m_BlockLastIdx ) : ASM_REG_T0
    );
 
    g_MPEGCtx.m_MVDir    = SMS_MV_DIR_FORWARD;
