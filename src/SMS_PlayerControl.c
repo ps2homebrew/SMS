@@ -177,7 +177,7 @@ static void _sb_init ( void ) {
 
  __asm__ __volatile__(
   ".set noreorder\n\t"
-  "addu     $t9, $zero, $ra\n\t"
+  "addu     " ASM_REG_T9 ", $zero, $ra\n\t"
   "li       $v0, 20\n\t"
   "move     $a0, $zero\n\t"
   "dsll32   $v0, $v0, 0\n\t"
@@ -189,9 +189,9 @@ static void _sb_init ( void ) {
   "sw       $v0, %0\n\t"
   "addu     $v0, $v0, $a1\n\t"
   "sw       $v0, %1\n\t"
-  "addu     $ra, $zero, $t9\n\t"
+  "addu     $ra, $zero, " ASM_REG_T9 "\n\t"
   ".set reorder\n\t"
-  : "=m"( s_SBY1 ), "=m"( s_SBY2 ) : "r"( lY ) : "a0", "a1", "a2", "v0", "v1", "t9"
+  : "=m"( s_SBY1 ), "=m"( s_SBY2 ) : "r"( lY ) : "a0", "a1", "a2", "v0", "v1", ASM_REG_T9
  );
 
  lX <<= 4;

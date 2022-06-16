@@ -178,10 +178,10 @@ __asm__(                        // a0 = CSC parameters
  "pcpyld    $ra, $ra, $ra\n\t"
  "bgezal    $zero, _sms_cscsyn\n\t"
  "lh        $a3,  0($a0)\n\t"       // a3 = number of slices
- "lh        $t1,  4($a0)\n\t"       // t1 = remainder
+ "lh        " ASM_REG_T1 ",  4($a0)\n\t"       // t1 = remainder
  "pcpyud    $ra, $ra, $ra\n\t"
  "sh        $a3,  2($a0)\n\t"       // s_nBlk[ 1 ] = a3
- "sh        $t1,  6($a0)\n\t"       // s_nRem[ 1 ] = t1
+ "sh        " ASM_REG_T1 ",  6($a0)\n\t"       // s_nRem[ 1 ] = t1
  "beql      $a3, $zero, 1f\n\t"     // if ( number of slices == 0 ) goto 1f
  "lh        $v0, 10($a0)\n\t"       // v0 = lQWC
  "addiu     $a3, $a3, -1\n\t"
@@ -190,22 +190,22 @@ __asm__(                        // a0 = CSC parameters
  "beq       $zero, $zero, 2f\n\t"
  "addiu     $v1, $zero, 1023\n\t"   // v1 = number of macroblocks (1023)
  "1:\n\t"
- "addu      $v1, $zero, $t1\n\t"    // v1 = number of macroblocks (remainder)
+ "addu      $v1, $zero, " ASM_REG_T1 "\n\t"    // v1 = number of macroblocks (remainder)
  "sh        $zero, 6($a0)\n\t"      // no more data
  "2:\n\t"
- "lw        $t0, 12($a0)\n\t"
+ "lw        " ASM_REG_T0 ", 12($a0)\n\t"
  "addiu     $a3, $zero, 0x0100\n\t"
- "addiu     $t1, $zero, 0x0105\n\t"
+ "addiu     " ASM_REG_T1 ", $zero, 0x0105\n\t"
  "sw        $a2, -20464($at)\n\t"   // D3_MADR = a2
  "sw        $v0, -20448($at)\n\t"   // D3_QWC  = v0
  "sw        $a3, -20480($at)\n\t"   // start D3
  "sw        $zero, -19424($at)\n\t" // D4_QWC  = 0
  "sw        $a1, -19408($at)\n\t"   // D4_TADR = a1
- "sw        $t1, -19456($at)\n\t"   // start D4
- "or        $t0, $t0, $v1\n\t"
+ "sw        " ASM_REG_T1 ", -19456($at)\n\t"   // start D4
+ "or        " ASM_REG_T0 ", " ASM_REG_T0 ", $v1\n\t"
  "lui       $at, 0x1000\n\t"
  "jr        $ra\n\t"
- "sd        $t0, 0x2000($at)\n\t"   // start IPU CSC
+ "sd        " ASM_REG_T0 ", 0x2000($at)\n\t"   // start IPU CSC
  ".set at\n\t"
  ".set macro\n\t"
  ".set reorder\n\t"
@@ -233,13 +233,13 @@ __asm__(
  "lh    $v0, 10($a1)\n\t"       // v0 = QWCR
  "sh    $zero, 6($a1)\n\t"      // no more data
  "2:\n\t"
- "lw    $t0,  12($a1)\n"        // t0 = CSC command
+ "lw    " ASM_REG_T0 ",  12($a1)\n"        // t0 = CSC command
  "ori   $a2, $zero, 0x0100\n\t"
  "sw    $v0, -20448($at)\n\t"   // D3_QWC = v0
  "sw    $a2, -20480($at)\n\t"   // start D3
- "or    $t0, $t0, $v1\n\t"
+ "or    " ASM_REG_T0 ", " ASM_REG_T0 ", $v1\n\t"
  "lui   $at, 0x1000\n\t"
- "sd    $t0, 0x2000($at)\n\t"   // start IPU CSC
+ "sd    " ASM_REG_T0 ", 0x2000($at)\n\t"   // start IPU CSC
  "3:\n\t"
  "jr    $ra\n\t"
  "xor   $v0, $v0, $v0\n\t"

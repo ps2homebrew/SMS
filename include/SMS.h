@@ -283,6 +283,16 @@ struct DMAChannel;
 #define ASM_REG_Q "Q"
 #define ASM_REG_I "I"
 #endif
+#define ASM_REG_T0 "$8"
+#define ASM_REG_T1 "$9"
+#define ASM_REG_T2 "$10"
+#define ASM_REG_T3 "$11"
+#define ASM_REG_T4 "$12"
+#define ASM_REG_T5 "$13"
+#define ASM_REG_T6 "$14"
+#define ASM_REG_T7 "$15"
+#define ASM_REG_T8 "$24"
+#define ASM_REG_T9 "$25"
 
 #ifdef __cplusplus
 extern "C" {
