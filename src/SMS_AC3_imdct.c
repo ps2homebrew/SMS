@@ -354,7 +354,7 @@ __asm__(
  "pexcw     $a2, $a2\n\t"
  "pexew     $a2, $a2\n\t"
  "prevh     $a2, $a2\n\t"
- "phmaddh   $a1, $a0, $a2\n\t"
+ "phmadh    $a1, $a0, $a2\n\t"
  "psrlw     $a0, $a0, 16\n\t"
  "pmulth    $a0, $a0, $a2\n\t"
  "mtsah     $zero, 2\n\t"
