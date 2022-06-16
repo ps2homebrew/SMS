@@ -8,6 +8,8 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+#include "SMS.h"
+
 int SMS_TimeZone ( void );
 __asm__(
  ".set noreorder\n\t"
