@@ -432,7 +432,7 @@ _gs_xyz:
     vftoi4.xyzw $vf1, $vf1
     qmfc2       $a1, $vf1
     qmtc2       $at, $vf1
-    qfsrv       $a1, $a1
+    qfsrv       $a1, $a1, $a1
     move        $a2, $a1
     and         $a2, $a2, $v1
     jr          $ra
@@ -469,7 +469,7 @@ GS_XYZv:
     qmtc2   $t3, $vf3
     dsll32  $t0, $t0, 0
     addu    $a3, $a1, $v1
-    pcpyld  $t0, $t0
+    pcpyld  $t0, $t0, $t0
 1:
     lqc2    $vf4, 0($a1)
     lqc2    $vf5, 0($a3)

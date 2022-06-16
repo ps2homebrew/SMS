@@ -580,10 +580,10 @@ MP123_Synth:
     pexew   $t2, $t2
     pexew   $t1, $t1
     pexew   $t0, $t0
-    qfsrv   $t3, $t3
-    qfsrv   $t2, $t2
-    qfsrv   $t1, $t1
-    qfsrv   $t0, $t0
+    qfsrv   $t3, $t3, $t3
+    qfsrv   $t2, $t2, $t2
+    qfsrv   $t1, $t1, $t1
+    qfsrv   $t0, $t0, $t0
     qmtc2   $t3, $vf8
     qmtc2   $t2, $vf7
     qmtc2   $t1, $vf6
@@ -610,8 +610,8 @@ MP123_Synth:
     qmfc2   $t1, $vf11
     pexew   $t0, $t0
     pexew   $t1, $t1
-    qfsrv   $t0, $t0
-    qfsrv   $t1, $t1
+    qfsrv   $t0, $t0, $t0
+    qfsrv   $t1, $t1, $t1
     qmtc2   $t0, $vf5
     qmtc2   $t1, $vf6
     vadd.xyzw   $vf13, $vf9, $vf5
@@ -626,8 +626,8 @@ MP123_Synth:
     pexew   $t1, $t1
     vmul.xyzw   $vf15, $vf15, $vf5
     vmul.xyzw   $vf16, $vf16, $vf6
-    qfsrv   $t0, $t0
-    qfsrv   $t1, $t1
+    qfsrv   $t0, $t0, $t0
+    qfsrv   $t1, $t1, $t1
     qmtc2   $t0, $vf4
     qmtc2   $t1, $vf3
     vsub.xyzw   $vf19, $vf1, $vf4
@@ -644,10 +644,10 @@ MP123_Synth:
     pexew   $t1, $t1
     pexew   $t2, $t2
     pexew   $t3, $t3
-    qfsrv   $t0, $t0
-    qfsrv   $t1, $t1
-    qfsrv   $t2, $t2
-    qfsrv   $t3, $t3
+    qfsrv   $t0, $t0, $t0
+    qfsrv   $t1, $t1, $t1
+    qfsrv   $t2, $t2, $t2
+    qfsrv   $t3, $t3, $t3
     qmtc2   $t0, $vf14
     qmtc2   $t1, $vf16
     qmtc2   $t2, $vf18
@@ -673,7 +673,7 @@ MP123_Synth:
     pcpyud  $t0, $t1, $t0
     pexew   $t0, $t0
     pcpyld  $v0, $v0, $v0
-    qfsrv   $t0, $t0
+    qfsrv   $t0, $t0, $t0
     qmtc2   $t2, $vf9
     qmtc2   $t0, $vf10
     qmtc2   $v0, $vf5
@@ -685,7 +685,7 @@ MP123_Synth:
     pcpyld  $t2, $t0, $t1
     pcpyud  $t0, $t1, $t0
     pexew   $t0, $t0
-    qfsrv   $t0, $t0
+    qfsrv   $t0, $t0, $t0
     qmtc2   $t2, $vf11
     qmtc2   $t0, $vf12
     vsub.xyzw   $vf15, $vf11, $vf12
@@ -696,7 +696,7 @@ MP123_Synth:
     pcpyld  $t2, $t0, $t1
     pcpyud  $t0, $t1, $t0
     pexew   $t0, $t0
-    qfsrv   $t0, $t0
+    qfsrv   $t0, $t0, $t0
     qmtc2   $t2, $vf4
     qmtc2   $t0, $vf3
     vsub.xyzw   $vf18, $vf4, $vf3
@@ -707,7 +707,7 @@ MP123_Synth:
     pcpyld  $t2, $t0, $t1
     pcpyud  $t0, $t1, $t0
     pexew   $t0, $t0
-    qfsrv   $t0, $t0
+    qfsrv   $t0, $t0, $t0
     qmtc2   $t2, $vf2
     qmtc2   $t0, $vf1
     vsub.xyzw   $vf19, $vf2, $vf1
