@@ -8,6 +8,11 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+
+#define ABI_EABI64
+#include <as_reg_compat.h>
+#undef at
+
 .text
 
 .set noat
