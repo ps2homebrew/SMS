@@ -11,6 +11,8 @@
 #ifndef __SMS_GUI_H
 #define __SMS_GUI_H
 
+#include <tamtypes.h>
+
 #define GUI_MSG_MOUNT_BIT  0x0000000000100000L
 #define GUI_MSG_MOUNT_MASK 0x00000000001F0000L
 #define GUI_MSG_PAD_MASK   0x000000000000FFFFL
@@ -37,10 +39,10 @@
 
 #define DECLARE_GUI_OBJECT()                                \
  void ( *Render      ) ( struct GUIObject*, int           ); \
- int  ( *HandleEvent ) ( struct GUIObject*, unsigned long ); \
+ int  ( *HandleEvent ) ( struct GUIObject*, u64           ); \
  void ( *SetFocus    ) ( struct GUIObject*, int           ); \
  void ( *Cleanup     ) ( struct GUIObject*                ); \
- unsigned long* m_pGSPacket;
+ u64*           m_pGSPacket;
 
 typedef enum GUIHResult {
 
@@ -94,8 +96,8 @@ void          GUI_Progress     ( unsigned char*, int, int );
 void          GUI_Run          ( void                     );
 void          GUI_Suspend      ( void                     );
 void          GUI_Resume       ( void                     );
-unsigned long GUI_WaitEvent    ( void                     );
-void          GUI_PostMessage  ( unsigned long            );
+u64           GUI_WaitEvent    ( void                     );
+void          GUI_PostMessage  ( u64                      );
 void          GUI_DeleteObject ( const unsigned char*     );
 void          GUI_UpdateStatus ( void                     );
 void          GUI_SetColors    ( void                     );

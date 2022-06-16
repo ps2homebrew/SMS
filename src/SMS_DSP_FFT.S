@@ -15,6 +15,11 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+
+#define ABI_EABI64
+#include <as_reg_compat.h>
+#undef at
+
 .set noat
 .set volatile
 .set noreorder
@@ -252,21 +257,21 @@ DSP_FFTInit:
     lh      $t1, 0($t1)
     lh      $t2, 0($t2)
     lh      $t3, 0($t3)
-    mtc1    $t0, $f00
-    mtc1    $t1, $f01
-    mtc1    $t2, $f02
-    mtc1    $t3, $f03
-    cvt.s.w $f00, $f00
-    cvt.s.w $f01, $f01
-    cvt.s.w $f02, $f02
-    cvt.s.w $f03, $f03
-    swc1    $f00,   0($a1)
+    mtc1    $t0, $f0
+    mtc1    $t1, $f1
+    mtc1    $t2, $f2
+    mtc1    $t3, $f3
+    cvt.s.w $f0, $f0
+    cvt.s.w $f1, $f1
+    cvt.s.w $f2, $f2
+    cvt.s.w $f3, $f3
+    swc1    $f0,   0($a1)
     sw      $zero,  4($a1)
-    swc1    $f01,   8($a1)
+    swc1    $f1,   8($a1)
     sw      $zero, 12($a1)
-    swc1    $f02,  16($a1)
+    swc1    $f2,  16($a1)
     sw      $zero, 20($a1)
-    swc1    $f03,  24($a1)
+    swc1    $f3,  24($a1)
     sw      $zero, 28($a1)
     bgtz    $v1, 1b
     addiu   $a1, $a1, 32
@@ -296,27 +301,27 @@ DSP_FFTRun:
     sll     $v0, $v0, 3
     addu    $v1, $v1, $a0
     addu    $v0, $v0, $a0
-    lwc1    $f00, 0($v0)
-    lwc1    $f04, 4($v0)
-    mul.s   $f10, $f14, $f00
-    mul.s	$f02, $f12, $f04
-    mul.s   $f00, $f12, $f00
-    mul.s   $f04, $f14, $f04
-    lwc1    $f08, 0($v1)
-    add.s   $f02, $f02, $f10
-    lwc1    $f06, 4($v1)
-    sub.s	$f00, $f00, $f04
-    add.s	$f10, $f06, $f02
-    sub.s   $f06, $f06, $f02
-    add.s   $f04, $f08, $f00
+    lwc1    $f0, 0($v0)
+    lwc1    $f4, 4($v0)
+    mul.s   $f10, $f14, $f0
+    mul.s	$f2, $f12, $f4
+    mul.s   $f0, $f12, $f0
+    mul.s   $f4, $f14, $f4
+    lwc1    $f8, 0($v1)
+    add.s   $f2, $f2, $f10
+    lwc1    $f6, 4($v1)
+    sub.s	$f0, $f0, $f4
+    add.s	$f10, $f6, $f2
+    sub.s   $f6, $f6, $f2
+    add.s   $f4, $f8, $f0
     addu    $a1, $a1, $a2
-    sub.s   $f08, $f08, $f00
+    sub.s   $f8, $f8, $f0
     sltiu   $t0, $a1, 512
-    swc1    $f06, 4($v0)
-    swc1    $f08, 0($v0)
+    swc1    $f6, 4($v0)
+    swc1    $f8, 0($v0)
     swc1    $f10, 4($v1)
     bne     $t0, $zero, 3b
-    swc1    $f04, 0($v1)
+    swc1    $f4, 0($v1)
     addiu   $t1, $t1, 1
     sltu    $v0, $t1, $a3
     bne     $v0, $zero, 2b
@@ -332,16 +337,20 @@ DSP_FFTRun:
 DSP_FFTGet:
     addiu       $sp, $sp, -272
     ctc2        $zero, $21
-    sqc2        $vf01,   0($sp)
-    vmaddi      $vf01, $vf01, I
-    sqc2        $vf02,  16($sp)
-    sqc2        $vf03,  32($sp)
-    sqc2        $vf04,  48($sp)
-    sqc2        $vf05,  64($sp)
-    sqc2        $vf06,  80($sp)
-    sqc2        $vf07,  96($sp)
-    sqc2        $vf08, 112($sp)
-    sqc2        $vf09, 128($sp)
+    sqc2        $vf1,   0($sp)
+.ifdef .gasversion.
+    vmaddi      $vf1, $vf1, $I
+.else
+    vmaddi      $vf1, $vf1, I
+.endif
+    sqc2        $vf2,  16($sp)
+    sqc2        $vf3,  32($sp)
+    sqc2        $vf4,  48($sp)
+    sqc2        $vf5,  64($sp)
+    sqc2        $vf6,  80($sp)
+    sqc2        $vf7,  96($sp)
+    sqc2        $vf8, 112($sp)
+    sqc2        $vf9, 128($sp)
     sqc2        $vf10, 144($sp)
     sqc2        $vf11, 160($sp)
     sqc2        $vf12, 176($sp)
@@ -349,106 +358,157 @@ DSP_FFTGet:
     sqc2        $vf14, 208($sp)
     sqc2        $vf15, 224($sp)
     sqc2        $vf16, 240($sp)
-    sqc2        $vf01, 256($sp)
+    sqc2        $vf1, 256($sp)
     lui         $a1, 0x7000
     addiu       $v0, $v0, 32
 1:
-    lqc2        $vf01,   0($a0)
-    lqc2        $vf02,  16($a0)
-    lqc2        $vf03,  32($a0)
-    lqc2        $vf04,  48($a0)
-    lqc2        $vf05,  64($a0)
-    lqc2        $vf06,  80($a0)
-    lqc2        $vf07,  96($a0)
-    lqc2        $vf08, 112($a0)
-    vmul.xyzw   $vf01, $vf01, $vf01
-    vmul.xyzw   $vf02, $vf02, $vf02
-    vmul.xyzw   $vf03, $vf03, $vf03
-    vmul.xyzw   $vf04, $vf04, $vf04
-    vmr32.xz    $vf09, $vf01
-    vmr32.xz    $vf10, $vf02
-    vmr32.xz    $vf11, $vf03
-    vmr32.xz    $vf12, $vf04
-    vadd.xz     $vf01, $vf01, $vf09
-    vadd.xz     $vf02, $vf02, $vf10
-    vadd.xz     $vf03, $vf03, $vf11
-    vadd.xz     $vf04, $vf04, $vf12
-    vmul.xyzw   $vf05, $vf05, $vf05
-    vmul.xyzw   $vf06, $vf06, $vf06
-    vmul.xyzw   $vf07, $vf07, $vf07
-    vmul.xyzw   $vf08, $vf08, $vf08
-    vmr32.xz    $vf13, $vf05
-    vmr32.xz    $vf14, $vf06
-    vmr32.xz    $vf15, $vf07
-    vmr32.xz    $vf16, $vf08
-    vadd.xz     $vf05, $vf05, $vf13
-    vadd.xz     $vf06, $vf06, $vf14
-    vadd.xz     $vf07, $vf07, $vf15
-    vadd.xz     $vf08, $vf08, $vf16
-    vsqrt       Q, $vf01x
+    lqc2        $vf1,   0($a0)
+    lqc2        $vf2,  16($a0)
+    lqc2        $vf3,  32($a0)
+    lqc2        $vf4,  48($a0)
+    lqc2        $vf5,  64($a0)
+    lqc2        $vf6,  80($a0)
+    lqc2        $vf7,  96($a0)
+    lqc2        $vf8, 112($a0)
+    vmul.xyzw   $vf1, $vf1, $vf1
+    vmul.xyzw   $vf2, $vf2, $vf2
+    vmul.xyzw   $vf3, $vf3, $vf3
+    vmul.xyzw   $vf4, $vf4, $vf4
+    vmr32.xz    $vf9, $vf1
+    vmr32.xz    $vf10, $vf2
+    vmr32.xz    $vf11, $vf3
+    vmr32.xz    $vf12, $vf4
+    vadd.xz     $vf1, $vf1, $vf9
+    vadd.xz     $vf2, $vf2, $vf10
+    vadd.xz     $vf3, $vf3, $vf11
+    vadd.xz     $vf4, $vf4, $vf12
+    vmul.xyzw   $vf5, $vf5, $vf5
+    vmul.xyzw   $vf6, $vf6, $vf6
+    vmul.xyzw   $vf7, $vf7, $vf7
+    vmul.xyzw   $vf8, $vf8, $vf8
+    vmr32.xz    $vf13, $vf5
+    vmr32.xz    $vf14, $vf6
+    vmr32.xz    $vf15, $vf7
+    vmr32.xz    $vf16, $vf8
+    vadd.xz     $vf5, $vf5, $vf13
+    vadd.xz     $vf6, $vf6, $vf14
+    vadd.xz     $vf7, $vf7, $vf15
+    vadd.xz     $vf8, $vf8, $vf16
+.ifdef .gasversion.
+    vsqrt       $Q, $vf1x
     vwaitq
-    vaddq.x     $vf01, $vf00, Q
-    vsqrt       Q, $vf01z
+    vaddq.x     $vf1, $vf0, $Q
+    vsqrt       $Q, $vf1z
     vwaitq
-    vaddq.z     $vf01, $vf00, Q
-    vsqrt       Q, $vf02x
+    vaddq.z     $vf1, $vf0, $Q
+    vsqrt       $Q, $vf2x
     vwaitq
-    vaddq.x     $vf02, $vf00, Q
-    vsqrt       Q, $vf02z
+    vaddq.x     $vf2, $vf0, $Q
+    vsqrt       $Q, $vf2z
     vwaitq
-    vaddq.z     $vf02, $vf00, Q
-    vsqrt       Q, $vf03x
+    vaddq.z     $vf2, $vf0, $Q
+    vsqrt       $Q, $vf3x
     vwaitq
-    vaddq.x     $vf03, $vf00, Q
-    vsqrt       Q, $vf03z
+    vaddq.x     $vf3, $vf0, $Q
+    vsqrt       $Q, $vf3z
     vwaitq
-    vaddq.z     $vf03, $vf00, Q
-    vsqrt       Q, $vf04x
+    vaddq.z     $vf3, $vf0, $Q
+    vsqrt       $Q, $vf4x
     vwaitq
-    vaddq.x     $vf04, $vf00, Q
-    vsqrt       Q, $vf04z
+    vaddq.x     $vf4, $vf0, $Q
+    vsqrt       $Q, $vf4z
     vwaitq
-    vaddq.z     $vf04, $vf00, Q
-    vsqrt       Q, $vf05x
+    vaddq.z     $vf4, $vf0, $Q
+    vsqrt       $Q, $vf5x
     vwaitq
-    vaddq.x     $vf05, $vf00, Q
-    vsqrt       Q, $vf05z
+    vaddq.x     $vf5, $vf0, $Q
+    vsqrt       $Q, $vf5z
     vwaitq
-    vaddq.z     $vf05, $vf00, Q
-    vsqrt       Q, $vf06x
+    vaddq.z     $vf5, $vf0, $Q
+    vsqrt       $Q, $vf6x
     vwaitq
-    vaddq.x     $vf06, $vf00, Q
-    vsqrt       Q, $vf06z
+    vaddq.x     $vf6, $vf0, $Q
+    vsqrt       $Q, $vf6z
     vwaitq
-    vaddq.z     $vf06, $vf00, Q
-    vsqrt       Q, $vf07x
+    vaddq.z     $vf6, $vf0, $Q
+    vsqrt       $Q, $vf7x
     vwaitq
-    vaddq.x     $vf07, $vf00, Q
-    vsqrt       Q, $vf07z
+    vaddq.x     $vf7, $vf0, $Q
+    vsqrt       $Q, $vf7z
     vwaitq
-    vaddq.z     $vf07, $vf00, Q
-    vsqrt       Q, $vf08x
+    vaddq.z     $vf7, $vf0, $Q
+    vsqrt       $Q, $vf8x
     vwaitq
-    vaddq.x     $vf08, $vf00, Q
-    vsqrt       Q, $vf08z
+    vaddq.x     $vf8, $vf0, $Q
+    vsqrt       $Q, $vf8z
     vwaitq
-    vaddq.z     $vf08, $vf00, Q
-    vaddz.y     $vf01, $vf00, $vf01
-    vaddx.z     $vf01, $vf00, $vf02
-    vaddz.w     $vf01, $vf00, $vf02
-    vaddz.y     $vf03, $vf00, $vf03
-    vaddx.z     $vf03, $vf00, $vf04
-    vaddz.w     $vf03, $vf00, $vf04
-    vaddz.y     $vf05, $vf00, $vf05
-    vaddx.z     $vf05, $vf00, $vf06
-    vaddz.w     $vf05, $vf00, $vf06
-    vaddz.y     $vf07, $vf00, $vf07
-    vaddx.z     $vf07, $vf00, $vf08
-    vaddz.w     $vf07, $vf00, $vf08
-    sqc2        $vf01, 0x3800($a1)
-    sqc2        $vf03, 0x3810($a1)
-    sqc2        $vf05, 0x3820($a1)
-    sqc2        $vf07, 0x3830($a1)
+    vaddq.z     $vf8, $vf0, $Q
+.else
+    vsqrt       Q, $vf1x
+    vwaitq
+    vaddq.x     $vf1, $vf0, Q
+    vsqrt       Q, $vf1z
+    vwaitq
+    vaddq.z     $vf1, $vf0, Q
+    vsqrt       Q, $vf2x
+    vwaitq
+    vaddq.x     $vf2, $vf0, Q
+    vsqrt       Q, $vf2z
+    vwaitq
+    vaddq.z     $vf2, $vf0, Q
+    vsqrt       Q, $vf3x
+    vwaitq
+    vaddq.x     $vf3, $vf0, Q
+    vsqrt       Q, $vf3z
+    vwaitq
+    vaddq.z     $vf3, $vf0, Q
+    vsqrt       Q, $vf4x
+    vwaitq
+    vaddq.x     $vf4, $vf0, Q
+    vsqrt       Q, $vf4z
+    vwaitq
+    vaddq.z     $vf4, $vf0, Q
+    vsqrt       Q, $vf5x
+    vwaitq
+    vaddq.x     $vf5, $vf0, Q
+    vsqrt       Q, $vf5z
+    vwaitq
+    vaddq.z     $vf5, $vf0, Q
+    vsqrt       Q, $vf6x
+    vwaitq
+    vaddq.x     $vf6, $vf0, Q
+    vsqrt       Q, $vf6z
+    vwaitq
+    vaddq.z     $vf6, $vf0, Q
+    vsqrt       Q, $vf7x
+    vwaitq
+    vaddq.x     $vf7, $vf0, Q
+    vsqrt       Q, $vf7z
+    vwaitq
+    vaddq.z     $vf7, $vf0, Q
+    vsqrt       Q, $vf8x
+    vwaitq
+    vaddq.x     $vf8, $vf0, Q
+    vsqrt       Q, $vf8z
+    vwaitq
+    vaddq.z     $vf8, $vf0, Q
+.endif
+    vaddz.y     $vf1, $vf0, $vf1
+    vaddx.z     $vf1, $vf0, $vf2
+    vaddz.w     $vf1, $vf0, $vf2
+    vaddz.y     $vf3, $vf0, $vf3
+    vaddx.z     $vf3, $vf0, $vf4
+    vaddz.w     $vf3, $vf0, $vf4
+    vaddz.y     $vf5, $vf0, $vf5
+    vaddx.z     $vf5, $vf0, $vf6
+    vaddz.w     $vf5, $vf0, $vf6
+    vaddz.y     $vf7, $vf0, $vf7
+    vaddx.z     $vf7, $vf0, $vf8
+    vaddz.w     $vf7, $vf0, $vf8
+    sqc2        $vf1, 0x3800($a1)
+    sqc2        $vf3, 0x3810($a1)
+    sqc2        $vf5, 0x3820($a1)
+    sqc2        $vf7, 0x3830($a1)
     addiu       $v0, $v0, -1
     addiu       $a0, $a0, 128
     bgtz        $v0, 1b
@@ -465,22 +525,33 @@ DSP_FFTGet:
 3:
     addiu       $v0, $zero, 8
 2:
-    vadda.xyzw  ACC, $vf00, $vf00
-    lqc2        $vf01, 0x3800($a1)
-    lqc2        $vf02, 0x3810($a1)
-    lqc2        $vf03, 0x3820($a1)
-    lqc2        $vf04, 0x3830($a1)
-    vmadda.xyzw ACC, $vf01, $vf10
-    vmadda.xyzw ACC, $vf02, $vf10
-    vmadda.xyzw ACC, $vf03, $vf10
-    vmadda.xyzw ACC, $vf04, $vf10
-    vmadd.xyzw  $vf01, $vf00, $vf00
-    vaddy.x     $vf01, $vf01, $vf01
-    vaddz.x     $vf01, $vf01, $vf01
-    vaddw.x     $vf01, $vf01, $vf01
+.ifdef .gasversion.
+    vadda.xyzw  $ACC, $vf0, $vf0
+.else
+    vadda.xyzw  ACC, $vf0, $vf0
+.endif
+    lqc2        $vf1, 0x3800($a1)
+    lqc2        $vf2, 0x3810($a1)
+    lqc2        $vf3, 0x3820($a1)
+    lqc2        $vf4, 0x3830($a1)
+.ifdef .gasversion.
+    vmadda.xyzw $ACC, $vf1, $vf10
+    vmadda.xyzw $ACC, $vf2, $vf10
+    vmadda.xyzw $ACC, $vf3, $vf10
+    vmadda.xyzw $ACC, $vf4, $vf10
+.else
+    vmadda.xyzw ACC, $vf1, $vf10
+    vmadda.xyzw ACC, $vf2, $vf10
+    vmadda.xyzw ACC, $vf3, $vf10
+    vmadda.xyzw ACC, $vf4, $vf10
+.endif
+    vmadd.xyzw  $vf1, $vf0, $vf0
+    vaddy.x     $vf1, $vf1, $vf1
+    vaddz.x     $vf1, $vf1, $vf1
+    vaddw.x     $vf1, $vf1, $vf1
     addiu       $a1, $a1, 64
     addiu       $v0, $v0, -1
-    qmfc2       $v1, $vf01
+    qmfc2       $v1, $vf1
     addiu       $a2, $a2, 4
     bgtz        $v0, 2b
     sw          $v1, 0x37FC($a2)
@@ -488,47 +559,51 @@ DSP_FFTGet:
     bgtzl       $a3, 3b
     addiu       $a1, $a1, 512
     lui         $a1, 0x7000
-    lqc2        $vf01,  0($t0)
-    lqc2        $vf02, 16($t0)
-    lqc2        $vf03, 32($t0)
-    lqc2        $vf04, 48($t0)
-    lqc2        $vf05, 64($t0)
-    lqc2        $vf06, 80($t0)
-    lqc2        $vf07, 0x3800($a1)
-    lqc2        $vf08, 0x3810($a1)
-    lqc2        $vf09, 0x3820($a1)
+    lqc2        $vf1,  0($t0)
+    lqc2        $vf2, 16($t0)
+    lqc2        $vf3, 32($t0)
+    lqc2        $vf4, 48($t0)
+    lqc2        $vf5, 64($t0)
+    lqc2        $vf6, 80($t0)
+    lqc2        $vf7, 0x3800($a1)
+    lqc2        $vf8, 0x3810($a1)
+    lqc2        $vf9, 0x3820($a1)
     lqc2        $vf10, 0x3830($a1)
-    vmul.xyzw   $vf07, $vf07, $vf01
-    vmul.xyzw   $vf08, $vf08, $vf02
-    vmul.xyzw   $vf09, $vf09, $vf03
-    vmul.xyzw   $vf10, $vf10, $vf04
-    vmini.xyzw  $vf07, $vf07, $vf05
-    vmini.xyzw  $vf08, $vf08, $vf05
-    vmini.xyzw  $vf09, $vf09, $vf05
-    vmini.xyzw  $vf10, $vf10, $vf05
-    vmax.xyzw   $vf07, $vf07, $vf06
-    vmax.xyzw   $vf08, $vf08, $vf06
-    vmax.xyzw   $vf09, $vf09, $vf06
-    vmax.xyzw   $vf10, $vf10, $vf06
-    vftoi0.xyzw $vf07, $vf07
-    vftoi0.xyzw $vf08, $vf08
-    vftoi0.xyzw $vf09, $vf09
+    vmul.xyzw   $vf7, $vf7, $vf1
+    vmul.xyzw   $vf8, $vf8, $vf2
+    vmul.xyzw   $vf9, $vf9, $vf3
+    vmul.xyzw   $vf10, $vf10, $vf4
+    vmini.xyzw  $vf7, $vf7, $vf5
+    vmini.xyzw  $vf8, $vf8, $vf5
+    vmini.xyzw  $vf9, $vf9, $vf5
+    vmini.xyzw  $vf10, $vf10, $vf5
+    vmax.xyzw   $vf7, $vf7, $vf6
+    vmax.xyzw   $vf8, $vf8, $vf6
+    vmax.xyzw   $vf9, $vf9, $vf6
+    vmax.xyzw   $vf10, $vf10, $vf6
+    vftoi0.xyzw $vf7, $vf7
+    vftoi0.xyzw $vf8, $vf8
+    vftoi0.xyzw $vf9, $vf9
     vftoi0.xyzw $vf10, $vf10
     lqc2        $vf16, 256($sp)
-    sqc2        $vf07, 0x3800($a1)
-    sqc2        $vf08, 0x3810($a1)
-    sqc2        $vf09, 0x3820($a1)
+    sqc2        $vf7, 0x3800($a1)
+    sqc2        $vf8, 0x3810($a1)
+    sqc2        $vf9, 0x3820($a1)
     sqc2        $vf10, 0x3830($a1)
+.ifdef .gasversion.
+    vaddai      $ACC, $vf16, $I
+.else
     vaddai      ACC, $vf16, I
-    lqc2        $vf01,   0($sp)
-    lqc2        $vf02,  16($sp)
-    lqc2        $vf03,  32($sp)
-    lqc2        $vf04,  48($sp)
-    lqc2        $vf05,  64($sp)
-    lqc2        $vf06,  80($sp)
-    lqc2        $vf07,  96($sp)
-    lqc2        $vf08, 112($sp)
-    lqc2        $vf09, 128($sp)
+.endif
+    lqc2        $vf1,   0($sp)
+    lqc2        $vf2,  16($sp)
+    lqc2        $vf3,  32($sp)
+    lqc2        $vf4,  48($sp)
+    lqc2        $vf5,  64($sp)
+    lqc2        $vf6,  80($sp)
+    lqc2        $vf7,  96($sp)
+    lqc2        $vf8, 112($sp)
+    lqc2        $vf9, 128($sp)
     lqc2        $vf10, 144($sp)
     lqc2        $vf11, 160($sp)
     lqc2        $vf12, 176($sp)

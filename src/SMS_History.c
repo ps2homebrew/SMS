@@ -47,9 +47,9 @@ void SMS_HistoryLoad ( void ) {
 
 }  /* end SMS_HistoryLoad */
 
-long SMS_HistoryLook ( const char* apPath, void** appNode ) {
+s64  SMS_HistoryLook ( const char* apPath, void** appNode ) {
 
- long          retVal = -1;
+ s64           retVal = -1;
  SMS_ListNode* lpNode = s_pHst -> m_pHead;
 
  while ( lpNode ) {
@@ -65,7 +65,7 @@ long SMS_HistoryLook ( const char* apPath, void** appNode ) {
 
 }  /* end SMS_HistoryLook */
 
-void SMS_HistoryAdd ( const char* apPath, long aPTS ) {
+void SMS_HistoryAdd ( const char* apPath, s64  aPTS ) {
 
  SMS_ListNode* lpNode;
 

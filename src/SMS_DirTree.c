@@ -103,7 +103,7 @@ void SMS_DirTreeScan ( SMS_DirTree* apTree, SMS_Dir* apRoot, const char* apPath 
 
   while (  fioDread ( lDD, &lEntry ) > 0  ) {
 
-   unsigned long lData;
+   u64           lData;
    SMS_DirNode*  lpNode;
 
    if ( apTree -> BrkCB ) {
@@ -132,7 +132,7 @@ error:
      goto end;
     }  /* end if */
     lEntry.name[ 0 ] = '\x00';
-    lData = ( unsigned long )( unsigned )lpList;
+    lData = ( u64           )( unsigned )lpList;
     ++apTree -> m_nDirs;
    } else continue;
 

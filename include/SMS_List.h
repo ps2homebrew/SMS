@@ -11,11 +11,13 @@
 #ifndef __SMS_List_H
 #define __SMS_List_H
 
+#include <tamtypes.h>
+
 #define _STR( n ) (   ( char* )( n + 1 )  )
 
 typedef struct SMS_ListNode {
 
- unsigned long        m_Param;
+ u64                  m_Param;
  struct SMS_ListNode* m_pNext;
  struct SMS_ListNode* m_pPrev;
 

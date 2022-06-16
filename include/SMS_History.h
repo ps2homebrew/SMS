@@ -16,8 +16,8 @@ extern "C" {
 #endif  /* __cplusplus */
 
 void SMS_HistoryLoad   ( void                );
-long SMS_HistoryLook   ( const char*, void** );
-void SMS_HistoryAdd    ( const char*, long   );
+s64  SMS_HistoryLook   ( const char*, void** );
+void SMS_HistoryAdd    ( const char*, s64    );
 int  SMS_HistoryRemove ( const char*         );
 void SMS_HistorySave   ( void                );
 

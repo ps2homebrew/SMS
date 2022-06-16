@@ -33,10 +33,10 @@
 )
 
 #define VIF_DIRECT( SIZE ) (                                          \
- (  ( unsigned long int )VIF_CODE( VIF_CODE_DIRECT, 0, SIZE )  ) << 32 \
+ (  ( u64               )VIF_CODE( VIF_CODE_DIRECT, 0, SIZE )  ) << 32 \
 )
 
 #define VIF_DIRECTHL( SIZE ) (                                          \
- (  ( unsigned long int )VIF_CODE( VIF_CODE_DIRECTHL, 0, SIZE )  ) << 32 \
+ (  ( u64               )VIF_CODE( VIF_CODE_DIRECTHL, 0, SIZE )  ) << 32 \
 )
 #endif  /* __SMS_VIF_H */

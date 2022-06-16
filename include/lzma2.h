@@ -30,7 +30,7 @@ typedef struct
 extern "C" {
 #endif
 
-size_t lzma2_get_uncompressed_size(unsigned char *buf, unsigned long size);
+size_t lzma2_get_uncompressed_size(unsigned char *buf, u64           size);
 enum xz_ret lzma2_uncompress(unsigned char *in, size_t size_in, unsigned char *out, size_t size_out);
 
 #ifdef __cplusplus

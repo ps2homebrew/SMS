@@ -59,7 +59,7 @@ extern "C" {
 #endif  /* __cplusplus */
 
 void GUI_LoadIcons      ( void                                           );
-void GUI_DrawIcon       ( unsigned int, int, int, GUIcon, unsigned long* );
+void GUI_DrawIcon       ( unsigned int, int, int, GUIcon, u64*           );
 void GUI_UnloadIcons    ( void                                           );
 
 #ifdef __cplusplus

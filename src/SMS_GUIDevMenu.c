@@ -37,7 +37,7 @@ typedef struct _DevMenuItem {
  int            m_XOffset;
  int            m_DevID;
  int            m_UnitID;
- unsigned long* m_pGSPacket;
+ u64*           m_pGSPacket;
 
 } _DevMenuItem;
 
@@ -49,8 +49,8 @@ typedef struct GUIDevMenu {
  SMS_ListNode*  m_pActive;
  SMS_ListNode*  m_pSelected;
  int            m_XOffset;
- unsigned long* m_pSelRect;
- unsigned long* m_pActRect;
+ u64*           m_pSelRect;
+ u64*           m_pActRect;
  unsigned int*  m_pColor;
 
 } GUIDevMenu;
@@ -81,8 +81,8 @@ static void GUIDevMenu_Render ( GUIObject* apObj, int aCtx ) {
   int            lPktSize = GS_RRT_PACKET_SIZE() + GS_TXT_PACKET_SIZE( STR_AVAILABLE_MEDIA.m_Len );
   int            lCumSize = lPktSize;
   int            lX, lY, lW, lH;
-  unsigned long  lXYXY;
-  unsigned long* lpDMA;
+  u64            lXYXY;
+  u64*           lpDMA;
   SMS_ListNode*  lpRNode = lpNode;
 
   lpMenu -> m_XOffset = GSFont_WidthEx ( STR_AVAILABLE_MEDIA.m_pStr, STR_AVAILABLE_MEDIA.m_Len, 6 );
@@ -170,7 +170,7 @@ static int GUIDevMenu_Redraw ( GUIDevMenu* apMenu ) {
  GUIObject_Cleanup (  ( GUIObject* )apMenu  );
 
  GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
- GSContext_CallList2 (  1, ( unsigned long* )&s_BitBlt  );
+ GSContext_CallList2 (  1, ( u64*           )&s_BitBlt  );
  GUIDevMenu_Render (  ( GUIObject* )apMenu, 1  );
  *( int* )UNCACHED_SEG(  ( char* )&s_BitBlt + 132  ) = ( int )g_GSCtx.m_pDBuf;
  GS_VSync2 ( g_GSCtx.m_DrawDelay );
@@ -180,7 +180,7 @@ static int GUIDevMenu_Redraw ( GUIDevMenu* apMenu ) {
 
 }  /* end GUIDevMenu_Redraw */
 
-static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount, unsigned long aMsg ) {
+static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount, u64           aMsg ) {
 
  int       lDevID = (  aMount & ~( GUI_MSG_MOUNT_BIT >> 16 )  ) - 1;
  SMS_List* lpList = apMenu -> m_pDevList;
@@ -274,7 +274,7 @@ static int GUIDevMenu_HandleMount ( GUIDevMenu* apMenu, unsigned int aMount, uns
  } else {
 
   SMS_ListNode* lpNode = lpList -> m_pHead;
-  unsigned long lMsg;
+  u64           lMsg;
 
   if ( lDevID == 3 && g_pCDDACtx ) {
 
@@ -442,7 +442,7 @@ SMBLoginInfo* _lookup_login_info ( void ) {
 
 }  /* end _lookup_login_info */
 
-static int GUIDevMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+static int GUIDevMenu_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  int         retVal = GUIHResult_Void;
  GUIDevMenu* lpMenu = ( GUIDevMenu* )apObj;
@@ -471,7 +471,7 @@ static void GUIDevMenu_SetFocus ( GUIObject* apObj, int afSet ) {
 
  GUIDevMenu* lpMenu  = ( GUIDevMenu* )apObj;
 
- lpMenu -> m_pColor = &( afSet ? g_Config.m_BrowserABCIdx : g_Config.m_BrowserIBCIdx );
+ lpMenu -> m_pColor = ( afSet ? &(g_Config.m_BrowserABCIdx) : &(g_Config.m_BrowserIBCIdx) );
 
  GUIDevMenu_Redraw ( lpMenu );
 

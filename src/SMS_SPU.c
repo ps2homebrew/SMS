@@ -102,8 +102,8 @@ static void SPU_PlayPCM ( void* apData ) {
   (    (   (  ( lSize + 15 ) >> 4  ) + 1  ) >> 1   ) << 1
  ) - 2;
 
- ( unsigned int )apData <<= 4;
- ( unsigned int )apData >>= 4;
+ apData = ( unsigned int )apData << 4;
+ apData = ( unsigned int )apData >> 4;
 
  DMA_SendA ( DMAC_SIF2, apData, 2 );
  Interrupt2Iop ( 1 );

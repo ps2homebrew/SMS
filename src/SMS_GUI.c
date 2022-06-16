@@ -75,13 +75,13 @@ static int            s_EventSema;
 static int            s_GUIThreadID;
 static int            s_GUIFlags;
 static int            s_PrevBtn;
-static volatile long  s_Event;
-static unsigned long  s_PowerOffTimer;
+static volatile s64   s_Event;
+static u64            s_PowerOffTimer;
 static unsigned int   s_DevFlags;
        int            g_SMBUnit;
        int            g_SMBError;
        int            g_SMBServerError;
-static unsigned long  s_BitBltPack[ sizeof ( GSLoadImage ) * 9 ] __attribute__(   (  aligned( 64 ), section( ".data" )  )   );
+static u64            s_BitBltPack[ sizeof ( GSLoadImage ) * 9 ] __attribute__(   (  aligned( 64 ), section( ".data" )  )   );
 
 static unsigned char s_pMsgStr [] __attribute__(   (  section( ".data" )  )   ) = "_POSTED_MESSAGE";
 
@@ -601,7 +601,7 @@ queryPad:
 void GUI_SetColors ( void ) {
 
  int           i;
- unsigned long lColor[ 4 ];
+ u64           lColor[ 4 ];
 
  lColor[ 0 ] = g_Palette[ g_Config.m_BrowserSBCIdx - 1 ] | 0x80000000;
  lColor[ 1 ] = g_Palette[ g_Config.m_BrowserTxtIdx - 1 ] | 0x80000000;
@@ -640,7 +640,7 @@ void GUI_Initialize ( int afCold ) {
  if ( afCold > 0 ) {
 
   int           i, lSts, lfNoXH = 0;
-  unsigned long lTimer;
+  u64           lTimer;
   GSVideoMode   lVideoMode = GSVideoMode_Default;
   ee_sema_t     lSema;
   ee_thread_t   lThread;
@@ -780,9 +780,9 @@ void GUI_Resume ( void ) {
 
 }  /* end GUI_Resume */
 
-unsigned long GUI_WaitEvent ( void ) {
+u64           GUI_WaitEvent ( void ) {
 
- unsigned long retVal = 0UL;
+ u64           retVal = 0UL;
 
  GUI_Resume ();
 
@@ -820,7 +820,7 @@ unsigned long GUI_WaitEvent ( void ) {
 int GUI_WaitButtons ( int anButtons, unsigned* apButtons, int aTimeout ) {
 
  int           i, retVal;
- unsigned long lTime;
+ u64           lTime;
 
  lTime = g_Timer + aTimeout;
 
@@ -840,7 +840,7 @@ end:
 
 }  /* end GUI_WaitButtons */
 
-void GUI_PostMessage ( unsigned long aMsg ) {
+void GUI_PostMessage ( u64           aMsg ) {
 
  SMS_ListPushBack ( s_pMsgQueue, s_pMsgStr ) -> m_Param = aMsg;
 
@@ -884,7 +884,7 @@ void GUI_Run ( void ) {
 
  static int s_lLevel = 0;
 
- unsigned long lEvent;
+ u64           lEvent;
 
  if ( !s_lLevel++ ) {
 

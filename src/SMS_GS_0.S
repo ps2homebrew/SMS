@@ -7,6 +7,11 @@
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
+
+#define ABI_EABI64
+#include <as_reg_compat.h>
+#undef at
+
 .set noreorder
 
 .globl g_XShift
@@ -418,21 +423,21 @@ _gs_xyz:
     .set noat
     lw          $at, g_XShift
     srav        $a0, $a0, $at
-    qmfc2       $at, $vf01
-    qmtc2       $a1, $vf01
-    vitof0.xyzw $vf01, $vf01
+    qmfc2       $at, $vf1
+    qmtc2       $a1, $vf1
+    vitof0.xyzw $vf1, $vf1
     sll         $v0, $a0, 4
     mtsah       $zero, -1
     ori         $v1, $zero, 0xFFFF
-    vmul.xyzw   $vf01, $vf01, $vf31
+    vmul.xyzw   $vf1, $vf1, $vf31
     dsll32      $a2, $a2, 0
     dsll32      $v1, $v1, 16
     or          $v0, $v0, $a2
     dsrl32      $v1, $v1, 0
-    vftoi4.xyzw $vf01, $vf01
-    qmfc2       $a1, $vf01
-    qmtc2       $at, $vf01
-    qfsrv       $a1, $a1
+    vftoi4.xyzw $vf1, $vf1
+    qmfc2       $a1, $vf1
+    qmtc2       $at, $vf1
+    qfsrv       $a1, $a1, $a1
     move        $a2, $a1
     and         $a2, $a2, $v1
     jr          $ra
@@ -464,26 +469,26 @@ GS_XYZv:
     pextlw  $t2, $t2, $t2
     pextlw  $t3, $t3, $t3
     lw      $at, g_XShift
-    qmtc2   $t1, $vf01
-    qmtc2   $t2, $vf02
-    qmtc2   $t3, $vf03
+    qmtc2   $t1, $vf1
+    qmtc2   $t2, $vf2
+    qmtc2   $t3, $vf3
     dsll32  $t0, $t0, 0
     addu    $a3, $a1, $v1
-    pcpyld  $t0, $t0
+    pcpyld  $t0, $t0, $t0
 1:
-    lqc2    $vf04, 0($a1)
-    lqc2    $vf05, 0($a3)
-    vmul.xyzw   $vf04, $vf04, $vf01
-    vmul.xyzw   $vf05, $vf05, $vf01
-    vadd.xyzw   $vf04, $vf04, $vf02
-    vadd.xyzw   $vf05, $vf05, $vf03
-    vftoi4.xyzw $vf04, $vf04
-    vmul.xyzw   $vf05, $vf05, $vf31
-    qmfc2   $t1, $vf04
-    vftoi4.xyzw $vf05, $vf05
+    lqc2    $vf4, 0($a1)
+    lqc2    $vf5, 0($a3)
+    vmul.xyzw   $vf4, $vf4, $vf1
+    vmul.xyzw   $vf5, $vf5, $vf1
+    vadd.xyzw   $vf4, $vf4, $vf2
+    vadd.xyzw   $vf5, $vf5, $vf3
+    vftoi4.xyzw $vf4, $vf4
+    vmul.xyzw   $vf5, $vf5, $vf31
+    qmfc2   $t1, $vf4
+    vftoi4.xyzw $vf5, $vf5
     addu    $a2, $a2, -4
     addu    $a1, $a1, 16
-    qmfc2   $t2, $vf05
+    qmfc2   $t2, $vf5
     addu    $a3, $a3, 16
     pinteh  $t2, $t2, $zero
     bgtzl   $at, 2f
@@ -1091,18 +1096,18 @@ GS_L2P:
     .set noat
     lw          $v0, g_XShift
     pcpyld      $a1, $zero, $a1
-    qmfc2       $at, $vf01
+    qmfc2       $at, $vf1
     pextlw      $a1, $a3, $a1
-    qmtc2       $a1, $vf01
-    vitof0.xyzw $vf01, $vf01
+    qmtc2       $a1, $vf1
+    vitof0.xyzw $vf1, $vf1
     srav        $a0, $a0, $v0
     dsll32      $v0, $a2, 0
     mtsah       $zero, -1
-    vmul.xyzw   $vf01, $vf01, $vf31
+    vmul.xyzw   $vf1, $vf1, $vf31
     or          $v0, $v0, $a0
-    vftoi0      $vf01, $vf01
-    qmfc2       $a1, $vf01
-    qmtc2       $at, $vf01
+    vftoi0      $vf1, $vf1
+    qmfc2       $a1, $vf1
+    qmtc2       $at, $vf1
     qfsrv       $a1, $a1, $a1
     jr          $ra
     or          $v0, $v0, $a1

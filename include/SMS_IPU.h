@@ -17,24 +17,24 @@ struct SMS_FrameBuffer;
 
 typedef struct IPURegs {
 
- volatile unsigned long m_CMD  __attribute__(   (  aligned( 16 )  )   );
+ volatile u64           m_CMD  __attribute__(   (  aligned( 16 )  )   );
  volatile unsigned int  m_CTRL __attribute__(   (  aligned( 16 )  )   );
  volatile unsigned int  m_BP   __attribute__(   (  aligned( 16 )  )   );
- volatile unsigned long m_TOP  __attribute__(   (  aligned( 16 )  )   );
+ volatile u64           m_TOP  __attribute__(   (  aligned( 16 )  )   );
 
 } IPURegs;
 
 #define IPU (  ( volatile IPURegs* )0x10002000  )
 
-#define IPU_REG_CMD  (  ( volatile unsigned long* )0x10002000  )
+#define IPU_REG_CMD  (  ( volatile u64*           )0x10002000  )
 #define IPU_REG_CTRL (  ( volatile unsigned int*  )0x10002010  )
 #define IPU_REG_BP   (  ( volatile unsigned int*  )0x10002020  )
-#define IPU_REG_TOP  (  ( volatile unsigned long* )0x10002030  )
-#define IPU_FIFO_I   (  ( volatile unsigned long* )0x10007000  )
-#define IPU_FIFO_O   (  ( volatile unsigned long* )0x10007010  )
+#define IPU_REG_TOP  (  ( volatile u64*           )0x10002030  )
+#define IPU_FIFO_I   (  ( volatile u64*           )0x10007000  )
+#define IPU_FIFO_O   (  ( volatile u64*           )0x10007010  )
 
 #define IPU_SET_CMD( CODE, OPTION ) \
- IPU -> m_CMD = ( unsigned long )(  ( CODE << 28 ) | OPTION  )
+ IPU -> m_CMD = ( u64           )(  ( CODE << 28 ) | OPTION  )
 
 #define IPU_CMD_BCLR( BP ) IPU_SET_CMD( 0, BP )
 
@@ -57,7 +57,7 @@ typedef struct IPURegs {
 
 typedef struct IPULoadImage {
 
- unsigned long* m_pDMA;
+ u64*           m_pDMA;
  unsigned char* m_pData;
  unsigned short m_Width;
  unsigned short m_Height;
@@ -71,9 +71,9 @@ typedef struct IPULoadImage {
 
 typedef struct IPUContext {
 
- unsigned long int      m_DMAGIFBgtn[ 16 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAGIFTX  [  8 ] __attribute__(   ( aligned( 16 )  )   );
- unsigned long int      m_DMAGIFPack[  8 ] __attribute__(   ( aligned( 16 )  )   );
+ u64                    m_DMAGIFBgtn[ 16 ] __attribute__(   ( aligned( 16 )  )   );
+ u64                    m_DMAGIFTX  [  8 ] __attribute__(   ( aligned( 16 )  )   );
+ u64                    m_DMAGIFPack[  8 ] __attribute__(   ( aligned( 16 )  )   );
  unsigned int           m_ImgLeft   [  8 ];
  unsigned int           m_ImgTop    [  8 ];
  unsigned int           m_ImgRight  [  8 ];
@@ -98,15 +98,15 @@ typedef struct IPUContext {
  unsigned short         m_fWS;
  unsigned char          m_fPG;
  unsigned char          m_fFL;
- unsigned long int*     m_pDMAPacket;
- unsigned long          m_BRGBAQ;
- unsigned long          m_Alpha;
- long*                  m_pAudioPTS;
- long                   m_VideoPTS;
+ u64*                   m_pDMAPacket;
+ u64                    m_BRGBAQ;
+ u64                    m_Alpha;
+ s64*                   m_pAudioPTS;
+ s64                    m_VideoPTS;
  int                    m_VSync;
  
  void ( *Sync          ) ( void         );
- void ( *Display       ) ( void*, long  );
+ void ( *Display       ) ( void*, s64   );
  void ( *Destroy       ) ( void         );
  void ( *SetTEX        ) ( void         );
  void ( *Reset         ) ( void         );
@@ -128,7 +128,7 @@ extern IPUContext g_IPUCtx;
 extern "C" {
 #endif  /* __cplusplus */
 
-IPUContext* IPU_InitContext ( int, int, long*, int );
+IPUContext* IPU_InitContext ( int, int, s64* , int );
 
 unsigned int IPU_FDEC ( unsigned                                                   );
 unsigned int IPU_IDEC ( unsigned, unsigned, unsigned, unsigned, unsigned, unsigned );

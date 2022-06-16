@@ -32,15 +32,15 @@
 #define IPUF_FL 0x00000040
 
 IPUContext        g_IPUCtx;
-unsigned long int s_DMAVIFDraw[ 16 ] __attribute__(   (  aligned( 64 )  )   );
-unsigned long int s_DMAGIFDraw[ 22 ] __attribute__(   (  aligned( 64 )  )   );
+u64               s_DMAVIFDraw[ 16 ] __attribute__(   (  aligned( 64 )  )   );
+u64               s_DMAGIFDraw[ 22 ] __attribute__(   (  aligned( 64 )  )   );
 
 static SMS_FrameBuffer* s_pFrame __attribute__(  ( unused )  );
 static SMS_DXSBFrame*   s_pDXSBDFrm;
 static SMS_DXSBFrame*   s_pDXSBAFrm;
 static SMS_DXSBFrame*   s_pDXSBRFrm;
 static int              s_SyncS;
-       unsigned long    s_VIFQueue[ 16 ];
+       u64              s_VIFQueue[ 16 ];
 static unsigned char    s_QIdx;
 static unsigned char    s_fStopSync;
 static unsigned char    s_fRefresh;
@@ -122,7 +122,6 @@ extern void IPU_RfshHandler ( void );
 __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"
- ".set noat\n\t"
  ".text\n\t"
  "IPU_Sync:\n\t"
  "pcpyld    $s0, $s0, $s0\n\t"
@@ -144,18 +143,18 @@ __asm__(
  "j         SignalSema\n\t"
  "pcpyud    $s0, $s0, $s0\n\t"
  "IPU_StopSync:\n\t"
- "jr        $ra\n\t"
  "sb        $a0, s_fStopSync\n\t"
+ "jr        $ra\n\t"
+ "nop\n\t"
  "IPU_RfshHandler:\n\t"
  "lui       $a0, 0xFFFF\n\t"
  "lui       $a1, %hi( s_fRefresh )\n\t"
- "mfc0      $at, $12\n\t"
+ "mfc0      " ASM_REG_T0 ", $12\n\t"
  "ori       $a0, $a0, 0x7FFF\n\t"
- "and       $at, $at, $a0\n\t"
+ "and       " ASM_REG_T0 ", " ASM_REG_T0 ", $a0\n\t"
  "sb        $a0, %lo( s_fRefresh )($a1)\n\t"
  "jr        $ra\n\t"
- "mtc0      $at, $12\n\t"
- ".set at\n\t"
+ "mtc0      " ASM_REG_T0 ", $12\n\t"
  ".set macro\n\t"
  ".set reorder\n\t"
 );
@@ -180,7 +179,6 @@ void IPU_Flush ( void );
 __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"
- ".set noat\n\t"
  ".text\n\t"
  "IPU_Flush:\n\t"
  "lbu      $a0, s_QIdx\n\t"
@@ -188,7 +186,7 @@ __asm__(
  "beqz     $a0, 2f\n\t"
  "la       $a1, s_VIFQueue\n\t"
  "la       $a2, s_DMAVIFDraw\n\t"
- "la       $at, s_DMAVIFDraw\n\t"
+ "la       " ASM_REG_T0 ", s_DMAVIFDraw\n\t"
  "or       $a2, $a2, $v0\n\t"
  "1:\n\t"
  "ld       $v0, 0($a1)\n\t"
@@ -208,20 +206,19 @@ __asm__(
  "bne      $v0, $zero, 1b\n\t"
  "addiu    $v0, $zero, 261\n\t"
  "sw       $zero, -0x6FE0($v1)\n\t"
- "sw       $at,   -0x6FD0($v1)\n\t"
+ "sw       " ASM_REG_T0 ",   -0x6FD0($v1)\n\t"
  "sw       $v0,   -0x7000($v1)\n\t"
  "sb       $zero, s_QIdx\n\t"
  "2:\n\t"
  "jr       $ra\n\t"
  "nop\n\t"
- ".set at\n\t"
  ".set macro\n\t"
  ".set reorder\n\t"
 );
 
 static void IPU_SetTEX ( void ) {
 
- unsigned long* lpDMA = UNCACHED_SEG( g_IPUCtx.m_DMAGIFTX );
+ u64*           lpDMA = UNCACHED_SEG( g_IPUCtx.m_DMAGIFTX );
 
  lpDMA[ 0 ] = GIF_TAG( 3, 1, 0, 0, 0, 1 );
  lpDMA[ 1 ] = GIFTAG_REGS_AD;
@@ -241,27 +238,25 @@ int IPU_GIFHandlerDummyDraw ( int aCh, void* apArg, void* apAddr );
 __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"
- ".set noat\n\t"
  ".text\n\t"
  "IPU_GIFHandlerDraw:\n\t"
  "lw    $a1, s_pFrame\n\t"
- "nor   $at, $zero, $zero\n\t"
- "sw    $at, 24($a1)\n\t"
+ "nor   " ASM_REG_T0 ", $zero, $zero\n\t"
+ "sw    " ASM_REG_T0 ", 24($a1)\n\t"
  "IPU_GIFHandlerDummyDraw:\n\t"
  "pcpyld    $ra, $ra, $ra\n\t"
  "bgezal    $zero, IPU_Flush\n\t"
  "lw        $a3, s_SyncS\n\t"
  "jal       iSignalSema\n\t"
  "or        $a0, $zero, $a3\n\t"
- "mfc0      $at, $12\n\t"
+ "mfc0      " ASM_REG_T0 ", $12\n\t"
  "pcpyud    $ra, $ra, $ra\n\t"
- "ori       $at, $at, 0x8000\n\t"
+ "ori       " ASM_REG_T0 ", " ASM_REG_T0 ", 0x8000\n\t"
  "mtc0      $zero, $9\n\t"
- "mtc0      $at, $12\n\t"
+ "mtc0      " ASM_REG_T0 ", $12\n\t"
  "sync.p\n\t"
  "jr        $ra\n\t"
  "nor       $v0, $zero, $zero\n\t"
- ".set at\n\t"
  ".set macro\n\t"
  ".set reorder\n\t"
 );
@@ -272,7 +267,7 @@ static void IPU_VBlankStartHandler ( void* apParam ) {
 
  if ( g_IPUCtx.m_fDraw ) {
 
-  long lVPTS = g_IPUCtx.m_VideoPTS;
+  s64  lVPTS = g_IPUCtx.m_VideoPTS;
 
   if ( !s_fStopSync && g_IPUCtx.m_pAudioPTS ) {
 
@@ -299,7 +294,7 @@ static void IPU_VBlankStartHandler ( void* apParam ) {
 
 void IPU_EraseSub ( void ) {
 
- unsigned long* lpGIFPack = ( unsigned long* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+ u64*           lpGIFPack = ( u64*           )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
 
  lpGIFPack[ 4 ] = DMA_TAG( 11, 0, DMATAG_ID_REFE, 0, s_DMAGIFDraw, 0  );
 
@@ -317,7 +312,7 @@ static void IPU_DrawSub ( void ) {
  unsigned int   lDst      = ( unsigned int )&s_DXSBDPack | 0x20000000;
  unsigned short lRW       = lpFrm -> m_RWidth;
  unsigned int   lTBW      = (  ( lRW + 63 ) & ~63  ) >> 6;
- unsigned long* lpGIFPack = ( unsigned long* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+ u64*           lpGIFPack = ( u64*           )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
 
  s_pDXSBAFrm = lpFrm;
  s_pDXSBRFrm = NULL;
@@ -346,9 +341,9 @@ static void IPU_DrawSub ( void ) {
 
 }  /* end IPU_DrawSub */
 
-static void IPU_Display ( void* apFB, long aVideoPTS ) {
+static void IPU_Display ( void* apFB, s64  aVideoPTS ) {
 
- unsigned long int* lpGIFPack = ( unsigned long int* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+ u64*               lpGIFPack = ( u64*               )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
 
  lpGIFPack[ 0 ] = DMA_TAG(  0, 0, DMATAG_ID_CALL, 0, ( unsigned int )(  ( SMS_FrameBuffer* )apFB  ) -> m_pData, 0  );
  s_pFrame       = ( SMS_FrameBuffer* )apFB;
@@ -566,21 +561,19 @@ void IPU_QueuePacket ( int, void* );
 __asm__(
  ".set noreorder\n\t"
  ".set nomacro\n\t"
- ".set noat\n\t"
  ".text\n\t"
  "IPU_QueuePacket:\n\t"
  "lbu       $v0, s_QIdx\n\t"
  "la        $v1, s_VIFQueue\n\t"
- "lui       $at, 0x3000\n\t"
+ "lui       " ASM_REG_T0 ", 0x3000\n\t"
  "dsll32    $a1, $a1, 0\n\t"
- "or        $a0, $a0, $at\n\t"
+ "or        $a0, $a0, " ASM_REG_T0 "\n\t"
  "addu      $v1, $v1, $v0\n\t"
  "addiu     $v0, $v0, 8\n\t"
  "or        $a1, $a1, $a0\n\t"
  "sb        $v0, s_QIdx\n\t"
  "jr        $ra\n\t"
  "sd        $a1, 0($v1)\n\t"
- ".set at\n\t"
  ".set macro\n\t"
  ".set reorder\n\t"
 );
@@ -620,11 +613,11 @@ static void IPU_DummyResume ( void ) {
 
 }  /* end IPU_DummyResume */
 
-static void IPU_DummyDisplay ( void* apParam, long aVideoPTS ) {
+static void IPU_DummyDisplay ( void* apParam, s64  aVideoPTS ) {
 
  WaitSema ( s_SyncS );
 
- g_IPUCtx.m_pDMAPacket = ( unsigned long* )apParam;
+ g_IPUCtx.m_pDMAPacket = ( u64*           )apParam;
  g_IPUCtx.m_fDraw = 1;
 
 }  /* end IPU_DummyDisplay */
@@ -666,12 +659,12 @@ static void IPU_DummyVBlankStartHandler ( void* apParam ) {
 
 static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
- unsigned long* lpPtr = UNCACHED_SEG( &g_IPUCtx.m_DMAGIFBgtn[ 4 ] );
+ u64*           lpPtr = UNCACHED_SEG( &g_IPUCtx.m_DMAGIFBgtn[ 4 ] );
 
  if ( aBrightness == 128 )
   lpPtr[ 0 ] = g_IPUCtx.m_Alpha = GS_SET_ALPHA( 1, 2, 2, 2, 0x80 );
  else {
-  unsigned long lAlpha;
+  u64           lAlpha;
   if ( aBrightness > 128 ) {
    float lVal = aBrightness - 128;
    lAlpha = GS_SET_ALPHA_2( 1, 2, 2, 0, 0x80 );
@@ -701,7 +694,7 @@ static void IPU_QueueSubtitle ( void* apSub ) {
 
 }  /* end IPU_QueueSubtitle */
 
-IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afWS ) {
+IPUContext* IPU_InitContext ( int aWidth, int aHeight, s64*  apAudioPTS, int afWS ) {
 
  ee_sema_t      lSema;
  unsigned short lCRTMode = GS_Params () -> m_GSCRTMode;
@@ -738,7 +731,7 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afW
  if ( aWidth && aHeight ) {
 
   unsigned int       lVRAM, lImgSize;
-  unsigned long int* lpGIFPack;
+  u64*               lpGIFPack;
   unsigned int       lTBW = ( aWidth + 63 ) >> 6;
   int                lf16 = ( g_Config.m_PlayerFlags & SMS_PF_C16 ) && !( g_Config.m_PlayerFlags & SMS_PF_C32 );
   unsigned int       lVSync;
@@ -781,10 +774,10 @@ retry:
   g_IPUCtx.m_fWS       = afWS;
   PowerOf2 ( aWidth, aHeight, &g_IPUCtx.m_TW, &g_IPUCtx.m_TH );
 
-  lpGIFPack = ( unsigned long int* )(  ( unsigned int )&s_DXSBDPack.m_BitBlt.m_Value | 0x20000000  );
+  lpGIFPack = ( u64*               )(  ( unsigned int )&s_DXSBDPack.m_BitBlt.m_Value | 0x20000000  );
   lpGIFPack[ 0 ] = GS_SET_BITBLTBUF( 0, 0, 0, lVRAM, 0, GSPixelFormat_PSMT4HH ),
 
-  lpGIFPack = ( unsigned long int* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+  lpGIFPack = ( u64*               )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
   lpGIFPack[ 2 ] = DMA_TAG(  8, 0, DMATAG_ID_REF,  0, ( unsigned int )g_IPUCtx.m_DMAGIFBgtn, 0  );
   lpGIFPack[ 4 ] = DMA_TAG( 11, 0, DMATAG_ID_REFE, 0, s_DMAGIFDraw,                          0  );
 
@@ -842,7 +835,7 @@ retry:
 
   __asm__ __volatile__(
    ".set noat\n\t"
-   "nor     $at, $zero, $zero\n\t"
+   "nor     " ASM_REG_T0 ", $zero, $zero\n\t"
    "mtc0    $a1, $11\n\t"
    ".set at\n\t"
   );

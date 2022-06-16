@@ -52,13 +52,13 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
 
 }  /* SMS_Realloc */
 
-extern long MUL64 ( long, long );
+extern s64  MUL64 ( s64 , s64  );
 
-long SMS_Rescale ( long anA, long aB, long aC ){
+s64  SMS_Rescale ( s64  anA, s64  aB, s64  aC ){
 
  int           i;
- unsigned long lA0, lA1, lB0, lB1, lT1, lT1a;
- long          lR;
+ u64           lA0, lA1, lB0, lB1, lT1, lT1a;
+ s64           lR;
 
  if ( anA < 0 ) return -SMS_Rescale ( -anA, aB, aC );
 
@@ -659,7 +659,7 @@ void SMS_SetDirButtons ( void ) {
 void SMS_InitBitBlt ( void* apPack, int aCnt, int anY, int aH ) {
 
  GSLoadImage*  lpPack = UNCACHED_SEG( apPack );
- unsigned long lXYXY  = GS_L2P ( 0, anY, g_GSCtx.m_LWidth, aH );
+ u64           lXYXY  = GS_L2P ( 0, anY, g_GSCtx.m_LWidth, aH );
  int           lX     = ( lXYXY >>  0 ) & 0xFFFF;
  int           lY     = ( lXYXY >> 16 ) & 0xFFFF;
  int           lW     = ( lXYXY >> 32 ) & 0xFFFF;
@@ -778,7 +778,7 @@ __asm__(
  "addiu $sp, $sp, -16\n\t"
  "lw    $a2,  0($a1)\n\t"
  "lw    $a3,  4($a1)\n\t"
- "lw    $t0,  8($a1)\n\t"
+ "lw    " ASM_REG_T0 ",  8($a1)\n\t"
  "lw    $a1, 12($a1)\n\t"
  "sw    $ra,  0($sp)\n\t"
  "bgezal    $zero, _di\n\t"
@@ -786,7 +786,7 @@ __asm__(
  "mtc0  $a0, $0\n\t"
  "mtc0  $a2, $5\n\t"
  "mtc0  $a3, $10\n\t"
- "mtc0  $t0, $2\n\t"
+ "mtc0  " ASM_REG_T0 ", $2\n\t"
  "mtc0  $a1, $3\n\t"
  "sync.p\n\t"
  "tlbwi\n\t"
@@ -802,26 +802,26 @@ __asm__(
  "sw    $ra, 0($sp)\n\t"
  "bgezal    $zero, _di\n\t"
  "nop\n\t"
- "mfc0  $t2, $10\n\t"
+ "mfc0  " ASM_REG_T2 ", $10\n\t"
  "mtc0  $a0, $0\n\t"
  "sync.p\n\t"
  "tlbr\n\t"
  "sync.p\n\t"
  "mfc0  $a2, $5\n\t"
  "mfc0  $a3, $10\n\t"
- "mfc0  $t1, $2\n\t"
+ "mfc0  " ASM_REG_T1 ", $2\n\t"
  "srl   $a2, $a2, 1\n\t"
- "mfc0  $t0, $3\n\t"
+ "mfc0  " ASM_REG_T0 ", $3\n\t"
  "sw    $a2,  0($a1)\n\t"
  "sw    $a3,  4($a1)\n\t"
- "sw    $t1,  8($a1)\n\t"
- "mtc0  $t2, $10\n\t"
+ "sw    " ASM_REG_T1 ",  8($a1)\n\t"
+ "mtc0  " ASM_REG_T2 ", $10\n\t"
  "sync.p\n\t"
  "bnel  $v0, $zero, 1f\n\t"
  "ei\n\t"
  "1:\n\t"
  "lw    $ra, 0($sp)\n\t"
- "sw    $t0, 12($a1)\n\t"
+ "sw    " ASM_REG_T0 ", 12($a1)\n\t"
  "jr    $ra\n\t"
  "addiu $sp, $sp, 16\n\t"
  "SMS_EETlbAlloc:\n\t"

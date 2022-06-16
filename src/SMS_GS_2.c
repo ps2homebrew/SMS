@@ -306,7 +306,7 @@ int GSFont_WidthEx ( unsigned char* apStr, int aLen, int aDW ) {
 
 }  /* end GSFont_WidthEx */
 
-void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, unsigned long* apDMA ) {
+void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, u64*           apDMA ) {
 
  int lDelta;
  int lY1;
@@ -386,7 +386,7 @@ void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, unsigned l
 
 }  /* end GSFont_Render */
 
-void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, unsigned long* apDMA, int aDW, int aDH ) {
+void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, u64*           apDMA, int aDW, int aDH ) {
 
  int   lDW    = aDW << 4;
  float lAR    = ( 32 + aDW ) / 32.0F;

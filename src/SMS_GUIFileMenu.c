@@ -64,7 +64,7 @@ typedef struct GUIFileMenu {
  SMS_ListNode*  m_pFirst;
  SMS_ListNode*  m_pLast;
  int            m_YOffset;
- unsigned long* m_pSelRect;
+ u64*           m_pSelRect;
  int            m_Active;
  int            m_ActiveY;
 
@@ -72,12 +72,12 @@ typedef struct GUIFileMenu {
 
 typedef struct _FileMenuItem {
 
- unsigned long  m_IconPack[ 32 ];
- unsigned long* m_pTxtPack;
+ u64            m_IconPack[ 32 ];
+ u64*           m_pTxtPack;
 
 } _FileMenuItem;
 
-static unsigned long s_BitBltPack[ sizeof ( GSLoadImage ) * 9 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
+static u64           s_BitBltPack[ sizeof ( GSLoadImage ) * 9 ] __attribute__(   (  aligned( 16 ), section( ".data" )  )   );
 
 static int _filter_item ( SMS_ListNode* apNode ) {
 
@@ -155,7 +155,7 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
  if ( !lpMenu -> m_pGSPacket ) {
 
-  unsigned long* lpDMA   = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
+  u64*           lpDMA   = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
   int            lHeight = g_GSCtx.m_Height - 101;
   int            lWidth  = g_GSCtx.m_Width  - 48;
   int            lnItems = ( lHeight - 2 ) / 34;
@@ -220,7 +220,7 @@ static void GUIFileMenu_Render ( GUIObject* apObj, int aCtx ) {
 
   if ( lpMenu -> m_pCurrent ) {
 
-   unsigned long lColor = g_Palette[ g_Config.m_BrowserSCIdx - 1 ];
+   u64           lColor = g_Palette[ g_Config.m_BrowserSCIdx - 1 ];
    unsigned int  lW     = lWidth + 40;
 
    if ( !lpMenu -> m_pSelRect ) lpMenu -> m_pSelRect = GSContext_NewList (  GS_RRT_PACKET_SIZE() << 1  );
@@ -291,7 +291,7 @@ static void _redraw ( GUIFileMenu* apMenu, int afAll ) {
  if ( !afAll ) {
 
   GSContext_NewPacket ( 1, 0, GSPaintMethod_Init );
-  GSContext_CallList2 (  1, ( unsigned long* )&s_BitBltPack  );
+  GSContext_CallList2 (  1, ( u64*           )&s_BitBltPack  );
   GUIFileMenu_Render (  ( GUIObject* )apMenu, 1  );
   GS_VSync2 ( g_GSCtx.m_DrawDelay );
   GSContext_Flush ( 1, GSFlushMethod_KeepLists );
@@ -305,7 +305,7 @@ static void GUIFileMenu_SetFocus ( GUIObject* apObj, int afSet ) {
  GUIFileMenu* lpMenu = ( GUIFileMenu* )apObj;
 
  lpMenu -> m_Active = afSet;
- lpMenu -> m_pColor = &( afSet ? g_Config.m_BrowserABCIdx : g_Config.m_BrowserIBCIdx );
+ lpMenu -> m_pColor = ( afSet ? &(g_Config.m_BrowserABCIdx) : &(g_Config.m_BrowserIBCIdx) );
 
  _redraw ( lpMenu, 0 );
 
@@ -421,7 +421,7 @@ void** SMS_OpenMediaFile ( const char* apName, int aFlags ) {
 
  if ( lpFileCtx ) {
 
-  unsigned long lEvent = GUI_MSG_FILE;
+  u64           lEvent = GUI_MSG_FILE;
 
   retVal = malloc (   (  sizeof ( void* ) << 1  ) + sizeof ( void* )  );
 
@@ -487,7 +487,7 @@ void** SMS_OpenMediaFile ( const char* apName, int aFlags ) {
 
   if ( aFlags & SMS_FA_FLAGS_MSG ) {
 
-   lEvent |= (  ( unsigned long )( unsigned int )retVal  ) << 28;
+   lEvent |= (  ( u64           )( unsigned int )retVal  ) << 28;
    GUI_PostMessage ( lEvent );
 
   }  /* end if */
@@ -780,7 +780,7 @@ static int _page_scroll (  int ( *aFunc ) ( GUIFileMenu*, int ), GUIFileMenu* ap
 
 }  /* end _page_scroll */
 
-static int GUIFileMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+static int GUIFileMenu_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  int          retVal   = GUIHResult_Void;
  GUIFileMenu* lpMenu   = ( GUIFileMenu* )apObj;

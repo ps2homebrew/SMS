@@ -29,28 +29,28 @@
 
 typedef struct SMS_DXSBDrawPack {
  DMATag         m_DMATagUpload;
- unsigned long  m_Pad0;
+ u64            m_Pad0;
  GIFTag         m_GIFTagUpload;
  GSRegBITBLTBUF m_BitBlt;
- unsigned long  m_BitBltID;
+ u64            m_BitBltID;
  GSRegTRXPOS    m_TrxPos;
- unsigned long  m_TrxPosID;
+ u64            m_TrxPosID;
  GSRegTRXREG    m_TrxReg;
- unsigned long  m_TrxRegID;
+ u64            m_TrxRegID;
  GSRegTRXDIR    m_TrxDir;
- unsigned long  m_TrxDirID;
+ u64            m_TrxDirID;
  GIFTag         m_GIFTagData;
  DMATag         m_DMATagData;
- unsigned long  m_Pad1;
+ u64            m_Pad1;
  DMATag         m_DMATagDraw;
- unsigned long  m_Pad2;
+ u64            m_Pad2;
  GIFTag         m_GIFTagDraw0;
  GSRegTEXFLUSH  m_TexFlush;
- unsigned long  m_TexFlushID;
+ u64            m_TexFlushID;
  GSRegPRIM      m_Prim;
- unsigned long  m_PrimID;
+ u64            m_PrimID;
  GSRegTEST      m_TestOn;
- unsigned long  m_TestOnID;
+ u64            m_TestOnID;
  GIFTag         m_GIFTagDraw1;
  GSRegRGBAQ     m_RGBAQ;
  GSRegTEX0      m_Tex0;
@@ -60,7 +60,7 @@ typedef struct SMS_DXSBDrawPack {
  GSRegXYZ       m_XYZRightBottom;
  GIFTag         m_GIFTagDraw2;
  GSRegTEST      m_TestOff;
- unsigned long  m_TestOffID;
+ u64            m_TestOffID;
 } SMS_DXSBDrawPack __attribute__(   (  aligned( 64 )  )   );
 
 #define SMS_DXSB_DP_BB_VRAM( p ) (   *( unsigned short* )(  ( p ) +  36  )   )
@@ -70,16 +70,16 @@ typedef struct SMS_DXSBDrawPack {
 #define SMS_DXSB_DP_QWC_GIF( p ) (   *( unsigned short* )(  ( p ) +  96  )   )
 #define SMS_DXSB_DP_QWC_DMA( p ) (   *( unsigned short* )(  ( p ) + 112  )   )
 #define SMS_DXSB_DP_PTR_DMA( p ) (   *( unsigned int*   )(  ( p ) + 116  )   )
-#define SMS_DXSB_DP_TEX0( p )    (   *( unsigned long*  )(  ( p ) + 232  )   )
-#define SMS_DXSB_DP_XYZ_LT( p )  (   *( unsigned long*  )(  ( p ) + 248  )   )
+#define SMS_DXSB_DP_TEX0( p )    (   *( u64*            )(  ( p ) + 232  )   )
+#define SMS_DXSB_DP_XYZ_LT( p )  (   *( u64*            )(  ( p ) + 248  )   )
 #define SMS_DXSB_DP_UV_R( p )    (   *( unsigned short* )(  ( p ) + 256  )   )
 #define SMS_DXSB_DP_UV_B( p )    (   *( unsigned short* )(  ( p ) + 258  )   )
-#define SMS_DXSB_DP_XYZ_RB( p )  (   *( unsigned long*  )(  ( p ) + 264  )   )
+#define SMS_DXSB_DP_XYZ_RB( p )  (   *( u64*            )(  ( p ) + 264  )   )
 
 typedef struct SMS_DXSBFrame {
 
- long           m_StartPTS;
- long           m_EndPTS;
+ s64            m_StartPTS;
+ s64            m_EndPTS;
  unsigned char* m_pPixmap;
  unsigned short m_Width;
  unsigned short m_Height;

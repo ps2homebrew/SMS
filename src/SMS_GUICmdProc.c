@@ -42,10 +42,10 @@ static void GUICmdProc_Cleanup ( GUIObject* apObj ) {
 
 extern void RestoreFileDir ( void** );
 
-static int GUICmdProc_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+static int GUICmdProc_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  int           retVal = GUIHResult_Void;
- unsigned long lEvent = anEvent & 0xF000000000000000L;
+ u64           lEvent = anEvent & 0xF000000000000000L;
 
  if ( lEvent == GUI_MSG_FILE || lEvent == GUI_MSG_FOLDER_MP3 ) {
 
@@ -152,8 +152,8 @@ static void _start_playlist ( SMS_List* apList ) {
 
 }  /* end _start_playlist */
 
-extern int ( *CtxMenu_HandleEventBase ) ( GUIObject*, unsigned long );
-extern int CtxMenu_HandleEvent          ( GUIObject*, unsigned long );
+extern int ( *CtxMenu_HandleEventBase ) ( GUIObject*, u64           );
+extern int CtxMenu_HandleEvent          ( GUIObject*, u64           );
 
 static GUIMenu* s_pMenu;
 

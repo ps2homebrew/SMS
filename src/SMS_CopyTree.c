@@ -30,16 +30,16 @@
 
 #define BUF_SIZE ( 4096 * 96 )
 
-int SMS_CopyFile ( const char*, FileContext*, unsigned long, unsigned long*, void* );
+int SMS_CopyFile ( const char*, FileContext*, u64          , u64*          , void* );
 
 typedef struct SrcDst {
  char*         m_pSrc;
  char*         m_pDst;
  int           m_SrcLen;
  int           m_DstLen;
- unsigned long m_TotalSize;
- unsigned long m_DataSize;
- unsigned long m_CumSize;
+ u64           m_TotalSize;
+ u64           m_DataSize;
+ u64           m_CumSize;
  void*         m_pBuf;
 } SrcDst;
 
@@ -145,8 +145,8 @@ static void CopyFileCB ( SMS_DirTree* apTree, const char* apPath, int afDir, uns
 void SMS_CopyTree ( const char* apSrc ) {
 
  int           lLen;
- unsigned long lZoneFree;
- unsigned long lZoneSize;
+ u64           lZoneFree;
+ u64           lZoneSize;
  SMS_DirTree*  lpTree = SMS_DirTreeInit ( apSrc );
  char*         lpDir  = strrchr ( apSrc, '/' ) + 1;
  SrcDst        lSrcDst; memset (  &lSrcDst, 0, sizeof ( lSrcDst )  );
@@ -296,7 +296,7 @@ void SMS_DeleteTree ( const char* apPath ) {
 #endif  /* _CHECK_AUDIO */
 
 int SMS_CopyFile (
-     const char* apDst, FileContext* apFile, unsigned long aTotalSize, unsigned long* apCumSize, void* apBuf
+     const char* apDst, FileContext* apFile, u64           aTotalSize, u64*           apCumSize, void* apBuf
     ) {
 
  int   retVal = 0;
@@ -315,7 +315,7 @@ int SMS_CopyFile (
 
    char          lSts[ 128 ];
    unsigned int  lnCopied = 0U;
-   unsigned long lCumSize = apCumSize ? *apCumSize : 0UL;
+   u64           lCumSize = apCumSize ? *apCumSize : 0UL;
    float         lSpeed   = 0.0F;
    int           lfError  = 0;
    unsigned int  lStart   = g_Timer;

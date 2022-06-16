@@ -28,7 +28,7 @@
 extern SMS_Player s_Player;
 extern SMString   g_StrPlayer[ 6 ];
 
-static int ( *HandleEventBase ) ( GUIObject*, unsigned long );
+static int ( *HandleEventBase ) ( GUIObject*, u64           );
 static GUIMenu* s_pMenu;
 
 static SMString* s_ModeNames[ 8 ] __attribute__(   (  section( ".data" )  )   ) = {
@@ -86,7 +86,7 @@ static void GUIMenuPlayer_Redraw ( GUIMenu* apMenu ) {
 
 }  /* end GUIMenuPlayer_Redraw */
 
-int GUIMenuPlayer_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+int GUIMenuPlayer_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 
@@ -242,7 +242,7 @@ void SMS_PlayerMenu ( void ) {
  int           lIdx     = 2;
  int           lfDXSB   = s_Player.m_Flags & SMS_FLAGS_DXSB;
  GUIMenuState* lpState;
- unsigned long lDMA[ 6 ] __attribute__(   (  aligned( 16 )  )   );
+ u64           lDMA[ 6 ] __attribute__(   (  aligned( 16 )  )   );
 
  lDMA[ 0 ] = GIF_TAG( 2, 1, 0, 0, 0, 1 );
  lDMA[ 1 ] = GIFTAG_REGS_AD;

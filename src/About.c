@@ -74,7 +74,7 @@ void About ( void ) {
  while ( 1 ) {
 
   int            lLen, lX, lYY = lY;
-  unsigned long* lpDMA;
+  u64*           lpDMA;
   unsigned int   lBtnCode;
 
   GSContext_NewPacket ( 1, 0, GSPaintMethod_InitClear );

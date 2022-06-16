@@ -31,11 +31,11 @@
 #include <sys/fcntl.h>
 
 extern void GUIMenuSMS_Redraw           ( GUIMenu*                                                        );
-extern int  CtxMenu_HandleEvent         ( GUIObject*, unsigned long                                       );
-extern int ( *CtxMenu_HandleEventBase ) ( GUIObject*, unsigned long                                       );
+extern int  CtxMenu_HandleEvent         ( GUIObject*, u64                                                 );
+extern int ( *CtxMenu_HandleEventBase ) ( GUIObject*, u64                                                 );
 extern void SMS_CopyTree                ( const char*                                                     );
 extern void SMS_DeleteTree              ( const char*                                                     );
-extern int  SMS_CopyFile                ( const char*, FileContext*, unsigned long, unsigned long*, void* );
+extern int  SMS_CopyFile                ( const char*, FileContext*, u64          , u64*          , void* );
 extern void SMS_LoadPalette             ( void                                                            );
 extern void SMS_LoadSMBInfo             ( void                                                            );
 extern void RestoreFileDir              ( void**                                                          );
@@ -150,7 +150,7 @@ static int _copy_file_to_mc ( const char* apDst, const char* apSrc ) {
 
   if ( lFDDst >= 0 ) {
 
-   long  lSize = fioLseek ( lFDSrc, 0, SEEK_END );
+   s64   lSize = fioLseek ( lFDSrc, 0, SEEK_END );
    char* lpBuf = ( char* )malloc ( lSize );
 
    if ( lpBuf ) {
@@ -334,13 +334,13 @@ __attribute__(   ( used )  ) static void _av_handler ( GUIMenu* apMenu, int aDir
 
  if ( lnMedia ) {
 
-  unsigned long lEvent = GUI_MSG_FOLDER_MP3;
+  u64           lEvent = GUI_MSG_FOLDER_MP3;
   unsigned int  lMask  = ( aFileType0 == GUICON_MP3 || aFileType0 == GUICON_PICTURE ) ? 0x80000000 : 0xC0000000;
 
   SMS_ListSort (  ( SMS_List* )lpParam[ 0 ]  );
 
   lpParam[ 0 ] = ( void* )(  ( unsigned int )lpParam[ 0 ] | lMask  );
-  lEvent      |= (  ( unsigned long )( unsigned int )lpParam  ) << 28;
+  lEvent      |= (  ( u64           )( unsigned int )lpParam  ) << 28;
 
   GUI_PostMessage ( GUI_MSG_QUIT );
   GUI_PostMessage ( lEvent );

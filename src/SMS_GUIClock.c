@@ -25,13 +25,13 @@ extern void* _gp;
 
 GUIClockParam g_Clock;
 
-static unsigned long s_PrevTimer;
+static u64           s_PrevTimer;
 static int           s_ThreadID;
 static int           s_HandlerID;
 static void*         s_pImg;
-static unsigned long s_DMA    [  8 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
-static unsigned long s_SendPkt[ 24 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
-static unsigned long s_DrawPkt[ 48 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
+static u64           s_DMA    [  8 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
+static u64           s_SendPkt[ 24 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
+static u64           s_DrawPkt[ 48 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
 
 static void _clock_thread  ( void*             );
 static int  _vblnk_handler ( int, void*, void* );
@@ -140,11 +140,11 @@ static void _clock_thread ( void* apParam ) {
  static const char s_lFmEUR[] __attribute__(   (  aligned( 1 ), section( ".rodata" )  )   ) = "00:00";
 
  CDDA_RTC             lRTC;
- unsigned long        lTime;
- unsigned long        lTimeBase;
- unsigned long        lMinutes;
- unsigned long        lHour;
- unsigned long        lMins;
+ u64                  lTime;
+ u64                  lTimeBase;
+ u64                  lMinutes;
+ u64                  lHour;
+ u64                  lMins;
  unsigned char        lHalf;
  int                  lTimeFormat;
  const char*          lpFmt;
@@ -155,7 +155,7 @@ static void _clock_thread ( void* apParam ) {
  GSPixelFormat        lPSM     = g_GSCtx.m_DrawCtx[ 0 ].m_FRAMEVal.PSM;
  unsigned int         lFBW     = g_GSCtx.m_DrawCtx[ 0 ].m_FRAMEVal.FBW;
  int                  lQWC     = (   (   lpCParam -> m_W * lPH * (  2 + ( lPSM == GSPixelFormat_PSMCT24 )  )   ) + 15    ) >> 4;
- unsigned long*       lpTex0, *lpDrawPkt;
+ u64*                 lpTex0, *lpDrawPkt;
  GSStoreImage         lStoreParam;
  int                  lX, lDX;
  int                  lDY;
@@ -235,7 +235,7 @@ static void _clock_thread ( void* apParam ) {
 
  while ( 1 ) {
 
-  unsigned long  lNewMinutes;
+  u64            lNewMinutes;
   char           lBuf[ 12 ];
   GSRegTEX0      lTex0;
 

@@ -313,7 +313,7 @@ static void _Sample_Render ( GUIObject* apObj, int aCtx ) {
   int            lLen   = STR_SAMPLE.m_Len;
   int            lDWC   = GS_TXT_PACKET_SIZE( lLen );
   int            lWidth = GSFont_WidthEx ( STR_SAMPLE.m_pStr, lLen, g_Config.m_SubHIncr );
-  unsigned long* lpDMA  = GSContext_NewList ( lDWC << 1 );
+  u64*           lpDMA  = GSContext_NewList ( lDWC << 1 );
 
   g_GSCtx.m_TextColor = 0;
   GSFont_RenderEx (
@@ -392,9 +392,9 @@ void GUIMenuSMS_UpdateStatus ( GUIMenu* apMenu ) {
 
 }  /* end GUIMenuSMS_UpdateStatus */
 
-extern int GUIMenu_HandleEvent ( GUIObject*, unsigned long );
+extern int GUIMenu_HandleEvent ( GUIObject*, u64           );
 
-int GUIMenuSMS_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+int GUIMenuSMS_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  GUIMenu*      lpMenu  = ( GUIMenu* )apObj;
  GUIMenuState* lpState = (  ( GUIMenuState* )( unsigned int )lpMenu -> m_pState -> m_pTail -> m_Param  );
@@ -1571,7 +1571,7 @@ static void _ibclr_handler ( GUIMenu* apMenu, int aDir ) {
 static void _txtclr_handler ( GUIMenu* apMenu, int aDir ) {
 
  int           lVal = g_Config.m_BrowserTxtIdx;
- unsigned long lColor;
+ u64           lColor;
 
  lVal += aDir;
 
@@ -2181,7 +2181,7 @@ static void _mp3_asd_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _mp3_adp_handler ( GUIMenu* apMenu, int aDir ) {
 
- ( char )g_Config.m_MP3AutoPar += aDir;
+ g_Config.m_MP3AutoPar = ( char )g_Config.m_MP3AutoPar + aDir;
 
  if (  ( char )g_Config.m_MP3AutoPar > 99  )
   g_Config.m_MP3AutoPar = 1;

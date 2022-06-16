@@ -56,7 +56,7 @@ typedef struct ogg_stream_state {
  int            body_fill;
  int            body_returned;
  int*           lacing_vals;
- long*          granule_vals;
+ s64*           granule_vals;
  int            lacing_storage;
  int            lacing_fill;
  int            lacing_packet;
@@ -67,7 +67,7 @@ typedef struct ogg_stream_state {
  int            b_o_s;
  int            serialno;
  int            pageno;
- long           packetno;
+ s64            packetno;
  int            granulepos;
 } ogg_stream_state;
 
@@ -83,8 +83,8 @@ typedef struct ogg_packet {
  int            bytes;
  int            b_o_s;
  int            e_o_s;
- long           granulepos;
- long           packetno;
+ s64            granulepos;
+ s64            packetno;
 } ogg_packet;
 
 typedef struct vorbis_info {
@@ -119,12 +119,12 @@ typedef struct vorbis_dsp_state {
  int          W;
  int          nW;
  int          centerW;
- long         granulepos;
- long         sequence;
- long         glue_bits;
- long         time_bits;
- long         floor_bits;
- long         res_bits;
+ s64          granulepos;
+ s64          sequence;
+ s64          glue_bits;
+ s64          time_bits;
+ s64          floor_bits;
+ s64          res_bits;
  void*        backend_state;
 } vorbis_dsp_state;
 
@@ -137,8 +137,8 @@ typedef struct vorbis_block {
  int                 pcmend;
  int                 mode;
  int                 eofflag;
- long                granulepos;
- long                sequence;
+ s64                 granulepos;
+ s64                 sequence;
  vorbis_dsp_state*   vd;
  void*               localstore;
  int                 localtop;

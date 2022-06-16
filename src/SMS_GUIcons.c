@@ -1409,7 +1409,7 @@ void GUI_UnloadIcons ( void ) {
 
 }  /* end GUI_UnloadIcons */
 
-void GUI_DrawIcon ( unsigned int anIndex, int aX, int anY, GUIcon aType, unsigned long* apDMA ) {
+void GUI_DrawIcon ( unsigned int anIndex, int aX, int anY, GUIcon aType, u64*           apDMA ) {
 
  static int          sl_ISize[ 3 ] = {  32,  32,  48 };
  static unsigned int sl_QWC  [ 3 ] = { 256, 256, 576 };
@@ -1421,8 +1421,8 @@ void GUI_DrawIcon ( unsigned int anIndex, int aX, int anY, GUIcon aType, unsigne
  int   lQWC   = sl_QWC  [ aType ];
  void* lpData = sl_pIcon[ aType ][ anIndex ];
 
- unsigned long lXYZ0;
- unsigned long lXYZ1;
+ u64           lXYZ0;
+ u64           lXYZ1;
 
  __asm__ __volatile__(
   ".set noreorder\n\t"

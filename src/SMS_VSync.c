@@ -19,8 +19,8 @@ extern short g_MaxSyncVal[ 8 ] __attribute__(   (  section( ".data" )  )   );
 
 unsigned int SMS_EstimateVSync ( int aPixFmt, int aWidth, int aHeight ) {
 
- unsigned long* lpDMA, *lpPtr;
- unsigned long  lGIFTag, lDMATag;
+ u64*           lpDMA, *lpPtr;
+ u64            lGIFTag, lDMATag;
  unsigned int   lPixFmt;
  unsigned int   lQWC, lX, lY;
  float          lnMB, lMB2HS;
@@ -42,7 +42,7 @@ unsigned int SMS_EstimateVSync ( int aPixFmt, int aWidth, int aHeight ) {
 
  lGIFTag = GIF_TAG( lQWC, 0, 0, 0, 2, 0 );
  lDMATag = DMA_TAG(  lQWC, 0, DMATAG_ID_REF, 0, 0x00100000, 0  );
- lpDMA   = lpPtr = ( unsigned long* )malloc (  ( 8 + 12 * 32 * 32 ) << 3  );
+ lpDMA   = lpPtr = ( u64*           )malloc (  ( 8 + 12 * 32 * 32 ) << 3  );
 
  lpDMA[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
  lpDMA[ 1 ] = 0LL;

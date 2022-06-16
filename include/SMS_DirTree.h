@@ -14,7 +14,7 @@
 typedef struct SMS_DirNode {
 
  struct SMS_DirNode* m_pNext;
- unsigned long       m_Param;
+ u64                 m_Param;
 
 } SMS_DirNode;
 
@@ -28,9 +28,9 @@ typedef struct SMS_Dir {
 typedef struct SMS_DirTree {
 
  SMS_Dir       m_Root;
- unsigned long m_Size;
- unsigned long m_nDirs;
- unsigned long m_nFiles;
+ u64           m_Size;
+ u64           m_nDirs;
+ u64           m_nFiles;
  int           m_Error;
  void*         m_pParam;
  int           ( *DirCB ) ( const char* );

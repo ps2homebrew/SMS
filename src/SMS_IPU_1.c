@@ -25,9 +25,9 @@ static void _destroy ( IPULoadImage* apLoadImg ) {
 
 void IPU_InitLoadImage ( IPULoadImage* apLoadImg, int aWidth, int aHeight ) {
 
- unsigned int   lDMASize  = sizeof ( unsigned long ) * (  8 + 12 * ( aWidth >> 4 )  );
+ unsigned int   lDMASize  = sizeof ( u64           ) * (  8 + 12 * ( aWidth >> 4 )  );
  unsigned int   lDataSize = aWidth << 6;
- unsigned long* lpDMA     = ( unsigned long* )malloc ( lDataSize += lDMASize );
+ u64*           lpDMA     = ( u64*           )malloc ( lDataSize += lDMASize );
  unsigned char* lpData    = (  ( unsigned char* )lpDMA  ) + lDMASize;
 
  lpDMA[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
@@ -74,30 +74,30 @@ static void _darken_image ( unsigned char* apBuf, unsigned int aQWC ) {
 
  __asm__ __volatile__ (
   ".set noreorder\n\t"
-  "lui      $t0, 0x00FF\n\t"
-  "lui      $t1, 0xFF00\n\t"
-  "ori      $t0, $t0, 0xFFFF\n\t"
-  "pextlw   $t1, $t1\n\t"
-  "pextlw   $t0, $t0\n\t"
-  "pcpyld   $t1, $t1\n\t"
-  "pcpyld   $t0, $t0\n\t"
+  "lui      " ASM_REG_T0 ", 0x00FF\n\t"
+  "lui      " ASM_REG_T1 ", 0xFF00\n\t"
+  "ori      " ASM_REG_T0 ", " ASM_REG_T0 ", 0xFFFF\n\t"
+  "pextlw   " ASM_REG_T1 ", " ASM_REG_T1 ", " ASM_REG_T1 "\n\t"
+  "pextlw   " ASM_REG_T0 ", " ASM_REG_T0 ", " ASM_REG_T0 "\n\t"
+  "pcpyld   " ASM_REG_T1 ", " ASM_REG_T1 ", " ASM_REG_T1 "\n\t"
+  "pcpyld   " ASM_REG_T0 ", " ASM_REG_T0 ", " ASM_REG_T0 "\n\t"
   "srl      $a1, $a1, 1\n\t"
   "1:\n\t"
   "lq       $v1,  0($a0)\n\t"
-  "lq       $t6, 16($a0)\n\t"
-  "pand     $t2, $v1, $t0\n\t"
-  "pand     $t3, $v1, $t1\n\t"
-  "pand     $t4, $t6, $t0\n\t"
-  "pand     $t5, $t6, $t1\n\t"
-  "psrlw    $t3, $t3, 1\n\t"
-  "psrlw    $t5, $t5, 1\n\t"
-  "pand     $t3, $t3, $t1\n\t"
-  "pand     $t5, $t5, $t1\n\t"
-  "por      $v1, $t2, $t3\n\t"
-  "por      $t6, $t4, $t5\n\t"
+  "lq       " ASM_REG_T6 ", 16($a0)\n\t"
+  "pand     " ASM_REG_T2 ", $v1, " ASM_REG_T0 "\n\t"
+  "pand     " ASM_REG_T3 ", $v1, " ASM_REG_T1 "\n\t"
+  "pand     " ASM_REG_T4 ", " ASM_REG_T6 ", " ASM_REG_T0 "\n\t"
+  "pand     " ASM_REG_T5 ", " ASM_REG_T6 ", " ASM_REG_T1 "\n\t"
+  "psrlw    " ASM_REG_T3 ", " ASM_REG_T3 ", 1\n\t"
+  "psrlw    " ASM_REG_T5 ", " ASM_REG_T5 ", 1\n\t"
+  "pand     " ASM_REG_T3 ", " ASM_REG_T3 ", " ASM_REG_T1 "\n\t"
+  "pand     " ASM_REG_T5 ", " ASM_REG_T5 ", " ASM_REG_T1 "\n\t"
+  "por      $v1, " ASM_REG_T2 ", " ASM_REG_T3 "\n\t"
+  "por      " ASM_REG_T6 ", " ASM_REG_T4 ", " ASM_REG_T5 "\n\t"
   "subu     $a1, $a1, 1\n\t"
   "sq       $v1,  0($a0)\n\t"
-  "sq       $t6, 16($a0)\n\t"
+  "sq       " ASM_REG_T6 ", 16($a0)\n\t"
   "bgtz     $a1, 1b\n\t"
   "addiu    $a0, $a0, 32\n\t"
   ".set reorder\n\t"
@@ -107,8 +107,8 @@ static void _darken_image ( unsigned char* apBuf, unsigned int aQWC ) {
 
 void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, int anY, int afDarken, int aTH0, int aTH1 ) {
 
- unsigned long* lpBegin = UNCACHED_SEG( apLoadImg -> m_pDMA + 12 );
- unsigned long* lpEnd   = UNCACHED_SEG( apLoadImg -> m_pData     );
+ u64*           lpBegin = UNCACHED_SEG( apLoadImg -> m_pDMA + 12 );
+ u64*           lpEnd   = UNCACHED_SEG( apLoadImg -> m_pData     );
  unsigned int   lH      = apLoadImg -> m_Height + anY;
  unsigned int   i, lCode;
 
@@ -147,7 +147,7 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
 
    if (  IPU_FDEC( 0 ) == lSlice  ) {
 
-    unsigned long* lpPos;
+    u64*           lpPos;
 
     lQSC = IPU_FDEC( 32 ) >> 27;
     ++lSlice;
@@ -287,7 +287,7 @@ void IPU_UnpackImage ( void* apDst, void* apSrc, int aSize, int aWidth, int aHei
       ".set at\n\t"
       : "=r"( lpDst )
       : "0"( lpDst ), "r"( lMBW ), "r"( afDarken )
-      : "at", "v0", "v1", "a0", "a1", "t0", "t1", "t2", "t3", "t4", "t5", "t6"
+      : "at", "v0", "v1", "a0", "a1", ASM_REG_T0, ASM_REG_T1, ASM_REG_T2, ASM_REG_T3, ASM_REG_T4, ASM_REG_T5, ASM_REG_T6
      );
 
      if (  IPU_FDEC ( 0 ) != lSlice++  ) break;

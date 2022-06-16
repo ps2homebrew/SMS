@@ -712,7 +712,7 @@ void SMS_LocaleInit ( void ) {
 
  if ( lFD >= 0 ) {
 
-  long lSize = MC_SeekS ( lFD, 0, SEEK_END );
+  s64  lSize = MC_SeekS ( lFD, 0, SEEK_END );
 
   if ( lSize > 0 ) {
 

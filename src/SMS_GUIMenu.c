@@ -38,8 +38,8 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
   int            lTW   = GSFont_Width ( lpState -> m_pTitle -> m_pStr, lLen );
   int            lTX   = lpMenu -> m_X + (  ( lpMenu -> m_Width - lTW ) >> 1  );
   int            lTDWC = GS_TXT_PACKET_SIZE( lLen );
-  unsigned long* lpPkt = GSContext_NewList (   (  GS_RRT_PACKET_SIZE() << 1  ) + 6 + lTDWC   );
-  unsigned long* lpDMA = lpPkt + (  GS_RRT_PACKET_SIZE() << 1  );
+  u64*           lpPkt = GSContext_NewList (   (  GS_RRT_PACKET_SIZE() << 1  ) + 6 + lTDWC   );
+  u64*           lpDMA = lpPkt + (  GS_RRT_PACKET_SIZE() << 1  );
 
   GS_RenderRoundRect (
    ( GSRoundRectPacket* )(  lpPkt +  GS_RRT_PACKET_SIZE() - 2  ),
@@ -72,7 +72,7 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
 
   int            lX     = lpMenu -> m_X      + 8;
   int            lWidth = lpMenu -> m_Width - 16;
-  unsigned long* lpDMA;
+  u64*           lpDMA;
   int            lLen;
 
   if ( lpItem -> m_Type & MENU_ITEM_HIDDEN ) continue;
@@ -104,7 +104,7 @@ static void GUIMenu_Render ( GUIObject* apObj, int aCtx ) {
 
   if (  lpItem == lpState -> m_pCurr && !( lpState -> m_Flags & MENU_FLAGS_TEXT )  ) {
 
-   unsigned long lColor = g_Palette[ g_Config.m_BrowserSCIdx - 1 ];
+   u64           lColor = g_Palette[ g_Config.m_BrowserSCIdx - 1 ];
 
    lX = lpMenu -> m_X + 4;
 
@@ -247,7 +247,7 @@ void GUIMenu_SelectItemByName ( GUIMenu* apMenu, const char* apName ) {
 
 }  /* end GUIMenu_SelectItemByName */
 
-int GUIMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+int GUIMenu_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  GUIMenu*      lpMenu  = ( GUIMenu* )apObj;
  GUIMenuState* lpState = ( GUIMenuState* )( unsigned int )lpMenu -> m_pState -> m_pTail -> m_Param;
