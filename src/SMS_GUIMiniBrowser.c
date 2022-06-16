@@ -81,11 +81,11 @@ static void _handler ( GUIMenu* apMenu, int aDir ) {
 
   lpName = lPath + strlen ( lPath ) - 3;
 
-  if (  !stricmp ( lpName, g_pSrtStr )  )
+  if (  !strcasecmp ( lpName, g_pSrtStr )  )
 
    s_SubFmt = SubtitleFormat_SRT;
 
-  else if (  !stricmp ( lpName, g_pSubStr ) || !stricmp ( lpName, g_pTxtStr )  )
+  else if (  !strcasecmp ( lpName, g_pSubStr ) || !strcasecmp ( lpName, g_pTxtStr )  )
 
    s_SubFmt = SubtitleFormat_SUB;
 
@@ -98,9 +98,9 @@ static int _is_sub ( SMS_ListNode* apNode ) {
  int lLen = strlen (  _STR( apNode )  );
 
  return lLen > 4 && _STR( apNode )[ lLen - 4 ] == '.' &&
-        (  !stricmp (  _STR( apNode ) + lLen - 3, g_pSubStr  ) ||
-           !stricmp (  _STR( apNode ) + lLen - 3, g_pSrtStr  ) ||
-           !stricmp (  _STR( apNode ) + lLen - 3, g_pTxtStr  )
+        (  !strcasecmp (  _STR( apNode ) + lLen - 3, g_pSubStr  ) ||
+           !strcasecmp (  _STR( apNode ) + lLen - 3, g_pSrtStr  ) ||
+           !strcasecmp (  _STR( apNode ) + lLen - 3, g_pTxtStr  )
         ) && apNode -> m_Param == GUICON_FILE;
 
 }  /* end _is_sub */
