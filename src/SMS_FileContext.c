@@ -407,7 +407,7 @@ static int CDDA_Read ( FileContext* apCtx, void* apBuf, unsigned int aSize ) {
 
    memcpy ( apBuf, apCtx -> m_pPos, lLen );
 
-   (  ( char* )apBuf  ) += lLen;
+   apBuf = ( char* )apBuf + lLen;
    apCtx -> m_pPos      += lLen;
    aSize                -= lLen;
 
@@ -1261,7 +1261,7 @@ static int STIO_Read ( FileContext* apCtx, void* apBuf, unsigned int aSize ) {
 
    memcpy ( apBuf, apCtx -> m_pPos, lLen );
 
-   (  ( char* )apBuf  ) += lLen;
+   apBuf = ( char* )apBuf + lLen;
    apCtx -> m_pPos      += lLen;
    apCtx -> m_Pos       += lLen;
    apCtx -> m_CurPos    += lLen;

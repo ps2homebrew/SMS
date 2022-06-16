@@ -2181,7 +2181,7 @@ static void _mp3_asd_handler ( GUIMenu* apMenu, int aDir ) {
 
 static void _mp3_adp_handler ( GUIMenu* apMenu, int aDir ) {
 
- ( char )g_Config.m_MP3AutoPar += aDir;
+ g_Config.m_MP3AutoPar = ( char )g_Config.m_MP3AutoPar + aDir;
 
  if (  ( char )g_Config.m_MP3AutoPar > 99  )
   g_Config.m_MP3AutoPar = 1;

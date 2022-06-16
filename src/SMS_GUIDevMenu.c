@@ -471,7 +471,7 @@ static void GUIDevMenu_SetFocus ( GUIObject* apObj, int afSet ) {
 
  GUIDevMenu* lpMenu  = ( GUIDevMenu* )apObj;
 
- lpMenu -> m_pColor = &( afSet ? g_Config.m_BrowserABCIdx : g_Config.m_BrowserIBCIdx );
+ lpMenu -> m_pColor = ( afSet ? &(g_Config.m_BrowserABCIdx) : &(g_Config.m_BrowserIBCIdx) );
 
  GUIDevMenu_Redraw ( lpMenu );
 

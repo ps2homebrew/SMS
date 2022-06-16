@@ -305,7 +305,7 @@ static void GUIFileMenu_SetFocus ( GUIObject* apObj, int afSet ) {
  GUIFileMenu* lpMenu = ( GUIFileMenu* )apObj;
 
  lpMenu -> m_Active = afSet;
- lpMenu -> m_pColor = &( afSet ? g_Config.m_BrowserABCIdx : g_Config.m_BrowserIBCIdx );
+ lpMenu -> m_pColor = ( afSet ? &(g_Config.m_BrowserABCIdx) : &(g_Config.m_BrowserIBCIdx) );
 
  _redraw ( lpMenu, 0 );
 
