@@ -113,8 +113,8 @@ static INLINE unsigned int File_GetUInt ( FileContext* apCtx ) {
  return retVal;
 }  /* end File_GetInt */
 
-static INLINE unsigned long File_GetULong ( FileContext* apCtx ) {
- unsigned long retVal;
+static INLINE u64           File_GetULong ( FileContext* apCtx ) {
+ u64           retVal;
  if (  apCtx -> m_pEnd - apCtx -> m_pPos >= 8  ) {
   retVal = SMS_unaligned64 ( apCtx -> m_pPos );
   apCtx -> m_pPos   += 8;
@@ -126,7 +126,7 @@ static INLINE unsigned long File_GetULong ( FileContext* apCtx ) {
 void File_Skip      ( FileContext*, unsigned int        );
 void File_GetString ( FileContext*, char*, unsigned int );
 
-CDDAContext*         CDDA_InitContext     ( unsigned long                      );
+CDDAContext*         CDDA_InitContext     ( u64                                );
 void                 CDDA_DestroyContext  ( CDDAContext*                       );
 const CDDADirectory* CDDA_DirectoryList   ( CDDAContext*                       );
 CDDAFile*            CDDA_GetFileList     ( CDDAContext*, const CDDADirectory* );

@@ -109,7 +109,7 @@ static void _draw_text ( char* apStr ) {
  int            lWidth = GSFont_Width ( apStr, lLen );
  int            lX     = ( g_GSCtx.m_Width  - lWidth ) / 2;
  int            lY     = ( g_GSCtx.m_Height -     32 ) / 2;
- unsigned long* lpDMA;
+ u64*           lpDMA;
 
  if ( s_Player.m_pIPUCtx ) s_Player.m_pIPUCtx -> Sync ();
 
@@ -1005,7 +1005,7 @@ static int _sms_play ( void* apPlayer ) {
 
   if ( !lfNoVideo && lfSeekable ) {
 
-   long lPTS = SMS_HistoryLook ( s_Player.m_pCont -> m_pFileCtx -> m_pPath, NULL );
+   s64  lPTS = SMS_HistoryLook ( s_Player.m_pCont -> m_pFileCtx -> m_pPath, NULL );
 
    if ( lPTS != -1 ) {
 
@@ -1463,7 +1463,7 @@ static void _Destroy ( void* apPlayer ) {
  ) {
 
   if ( s_Player.m_Flags & SMS_FLAGS_USER_STOP ) {
-   long int lVideoTime = SMS_Rescale ( s_Player.m_VideoTime, s_Player.m_PDW22Base, s_Player.m_PDW22Ratio );
+   s64      lVideoTime = SMS_Rescale ( s_Player.m_VideoTime, s_Player.m_PDW22Base, s_Player.m_PDW22Ratio );
    SMS_HistoryAdd ( lPath, lVideoTime );
    SMS_HistorySave ();
   } else if (  SMS_HistoryRemove ( lPath )  ) SMS_HistorySave ();

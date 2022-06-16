@@ -28,8 +28,8 @@ void SMS_SpectrumInit ( void ) {
  int            lX       = (  ( g_GSCtx.m_Width - 480 ) >> 1  ) - 30;
  int            lYT      = g_GSCtx.m_Height - 196;
  int            lYB      = g_GSCtx.m_Height - 192;
- unsigned long* lpDMA    = UNCACHED_SEG( g_SPCPkt       );
- unsigned long* lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
+ u64*           lpDMA    = UNCACHED_SEG( g_SPCPkt       );
+ u64*           lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
 
  *lpDMA++ = 0L;
  *lpDMA++ = VIF_DIRECT( 73 );
@@ -97,8 +97,8 @@ void SMS_SpectrumUpdate ( void ) {
  int*           lpH      = ( int* )0x70003800;
  int            lYB      = g_GSCtx.m_Height - 192;
  int            lX       = (  ( g_GSCtx.m_Width - 480 ) >> 1  ) - 30;
- unsigned long* lpDMA    = UNCACHED_SEG( g_SPCPkt + 6 );
- unsigned long* lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
+ u64*           lpDMA    = UNCACHED_SEG( g_SPCPkt + 6 );
+ u64*           lpDMAEnd = UNCACHED_SEG( g_SPCPkt + 148 );
 
  i = 0;
 

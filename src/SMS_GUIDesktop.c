@@ -65,7 +65,7 @@ typedef struct _Version {
 static int            s_Init     __attribute__(   (  section( ".data" )  )   ) = 0;
 static GSLoadImage    s_BitBltSL;
 static void*          s_pSLArea  __attribute__(   (  aligned( 64 )  )   );
-static unsigned long* s_pDMASL;
+static u64*           s_pDMASL;
 static unsigned int   s_nDMASL;
 
 static void _Version_Render ( GUIObject* apObj, int aCtx ) {
@@ -144,7 +144,7 @@ static int DrawSkin ( void ) {
 
  if ( lFD >= 0 ) { 
 
-  long           lSize; 
+  s64            lSize; 
   unsigned char* lpData; 
 
   lSize = MC_SeekS ( lFD, 0, SEEK_END ); 
@@ -163,7 +163,7 @@ static int DrawSkin ( void ) {
    if ( lWidth ) {
 
     IPULoadImage   lLoadImg;
-    unsigned long* lpDMA;
+    u64*           lpDMA;
 
     g_GSCtx.m_TBW = ( lWidth + 63 ) >> 6;
 
@@ -222,17 +222,17 @@ static void Desktop_Render ( GUIObject* apObj, int aCtx ) {
  if ( !apObj -> m_pGSPacket ) {
 
   int            i, lW, lH;
-  unsigned long  lXYXY;
+  u64            lXYXY;
   int            lX    = ( g_GSCtx.m_Width  - LOGO_W * 32 ) >> 1;
   int            lY    = ( g_GSCtx.m_Height - LOGO_H * 32 ) >> 1;
-  unsigned long* lpDMA = GSContext_NewPacket (  0, GS_VGR_PACKET_SIZE(), GSPaintMethod_InitClear  );
+  u64*           lpDMA = GSContext_NewPacket (  0, GS_VGR_PACKET_SIZE(), GSPaintMethod_InitClear  );
   GSStoreImage   lSIPkt;
 
   SMS_SetPalette ( NULL );
 
   if (   aCtx >= 0 && (  !g_Config.m_SkinName[ 0 ] || !DrawSkin ()  )   ) {
 
-   unsigned long lBP[ 96 ] __attribute__(   (  aligned( 16 )  )   );
+   u64           lBP[ 96 ] __attribute__(   (  aligned( 16 )  )   );
 
    GUI_LoadIcons ();
 
@@ -317,7 +317,7 @@ extern void _save_handler     ( GUIMenu*, int );
 extern void _shutdown_handler ( GUIMenu*, int );
 extern void _exit_handler     ( GUIMenu*, int );
 
-static int Desktop_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+static int Desktop_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  int retVal = GUIHResult_Void;
 
@@ -371,12 +371,12 @@ GUIObject* GUI_CreateDesktop ( void ) {
 
 static void StatusLine_Render ( GUIObject* apObj, int aCtx ) {
 
- unsigned long** lppList = ( unsigned long** )&apObj[ 1 ];
+ u64*          * lppList = ( u64*          * )&apObj[ 1 ];
 
  if ( !apObj -> m_pGSPacket ) {
 
-  unsigned long* lpDMA  = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
-  unsigned long* lpDMA2 = GSContext_NewList ( 6 );
+  u64*           lpDMA  = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
+  u64*           lpDMA2 = GSContext_NewList ( 6 );
   unsigned int   lX, lY;
 
   lX = g_GSCtx.m_Width  - 88;
@@ -402,7 +402,7 @@ static void StatusLine_Render ( GUIObject* apObj, int aCtx ) {
 
  }  /* end if */
 
- GSContext_CallList2 (  aCtx, ( unsigned long* )&s_BitBltSL  );
+ GSContext_CallList2 (  aCtx, ( u64*           )&s_BitBltSL  );
  GSContext_CallList ( aCtx, apObj -> m_pGSPacket );
  GSContext_CallList ( aCtx, lppList[ 0 ] );
 
@@ -412,7 +412,7 @@ static void StatusLine_Render ( GUIObject* apObj, int aCtx ) {
 
 static void StatusLine_Cleanup ( GUIObject* apObj ) {
 
- unsigned long** lppList = ( unsigned long** )&apObj[ 1 ];
+ u64*          * lppList = ( u64*          * )&apObj[ 1 ];
 
  GUIObject_Cleanup ( apObj );
  GSContext_DeleteList ( lppList[ 0 ] );
@@ -428,7 +428,7 @@ static void StatusLine_Cleanup ( GUIObject* apObj ) {
 
 GUIObject* GUI_CreateStatusLine ( void ) {
 
- GUIObject* retVal = ( GUIObject* )calloc (  1, sizeof ( GUIObject ) + sizeof ( unsigned long* )  );
+ GUIObject* retVal = ( GUIObject* )calloc (  1, sizeof ( GUIObject ) + sizeof ( u64*           )  );
 
  retVal -> Render  = StatusLine_Render;
  retVal -> Cleanup = StatusLine_Cleanup;
@@ -455,7 +455,7 @@ void GUI_Status ( unsigned char* apMsg ) {
 
  if ( s_nDMASL < lWidth ) {
 
-  s_pDMASL = ( unsigned long* )realloc64(  s_pDMASL, lWidth * sizeof ( unsigned long )  );
+  s_pDMASL = ( u64*           )realloc64(  s_pDMASL, lWidth * sizeof ( u64           )  );
   s_nDMASL = lWidth;
 
  }  /* end if */
@@ -480,20 +480,20 @@ static int _wait_user ( unsigned char* apMsg, int anIcon, int anBtn, unsigned in
  int            lLen   = strlen ( apMsg );
  int            lWidth = g_GSCtx.m_Width - 128;
  int            lDX    = -2;
- unsigned long* lpDMA;
- unsigned long  lIcon[ 32 ] __attribute__(   (  aligned( 16 )  )   );
+ u64*           lpDMA;
+ u64            lIcon[ 32 ] __attribute__(   (  aligned( 16 )  )   );
 
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth && lDX >= -12  ) --lDX;
  while (   GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth                ) --lLen;
 
  g_GSCtx.m_TextColor = 0;
  GSContext_NewPacket (  1, 0, GSPaintMethod_Init  );
- GSContext_CallList2 (  1, ( unsigned long* )&s_BitBltSL  );
+ GSContext_CallList2 (  1, ( u64*           )&s_BitBltSL  );
  lpDMA = GSContext_NewPacket (  1, GS_TXT_PACKET_SIZE( lLen ), GSPaintMethod_Continue  );
  GSFont_RenderEx ( apMsg, lLen, 40, lWidth = g_GSCtx.m_Height - 34, lpDMA, lDX, -2 );
  GUI_DrawIcon ( anIcon, 8, lWidth, GUIcon_Misc, lIcon );
  SyncDCache ( &lIcon[ 0 ], &lIcon[ 32 ] );
- lpDMA = (  ( unsigned long** )&g_pStatusLine[ 1 ]  )[ 0 ];
+ lpDMA = (  ( u64*          * )&g_pStatusLine[ 1 ]  )[ 0 ];
  GSContext_CallList2 ( 1, lIcon );
  GSContext_CallList  ( 1, g_pStatusLine -> m_pGSPacket );
  GSContext_CallList  ( 1, lpDMA );
@@ -534,8 +534,8 @@ int GUI_Question ( unsigned char* apMsg ) {
 
 void GUI_Progress ( unsigned char* apStr, int aPos, int afForceUpdate ) {
 
- static unsigned long* s_lpListTxt;
- static unsigned long* s_lpListRRT;
+ static u64*           s_lpListTxt;
+ static u64*           s_lpListRRT;
  static int            s_lLen;
  static int            s_lPos;
 
@@ -581,7 +581,7 @@ void GUI_Progress ( unsigned char* apStr, int aPos, int afForceUpdate ) {
    );
 
    GSContext_NewPacket (  1, 0, GSPaintMethod_Init          );
-   GSContext_CallList2 (  1, ( unsigned long* )&s_BitBltSL  );
+   GSContext_CallList2 (  1, ( u64*           )&s_BitBltSL  );
    GSContext_CallList  (  1, g_pStatusLine -> m_pGSPacket   );
    GSContext_CallList  (  1, s_lpListRRT                    );
    GSContext_CallList  (  1, s_lpListTxt                    );
@@ -592,7 +592,7 @@ void GUI_Progress ( unsigned char* apStr, int aPos, int afForceUpdate ) {
  } else {
 
   GSContext_NewPacket (  1, 0, GSPaintMethod_Init          );
-  GSContext_CallList2 (  1, ( unsigned long* )&s_BitBltSL  );
+  GSContext_CallList2 (  1, ( u64*           )&s_BitBltSL  );
   GSContext_CallList  (  1, g_pStatusLine -> m_pGSPacket   );
   GSContext_Flush     (  1, GSFlushMethod_KeepLists        );
 

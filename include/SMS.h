@@ -17,12 +17,17 @@ typedef unsigned int size_t;
 #define _SIZE_T_DEFINED
 #endif
 
+#include <tamtypes.h>
+
 extern unsigned char* g_pSPRTop;
 extern void*          g_pSynthBuffer;
 extern int            g_XShift;
 extern int            g_MCSlot;
 extern int            g_RandSeed;
 
+#if __GNUC__ > 3
+#include <stdint.h>
+#else
 typedef signed   char  int8_t;
 typedef unsigned char uint8_t;
 
@@ -31,6 +36,7 @@ typedef unsigned short uint16_t;
 
 typedef signed   int  int32_t;
 typedef unsigned int uint32_t;
+#endif
 
 typedef short SMS_DCTELEM;
 
@@ -82,8 +88,10 @@ typedef short SMS_DCTELEM;
 #  define NULL (  ( void* )0  )
 #endif  /* NULL */
 
-typedef signed   long int  int64_t;
-typedef unsigned long int uint64_t;
+#if __GNUC__ <= 3
+typedef s64                int64_t;
+typedef u64               uint64_t;
+#endif
 typedef unsigned int     uint128_t __attribute__(   (  mode( TI )  )   );
 
 typedef struct SMS_Unaligned32 {

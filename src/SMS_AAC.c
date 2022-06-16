@@ -442,7 +442,7 @@ typedef struct {
 typedef struct _mp4AudioSpecificConfig {
  unsigned char  objectTypeIndex;
  unsigned char  samplingFrequencyIndex;
- unsigned long  samplingFrequency;
+ u64            samplingFrequency;
  unsigned char  channelsConfiguration;
  unsigned char  frameLengthFlag;
  unsigned char  dependsOnCoreCoder;
@@ -459,7 +459,7 @@ typedef struct _mp4AudioSpecificConfig {
 
 typedef struct _NeAACDecConfiguration {
  unsigned char defObjectType;
- unsigned long defSampleRate;
+ u64           defSampleRate;
  unsigned char useOldADTSFormat;
  unsigned char dontUpSampleImplicitSBR;
 } _NeAACDecConfiguration, *_NeAACDecConfigurationPtr;

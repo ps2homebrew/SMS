@@ -76,12 +76,12 @@ typedef struct SMS_JPEGContext {
 
 typedef struct SMS_JPEGViewer {
 
- unsigned long              m_BitBltPack[ 64 ];
- unsigned long              m_ImagePack [  8 ];
- unsigned long              m_BordPackZ [ 14 ];
- unsigned long              m_BordPack  [ 22 ];
- unsigned long              m_DrawPack  [  8 ];
- unsigned long              m_XYZ       [  2 ][ 2 ];
+ u64                        m_BitBltPack[ 64 ];
+ u64                        m_ImagePack [  8 ];
+ u64                        m_BordPackZ [ 14 ];
+ u64                        m_BordPack  [ 22 ];
+ u64                        m_DrawPack  [  8 ];
+ u64                        m_XYZ       [  2 ][ 2 ];
  SMS_JPEGContext*           m_pCtx;
  struct SMS_List*           m_pItems;
  struct SMS_ListNode*       m_pCurrent;
@@ -91,12 +91,12 @@ typedef struct SMS_JPEGViewer {
  unsigned int               m_StsY;
  unsigned int               m_StsW;
  unsigned int               m_StsH;
- unsigned long*             m_pDefPic;
- unsigned long*             m_pStsOutline;
- unsigned long*             m_pStsBkgnd;
- unsigned long*             m_pStsText;
- unsigned long*             m_pStsPgBg;
- unsigned long*             m_pStsPgFg;
+ u64*                       m_pDefPic;
+ u64*                       m_pStsOutline;
+ u64*                       m_pStsBkgnd;
+ u64*                       m_pStsText;
+ u64*                       m_pStsPgBg;
+ u64*                       m_pStsPgFg;
  unsigned short*            m_pStsPgX;
  float                      m_PixPP;
  unsigned int               m_TextCoord[ 4 ];

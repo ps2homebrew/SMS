@@ -12,6 +12,8 @@
 #ifndef __libmpeg_H
 #define __libmpeg_H
 
+#include <tamtypes.h>
+
 #define MPEG_CHROMA_FORMAT_420 1
 #define MPEG_CHROMA_FORMAT_422 2
 #define MPEG_CHROMA_FORMAT_444 3
@@ -56,10 +58,10 @@ typedef struct MPEGSequenceInfo {
 extern "C" {
 #endif  /* __cplusplus */
 
-void MPEG_Initialize (  int ( * ) ( void* ), void*, void* ( * ) ( void*, MPEGSequenceInfo* ), void*, long* );
+void MPEG_Initialize (  int ( * ) ( void* ), void*, void* ( * ) ( void*, MPEGSequenceInfo* ), void*, s64*  );
 void MPEG_Destroy    ( void );
 void MPEG_Reset      ( int  );
-int  ( *MPEG_Picture ) ( void*, long* );
+int  ( *MPEG_Picture ) ( void*, s64*  );
 
 #ifdef __cplusplus
 }

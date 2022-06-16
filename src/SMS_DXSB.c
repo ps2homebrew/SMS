@@ -36,7 +36,7 @@ typedef struct _DXSB_Header {
 extern void mips_memset ( void*, int, unsigned int         );
 extern void dxsb_pack   ( void*, const void*, unsigned int );
 
-extern void _get_pts ( const unsigned char*, long* );
+extern void _get_pts ( const unsigned char*, s64*  );
 
 static float s_HFactor;
 static float s_VFactor;

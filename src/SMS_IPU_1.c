@@ -25,9 +25,9 @@ static void _destroy ( IPULoadImage* apLoadImg ) {
 
 void IPU_InitLoadImage ( IPULoadImage* apLoadImg, int aWidth, int aHeight ) {
 
- unsigned int   lDMASize  = sizeof ( unsigned long ) * (  8 + 12 * ( aWidth >> 4 )  );
+ unsigned int   lDMASize  = sizeof ( u64           ) * (  8 + 12 * ( aWidth >> 4 )  );
  unsigned int   lDataSize = aWidth << 6;
- unsigned long* lpDMA     = ( unsigned long* )malloc ( lDataSize += lDMASize );
+ u64*           lpDMA     = ( u64*           )malloc ( lDataSize += lDMASize );
  unsigned char* lpData    = (  ( unsigned char* )lpDMA  ) + lDMASize;
 
  lpDMA[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );
@@ -107,8 +107,8 @@ static void _darken_image ( unsigned char* apBuf, unsigned int aQWC ) {
 
 void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, int anY, int afDarken, int aTH0, int aTH1 ) {
 
- unsigned long* lpBegin = UNCACHED_SEG( apLoadImg -> m_pDMA + 12 );
- unsigned long* lpEnd   = UNCACHED_SEG( apLoadImg -> m_pData     );
+ u64*           lpBegin = UNCACHED_SEG( apLoadImg -> m_pDMA + 12 );
+ u64*           lpEnd   = UNCACHED_SEG( apLoadImg -> m_pData     );
  unsigned int   lH      = apLoadImg -> m_Height + anY;
  unsigned int   i, lCode;
 
@@ -147,7 +147,7 @@ void IPU_LoadImage ( IPULoadImage* apLoadImg, void* apData, int aSize, int aX, i
 
    if (  IPU_FDEC( 0 ) == lSlice  ) {
 
-    unsigned long* lpPos;
+    u64*           lpPos;
 
     lQSC = IPU_FDEC( 32 ) >> 27;
     ++lSlice;

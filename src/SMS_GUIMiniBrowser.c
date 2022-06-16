@@ -27,13 +27,13 @@
 
 extern void GUIMenuSMS_Redraw ( GUIMenu* );
 
-int ( *CtxMenu_HandleEventBase ) ( GUIObject*, unsigned long );
+int ( *CtxMenu_HandleEventBase ) ( GUIObject*, u64           );
 
 static FileContext*   s_pFileCtx;
 static FileContext*   s_pFileCtxSub;
 static SubtitleFormat s_SubFmt;
 
-int CtxMenu_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+int CtxMenu_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  switch ( anEvent & GUI_MSG_PAD_MASK ) {
 

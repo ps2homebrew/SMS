@@ -97,7 +97,7 @@ static void _load_font ( unsigned int anIndex ) {
  if ( lFD >= 0 ) {
 
   unsigned int lFontSize;
-  long         lSize  = fioLseek ( lFD, 0, SEEK_END );
+  s64          lSize  = fioLseek ( lFD, 0, SEEK_END );
   void*        lpBuff = GSFont_Get ( anIndex, &lFontSize );
 
   if ( lSize > 0 ) {

@@ -11,7 +11,7 @@
 #ifndef __SMS_Timer_H
 #define __SMS_Timer_H
 
-extern unsigned long g_Timer;
+extern u64           g_Timer;
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,11 +19,11 @@ extern "C" {
 
 void  SMS_TimerInit    ( void );
 void  SMS_TimerDestroy ( void );
-void  SMS_TimerSet     (  unsigned int, unsigned long, void ( * ) ( void* ), void*  );
-void  SMS_iTimerSet    (  unsigned int, unsigned long, void ( * ) ( void* ), void*  );
+void  SMS_TimerSet     (  unsigned int, u64          , void ( * ) ( void* ), void*  );
+void  SMS_iTimerSet    (  unsigned int, u64          , void ( * ) ( void* ), void*  );
 void* SMS_TimerReset   ( unsigned int, void* );
 void  SMS_iTimerReset  ( unsigned int );
-void  SMS_TimerWait    ( unsigned long );
+void  SMS_TimerWait    ( u64           );
 void  SMS_SetAlarm     (  unsigned int, void ( * ) ( void* ), void*  );
 
 #ifdef __cplusplus

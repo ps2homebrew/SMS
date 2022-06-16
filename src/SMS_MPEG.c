@@ -1112,12 +1112,12 @@ static uint8_t* s_pDest;
 
 void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
 
- static unsigned long s_DMATag[ 2 ] __attribute__(   (  aligned( 16 )  )   ) = {
+ static u64           s_DMATag[ 2 ] __attribute__(   (  aligned( 16 )  )   ) = {
   0x8000058004000033UL, 0x0000000000000000UL
  };
 
  const int     lMBXY = g_MPEGCtx.m_MBY * g_MPEGCtx.m_MBStride + g_MPEGCtx.m_MBX;
- unsigned long lDword;
+ u64           lDword;
  unsigned int  lWord;
 
  SMS_MacroBlock* lpDestMB;
@@ -1137,10 +1137,10 @@ void SMS_MPEG_DecodeMB ( SMS_DCTELEM aBlock[ 12 ][ 64 ] ) {
  g_MPEGCtx.MBCallback ( g_MPEGCtx.m_pDestCB );
  g_MPEGCtx.MBCallback = SMS_MPEG_DummyCB;
 
- lDword   = (  ( unsigned long* )&g_MPEGCtx.m_BlockLastIdx  )[ 0 ];
+ lDword   = (  ( u64*           )&g_MPEGCtx.m_BlockLastIdx  )[ 0 ];
  lWord    = (  ( unsigned int*  )&g_MPEGCtx.m_BlockLastIdx  )[ 2 ];
  lpDestMB = g_MPEGCtx.m_pMCBlk[ g_MPEGCtx.m_MCBlkIdx ];
- (  ( unsigned long* )SMS_MPEG_SPR_BLOCKS  )[  98 ] = lDword;
+ (  ( u64*           )SMS_MPEG_SPR_BLOCKS  )[  98 ] = lDword;
  (  ( unsigned int*  )SMS_MPEG_SPR_BLOCKS  )[ 198 ] = lWord;
 
  if ( g_MPEGCtx.m_MBSkiped ) {

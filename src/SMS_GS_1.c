@@ -145,11 +145,11 @@ void GSContext_Init ( GSVideoMode aMode, GSZTest aZTest, GSDoubleBuffer aDblBuf 
 
 }  /* end GSContext_Init */
 
-unsigned long* GSContext_NewPacket ( int aCtx, int aDWC, GSPaintMethod aMethod ) {
+u64*           GSContext_NewPacket ( int aCtx, int aDWC, GSPaintMethod aMethod ) {
 
  int            lPutIdx = g_GSCtx.m_PutIndex[ aCtx ];
  unsigned int   lQWC    = ( aDWC + 1 ) >> 1;
- unsigned long* lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
+ u64*           lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
 
  DMA_Wait ( DMAC_VIF1 );
 
@@ -157,8 +157,8 @@ unsigned long* GSContext_NewPacket ( int aCtx, int aDWC, GSPaintMethod aMethod )
 
   g_GSCtx.m_nAlloc[ aCtx ] = aDWC + g_GSCtx.m_nAlloc[ aCtx ] + 512;
 
- g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( unsigned long* )realloc64(
-  lpList, (  g_GSCtx.m_nAlloc[ aCtx ] * sizeof ( unsigned long ) + 63  ) & ~63
+ g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )realloc64(
+  lpList, (  g_GSCtx.m_nAlloc[ aCtx ] * sizeof ( u64           ) + 63  ) & ~63
  );
 
  if ( aMethod & 0x02 ) {
@@ -193,7 +193,7 @@ unsigned long* GSContext_NewPacket ( int aCtx, int aDWC, GSPaintMethod aMethod )
 
 void GSContext_Flush ( int aCtx, GSFlushMethod aMethod ) {
 
- unsigned long* lpList = g_GSCtx.m_pDisplayList[ aCtx ];
+ u64*           lpList = g_GSCtx.m_pDisplayList[ aCtx ];
 
  if ( aMethod != GSFlushMethod_DeleteListsOnly ) {
 
@@ -229,11 +229,11 @@ void GSContext_Flush ( int aCtx, GSFlushMethod aMethod ) {
 
 }  /* end GSContext_Flush */
 
-unsigned long* GSContext_NewList ( unsigned int aDWC ) {
+u64*           GSContext_NewList ( unsigned int aDWC ) {
 
  unsigned int   lQWC   = ( aDWC + 1 ) >> 1;
- unsigned long* retVal = ( unsigned long* )memalign (
-  64, (  ( aDWC + 2 ) * sizeof ( unsigned long ) + 63  ) & ~63
+ u64*           retVal = ( u64*           )memalign (
+  64, (  ( aDWC + 2 ) * sizeof ( u64           ) + 63  ) & ~63
  );
 
  retVal[ 0 ] = 0;
@@ -243,22 +243,22 @@ unsigned long* GSContext_NewList ( unsigned int aDWC ) {
 
 }  /* end GSContext_NewList */
 
-void GSContext_DeleteList ( unsigned long* apList ) {
+void GSContext_DeleteList ( u64*           apList ) {
 
  if ( apList ) free ( apList - 2 );
 
 }  /* end GSContext_DeleteList */
 
-void GSContext_CallList ( int aCtx, unsigned long* apList ) {
+void GSContext_CallList ( int aCtx, u64*           apList ) {
 
  unsigned int   lQWC    = ( apList[ -1 ] >> 32 ) & 0xFFFF;
  unsigned int   lPutIdx = g_GSCtx.m_PutIndex[ aCtx ];
- unsigned long* lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
+ u64*           lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
 
  if ( 2 > g_GSCtx.m_nAlloc[ aCtx ] - g_GSCtx.m_PutIndex[ aCtx ] )
 
-  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( unsigned long* )realloc (
-   lpList, ( g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512 ) * sizeof ( unsigned long )
+  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )realloc (
+   lpList, ( g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512 ) * sizeof ( u64           )
   );
 
  g_GSCtx.m_pLastTag[ aCtx ] = &lpList[ lPutIdx ];
@@ -270,15 +270,15 @@ void GSContext_CallList ( int aCtx, unsigned long* apList ) {
 
 }  /* end GSContext_CallList */
 
-void GSContext_CallList2 ( int aCtx, unsigned long* apList ) {
+void GSContext_CallList2 ( int aCtx, u64*           apList ) {
 
  unsigned int   lPutIdx = g_GSCtx.m_PutIndex    [ aCtx ];
- unsigned long* lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
+ u64*           lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
 
  if ( 2 > g_GSCtx.m_nAlloc[ aCtx ] - g_GSCtx.m_PutIndex[ aCtx ] )
 
-  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( unsigned long* )realloc (
-   lpList, ( g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512 ) * sizeof ( unsigned long )
+  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )realloc (
+   lpList, ( g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512 ) * sizeof ( u64           )
   );
 
  g_GSCtx.m_pLastTag[ aCtx ] = &lpList[ lPutIdx ];
@@ -288,9 +288,9 @@ void GSContext_CallList2 ( int aCtx, unsigned long* apList ) {
 
 }  /* end GSContext_CallList2 */
 
-void GSContext_SetTextColor ( unsigned int aColorIdx, unsigned long aColor ) {
+void GSContext_SetTextColor ( unsigned int aColorIdx, u64           aColor ) {
 
- unsigned long lDMA[ 8 ] __attribute__(   (  aligned( 64 )  )  );
+ u64           lDMA[ 8 ] __attribute__(   (  aligned( 64 )  )  );
  unsigned int* lpCLUT    = UNCACHED_SEG(  s_CLUT          );
  GSLoadImage*  lpLoadImg = UNCACHED_SEG( &s_CLUTLoadImage );
 
@@ -319,8 +319,8 @@ void GSContext_SetTextColor ( unsigned int aColorIdx, unsigned long aColor ) {
 
 void GSContext_RenderTexSprite ( GSTexSpritePacket* apPkt, int aX, int anY, int aWidth, int aHeight, int aTX, int aTY, int aTW, int aTH ) {
 
- unsigned long lXYZ0;
- unsigned long lXYZ1;
+ u64           lXYZ0;
+ u64           lXYZ1;
 
  __asm__ __volatile__ (
   ".set noreorder\n\t"
@@ -366,7 +366,7 @@ void GSContext_RenderTexSprite ( GSTexSpritePacket* apPkt, int aX, int anY, int 
 
 }  /* end GSContext_RenderTexSprite */
 
-void GSContext_RenderVGRect ( unsigned long* apDMA, int aX, int anY, int aWidth, int aHeight, unsigned long aClr0, unsigned long aClr1 ) {
+void GSContext_RenderVGRect ( u64*           apDMA, int aX, int anY, int aWidth, int aHeight, u64           aClr0, u64           aClr1 ) {
 
  GSRegXYZ lXYZ0;
  GSRegXYZ lXYZ1;
@@ -442,7 +442,7 @@ void GS_StoreImage ( GSStoreImage* apPkt, void* apDst ) {
  u128 lTmp;
 
  volatile unsigned int*  lpVIFStat  = ( volatile unsigned int*  )0x10003C00;
- volatile unsigned long* lpGSBusDir = ( volatile unsigned long* )0x12001040;
+ volatile u64*           lpGSBusDir = ( volatile u64*           )0x12001040;
  volatile u128*          lpVIFIFO   = ( volatile u128*          )0x10005000;
 
  lW = apPkt -> m_TRXREGVal.RRW;

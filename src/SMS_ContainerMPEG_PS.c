@@ -99,7 +99,7 @@ found:
 
 }  /* end _next_start_code */
 
-static long _psm_parse ( _MPEGPSContainer* apCont, FileContext* apFileCtx ) {
+static s64  _psm_parse ( _MPEGPSContainer* apCont, FileContext* apFileCtx ) {
 
  int lPLen, lPILen, lMLen;
 

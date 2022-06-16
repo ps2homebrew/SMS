@@ -30,9 +30,9 @@ typedef struct SMBInfo {
 } SMBInfo;
 
 extern void GUIMenuSMS_UpdateStatus ( GUIMenu*                  );
-extern int  GUIMenuSMS_HandleEvent  ( GUIObject*, unsigned long );
+extern int  GUIMenuSMS_HandleEvent  ( GUIObject*, u64           );
 
-static int GUIMenuSMB_HandleEvent ( GUIObject* apObj, unsigned long anEvent ) {
+static int GUIMenuSMB_HandleEvent ( GUIObject* apObj, u64           anEvent ) {
 
  return GUIMenuSMS_HandleEvent ( apObj, anEvent );
 

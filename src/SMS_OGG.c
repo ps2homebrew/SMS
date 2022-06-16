@@ -135,7 +135,7 @@ typedef struct private_state {
  int                     modebits;
  vorbis_look_floor**     flr;
  vorbis_look_residue**   residue;
- long                    sample_count;
+ s64                     sample_count;
 } private_state;
 
 static int32_t OGGV_Init     ( SMS_CodecContext*                                   );
@@ -2749,9 +2749,9 @@ static void _os_body_expand ( ogg_stream_state* apSS, int aNeeded ) {
  }  /* end if */
 }  /* end _os_body_expand */
 
-long ogg_page_granulepos ( ogg_page* apPage ) {
+s64  ogg_page_granulepos ( ogg_page* apPage ) {
  unsigned char* page       = apPage -> header;
- long           granulepos = page[ 13 ] & 0xFF;
+ s64            granulepos = page[ 13 ] & 0xFF;
  granulepos = ( granulepos << 8 ) | ( page[ 12 ] & 0xFF );
  granulepos = ( granulepos << 8 ) | ( page[ 11 ] & 0xFF );
  granulepos = ( granulepos << 8 ) | ( page[ 10 ] & 0xFF );
@@ -2779,7 +2779,7 @@ int ogg_stream_pagein ( ogg_stream_state* apSS, ogg_page* apPage ) {
  int            continued  = ogg_page_continued  ( apPage );
  int            bos        = ogg_page_bos        ( apPage );
  int            eos        = ogg_page_eos        ( apPage );
- long           granulepos = ogg_page_granulepos ( apPage );
+ s64            granulepos = ogg_page_granulepos ( apPage );
  int            serialno   = ogg_page_serialno   ( apPage );
  int            pageno     = ogg_page_pageno     ( apPage );
  int            segments   = header[ 26 ];
@@ -3778,7 +3778,7 @@ static unsigned int inline bitreverse ( unsigned int aX ) {
 static float _float32_unpack ( int aVal ) {
  double mant = aVal & 0x001FFFFF;
  int    sign = aVal & 0x80000000;
- long   exp  = ( aVal & 0x7FE00000 ) >> 21;
+ s64    exp  = ( aVal & 0x7FE00000 ) >> 21;
  if ( sign ) mant = -mant;
  return ldexp (  mant, exp - ( 21 - 1 ) - 768  );
 }  /* end _float32_unpack */

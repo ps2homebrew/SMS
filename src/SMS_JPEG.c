@@ -310,14 +310,14 @@ static void inline _init_clr_fmt ( _jpeg_clr_fmt aFmt ) {
 
 SMS_JPEGContext* SMS_JPEGInit (  void ( *aProgress ) ( void*, unsigned int ), void* apPrgParam ) {
 
- const unsigned long lDMATag = 0x0000000070000009UL;  /* DMAEnd ( 9 );                                  */
- const unsigned long lVIFCmd = 0x6D10001001000404UL;  /* STCYCL ( 4, 4 ); UNPACK ( v4_16, 0x10, 0x10 ); */
- const unsigned long lVIFEnd = 0x0000000017000000UL;  /* MSCNT ( 0 )                                    */
- const unsigned long lVIFNop = 0x0000000000000000UL;  /* NOP (); NOP ();                                */
+ const u64           lDMATag = 0x0000000070000009UL;  /* DMAEnd ( 9 );                                  */
+ const u64           lVIFCmd = 0x6D10001001000404UL;  /* STCYCL ( 4, 4 ); UNPACK ( v4_16, 0x10, 0x10 ); */
+ const u64           lVIFEnd = 0x0000000017000000UL;  /* MSCNT ( 0 )                                    */
+ const u64           lVIFNop = 0x0000000000000000UL;  /* NOP (); NOP ();                                */
 
  SMS_JPEGContext* retVal;
- unsigned long*   lpBuf = ( unsigned long* )0x70000000;
- unsigned long*   lpEnd = ( unsigned long* )0x70001E00;
+ u64*             lpBuf = ( u64*           )0x70000000;
+ u64*             lpEnd = ( u64*           )0x70001E00;
 
  __asm__ __volatile__(
   ".set noat\n\t"
@@ -1081,7 +1081,7 @@ SMS_JPEGViewer* SMS_JPEGViewerInit ( void ) {
 
  SMS_JPEGViewer* retVal = ( SMS_JPEGViewer* )memalign (  64, sizeof ( SMS_JPEGViewer )  );
  int             lX, lY, lW;
- unsigned long   lPrim;
+ u64             lPrim;
 
  memset (  retVal, 0, sizeof ( SMS_JPEGViewer )  );
  SyncDCache ( retVal, retVal + 1 );
@@ -1106,7 +1106,7 @@ SMS_JPEGViewer* SMS_JPEGViewerInit ( void ) {
  retVal -> m_pStsOutline = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
  retVal -> m_pStsBkgnd   = GSContext_NewList (  GS_RRT_PACKET_SIZE()  );
  retVal -> m_pStsPgBg    = GSContext_NewList (  GS_VGR_PACKET_SIZE()  );
- retVal -> m_pStsPgFg    = ( unsigned long* )memalign (  64, GS_VGR_PACKET_SIZE() << 3  );
+ retVal -> m_pStsPgFg    = ( u64*           )memalign (  64, GS_VGR_PACKET_SIZE() << 3  );
 
  lX += 12;
  lY += 48;
@@ -1362,9 +1362,9 @@ static void _recalc_layout ( SMS_JPEGViewer* apViewer, SMS_JPEGContext* apCtx ) 
  unsigned int   lnRem;
  unsigned int   lScrW, lScrH;
  unsigned int   lTW, lTH;
- unsigned long* lpDMA;
+ u64*           lpDMA;
  unsigned char* lpData;
- unsigned long* lpXYZ;
+ u64*           lpXYZ;
  unsigned int   lDispCoord[ 2 ][ 4 ];
  unsigned int   lBorder;
 
@@ -1605,12 +1605,12 @@ static void _display_text ( SMS_JPEGViewer* apViewer, const char* apFileName ) {
 
 static void _error ( SMS_JPEGViewer* apViewer ) {
 
- unsigned long* lpDMA;
+ u64*           lpDMA;
  unsigned int   lX, lY, lW, lH, lTX, lTY, lTW;
  char*          lpStr = STR_UNSUPPORTED_IMAGE.m_pStr;
  unsigned int   lLen  = STR_UNSUPPORTED_IMAGE.m_Len;
           int   lDW   = 0;
- unsigned long  lIcon[ 32 ] __attribute__(   (  aligned( 16 )  )   );
+ u64            lIcon[ 32 ] __attribute__(   (  aligned( 16 )  )   );
 
  lW = ( unsigned int )( g_GSCtx.m_Width  * 0.9F + 0.5F );
  lH = ( unsigned int )( g_GSCtx.m_Height * 0.1F + 0.5F );
@@ -1779,8 +1779,8 @@ user_input:
 
    case SMS_PAD_SQUARE:
    case RC_DISPLAY: {
-    unsigned long* lpXYZ = UNCACHED_SEG( apViewer -> m_XYZ       );
-    unsigned long* lpPkt = UNCACHED_SEG( apViewer -> m_ImagePack );
+    u64*           lpXYZ = UNCACHED_SEG( apViewer -> m_XYZ       );
+    u64*           lpPkt = UNCACHED_SEG( apViewer -> m_ImagePack );
     unsigned int   lBorder;
     apViewer -> m_Mode ^= 1;
     lpXYZ     += ( apViewer -> m_Mode << 1 );

@@ -17,12 +17,12 @@
 
 typedef struct SMS_FrameBuffer {
 
- long                    m_StartPTS;
- long                    m_EndPTS;
+ s64                     m_StartPTS;
+ s64                     m_EndPTS;
  SMS_MacroBlock*         m_pBase;
  SMS_MacroBlock*         m_pData;
  int                     m_FrameType;
- unsigned long*          m_pCSCDma;
+ u64*                    m_pCSCDma;
  struct SMS_FrameBuffer* m_pNext;
 
 } SMS_FrameBuffer;
@@ -55,7 +55,7 @@ void             SMS_VideoBufferDestroy ( SMS_VideoBuffer*                     )
 void             SMS_CSCResume          ( void                                 );
 void             SMS_CSCSuspend         ( void                                 );
 void             SMS_CSCSync            ( void                                 );
-void             SMS_CSC                ( SMS_CSCParam*, unsigned long*, void* );
+void             SMS_CSC                ( SMS_CSCParam*, u64*          , void* );
 void             SMS_FrameBufferInit    ( SMS_FrameBuffer*, int, int, int, int );
 void             SMS_FrameBufferDestroy ( SMS_FrameBuffer*, int                );
 

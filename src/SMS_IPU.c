@@ -32,15 +32,15 @@
 #define IPUF_FL 0x00000040
 
 IPUContext        g_IPUCtx;
-unsigned long int s_DMAVIFDraw[ 16 ] __attribute__(   (  aligned( 64 )  )   );
-unsigned long int s_DMAGIFDraw[ 22 ] __attribute__(   (  aligned( 64 )  )   );
+u64               s_DMAVIFDraw[ 16 ] __attribute__(   (  aligned( 64 )  )   );
+u64               s_DMAGIFDraw[ 22 ] __attribute__(   (  aligned( 64 )  )   );
 
 static SMS_FrameBuffer* s_pFrame __attribute__(  ( unused )  );
 static SMS_DXSBFrame*   s_pDXSBDFrm;
 static SMS_DXSBFrame*   s_pDXSBAFrm;
 static SMS_DXSBFrame*   s_pDXSBRFrm;
 static int              s_SyncS;
-       unsigned long    s_VIFQueue[ 16 ];
+       u64              s_VIFQueue[ 16 ];
 static unsigned char    s_QIdx;
 static unsigned char    s_fStopSync;
 static unsigned char    s_fRefresh;
@@ -221,7 +221,7 @@ __asm__(
 
 static void IPU_SetTEX ( void ) {
 
- unsigned long* lpDMA = UNCACHED_SEG( g_IPUCtx.m_DMAGIFTX );
+ u64*           lpDMA = UNCACHED_SEG( g_IPUCtx.m_DMAGIFTX );
 
  lpDMA[ 0 ] = GIF_TAG( 3, 1, 0, 0, 0, 1 );
  lpDMA[ 1 ] = GIFTAG_REGS_AD;
@@ -272,7 +272,7 @@ static void IPU_VBlankStartHandler ( void* apParam ) {
 
  if ( g_IPUCtx.m_fDraw ) {
 
-  long lVPTS = g_IPUCtx.m_VideoPTS;
+  s64  lVPTS = g_IPUCtx.m_VideoPTS;
 
   if ( !s_fStopSync && g_IPUCtx.m_pAudioPTS ) {
 
@@ -299,7 +299,7 @@ static void IPU_VBlankStartHandler ( void* apParam ) {
 
 void IPU_EraseSub ( void ) {
 
- unsigned long* lpGIFPack = ( unsigned long* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+ u64*           lpGIFPack = ( u64*           )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
 
  lpGIFPack[ 4 ] = DMA_TAG( 11, 0, DMATAG_ID_REFE, 0, s_DMAGIFDraw, 0  );
 
@@ -317,7 +317,7 @@ static void IPU_DrawSub ( void ) {
  unsigned int   lDst      = ( unsigned int )&s_DXSBDPack | 0x20000000;
  unsigned short lRW       = lpFrm -> m_RWidth;
  unsigned int   lTBW      = (  ( lRW + 63 ) & ~63  ) >> 6;
- unsigned long* lpGIFPack = ( unsigned long* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+ u64*           lpGIFPack = ( u64*           )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
 
  s_pDXSBAFrm = lpFrm;
  s_pDXSBRFrm = NULL;
@@ -346,9 +346,9 @@ static void IPU_DrawSub ( void ) {
 
 }  /* end IPU_DrawSub */
 
-static void IPU_Display ( void* apFB, long aVideoPTS ) {
+static void IPU_Display ( void* apFB, s64  aVideoPTS ) {
 
- unsigned long int* lpGIFPack = ( unsigned long int* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+ u64*               lpGIFPack = ( u64*               )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
 
  lpGIFPack[ 0 ] = DMA_TAG(  0, 0, DMATAG_ID_CALL, 0, ( unsigned int )(  ( SMS_FrameBuffer* )apFB  ) -> m_pData, 0  );
  s_pFrame       = ( SMS_FrameBuffer* )apFB;
@@ -620,11 +620,11 @@ static void IPU_DummyResume ( void ) {
 
 }  /* end IPU_DummyResume */
 
-static void IPU_DummyDisplay ( void* apParam, long aVideoPTS ) {
+static void IPU_DummyDisplay ( void* apParam, s64  aVideoPTS ) {
 
  WaitSema ( s_SyncS );
 
- g_IPUCtx.m_pDMAPacket = ( unsigned long* )apParam;
+ g_IPUCtx.m_pDMAPacket = ( u64*           )apParam;
  g_IPUCtx.m_fDraw = 1;
 
 }  /* end IPU_DummyDisplay */
@@ -666,12 +666,12 @@ static void IPU_DummyVBlankStartHandler ( void* apParam ) {
 
 static void IPU_SetBrightness ( unsigned int aBrightness ) {
 
- unsigned long* lpPtr = UNCACHED_SEG( &g_IPUCtx.m_DMAGIFBgtn[ 4 ] );
+ u64*           lpPtr = UNCACHED_SEG( &g_IPUCtx.m_DMAGIFBgtn[ 4 ] );
 
  if ( aBrightness == 128 )
   lpPtr[ 0 ] = g_IPUCtx.m_Alpha = GS_SET_ALPHA( 1, 2, 2, 2, 0x80 );
  else {
-  unsigned long lAlpha;
+  u64           lAlpha;
   if ( aBrightness > 128 ) {
    float lVal = aBrightness - 128;
    lAlpha = GS_SET_ALPHA_2( 1, 2, 2, 0, 0x80 );
@@ -701,7 +701,7 @@ static void IPU_QueueSubtitle ( void* apSub ) {
 
 }  /* end IPU_QueueSubtitle */
 
-IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afWS ) {
+IPUContext* IPU_InitContext ( int aWidth, int aHeight, s64*  apAudioPTS, int afWS ) {
 
  ee_sema_t      lSema;
  unsigned short lCRTMode = GS_Params () -> m_GSCRTMode;
@@ -738,7 +738,7 @@ IPUContext* IPU_InitContext ( int aWidth, int aHeight, long* apAudioPTS, int afW
  if ( aWidth && aHeight ) {
 
   unsigned int       lVRAM, lImgSize;
-  unsigned long int* lpGIFPack;
+  u64*               lpGIFPack;
   unsigned int       lTBW = ( aWidth + 63 ) >> 6;
   int                lf16 = ( g_Config.m_PlayerFlags & SMS_PF_C16 ) && !( g_Config.m_PlayerFlags & SMS_PF_C32 );
   unsigned int       lVSync;
@@ -781,10 +781,10 @@ retry:
   g_IPUCtx.m_fWS       = afWS;
   PowerOf2 ( aWidth, aHeight, &g_IPUCtx.m_TW, &g_IPUCtx.m_TH );
 
-  lpGIFPack = ( unsigned long int* )(  ( unsigned int )&s_DXSBDPack.m_BitBlt.m_Value | 0x20000000  );
+  lpGIFPack = ( u64*               )(  ( unsigned int )&s_DXSBDPack.m_BitBlt.m_Value | 0x20000000  );
   lpGIFPack[ 0 ] = GS_SET_BITBLTBUF( 0, 0, 0, lVRAM, 0, GSPixelFormat_PSMT4HH ),
 
-  lpGIFPack = ( unsigned long int* )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
+  lpGIFPack = ( u64*               )(  ( unsigned int )&g_IPUCtx.m_DMAGIFPack[ 0 ] | 0x20000000  );
   lpGIFPack[ 2 ] = DMA_TAG(  8, 0, DMATAG_ID_REF,  0, ( unsigned int )g_IPUCtx.m_DMAGIFBgtn, 0  );
   lpGIFPack[ 4 ] = DMA_TAG( 11, 0, DMATAG_ID_REFE, 0, s_DMAGIFDraw,                          0  );
 

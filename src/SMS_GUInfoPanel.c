@@ -56,7 +56,7 @@ GUIObject* SMS_GUInfo ( SMS_Container* apCont ) {
  int               lY      = ( g_GSCtx.m_Height - lHeight ) - ( lHeight >> 3 );
  int               lDWC    = GS_RRT_PACKET_SIZE() << 1;
  int               lLen, lGB, lMB, lKB;
- unsigned long*    lpPkt, *lpDMA;
+ u64*              lpPkt, *lpDMA;
  char              lFileSize[ 64 ];
  char              lVideo   [ 64 ];
  char              lAudio   [ 64 ];

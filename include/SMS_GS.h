@@ -11,7 +11,9 @@
 #ifndef __SMS_GS_H
 #define __SMS_GS_H
 
-#define GS_BGCOLOR() (  *( volatile unsigned long* )0x120000E0  )
+#include <tamtypes.h>
+
+#define GS_BGCOLOR() (  *( volatile u64*           )0x120000E0  )
 
 #define GIF_MODE() (  *( volatile unsigned int* )0x10003010  )
 #define GIF_STAT() (  *( volatile unsigned int* )0x10003020  )
@@ -130,12 +132,12 @@ typedef enum GSCodePage {
 #define GIFTAG_REGS_NOP      0xF
 
 #define GIF_TAG( NLOOP, EOP, PRE, PRIM, FLG, NREG ) \
- (  ( unsigned long )( NLOOP ) <<  0  ) |            \
- (  ( unsigned long )( EOP   ) << 15  ) |            \
- (  ( unsigned long )( PRE   ) << 46  ) |            \
- (  ( unsigned long )( PRIM  ) << 47  ) |            \
- (  ( unsigned long )( FLG   ) << 58  ) |            \
- (  ( unsigned long )( NREG  ) << 60  )
+ (  ( u64           )( NLOOP ) <<  0  ) |            \
+ (  ( u64           )( EOP   ) << 15  ) |            \
+ (  ( u64           )( PRE   ) << 46  ) |            \
+ (  ( u64           )( PRIM  ) << 47  ) |            \
+ (  ( u64           )( FLG   ) << 58  ) |            \
+ (  ( u64           )( NREG  ) << 60  )
 
 typedef union GIFTag {
 
@@ -169,8 +171,8 @@ typedef union GIFTag {
 
  struct {
 
-  unsigned long m_Lo __attribute__(  ( packed )  );
-  unsigned long m_Hi __attribute__(  ( packed )  );
+  u64           m_Lo __attribute__(  ( packed )  );
+  u64           m_Hi __attribute__(  ( packed )  );
 
  } m_HiLo __attribute__(  ( packed )  );
 
@@ -215,66 +217,66 @@ typedef union GIFTag {
 #define GS_SET_ALPHA_1 GS_SET_ALPHA
 #define GS_SET_ALPHA_2 GS_SET_ALPHA
 #define GS_SET_ALPHA( a, b, c, d, f )                                        \
- (   (  ( unsigned long )( a ) <<  0  ) | (  ( unsigned long )( b ) << 2  ) | \
-     (  ( unsigned long )( c ) <<  4  ) | (  ( unsigned long )( d ) << 6  ) | \
-     (  ( unsigned long )( f ) << 32  )                                       \
+ (   (  ( u64           )( a ) <<  0  ) | (  ( u64           )( b ) << 2  ) | \
+     (  ( u64           )( c ) <<  4  ) | (  ( u64           )( d ) << 6  ) | \
+     (  ( u64           )( f ) << 32  )                                       \
  )
 
 #define GS_SET_BITBLTBUF( sbp, sbw, spsm, dbp, dbw, dpsm )                          \
- (   (  ( unsigned long )( sbp  ) <<  0  ) | (  ( unsigned long )( sbw  ) << 16  ) | \
-     (  ( unsigned long )( spsm ) << 24  ) | (  ( unsigned long )( dbp  ) << 32  ) | \
-     (  ( unsigned long )( dbw  ) << 48  ) | (  ( unsigned long )( dpsm ) << 56  )   \
+ (   (  ( u64           )( sbp  ) <<  0  ) | (  ( u64           )( sbw  ) << 16  ) | \
+     (  ( u64           )( spsm ) << 24  ) | (  ( u64           )( dbp  ) << 32  ) | \
+     (  ( u64           )( dbw  ) << 48  ) | (  ( u64           )( dpsm ) << 56  )   \
  )
 
 #define GS_SET_DTHE( v ) ( v )
 
 #define GS_SET_FBA_1 GS_SET_FBA
 #define GS_SET_FBA_2 GS_SET_FBA
-#define GS_SET_FBA( fba ) (  ( unsigned long )( fba )  )
+#define GS_SET_FBA( fba ) (  ( u64           )( fba )  )
 
-#define GS_SET_FINISH( v ) (  ( unsigned long )( v )  )
+#define GS_SET_FINISH( v ) (  ( u64           )( v )  )
 
 #define GS_SET_FRAME_1 GS_SET_FRAME
 #define GS_SET_FRAME_2 GS_SET_FRAME
 #define GS_SET_FRAME( fbp, fbw, psm, fbmask )                                        \
- (   (  ( unsigned long )( fbp ) <<  0  ) | (  ( unsigned long )( fbw    ) << 16  ) | \
-     (  ( unsigned long )( psm ) << 24  ) | (  ( unsigned long )( fbmask ) << 32  )   \
+ (   (  ( u64           )( fbp ) <<  0  ) | (  ( u64           )( fbw    ) << 16  ) | \
+     (  ( u64           )( psm ) << 24  ) | (  ( u64           )( fbmask ) << 32  )   \
  )
 
-#define GS_SET_PABE( pabe ) (  ( unsigned long )( pabe )  )
+#define GS_SET_PABE( pabe ) (  ( u64           )( pabe )  )
 
 #define GS_SET_PRIM( prim, iip, tme, fge, abe, aa1, fst, ctxt, fix )                                                     \
- (   (  ( unsigned long )( prim ) << 0  ) | (  ( unsigned long )( iip  ) << 3  ) | (  ( unsigned long )( tme ) <<  4  ) | \
-     (  ( unsigned long )( fge  ) << 5  ) | (  ( unsigned long )( abe  ) << 6  ) | (  ( unsigned long )( aa1 ) <<  7  ) | \
-     (  ( unsigned long )( fst  ) << 8  ) | (  ( unsigned long )( ctxt ) << 9  ) | (  ( unsigned long )( fix ) << 10  )   \
+ (   (  ( u64           )( prim ) << 0  ) | (  ( u64           )( iip  ) << 3  ) | (  ( u64           )( tme ) <<  4  ) | \
+     (  ( u64           )( fge  ) << 5  ) | (  ( u64           )( abe  ) << 6  ) | (  ( u64           )( aa1 ) <<  7  ) | \
+     (  ( u64           )( fst  ) << 8  ) | (  ( u64           )( ctxt ) << 9  ) | (  ( u64           )( fix ) << 10  )   \
  )
 
 #define GS_SET_RGBAQ( r, g, b, a, q )                                         \
- (   (  ( unsigned long )( r ) <<  0  ) | (  ( unsigned long )( g ) <<  8  ) | \
-     (  ( unsigned long )( b ) << 16  ) | (  ( unsigned long )( a ) << 24  ) | \
-     (  ( unsigned long )( q ) << 32  )                                        \
+ (   (  ( u64           )( r ) <<  0  ) | (  ( u64           )( g ) <<  8  ) | \
+     (  ( u64           )( b ) << 16  ) | (  ( u64           )( a ) << 24  ) | \
+     (  ( u64           )( q ) << 32  )                                        \
  )
 
 #define GS_SET_SCISSOR_1 GS_SET_SCISSOR
 #define GS_SET_SCISSOR_2 GS_SET_SCISSOR
 #define GS_SET_SCISSOR( scax0, scax1, scay0, scay1 ) \
- (   (  ( unsigned long )( scax0 ) <<  0  ) |         \
-     (  ( unsigned long )( scax1 ) << 16  ) |         \
-     (  ( unsigned long )( scay0 ) << 32  ) |         \
-     (  ( unsigned long )( scay1 ) << 48  )           \
+ (   (  ( u64           )( scax0 ) <<  0  ) |         \
+     (  ( u64           )( scax1 ) << 16  ) |         \
+     (  ( u64           )( scay0 ) << 32  ) |         \
+     (  ( u64           )( scay1 ) << 48  )           \
  )
 
 #define GS_SET_TEST_1 GS_SET_TEST
 #define GS_SET_TEST_2 GS_SET_TEST
 #define GS_SET_TEST( ate, atst, aref, afail, date, datm, zte, ztst ) \
- (   (  ( unsigned long )( ate   ) <<  0  ) |                         \
-     (  ( unsigned long )( atst  ) <<  1  ) |                         \
-     (  ( unsigned long )( aref  ) <<  4  ) |                         \
-     (  ( unsigned long )( afail ) << 12  ) |                         \
-     (  ( unsigned long )( date  ) << 14  ) |                         \
-     (  ( unsigned long )( datm  ) << 15  ) |                         \
-     (  ( unsigned long )( zte   ) << 16  ) |                         \
-     (  ( unsigned long )( ztst  ) << 17  )                           \
+ (   (  ( u64           )( ate   ) <<  0  ) |                         \
+     (  ( u64           )( atst  ) <<  1  ) |                         \
+     (  ( u64           )( aref  ) <<  4  ) |                         \
+     (  ( u64           )( afail ) << 12  ) |                         \
+     (  ( u64           )( date  ) << 14  ) |                         \
+     (  ( u64           )( datm  ) << 15  ) |                         \
+     (  ( u64           )( zte   ) << 16  ) |                         \
+     (  ( u64           )( ztst  ) << 17  )                           \
  )
 
 #define GS_SET_TEX0_1 GS_SET_TEX0
@@ -283,82 +285,82 @@ typedef union GIFTag {
           tbp, tbw, psm, tw, th, tcc, tfx,                                          \
           cbp, cpsm, csm, csa, cld                                                  \
          )                                                                          \
- (   (  ( unsigned long )( tbp  ) <<  0  ) | (  ( unsigned long )( tbw ) << 14  ) | \
-     (  ( unsigned long )( psm  ) << 20  ) | (  ( unsigned long )( tw  ) << 26  ) | \
-     (  ( unsigned long )( th   ) << 30  ) | (  ( unsigned long )( tcc ) << 34  ) | \
-     (  ( unsigned long )( tfx  ) << 35  ) | (  ( unsigned long )( cbp ) << 37  ) | \
-     (  ( unsigned long )( cpsm ) << 51  ) | (  ( unsigned long )( csm ) << 55  ) | \
-     (  ( unsigned long )( csa  ) << 56  ) | (  ( unsigned long )( cld ) << 61  )   \
+ (   (  ( u64           )( tbp  ) <<  0  ) | (  ( u64           )( tbw ) << 14  ) | \
+     (  ( u64           )( psm  ) << 20  ) | (  ( u64           )( tw  ) << 26  ) | \
+     (  ( u64           )( th   ) << 30  ) | (  ( u64           )( tcc ) << 34  ) | \
+     (  ( u64           )( tfx  ) << 35  ) | (  ( u64           )( cbp ) << 37  ) | \
+     (  ( u64           )( cpsm ) << 51  ) | (  ( u64           )( csm ) << 55  ) | \
+     (  ( u64           )( csa  ) << 56  ) | (  ( u64           )( cld ) << 61  )   \
  )
 
 #define GS_SET_TEX1_1 GS_SET_TEX1
 #define GS_SET_TEX1_2 GS_SET_TEX1
 #define GS_SET_TEX1( lcm, mxl, mmag, mmin, mtba, l, k ) \
- (   (  ( unsigned long )( lcm  ) <<  0  ) |             \
-     (  ( unsigned long )( mxl  ) <<  2  ) |             \
-     (  ( unsigned long )( mmag ) <<  5  ) |             \
-     (  ( unsigned long )( mmin ) <<  6  ) |             \
-     (  ( unsigned long )( mtba ) <<  9  ) |             \
-     (  ( unsigned long )( l    ) << 19  ) |             \
-     (  ( unsigned long )( k    ) << 32  )               \
+ (   (  ( u64           )( lcm  ) <<  0  ) |             \
+     (  ( u64           )( mxl  ) <<  2  ) |             \
+     (  ( u64           )( mmag ) <<  5  ) |             \
+     (  ( u64           )( mmin ) <<  6  ) |             \
+     (  ( u64           )( mtba ) <<  9  ) |             \
+     (  ( u64           )( l    ) << 19  ) |             \
+     (  ( u64           )( k    ) << 32  )               \
  )
 
-#define GS_SET_TEXFLUSH( v ) (  ( unsigned long )( v )  )
+#define GS_SET_TEXFLUSH( v ) (  ( u64           )( v )  )
 
 #define GS_SET_TEXA( ta0, aem, ta1 )       \
- (   (  ( unsigned long )( ta0 ) <<  0  ) | \
-     (  ( unsigned long )( aem ) << 15  ) | \
-     (  ( unsigned long )( ta1 ) << 32  )   \
+ (   (  ( u64           )( ta0 ) <<  0  ) | \
+     (  ( u64           )( aem ) << 15  ) | \
+     (  ( u64           )( ta1 ) << 32  )   \
  )
 
-#define GS_SET_TRXDIR( xdr ) (  ( unsigned long )( xdr )  )
+#define GS_SET_TRXDIR( xdr ) (  ( u64           )( xdr )  )
 
 #define GS_SET_TRXPOS( ssax, ssay, dsax, dsay, dir )                              \
- (   (  ( unsigned long )( ssax ) <<  0  ) | (  ( unsigned long )( ssay ) << 16) | \
-     (  ( unsigned long )( dsax ) << 32  ) | (  ( unsigned long )( dsay ) << 48) | \
-     (  ( unsigned long )( dir  ) << 59  )                                         \
+ (   (  ( u64           )( ssax ) <<  0  ) | (  ( u64           )( ssay ) << 16) | \
+     (  ( u64           )( dsax ) << 32  ) | (  ( u64           )( dsay ) << 48) | \
+     (  ( u64           )( dir  ) << 59  )                                         \
  )
 
 #define GS_SET_TRXREG( rrw, rrh ) \
- (   ( unsigned long )( rrw ) | (  ( unsigned long )( rrh ) << 32  )   )
+ (   ( u64           )( rrw ) | (  ( u64           )( rrh ) << 32  )   )
 
-#define GS_SET_UV( u, v ) (   ( unsigned long )( u ) | (  ( unsigned long )( v ) << 16  )   )
+#define GS_SET_UV( u, v ) (   ( u64           )( u ) | (  ( u64           )( v ) << 16  )   )
 
 #define GS_SET_XYOFFSET_1 GS_SET_XYOFFSET
 #define GS_SET_XYOFFSET_2 GS_SET_XYOFFSET
 #define GS_SET_XYOFFSET( ofx, ofy )        \
- (   (  ( unsigned long )( ofx ) <<  0  ) | \
-     (  ( unsigned long )( ofy ) << 32 )    \
+ (   (  ( u64           )( ofx ) <<  0  ) | \
+     (  ( u64           )( ofy ) << 32 )    \
  )
 
 #define GS_SET_XYZ3 GS_SET_XYZ
 #define GS_SET_XYZ2 GS_SET_XYZ
 #define GS_SET_XYZ( x, y, z )            \
- (   (  ( unsigned long )( x ) <<  0  ) | \
-     (  ( unsigned long )( y ) << 16  ) | \
-     (  ( unsigned long )( z ) << 32  )   \
+ (   (  ( u64           )( x ) <<  0  ) | \
+     (  ( u64           )( y ) << 16  ) | \
+     (  ( u64           )( z ) << 32  )   \
  )
 
 #define GS_SET_ZBUF_1 GS_SET_ZBUF
 #define GS_SET_ZBUF_2 GS_SET_ZBUF
 #define GS_SET_ZBUF( zbp, psm, zmsk )       \
- (   (  ( unsigned long )( zbp  ) <<  0  ) | \
-     (  ( unsigned long )( psm  ) << 24  ) | \
-     (  ( unsigned long )( zmsk ) << 32  )   \
+ (   (  ( u64           )( zbp  ) <<  0  ) | \
+     (  ( u64           )( psm  ) << 24  ) | \
+     (  ( u64           )( zmsk ) << 32  )   \
  )
 
 #define GS_SET_DIMX(                                                                 \
          dm00, dm01, dm02, dm03, dm10, dm11, dm12, dm13,                             \
          dm20, dm21, dm22, dm23, dm30, dm31, dm32, dm33                              \
         )                                                                            \
- (   (  ( unsigned long )( dm00 ) <<  0  ) | (  ( unsigned long )( dm01 ) <<  4  ) | \
-     (  ( unsigned long )( dm02 ) <<  8  ) | (  ( unsigned long )( dm03 ) << 12  ) | \
-     (  ( unsigned long )( dm10 ) << 16  ) | (  ( unsigned long )( dm11 ) << 20  ) | \
-     (  ( unsigned long )( dm12 ) << 24  ) | (  ( unsigned long )( dm13 ) << 28  ) | \
-     (  ( unsigned long )( dm20 ) << 32  ) | (  ( unsigned long )( dm21 ) << 36  ) | \
-     (  ( unsigned long )( dm22 ) << 40  ) | (  ( unsigned long )( dm23 ) << 44  ) | \
-     (  ( unsigned long )( dm30 ) << 48  ) | (  ( unsigned long )( dm31 ) << 52  ) | \
-     (  ( unsigned long )( dm32 ) << 56  ) | (  ( unsigned long )( dm33 ) << 60  )   \
+ (   (  ( u64           )( dm00 ) <<  0  ) | (  ( u64           )( dm01 ) <<  4  ) | \
+     (  ( u64           )( dm02 ) <<  8  ) | (  ( u64           )( dm03 ) << 12  ) | \
+     (  ( u64           )( dm10 ) << 16  ) | (  ( u64           )( dm11 ) << 20  ) | \
+     (  ( u64           )( dm12 ) << 24  ) | (  ( u64           )( dm13 ) << 28  ) | \
+     (  ( u64           )( dm20 ) << 32  ) | (  ( u64           )( dm21 ) << 36  ) | \
+     (  ( u64           )( dm22 ) << 40  ) | (  ( u64           )( dm23 ) << 44  ) | \
+     (  ( u64           )( dm30 ) << 48  ) | (  ( u64           )( dm31 ) << 52  ) | \
+     (  ( u64           )( dm32 ) << 56  ) | (  ( u64           )( dm33 ) << 60  )   \
  )
 
 #define GS_PMODE_EN_OFF   0
@@ -377,19 +379,19 @@ typedef union GSRegPMODE {
 
  struct {
 
-  unsigned long EN1    :  1 __attribute__(  ( packed )  );
-  unsigned long EN2    :  1 __attribute__(  ( packed )  );
-  unsigned long CRTMD  :  3 __attribute__(  ( packed )  );
-  unsigned long MMOD   :  1 __attribute__(  ( packed )  );
-  unsigned long AMOD   :  1 __attribute__(  ( packed )  );
-  unsigned long SLBG   :  1 __attribute__(  ( packed )  );
-  unsigned long ALP    :  8 __attribute__(  ( packed )  );
-  unsigned long m_Undef: 17 __attribute__(  ( packed )  );
-  unsigned long m_Pad  : 31 __attribute__(  ( packed )  );
+  u64           EN1    :  1 __attribute__(  ( packed )  );
+  u64           EN2    :  1 __attribute__(  ( packed )  );
+  u64           CRTMD  :  3 __attribute__(  ( packed )  );
+  u64           MMOD   :  1 __attribute__(  ( packed )  );
+  u64           AMOD   :  1 __attribute__(  ( packed )  );
+  u64           SLBG   :  1 __attribute__(  ( packed )  );
+  u64           ALP    :  8 __attribute__(  ( packed )  );
+  u64           m_Undef: 17 __attribute__(  ( packed )  );
+  u64           m_Pad  : 31 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegPMODE;
 
@@ -408,14 +410,14 @@ typedef union GSRegSMODE2 {
 
  struct {
 
-  unsigned long INT  :  1 __attribute__(  ( packed )  );
-  unsigned long FFMD :  1 __attribute__(  ( packed )  );
-  unsigned long DPMS :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 60 __attribute__(  ( packed )  );
+  u64           INT  :  1 __attribute__(  ( packed )  );
+  u64           FFMD :  1 __attribute__(  ( packed )  );
+  u64           DPMS :  2 __attribute__(  ( packed )  );
+  u64           m_Pad: 60 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegSMODE2;
 
@@ -423,17 +425,17 @@ typedef union GSRegDISFB {
 
  struct {
 
-  unsigned long FBP   :  9 __attribute__(  ( packed )  );
-  unsigned long FBW   :  6 __attribute__(  ( packed )  );
-  unsigned long PSM   :  5 __attribute__(  ( packed )  );
-  unsigned long m_Pad0: 12 __attribute__(  ( packed )  );
-  unsigned long DBX   : 11 __attribute__(  ( packed )  );
-  unsigned long DBY   : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad1: 10 __attribute__(  ( packed )  );
+  u64           FBP   :  9 __attribute__(  ( packed )  );
+  u64           FBW   :  6 __attribute__(  ( packed )  );
+  u64           PSM   :  5 __attribute__(  ( packed )  );
+  u64           m_Pad0: 12 __attribute__(  ( packed )  );
+  u64           DBX   : 11 __attribute__(  ( packed )  );
+  u64           DBY   : 11 __attribute__(  ( packed )  );
+  u64           m_Pad1: 10 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegDISFB;
 
@@ -441,18 +443,18 @@ typedef union GSRegDISPLAY {
 
  struct {
 
-  unsigned long DX    : 12 __attribute__(  ( packed )  );
-  unsigned long DY    : 11 __attribute__(  ( packed )  );
-  unsigned long MAGH  :  4 __attribute__(  ( packed )  );
-  unsigned long MAGV  :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  3 __attribute__(  ( packed )  );
-  unsigned long DW    : 12 __attribute__(  ( packed )  );
-  unsigned long DH    : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  9 __attribute__(  ( packed )  );
+  u64           DX    : 12 __attribute__(  ( packed )  );
+  u64           DY    : 11 __attribute__(  ( packed )  );
+  u64           MAGH  :  4 __attribute__(  ( packed )  );
+  u64           MAGV  :  2 __attribute__(  ( packed )  );
+  u64           m_Pad0:  3 __attribute__(  ( packed )  );
+  u64           DW    : 12 __attribute__(  ( packed )  );
+  u64           DH    : 11 __attribute__(  ( packed )  );
+  u64           m_Pad1:  9 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegDISPLAY;
 
@@ -460,18 +462,18 @@ typedef union GSRegEXTDATA {
 
  struct {
 
-  unsigned long SX    : 12 __attribute__(  ( packed )  );
-  unsigned long SY    : 11 __attribute__(  ( packed )  );
-  unsigned long SMPH  :  4 __attribute__(  ( packed )  );
-  unsigned long SMPV  :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  3 __attribute__(  ( packed )  );
-  unsigned long WW    : 12 __attribute__(  ( packed )  );
-  unsigned long WH    : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  9 __attribute__(  ( packed )  );
+  u64           SX    : 12 __attribute__(  ( packed )  );
+  u64           SY    : 11 __attribute__(  ( packed )  );
+  u64           SMPH  :  4 __attribute__(  ( packed )  );
+  u64           SMPV  :  2 __attribute__(  ( packed )  );
+  u64           m_Pad0:  3 __attribute__(  ( packed )  );
+  u64           WW    : 12 __attribute__(  ( packed )  );
+  u64           WH    : 11 __attribute__(  ( packed )  );
+  u64           m_Pad1:  9 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegEXTDATA __attribute__(  ( packed )  );
 
@@ -479,17 +481,17 @@ typedef union GSRegFRAME {
 
  struct {
 
-  unsigned long FBP   :  9 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  7 __attribute__(  ( packed )  );
-  unsigned long FBW   :  6 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  2 __attribute__(  ( packed )  );
-  unsigned long PSM   :  6 __attribute__(  ( packed )  );
-  unsigned long m_Pad2:  2 __attribute__(  ( packed )  );
-  unsigned long FBMSK : 32 __attribute__(  ( packed )  );
+  u64           FBP   :  9 __attribute__(  ( packed )  );
+  u64           m_Pad0:  7 __attribute__(  ( packed )  );
+  u64           FBW   :  6 __attribute__(  ( packed )  );
+  u64           m_Pad1:  2 __attribute__(  ( packed )  );
+  u64           PSM   :  6 __attribute__(  ( packed )  );
+  u64           m_Pad2:  2 __attribute__(  ( packed )  );
+  u64           FBMSK : 32 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegFRAME;
 
@@ -497,16 +499,16 @@ typedef union GSRegZBUF {
 
  struct {
 
-  unsigned long ZBP   :  9 __attribute__(  ( packed )  );
-  unsigned long m_Pad0: 15 __attribute__(  ( packed )  );
-  unsigned long PSM   :  4 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  4 __attribute__(  ( packed )  );
-  unsigned long ZMSK  :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad2: 31 __attribute__(  ( packed )  );
+  u64           ZBP   :  9 __attribute__(  ( packed )  );
+  u64           m_Pad0: 15 __attribute__(  ( packed )  );
+  u64           PSM   :  4 __attribute__(  ( packed )  );
+  u64           m_Pad1:  4 __attribute__(  ( packed )  );
+  u64           ZMSK  :  1 __attribute__(  ( packed )  );
+  u64           m_Pad2: 31 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegZBUF;
 
@@ -514,14 +516,14 @@ typedef union GSRegXYOFFSET {
 
  struct {
 
-  unsigned long OFX   : 16 __attribute__(  ( packed )  );
-  unsigned long m_Pad0: 16 __attribute__(  ( packed )  );
-  unsigned long OFY   : 16 __attribute__(  ( packed )  );
-  unsigned long m_Pad1: 16 __attribute__(  ( packed )  );
+  u64           OFX   : 16 __attribute__(  ( packed )  );
+  u64           m_Pad0: 16 __attribute__(  ( packed )  );
+  u64           OFY   : 16 __attribute__(  ( packed )  );
+  u64           m_Pad1: 16 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegXYOFFSET;
 
@@ -529,18 +531,18 @@ typedef union GSRegSCISSOR {
 
  struct {
 
-  unsigned long SCAX0 : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  5 __attribute__(  ( packed )  );
-  unsigned long SCAX1 : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  5 __attribute__(  ( packed )  );
-  unsigned long SCAY0 : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad2:  5 __attribute__(  ( packed )  );
-  unsigned long SCAY1 : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad3:  5 __attribute__(  ( packed )  );
+  u64           SCAX0 : 11 __attribute__(  ( packed )  );
+  u64           m_Pad0:  5 __attribute__(  ( packed )  );
+  u64           SCAX1 : 11 __attribute__(  ( packed )  );
+  u64           m_Pad1:  5 __attribute__(  ( packed )  );
+  u64           SCAY0 : 11 __attribute__(  ( packed )  );
+  u64           m_Pad2:  5 __attribute__(  ( packed )  );
+  u64           SCAY1 : 11 __attribute__(  ( packed )  );
+  u64           m_Pad3:  5 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegSCISSOR;
 
@@ -551,12 +553,12 @@ typedef union GSRegPRMODECONT {
 
  struct {
 
-  unsigned long AC   :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 63 __attribute__(  ( packed )  );
+  u64           AC   :  1 __attribute__(  ( packed )  );
+  u64           m_Pad: 63 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegPRMODECONT;
 
@@ -565,7 +567,7 @@ typedef union GSRegPRMODECONT {
 
 typedef struct GSRegPABE {
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegPABE;
 
@@ -576,12 +578,12 @@ typedef union GSRegCOLCLAMP {
 
  struct {
 
-  unsigned long CLAMP:  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 63 __attribute__(  ( packed )  );
+  u64           CLAMP:  1 __attribute__(  ( packed )  );
+  u64           m_Pad: 63 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value  __attribute__(  ( packed )  );
+ u64           m_Value  __attribute__(  ( packed )  );
 
 } GSRegCOLCLAMP;
 
@@ -592,12 +594,12 @@ typedef union GSRegDTHE {
 
  struct {
 
-  unsigned long DTHE :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 63 __attribute__(  ( packed )  );
+  u64           DTHE :  1 __attribute__(  ( packed )  );
+  u64           m_Pad: 63 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegDTHE;
 
@@ -635,19 +637,19 @@ typedef union GSRegTEST {
 
  struct {
 
-  unsigned long ATE  :  1 __attribute__(  ( packed )  );
-  unsigned long ATST :  3 __attribute__(  ( packed )  );
-  unsigned long AREF :  8 __attribute__(  ( packed )  );
-  unsigned long AFAIL:  2 __attribute__(  ( packed )  );
-  unsigned long DATE :  1 __attribute__(  ( packed )  );
-  unsigned long DATM :  1 __attribute__(  ( packed )  );
-  unsigned long ZTE  :  1 __attribute__(  ( packed )  );
-  unsigned long ZTST :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 45 __attribute__(  ( packed )  );
+  u64           ATE  :  1 __attribute__(  ( packed )  );
+  u64           ATST :  3 __attribute__(  ( packed )  );
+  u64           AREF :  8 __attribute__(  ( packed )  );
+  u64           AFAIL:  2 __attribute__(  ( packed )  );
+  u64           DATE :  1 __attribute__(  ( packed )  );
+  u64           DATM :  1 __attribute__(  ( packed )  );
+  u64           ZTE  :  1 __attribute__(  ( packed )  );
+  u64           ZTST :  2 __attribute__(  ( packed )  );
+  u64           m_Pad: 45 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTEST;
 
@@ -668,17 +670,17 @@ typedef union GSRegALPHA {
 
  struct {
 
-  unsigned long A     :  2 __attribute__(  ( packed )  );
-  unsigned long B     :  2 __attribute__(  ( packed )  );
-  unsigned long C     :  2 __attribute__(  ( packed )  );
-  unsigned long D     :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad0: 24 __attribute__(  ( packed )  );
-  unsigned long FIX   :  8 __attribute__(  ( packed )  );
-  unsigned long m_Pad1: 24 __attribute__(  ( packed )  );
+  u64           A     :  2 __attribute__(  ( packed )  );
+  u64           B     :  2 __attribute__(  ( packed )  );
+  u64           C     :  2 __attribute__(  ( packed )  );
+  u64           D     :  2 __attribute__(  ( packed )  );
+  u64           m_Pad0: 24 __attribute__(  ( packed )  );
+  u64           FIX   :  8 __attribute__(  ( packed )  );
+  u64           m_Pad1: 24 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegALPHA;
 
@@ -718,20 +720,20 @@ typedef union GSRegPRIM {
 
  struct {
 
-  unsigned long PRIM :  3 __attribute__(  ( packed )  );
-  unsigned long IIP  :  1 __attribute__(  ( packed )  );
-  unsigned long TME  :  1 __attribute__(  ( packed )  );
-  unsigned long FGE  :  1 __attribute__(  ( packed )  );
-  unsigned long ABE  :  1 __attribute__(  ( packed )  );
-  unsigned long AA1  :  1 __attribute__(  ( packed )  );
-  unsigned long FST  :  1 __attribute__(  ( packed )  );
-  unsigned long CTXT :  1 __attribute__(  ( packed )  );
-  unsigned long FIX  :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 53 __attribute__(  ( packed )  );
+  u64           PRIM :  3 __attribute__(  ( packed )  );
+  u64           IIP  :  1 __attribute__(  ( packed )  );
+  u64           TME  :  1 __attribute__(  ( packed )  );
+  u64           FGE  :  1 __attribute__(  ( packed )  );
+  u64           ABE  :  1 __attribute__(  ( packed )  );
+  u64           AA1  :  1 __attribute__(  ( packed )  );
+  u64           FST  :  1 __attribute__(  ( packed )  );
+  u64           CTXT :  1 __attribute__(  ( packed )  );
+  u64           FIX  :  1 __attribute__(  ( packed )  );
+  u64           m_Pad: 53 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegPRIM;
 
@@ -739,22 +741,22 @@ typedef union GSRegBITBLTBUF {
 
  struct {
 
-  unsigned long SBP   : 14 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  2 __attribute__(  ( packed )  );
-  unsigned long SBW   :  6 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  2 __attribute__(  ( packed )  );
-  unsigned long SPSM  :  6 __attribute__(  ( packed )  );
-  unsigned long m_Pad2:  2 __attribute__(  ( packed )  );
-  unsigned long DBP   : 14 __attribute__(  ( packed )  );
-  unsigned long m_Pad3:  2 __attribute__(  ( packed )  );
-  unsigned long DBW   :  6 __attribute__(  ( packed )  );
-  unsigned long m_Pad4:  2 __attribute__(  ( packed )  );
-  unsigned long DPSM  :  6 __attribute__(  ( packed )  );
-  unsigned long m_Pad5:  2 __attribute__(  ( packed )  );
+  u64           SBP   : 14 __attribute__(  ( packed )  );
+  u64           m_Pad0:  2 __attribute__(  ( packed )  );
+  u64           SBW   :  6 __attribute__(  ( packed )  );
+  u64           m_Pad1:  2 __attribute__(  ( packed )  );
+  u64           SPSM  :  6 __attribute__(  ( packed )  );
+  u64           m_Pad2:  2 __attribute__(  ( packed )  );
+  u64           DBP   : 14 __attribute__(  ( packed )  );
+  u64           m_Pad3:  2 __attribute__(  ( packed )  );
+  u64           DBW   :  6 __attribute__(  ( packed )  );
+  u64           m_Pad4:  2 __attribute__(  ( packed )  );
+  u64           DPSM  :  6 __attribute__(  ( packed )  );
+  u64           m_Pad5:  2 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegBITBLTBUF;
 
@@ -767,19 +769,19 @@ typedef union GSRegTRXPOS {
 
  struct {
 
-  unsigned long SSAX  : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  5 __attribute__(  ( packed )  );
-  unsigned long SSAY  : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  5 __attribute__(  ( packed )  );
-  unsigned long DSAX  : 11 __attribute__(  ( packed )  );
-  unsigned long m_Pad2:  5 __attribute__(  ( packed )  );
-  unsigned long DSAY  : 11 __attribute__(  ( packed )  );
-  unsigned long DIR   :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad3:  3 __attribute__(  ( packed )  );
+  u64           SSAX  : 11 __attribute__(  ( packed )  );
+  u64           m_Pad0:  5 __attribute__(  ( packed )  );
+  u64           SSAY  : 11 __attribute__(  ( packed )  );
+  u64           m_Pad1:  5 __attribute__(  ( packed )  );
+  u64           DSAX  : 11 __attribute__(  ( packed )  );
+  u64           m_Pad2:  5 __attribute__(  ( packed )  );
+  u64           DSAY  : 11 __attribute__(  ( packed )  );
+  u64           DIR   :  2 __attribute__(  ( packed )  );
+  u64           m_Pad3:  3 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTRXPOS;
 
@@ -787,14 +789,14 @@ typedef union GSRegTRXREG {
 
  struct {
 
-  unsigned long RRW   : 12 __attribute__(  ( packed )  );
-  unsigned long m_Pad0: 20 __attribute__(  ( packed )  );
-  unsigned long RRH   : 12 __attribute__(  ( packed )  );
-  unsigned long m_Pad1: 20 __attribute__(  ( packed )  );
+  u64           RRW   : 12 __attribute__(  ( packed )  );
+  u64           m_Pad0: 20 __attribute__(  ( packed )  );
+  u64           RRH   : 12 __attribute__(  ( packed )  );
+  u64           m_Pad1: 20 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTRXREG;
 
@@ -806,18 +808,18 @@ typedef union GSRegTRXDIR {
 
  struct {
 
-  unsigned long XDR  :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad: 62 __attribute__(  ( packed )  );
+  u64           XDR  :  2 __attribute__(  ( packed )  );
+  u64           m_Pad: 62 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTRXDIR;
 
 typedef struct GSRegFINISH {
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegFINISH;
 
@@ -828,16 +830,16 @@ typedef union GSRefZBUF {
 
  struct {
 
-  unsigned long ZBP   :  9 __attribute__(  ( packed )  );
-  unsigned long m_Pad0: 15 __attribute__(  ( packed )  );
-  unsigned long PSM   :  4 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  4 __attribute__(  ( packed )  );
-  unsigned long ZMSK  :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad2: 31 __attribute__(  ( packed )  );
+  u64           ZBP   :  9 __attribute__(  ( packed )  );
+  u64           m_Pad0: 15 __attribute__(  ( packed )  );
+  u64           PSM   :  4 __attribute__(  ( packed )  );
+  u64           m_Pad1:  4 __attribute__(  ( packed )  );
+  u64           ZMSK  :  1 __attribute__(  ( packed )  );
+  u64           m_Pad2: 31 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRefZBUF;
 
@@ -860,22 +862,22 @@ typedef union GSRegTEX0 {
 
  struct {
 
-  unsigned long TBP0: 14 __attribute__(  ( packed )  );
-  unsigned long TBW :  6 __attribute__(  ( packed )  );
-  unsigned long PSM :  6 __attribute__(  ( packed )  );
-  unsigned long TW  :  4 __attribute__(  ( packed )  );
-  unsigned long TH  :  4 __attribute__(  ( packed )  );
-  unsigned long TCC :  1 __attribute__(  ( packed )  );
-  unsigned long TFX :  2 __attribute__(  ( packed )  );
-  unsigned long CBP : 14 __attribute__(  ( packed )  );
-  unsigned long CPSM:  4 __attribute__(  ( packed )  );
-  unsigned long CSM :  1 __attribute__(  ( packed )  );
-  unsigned long CSA :  5 __attribute__(  ( packed )  );
-  unsigned long CLD :  3 __attribute__(  ( packed )  );
+  u64           TBP0: 14 __attribute__(  ( packed )  );
+  u64           TBW :  6 __attribute__(  ( packed )  );
+  u64           PSM :  6 __attribute__(  ( packed )  );
+  u64           TW  :  4 __attribute__(  ( packed )  );
+  u64           TH  :  4 __attribute__(  ( packed )  );
+  u64           TCC :  1 __attribute__(  ( packed )  );
+  u64           TFX :  2 __attribute__(  ( packed )  );
+  u64           CBP : 14 __attribute__(  ( packed )  );
+  u64           CPSM:  4 __attribute__(  ( packed )  );
+  u64           CSM :  1 __attribute__(  ( packed )  );
+  u64           CSA :  5 __attribute__(  ( packed )  );
+  u64           CLD :  3 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTEX0;
 
@@ -896,21 +898,21 @@ typedef union GSRegTEX1 {
 
  struct {
 
-  unsigned long LCM   :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  1 __attribute__(  ( packed )  );
-  unsigned long MXL   :  3 __attribute__(  ( packed )  );
-  unsigned long MMAG  :  1 __attribute__(  ( packed )  );
-  unsigned long MMIN  :  3 __attribute__(  ( packed )  );
-  unsigned long MTBA  :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  9 __attribute__(  ( packed )  );
-  unsigned long L     :  2 __attribute__(  ( packed )  );
-  unsigned long m_Pad2: 11 __attribute__(  ( packed )  );
-  unsigned long K     : 12 __attribute__(  ( packed )  );
-  unsigned long m_Pad3: 20 __attribute__(  ( packed )  );
+  u64           LCM   :  1 __attribute__(  ( packed )  );
+  u64           m_Pad0:  1 __attribute__(  ( packed )  );
+  u64           MXL   :  3 __attribute__(  ( packed )  );
+  u64           MMAG  :  1 __attribute__(  ( packed )  );
+  u64           MMIN  :  3 __attribute__(  ( packed )  );
+  u64           MTBA  :  1 __attribute__(  ( packed )  );
+  u64           m_Pad1:  9 __attribute__(  ( packed )  );
+  u64           L     :  2 __attribute__(  ( packed )  );
+  u64           m_Pad2: 11 __attribute__(  ( packed )  );
+  u64           K     : 12 __attribute__(  ( packed )  );
+  u64           m_Pad3: 20 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTEX1 __attribute__(  ( packed )  );
 
@@ -928,28 +930,28 @@ typedef union GSRegCSR {
 
  struct {
 
-  unsigned long SIGNAL:  1 __attribute__(  ( packed )  );
-  unsigned long FINISH:  1 __attribute__(  ( packed )  );
-  unsigned long HSINT :  1 __attribute__(  ( packed )  );
-  unsigned long VSINT :  1 __attribute__(  ( packed )  );
-  unsigned long EDWINT:  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad1:  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad2:  1 __attribute__(  ( packed )  );
-  unsigned long FLUSH :  1 __attribute__(  ( packed )  );
-  unsigned long RESET :  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad3:  1 __attribute__(  ( packed )  );
-  unsigned long m_Pad4:  1 __attribute__(  ( packed )  );
-  unsigned long NFIELD:  1 __attribute__(  ( packed )  );
-  unsigned long FIELD :  1 __attribute__(  ( packed )  );
-  unsigned long FIFO  :  2 __attribute__(  ( packed )  );
-  unsigned long REV   :  8 __attribute__(  ( packed )  );
-  unsigned long ID    :  8 __attribute__(  ( packed )  );
-  unsigned long m_Pad5: 32 __attribute__(  ( packed )  );
+  u64           SIGNAL:  1 __attribute__(  ( packed )  );
+  u64           FINISH:  1 __attribute__(  ( packed )  );
+  u64           HSINT :  1 __attribute__(  ( packed )  );
+  u64           VSINT :  1 __attribute__(  ( packed )  );
+  u64           EDWINT:  1 __attribute__(  ( packed )  );
+  u64           m_Pad0:  1 __attribute__(  ( packed )  );
+  u64           m_Pad1:  1 __attribute__(  ( packed )  );
+  u64           m_Pad2:  1 __attribute__(  ( packed )  );
+  u64           FLUSH :  1 __attribute__(  ( packed )  );
+  u64           RESET :  1 __attribute__(  ( packed )  );
+  u64           m_Pad3:  1 __attribute__(  ( packed )  );
+  u64           m_Pad4:  1 __attribute__(  ( packed )  );
+  u64           NFIELD:  1 __attribute__(  ( packed )  );
+  u64           FIELD :  1 __attribute__(  ( packed )  );
+  u64           FIFO  :  2 __attribute__(  ( packed )  );
+  u64           REV   :  8 __attribute__(  ( packed )  );
+  u64           ID    :  8 __attribute__(  ( packed )  );
+  u64           m_Pad5: 32 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegCSR __attribute__(  (  aligned( 16 )  )  );
 
@@ -957,15 +959,15 @@ typedef union GSRegRGBAQ {
 
  struct {
 
-  unsigned long R:  8 __attribute__(  ( packed )  );
-  unsigned long G:  8 __attribute__(  ( packed )  );
-  unsigned long B:  8 __attribute__(  ( packed )  );
-  unsigned long A:  8 __attribute__(  ( packed )  );
-  unsigned long Q: 32 __attribute__(  ( packed )  );
+  u64           R:  8 __attribute__(  ( packed )  );
+  u64           G:  8 __attribute__(  ( packed )  );
+  u64           B:  8 __attribute__(  ( packed )  );
+  u64           A:  8 __attribute__(  ( packed )  );
+  u64           Q: 32 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegRGBAQ;
 
@@ -973,19 +975,19 @@ typedef union GSRegXYZ {
 
  struct {
 
-  unsigned long X: 16 __attribute__(  ( packed )  );
-  unsigned long Y: 16 __attribute__(  ( packed )  );
-  unsigned long Z: 32 __attribute__(  ( packed )  );
+  u64           X: 16 __attribute__(  ( packed )  );
+  u64           Y: 16 __attribute__(  ( packed )  );
+  u64           Z: 32 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegXYZ;
 
 typedef struct GSRegTEXFLUSH {
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegTEXFLUSH;
 
@@ -993,55 +995,55 @@ typedef union GSRegUV {
 
  struct {
 
-  unsigned long U     : 14 __attribute__(  ( packed )  );
-  unsigned long m_Pad0:  2 __attribute__(  ( packed )  );
-  unsigned long V     : 14 __attribute__(  ( packed )  );
-  unsigned long m_Pad1: 34 __attribute__(  ( packed )  );
+  u64           U     : 14 __attribute__(  ( packed )  );
+  u64           m_Pad0:  2 __attribute__(  ( packed )  );
+  u64           V     : 14 __attribute__(  ( packed )  );
+  u64           m_Pad1: 34 __attribute__(  ( packed )  );
 
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegUV;
 
 typedef union GSRegDIMX {
 
  struct {
-  unsigned long m_DIMX00 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad00  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX01 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad01  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX02 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad02  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX03 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad03  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX10 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad10  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX11 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad11  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX12 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad12  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX13 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad13  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX20 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad20  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX21 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad21  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX22 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad22  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX23 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad23  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX30 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad30  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX31 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad31  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX32 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad32  : 1 __attribute__(  ( packed )  );
-  unsigned long m_DIMX33 : 3 __attribute__(  ( packed )  );
-  unsigned long m_Pad33  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX00 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad00  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX01 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad01  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX02 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad02  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX03 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad03  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX10 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad10  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX11 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad11  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX12 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad12  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX13 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad13  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX20 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad20  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX21 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad21  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX22 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad22  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX23 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad23  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX30 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad30  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX31 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad31  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX32 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad32  : 1 __attribute__(  ( packed )  );
+  u64           m_DIMX33 : 3 __attribute__(  ( packed )  );
+  u64           m_Pad33  : 1 __attribute__(  ( packed )  );
  } __attribute__(  ( packed )  );
 
- unsigned long m_Value __attribute__(  ( packed )  );
+ u64           m_Value __attribute__(  ( packed )  );
 
 } GSRegDIMX;
 
@@ -1058,71 +1060,71 @@ typedef struct GSGC {
 
  GIFTag          m_Tag;
  GSRegFRAME      m_FRAMEVal;
- unsigned long   m_FRAMETag;
+ u64             m_FRAMETag;
  GSRegZBUF       m_ZBUFVal;
- unsigned long   m_ZBUFTag;
+ u64             m_ZBUFTag;
  GSRegXYOFFSET   m_XYOFFSETVal;
- unsigned long   m_XYOFFSETTag;
+ u64             m_XYOFFSETTag;
  GSRegSCISSOR    m_SCISSORVal;
- unsigned long   m_SCISSORTag;
+ u64             m_SCISSORTag;
  GSRegPRMODECONT m_PRMODECONTVal;
- unsigned long   m_PRMODECONTTag;
+ u64             m_PRMODECONTTag;
  GSRegCOLCLAMP   m_COLCLAMPVal;
- unsigned long   m_COLCLAMPTag;
+ u64             m_COLCLAMPTag;
  GSRegDTHE       m_DTHEVal;
- unsigned long   m_DTHETag;
+ u64             m_DTHETag;
  GSRegTEST       m_TESTVal;
- unsigned long   m_TESTTag;
+ u64             m_TESTTag;
  GSRegALPHA      m_ALPHAVal;
- unsigned long   m_ALPHATag;
+ u64             m_ALPHATag;
  GSRegPABE       m_PABEVal;
- unsigned long   m_PABETag;
+ u64             m_PABETag;
  GSRegTEX1       m_TEX1Val;
- unsigned long   m_TEX1Tag;
+ u64             m_TEX1Tag;
  GSRegDIMX       m_DIMXVal;
- unsigned long   m_DIMXTag;
+ u64             m_DIMXTag;
 
 } GSGC __attribute__(   (  aligned( 16 )  )   );
 
 typedef struct GSClearPacket {
 
- unsigned long m_VIFCodes[ 2 ];
+ u64           m_VIFCodes[ 2 ];
  GIFTag        m_Tag;
  GSRegTEST     m_TESTSVal;
- unsigned long m_TESTSTag;
+ u64           m_TESTSTag;
  GSRegPRIM     m_PRIMVal;
- unsigned long m_PRIMTag;
+ u64           m_PRIMTag;
  GSRegRGBAQ    m_RGBAQVal;
- unsigned long m_RGBAQTag;
+ u64           m_RGBAQTag;
  GSRegXYZ      m_XYZ20Val;
- unsigned long m_XYZ20Tag;
+ u64           m_XYZ20Tag;
  GSRegXYZ      m_XYZ21Val;
- unsigned long m_XYZ21Tag;
+ u64           m_XYZ21Tag;
  GSRegTEST     m_TESTRVal;
- unsigned long m_TESTRTag;
+ u64           m_TESTRTag;
 
 } GSClearPacket __attribute__(   (  aligned( 16 )  )   );
 
 typedef struct GSStoreImage {
 
- unsigned long  m_VIFCodes[ 2 ];
+ u64            m_VIFCodes[ 2 ];
  GIFTag         m_Tag;
  GSRegBITBLTBUF m_BITBLTBUFVal;
- unsigned long  m_BITBLTBUFTag;
+ u64            m_BITBLTBUFTag;
  GSRegTRXREG    m_TRXREGVal;
- unsigned long  m_TRXREGTag;
+ u64            m_TRXREGTag;
  GSRegTRXPOS    m_TRXPOSVal;
- unsigned long  m_TRXPOSTag;
+ u64            m_TRXPOSTag;
  GSRegFINISH    m_FINISHVal;
- unsigned long  m_FINISHTag;
+ u64            m_FINISHTag;
  GSRegTRXDIR    m_TRXDIRVal;
- unsigned long  m_TRXDIRTag;
+ u64            m_TRXDIRTag;
 
 } GSStoreImage __attribute__(   (  aligned( 16 )  )   );
 
 typedef struct GSRoundRectPacket {
 
- unsigned long m_VIFCodes[ 2 ];
+ u64           m_VIFCodes[ 2 ];
  GIFTag        m_Tag0;
  GSRegPRIM     m_PRIM;
  GSRegRGBAQ    m_RGBAQ;
@@ -1133,10 +1135,10 @@ typedef struct GSRoundRectPacket {
 
 typedef struct GSTexSpritePacket {
 
- unsigned long m_VIFCodes[ 2 ];
+ u64           m_VIFCodes[ 2 ];
  GIFTag        m_Tag0;
  GSRegTEXFLUSH m_TEXFLUSHVal;
- unsigned long m_TEXFLUSHTag;
+ u64           m_TEXFLUSHTag;
  GIFTag        m_Tag1;
  GSRegTEX0     m_TEX0Val;
  GSRegPRIM     m_PRIMVal;
@@ -1150,21 +1152,21 @@ typedef struct GSTexSpritePacket {
 
 typedef struct GSLoadImage {
 
- unsigned long  m_DMATag1[ 2 ];
+ u64            m_DMATag1[ 2 ];
  GIFTag         m_Tag1;
  GSRegTEXFLUSH  m_TexFlushReg;
- unsigned long  m_TexFlushTag;
+ u64            m_TexFlushTag;
  GSRegBITBLTBUF m_BitBltBufReg;
- unsigned long  m_BitBltBufTag;
+ u64            m_BitBltBufTag;
  GSRegTRXPOS    m_TrxPosReg;
- unsigned long  m_TrxPosTag;
+ u64            m_TrxPosTag;
  GSRegTRXREG    m_TrxRegReg;
- unsigned long  m_TrxRegTag;
+ u64            m_TrxRegTag;
  GSRegTRXDIR    m_TrxDirReg;
- unsigned long  m_TrxDirTag;
+ u64            m_TrxDirTag;
  GIFTag         m_Tag2;
- unsigned long  m_DMATag2[ 2 ];
- unsigned long  m_DMATag3[ 2 ];
+ u64            m_DMATag2[ 2 ];
+ u64            m_DMATag3[ 2 ];
 
 } GSLoadImage __attribute__(   (  aligned( 64 )  )   );
 
@@ -1197,9 +1199,9 @@ typedef struct GSContext {
  unsigned int   m_VRAMPtr;
  unsigned int   m_VRAMPtr2;
           int   m_nAlloc[ 2 ];
- unsigned long* m_pDisplayList[ 2 ];
- unsigned long* m_pLastTag[ 2 ];
- unsigned long  m_BkColor;
+ u64*           m_pDisplayList[ 2 ];
+ u64*           m_pLastTag[ 2 ];
+ u64            m_BkColor;
           int   m_PutIndex[ 2 ];
  GSDC           m_DispCtx;
  GSGC           m_DrawCtx[ 2 ];
@@ -1237,12 +1239,12 @@ extern unsigned int*    g_MBFont;
 extern GSMTKFontHeader* g_pASCII;
 extern GSMTKFontHeader* g_Fonts[ 4 ];
 
-#define GS_CSR      (  ( volatile unsigned long* )0x12001000  )
-#define GS_PMODE    (  ( volatile unsigned long* )0x12000000  )
-#define GS_DISPFB1  (  ( volatile unsigned long* )0x12000070  )
-#define GS_DISPLAY1 (  ( volatile unsigned long* )0x12000080  )
-#define GS_DISPFB2  (  ( volatile unsigned long* )0x12000090  )
-#define GS_DISPLAY2 (  ( volatile unsigned long* )0x120000A0  )
+#define GS_CSR      (  ( volatile u64*           )0x12001000  )
+#define GS_PMODE    (  ( volatile u64*           )0x12000000  )
+#define GS_DISPFB1  (  ( volatile u64*           )0x12000070  )
+#define GS_DISPLAY1 (  ( volatile u64*           )0x12000080  )
+#define GS_DISPFB2  (  ( volatile u64*           )0x12000090  )
+#define GS_DISPLAY2 (  ( volatile u64*           )0x120000A0  )
 
 #define GS_TXT_PACKET_SIZE( n ) (   ( n << 2 ) + 6 + (  ( g_GSCtx.m_FontTexFmt != GSPixelFormat_PSMT4HL ) << 3  )   )
 #define GS_RRT_PACKET_SIZE()    ( 34 )
@@ -1261,38 +1263,38 @@ void          GS_InitDC          ( GSDC*, GSPixelFormat, int, int, int, int     
 void          GS_SetDC           ( GSDC*, int                                                                  );
 unsigned int  GS_InitGC          ( int, GSGC*, GSPixelFormat, int, int, GSZTest                                );
 void          GS_SetGC           ( GSGC*                                                                       );
-unsigned long GS_XYZ             ( int, int, int                                                               );
-unsigned long GS_XYZF            ( int, int, int, int                                                          );
-void          GS_XYZv            ( unsigned long*, float*, int, float*, int                                    );
-void          GS_InitClear       ( GSClearPacket*, int, int, int, int, unsigned long, GSZTest                  );
+u64           GS_XYZ             ( int, int, int                                                               );
+u64           GS_XYZF            ( int, int, int, int                                                          );
+void          GS_XYZv            ( u64*          , float*, int, float*, int                                    );
+void          GS_InitClear       ( GSClearPacket*, int, int, int, int, u64          , GSZTest                  );
 void          GS_Clear           ( GSClearPacket*                                                              );
 void          GS_InitLoadImage   ( GSLoadImage*, unsigned int, unsigned int, GSPixelFormat, int, int, int, int );
 void          GS_LoadImage       ( GSLoadImage*, void*                                                         );
-void          GS_RRV             ( unsigned long*, int, int, int, int, int                                     );
-void          GS_RenderRoundRect ( GSRoundRectPacket*, int, int, int, int, int, long                           );
+void          GS_RRV             ( u64*          , int, int, int, int, int                                     );
+void          GS_RenderRoundRect ( GSRoundRectPacket*, int, int, int, int, int, s64                            );
 void          GS_VSync           ( void                                                                        );
 void          GS_InitStoreImage  ( GSStoreImage*, unsigned int, int, int, int, int                             );
 void          GS_StoreImage      ( GSStoreImage*, void*                                                        );
-unsigned long GS_L2P             ( int, int, int, int                                                          );
+u64           GS_L2P             ( int, int, int, int                                                          );
 void          GS_VSync2          ( int                                                                         );
 int           GS_VMode2Index     ( GSVideoMode                                                                 );
 
 void           GSContext_Init            ( GSVideoMode, GSZTest, GSDoubleBuffer                             );
-unsigned long* GSContext_NewPacket       ( int, int, GSPaintMethod                                          );
+u64*           GSContext_NewPacket       ( int, int, GSPaintMethod                                          );
 void           GSContext_Flush           ( int, GSFlushMethod                                               );
-unsigned long* GSContext_NewList         ( unsigned int                                                     );
-void           GSContext_DeleteList      ( unsigned long*                                                   );
-void           GSContext_CallList        ( int, unsigned long*                                              );
-void           GSContext_CallList2       ( int, unsigned long*                                              );
-void           GSContext_SetTextColor    ( unsigned int, unsigned long                                      );
+u64*           GSContext_NewList         ( unsigned int                                                     );
+void           GSContext_DeleteList      ( u64*                                                             );
+void           GSContext_CallList        ( int, u64*                                                        );
+void           GSContext_CallList2       ( int, u64*                                                        );
+void           GSContext_SetTextColor    ( unsigned int, u64                                                );
 void           GSContext_RenderTexSprite ( GSTexSpritePacket*, int, int, int, int, int, int, int, int       );
-void           GSContext_RenderVGRect    ( unsigned long*, int, int, int, int, unsigned long, unsigned long );
+void           GSContext_RenderVGRect    ( u64*          , int, int, int, int, u64          , u64           );
 
 void  GSFont_Init      ( void                                                    );
 int   GSFont_Width     ( unsigned char*, int                                     );
 int   GSFont_WidthEx   ( unsigned char*, int, int                                );
-void  GSFont_Render    ( unsigned char*, int, int, int, unsigned long*           );
-void  GSFont_RenderEx  ( unsigned char*, int, int, int, unsigned long*, int, int );
+void  GSFont_Render    ( unsigned char*, int, int, int, u64*                     );
+void  GSFont_RenderEx  ( unsigned char*, int, int, int, u64*          , int, int );
 void  GSFont_Set       ( unsigned int, void*                                     );
 void* GSFont_Get       ( unsigned int, unsigned int*                             );
 int   GSFont_UnpackChr ( GSMTKFontHeader*, unsigned int, void*                   );

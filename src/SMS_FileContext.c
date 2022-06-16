@@ -860,7 +860,7 @@ int CDDA_GetDiskPicture ( CDDAContext* apCtx, void* apData ) {
 
 }  /* end CDDA_GetDiskPicture */
 
-CDDAContext* CDDA_InitContext ( unsigned long aDrive ) {
+CDDAContext* CDDA_InitContext ( u64           aDrive ) {
 
  int          lfSuccess = 0;
  CDDAContext* retVal    = NULL;

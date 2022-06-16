@@ -52,13 +52,13 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
 
 }  /* SMS_Realloc */
 
-extern long MUL64 ( long, long );
+extern s64  MUL64 ( s64 , s64  );
 
-long SMS_Rescale ( long anA, long aB, long aC ){
+s64  SMS_Rescale ( s64  anA, s64  aB, s64  aC ){
 
  int           i;
- unsigned long lA0, lA1, lB0, lB1, lT1, lT1a;
- long          lR;
+ u64           lA0, lA1, lB0, lB1, lT1, lT1a;
+ s64           lR;
 
  if ( anA < 0 ) return -SMS_Rescale ( -anA, aB, aC );
 
@@ -659,7 +659,7 @@ void SMS_SetDirButtons ( void ) {
 void SMS_InitBitBlt ( void* apPack, int aCnt, int anY, int aH ) {
 
  GSLoadImage*  lpPack = UNCACHED_SEG( apPack );
- unsigned long lXYXY  = GS_L2P ( 0, anY, g_GSCtx.m_LWidth, aH );
+ u64           lXYXY  = GS_L2P ( 0, anY, g_GSCtx.m_LWidth, aH );
  int           lX     = ( lXYXY >>  0 ) & 0xFFFF;
  int           lY     = ( lXYXY >> 16 ) & 0xFFFF;
  int           lW     = ( lXYXY >> 32 ) & 0xFFFF;

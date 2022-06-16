@@ -57,9 +57,9 @@ SMS_VideoBuffer* SMS_VideoBufferInit ( int aWidth, int aHeight ) {
  for ( i = 0; i < 3; ++i ) {
 
   SMS_MacroBlock* lpBase   = ( SMS_MacroBlock* )memalign ( 128, lFrameSize + lDMASize );
-  unsigned long*  lpDMA    = ( unsigned long* )(   (  ( char* )lpBase  ) + lFrameSize   );
+  u64*            lpDMA    = ( u64*           )(   (  ( char* )lpBase  ) + lFrameSize   );
   unsigned char*  lpSrc    = ( unsigned char* )( lpBase + lFrameStride );
-  unsigned long*  lpDMAEnd = lpDMA + lMBH;
+  u64*            lpDMAEnd = lpDMA + lMBH;
 
   memset ( lpBase, 0, lFrameSize );
 
@@ -167,7 +167,7 @@ __asm__(
  ".set reorder\n\t"
 );
 
-void SMS_CSC ( SMS_CSCParam*, unsigned long*, void* );
+void SMS_CSC ( SMS_CSCParam*, u64*          , void* );
 __asm__(                        // a0 = CSC parameters
  ".set noreorder\n\t"           // a1 = DMA packet
  ".set nomacro\n\t"             // a2 = RGB data
@@ -253,9 +253,9 @@ void SMS_FrameBufferInit ( SMS_FrameBuffer* apBuf, int anBuf, int aWidth, int aH
  unsigned int   i, lSize;
  unsigned int   lMBW, lMBH;
  unsigned int   lQWC, lPixFmt, lIncr;
- unsigned long  lBitBltBuf;
- unsigned long  lGIFTag;
- unsigned long* lpDMA;
+ u64            lBitBltBuf;
+ u64            lGIFTag;
+ u64*           lpDMA;
 
  aWidth  = ( aWidth  + 15 ) & ~15;
  aHeight = ( aHeight + 15 ) & ~15;
@@ -286,7 +286,7 @@ void SMS_FrameBufferInit ( SMS_FrameBuffer* apBuf, int anBuf, int aWidth, int aH
   unsigned char* lpPic = ( unsigned char* )memalign (   128, lSize + (  ( 10 + 12 * lMBW * lMBH ) << 3  )   );
 
   apBuf[ i ].m_pBase     = ( SMS_MacroBlock* )lpPic;
-  apBuf[ i ].m_pData     = ( SMS_MacroBlock* )(  lpDMA = ( unsigned long* )( lpPic + lSize )  );
+  apBuf[ i ].m_pData     = ( SMS_MacroBlock* )(  lpDMA = ( u64*           )( lpPic + lSize )  );
   apBuf[ i ].m_FrameType = -1;
 
   lpDMA[ 0 ] = DMA_TAG( 3, 0, DMATAG_ID_CNT, 0, 0, 0 );

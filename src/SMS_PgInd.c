@@ -25,8 +25,8 @@ extern int   g_XShift;
 static int           s_ThreadID;
 static int           s_HandlerID;
 static unsigned char s_Stack  [                    4096 ] __attribute__(   (  aligned( 16 ), section( ".bss" )  )   );
-static unsigned long s_DrawPkt[                     112 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
-static unsigned long s_SendPkt[                      24 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
+static u64           s_DrawPkt[                     112 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
+static u64           s_SendPkt[                      24 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
 static unsigned int  s_Bitmap [ IND_SIZE * IND_SIZE * 4 ] __attribute__(   (  aligned( 64 ), section( ".bss" )  )   );
 
 static const unsigned int s_Data[ 144 ] __attribute__(   (  aligned( 16 ), section( ".rodata" )  )   ) = {
@@ -116,7 +116,7 @@ void SMS_PgIndStop ( void ) {
 
  if ( s_HandlerID ) {
 
-  unsigned long* lpDMA = UNCACHED_SEG( &s_SendPkt[ 18 ] );
+  u64*           lpDMA = UNCACHED_SEG( &s_SendPkt[ 18 ] );
 
   lpDMA[ 0 ] = GIF_TAG( 1, 1, 0, 0, 0, 1 );
 
@@ -208,7 +208,7 @@ static void _pgind_thread ( void* apArg ) {
  int           lQWC    = (   (   lSendW * lPSendH * (  2 + ( lPSM == GSPixelFormat_PSMCT24 )  )   ) + 15    ) >> 4;
  float         lSO[ 3 ];
  GSStoreImage  lStoreParam;
- unsigned long lDMA[ 4 ] __attribute__(   (  aligned( 16 )  )   );
+ u64           lDMA[ 4 ] __attribute__(   (  aligned( 16 )  )   );
 
  lSO[ 0 ] = ( float )IND_SIZE;
  lSO[ 1 ] = lDrawX;
@@ -247,10 +247,10 @@ static void _pgind_thread ( void* apArg ) {
  GS_XYZv (  &s_DrawPkt[ 2 ], ( float* )s_Data, 72, lSO, 0  );
 
  for ( i = 73, j = 109; i > 3; i -= 4, j -= 6 ) {
-  unsigned long lVal0 = s_DrawPkt[ i - 0 ];
-  unsigned long lVal1 = s_DrawPkt[ i - 1 ];
-  unsigned long lVal2 = s_DrawPkt[ i - 2 ];
-  unsigned long lVal3 = s_DrawPkt[ i - 3 ];
+  u64           lVal0 = s_DrawPkt[ i - 0 ];
+  u64           lVal1 = s_DrawPkt[ i - 1 ];
+  u64           lVal2 = s_DrawPkt[ i - 2 ];
+  u64           lVal3 = s_DrawPkt[ i - 3 ];
   s_DrawPkt[ j - 5 ] = GS_SET_PRIM( GS_PRIM_PRIM_TRISTRIP, 0, 0, 0, 1, 0, 0, 0, 0 );
   s_DrawPkt[ j - 4 ] = GS_SET_RGBAQ( 0xFF, 0x00, 0x00, 0x80, 0x00 );
   s_DrawPkt[ j - 3 ] = lVal0;
@@ -266,7 +266,7 @@ static void _pgind_thread ( void* apArg ) {
  while ( 1 ) {
 
   float          lRA   = s_lAlpha;
-  unsigned long* lpDMA = UNCACHED_SEG( &s_DrawPkt[ 3 ] );
+  u64*           lpDMA = UNCACHED_SEG( &s_DrawPkt[ 3 ] );
 
   SleepThread ();
 

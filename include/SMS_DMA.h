@@ -51,24 +51,24 @@ typedef union DMATag {
 
  struct {
 
-  unsigned long QWC  : 16 __attribute__ (  ( packed )  );
-  unsigned long m_Pad: 10 __attribute__ (  ( packed )  );
-  unsigned long PCE  :  2 __attribute__ (  ( packed )  );
-  unsigned long ID   :  3 __attribute__ (  ( packed )  );
-  unsigned long IRQ  :  1 __attribute__ (  ( packed )  );
-  unsigned long ADDR : 31 __attribute__ (  ( packed )  );
-  unsigned long SPR  :  1 __attribute__ (  ( packed )  );
+  u64           QWC  : 16 __attribute__ (  ( packed )  );
+  u64           m_Pad: 10 __attribute__ (  ( packed )  );
+  u64           PCE  :  2 __attribute__ (  ( packed )  );
+  u64           ID   :  3 __attribute__ (  ( packed )  );
+  u64           IRQ  :  1 __attribute__ (  ( packed )  );
+  u64           ADDR : 31 __attribute__ (  ( packed )  );
+  u64           SPR  :  1 __attribute__ (  ( packed )  );
 
  } __attribute__ (  ( packed )  );
 
- unsigned long m_Value __attribute__ (  ( packed )  );
+ u64           m_Value __attribute__ (  ( packed )  );
 
 } DMATag __attribute__(   (  aligned( 16 )  )   );
 
 #define DMA_TAG( QWC, PCE, ID, IRQ, ADDR, SPR ) (                                                \
- (  ( unsigned long )(                  QWC   ) <<  0  ) | (  ( unsigned long )( PCE ) << 26  ) | \
- (  ( unsigned long )(                  ID    ) << 28  ) | (  ( unsigned long )( IRQ ) << 31  ) | \
- (  ( unsigned long )(  ( unsigned int )ADDR  ) << 32  ) | (  ( unsigned long )( SPR ) << 63  )   \
+ (  ( u64           )(                  QWC   ) <<  0  ) | (  ( u64           )( PCE ) << 26  ) | \
+ (  ( u64           )(                  ID    ) << 28  ) | (  ( u64           )( IRQ ) << 31  ) | \
+ (  ( u64           )(  ( unsigned int )ADDR  ) << 32  ) | (  ( u64           )( SPR ) << 63  )   \
 )
 
 #define DMA_SET_CTRL( A, B, C, D, E, F )                                                        \

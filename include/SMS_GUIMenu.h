@@ -42,8 +42,8 @@ typedef struct GUIMenuItem {
  void ( *Enter   ) ( struct GUIMenu*       );
  void ( *Leave   ) ( struct GUIMenu*       );
 
- unsigned long* m_pIconLeftPack;
- unsigned long* m_pIconRightPack;
+ u64*           m_pIconLeftPack;
+ u64*           m_pIconRightPack;
 
 } GUIMenuItem;
 
@@ -60,7 +60,7 @@ typedef struct GUIMenuState {
  void*        m_pUserData;
 
  void ( *UserDataDestructor ) ( void*                     );
- int  ( *HandleEvent        ) ( GUIObject*, unsigned long );
+ int  ( *HandleEvent        ) ( GUIObject*, u64           );
 
 } GUIMenuState;
 
@@ -74,7 +74,7 @@ typedef struct GUIMenu {
  int           m_Y;
  int           m_Width;
  int           m_Height;
- unsigned long m_Color;
+ u64           m_Color;
  void*         m_pActiveObj;
  SMS_List*     m_pState;
  int           m_IGroup;

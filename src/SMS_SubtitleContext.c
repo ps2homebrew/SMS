@@ -39,12 +39,12 @@ static SubtitleContext s_SubCtx __attribute__(   (  section( ".bss" )  )   );
 
 static char*          ( *_strtok_func        ) ( char*, const char*                                   );
 static unsigned int   ( *_strlen_func        ) ( const char*                                          );
-static unsigned long* ( *_render_string_func ) ( const char*, int, int, int, unsigned long*, int, int );
+static u64*           ( *_render_string_func ) ( const char*, int, int, int, u64*          , int, int );
 static int            ( *_string_width_func  ) ( unsigned char*, int, int                             );
 
-static unsigned long* _sb_render_string (
+static u64*           _sb_render_string (
                        const char* apStr, int aLen,
-                       int aX, int anY, unsigned long* apDMA,
+                       int aX, int anY, u64*           apDMA,
                        int aDW, int aDH
                       ) {
 
@@ -127,9 +127,9 @@ static int _sb_string_width ( unsigned char* apStr, int aLen, int aDW ) {
 
 }  /* end _sb_string_width */
 
-static unsigned long* _mb_render_string (
+static u64*           _mb_render_string (
                        const char* apStr, int aLen,
-                       int aX, int anY, unsigned long* apDMA,
+                       int aX, int anY, u64*           apDMA,
                        int aDW, int aDH
                       ) {
 
@@ -385,7 +385,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio
 
  while ( 1 ) {
 
-  long    lTime [ 2 ];
+  s64     lTime [ 2 ];
   int     lFrame[ 2 ];
   int     i;
   int     lHour   = 0;
@@ -411,7 +411,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio
    if ( lFrame[ 0 ] == 0 ) continue;
    if ( lFrame[ 1 ] == 0 ) lFrame[ 1 ] = lFrame[ 0 ] + ( int )(  ( SUB_DEF_LINE_LEN * aFPS ) + 0.5F  );
 
-   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( long )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
+   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( s64  )(  ( float )lFrame[ i ] * lMSPerFrame + 0.5F  );
 
    lpPtr = strchr ( lLine, '}' ) + 1;
    lpPtr = strchr ( lpPtr, '}' ) + 1;
@@ -423,7 +423,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio
    if ( lFrame[ 0 ] == 0 ) continue;
    if ( lFrame[ 1 ] == 0 ) lFrame[ 1 ] = lFrame[ 0 ] + ( int )( SUB_DEF_LINE_LEN * 10.0F );
 
-   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( long )( lFrame[ i ] * 100  );
+   for ( i = 0; i < 2; ++i ) lTime[ i ] = ( s64  )( lFrame[ i ] * 100  );
 
    lpPtr = strchr ( lLine, ']' ) + 1;
    lpPtr = strchr ( lpPtr, ']' ) + 1;
@@ -432,8 +432,8 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio
 
   } else if (   (  sscanf ( lLine, "%d:%d:%d:", &lHour, &lMinute, &lSecond ) == 3  )   ) {
 
-   lTime[ 0 ] = ( long )(   ( lSecond + ( lMinute * 60 ) + ( lHour * 3600 )  ) * 1000   );
-   lTime[ 1 ] = lTime[ 0 ] + ( long )( SUB_DEF_LINE_LEN * 1000.0F );
+   lTime[ 0 ] = ( s64  )(   ( lSecond + ( lMinute * 60 ) + ( lHour * 3600 )  ) * 1000   );
+   lTime[ 1 ] = lTime[ 0 ] + ( s64  )( SUB_DEF_LINE_LEN * 1000.0F );
 
    lpPtr = strchr ( lLine, ':' ) + 1;
    lpPtr = strchr ( lpPtr, ':' ) + 1;
@@ -703,7 +703,7 @@ static void _produce_packets ( void ) {
 
  SubtitleContext* lpCtx = &s_SubCtx;
  int              i, lf16, lfTSub = !( g_Config.m_PlayerFlags & SMS_PF_OSUB ), lnAlloc = ( lpCtx -> m_nAlloc + 63 ) & ~63;
- unsigned long*   lpDMA0, *lpDMA1;
+ u64*             lpDMA0, *lpDMA1;
  SubNode*         lpNode = lpCtx -> m_pHead;
 
  if ( lfTSub ) {
@@ -711,7 +711,7 @@ static void _produce_packets ( void ) {
   lpCtx -> m_nPreAlloc += 16;
  }  /* end if */
 
- s_SubCtx.m_pDMA[ 0 ] = ( unsigned long* )memalign ( 64, lnAlloc << 1 );
+ s_SubCtx.m_pDMA[ 0 ] = ( u64*           )memalign ( 64, lnAlloc << 1 );
  s_SubCtx.m_pDMA[ 1 ] = s_SubCtx.m_pDMA[ 0 ] + ( lnAlloc >> 3 );
  s_SubCtx.m_pPackets  = ( SubtitlePacket* )calloc (  s_SubCtx.m_Cnt, sizeof ( SubtitlePacket )  );
 
@@ -777,7 +777,7 @@ static void _create_gs_packet ( SubtitlePacket* apPacket ) {
  int              lChrH   = 32 + lDH;
  unsigned int     lY      = g_GSCtx.m_Height - lChrH * ( lSize - 1 ) - g_Config.m_PlayerSubOffset;
  unsigned int     lQWC    = lpCtx -> m_nPreAlloc >> 4;
- unsigned long*   lpDMA;
+ u64*             lpDMA;
 
  s_SubCtx.m_DMAIdx ^= 1;
 
@@ -795,7 +795,7 @@ static void _create_gs_packet ( SubtitlePacket* apPacket ) {
  while ( lpNode ) {
 
   unsigned int   lX;
-  unsigned long* lpDMANext;
+  u64*           lpDMANext;
   int            lLen = strlen (  _STR( lpNode )  );
   unsigned int   lW   = _string_width_func (  _STR( lpNode ), lLen, lDW  );
 
@@ -867,7 +867,7 @@ static void _create_gs_packet ( SubtitlePacket* apPacket ) {
 
 }  /* end _create_gs_packet */
 
-static void _display ( long aPTS ) {
+static void _display ( s64  aPTS ) {
 
  SubtitlePacket* lpPacket = s_SubCtx.m_pPackets;
 
