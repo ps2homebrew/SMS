@@ -10,7 +10,6 @@
 */
 .set noreorder
 .set nomacro
-.set noat
 
 .globl MP123_CoreInit
 .globl MP123_IMDCT36
@@ -183,11 +182,13 @@ s_Offset   :    .space  4
 .text
 
 MP123_CoreInit:
+.set at
     lw      $a0, g_pSynthBuffer
     sw      $zero, s_Offset
     addu    $a1, $zero, $zero
     j       memset
     addiu   $a2, $zero, 4352
+.set noat
 
 MP123_IMDCT36:
     addiu   $sp, $sp, -16
@@ -541,7 +542,9 @@ MP123_Synth:
     addu    $t4, $zero, $ra
     andi    $v1, $v1, 0x000F
     beq     $zero, $zero, 2f
+.set at
     sw      $v1, s_Offset
+.set noat
 1:
     addiu   $t4, $ra, 2176
 2:

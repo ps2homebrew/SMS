@@ -78,6 +78,7 @@ s_CSCFlag : .space   8
 s_CSCParam: .space  12
 
 .text
+.set at
 
 _MPEG_Initialize:
     addiu   $sp, $sp, -48

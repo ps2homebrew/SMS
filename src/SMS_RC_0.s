@@ -9,7 +9,6 @@
 #
 #
 .set noreorder
-.set noat
 .set nomacro
 .set volatile
 
@@ -65,9 +64,9 @@ RC_ReadI:
 
 RC_DefTranslator:
 _rc_def_translator:
-    addiu   $at, $zero, 0x05DF
+    addiu   $t0, $zero, 0x05DF
     andi    $v1, $a0, 0x0FFF
-    beql    $v1, $at, 1f
+    beql    $v1, $t0, 1f
     srl     $a0, $a0, 12
     jr      $ra
     addu    $v0, $zero, $a0
