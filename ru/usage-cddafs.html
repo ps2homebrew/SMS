@@ -1,0 +1,232 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>3.3. Воспроизведение видеофайлов с CD-R на системе без модчипа</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="prev" href="usage-network.html" title="3.2. Воспроизведение файлов в локальной сети"><link rel="next" href="usage-dvdr.html" title="3.4. Воспроизведение файлов с DVD-R на PS2 без модчипа."><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"><link rel="subsection" href="usage-cddafs.html#usage-cddafs-short" title="3.3.1. Краткое описание необходимых действий"><link rel="subsection" href="usage-cddafs.html#usage-cddafs-detail" title="3.3.2. Детальное описание"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.3. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение видеофайлов с CD-R на системе без модчипа</span>
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="usage-network.html">Пред.</a> </td><th width="60%" align="center">Глава 3. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Как пользоваться программой </span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage-dvdr.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="usage-cddafs"></a>3.3. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение видеофайлов с CD-R на системе без модчипа</span>
+  </h2></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+      Для того, чтобы воспроизводить видеофайлы с CD, вы должны записать его
+      в специальном формате, так как PS2 не умеет читать диски в формате ISO.
+      Для создания такого <span class="quote">«<span class="quote">специального диска</span>»</span> воспользуйтесь
+      CDXplorer.exe.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-cddafs-short"></a>3.3.1. 
+      
+      
+      <span lang="ru" class="phrase">Краткое описание необходимых действий</span>
+    </h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p lang="ru">Скачайте CDXplorer.exe с SVN.</p></li><li class="listitem"><p lang="ru">Запустите его на компьютере с Windows.</p></li><li class="listitem"><p lang="ru">Перетащите нужные файлы из окна Проводника Windows в
+  программу (или просто воспользуйтесь кнопкой '+' в тулбаре).</p></li><li class="listitem"><p lang="ru">
+    Запишите образ диска - вы получите два файла: .cue и .bin
+  </p></li><li class="listitem"><p lang="ru">
+    Закройте программу.
+  </p></li><li class="listitem"><p lang="ru">
+    Запустите программу записи CD (я пользуюсь Nero).
+  </p></li><li class="listitem"><p lang="ru">
+    Откройте в ней созданный ранее файл .cue
+  </p></li><li class="listitem"><p lang="ru">
+    Если вы используете Nero 5, то выберите опцию Disk-at-once/96.
+  </p></li><li class="listitem"><p lang="ru">
+    Запишите диск.
+  </p></li></ul></div><p lang="ru">
+Успехов
+</p><p lang="ru">
+Евгений
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+      Если вы хотите записать avi файлы на DVD, прочтите раздел
+      <a class="xref" href="usage-dvdr.html" title="3.4. Воспроизведение файлов с DVD-R на PS2 без модчипа.">DVD-R</a>.
+    </p></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-cddafs-detail"></a>3.3.2. 
+      
+      
+      <span lang="ru" class="phrase">Детальное описание</span>
+    </h3></div></div></div><p lang="ru">
+      Немодифицированная PS2 не может загружать данные с нормального CDR из-за
+      встроенной защиты от копирования. Чтобы обойти это, разработчик SMS
+      придумал такую уловку, в результате которой, PS2 считает диск CD-R за
+      диск Аудио CD, а с такими дисками PS2 работать умеет. Основной принцип
+      уловки состоит в создании диска в так называемом CDDAFS формате,
+      который, воспринимается PS2 как аудиодиск. Диск содержит ваш файл .avi,
+      скрытый внутри аудио трека и SMS конвертирует его во время чтения.
+      Умно придумано, а?
+    </p><p lang="ru">
+      Разработчик написал небольшую программу (CDXplorer.exe) для создания
+      файлов .cue/.bin из ваших файлов .avi. После чего, вы можете записать их
+      на CD (если программа записи дисков, установленная на вашем компьютере,
+      умеет работать с  .cue/.bin).
+    </p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Важно</h3><p lang="ru">
+        Нельзя просто записать файлы .cue и .bin в формате данных (ISO). Такой
+        диск PS2 не прочтет. Для того, чтобы правильно записать диск вы должны
+        использовать программу, которая умеет работать с файлами cue/bin. На
+        момент написания данного руководства, таких программ есть несколько,
+        например Nero или cdrdao.
+      </p></div><p lang="ru">
+      Скачайте CDXplorer.exe с сайта
+      <a class="ulink" href="http://ps2dev.org/ps2/Projects/Softwares" target="_top">http://ps2dev.org/ps2/Projects/Softwares</a>. Вы можете найти
+      (<tt class="filename">CDXplorer.exe</tt> в архиве <tt class="filename">SMS.zip</tt>
+      на той странице.
+    </p><p lang="ru">
+      Запустите программу (установка не требуется):
+    </p><div class="figure"><a name="idm1271"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-cdxplorer01.png" alt="Screenshot of CDXplorer."></div></div><p class="title"><b>Рисунок 3.20. 
+        
+        
+        <span lang="ru" class="phrase">
+          Окно программы CDXplorer.
+        </span>
+      </b></p></div><br class="figure-break"><p lang="ru">
+      После того как CDXplorer был успешно запущен, перетащите один (или
+      несколько) AVI файлов в правую часть окна программы.
+    </p><div class="figure"><a name="idm1280"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-cdxplorer02.png" alt="Screenshot of CDXplorer."></div></div><p class="title"><b>Рисунок 3.21. 
+        
+        
+        <span lang="ru" class="phrase">
+          В окне CDXplorer-а показан файл
+          <tt class="filename">testvid.avi</tt> после перетаскивания из Проводника
+          Windows.
+        </span>
+      </b></p></div><br class="figure-break"><p lang="ru">
+      В меню выберите File-&gt;SaveAs, после чего наберите имя файла (например,
+      'test' - без кавычек, разумеется) а затем, нажмите
+      &lt;Ввод&gt;. В текущей папке будут созданы 2 файла
+      <tt class="filename">test.cue</tt> и <tt class="filename">test.bin</tt>.
+    </p><p lang="ru">
+      Теперь CDXplorer можно закрыть.
+    </p><p lang="ru">
+      Откройте программу записи дисков. Еще раз напоминаю, что программа эта
+      должна уметь работать с файлами CUE/BIN! Откройте файл .cue
+    </p><p lang="ru">
+      (Неподтверждено): Возможно, вам придется обязательно пользоваться
+      дисками CDR, а не CD-RW - но я в этом не уверен, просто мне не удалось
+      заставить работать систему с CD-RW.
+    </p><p lang="ru">
+
+    </p><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm1296"></a>3.3.2.1. 
+        
+        
+        <span lang="ru" class="phrase">Nero 5</span>
+      </h4></div></div></div><p lang="ru">
+        Если вы используете Nero 5, то выберите опцию
+        '<span class="bold"><strong>Disk-at-once/96</strong></span>', затем
+        запишите диск.
+      </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm1301"></a>3.3.2.2. 
+        
+        
+        <span lang="ru" class="phrase">Если у вас нет Nero 5</span>
+      </h4></div></div></div><p lang="ru">
+        Если у вас нет Nero 5 (у меня, например, ее тоже нет), то вы можете
+        воспользоваться другой (да еще и бесплатной) программой, которая
+        также позволяет записывать диски в режиме disc-at-once. Единственной
+        программой такого рода, которой я пользовался, является
+        <span class="application">cdrdao</span> (CDR Disc At Once)
+        которая запускается из командной строки. Эта программа существует в
+        вариантах для Windows и Linux. Если вы знаете о существовании
+        какой-либо другой программы такого рода, пожалуйста, напишите об этом
+        в форуме техподдержки SMS. Установка
+        <span class="application">cdrdao</span> производится следующим образом:
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td>
+                
+                
+                <p lang="ru">Linux (Fedora Core 4)</p>
+              </td><td>
+                
+                
+                <p lang="ru">
+                  <strong class="userinput"><code># yum install cdrdao</code></strong>
+                </p>
+              </td></tr><tr><td>
+                
+                
+                <p lang="ru">Windows</p>
+              </td><td>
+                
+                
+                <p lang="ru">
+                  Скачайте и установите
+                  <a class="ulink" href="http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip" target="_top">http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip</a>.
+                </p>
+              </td></tr></tbody></table></div><p lang="ru">
+        CD записывается с помощью следующей команды (обратите внимание на
+        опцию --force которая нужна для продолжения записи, несмотря на
+        предупреждение 'короче 4х секунд' (shorter than 4 seconds)):
+      </p><p lang="ru">
+        <strong class="userinput"><code>cdrdao write --speed MAX --force test.cue</code></strong>
+      </p><p lang="ru">
+        Если все было сделано правильно, то программа выдаст примерно такой
+        текст:
+      </p><pre class="screen">[dave@blue ~]$ cdrdao write --speed MAX --force test.cue
+Cdrdao version 1.1.9 - (C) Andreas Mueller &lt;andreas@daneb.de&gt;
+SCSI interface library - (C) Joerg Schilling
+Paranoia DAE library - (C) Monty
+Check http://cdrdao.sourceforge.net/drives.html#dt for current driver tables.
+WARNING: Track 1: Length is shorter than 4 seconds.
+Error trying to open /dev/cdrecorder exclusively ... retrying in 1 second.
+Using libscg version 'schily-0.8'
+/dev/cdrecorder: PHILIPS CDRW2412A Rev: P1.4
+Using driver: Generic SCSI-3/MMC - Version 2.0 (options 0x0000)
+Burning entire 74 mins disc.
+Starting write at speed 24...
+Pausing 10 seconds - hit CTRL-C to abort.
+Process can be aborted with QUIT signal (usually CTRL-\).
+Turning BURN-Proof on
+Executing power calibration...
+Power calibration successful.
+Writing track 01 (mode AUDIO/AUDIO )...
+Writing track 02 (mode AUDIO/AUDIO )...
+Wrote 110 of 110 MB (Buffers 100% 98%).
+Wrote 49178 blocks. Buffer fill min 93%/max 100%.
+Flushing cache...
+Writing finished successfully.
+[dave@blue ~]$</pre><p lang="ru">
+        Ну, вот и все. Теперь у вас должен быть диск с AVI файлом, пригодным
+        для использования с SMS. Этот диск не будет работать на вашем
+        компьютере, так что даже не пытайтесь. Вернее, работать-то он будет,
+        но компьютер постарается воспроизвести его как аудиодиск, так что
+        вы услышите различные шумы в колонках. Запустите SMS, после чего
+        вставьте диск в трей и вы должны увидеть примерно следующее:
+      </p><div class="figure"><a name="idm1328"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cdloading.png" alt="Screenshot showing display while disc is loading."></div></div><p class="title"><b>Рисунок 3.22. 
+          
+          
+          <span lang="ru" class="phrase">
+            SMS читает диск CDDAFS
+          </span>
+        </b></p></div><br class="figure-break"><div class="figure"><a name="idm1336"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cdbrowsing.png" alt="CDDAFS CD loaded"></div></div><p class="title"><b>Рисунок 3.23. 
+          
+          
+          <span lang="ru" class="phrase">
+            Диск успешно распознан и SMS показывает список AVI файлов на диске.
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Вы можете теперь выбрать файл, который вы скопировали на диск. Нажмите
+        Х для начала воспроизведения.
+      </p><p lang="ru">
+        Если файл в списке не появился, а PS2 продолжает крутить диск, или
+        иконка диска в SMS стала красной, то диск не может быть прочитан.
+        Возможно, он был плохо записан, так что попытайтесь создать диск
+        еще раз. Проверьте, что вы все делаете правильно и, возможно,
+        попробуйте снизить скорость записи. Если вы пользовались CD-RW,
+        то попробуйте записать файл CD-R.
+      </p><div class="figure"><a name="idm1346"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cderror.png" alt="CDDAFS CD loaded"></div></div><p class="title"><b>Рисунок 3.24. 
+          
+          
+          <span lang="ru" class="phrase">
+            Так выглядит экран SMS при ошибке чтения диска.
+          </span>
+        </b></p></div><br class="figure-break"></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="usage-network.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="usage-dvdr.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">3.2. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение файлов в локальной сети</span>
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 3.4. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение файлов с DVD-R на PS2 без модчипа.</span>
+  </td></tr></table></div></body></html>

@@ -1,0 +1,79 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>A.6. SMS не получает доступ к моей сети, основанной на DHCP. SMS отказывается сконфигурировать IP адрес. Что не так?</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="prev" href="faq-independence.html" title="A.5. Что такое «Independence Exploit» зачем мне это нужно?"><link rel="next" href="faq-opticalout.html" title="A.7. Будет ли работать оптический выход (S/PDIF), имеющийся в PS2, в SMS для вывода АС3?"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">A.6. 
+    
+    
+    <span lang="ru" class="phrase">
+      <span class="emphasis"><em>SMS не получает доступ к моей сети, основанной на DHCP. SMS
+      отказывается сконфигурировать IP адрес. Что не так?
+      </em></span>
+    </span>
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="faq-independence.html">Пред.</a> </td><th width="60%" align="center">Приложение A. 
+      
+      
+      <span lang="ru" class="phrase">ЧаВо - Часто Задаваемые Вопросы</span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="faq-opticalout.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="faq-dhcp"></a>A.6. 
+    
+    
+    <span lang="ru" class="phrase">
+      <span class="emphasis"><em>SMS не получает доступ к моей сети, основанной на DHCP. SMS
+      отказывается сконфигурировать IP адрес. Что не так?
+      </em></span>
+    </span>
+  </h2></div></div></div><p lang="ru">
+    SMS не будет автоматически запрашивать адрес от DHCP сервера (Dynamic Host
+    Configuration Protocol - обычно этот сервер работает в рутерах, точках
+    беспроводного доступа и т.д.).  Для SMS требуется статичный (или заданный
+    вручную) IP адрес, сохраненный в  <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>,
+    (см. <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Настройки сети">Раздел 2.6.1, «
+      
+      
+      <span lang="ru" class="phrase">
+        Настройки сети
+      </span>
+    »</a>).
+  </p><p lang="ru">
+    Это, разумеется, не означает, что вам теперь необходимо отключить DHCP
+    во всей вашей сети. Все, что потребуется, это ограничить диапазон
+    адресов, которые DHCP будет раздавать клиентам. Например, в Linksys
+    WRT54G можно ограничить DHCP адресами от 192.168.1.100 до 192.168.1.254
+    В таком случае, вы вполне можете задать SMS адрес, скажем, 192.168.1.22
+    без какого-либо влияния на остальные компоненты вашей сети (разумеется,
+    вы должны проверить, что этот адрес уже не занят каким-либо иным
+    сетевым устройством).
+  </p><p lang="ru">
+    Возможно, вам придется скорректировать настройки DHCP если диапазон
+    адресов еще не сконфигурирован.
+  </p><p lang="ru">
+    Разумеется, как было сказано выше, вам необходимо убедиться в том, что
+    выбранный вами для SMS адрес уже не используется каким-либо другим
+    устройством в вашей сети. Кроме того, надо помнить о том, что PS2 должна
+    находиться в той же подсетке, что и все остальные устройства (например,
+    первые три сегмента адреса сети должны быть такими же, как и у других
+    сетевых устройств в вашей сети)
+  </p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Подсказка</h3><p lang="ru">
+      Если вы не уверены, что в вашей сети вообще есть DHCP сервер, откройте
+      окно ДОС и напечатайте <strong class="userinput"><code>ipconfig /all</code></strong>.  Если вы
+      увидите, что в списке есть строка DHCP server и в ней записан IP адрес,
+      это означает, что у вас в сети <span class="bold"><strong>есть</strong></span>
+      DHCP рабочий сервер. Как правило, вы можете сконфигурировать точку
+      доступа, просто напечатав ее IP адрес в веб-браузере.
+    </p></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="faq-independence.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="faq.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="faq-opticalout.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">A.5. 
+    
+    
+    <span lang="ru" class="phrase">
+      <span class="emphasis"><em>Что такое <span class="quote">«<span class="quote">Independence Exploit</span>»</span> зачем мне это
+      нужно?</em></span>
+    </span>
+
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> A.7. 
+    
+    
+    <span lang="ru" class="phrase">
+      <span class="emphasis"><em>Будет ли работать оптический выход (S/PDIF), имеющийся в PS2,
+      в SMS для вывода АС3?</em></span>
+    </span>
+  </td></tr></table></div></body></html>

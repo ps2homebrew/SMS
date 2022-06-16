@@ -1,0 +1,373 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.3.  Copying SMS to your memory card (Independence/Modchip)</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Chapter 2.  Installation"><link rel="prev" href="sms-installation-requirements.html" title="2.2.  Requirements"><link rel="next" href="installation-bootablecdr.html" title="2.4.  Using a bootable SMS CDR (Modchip only)"><link rel="chapter" href="introduction.html" title="Chapter 1.  Introduction"><link rel="chapter" href="installation.html" title="Chapter 2.  Installation"><link rel="chapter" href="usage.html" title="Chapter 3.  Usage"><link rel="appendix" href="faq.html" title="Appendix A.  Frequently Asked Questions"><link rel="appendix" href="apb.html" title="Appendix B.  Bits and Pieces"><link rel="appendix" href="legal.html" title="Appendix C.  GNU Free Documentation License"><link rel="subsection" href="installation-copytomemcard.html#idm94" title="2.3.1.  Copying SMS to your memory card using FTP"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. 
+    <span lang="en" class="phrase">Copying SMS to your memory card (Independence/Modchip)</span>
+    
+    
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sms-installation-requirements.html">Prev</a> </td><th width="60%" align="center">Chapter 2. 
+      <span lang="en" class="phrase">Installation</span>
+      
+      
+      
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="installation-bootablecdr.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-copytomemcard"></a>2.3. 
+    <span lang="en" class="phrase">Copying SMS to your memory card (Independence/Modchip)</span>
+    
+    
+  </h2></div></div></div><p lang="en">
+    First download a copy of the latest <tt class="filename">SMS.ELF</tt>. The
+    latest release is  available at
+    <a class="ulink" href="http://home.casema.nl/eugene_plotnikov/" target="_top">http://home.casema.nl/eugene_plotnikov/</a>
+    also, some older versions are held at
+    <a class="ulink" href="http://ps2dev.org/ps2/Projects" target="_top">http://ps2dev.org/ps2/Projects</a>. Developers can download the
+    source from svn://svn.ps2dev.org.
+  </p><p lang="en">
+    Now copy this file to your memory card (memory card 0). The recommended
+    (and probably easiest) way to copy the ELF file to your PS2 is using FTP.
+  </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm94"></a>2.3.1. 
+    <span lang="en" class="phrase">Copying SMS to your memory card using FTP</span>
+    
+    
+  </h3></div></div></div><p lang="en">
+    You'll need an
+    <span class="bold"><strong>FTP server</strong></span> running on your PS2, and an
+    <span class="bold"><strong>FTP client</strong></span> running on your PC, with either
+    a  crossover cable between the two, or patch cables linking them both to a
+    network switch.
+  </p><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="installation-copytomemcard-ftp-ulaunchelf"></a>2.3.1.1. 
+    <span lang="en" class="phrase">Starting the FTP Server (uLaunchELF)</span>
+    
+    
+  </h4></div></div></div><p lang="en">
+    The recommended (and again, probably easiest) PS2 FTP server to use is
+    the built in FTP server of 'unofficial' LaunchELF.
+    You can get the <tt class="filename">BOOT.ELF</tt> for uLaunchELF from here:
+    <a class="ulink" href="http://www.ps2-scene.org/forums/showthread.php?t=37242" target="_top">http://www.ps2-scene.org/forums/showthread.php?t=37242</a>.
+  </p><p lang="en">
+    Assuming you've already copied the <tt class="filename">BOOT.ELF</tt> onto
+    your memory card using one of the exploit installation techniques, it
+    is very easy to start the FTP server.
+  </p><p lang="en">
+    Turn on your PS2 and activate your exploit/modchip; first time you
+    use uLaunchELF, it will look something like this:
+  </p><div class="figure"><a name="idm109"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf01.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.2. 
+      <span lang="en" class="phrase">
+         uLaunchELF startup screen.
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    Press <span class="bold"><strong>SELECT</strong></span>, go to
+    <span class="bold"><strong>Network Settings</strong></span>, then press
+    <span class="bold"><strong>O</strong></span>
+  </p><div class="figure"><a name="idm121"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf02.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.3. 
+      <span lang="en" class="phrase">
+         uLaunchELF Network Settings - step 1
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    The next screen allows you to change the network settings using your
+    controller pad.  The settings are stored in the file
+    <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>.
+  </p><p lang="en">
+    You can change the IP address of your PS2 from the default
+    192.168.0.10 to anything you want, but it must be on the same subnet
+    as your PC.  For more information on network settings, please see the
+    <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1.  Network Configuration">Section 2.6.1, “
+      <span lang="en" class="phrase">
+        Network Configuration
+      </span>
+      
+      
+    ”</a> section.
+    You can edit the values using the D-pad.
+  </p><div class="figure"><a name="idm133"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf03.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.4. 
+      <span lang="en" class="phrase">
+         uLaunchELF Network Settings - step 2
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    Once you are happy with the settings, select
+    <span class="bold"><strong>SAVE</strong></span> and press
+    <span class="bold"><strong>O</strong></span>:
+  </p><div class="figure"><a name="idm144"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf04.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.5. 
+      <span lang="en" class="phrase">
+         uLaunchELF Network Settings - step 3
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    On the main screen select <span class="bold"><strong>OK</strong></span> and press
+    <span class="bold"><strong>O</strong></span>:
+  </p><div class="figure"><a name="idm155"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf05.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.6. 
+      <span lang="en" class="phrase">
+         uLaunchELF Network Settings - step 4
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    You should see a message saying that the configuration has been saved:
+  </p><div class="figure"><a name="idm164"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf06.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.7. 
+      <span lang="en" class="phrase">
+         uLaunchELF Network Settings - step 5
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    Now you need to assign a button to launch the FTP server.  Press
+    <span class="bold"><strong>SELECT</strong></span>, then move to any entry on the
+    list (here, we've used 'START').  Press
+    <span class="bold"><strong>O</strong></span>, and navigate to
+    <span class="bold"><strong>MISC</strong></span>, then
+    <span class="bold"><strong>PS2Net</strong></span>.
+  </p><div class="figure"><a name="idm177"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf07.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.8. 
+      <span lang="en" class="phrase">
+         uLaunchELF: Assigning a Menu Button - step 1
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm185"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf08.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.9. 
+      <span lang="en" class="phrase">
+         uLaunchELF: Assigning a Menu Button - step 2
+      </span>
+      
+      
+
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm193"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf09.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.10. 
+      <span lang="en" class="phrase">
+         uLaunchELF: Assigning a Menu Button - step 3
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+      <span class="application">PS2Net</span> is the name of the FTP server program
+      that comes built in to uLaunchELF's
+      <tt class="filename">BOOT.ELF</tt> file.
+    </p></div><p lang="en">
+    Once you've pressed
+    <span class="bold"><strong>O</strong></span> to confirm, then
+    <span class="bold"><strong>OK</strong></span>, and
+    <span class="bold"><strong>O</strong></span> again, you'll see the following
+    screen:
+  </p><div class="figure"><a name="idm209"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf10.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.11. 
+      <span lang="en" class="phrase">
+         uLaunchELF: Assigning a Menu Button - step 4
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    You'll now see the above screen every time <tt class="filename">BOOT.ELF</tt>
+    starts up.
+  </p><p lang="en">
+    This means that if you press <span class="bold"><strong>START</strong></span>,
+    PS2Net will be launched, and if you press
+    <span class="bold"><strong>SELECT</strong></span>, you will go to the config
+    screen.
+  </p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Tip</h3><p lang="en">
+      You can assign many buttons on this screen.  You will probably
+      want to later assign SMS to one of the buttons.  If you assign anything
+      to <span class="bold"><strong>DEFAULT</strong></span>, it will launch
+      automatically after a pre-set delay.
+    </p></div><p lang="en">
+    Now press
+    <span class="bold"><strong>START</strong></span> to launch PS2Net.  The following
+    screen is shown while your FTP server is running:
+  </p><div class="figure"><a name="idm227"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf11.png" alt="uLaunchELF"></div></div><p class="title"><b>Figure 2.12. 
+      <span lang="en" class="phrase">
+         uLaunchELF: Starting the FTP server
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    You can check that the connection between the PC and PS2 is working by
+    starting a command prompt on the PC  (start-&gt;run, 'cmd' &lt;enter&gt;).
+    Then type <strong class="userinput"><code>ping 192.168.0.10</code></strong> (or whatever the IP
+    address of your PS2 is). If it's working, you'll see
+    <code class="computeroutput">reply from ...</code> shown on the screen.
+  </p><p lang="en">
+    Now that you've got your FTP server running, skip ahead to
+    <a class="xref" href="installation-copytomemcard.html#installation-copytomemcard-ftp-ftpclient">Section 2.3.1.3, “
+    <span lang="en" class="phrase">
+      Starting the FTP Client
+    </span>
+    
+    
+  ”</a> for how to upload
+    SMS to your memcard.
+  </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="installation-detail-copyftp-execftps"></a>2.3.1.2. 
+    <span lang="en" class="phrase">Starting the FTP Server (ExecFTPs)</span>
+    
+    
+  </h4></div></div></div><p lang="en">
+    If you are <span class="emphasis"><em>not</em></span>
+    <a class="link" href="installation-copytomemcard.html#installation-copytomemcard-ftp-ulaunchelf" title="2.3.1.1.  Starting the FTP Server (uLaunchELF)">using
+    uLaunchELF</a>, you'll need to load a seperate FTP server
+    application onto your memory card such as
+    <tt class="filename">EXECFTPS.ELF</tt>.  Activate your exploit, and boot
+    to your boot browser (e.g. LaunchELF).  You can either configure one of
+    the buttons to start <tt class="filename">EXECFTPS.ELF</tt> directly, or
+    navigate to it using the filebrowser, then run it from there.
+  </p><div class="figure"><a name="idm248"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps01.png" alt="LanuchELF browser"></div></div><p class="title"><b>Figure 2.13. 
+      <span lang="en" class="phrase">
+         Start ExecFTPs by navigating to the ELF using LaunchELF.
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm256"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps02.png" alt="LaunchELF main screen"></div></div><p class="title"><b>Figure 2.14. 
+      <span lang="en" class="phrase">
+         Starting ExecFTPs using a configured button (the configuration above
+         shows that by pressing start on controller 1, ExecFTPs will be started).
+      </span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    Either way, once you've got the FTP server running, you should see your
+    TV screen show something like this:
+  </p><div class="figure"><a name="installation-execftps03"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps03.png" alt="ExecFTPS running with defaults."></div></div><p class="title"><b>Figure 2.15. 
+       <span lang="en" class="phrase">
+         Screenshot of ExecFTPs running using default IP configuration.
+      </span>
+      
+       
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm273"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps04.png" alt="ExecFTPs running with custom configuration."></div></div><p class="title"><b>Figure 2.16. 
+       <span lang="en" class="phrase">
+         Screenshot of ExecFTPs running using custom IP configuration.
+      </span>
+      
+       
+
+    </b></p></div><br class="figure-break"><p lang="en">
+    You can check that the connection between the PC and PS2 is working by
+    starting a command prompt <span class="bold"><strong>on the PC</strong></span>
+    (start-&gt;run, 'cmd' &lt;enter&gt;).  Then type
+    <strong class="userinput"><code>ping 192.168.0.10</code></strong> (or whatever the IP address of your
+    PS2 is). If it's working, you'll see
+    <code class="computeroutput">reply from ...</code> shown on the screen.
+  </p><p lang="en">
+    The configuration settings for <span class="application">ExecFTPs</span> are
+    stored in <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>, in the
+    form:
+  </p><pre class="screen">
+    &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
+  </pre><p lang="en">
+    If you do not have a
+    <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt> file,
+    <span class="application">ExecFTPs</span> will automatically use the following
+    defaults:
+  </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+      <p lang="en">PS2 Settings</p>
+      
+      
+    </td><td>
+      <p lang="en">PS2 IP Address:</p>
+      
+      
+    </td><td>192.168.0.10</td></tr><tr><td>
+      <p lang="en">Subnet Mask:</p>
+      
+      
+    </td><td>255.255.255.0</td></tr><tr><td>
+      <p lang="en">Default Gateway:</p>
+      
+      
+    </td><td>192.168.0.1</td></tr><tr><td>
+      <p lang="en">mc0:/BxDATA-SYSTEM/CONFIG.DAT</p>
+      
+      
+    </td><td> file not created</td></tr></tbody></table></div><p lang="en">
+    If you want to use a custom IP configuration, you will need to modify
+    the file <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.  However,
+    if you intend to use FTP to copy a custom
+    <tt class="filename">CONFIG.DAT</tt> file to your PS2, then you'll need to
+    get it working with the defaults first.  For more information on network
+    settings, please see
+    <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1.  Network Configuration">Section 2.6.1, “
+      <span lang="en" class="phrase">
+        Network Configuration
+      </span>
+      
+      
+    ”</a>.
+  </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+      ExecFTPs stores its settings in
+      <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.  This is different
+      from the file <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt> where
+      SMS and uLaunchELF/PS2Net store their settings.
+    </p></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm321"></a>2.3.1.3. 
+    <span lang="en" class="phrase">
+      Starting the FTP Client
+    </span>
+    
+    
+  </h4></div></div></div><p lang="en">
+    Once you've got the FTP server working, and successfully PINGed your PS2,
+    start your FTP client. Lots of people seem to be recommending FlashFXP
+    (<a class="ulink" href="http://www.inicom.net/pages/en.ffxp-download.php" target="_top">http://www.inicom.net/pages/en.ffxp-download.php</a>), but I
+    was happier with the free (and non-nagware) GPL FileZilla
+    (<a class="ulink" href="http://sourceforge.net/projects/filezilla" target="_top">http://sourceforge.net/projects/filezilla</a>). Not all FTP
+    clients will work. For example I couldn't get FTPexplorer to work for
+    some reason.
+  </p><p lang="en">
+    Load the FTP client on your PC (example is FileZilla), then type in the
+    IP address of your PS2 in the 'Host:' box. Some people have also
+    recommended that you need to enable Passive (or PASV) mode. I've found
+    that this isn't necessary, but by all means go ahead if you like, the
+    setting is accessed by clicking the 'Advanced' button on the form below.
+  </p><div class="figure"><a name="idm328"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-filezilla01.png" alt="FileZilla configuration dialog."></div></div><p class="title"><b>Figure 2.17. 
+       <span lang="en" class="phrase">
+         Setting up the IP to connect to (note that the default IP address
+         for the PS2 is 192.168.0.10).
+      </span>
+      
+       
+
+    </b></p></div><br class="figure-break"><p lang="en">
+    When you are ready, click 'Connect', and after a blur of messages at
+    the top of the screen, you should see something like the following page:
+  </p><div class="figure"><a name="idm337"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-filezilla02.png" alt="FileZilla FTP client while connected to PS2."></div></div><p class="title"><b>Figure 2.18. 
+       <span lang="en" class="phrase">
+         FileZilla FTP client while connected to PS2.
+      </span>
+      
+       
+    </b></p></div><br class="figure-break"><p lang="en">
+    In the 'Remote Site' section you should see 'hdd, mc, pfs'. These are the
+    storage devices on your PS2. Hdd is the hard disc drive, and mc is the
+    memory card. (if you don't see anything, try pressing F5 to refresh).
+    Double click mc, then '0'. The two memory card slots are accessed via
+    <tt class="filename">/mc/0</tt> and <tt class="filename">/mc/1</tt> (slots 1 and 2
+    on the Playstation2).
+  </p><p lang="en">
+    I'd recommend putting your <tt class="filename">SMS.ELF</tt> in a folder called
+    'SMS', as the settings will also be stored in
+    <tt class="filename">/mc/0/SMS</tt>, but you can put it where you wish.
+    Right click to create a new folder if necessary.
+  </p><p lang="en">
+    Navigate to your downloaded <tt class="filename">SMS.ELF</tt> in the local
+    site browser, then drag the file from the left window to the right window.
+    You should see a progress bar as the transfer completes:
+  </p><div class="figure"><a name="idm353"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-filezilla03.png" alt="FileZilla FTP client: Transfer of file in progress."></div></div><p class="title"><b>Figure 2.19. 
+       <span lang="en" class="phrase">
+         FileZilla FTP client: Transfer of file in progress.
+      </span>
+      
+       
+    </b></p></div><br class="figure-break"><p lang="en">
+    Congratulations, you've now copied the SMS executable to your memory
+    card. Close down your FTP client then restart your PS2.
+  </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sms-installation-requirements.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="installation-bootablecdr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.2. 
+    <span lang="en" class="phrase">Requirements</span>
+    
+    
+    
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 2.4. 
+    <span lang="en" class="phrase">Using a bootable SMS CDR (Modchip only)</span>
+    
+    
+  </td></tr></table></div></body></html>

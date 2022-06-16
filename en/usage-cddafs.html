@@ -1,0 +1,229 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>3.3.  Playing video files from a CD-R (without a modchip)</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="usage.html" title="Chapter 3.  Usage"><link rel="prev" href="usage-network.html" title="3.2.  Playing Files Over A Local Area Network"><link rel="next" href="usage-dvdr.html" title="3.4.  Playing files from a DVD-R (without a modchip)"><link rel="chapter" href="introduction.html" title="Chapter 1.  Introduction"><link rel="chapter" href="installation.html" title="Chapter 2.  Installation"><link rel="chapter" href="usage.html" title="Chapter 3.  Usage"><link rel="appendix" href="faq.html" title="Appendix A.  Frequently Asked Questions"><link rel="appendix" href="apb.html" title="Appendix B.  Bits and Pieces"><link rel="appendix" href="legal.html" title="Appendix C.  GNU Free Documentation License"><link rel="subsection" href="usage-cddafs.html#usage-cddafs-short" title="3.3.1.  Instructions in Short"><link rel="subsection" href="usage-cddafs.html#usage-cddafs-detail" title="3.3.2.  Instructions in detail"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.3. 
+    <span lang="en" class="phrase">Playing video files from a CD-R (without a modchip)</span>
+    
+    
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="usage-network.html">Prev</a> </td><th width="60%" align="center">Chapter 3. 
+      <span lang="en" class="phrase">Usage</span>
+      
+      
+      
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage-dvdr.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="usage-cddafs"></a>3.3. 
+    <span lang="en" class="phrase">Playing video files from a CD-R (without a modchip)</span>
+    
+    
+  </h2></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+      To play video files from a CD, you need to burn the CD in a special
+      format. The PS2 cannot read the data from ISO format CDRs. The
+      <span class="quote">“<span class="quote">special format</span>”</span> is created using CDXplorer.exe.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-cddafs-short"></a>3.3.1. 
+      <span lang="en" class="phrase">Instructions in Short</span>
+      
+      
+    </h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p lang="en">Download CDXplorer.exe from SVN;</p></li><li class="listitem"><p lang="en">Launch it on Windows;</p></li><li class="listitem"><p lang="en">Drag/drop the files you want from Windows explorer to the
+  application (or use '+' toolbar button);</p></li><li class="listitem"><p lang="en">
+    Save your compilation - you'll get cue/bin file pair;
+  </p></li><li class="listitem"><p lang="en">
+    Close the application;
+  </p></li><li class="listitem"><p lang="en">
+    Launch CD burning application (I use Nero);
+  </p></li><li class="listitem"><p lang="en">
+    Open generated cue file;
+  </p></li><li class="listitem"><p lang="en">
+    If you use Nero 5 then select Disk-at-once/96 option;
+  </p></li><li class="listitem"><p lang="en">
+    Burn it;
+  </p></li></ul></div><p lang="en">
+Good luck
+</p><p lang="en">
+Eugene
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+      If you want to burn avi files to a DVDR, please refer to the
+      <a class="xref" href="usage-dvdr.html" title="3.4.  Playing files from a DVD-R (without a modchip)">DVD-R</a> section.
+    </p></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-cddafs-detail"></a>3.3.2. 
+      <span lang="en" class="phrase">Instructions in detail</span>
+      
+      
+    </h3></div></div></div><p lang="en">
+      The unmodified PS2 cannot load data from a normal CDR. This is due to
+      built in copy protection. To get around this, the developer of SMS
+      designed a clever trick that fools the PS2 into thinking that the CD-R
+      is an <span class="bold"><strong>audio CD</strong></span>.
+      The PS2 is allowed to load a CDR if it's an audio CD.
+      The basic principle relies on creating a disc in the so called CDDAFS
+      format, which is essentially a disc that looks enough like an audio CD
+      for the PS2 to accept it. The disc contains your .avi file data hidden
+      inside audio tracks, and SMS converts these as it reads them.
+      Clever huh?
+    </p><p lang="en">
+      The developer has written a utility (CDXplorer.exe) to create the
+      .cue/.bin files from your .avi files, ready to burn to CDR. Then,
+      provided your CD burning software knows how to read .cue/.bin files,
+      you can burn them to CD.
+    </p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p lang="en">
+        You must not simply write the .cue and .bin files to an ISO (data) CD
+        format. This will not work. You must use a CD burning application
+        which understands .cue and .bin files. The only two known at present
+        are Nero 5 and, cdrdao.
+      </p></div><p lang="en">
+      Download CDXplorer.exe from
+      <a class="ulink" href="http://ps2dev.org/ps2/Projects/Softwares" target="_top">http://ps2dev.org/ps2/Projects/Softwares</a>
+      (<tt class="filename">CDXplorer.exe</tt> can be found in
+      <tt class="filename">SMS.zip</tt> file on the page).
+    </p><p lang="en">
+      Run the application by double clicking on it (no installation is
+      necessary).
+    </p><div class="figure"><a name="idm1279"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-cdxplorer01.png" alt="Screenshot of CDXplorer."></div></div><p class="title"><b>Figure 3.20. 
+        <span lang="en" class="phrase">
+          Screenshot of CDXplorer.
+        </span>
+        
+        
+      </b></p></div><br class="figure-break"><p lang="en">
+      Once CDXplorer is running, drag and drop 1 or more AVI files into
+      the right hand window.
+    </p><div class="figure"><a name="idm1288"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-cdxplorer02.png" alt="Screenshot of CDXplorer."></div></div><p class="title"><b>Figure 3.21. 
+        <span lang="en" class="phrase">
+          Screenshot of CDXplorer showing avi file
+          <tt class="filename">testvid.avi</tt>
+          after dragging and dropping from Windows Explorer.
+        </span>
+        
+        
+      </b></p></div><br class="figure-break"><p lang="en">
+      Click file-&gt;SaveAs, then type in a name (e.g. 'test') then press
+      &lt;enter&gt;. This will automatically save two files
+      <tt class="filename">test.cue</tt> and <tt class="filename">test.bin</tt>
+      in the current folder.
+    </p><p lang="en">
+      Now you can close down CDXplorer.
+    </p><p lang="en">
+      Next open up your CD burning application. This must be a CD burning
+      application that allows you to load .cue files. Open the cue file.
+    </p><p lang="en">
+      (unconfirmed): It may be necessary to use a CDR (rather than a
+      CD-RW) - I only suspect this because i've not yet managed to get a
+      CD-RW to work.
+    </p><p lang="en">
+
+    </p><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm1304"></a>3.3.2.1. 
+        <span lang="en" class="phrase">Nero 5</span>
+        
+        
+      </h4></div></div></div><p lang="en">
+        If you are using Nero 5, select
+        '<span class="bold"><strong>Disk-at-once/96</strong></span>',
+        then burn to a CD-R.
+      </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm1309"></a>3.3.2.2. 
+        <span lang="en" class="phrase">If You've Not Got Nero 5</span>
+        
+        
+      </h4></div></div></div><p lang="en">
+        If you've not got Nero 5 (I haven't got it), then it is possible to
+        use another (free) application to burn CDs in disc-at-once mode. The
+        only program I've used successfully is
+        <span class="application">cdrdao</span> (CDR Disc At Once), which is a
+        command line cd burning application. It is available for linux and
+        windows. If you find any other applications that are easier to use,
+        please post the details on the SMS support forum. Installation of
+        <span class="application">cdrdao</span> is as follows:
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td>
+                <p lang="en">Linux (Fedora Core 4)</p>
+                
+                
+              </td><td>
+                <p lang="en">
+                  <strong class="userinput"><code># yum install cdrdao</code></strong>
+                </p>
+                
+                
+              </td></tr><tr><td>
+                <p lang="en">Windows</p>
+                
+                
+              </td><td>
+                <p lang="en">
+                  Download and install
+                  <a class="ulink" href="http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip" target="_top">http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip</a>.
+                </p>
+                
+                
+              </td></tr></tbody></table></div><p lang="en">
+        The CD is written with the following command: (Note the -–force
+        option which is is needed to make the burn continue despite the
+        'shorter than 4 seconds' warning.)
+      </p><p lang="en">
+        <strong class="userinput"><code>cdrdao write --speed MAX --force test.cue</code></strong>
+      </p><p lang="en">
+        The output will hopefully look something like this:
+      </p><pre class="screen">[dave@blue ~]$ cdrdao write --speed MAX --force test.cue
+Cdrdao version 1.1.9 - (C) Andreas Mueller &lt;andreas@daneb.de&gt;
+SCSI interface library - (C) Joerg Schilling
+Paranoia DAE library - (C) Monty
+Check http://cdrdao.sourceforge.net/drives.html#dt for current driver tables.
+WARNING: Track 1: Length is shorter than 4 seconds.
+Error trying to open /dev/cdrecorder exclusively ... retrying in 1 second.
+Using libscg version 'schily-0.8'
+/dev/cdrecorder: PHILIPS CDRW2412A Rev: P1.4
+Using driver: Generic SCSI-3/MMC - Version 2.0 (options 0x0000)
+Burning entire 74 mins disc.
+Starting write at speed 24...
+Pausing 10 seconds - hit CTRL-C to abort.
+Process can be aborted with QUIT signal (usually CTRL-\).
+Turning BURN-Proof on
+Executing power calibration...
+Power calibration successful.
+Writing track 01 (mode AUDIO/AUDIO )...
+Writing track 02 (mode AUDIO/AUDIO )...
+Wrote 110 of 110 MB (Buffers 100% 98%).
+Wrote 49178 blocks. Buffer fill min 93%/max 100%.
+Flushing cache...
+Writing finished successfully.
+[dave@blue ~]$</pre><p lang="en">
+        And there you have it. You should now have a CD with the SMS
+        compatible AVI file on it. This CD won't work in your PC. In fact,
+        if you put it in, it will probably try to play it as an audio file
+        and you'll just hear 'noise'.  Start up SMS, then put the disc in
+        your PS2, and you should see the following:
+      </p><div class="figure"><a name="idm1336"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cdloading.png" alt="Screenshot showing display while disc is loading."></div></div><p class="title"><b>Figure 3.22. 
+          <span lang="en" class="phrase">
+            Screenshot showing display while disc is loading.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"><div class="figure"><a name="idm1344"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cdbrowsing.png" alt="CDDAFS CD loaded"></div></div><p class="title"><b>Figure 3.23. 
+          <span lang="en" class="phrase">
+            Screenshot of SMS showing video file loaded via CD-R in
+            CD drive (CDDAFS format).
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"><p lang="en">
+        You can now browse to the file you copied, and press X to start
+        playback in the usual way.
+      </p><p lang="en">
+        If you don't see the file, and get constant whirring from your PS2,
+        or the following 'red' icon, then there is a problem with your disc.
+        You've probably got a coaster (i.e. wasted CDR), and will need to
+        try again. Check the instructions and try a lower burn speed. If you
+        were using a CD-RW, try a CD-R.
+      </p><div class="figure"><a name="idm1354"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cderror.png" alt="CDDAFS CD loaded"></div></div><p class="title"><b>Figure 3.24. 
+          <span lang="en" class="phrase">
+            Screenshot of SMS after loading failed or incompatible CD.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="usage-network.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="usage-dvdr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3.2. 
+    <span lang="en" class="phrase">Playing Files Over A Local Area Network</span>
+    
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 3.4. 
+    <span lang="en" class="phrase">Playing files from a DVD-R (without a modchip)</span>
+    
+    
+  </td></tr></table></div></body></html>

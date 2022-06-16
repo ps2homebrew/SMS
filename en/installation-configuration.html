@@ -1,0 +1,253 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.6.  Configuration</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Chapter 2.  Installation"><link rel="prev" href="installation-bootabledvdr.html" title="2.5.  Using a bootable SMS DVDR (Modchip only)"><link rel="next" href="usage.html" title="Chapter 3.  Usage"><link rel="chapter" href="introduction.html" title="Chapter 1.  Introduction"><link rel="chapter" href="installation.html" title="Chapter 2.  Installation"><link rel="chapter" href="usage.html" title="Chapter 3.  Usage"><link rel="appendix" href="faq.html" title="Appendix A.  Frequently Asked Questions"><link rel="appendix" href="apb.html" title="Appendix B.  Bits and Pieces"><link rel="appendix" href="legal.html" title="Appendix C.  GNU Free Documentation License"><link rel="subsection" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1.  Network Configuration"><link rel="subsection" href="installation-configuration.html#installation-configration-generalconfig" title="2.6.2.  General Configuration"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.6. 
+    <span lang="en" class="phrase">
+      Configuration
+    </span>
+    
+    
+
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="installation-bootabledvdr.html">Prev</a> </td><th width="60%" align="center">Chapter 2. 
+      <span lang="en" class="phrase">Installation</span>
+      
+      
+      
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-configuration"></a>2.6. 
+    <span lang="en" class="phrase">
+      Configuration
+    </span>
+    
+    
+
+  </h2></div></div></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Tip</h3><p lang="en">
+      Normally there is no need to change any configuration files to
+      get SMS running.  If you are just using SMS in standalone mode,
+      you can skip this section.  You only need to change the configuration
+      if you want to use SMS in network mode (i.e. play files over a LAN).
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="installation-configuration-ipconfig"></a>2.6.1. 
+      <span lang="en" class="phrase">
+        Network Configuration
+      </span>
+      
+      
+    </h3></div></div></div><p lang="en">
+      If you have an official <span class="trademark">Sony</span>™ Network adaptor,
+      and you intend to use SMS to play media files stored on a network,
+      you will need to assign an IP address and subnet to the PS2.  Chances are
+      you'll want this in a semi permanent set-up, so this section helps you
+      pick settings that will be compatible with your home network.
+    </p><p lang="en">
+      IP configuration data for SMS is stored in
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>. (not
+      <tt class="filename">CONFIG.DAT</tt>).  Note that the two files are seperate. SMS
+      will not look for settings in
+      <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.
+    </p><p lang="en">
+      To set the IP address for your PS2, you will need to create a file
+      named
+      <tt class="filename">IPCONFIG.DAT</tt> (e.g. using notepad) and it should
+      have just one line of text:
+    </p><pre class="screen">
+      &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
+    </pre><p lang="en">
+      If you created a <tt class="filename">CONFIG.DAT</tt> file in the
+      <a class="xref" href="installation.html" title="Chapter 2.  Installation">Chapter 2, <i>
+      <span lang="en" class="phrase">Installation</span>
+      
+      
+      
+      
+    </i></a> section, you can use the same file, but
+      remember rename it to <tt class="filename">IPCONFIG.DAT</tt>.  Once you have
+      created this file, you must copy it to your PS2, into the location
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>.  You can do this
+      using the FTP technique described in the
+      <a class="link" href="installation-copytomemcard.html#installation-copytomemcard-ftp">installation</a>
+      section.
+    </p><p lang="en">
+      If you are using <span class="application">uLaunchELF</span> as your boot
+      browser, it's easy to configure your SMS IP settings.  Just use the
+      boot browser's <span class="bold"><strong>Network Settings</strong></span>
+      option to change the settings with your D-Pad.  There's no need to
+      create an <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt> file
+      manually.
+    </p><p lang="en">
+      You'll need to choose an IP address for your PS2 that is different from
+      the IP address of any other node on your network, but on the same subnet
+      as your PC.  You will have to turn DHCP off on your PC, and use a manual
+      (or static) IP configuration.  SMS cannot autoconfigure it's IP address
+      from a DHCP server (see <a class="link" href="faq-dhcp.html" title="A.6.  I can't access SMS on my DHCP network. SMS won't autoconfigure it's IP address. What's wrong?">DHCP FAQ</a>.
+    </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="3">
+        <p lang="en">PS2 Settings</p>
+        
+        
+      </td><td>
+        <p lang="en">PS2 IP Address:</p>
+        
+        
+      </td><td>192.168.a.x</td></tr><tr><td>
+        <p lang="en">PS2 Subnet Mask:</p>
+        
+        
+      </td><td>255.255.255.0</td></tr><tr><td>
+        <p lang="en">PS2 Default Gateway:</p>
+        
+        
+      </td><td>192.168.a.z</td></tr><tr><td rowspan="3">
+        <p lang="en">PC Settings</p>
+        
+        
+      </td><td>
+        <p lang="en">PC IP Address:</p>
+        
+        
+      </td><td>192.168.a.y</td></tr><tr><td>
+        <p lang="en">PC Subnet Mask:</p>
+        
+        
+      </td><td>255.255.255.0</td></tr><tr><td>
+        <p lang="en">PC Default Gateway:</p>
+        
+        
+      </td><td>192.168.a.z</td></tr></tbody></table></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm558"></a>2.6.1.1. 
+        <span lang="en" class="phrase">Example configuration 1</span>
+        
+        
+      </h4></div></div></div><p lang="en">
+        This configuration is for a PS2 and PC connected directly
+        with a crossover cable, or for both connected to a network
+        switch.  There is no internet gateway device to connect to, so the
+        gateway is set to the IP address of the PC.
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+        <p lang="en">PS2 Settings</p>
+          
+        
+      </td><td>
+        <p lang="en">PS2 IP Address:</p>
+          
+        
+      </td><td>192.168.0.2</td></tr><tr><td>
+        <p lang="en">PS2 Subnet Mask:</p>
+        
+        
+      </td><td>255.255.255.0</td></tr><tr><td>
+        <p lang="en">PS2 Default Gateway:</p>
+        
+        
+      </td><td>192.168.0.1</td></tr><tr><td>
+          <p lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</p>
+          
+          
+        </td><td>
+        <div class="mediaobject"><img src="../images/installation-ipconfig.dat1.png" alt="Sample ipconfig.dat file screenshot."></div>
+        </td></tr><tr><td rowspan="3">
+        <p lang="en">PC Settings</p>
+          
+        
+        </td><td>
+        <p lang="en">PC IP Address:</p>
+          
+        
+        </td><td>192.168.0.1</td></tr><tr><td>
+        <p lang="en">PC Subnet Mask:</p>
+        
+        
+        </td><td>255.255.255.0</td></tr><tr><td>
+        <p lang="en">PC Default Gateway:</p>
+        
+        
+      </td><td>192.168.0.1</td></tr></tbody></table></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm602"></a>2.6.1.2. 
+        <span lang="en" class="phrase">Example configuration 2</span>
+        
+        
+      </h4></div></div></div><p lang="en">
+        Here is the configuration I use at home.  Both PS2 and PC are on the
+        same 192.168.2._ subnet, and my internet access point / router is
+        at 192.168.2.1.
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+        <p lang="en">PS2 Settings</p>
+          
+        
+        </td><td>
+        <p lang="en">PS2 IP Address:</p>
+          
+        
+        </td><td>192.168.2.22</td></tr><tr><td>
+        <p lang="en">PS2 Subnet Mask:</p>
+        
+        
+        </td><td>255.255.255.0</td></tr><tr><td>
+        <p lang="en">PS2 Default Gateway:</p>
+        
+        
+        </td><td>192.168.2.1</td></tr><tr><td>
+          <p lang="en">mc0:/SYS-CONF/IPCONFIG.DAT</p>
+          
+          
+
+        </td><td>
+        <div class="mediaobject"><img src="../images/installation-ipconfig.dat2.png" alt="Sample ipconfig.dat file screenshot."></div>
+        </td></tr><tr><td rowspan="3">
+        <p lang="en">PC Settings</p>
+          
+        
+        </td><td>
+        <p lang="en">PC IP Address:</p>
+          
+        
+        </td><td>192.168.2.23</td></tr><tr><td>
+        <p lang="en">PC Subnet Mask:</p>
+        
+        
+        </td><td>255.255.255.0</td></tr><tr><td>
+        <p lang="en">PC Default Gateway:</p>
+        
+        
+      </td><td>192.168.2.1</td></tr></tbody></table></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3><p lang="en">
+        If you are connected to the internet via the same network that
+        you are using to connect to your PS2
+        <span class="bold"><strong>be very careful</strong></span> when you change
+        your PC's IP settings.  You must make sure that your PC is set to be
+        on the same subnet as your access point/router (i.e. the first three
+        numbers of the PC IP address are the same as the access
+        point/router), and that the PC Default Gateway remains the same
+        (this will normally be the IP address of your access point.
+        Failure to do this may break your internet connection.  If you
+        are not sure what you are doing, please make a note of your starting
+        settings by typing <strong class="userinput"><code>ipconfig /all</code></strong> at the
+        command prompt.
+      </p></div></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="installation-configration-generalconfig"></a>2.6.2. 
+      <span lang="en" class="phrase">
+        General Configuration
+      </span>
+      
+      
+
+    </h3></div></div></div><p lang="en">
+      SMS general configuration information is stored in
+      <tt class="filename">mc0:/SMS/SMS.cfg</tt>. This file is written by the
+      application when you save the configuration data, and is not designed to
+      be edited by hand.
+      <span class="bold"><strong>You do not need to create this file</strong></span>.
+      SMS will create the file when you save the configuration from within
+      SMS (see configuration menu in
+      <a class="link" href="usage-controls.html#usage-controls-navigation" title="3.1.2.  During Navigation">usage</a> section).
+    </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+        If you are having problems with the configuration settings, it is
+        suggested that you delete your <tt class="filename">mc0:/SMS/SMS.cfg</tt>
+        file, and let SMS create a new one for you next time it runs.
+      </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="installation-bootabledvdr.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.5. 
+    <span lang="en" class="phrase">Using a bootable SMS DVDR (Modchip only)</span>
+    
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 3. 
+      <span lang="en" class="phrase">Usage</span>
+      
+      
+      
+      
+    </td></tr></table></div></body></html>

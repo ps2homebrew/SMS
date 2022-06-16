@@ -1,0 +1,160 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>3.9.  Skinning</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="usage.html" title="Chapter 3.  Usage"><link rel="prev" href="usage-subtitles.html" title="3.8.  Subtitles"><link rel="next" href="faq.html" title="Appendix A.  Frequently Asked Questions"><link rel="chapter" href="introduction.html" title="Chapter 1.  Introduction"><link rel="chapter" href="installation.html" title="Chapter 2.  Installation"><link rel="chapter" href="usage.html" title="Chapter 3.  Usage"><link rel="appendix" href="faq.html" title="Appendix A.  Frequently Asked Questions"><link rel="appendix" href="apb.html" title="Appendix B.  Bits and Pieces"><link rel="appendix" href="legal.html" title="Appendix C.  GNU Free Documentation License"><link rel="subsection" href="usage-skin.html#usage-skin-create" title="3.9.1.  Creating a Skin"><link rel="subsection" href="usage-skin.html#usage-skin-apply" title="3.9.2.  Applying a Skin"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.9. 
+    <span lang="en" class="phrase">Skinning</span>
+    
+    
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="usage-subtitles.html">Prev</a> </td><th width="60%" align="center">Chapter 3. 
+      <span lang="en" class="phrase">Usage</span>
+      
+      
+      
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="faq.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="usage-skin"></a>3.9. 
+    <span lang="en" class="phrase">Skinning</span>
+    
+    
+  </h2></div></div></div><p lang="en">
+    SMS allows basic 'skinning' of the player.  Essentially, this means you
+    can change the backdrop wallpaper of the browser to be an image of your
+    choice.
+  </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+      The current support for skinning only allows you to change the
+      background image of the browser.  It does not allow you to re-arrange
+      the layout of the controls on the screen.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-skin-create"></a>3.9.1. 
+      <span lang="en" class="phrase">Creating a Skin</span>
+      
+      
+    </h3></div></div></div><p lang="en">
+    The skin file is a DivX5xx/XviD encoded I-Frame, named
+    <tt class="filename">mc0:/SMS/SMS.skn</tt>.  A small windows program
+    (<span class="application">pic2sms.exe</span>) has been written to allow you
+    to create these files from normal image files.  You'll first of all
+    need an image file to start from.  In this example, I've used a holiday
+    photo (jpeg).
+  </p><p lang="en">
+    What you need to create is a bitmap file, with dimensions less than
+    800x600.
+    If you want some help finding out where the screen elements are in
+    relation to this, you can download a template file from here:
+    <a class="ulink" href="http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982" target="_top">http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982</a>.
+    [Warning - changes from SMS V1.5 to V1.6 may not be reflected in
+    this template.]
+    This is a <span class="application">Photoshop</span> format
+    (<tt class="filename">.psd</tt>) file, but if you haven't got
+    <span class="application">Photoshop</span> you can open it up in the GIMP
+    (free graphics editor) <a class="ulink" href="http://www.gimp.org/" target="_top">http://www.gimp.org/</a>.  When
+    you've finished playing with how it looks, save the file as a single
+    layer bitmap (<tt class="filename">.bmp</tt>) file into an empty folder on
+    your computer.
+  </p><p lang="en">
+    Next, download the SMS skin generator (Win32 App)
+    <span class="application">pic2sms.exe</span>
+    from <a class="ulink" href="http://home.casema.nl/eugene_plotnikov/" target="_top">http://home.casema.nl/eugene_plotnikov/</a>, and
+    extract the <tt class="filename">pic2sms.exe</tt> file
+    from the <tt class="filename">pic2sms.rar</tt> file using
+    <a class="ulink" href="http://www.rarlab.com/download.htm" target="_top">WinRAR</a>.
+    Copy it into the same folder on your computer.  Then try double clicking
+    the file.  If it opens up first time with no errors, everything's ok.
+    If you see a message saying 'cannot find xvidcore.dll', close the
+    program, then download <tt class="filename">xvidcore.dll</tt> from
+    <a class="ulink" href="http://www.dll-files.com/dllindex/dll-files.shtml?xvidcore" target="_top">http://www.dll-files.com/dllindex/dll-files.shtml?xvidcore</a>
+    or any other location (try google).  Copy the file
+    <tt class="filename">xvidcore.dll</tt> into the same directory as
+    <span class="application">pic2sms.exe</span>.  When you run the program again,
+    you should get no errors.
+  </p><div class="figure"><a name="idm1716"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-pic2sms01.png" alt="Pic2sms.exe application"></div></div><p class="title"><b>Figure 3.40. 
+      <span lang="en" class="phrase">Pic2sms.exe application.</span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    Now click on the 'open' button and open the bitmap file you just created.
+  </p><div class="figure"><a name="idm1725"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-pic2sms02.png" alt="Pic2sms.exe application"></div></div><p class="title"><b>Figure 3.41. 
+      <span lang="en" class="phrase">Open the image file</span>
+      
+      
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm1733"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-pic2sms03.png" alt="Pic2sms.exe application"></div></div><p class="title"><b>Figure 3.42. 
+      <span lang="en" class="phrase">Image file loaded</span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    You should see your image appear in the window.  Click the save button
+    to create a <tt class="filename">.skn</tt> file in the same directory.
+    That's it - your skin is created.
+  </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-skin-apply"></a>3.9.2. 
+    <span lang="en" class="phrase">Applying a Skin</span>
+    
+    
+  </h3></div></div></div><p lang="en">
+    To apply a skin (whether it's one you've downloaded, or one you made
+    yourself), you need to do the following:
+  </p><p lang="en">
+    Get hold of your <tt class="filename">SMS.skn</tt> file.  If your file is
+    <tt class="filename">xxxxxx.skn</tt>, rename it to
+    <tt class="filename">SMS.skn</tt>.
+  </p><p lang="en">
+    Now you need to transfer the file to
+    <tt class="filename">mc0:SMS/SMS.skn</tt> (i.e onto the memory card in
+    slot 1 on your PS2).  Here we'll assume that you're transfering via FTP.
+    <span class="bold"><strong>On your PS2</strong></span>, start your ELF
+    launcher (such as uLaunchELF), and select the FTP server program
+    (e.g PS2NET).
+  </p><p lang="en">
+    Once your PS2 FTP server is running, <span class="bold"><strong>go to your
+    PC</strong></span>, start up your FTP client (e.g. FileZilla), and connect
+    to the PS2.
+  </p><p lang="en">
+    Drag and drop the file <tt class="filename">SMS.skn</tt> into the location
+    <tt class="filename">mc0:/SMS/SMS.skn</tt>.  When it completes, disconnect
+    the FTP client and restart the PS2.
+  </p><div class="figure"><a name="idm1759"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-ftpexplorer-skintransfer.png" alt="FTP explorer screenshot."></div></div><p class="title"><b>Figure 3.43. 
+       <span lang="en" class="phrase">Transfering skin file to PS2.</span>
+       
+       
+    </b></p></div><br class="figure-break"><p lang="en">
+    <span class="bold"><strong>On your PS2</strong></span>, start up SMS as normal,
+    then press <span class="bold"><strong>START</strong></span> to bring up the
+    configuration menu, then select
+    '<span class="bold"><strong>browser settings</strong></span>'.
+  </p><div class="figure"><a name="idm1771"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-browsersettings01.png" alt="SMS browser settings menu screenshot"></div></div><p class="title"><b>Figure 3.44. 
+      <span lang="en" class="phrase">Browser settings menu.</span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    Tick the option '<span class="bold"><strong>Use background image</strong></span>'
+    to turn the skin on.  You should see the background immediately change.
+  </p><div class="figure"><a name="idm1781"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-browsersettings02.png" alt="SMS browser settings menu screenshot"></div></div><p class="title"><b>Figure 3.45. 
+      <span lang="en" class="phrase">Browser settings menu (skin activated).</span>
+      
+      
+    </b></p></div><br class="figure-break"><p lang="en">
+    If you need to change the skin, copy a new
+    <tt class="filename">SMS.skn</tt> over the top of the old one.
+  </p><div class="figure"><a name="idm1791"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-skinned.png" alt="SMS with skin active (screenshot)"></div></div><p class="title"><b>Figure 3.46. 
+       <span lang="en" class="phrase">Example skin.</span>
+      
+       
+    </b></p></div><br class="figure-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p lang="en">
+      SMS versions 1.5 and below had a different skin format, which used
+      a <tt class="filename">mc0:/SMS/skin.sms</tt> file instead of
+      <tt class="filename">mc0:/SMS/SMS.skn</tt>.  There was also a different
+      version of the skin generator pic2sms.exe.  The old skin generator
+      is no longer available for download.  If you have an old
+      version of SMS, we recommend upgrading both SMS and pic2sms.exe
+      to the latest version from the
+      <a class="ulink" href="http://sms.ps2-scene.org" target="_top">SMS web site</a>.
+    </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="usage-subtitles.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="faq.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3.8. 
+    <span lang="en" class="phrase">
+      Subtitles
+    </span>
+    
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Appendix A. 
+      <span lang="en" class="phrase">Frequently Asked Questions</span>
+      
+      
+    </td></tr></table></div></body></html>

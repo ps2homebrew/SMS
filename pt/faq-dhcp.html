@@ -1,0 +1,80 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>A.6. Não consigo aceder ao SMS na minha rede DHCP. O SMS não configura o seu IP automaticamente. O que se passa?</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="faq.html" title="Apêndice A. FAQ - Questões Mais Frequentes"><link rel="prev" href="faq-independence.html" title="A.5. O que é o “Independence Exploit” e como é que me ajuda?"><link rel="next" href="faq-opticalout.html" title="A.7. A saída óptica digital (S/PDIF) da PS2 funciona no SMS para som AC3?"><link rel="chapter" href="introduction.html" title="Capítulo 1. Introdução"><link rel="chapter" href="installation.html" title="Capítulo 2. Instalação"><link rel="chapter" href="usage.html" title="Capítulo 3. Utilização"><link rel="appendix" href="faq.html" title="Apêndice A. FAQ - Questões Mais Frequentes"><link rel="appendix" href="apb.html" title="Apêndice B. Variados"><link rel="appendix" href="legal.html" title="Apêndice C."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">A.6. 
+    
+    <span lang="pt" class="phrase">
+      <span class="emphasis"><em>Não consigo aceder ao SMS na minha rede DHCP.  O SMS não
+      configura o seu IP automaticamente. O que se passa?
+      </em></span>
+    </span>
+    
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="faq-independence.html">Anterior</a> </td><th width="60%" align="center">Apêndice A. 
+      
+      <span lang="pt" class="phrase">FAQ - Questões Mais Frequentes</span>
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="faq-opticalout.html">Próximo</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="faq-dhcp"></a>A.6. 
+    
+    <span lang="pt" class="phrase">
+      <span class="emphasis"><em>Não consigo aceder ao SMS na minha rede DHCP.  O SMS não
+      configura o seu IP automaticamente. O que se passa?
+      </em></span>
+    </span>
+    
+  </h2></div></div></div><p lang="pt">
+    O SMS não configura o seu endereço de IP numa rede de DHCP (Dynamic Host
+    Configuration Protocol), tal como os servidores DHCP normalmente
+    encontrados em access points wireless, etc.  SMS requere um endereço de IP
+    estático (ou manual) configurado em
+    <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>, (veja
+    <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Configuração de Rede">Secção 2.6.1, “
+      
+      <span lang="pt" class="phrase">
+        Configuração de Rede
+      </span>
+      
+    ”</a>).
+  </p><p lang="pt">
+    Isto não significa que tenha de desligar o DHCP e fazer com que toda a sua
+    rede funcione com endereços estáticos.  Basta verificar a configuração do
+    seu servidor de DHCP, e configurar o endereço de IP da PS2 manualmente para
+    ser compatível.  A grande maioria dos servidores de DHCP tem um raio de
+    endereços IP que irá atribuir aos clientes (por exemplo, a minha access
+    point linksys WRT54G atribui endereços de IP de 192.168.1.100 a
+    192.168.1.254).
+  </p><p lang="pt">
+    Desde que atribua à PS2 um IP fora deste raio (e.g. 192.168.1.22), então
+    o SMS correrá feliz junto com os seus clientes de DHCP. Pode ter de
+    ajustar as suas definições de DHCP modificando o endereço de IP inicial se
+    ainda não houver um raio que possa usar.
+  </p><p lang="pt">
+    Tem de se certificar que o IP que está a usar não é usado por outros
+    aparelhos na sua rede local (tal como PC's, outras PS2's, ou a própria
+    access point), e a PS2 tem de estar na mesma 'subnet' (i.e. os primeiros
+    3 números do endereço de IP devem ser os mesmos que os outros aparelhos
+    na sua rede local).
+  </p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Dica</h3><p lang="pt">
+      Se não estiver certo se tem ou não um servidor de DHCP, vá ao command
+      prompt e insira <strong class="userinput"><code>ipconfig /all</code></strong>.
+      Se vir um servidor de DHCP listado com um endereço de IP, então isso
+      significa que você <span class="bold"><strong>tem</strong></span> um servidor de
+      DHCP a correr. Pode normalmente aceder à configuração das access points
+      inserindo o seu endereço de IP num navegador de internet.
+    </p></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="faq-independence.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="faq.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="faq-opticalout.html">Próximo</a></td></tr><tr><td width="40%" align="left" valign="top">A.5. 
+    
+    <span lang="pt" class="phrase">
+      <span class="emphasis"><em>O que é o <span class="quote">“<span class="quote">Independence Exploit</span>”</span> e como é que me
+      ajuda?</em></span>
+    </span>
+    
+
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Início</a></td><td width="40%" align="right" valign="top"> A.7. 
+    
+    <span lang="pt" class="phrase">
+      <span class="emphasis"><em>A saída óptica digital (S/PDIF) da PS2 funciona no SMS para
+      som AC3?</em></span>
+    </span>
+    
+  </td></tr></table></div></body></html>

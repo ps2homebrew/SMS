@@ -1,0 +1,420 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>3.2. Воспроизведение файлов в локальной сети</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="prev" href="usage-controls.html" title="3.1. Управление программой"><link rel="next" href="usage-cddafs.html" title="3.3. Воспроизведение видеофайлов с CD-R на системе без модчипа"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"><link rel="subsection" href="usage-network.html#usage-network-smb" title="3.2.1. Проигрывание медиафайлов, используя расшаренную папку Windows"><link rel="subsection" href="usage-network.html#usage-network-rhc" title="3.2.2. Воспроизведение видеофайлов через сеть с помощью RadHostClient"><link rel="subsection" href="usage-network.html#idm1209" title="3.2.3. Воспроизведение видеофайлов через сеть с помощью PS2Client-gui"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение файлов в локальной сети</span>
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="usage-controls.html">Пред.</a> </td><th width="60%" align="center">Глава 3. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Как пользоваться программой </span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage-cddafs.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="usage-network"></a>3.2. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение файлов в локальной сети</span>
+  </h2></div></div></div><p lang="ru">
+    Начнем с того, что у вас должна быть нормально функционирующая локальная
+    сеть. Это значит, что вам потребуется сетевой коммутатор (свич),
+    концентратор (хаб) или маршрутизатор (раутер) к которому будут
+    подключены компьютер и PS2. Как вариант, вы можете подключить PS2
+    к компьютеру напрямую, посредством кабеля-кроссовера. В этом случае,
+    никаких дополнительных (вроде вышеперечисленных) вам не понадобится.
+    Важно, чтобы компьютер и PS2 находились в одной подсети и имели
+    статические IP адреса. Если вы не можете пинговать PS2 с компьютера
+    во время работы SMS, то вам необходимо исправить эту ситуацию до того,
+    как пытаться воспроизвести файлы через сеть. Прочтите
+    <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Настройки сети">Раздел 2.6.1, «
+      
+      
+      <span lang="ru" class="phrase">
+        Настройки сети
+      </span>
+    »</a>, если вам требуется
+    дополнительная информация. После того, как ваша локальная сеть заработает,
+    самый простой метод передачи файлов на PS2 будет расшаренная папка
+    Windows. Также, в этом раздеде рассматриваются устаревшие методы
+    работы с сетью с помощью PS2Client-gui и RadHostClient.
+
+    Примечание: Расшарить папку - значит сделать ее доступной для других
+    компьютеров (или PS2) в локальной сети. От английского слова share.
+  </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-network-smb"></a>3.2.1. 
+      
+      
+      <span lang="ru" class="phrase">Проигрывание медиафайлов, используя расшаренную
+      папку Windows</span>
+    </h3></div></div></div><p lang="ru">
+      SMS может воспроизводить медиафайлы, находящиеся в расшаренной папке
+      на обычном компьютере в вашей сети посредством т.н. SMB доступа.
+      На сегодняшний момент, это самый простой способ воспроизвесть всю
+      вашу медиа-коллекцию через SMS. Вам не потребуется никакое
+      дополнительное программное обеспечение, поскольку расшарка SMB может
+      быть создана стандартными средствами Windows, а также в Linux и MacOS.
+      В этом разделе мы рассмотрим следующие вопросы:
+    </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+          <a class="xref" href="usage-network.html#usage-network-smb-winxp" title="3.2.1.1. Расшариваем папку в WinXP (в вашем компьютере)">Раздел 3.2.1.1, «
+        
+        
+        <span lang="ru" class="phrase">Расшариваем папку в WinXP (в вашем компьютере)
+        </span>
+      »</a>
+        </p></li><li class="listitem"><p>
+          <a class="xref" href="usage-network.html#usage-network-smb-sms_setup" title="3.2.1.2. Настраиваем SMS на PS2, чтобы получить доступ к расшаренной папке">Раздел 3.2.1.2, «
+        
+        
+        <span lang="ru" class="phrase">Настраиваем SMS на PS2, чтобы получить доступ к
+        расшаренной папке</span>
+      »</a>
+        </p></li><li class="listitem"><p>
+          <a class="xref" href="usage-network.html#usage-network-smb-sms_usage" title="3.2.1.3. Настройки доступа к расшаренным папкам в SMS">Раздел 3.2.1.3, «
+        
+        
+        <span lang="ru" class="phrase">Настройки доступа к расшаренным папкам в SMS</span>
+      »</a>
+        </p></li></ul></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="usage-network-smb-winxp"></a>3.2.1.1. 
+        
+        
+        <span lang="ru" class="phrase">Расшариваем папку в WinXP (в вашем компьютере)
+        </span>
+      </h4></div></div></div><p lang="ru">
+        Если у вас уже есть расшаренная SMB папка, вы можете пропустить этот
+        подраздел и сразу перейти к
+        <a class="xref" href="usage-network.html#usage-network-smb-sms_setup" title="3.2.1.2. Настраиваем SMS на PS2, чтобы получить доступ к расшаренной папке">Раздел 3.2.1.2, «
+        
+        
+        <span lang="ru" class="phrase">Настраиваем SMS на PS2, чтобы получить доступ к
+        расшаренной папке</span>
+      »</a>.  Только убедитесь,
+        что вы знаете <span class="bold"><strong>IP адрес SMB сервера </strong></span>
+        (компьютера, на котором находится расшаренная папка) и
+        его <span class="bold"><strong>имя Netbios</strong></span>.
+      </p><p lang="ru">
+        А теперь мы объясним, как расшарить папку в Windows XP Home/Pro.
+      </p><p lang="ru">
+        Допустим, вы хотите расшарить папку
+        <tt class="filename">D:/Shared/videos/</tt>. В ней находятся медиафайлы,
+        которые вы надо сделать доступными для PS2. Найдите эту папку в
+        Проводнике Windows, затем, кликните на поддиректории videos правой
+        кнопкой мыши и выберите
+        <span class="bold"><strong>Sharing and Security...</strong></span>:
+      </p><div class="figure"><a name="idm994"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-winxp-share01.png" alt="Setting up a windows XP share, step 1"></div></div><p class="title"><b>Рисунок 3.4. 
+          
+          
+          <span lang="ru" class="phrase">
+            Расшариваем папку в Windows XP, шаг 1
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        В открывшемся окне, кликните на опцию, в которой говорится о том,
+        что вы осознаете о том, что расшаривать папку самостоятельно (без
+        Wizard-а) - может привести к рискованным результатам, но все равно
+        хотите сделать это сами.
+      </p><div class="figure"><a name="idm1003"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-winxp-share02.png" alt="Setting up a windows XP share, step 2"></div></div><p class="title"><b>Рисунок 3.5. 
+          
+          
+          <span lang="ru" class="phrase">
+            Расшариваем папку в Windows XP, шаг 2
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Теперь, кликните на
+        <span class="bold"><strong>Just enable file sharing</strong></span> (просто
+        расшарить файлы), после чего, нажмите на
+        click <span class="bold"><strong>OK</strong></span>.
+      </p><p lang="ru">
+        Вид окна должен поменяться, теперь там должны быть опции расшарки.
+        Выберите опцию
+        '<span class="bold"><strong>Share this folder on the network</strong></span>' и
+        введите имя для расшарки, например videos.  Оставьте опцию  Allow
+        network users to change my files выключенной. В этом случае, файлы
+        будут недоступны для изменения с других компьютеров.
+      </p><div class="figure"><a name="idm1016"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-winxp-share03.png" alt="Setting up a windows XP share, step 3"></div></div><p class="title"><b>Рисунок 3.6. 
+          
+          
+          <span lang="ru" class="phrase">
+            Расшариваем папку в Windows XP, шаг 3
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Теперь нажмите на <span class="bold"><strong>OK</strong></span> (если вы не
+        относитесь к тем людям, которые всегда первым делом кликают на Apply).
+        В любом случае, ваша папка сейчас должна быть расшарена. В Проводнике,
+        ее иконка должна измениться, под изображением папки должна
+        повяиться рука:
+      </p><div class="figure"><a name="idm1026"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-winxp-share04.png" alt="Shared folder in windows XP"></div></div><p class="title"><b>Рисунок 3.7. 
+          
+          
+          <span lang="ru" class="phrase">
+            Расшаренная папка в Windows XP
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Вот и все. Если у вас есть еще один компьютер в вашей локальной
+        сети, вы можете попробовать получить доступ к расшаренной папке
+        перед тем, как настраивать PS2.
+      </p><p lang="ru">
+        Следующим шагом станет настройка SMS на PS2 для организации
+        доступа к расшаренной папке.
+      </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="usage-network-smb-sms_setup"></a>3.2.1.2. 
+        
+        
+        <span lang="ru" class="phrase">Настраиваем SMS на PS2, чтобы получить доступ к
+        расшаренной папке</span>
+      </h4></div></div></div><p lang="ru">
+        Откройте простой текстовый редактор, такой, как
+        <span class="application">Блокнот</span> например, и наберите следующий
+        текст:
+      </p><p lang="ru">
+        </p><pre class="screen">&lt;IP адрес SMB-сервера (компьютера, на котором
+        находится расшаренная папка)&gt;
+        &lt;имя SMB сервера (имя компьютера)&gt;
+        &lt;имя PS2 (здесь можете написать все, что угодно)&gt;
+        &lt;имя пользователя (опционально)&gt;
+        &lt;пароль пользователя (опционально)&gt;</pre><p lang="ru">
+     </p><p lang="ru">
+        Имя SMB сервера можно найти в My Computer &gt; Properties &gt;
+        Computer Name &gt; Full Computer Name.  Имя надо набирать
+        <span class="bold"><strong>ЗАГЛАВНЫМИ</strong></span> буквами и пропустить
+        '.' в конце. Имя может быть абсолютно любым. Имя пользователя и пароль
+        требуются только если вы ограничили доступ к расшаренной папке паролем.
+        Если же вы расшарили папку, как описано выше, то можете оставить эти
+        строки пустыми. Например:
+      </p><pre class="screen">192.168.2.20
+DTHP
+Playstation2</pre><p lang="ru">
+        Запишите файл в какую-нибудь временную директорию (например, на
+        Рабочий Стол) под именем <tt class="filename">SMS.smb</tt>.  Обратите
+        внимание на то, что вам, возможно, придется ввести кавычки " в
+        окне Сохранить как.. (Save As...) в Блокноте, например
+        <tt class="filename">"SMS.smb"</tt>.  Если вы просто напечатаете
+        <tt class="filename">SMS.smb</tt>, то редактор, возможно, запишет файл под
+        именем <tt class="filename">SMS.smb.txt</tt>, что совсем не одно и то же.
+        Кроме того, в этом случае, Windows спрячет истинное разрешение
+        <tt class="filename">.txt</tt> и вы его не увидите.
+      </p><div class="figure"><a name="idm1052"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_setup-saveas.png" alt="Saving the SMS.smb file"></div></div><p class="title"><b>Рисунок 3.8. 
+          
+          
+          <span lang="ru" class="phrase">
+           Сохраняем файл SMS.smb
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Теперь вам надо скопировать файл <tt class="filename">SMS.smb</tt> на карту
+        памяти вашей PS2, в папку, где находится SMS. Так как ваша PS2 уже
+        работает в локальной сети, то я буду считать, что вы будете
+        пользоваться FTP для копирования файла на карту памяти (см.
+         <a class="xref" href="installation-copytomemcard.html#installation-copytomemcard-ftp">Раздел 2.3.1, «
+    
+    
+    <span lang="ru" class="phrase">Как скопировать SMS на карту памяти через FTP</span>
+  »</a>, чтобы прочитать о
+         том, как настроить FTP). Скопируйте файл в
+        <tt class="filename">/mc/0/SMS/SMS.smb</tt>.
+      </p><div class="figure"><a name="idm1064"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_setup-ftp.png" alt="Screenshot of SMS.smb upload via FTP"></div></div><p class="title"><b>Рисунок 3.9. 
+          
+          
+          <span lang="ru" class="phrase">
+            Копирование файла SMS.smb на PS2 через FTP
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        После того, как файл был успешно скопирован, перезапустите PS2
+        и загрузите <span class="application">SMS</span>.
+      </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="usage-network-smb-sms_usage"></a>3.2.1.3. 
+        
+        
+        <span lang="ru" class="phrase">Настройки доступа к расшаренным папкам в SMS</span>
+      </h4></div></div></div><p lang="ru">
+        <span class="bold"><strong>На PS2:</strong></span> Запустите SMS, после чего,
+        откройте меню
+        <span class="bold"><strong>Device settings</strong></span>
+        (нажмите <span class="bold"><strong>START</strong></span>, выберите
+        <span class="bold"><strong>Device settings...</strong></span> и нажмите
+        <span class="bold"><strong>X</strong></span>).
+      </p><div class="figure"><a name="idm1083"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage01.png" alt="Screenshot of Device settings menu"></div></div><p class="title"><b>Рисунок 3.10. 
+          
+          
+          <span lang="ru" class="phrase">
+            Меню Device settings (настройки устройств)
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Если включена опция Autostart network option (автоматически
+        включать поддержку сети), то ее следует выключить:
+      </p><div class="figure"><a name="idm1092"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage02.png" alt="Screenshot of Device settings menu (Autostart network disabled)"></div></div><p class="title"><b>Рисунок 3.11. 
+          
+          
+          <span lang="ru" class="phrase">
+            Меню Device settings (опция Autostart network отключена)
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Нажмите на кнопку <span class="bold"><strong>ТРЕУГОЛЬНИК</strong></span>, чтобы
+        выйти их меню, затем выберите
+        <span class="bold"><strong>Save settings</strong></span> (сохранить настройки)
+        в главном окне и нажмите кнопку
+        <span class="bold"><strong>X</strong></span>. Перезапустите SMS.
+      </p><p lang="ru">
+        Вернитесь в меню Device settings и пролистайте его вниз. Вы должны
+        увидеть новую опцию -
+        <span class="bold"><strong>Network protocol</strong></span> (сетевой протокол).
+        Нажмите на кнопку <span class="bold"><strong>X</strong></span>, чтобы  сменить
+        значение опции на to <span class="bold"><strong>SMB/CIFS</strong></span>.
+      </p><div class="figure"><a name="idm1108"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage03.png" alt="Screenshot of Device settings menu (Select SMB/CIFS Network protocol)"></div></div><p class="title"><b>Рисунок 3.12. 
+          
+          
+          <span lang="ru" class="phrase">
+            Меню Device settings (выбор протокола SMB/CIFS)
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Теперь выберите <span class="bold"><strong>Start network support</strong></span>
+        (включить поддержку сети) и нажмите кнопку
+        <span class="bold"><strong>X</strong></span>.  На экране появится сообщение
+        <span class="emphasis"><em>Intialising Network...</em></span> (инициализация сетевого
+        драйвера), после чего вы должны увидеть новую иконку в файловом
+        проводнике PS2:
+      </p><div class="figure"><a name="idm1120"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage04.png" alt="Screenshot of SMB share connected (right hand icon in top menu bar)"></div></div><p class="title"><b>Рисунок 3.13. 
+          
+          
+          <span lang="ru" class="phrase">
+            SMB расшарка подключена (иконка вверху справа):
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Теперь можно опять включить Autostart network. Если вы решите это
+        сделать, то не забудьте сохранить настройки, с помощью пункта меню
+        <span class="bold"><strong>Save settings</strong></span>.
+        Нажмите <span class="bold"><strong>ТРЕУГОЛЬНИК</strong></span>, чтобы выйти из
+        меню, после чего нажмите кнопки
+        <span class="bold"><strong>ВПРАВО</strong></span>,
+        <span class="bold"><strong>ВПРАВО</strong></span> и
+        <span class="bold"><strong>X</strong></span> для выбора расшарки:
+      </p><div class="figure"><a name="idm1134"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage05.png" alt="Screenshot of navigating an SMB share"></div></div><p class="title"><b>Рисунок 3.14. 
+          
+          
+          <span lang="ru" class="phrase">
+            Навигация по расшаркам
+          </span>
+        </b></p></div><br class="figure-break"><p lang="ru">
+        Нажмите кнопку <span class="bold"><strong>X</strong></span>, чтобы зайти в
+        папку, затем еще раз на
+        <span class="bold"><strong>X</strong></span>, чтобы начать воспроизведение файла.
+      </p><div class="figure"><a name="idm1145"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage06.png" alt="Screenshot of navigating an SMB share - selecting file for playback"></div></div><p class="title"><b>Рисунок 3.15. 
+          
+          
+          <span lang="ru" class="phrase">
+            Навигация по расшаркам: выбор файла для воспроизведения
+          </span>
+        </b></p></div><br class="figure-break"><div class="figure"><a name="idm1153"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-network-smb-sms_usage07.png" alt="Playback started"></div></div><p class="title"><b>Рисунок 3.16. 
+          
+          
+          <span lang="ru" class="phrase">
+            Воспроизведение файла.
+          </span>
+        </b></p></div><br class="figure-break"><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Подсказка</h3><p lang="ru">
+        Если у вас возникли проблемы, проверьте параметры в файле
+        <tt class="filename">SMS.smb</tt>. Убедитесь в том, что вы правильно задали
+        IP адрес вашего компьютера и имя SMB сервера написано ЗАГЛАВНЫМИ
+        буквами.
+      </p></div></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-network-rhc"></a>3.2.2. 
+      
+      
+      <span lang="ru" class="phrase">Воспроизведение видеофайлов через сеть с помощью
+       RadHostClient</span>
+    </h3></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+        Рекомендованный (и, пожалуй, самый легкий) путь воспроизведения файлов
+        через сеть в SMS -
+        <a class="link" href="usage-network.html#usage-network-smb" title="3.2.1. Проигрывание медиафайлов, используя расшаренную папку Windows">расшарка папок в SMB</a> (эта
+        функция доступна в SMS, начиная с версии 1.9)
+        Этот раздел оставлен в руководстве на случай, если кому-то потребуется
+        информация об устаревшем способе работы с SMS.
+      </p></div><p lang="ru">
+      Скачайте и установите RadHostClient с сайта
+      <a class="ulink" href="http://ps2dev.org/ps2/Tools/Misc_tools/Rad_Host_Client_1.4" target="_top">http://ps2dev.org/ps2/Tools/Misc_tools/Rad_Host_Client_1.4</a>.
+      Запустите эту программу на вашем компьютере и наберите в ней IP адрес
+      вашей PS2. Перетащите папки, которые вы хотите расшарить для PS2 в список
+      в середине окна программы. Эти папки станут доступны SMS автоматически.
+    </p><div class="figure"><a name="idm1172"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/network-radhostclient.png" alt="RadHostClient in operation."></div></div><p class="title"><b>Рисунок 3.17. 
+        
+        
+        <span lang="ru" class="phrase">
+          RadHostClient в работе.
+        </span>
+      </b></p></div><br class="figure-break"><p lang="ru">
+      Сейчас самое время запустить SMS на PS2, если вы этого еще не сделали.
+      Затем, <span class="bold"><strong>на PS2</strong></span> нажмите кнопку
+      <span class="bold"><strong>START</strong></span>, чтобы вызывать меню настроек
+      SMS, зайдите в <span class="bold"><strong>Nework settings...</strong></span>
+      (сетевые настройки), после чего, выберите
+      <span class="bold"><strong>start network interface now</strong></span> (включить
+      сетевой интерфейс) и нажмите кнопку <span class="bold"><strong>X</strong></span>.
+    </p><p lang="ru">
+      В течение 10 секунд вы должны увидеть иконку нового устройства
+      вверху экрана SMS.
+    </p><div class="figure"><a name="idm1187"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-networkactivated.png" alt="Screenshot of SMS with network support activated."></div></div><p class="title"><b>Рисунок 3.18. 
+        
+        
+        <span lang="ru" class="phrase">
+          Экран SMS с включенной поддержкой сетевого интерфейса. Обратите
+          внимание на дополнительную иконку вверху экрана.
+        </span>
+     </b></p></div><br class="figure-break"><p lang="ru">
+      Теперь нажмите кнопку <span class="bold"><strong>ВПРАВО</strong></span>, чтобы
+      выбрать сетевую иконку и зайти в папки, расшаренные с компьютера.
+      Когда вы нажмете на кнопку <span class="bold"><strong>X</strong></span>, PS2
+      начнет воспроизведение и файл будет передан с компьютера на PS2
+      через локальную сеть.
+    </p><div class="figure"><a name="idm1198"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-networkbrowsing.png" alt="Screenshot of SMS browsing networked folder shared from remote PC."></div></div><p class="title"><b>Рисунок 3.19. 
+        
+        
+        <span lang="ru" class="phrase">
+          Просмотр расшаренной папки.
+        </span>
+      </b></p></div><br class="figure-break"><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Предупреждение</h3><p lang="ru">
+        Не закрывайте RadHostClient во время того, как PS2 просматривает файлы,
+        расшаренные через эту программу. Это станет причиной ошибки исполнения
+        как в RadHostClient, так и для PS2.
+      </p><p lang="ru">
+        Если на PS2 произошла ошибка, она зависла или перезагрузилась, то вам
+        придется перезапустить RadHostClient.
+      </p></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm1209"></a>3.2.3. 
+      
+      
+      <span lang="ru" class="phrase">Воспроизведение видеофайлов через сеть с помощью
+       PS2Client-gui</span>
+    </h3></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+        Рекомендованный (и, пожалуй, самый легкий) путь воспроизведения файлов
+        через сеть в SMS -
+        <a class="link" href="usage-network.html#usage-network-smb" title="3.2.1. Проигрывание медиафайлов, используя расшаренную папку Windows">расшарка папок в SMB</a> (эта
+        функция доступна в SMS, начиная с версии 1.9)
+        Этот раздел оставлен в руководстве на случай, если кому-то потребуется
+        информация об устаревшем способе работы с SMS.
+      </p></div><p lang="ru">
+      <span class="bold"><strong>На компьютере</strong></span>: скачайте и установите
+      программу ps2client-gui. Запустите ее и выберите папки, в которых
+      находятся ваши видеофайлы. Если у вас есть головная папка, в которой
+      хранятся все видеофайлы (в- или вне поддиректорий), введите имя
+      этой папки. После того, как вы нажмете на ОК, файлы в папках станут
+      доступны для PS2.
+    </p><p lang="ru">
+      Сейчас самое время запустить SMS на PS2, если вы этого еще не сделали.
+      Затем, <span class="bold"><strong>на PS2</strong></span> нажмите кнопку
+      <span class="bold"><strong>START</strong></span>, чтобы вызывать меню настроек
+      SMS, зайдите в <span class="bold"><strong>Nework settings...</strong></span>
+      (сетевые настройки), после чего, выберите
+      <span class="bold"><strong>start network interface now</strong></span> (включить
+      сетевой интерфейс) и нажмите кнопку <span class="bold"><strong>X</strong></span>.
+    </p><p lang="ru">
+      Вы должны увидеть иконку нового устройства, появившуюся вверху экрана.
+      Если после примерно 20 секунд, иконка там не появилась, попробуйте
+      перезапустить программу ps2client-gui на вашем компьютере. После того,
+      как иконка появилась (обычно это берет около 15 секунд), нажмите
+      кнопку <span class="bold"><strong>ВПРАВО</strong></span>, чтобы ее выбрать, затем
+      нажмите на <span class="bold"><strong>X</strong></span>. Теперь вы сможете
+      выбирать файлы из расшаренной с компьютера папки, включая поддиректории.
+    </p></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="usage-controls.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="usage-cddafs.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">3.1. 
+    
+    
+    
+    
+    <span lang="ru" class="phrase">Управление программой</span>
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 3.3. 
+    
+    
+    <span lang="ru" class="phrase">Воспроизведение видеофайлов с CD-R на системе без модчипа</span>
+  </td></tr></table></div></body></html>

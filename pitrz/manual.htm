@@ -1,0 +1,113 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>One of the users asked me to write a small encoding guide to use high&nbsp;
+resolution mpeg2</title>
+</head>
+
+<body>
+
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">One of the users asked me to write a small
+encoding guide to use high <br>
+resolution mpeg2, so i wrote him a quick one with the pack of needed <br>
+tools. I guess you already have most of these, but I have finetuned using</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">various collected information and custom quant
+matrices my settings for</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">high resolution mpeg2, and the quality of the
+encodes is at least comparable</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">to h.264 at the same bitrate .). I will paste
+you the guide here, but I</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">guess the only relevant things/information for
+you are the custom matrix</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">from the archive and the quenc settings I use.
+It is actually finetuned for</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">720p content, but SMS can't play that thanks
+to the texture size limit.</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">For maximum size possible (1024*576) there are
+little artifacts in corners</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">in 720p because we are using too much vram. It
+really does give excellent</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">quality.<br>
+<br>
+- Download <a href="pack.rar">THIS</a> archive. It contains all the tools you
+need. I assume you</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; have proper codecs for playing
+everything on you computer installed;<br>
+- Install avisynth from tools folder;<br>
+- Unpack quenc somewhere where you like;<br>
+- Copy sagit.xcm to the folder where your quenc is (or somewhere where you <br>
+&nbsp; can find it later when you will be setting up quenc);<br>
+- Copy the avisynth sample script somewhere and open it in you favourite <br>
+&nbsp; text editor. You will see two commands, change the first one so that it
+<br>
+&nbsp; points to the file you want to encode, and the second one to the <br>
+&nbsp; resolution you want to use. With the resolution settings you see there,</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; you will get CORRUPTION. You can't have
+bigger horizontal width then 1024</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; because of maximum ps2 texture size
+limit. So my recommendation is probably</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; 960x540 or a little bit more, try a few
+tests to get picture without any</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; corruption;<br>
+- After you have edit this file, fire up quenc program, select the avisynth</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; script, and set everything exactly as
+it is in Quenc_Settings.jpg. This</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; settings are actually optimal to encode
+to 720p mpeg2, so you can probably</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; lower the bitrate a little bit. You
+have to select the Custom quant matrix</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; sagit.xcm which was in the archive.
+There is also utility qmatrix in the</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; archive which is a editor of custom
+matrices, with plenty of examples.</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; However the matrix I use is especially
+good for high resolutions. So if</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; you have set up everything correctly
+you can start your encode. In the way</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; I have it set up, it is slow, but the
+quality at the bitrate you&nbsp; get is</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; comparable if not almost equal to
+h.264. Try playing with some small sample</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">&nbsp; files and you will see what you can
+get;<br>
+<br>
+Peter<br>
+&nbsp;</font></p>
+<p align="justify" style="margin-top: 0; margin-bottom: 0">
+<font face="Courier New" size="2">Thanks to all authors of the used programs,
+doom9.org forums and <br>
+doom9.org forum users.<br>
+&nbsp;</font></p>
+
+</body>
+
+</html>

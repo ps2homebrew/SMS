@@ -1,0 +1,372 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.3. Как скопировать SMS на карту памяти (Independence/Модчип)</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="prev" href="sms-installation-requirements.html" title="2.2. Системные требования"><link rel="next" href="installation-bootablecdr.html" title="2.4. Загрузка с SMS CD-диска (только для модчипа)"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"><link rel="subsection" href="installation-copytomemcard.html#idm94" title="2.3.1. Как скопировать SMS на карту памяти через FTP"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. 
+    
+    
+    <span lang="ru" class="phrase">Как скопировать SMS на карту памяти (Independence/Модчип)</span>
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sms-installation-requirements.html">Пред.</a> </td><th width="60%" align="center">Глава 2. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Установка и конфигурирование программы  </span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="installation-bootablecdr.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-copytomemcard"></a>2.3. 
+    
+    
+    <span lang="ru" class="phrase">Как скопировать SMS на карту памяти (Independence/Модчип)</span>
+  </h2></div></div></div><p lang="ru">
+    Прежде всего, скачайте последнюю версию <tt class="filename">SMS.ELF</tt>
+    с <a class="ulink" href="http://home.casema.nl/eugene_plotnikov/" target="_top">http://home.casema.nl/eugene_plotnikov/</a>.
+    Кроме того, предыдущие версии можно скачать с <a class="ulink" href="http://ps2dev.org/ps2/Projects" target="_top">http://ps2dev.org/ps2/Projects</a>.
+    Если есть желание помочь в разработке программы, то исходники можно взять
+    на svn://svn.ps2dev.org.
+  </p><p lang="ru">
+    Теперь надо записать этот файла на карту памяти (ту, которая будет
+    вставлена в слот 0). Рекомендованный нами (и, скорее всего, самый
+    простой) способ скопировать ELF файл в PS2 - через FTP.
+  </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm94"></a>2.3.1. 
+    
+    
+    <span lang="ru" class="phrase">Как скопировать SMS на карту памяти через FTP</span>
+  </h3></div></div></div><p lang="ru">
+    Вам понадобится
+    <span class="bold"><strong>FTP сервер</strong></span>, запущенный на PS2, и
+    <span class="bold"><strong>FTP клиент</strong></span> на компьютере подключенном к
+    PS2 посредством кабеля-кроссовера или обычными кабелями через свич.
+  </p><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="installation-copytomemcard-ftp-ulaunchelf"></a>2.3.1.1. 
+    
+    
+    <span lang="ru" class="phrase">Запускаем FTP сервер (uLaunchELF)</span>
+  </h4></div></div></div><p lang="ru">
+    Самый удобный, и, пожалуй, самый простой, FTP сервер для PS2 - тот,
+    который встроен в "неофициальный" загрузчик LaunchELF. Скачать файл
+    <tt class="filename">BOOT.ELF</tt> для uLaunchELF можно здесь:
+    <a class="ulink" href="http://www.ps2-scene.org/forums/showthread.php?t=37242" target="_top">http://www.ps2-scene.org/forums/showthread.php?t=37242</a>.
+  </p><p lang="ru">
+    Будем считать, что файл <tt class="filename">BOOT.ELF</tt> уже скопирован на
+    карту памяти, используя какую-нибудь систему по установке exploit-а.
+    В таком случае, запуск FTP сервера - очень простая задача.
+  </p><p lang="ru">
+    Включите PS2 и активируйте модчип или exploit. При первом запуске,
+    uLaunchELF будет выглядеть примерно так:
+  </p><div class="figure"><a name="idm109"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf01.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.2. 
+      
+      
+      <span lang="ru" class="phrase">
+         Экран при запуске uLaunchELF.
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Нажмите на <span class="bold"><strong>SELECT</strong></span>. Затем, выберите
+    <span class="bold"><strong>Network Settings</strong></span>, и нажмите
+    <span class="bold"><strong>O</strong></span>
+  </p><div class="figure"><a name="idm121"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf02.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.3. 
+      
+      
+      <span lang="ru" class="phrase">
+         Меню сетевых настроек uLaunchELF  - шаг 1
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Следующим шагом будет изменение сетевых настроек, с помощью джойстика.
+    Параметры находятся в файле <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>.
+  </p><p lang="ru">
+    Вы можете сменить IP адрес вашей PS2 со стандартного 192.168.0.10 на все,
+    что душа пожелает, но надо помнить, что новый адрес должен быть в той
+    же подсетке, что и ваш компьютер. Более детально этот вопрос
+    рассматривается в <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Настройки сети">Раздел 2.6.1, «
+      
+      
+      <span lang="ru" class="phrase">
+        Настройки сети
+      </span>
+    »</a>
+    разделе. Данные можно редактировать с помощью клавиш на игровом пульте.
+  </p><div class="figure"><a name="idm133"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf03.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.4. 
+      
+      
+      <span lang="ru" class="phrase">
+         Меню сетевых настроек uLaunchELF  - шаг 2
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    После того, как нужные изменения произведены, выберите
+    <span class="bold"><strong>SAVE</strong></span> и нажмите
+    <span class="bold"><strong>O</strong></span>:
+  </p><div class="figure"><a name="idm144"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf04.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.5. 
+      
+      
+      <span lang="ru" class="phrase">
+         Меню сетевых настроек uLaunchELF  - шаг 3
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    В главном окне программы выберите <span class="bold"><strong>OK</strong></span>
+    и нажмите <span class="bold"><strong>O</strong></span>:
+  </p><div class="figure"><a name="idm155"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf05.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.6. 
+      
+      
+      <span lang="ru" class="phrase">
+         Меню сетевых настроек uLaunchELF  - шаг 4
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Сверху экрана должно появиться сообщение о том, что параметры были успешно
+    сохранены:
+  </p><div class="figure"><a name="idm164"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf06.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.7. 
+      
+      
+      <span lang="ru" class="phrase">
+         Меню сетевых настроек uLaunchELF  - шаг 5
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Теперь надо назначить кнопку для запуска FTP сервера. Нажмите
+    <span class="bold"><strong>SELECT</strong></span>, после чего, выберите любую
+    клавишу, которая вам больше нравится. В этом примере, мы выбрали "START").
+    Нажмите <span class="bold"><strong>O</strong></span>, после чего, выберите
+    <span class="bold"><strong>MISC</strong></span>, а затем
+    <span class="bold"><strong>PS2Net</strong></span>.
+  </p><div class="figure"><a name="idm177"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf07.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.8. 
+      
+      
+      <span lang="ru" class="phrase">
+         Назначаем кнопку запуска FTP сервера  - шаг 1
+      </span>
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm185"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf08.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.9. 
+      
+      
+      <span lang="ru" class="phrase">
+         Назначаем кнопку запуска FTP сервера  - шаг 2
+      </span>
+
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm193"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf09.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.10. 
+      
+      
+      <span lang="ru" class="phrase">
+         Назначаем кнопку запуска FTP сервера  - шаг 3
+      </span>
+    </b></p></div><br class="figure-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+      <span class="application">PS2Net</span>  - так называется FTP сервер, который
+      встроен в <tt class="filename">BOOT.ELF</tt> uLaunchELF'а.
+    </p></div><p lang="ru">
+    Нажмите <span class="bold"><strong>O</strong></span> для подтверждения, затем
+    <span class="bold"><strong>OK</strong></span>, и еще раз
+    <span class="bold"><strong>O</strong></span>, после чего вы увидите такой экран:
+  </p><div class="figure"><a name="idm209"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf10.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.11. 
+      
+      
+      <span lang="ru" class="phrase">
+         Назначаем кнопку запуска FTP сервера  - шаг 4
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Этот экран будет появляться при каждом запуске <tt class="filename">BOOT.ELF</tt>.
+  </p><p lang="ru">
+    Он означает, что, при каждом нажатии на кнопку
+    <span class="bold"><strong>START</strong></span>, будет запущен PS2Net, а если вы
+    решите нажать на кнопку <span class="bold"><strong>SELECT</strong></span>, то
+    откроется меню настроек.
+  </p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Подсказка</h3><p lang="ru">
+      Вы можете назначить действия для многих кнопок, список которых
+      появится на этом экране. Вы наверняка позже захотите назначить
+      кнопку для запуска SMS. Кстати, если вы назначите какую-либо программу
+      для <span class="bold"><strong>DEFAULT</strong></span>, то она будет автоматически
+      запущена после небольшой задержки.
+    </p></div><p lang="ru">
+    Теперь нажмите <span class="bold"><strong>START</strong></span> для запуска PS2Net.
+    Экран будет выглядеть примерно так:
+  </p><div class="figure"><a name="idm227"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-ulaunchelf11.png" alt="uLaunchELF"></div></div><p class="title"><b>Рисунок 2.12. 
+      
+      
+      <span lang="ru" class="phrase">
+         uLaunchELF: Запуск FTP сервера
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Вы можете проверить связь между компьютером и PS2 с помощью "пинга". Для
+    этого, откройте окно ДОС (например, Start-&gt;Run, напечатайте 'cmd' (без
+    кавычек) и нажмите Enter). В открывшемся окне, наберите
+    <strong class="userinput"><code>ping 192.168.0.10</code></strong> (или адрес PS2, котрый вы
+    задали в предыдущем разделе). Если все работает, как надо, то на экране
+    должны появиться несколько строк, начинающихся с
+    <code class="computeroutput">reply from ...</code>.
+  </p><p lang="ru">
+    Итак, ваш FTP сервер заработал? Если так, то вы можете перейти к главе
+    <a class="xref" href="installation-copytomemcard.html#installation-copytomemcard-ftp-ftpclient">Раздел 2.3.1.3, «
+    
+    
+    <span lang="ru" class="phrase">
+      Запуск FTP клиента
+    </span>
+  »</a>, в которой
+    объясняется, как можно скопировать SMS на карту памяти.
+  </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="installation-detail-copyftp-execftps"></a>2.3.1.2. 
+    
+    
+    <span lang="ru" class="phrase">Запуск FTP сервера (ExecFTPs)</span>
+  </h4></div></div></div><p lang="ru">
+    Если вы, по какой-то причине, <span class="emphasis"><em>не</em></span>
+    <a class="link" href="installation-copytomemcard.html#installation-copytomemcard-ftp-ulaunchelf" title="2.3.1.1. Запускаем FTP сервер (uLaunchELF)">пользуетесь
+    uLaunchELF</a>, вам понадобится загрузить программу FTP сервера на
+    карту памяти. Например, <tt class="filename">EXECFTPS.ELF</tt>.
+    Активируйте exploit и запустите менеджер загрузки (например, LaunchELF).
+    Вы можете назначить кнопку запуска для <tt class="filename">EXECFTPS.ELF</tt>
+    или можете просто выбирать его из списка файлов и запускать его оттуда.
+  </p><div class="figure"><a name="idm248"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps01.png" alt="LanuchELF browser"></div></div><p class="title"><b>Рисунок 2.13. 
+      
+      
+      <span lang="ru" class="phrase">
+         Запуск ExecFTPs из списка ELF файлов в LaunchELF.
+      </span>
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm256"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps02.png" alt="LaunchELF main screen"></div></div><p class="title"><b>Рисунок 2.14. 
+      
+      
+      <span lang="ru" class="phrase">
+         Запуск ExecFTPs через кнопку быстрого доступа. Из данного примера
+         видно, что для запуска надо нажать кнопку START на контроллере 1.
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Как бы то ни было, после того, как FTP сервер заработал, вы должны
+    увидеть на экране вашеге телевизора что-то подобное:
+  </p><div class="figure"><a name="installation-execftps03"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps03.png" alt="ExecFTPS running with defaults."></div></div><p class="title"><b>Рисунок 2.15. 
+       
+      
+       <span lang="ru" class="phrase">
+         Пример ExecFTPs, использующего стандартную конфигурацию IP.
+      </span>
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm273"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-execftps04.png" alt="ExecFTPs running with custom configuration."></div></div><p class="title"><b>Рисунок 2.16. 
+       
+      
+       <span lang="ru" class="phrase">
+         Пример ExecFTPs, использующего измененную вами конфигурацию IP.
+      </span>
+
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Вы можете проверить связь между компьютером и PS2 с помощью "пинга". Для
+    этого, откройте окно ДОС (например, Start-&gt;Run, напечатайте 'cmd' (без
+    кавычек) и нажмите Enter). В открывшемся окне, наберите
+    <strong class="userinput"><code>ping 192.168.0.10</code></strong> (или адрес PS2, котрый вы
+    задали в предыдущем разделе). Если все работает, как надо, то на экране
+    должны появиться несколько строк, начинающихся с
+    <code class="computeroutput">reply from ...</code>.
+  </p><p lang="ru">
+    Параметры <span class="application">ExecFTPs</span> находятся в файле
+     <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt> в таком виде:
+  </p><pre class="screen">
+    &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
+  </pre><p lang="ru">
+    Если файла <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt> не
+    существует, то <span class="application">ExecFTPs</span> создаст его, используя
+    следующие параметры:
+  </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+      
+      
+      <p lang="ru">Параметры PS2</p>
+    </td><td>
+      
+      
+      <p lang="ru">IP адрес PS2:</p>
+    </td><td>192.168.0.10</td></tr><tr><td>
+      
+      
+      <p lang="ru">Сетевая маска:</p>
+    </td><td>255.255.255.0</td></tr><tr><td>
+      
+      
+      <p lang="ru">Адрес точки доступа:</p>
+    </td><td>192.168.0.1</td></tr><tr><td>
+      
+      
+      <p lang="ru">mc0:/BxDATA-SYSTEM/CONFIG.DAT</p>
+    </td><td> file not created</td></tr></tbody></table></div><p lang="ru">
+    Если вы хотите использовать свои собственные настройки, вы можете
+    изменить файл <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.  Однако,
+    если вы хотите использовать FTP для того, чтобы скопировать свой
+    собственный файл <tt class="filename">CONFIG.DAT</tt> на PS2, вы должны сначала
+    установить связь между копьютером и PS2, используя стандартные настройки.
+    Более детально вопросы сетевых настроек рассмотрены в главе
+    <a class="xref" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Настройки сети">Раздел 2.6.1, «
+      
+      
+      <span lang="ru" class="phrase">
+        Настройки сети
+      </span>
+    »</a>.
+  </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+      Обратите внимание на то, что ExecFTPs сохраняет свои настройки в файле
+      <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.  Это другой файл,
+      не такой же, как тот, в котором находятся настройки для SMS и
+      uLaunchELF/PS2NetThis. Последние используют файл
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt> для записи параметров.
+    </p></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm320"></a>2.3.1.3. 
+    
+    
+    <span lang="ru" class="phrase">
+      Запуск FTP клиента
+    </span>
+  </h4></div></div></div><p lang="ru">
+    После того, как FTP сервер заработал и вы успешно проверили его
+    работоспособность с помощью пингов, необходимо запустить FTP клиент на
+    вашем компьютере. Многие рекомендуют использовать FlashFXP
+    (<a class="ulink" href="http://www.inicom.net/pages/en.ffxp-download.php" target="_top">http://www.inicom.net/pages/en.ffxp-download.php</a>), но
+    мне больше нравится бесплатный (и без надоедливых напоминалок о том, что
+    неплохо было бы и заплатить за него) клиент GPL FileZilla
+    (<a class="ulink" href="http://sourceforge.net/projects/filezilla" target="_top">http://sourceforge.net/projects/filezilla</a>). Не все
+    FTP будут работать с PS2. Например, я так и не смог заставить FTPexplorer
+    общаться с моей консолью.
+  </p><p lang="ru">
+    Запустите FTP клиент на вашем компьютере (в нашем примере это FileZilla),
+    затем наберите IP адрес вашей PS2 в строке 'Host:' box. Некоторые
+    рекомендуют, также, включить пассивный режим (PASV). Как мне кажется,
+    это не является необходимостью, но можете его включить, если вам так
+    хочется. Сделать это можно, нажав кнопку 'Advanced'.
+  </p><div class="figure"><a name="idm327"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-filezilla01.png" alt="FileZilla configuration dialog."></div></div><p class="title"><b>Рисунок 2.17. 
+       
+      
+       <span lang="ru" class="phrase">
+         Настройки IP адреса для подключения к PS2. Обратите внимание, что
+         стандартный адрес PS2 - 192.168.0.10).
+      </span>
+
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Нажмите 'Connect' когда будете готовы и, после кучи различных сообщений
+    вверху экрана, вы увидите что-то такое:
+  </p><div class="figure"><a name="idm336"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-filezilla02.png" alt="FileZilla FTP client while connected to PS2."></div></div><p class="title"><b>Рисунок 2.18. 
+       
+      
+       <span lang="ru" class="phrase">
+         FTP клиент FileZilla успешно подключен к PS2.
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    В разделе 'Remote Site' вы должны увидеть 'hdd, mc, pfs'. Это различные
+    устройства памяти на PS2. Hdd - это жесткий диск (если есть), а mc - карта
+    памяти. Если вы ничего не видите, попробуйте нажать F5, чтобы обновить
+    список. Выбираем mc (двойной клик), затем '0'. Карты памяти доступны
+    через <tt class="filename">/mc/0</tt> и <tt class="filename">/mc/1</tt> (разъемы 1
+    и 2 на Playstation2).
+  </p><p lang="ru">
+    Я бы порекомендовал записать <tt class="filename">SMS.ELF</tt> в директорию,
+    которая так и называется - 'SMS', так как настройки будут
+    сохраняться в директории <tt class="filename">/mc/0/SMS</tt>, но если, по каким-
+    либо причинам вас это не устраивает, то дело ваше.
+    Нажмите правую клавишу мыши, чтобы создать директорию.
+  </p><p lang="ru">
+    Выберите файл <tt class="filename">SMS.ELF</tt> в списке локальных файлов и
+    перетащите его из левого окна в правое. На экране появится полоса,
+    показывающая ход процесса копирования:
+  </p><div class="figure"><a name="idm352"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-filezilla03.png" alt="FileZilla FTP client: Transfer of file in progress."></div></div><p class="title"><b>Рисунок 2.19. 
+       
+      
+       <span lang="ru" class="phrase">
+        FTP клиент FileZilla : процесс копирования файла.
+      </span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Поздравляем, вы успешно скопировали файл SMS на карту памяти. Закройте FTP
+    клиент и перезагрузите PS2.
+  </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sms-installation-requirements.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="installation-bootablecdr.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">2.2. 
+    
+    
+    
+    
+    <span lang="ru" class="phrase">Системные требования</span>
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 2.4. 
+    
+    
+    <span lang="ru" class="phrase">Загрузка с SMS CD-диска (только для модчипа)</span>
+  </td></tr></table></div></body></html>

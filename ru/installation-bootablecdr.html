@@ -1,0 +1,172 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.4. Загрузка с SMS CD-диска (только для модчипа)</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="prev" href="installation-copytomemcard.html" title="2.3. Как скопировать SMS на карту памяти (Independence/Модчип)"><link rel="next" href="installation-bootabledvdr.html" title="2.5. Загрузка с SMS DVD-диска (только для модчипа)"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"><link rel="subsection" href="installation-bootablecdr.html#idm373" title="2.4.1. Создаем свой собственный CD диск (только для модчипа)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. 
+    
+    
+    <span lang="ru" class="phrase">Загрузка с SMS CD-диска (только для модчипа)</span>
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="installation-copytomemcard.html">Пред.</a> </td><th width="60%" align="center">Глава 2. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Установка и конфигурирование программы  </span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="installation-bootabledvdr.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-bootablecdr"></a>2.4. 
+    
+    
+    <span lang="ru" class="phrase">Загрузка с SMS CD-диска (только для модчипа)</span>
+  </h2></div></div></div><p lang="ru">
+    Автор этого <a class="ulink" href="http://www.ps2-scene.org/sms/" target="_top">сайта SMS</a>
+    сделал <a class="ulink" href="http://www.ps2-scene.org/sms/eng/cdimage.htm" target="_top">готовые
+    образы CD для SMS</a>.  Это значит, что вам не нужно напрягаться и
+    пытаться создать свой собственный образ диска. На странице, ссылка на
+    которую приведена выше, есть версии для PAL и NTSC.
+  </p><p lang="ru">
+    Когда вы будете использовать такой диск в первый раз, вы увидите
+    стандартное окно <span class="application">uLaunchELF</span>, который
+    является простым файловым менеджером. Мы рекомендуем вам зайти в раздел
+    настроек и назначить кнопку быстрого запуска для SMS (SMS находится в
+    CDFS).
+  </p><p lang="ru">
+    Если вы потом захотите обновить SMS, вы всегда можете скопировать новую
+    версию <tt class="filename">SMS.elf</tt> на USB флешку. Затем, используя
+    файловый менеджер <span class="application">uLaunchELF</span>, скопируйте
+    SMS на карту памяти PS2.  Запишите ее в директорию sms (а иначе она будет
+    видна, как 'corrupted data') и обновите настройки кнопки быстрого запуска.
+    SMS занимает около половины мегабайта на карте памяти.
+  </p><p lang="ru">
+    Поскольку автор SMS не обновляет вышеуказанным сайтом самолично, то всегда
+    есть возможность, что на сайте не будет образа для самой последней
+    версии SMS. В таком случае, вам нужно будет сделать свой собственный
+    диск по нижеследующей инструкции:
+  </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm373"></a>2.4.1. 
+    
+    
+    <span lang="ru" class="phrase">
+      Создаем свой собственный CD диск (только для модчипа)
+    </span>
+  </h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: number; "><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Найдите и скачайте CDGenPS2 v3.0
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Скачайте последнюю
+        <a class="ulink" href="http://home.casema.nl/eugene_plotnikov/" target="_top">версию SMS</a>,
+        а также, последнюю версию
+        <a class="ulink" href="http://www.ps2-scene.org/forums/showthread.php?t=37242" target="_top">uLaunchELF</a>
+        . Вам придется зарегистрироваться на форуме, чтобы получить доступ к
+        странице <span class="application">uLaunchELF</span>.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Распакуйтей файл uLaunchELF.zip и удалите все, кроме BOOTc.ELF.
+        (остальные файлы вам не нужны)
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Переименуйте "<tt class="filename">BOOTc.ELF</tt>" в
+        "<tt class="filename">BOOT.ELF</tt>".
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Переименуйте "<tt class="filename">SMS Version x.y (Rev x).elf</tt>" в
+        "<tt class="filename">SMS.ELF</tt>"
+      </p><div class="figure"><a name="idm394"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdrrenameboth.png" alt="rename both files"></div></div><p class="title"><b>Рисунок 2.20. 
+          
+          
+          <span lang="ru" class="phrase">
+             Переименовываем оба файла.
+          </span>
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Откройте текстовый редактор (например, Notepad), создайте новый файл
+        и скопируйте в него следующие строки:
+      </p><pre class="screen">BOOT2 = cdrom0:\BOOT.ELF;1
+VER = 1.00
+VMODE = NTSC
+</pre><p lang="ru">
+        <span class="emphasis"><em>ВНИМАНИЕ: Если у вас телевизор системы PAL, то наберите
+        PAL вместо NTSC. Не забудьте добавить одну пустую строку (нажмите
+        Enter после NTSC).</em></span>
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        File --&gt; Save As: "<tt class="filename">system.cnf</tt>" (убедитесь, что
+        расширение именно <tt class="filename">.cnf</tt> а не <tt class="filename">.txt</tt>
+        ).
+      </p><p lang="ru">
+        Теперь у вас должны быть такие файлы:
+      </p><div class="figure"><a name="idm413"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-smsfolder.png" alt="Files ready for CDGenPS2"></div></div><p class="title"><b>Рисунок 2.21. 
+          
+          
+          <span lang="ru" class="phrase">
+            Файлы для <span class="application">CDGenPS2</span>.
+          </span>
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Запустите <span class="application">CDGenPS2</span>, после чего перетащите
+        файлы в главное окно программы в следующем порядке:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: letter; "><li class="listitem" style="list-style-type: letter"><p lang="ru">
+            <tt class="filename">system.cnf</tt>
+          </p></li><li class="listitem" style="list-style-type: letter"><p lang="ru">
+            <tt class="filename">BOOT.ELF</tt>
+          </p></li><li class="listitem" style="list-style-type: letter"><p lang="ru">
+            <tt class="filename">SMS.ELF</tt>
+          </p></li></ul></div><p lang="ru">
+        Не спешите, добавляйте файлы по одному.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Кликаем правой кнопкой мыши на <tt class="filename">system.cnf</tt> -&gt; edit.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Выбираем Fix LBA и вводим '12231':
+      </p><div class="figure"><a name="idm441"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-fixlba.png" alt="Fix LBA option in CDGenPS2"></div></div><p class="title"><b>Рисунок 2.22. 
+          
+          
+          <span lang="ru" class="phrase">
+            Окно Fix LBA в CDGenPS2.
+          </span>
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Теперь вы можете добавить на этот диск любые файлы по своему
+        усмотрению. Например, МР3 или видео. Зачем месту-то
+        пропадать?
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Окно CDGenPS2 должно выглядеть примерно так:
+      </p><div class="figure"><a name="idm453"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdgenps2.png" alt="Fix LBA option in CDGenPS2"></div></div><p class="title"><b>Рисунок 2.23. 
+          
+          
+          <span lang="ru" class="phrase">
+            Окно CDGenPS2 после добавления файлов.
+          </span>
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Выберите File -&gt; Create CD. Сохраните результат, как BIN. Имя файла
+        значения не имеет, пока вы помните, как вы его назвали и где его
+        искать.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Запишите диск, используя опцию Disc at Once. Если вы уже знаете, как
+        записывать диски, то на этом ваши мучения по созданию диска завершены.
+        Если нет, то продолжайте читать.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Запустите Nero и, первым делом, отключите надоедливый Wizard.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Выберите Recorder -&gt; Burn Image (в некоторых версиях Nero раздел
+        Burn Image может быть в меню File).
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Найдите и откройте в Nero файл CUE, который был создан когда вы
+        сохраняли файл типа BIN (на стадии создания образа диска)
+      </p><div class="figure"><a name="idm471"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdburn01.png" alt="Burning the image, step 1."></div></div><p class="title"><b>Рисунок 2.24. 
+          
+          
+          <span lang="ru" class="phrase">
+            Запись образа, шаг 1.
+          </span>
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="ru">
+        Нажмите на кнопку Burn. У меня лично не было проблем с записью на
+        скоростях до 40х, но, возможно, вы захотите уменьшить скорость
+        записи.
+      </p><div class="figure"><a name="idm481"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdburn02.png" alt="Burning the image, step 2."></div></div><p class="title"><b>Рисунок 2.25. 
+          
+          
+          <span lang="ru" class="phrase">
+            Запись образа, шаг 1.
+          </span>
+        </b></p></div><br class="figure-break"></li></ul></div><p lang="ru">
+    Ну, вот и все. Диск записан. Если вы не хотите записывать uLaunchELF на
+    такой диск, просто переименуйте SMS.ELF в BOOT.ELF (до создания образа).
+  </p></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="installation-copytomemcard.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="installation-bootabledvdr.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. 
+    
+    
+    <span lang="ru" class="phrase">Как скопировать SMS на карту памяти (Independence/Модчип)</span>
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 2.5. 
+    
+    
+    <span lang="ru" class="phrase">Загрузка с SMS DVD-диска (только для модчипа)</span>
+  </td></tr></table></div></body></html>

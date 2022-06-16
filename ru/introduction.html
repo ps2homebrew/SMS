@@ -1,0 +1,78 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Глава 1. Введение</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="prev" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="next" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Глава 1. 
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Введение</span>
+      
+      
+    </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="index.html">Пред.</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="installation.html">След.</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="introduction"></a>Глава 1. 
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Введение</span>
+      
+      
+    </h1></div></div></div><p lang="ru">
+  Simple Media System (<span class="application">SMS</span>) является результатом
+  интереса создателя программы (Евгений Плотников) к игровой приставке Sony Playstation 2,
+  MIPS, DivX и MP3.
+  Его целью было создание простого плейера DivX, который смог бы воспроизводить фильмы
+  в достойной резолюции на немодифицированной PS2 без применения каких-либо
+  дополнительных средств, как, например, жесткий диск или адаптер сети.
+</p><p lang="ru">
+  Зачем создавать "систему"? Просто потому, что одной только программы-плейера
+  недостаточно. Поскольку PS2 была создана так, чтобы игнорировать "неправильные"
+  диски, он воспользовался идеей UMCDR от Drakonite и разработал свою собственную
+  систему UMCDR (которая называется CDDAFS). Эта система позволяет записывать данные
+  на диск в аудио CD формате, который может быть воспроизведен (при удачной фазе луны)
+  на любой PS2.
+</p><p lang="ru">
+  Но это только первая составляющая SMS. Вторая составляющая - это компьютерная
+  программа, которая создает файлы cue/bin, для того, чтобы записать такой диск.
+  И, наконец, сама программа плейера. Система еще не завершена, но она уже может
+  воспроизводить фильмы в DivX со звуком с приличной частотой кадров. Плейер основан
+  на известном проекте ffmpeg. EEUG использовал  некоторые принципы из этого проекта,
+  как, например, поддержка DivX 5.xx и MP3, а также, сделал несколько изменений, которые
+  требовала специфика "железа" PS2. Система была проверена на многих DivX/XViD фильмах,
+  с различными разрешениями и закодированными разными методами и, похоже, что она
+  вполне работоспособна.
+</p><p lang="ru">
+  По сравнению с первоначальной концепцией, проект SMS вырос настолько, что, на
+  сегодняшний момент, он включает в себя поддержку сетевого окружения, USB дисков,
+  а также жестких дисков. Кроме того, появилась поддержка субтитров и полнофункциональный
+  MP3-плейер. Все файлы проекта доступны в системе контроля версий "subversion" (SVN)
+  на сайте PS2dev.org. Эти файлы были выложены в свободный доступ в надежде, что
+  система окажется интересной для "фанатов" PS2, которые смогут использовать их в
+  качестве базиса для своих собственных проектов.
+</p><p lang="ru">
+  Этот документ является полным руководством по установке и использованию системы.
+  На сегодняшний момент, он поддерживается в формате DocBook XML и может быть
+  сконвертирован в любой из множества форматов, например, таких как одностраничный или
+  многостраничный HTML. Позже он будет (если получится) распространяться также в виде PDF
+  файла.
+</p></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="index.html">Пред.</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="installation.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">
+      <span class="application">SMS</span> - Playstation 2 Simple Media System
+     </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> Глава 2. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Установка и конфигурирование программы  </span>
+    </td></tr></table></div></body></html>

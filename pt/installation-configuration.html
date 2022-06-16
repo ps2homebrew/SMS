@@ -1,0 +1,239 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.6. Configuração</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Capítulo 2. Instalação"><link rel="prev" href="installation-bootabledvdr.html" title="2.5. #Using a bootable SMS DVDR (Modchip only)#"><link rel="next" href="usage.html" title="Capítulo 3. Utilização"><link rel="chapter" href="introduction.html" title="Capítulo 1. Introdução"><link rel="chapter" href="installation.html" title="Capítulo 2. Instalação"><link rel="chapter" href="usage.html" title="Capítulo 3. Utilização"><link rel="appendix" href="faq.html" title="Apêndice A. FAQ - Questões Mais Frequentes"><link rel="appendix" href="apb.html" title="Apêndice B. Variados"><link rel="appendix" href="legal.html" title="Apêndice C."><link rel="subsection" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Configuração de Rede"><link rel="subsection" href="installation-configuration.html#installation-configration-generalconfig" title="2.6.2. Configuração Geral"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.6. 
+    
+    <span lang="pt" class="phrase">
+      Configuração
+    </span>
+    
+
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="installation-bootabledvdr.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. 
+      
+      
+      
+      <span lang="pt" class="phrase">Instalação</span>
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Próximo</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-configuration"></a>2.6. 
+    
+    <span lang="pt" class="phrase">
+      Configuração
+    </span>
+    
+
+  </h2></div></div></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Dica</h3><p lang="pt">
+      Normalmente não é necessário modificar nenhum dos ficheiros de
+      configuração para que o SMS funcione.  Se estiver apenas a usar o SMS de
+      forma simples, pode saltar esta secção.  Só necessita de alterar a
+      configuração do SMS se quiser que este funcione em rede.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="installation-configuration-ipconfig"></a>2.6.1. 
+      
+      <span lang="pt" class="phrase">
+        Configuração de Rede
+      </span>
+      
+    </h3></div></div></div><p lang="pt">
+      Se tiver um adaptador de rede oficial da <span class="trademark">Sony</span>™,
+      e pretender usar o SMS para vizualizar ficheiros através da rede, terá
+      de atribuir um endereço de IP e subnet à PS2.  Provavelmente quererá isto
+      num modo semi-permanente, esta secção ajudá-lo-á a escolher opções
+      compatíveis com a seua rede doméstica.
+    </p><p lang="pt">
+      Configuração de IP para o SMS está guardado em
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>. (não
+      <tt class="filename">CONFIG.DAT</tt>).  Repare que os dois ficheiros estão
+      separados. O SMS não procurará por definições em
+      <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.
+    </p><p lang="pt">
+      Para atribuir um endereço de IP à PS2, terá de criar um ficheiro
+      chamado <tt class="filename">IPCONFIG.DAT</tt> (e.g. usando o notepad)
+      e deverá ter apenas uma linha de texto:
+    </p><pre class="screen">
+      &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
+    </pre><p lang="pt">
+      Se crou um ficheiro <tt class="filename">CONFIG.DAT</tt> na secção
+      <a class="xref" href="installation.html" title="Capítulo 2. Instalação">Capítulo 2, <i>
+      
+      
+      
+      <span lang="pt" class="phrase">Instalação</span>
+      
+    </i></a> pode usar o mesmo ficheiro, mas lembre-se
+      de o renomear para <tt class="filename">IPCONFIG.DAT</tt>.  Assim the tiver
+      criado este ficheiro, tem de copiá-lo para a sua PS2, para a localização
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>. Pode fazer isto
+      utilizando a técnica de FTP referida na secção
+      <a class="link" href="installation-copytomemcard.html#installation-copytomemcard-ftp">instalação</a>.
+    </p><p lang="pt">
+      Terá de escolher um endereço de IP que seja diferente de todos os outros
+      endereços de IP dos PC's na seua rede local, mas com a mesma subnet que
+      o seu PC.  Terá de desligar a opção DHCP no seu PC, e usar uma
+      configuração de IP manual (ou estático).
+    </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="3">
+        
+        <p lang="pt">Definições da PS2</p>
+        
+      </td><td>
+        
+        <p lang="pt">Endereço de IP da PS2:</p>
+        
+      </td><td>192.168.a.x</td></tr><tr><td>
+        
+        <p lang="pt">'Subnet Mask' da PS2:</p>
+        
+      </td><td>255.255.255.0</td></tr><tr><td>
+        
+        <p lang="pt">'Gateway' da PS2:</p>
+        
+      </td><td>192.168.a.z</td></tr><tr><td rowspan="3">
+        
+        <p lang="pt">Definições do PC</p>
+        
+      </td><td>
+        
+        <p lang="pt">Endereço de IP do PC:</p>
+        
+      </td><td>192.168.a.y</td></tr><tr><td>
+        
+        <p lang="pt">'Subnet Mask' do PC:</p>
+        
+      </td><td>255.255.255.0</td></tr><tr><td>
+        
+        <p lang="pt">'Gateway' do PC:</p>
+        
+      </td><td>192.168.a.z</td></tr></tbody></table></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm552"></a>2.6.1.1. 
+        
+        <span lang="pt" class="phrase">Configuração de Exemplo 1</span>
+        
+      </h4></div></div></div><p lang="pt">
+        Esta configuração é para um PC e PS2 ligados directamente com um cabo
+        cruzado, ou ambos ligados a um 'switcher'.  Não existe nenhum 'gateway'
+        de internet ao qual se ligar, por isso o 'gateway' é o IP do PC.
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+        
+          <p lang="pt">Definições da PS2</p>
+        
+      </td><td>
+        
+          <p lang="pt">Endereço de IP da PS2:</p>
+        
+      </td><td>192.168.0.2</td></tr><tr><td>
+        
+        <p lang="pt">'Subnet Mask' da PS2:</p>
+        
+      </td><td>255.255.255.0</td></tr><tr><td>
+        
+        <p lang="pt">'Gateway' da PS2:</p>
+        
+      </td><td>192.168.0.1</td></tr><tr><td>
+          
+          <p lang="pt">mc0:/SYS-CONF/IPCONFIG.DAT</p>
+          
+        </td><td>
+        <div class="mediaobject"><img src="../images/installation-ipconfig.dat1.png" alt="Sample ipconfig.dat file screenshot."></div>
+        </td></tr><tr><td rowspan="3">
+        
+          <p lang="pt">Definições do PC</p>
+        
+        </td><td>
+        
+          <p lang="pt">Endereço de IP do PC:</p>
+        
+        </td><td>192.168.0.1</td></tr><tr><td>
+        
+        <p lang="pt">'Subnet Mask' do PC:</p>
+        
+        </td><td>255.255.255.0</td></tr><tr><td>
+        
+        <p lang="pt">'Gateway' do PC:</p>
+        
+      </td><td>192.168.0.1</td></tr></tbody></table></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm596"></a>2.6.1.2. 
+        
+        <span lang="pt" class="phrase">Configuração de Exemplo 2</span>
+        
+      </h4></div></div></div><p lang="pt">
+        Aqui está a configuração que uso em casa.  PC e PS2 estão na mesma
+        'subnet' 192.168.2.___, e o meu router/access point são 192.168.2.1.
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+        
+          <p lang="pt">Definições da PS2</p>
+        
+        </td><td>
+        
+          <p lang="pt">Endereço de IP da PS2:</p>
+        
+        </td><td>192.168.2.22</td></tr><tr><td>
+        
+        <p lang="pt">'Subnet Mask' da PS2:</p>
+        
+        </td><td>255.255.255.0</td></tr><tr><td>
+        
+        <p lang="pt">'Gateway' da PS2:</p>
+        
+        </td><td>192.168.2.1</td></tr><tr><td>
+          
+          <p lang="pt">mc0:/SYS-CONF/IPCONFIG.DAT</p>
+          
+
+        </td><td>
+        <div class="mediaobject"><img src="../images/installation-ipconfig.dat2.png" alt="Sample ipconfig.dat file screenshot."></div>
+        </td></tr><tr><td rowspan="3">
+        
+          <p lang="pt">Definições do PC</p>
+        
+        </td><td>
+        
+          <p lang="pt">Endereço de IP do PC:</p>
+        
+        </td><td>192.168.2.23</td></tr><tr><td>
+        
+        <p lang="pt">'Subnet Mask' do PC:</p>
+        
+        </td><td>255.255.255.0</td></tr><tr><td>
+        
+        <p lang="pt">'Gateway' do PC:</p>
+        
+      </td><td>192.168.2.1</td></tr></tbody></table></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Atenção</h3><p lang="pt">
+        Se estiver ligado a internet pela mesma rede que usa para se ligar à
+        PS2 <span class="bold"><strong>tenha muito cuidado</strong></span> quando
+        alterar a configuração de rede do seu PC.  Verifique que o seu PC se
+        encontra na mesma 'subnet' que o seu router/access point (i.e. os
+        primeiros três números do IP do seu PC têm de ser os mesmos do IP do
+        router), e de que o 'Gateway' permanece o mesmo (isto será normalmente
+        o endereço de IP do router. Não fazer isto pode resultar numa perda de
+        ligação à internet. Se não tiver a certeza do que está a fazer, por
+        favor tome nota das suas definições iniciais escrevendo
+        <strong class="userinput"><code>ipconfig /all</code></strong> no command prompt.
+      </p></div></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="installation-configration-generalconfig"></a>2.6.2. 
+      
+      <span lang="pt" class="phrase">
+        Configuração Geral
+      </span>
+      
+
+    </h3></div></div></div><p lang="pt">
+      A configuração geral do SMS está guardada em
+      <tt class="filename">mc0:/SMS/SMS.cfg</tt>. Este ficheiro é criado pela
+      aplicação quando você salva as suas definições, e não está feito para
+      ser editado à mão.
+      <span class="bold"><strong>Não precisa de criar este ficheiro</strong></span>.
+      O SMS cria-lo-á quando salvar as definições no SMS (veja o menu de
+      configuração na secção
+      <a class="link" href="usage-controls.html#usage-controls-navigation" title="3.1.2. Durante a Navegação">Utilização</a>).
+    </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Nota</h3><p lang="pt">
+        Se tiver problemas com as definições, é aconselhável que apague o seu
+        ficheiro <tt class="filename">mc0:/SMS/SMS.cfg</tt> , e deixe o SMS criar
+        um novo da próxima vez que for executado.
+      </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="installation-bootabledvdr.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Próximo</a></td></tr><tr><td width="40%" align="left" valign="top">2.5. 
+    
+    <span lang="pt" class="phrase">#Using a bootable SMS DVDR (Modchip only)#</span>
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Início</a></td><td width="40%" align="right" valign="top"> Capítulo 3. 
+      
+      
+      
+      <span lang="pt" class="phrase">Utilização</span>
+      
+    </td></tr></table></div></body></html>

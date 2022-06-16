@@ -1,0 +1,169 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.4.  Using a bootable SMS CDR (Modchip only)</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Chapter 2.  Installation"><link rel="prev" href="installation-copytomemcard.html" title="2.3.  Copying SMS to your memory card (Independence/Modchip)"><link rel="next" href="installation-bootabledvdr.html" title="2.5.  Using a bootable SMS DVDR (Modchip only)"><link rel="chapter" href="introduction.html" title="Chapter 1.  Introduction"><link rel="chapter" href="installation.html" title="Chapter 2.  Installation"><link rel="chapter" href="usage.html" title="Chapter 3.  Usage"><link rel="appendix" href="faq.html" title="Appendix A.  Frequently Asked Questions"><link rel="appendix" href="apb.html" title="Appendix B.  Bits and Pieces"><link rel="appendix" href="legal.html" title="Appendix C.  GNU Free Documentation License"><link rel="subsection" href="installation-bootablecdr.html#idm374" title="2.4.1.  Creating Your Own CDR (Modchip Only)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. 
+    <span lang="en" class="phrase">Using a bootable SMS CDR (Modchip only)</span>
+    
+    
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="installation-copytomemcard.html">Prev</a> </td><th width="60%" align="center">Chapter 2. 
+      <span lang="en" class="phrase">Installation</span>
+      
+      
+      
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="installation-bootabledvdr.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-bootablecdr"></a>2.4. 
+    <span lang="en" class="phrase">Using a bootable SMS CDR (Modchip only)</span>
+    
+    
+  </h2></div></div></div><p lang="en">
+    The author of the
+    <a class="ulink" href="http://www.ps2-scene.org/sms/" target="_top">SMS website</a> has kindly
+    contributed
+    <a class="ulink" href="http://www.ps2-scene.org/sms/eng/cdimage.htm" target="_top">pre-made
+    CD images for SMS</a>.  This means you don't need to
+    go to the bother of creating your own image.  PAL and NTSC versions are
+    available, on the page linked above.
+  </p><p lang="en">
+    When you first use this disc, you will get the default
+    <span class="application">uLaunchELF</span> settings, which is just the file
+    browser. We suggest you go to the settings option, and map a button to
+    launch SMS. (SMS is under CDFS). These settings are saved, so you only
+    have to do this once.
+  </p><p lang="en">
+    If you want to upgrade SMS later, you can copy the new
+    <tt class="filename">SMS.elf</tt> onto a USB drive.  Then use the
+    <span class="application">uLaunchELF</span> file browser to copy it over to
+    your PS2's memory card.  Put it into the sms folder (otherwise it will
+    appear as 'corrupted data'), and adjust your key mappings to suit. it
+    takes up about half a meg on your memory card.
+  </p><p lang="en">
+    As the author of SMS does not work on the website himself, the version
+    of SMS in these CD Images will occasionally fall behind. Here are
+    instructions to make your own SMS disc:
+  </p><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="idm374"></a>2.4.1. 
+    <span lang="en" class="phrase">
+      Creating Your Own CDR (Modchip Only)
+    </span>
+    
+    
+  </h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: number; "><li class="listitem" style="list-style-type: number"><p lang="en">
+        You will need to find and download CDGenPS2 v3.0
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Download the latest
+        <a class="ulink" href="http://home.casema.nl/eugene_plotnikov/" target="_top">SMS Release</a>,
+        and the latest
+        <a class="ulink" href="http://www.ps2-scene.org/forums/showthread.php?t=37242" target="_top">uLaunchELF</a>
+        release.  You will need to sign up at the forums to view the
+        <span class="application">uLaunchELF</span> pages.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Unzip the uLaunchELF zip file, and delete everything but BOOTc.ELF.
+        (you don't need the other stuff)
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Rename "<tt class="filename">BOOTc.ELF</tt>" to
+        "<tt class="filename">BOOT.ELF</tt>".
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Rename "<tt class="filename">SMS Version x.y (Rev x).elf</tt>" to
+        "<tt class="filename">SMS.ELF</tt>"
+      </p><div class="figure"><a name="idm395"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdrrenameboth.png" alt="rename both files"></div></div><p class="title"><b>Figure 2.20. 
+          <span lang="en" class="phrase">
+             Rename both files.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Open Notepad, and paste this:
+      </p><pre class="screen">BOOT2 = cdrom0:\BOOT.ELF;1
+VER = 1.00
+VMODE = NTSC
+</pre><p lang="en">
+        <span class="emphasis"><em>Note: Use PAL instead of NTSC if you have a PAL TV, and
+        make sure to add a blank line after the last line (press enter after
+        NTSC).</em></span>
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        File --&gt; Save As: "<tt class="filename">system.cnf</tt>" (make sure it is
+        a <tt class="filename">.cnf</tt> file, not a <tt class="filename">.txt</tt>
+        file).
+      </p><p lang="en">
+        You should now have:
+      </p><div class="figure"><a name="idm414"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-smsfolder.png" alt="Files ready for CDGenPS2"></div></div><p class="title"><b>Figure 2.21. 
+          <span lang="en" class="phrase">
+            Files ready for <span class="application">CDGenPS2</span>.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Open <span class="application">CDGenPS2</span>, and in order:
+      </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: letter; "><li class="listitem" style="list-style-type: letter"><p lang="en">
+            Drag <tt class="filename">system.cnf</tt> into the main window.
+          </p></li><li class="listitem" style="list-style-type: letter"><p lang="en">
+            Drag <tt class="filename">BOOT.ELF</tt> into the main window.
+          </p></li><li class="listitem" style="list-style-type: letter"><p lang="en">
+            Drag <tt class="filename">SMS.ELF</tt> into the main window.
+          </p></li></ul></div><p lang="en">
+        (Don't rush, do them one at a time).
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Right click <tt class="filename">system.cnf</tt> -&gt; edit.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        choose Fix LBA, and enter '12231':
+      </p><div class="figure"><a name="idm442"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-fixlba.png" alt="Fix LBA option in CDGenPS2"></div></div><p class="title"><b>Figure 2.22. 
+          <span lang="en" class="phrase">
+            Fix LBA option in CDGenPS2.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Go ahead and add some other files and folders now if you want, such
+        as MP3s and videos... you might as well use the rest of the space on
+        the CD.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        CDGenPS2 should look like this...
+      </p><div class="figure"><a name="idm454"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdgenps2.png" alt="Fix LBA option in CDGenPS2"></div></div><p class="title"><b>Figure 2.23. 
+          <span lang="en" class="phrase">
+            CDGenPS2 window after adding files.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Choose File -&gt; Create CD. Save the file as type BIN files. (the name
+        doesn't matter, so long as you remember where you saved it).
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Burn the image using Disc at Once. If you already know how to burn a
+        CD image, you're done here. just burn the disc and put it in your PS2.
+        if not, read on.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Open Nero, and cancel the wizard that appears.
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Choose Recorder -&gt; Burn Image (Burn Image may also be under the File
+        menu in some versions of Nero)
+      </p></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Browse and select the CUE file that was saved with your BIN file when
+        you made the CD image.
+      </p><div class="figure"><a name="idm472"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdburn01.png" alt="Burning the image, step 1."></div></div><p class="title"><b>Figure 2.24. 
+          <span lang="en" class="phrase">
+            Burning the image, step 1.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></li><li class="listitem" style="list-style-type: number"><p lang="en">
+        Press Burn... I have no trouble myself with 40x, but you may want to
+        lower the speed.
+      </p><div class="figure"><a name="idm482"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/installation-cdburn02.png" alt="Burning the image, step 2."></div></div><p class="title"><b>Figure 2.25. 
+          <span lang="en" class="phrase">
+            Burning the image, step 2.
+          </span>
+          
+          
+        </b></p></div><br class="figure-break"></li></ul></div><p lang="en">
+    That's it. you're done.  If you don't want to include uLaunchELF on the
+    CD, just rename SMS.ELF to BOOT.ELF.
+  </p></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="installation-copytomemcard.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="installation-bootabledvdr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. 
+    <span lang="en" class="phrase">Copying SMS to your memory card (Independence/Modchip)</span>
+    
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 2.5. 
+    <span lang="en" class="phrase">Using a bootable SMS DVDR (Modchip only)</span>
+    
+    
+  </td></tr></table></div></body></html>

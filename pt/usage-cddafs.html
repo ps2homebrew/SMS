@@ -1,0 +1,232 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>3.3. Correndo ficheiros de video a partir de um CD-R (without a modchip)</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="usage.html" title="Capítulo 3. Utilização"><link rel="prev" href="usage-network.html" title="3.2. Correndo ficheiros numa Rede Local"><link rel="next" href="usage-dvdr.html" title="3.4. Correndo ficheiros a partir de um DVD-R (without a modchip)"><link rel="chapter" href="introduction.html" title="Capítulo 1. Introdução"><link rel="chapter" href="installation.html" title="Capítulo 2. Instalação"><link rel="chapter" href="usage.html" title="Capítulo 3. Utilização"><link rel="appendix" href="faq.html" title="Apêndice A. FAQ - Questões Mais Frequentes"><link rel="appendix" href="apb.html" title="Apêndice B. Variados"><link rel="appendix" href="legal.html" title="Apêndice C."><link rel="subsection" href="usage-cddafs.html#usage-cddafs-short" title="3.3.1. Instruções curtas"><link rel="subsection" href="usage-cddafs.html#usage-cddafs-detail" title="3.3.2. Instruções detalhadas"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.3. 
+    
+    <span lang="pt" class="phrase">Correndo ficheiros de video a partir de um CD-R
+    (without a modchip)</span>
+    
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="usage-network.html">Anterior</a> </td><th width="60%" align="center">Capítulo 3. 
+      
+      
+      
+      <span lang="pt" class="phrase">Utilização</span>
+      
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage-dvdr.html">Próximo</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="usage-cddafs"></a>3.3. 
+    
+    <span lang="pt" class="phrase">Correndo ficheiros de video a partir de um CD-R
+    (without a modchip)</span>
+    
+  </h2></div></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Nota</h3><p lang="pt">
+      Para correr ficheiros de video a partir de um CD, precisa de gravar
+      o CD num formato especial. A PS2 não consegue ler data de CD's com
+      formato ISO. O <span class="quote">“<span class="quote">formato especial</span>”</span> é criado utilizando
+      o CDXplorer.exe.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-cddafs-short"></a>3.3.1. 
+      
+      <span lang="pt" class="phrase">Instruções curtas</span>
+      
+    </h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p lang="pt">Faça o download do CDXplorer.exe do SVN;</p></li><li class="listitem"><p lang="pt">Execute-o no Windows;</p></li><li class="listitem"><p lang="pt">Arraste os ficheiros que deseja do Explorador do Widnows
+  para a aplicação (ou use o butão '+' na barra de ferramentas);</p></li><li class="listitem"><p lang="pt">
+    Salve a compilação - ficará com um ficheiro cue e um bin;
+  </p></li><li class="listitem"><p lang="pt">
+    Feche a aplicação;
+  </p></li><li class="listitem"><p lang="pt">
+    Execute uma aplicação de gravação de CD's (i.e. Nero);
+  </p></li><li class="listitem"><p lang="pt">
+    Abra o ficheiro .cue;
+  </p></li><li class="listitem"><p lang="pt">
+    Se estiver a usar o Nero 5 seleccione a opção Disk-at-once/96;
+  </p></li><li class="listitem"><p lang="pt">
+    Grave o CD;
+  </p></li></ul></div><p lang="pt">
+Boa Sorte
+</p><p lang="pt">
+Eugene
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Nota</h3><p lang="pt">
+      #If you want to burn avi files to a DVDR, please refer to the
+      <a class="xref" href="usage-dvdr.html" title="3.4. Correndo ficheiros a partir de um DVD-R (without a modchip)">DVD-R</a> section.#
+    </p></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-cddafs-detail"></a>3.3.2. 
+      
+      <span lang="pt" class="phrase">Instruções detalhadas</span>
+      
+    </h3></div></div></div><p lang="pt">
+      A PS2 não modificada não consegue ler data de um CD-R normal. Isto deve-
+      se a um mecanismo de protecção anti-cópia interno. Para dar a volta a
+      isto, o criador do SMS desenvolveu um pequeno truque que leva a PS2 a
+      pensar que o CD-R é um <span class="bold"><strong>CD de áudio</strong></span>.
+      A PS2 consegue ler o CD-R se este for um CD de áudio.
+      O principio básico consiste em criar um disco no formato CDDAFS, que é
+      essencialmente um disco que se parece suficientemente com um CD de áudio
+      para que a PS2 o aceite. O disco contém o seu ficheiro .avi escondido
+      dentro de pistas de áudio, e o SMS converte-as à medida que as lê.
+      Esperto huh?
+    </p><p lang="pt">
+      O criador programou um utilitário (CDXplorer.exe) para criar os
+      ficheiros .cue/.bin do ficheiro .avi, pronto para ser gravado em CD-R.
+      Depois, desde que o software de gravação de CD's consiga ler ficheiros
+      .cue/.bin, pode gravar esses ficheiros num CD-R.
+    </p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Importante</h3><p lang="pt">
+        Não basta copiar os ficheiros .cue/.bin para um CD em formato ISO.
+        Isto não funciona. Tem de usar um software de gravação de CD que
+        funcione com ficheiros .cue/.bin. Os únicos conhecidos de momento
+        são o Nero e o cdrdao.
+      </p></div><p lang="pt">
+      Faça o download do CDXplorer.exe a partir de
+      <a class="ulink" href="http://ps2dev.org/ps2/Projects/Softwares" target="_top">http://ps2dev.org/ps2/Projects/Softwares</a>
+      (<tt class="filename">CDXplorer.exe</tt> pode ser encontrado dentro do
+      ficheiro <tt class="filename">SMS.zip</tt> nesta página).
+    </p><p lang="pt">
+      Execute a aplicação fasendo duplo clique sobre ela (não é necessário
+      instalar).
+    </p><div class="figure"><a name="idm1263"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-cdxplorer01.png" alt="Screenshot of CDXplorer."></div></div><p class="title"><b>Figura 3.20. 
+        
+        <span lang="pt" class="phrase">
+          Screenshot do CDXplorer.
+        </span>
+        
+      </b></p></div><br class="figure-break"><p lang="pt">
+      Assim que o CDXplorer esteja a correr, arraste 1 ou mais ficheiros
+      AVI para a janela.
+    </p><div class="figure"><a name="idm1272"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-cdxplorer02.png" alt="Screenshot of CDXplorer."></div></div><p class="title"><b>Figura 3.21. 
+        
+        <span lang="pt" class="phrase">
+          Screenshot do CDXplorer mostrando ficheiro AVI
+          <tt class="filename">testvid.avi</tt>
+          depois de este ser arrastado do Explorador do Windows.
+        </span>
+        
+      </b></p></div><br class="figure-break"><p lang="pt">
+      Clique file-&gt;SaveAs, insira um nome (e.g. 'test') e pressione
+      &lt;enter&gt;. Isto salvará dois ficheiros: <tt class="filename">test.cue</tt>
+      e <tt class="filename">test.bin</tt> no directório actual.
+    </p><p lang="pt">
+      Pode agora fechar o CDXplorer.
+    </p><p lang="pt">
+      De seguida execute o seu programa de gravação de CD's. Tem de ser um
+      software que permita carregar ficheiros .cue. Carregue o ficheiro .cue.
+    </p><p lang="pt">
+      (não confirmado): pode ser necessário usar CD-R (em vez de CD-RW) -
+      suspeito disto porque ainda não consegui pôr um CD-RW a funcionar.
+    </p><p lang="pt">
+
+    </p><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm1288"></a>3.3.2.1. 
+        
+        <span lang="pt" class="phrase">Nero 5</span>
+        
+      </h4></div></div></div><p lang="pt">
+        Se estiver a usar o Nero 5, seleccione
+        '<span class="bold"><strong>Disk-at-once/96</strong></span>',
+        e grave o CD-R
+      </p></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm1293"></a>3.3.2.2. 
+        
+        <span lang="pt" class="phrase">Se não tiver o Nero 5</span>
+        
+      </h4></div></div></div><p lang="pt">
+        Se você não tiver o Nero 5 (eu não tenho), pode utilizar outro
+        software (grátis) para gravar CD's em modo disc-at-once. O único
+        porgrama que eu consegui usar com sucesso foi o
+        <span class="application">cdrdao</span> (CDR Disc At Once), que é uma
+        aplicação de linha de comando para gravar CD's. Está disponivel para
+        Linux e para Windows. Se encontrar outras aplicações que sejam mais
+        fáceis de utilizar, por favor refira os detalhes no forum do SMS.
+        Instalação do <span class="application">cdrdao</span> pode ser feita da
+        seguinte maneira:
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td>
+                
+                <p lang="pt">Linux (Fedora Core 4)</p>
+                
+              </td><td>
+                
+                <p lang="pt">
+                  <strong class="userinput"><code># yum install cdrdao</code></strong>
+                </p>
+                
+              </td></tr><tr><td>
+                
+                <p lang="pt">Windows</p>
+                
+              </td><td>
+                
+                <p lang="pt">
+                  Downloade e instale
+                  <a class="ulink" href="http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip" target="_top">http://ovh.dl.sourceforge.net/sourceforge/cdrdao/cdrdao-1.1.5.bin.x86.win32.zip</a>.
+                </p>
+                
+              </td></tr></tbody></table></div><p lang="pt">
+        Para gravar o CD execute o seguinte comando: (Note a opção
+        --force que é necessária para efectuar a gravação sem ligar
+        ao aviso 'mais curto que 4 segundos')
+      </p><p lang="pt">
+        <strong class="userinput"><code>cdrdao write --speed MAX --force test.cue</code></strong>
+      </p><p lang="pt">
+        Deverá aparecer algo como isto:
+      </p><pre class="screen">[dave@blue ~]$ cdrdao write --speed MAX --force test.cue
+Cdrdao version 1.1.9 - (C) Andreas Mueller &lt;andreas@daneb.de&gt;
+SCSI interface library - (C) Joerg Schilling
+Paranoia DAE library - (C) Monty
+Check http://cdrdao.sourceforge.net/drives.html#dt for current driver tables.
+WARNING: Track 1: Length is shorter than 4 seconds.
+Error trying to open /dev/cdrecorder exclusively ... retrying in 1 second.
+Using libscg version 'schily-0.8'
+/dev/cdrecorder: PHILIPS CDRW2412A Rev: P1.4
+Using driver: Generic SCSI-3/MMC - Version 2.0 (options 0x0000)
+Burning entire 74 mins disc.
+Starting write at speed 24...
+Pausing 10 seconds - hit CTRL-C to abort.
+Process can be aborted with QUIT signal (usually CTRL-\).
+Turning BURN-Proof on
+Executing power calibration...
+Power calibration successful.
+Writing track 01 (mode AUDIO/AUDIO )...
+Writing track 02 (mode AUDIO/AUDIO )...
+Wrote 110 of 110 MB (Buffers 100% 98%).
+Wrote 49178 blocks. Buffer fill min 93%/max 100%.
+Flushing cache...
+Writing finished successfully.
+[dave@blue ~]$</pre><p lang="pt">
+        E pronto. Deverá ter um CD com um ficheiro AVI compativel com o SMS.
+        Este Cd não funcionará no seu PC. Aliás, se o colocar no PC, ele
+        provavelmente tentará tocá-lo como se fosse um CD de áudio e apenas
+        ouvirá 'ruido'. Inicie o SMS, depois coloque o CD na PS2 e deverá ver
+        o seguinte:
+      </p><div class="figure"><a name="idm1320"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cdloading.png" alt="Screenshot showing display while disc is loading."></div></div><p class="title"><b>Figura 3.22. 
+          
+          <span lang="pt" class="phrase">
+            Screenshot mostrando o ecrã enquanto o disco está a carregar.
+          </span>
+          
+        </b></p></div><br class="figure-break"><div class="figure"><a name="idm1328"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cdbrowsing.png" alt="CDDAFS CD loaded"></div></div><p class="title"><b>Figura 3.23. 
+          
+          <span lang="pt" class="phrase">
+            Screenshot do SMS mostrando o ficheiro de video carregado
+            a partir do CD-R em formato CDDAFS.
+          </span>
+          
+        </b></p></div><br class="figure-break"><p lang="pt">
+        Pode agora navegar até ao ficheiro que copiou, e pressionar X para
+        iniciar a leitura da maneira habitual.
+      </p><p lang="pt">
+        Se não vir o ficheiro, e a sua PS2 fizer um barulho constante, ou o
+        seguinte icon 'vermelho', então existe um problema com o disco.
+        Provavelmente você tem um CD-R queimado (estragado), e terá de tentar
+        novamente. Repita as instruções mas com uma velocidade de gravação
+        mais baixa. Se utilizou um CD-RW, tente agora com um CD-R.
+      </p><div class="figure"><a name="idm1338"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-cderror.png" alt="CDDAFS CD loaded"></div></div><p class="title"><b>Figura 3.24. 
+          
+          <span lang="pt" class="phrase">
+            Screenshot do SMS ao falhar a leitura de um CD incompativel.
+          </span>
+          
+        </b></p></div><br class="figure-break"></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="usage-network.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="usage-dvdr.html">Próximo</a></td></tr><tr><td width="40%" align="left" valign="top">3.2. 
+    
+    <span lang="pt" class="phrase">Correndo ficheiros numa Rede Local</span>
+    
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Início</a></td><td width="40%" align="right" valign="top"> 3.4. 
+    
+    <span lang="pt" class="phrase">Correndo ficheiros a partir de um DVD-R (without a
+    modchip)</span>
+    
+  </td></tr></table></div></body></html>

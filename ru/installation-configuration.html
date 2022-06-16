@@ -1,0 +1,259 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>2.6. Настройки программы</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="prev" href="installation-bootabledvdr.html" title="2.5. Загрузка с SMS DVD-диска (только для модчипа)"><link rel="next" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"><link rel="subsection" href="installation-configuration.html#installation-configuration-ipconfig" title="2.6.1. Настройки сети"><link rel="subsection" href="installation-configuration.html#installation-configration-generalconfig" title="2.6.2. Общие настройки"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.6. 
+    
+    
+    <span lang="ru" class="phrase">
+      Настройки программы
+    </span>
+
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="installation-bootabledvdr.html">Пред.</a> </td><th width="60%" align="center">Глава 2. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Установка и конфигурирование программы  </span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="usage.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-configuration"></a>2.6. 
+    
+    
+    <span lang="ru" class="phrase">
+      Настройки программы
+    </span>
+
+  </h2></div></div></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Подсказка</h3><p lang="ru">
+      Обычно, нет необходимости вносить изменения в какие-либо файлы
+      конфигурации, чтобы начать работать с SMS. Если SMS используется в
+      обычном режиме, то вы можете пропустить этот раздел. Однако, если вы
+      хотите использовать SMS в режиме сетевого плейера (например,
+      воспроизводить файлы через сеть), то вам, скорее всего, придется
+      "поиграться" с настройками.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="installation-configuration-ipconfig"></a>2.6.1. 
+      
+      
+      <span lang="ru" class="phrase">
+        Настройки сети
+      </span>
+    </h3></div></div></div><p lang="ru">
+      Если у вас есть официальный сетевой адаптер от <span class="trademark">Sony</span>™
+      и вы хотите воспроизводить медиа-файлы, находящиеся в вашей локальной
+      сети, вам придется назначить IP адрес и подсетку для PS2. Скорее всего,
+      вы захотите сделать эти настройки для долговременного пользования,
+      так что этот раздел призван помочь вам выбрать правильные настройки,
+      которые будут совместимы с вашей сетью.
+    </p><p lang="ru">
+      Настройки IP SMS находятся в файле
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt>, а не в
+      <tt class="filename">CONFIG.DAT</tt>).  Обратите внимание на то, что эти два
+      файла являются отличными друг от друга. SMS не будет искать параметры
+      настроек в <tt class="filename">mc0:/BxDATA-SYSTEM/CONFIG.DAT</tt>.
+    </p><p lang="ru">
+      Для того, чтобы настроить IP адрес для вашей PS2, вам необходимо
+      создать файл с названием <tt class="filename">IPCONFIG.DAT</tt> в любом
+      текстовом редакторе (не Word!), например, в Notepad, входящем в комплект
+      поставки Windows. Этот файл должен иметь всего одну текстовую строку:
+    </p><pre class="screen">
+      &lt;ps2_ip_address&gt; &lt;ps2_subnet_mask&gt; &lt;ps2_default_gateway&gt;
+    </pre><p lang="ru">
+      Если вы создали файл <tt class="filename">CONFIG.DAT</tt> в разделе
+      <a class="xref" href="installation.html" title="Глава 2. Установка и конфигурирование программы">Глава 2, <i>
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Установка и конфигурирование программы  </span>
+    </i></a>, вы можете его использовать в этом
+      разделе, только не забудьте переименовать его в <tt class="filename">IPCONFIG.DAT</tt>.
+      После успешного создания такового файла, необходимо скопировать его в
+      <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt> на вашей PS2, используя
+      FTP, как описано в разделе
+      <a class="link" href="installation-copytomemcard.html#installation-copytomemcard-ftp">installation</a>
+    </p><p lang="ru">
+      Если вы решили использовать <span class="application">uLaunchELF</span> в
+      качестве менеджера запуска программ, вы можете легко сконфигурировать
+      настройки IP для SMS. Просто воспользуйтесь опцией
+      <span class="bold"><strong>Network Settings</strong></span>, чтобы изменить
+      настройки, используя игровой джойстик. В этом случае, нет необходимости
+      создания файла <tt class="filename">mc0:/SYS-CONF/IPCONFIG.DAT</tt> вручную.
+    </p><p lang="ru">
+      Не забудьте, что адрес PS2 должен быть уникальным в вашей сети и, в то
+      же время, быть в той же самой подсети, что и все остальные устройства.
+      Вам придется отключить DHCP сервер (или ограничить диапазон
+      распределяемых им адресов) на вашем компьютере или маршрутизаторе и
+      использовать статические настройки IP. SMS не умеет работать с DHCP
+      серверами (см <a class="link" href="faq-dhcp.html" title="A.6. SMS не получает доступ к моей сети, основанной на DHCP. SMS отказывается сконфигурировать IP адрес. Что не так?">DHCP FAQ</a>.
+    </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="3">
+        
+        
+        <p lang="ru">настройки PS2</p>
+      </td><td>
+        
+        
+        <p lang="ru">IP адрес PS2:</p>
+      </td><td>192.168.a.x</td></tr><tr><td>
+        
+        
+        <p lang="ru">Маска подсети PS2:</p>
+      </td><td>255.255.255.0</td></tr><tr><td>
+        
+        
+        <p lang="ru">Адрес точки доступа сети:</p>
+      </td><td>192.168.a.z</td></tr><tr><td rowspan="3">
+        
+        
+        <p lang="ru">Настройки компьютера</p>
+      </td><td>
+        
+        
+        <p lang="ru">IP адрес компьютера:</p>
+      </td><td>192.168.a.y</td></tr><tr><td>
+        
+        
+        <p lang="ru">Маска подсети компьютера:</p>
+      </td><td>255.255.255.0</td></tr><tr><td>
+        
+        
+        <p lang="ru">Точка доступа сети компьютера:</p>
+      </td><td>192.168.a.z</td></tr></tbody></table></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm557"></a>2.6.1.1. 
+        
+        
+        <span lang="ru" class="phrase">Конфигурация: Пример 1</span>
+      </h4></div></div></div><p lang="ru">
+        В этом примере приведены настройки для случая, когда PS2 и компьютер
+        подключены друг к другу посредством кабеля-кроссовера или, когда
+        они подключены через сетевой свич или хаб. В этом примере нет
+        маршрутизатора, так что, в качестве адреса точки доступа, будет
+        выступать адрес компьютера.
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+        
+          
+        <p lang="ru">настройки PS2</p>
+      </td><td>
+        
+          
+        <p lang="ru">IP адрес PS2:</p>
+      </td><td>192.168.0.2</td></tr><tr><td>
+        
+        
+        <p lang="ru">Маска подсети PS2:</p>
+      </td><td>255.255.255.0</td></tr><tr><td>
+        
+        
+        <p lang="ru">Адрес точки доступа сети:</p>
+      </td><td>192.168.0.1</td></tr><tr><td>
+          
+          
+          <p lang="ru">mc0:/SYS-CONF/IPCONFIG.DAT</p>
+        </td><td>
+        <div class="mediaobject"><img src="../images/installation-ipconfig.dat1.png" alt="Sample ipconfig.dat file screenshot."></div>
+        </td></tr><tr><td rowspan="3">
+        
+          
+        <p lang="ru">Настройки компьютера</p>
+        </td><td>
+        
+          
+        <p lang="ru">IP адрес компьютера:</p>
+        </td><td>192.168.0.1</td></tr><tr><td>
+        
+        
+        <p lang="ru">Маска подсети компьютера:</p>
+        </td><td>255.255.255.0</td></tr><tr><td>
+        
+        
+        <p lang="ru">Точка доступа сети компьютера:</p>
+      </td><td>192.168.0.1</td></tr></tbody></table></div></div><div class="sect3"><div class="titlepage"><div><div><h4 class="title"><a name="idm601"></a>2.6.1.2. 
+        
+        
+        <span lang="ru" class="phrase">Конфигурация: Пример 2</span>
+      </h4></div></div></div><p lang="ru">
+        В этом примере рассматривается конфигурация, которую я использую дома.
+        Мой компьютер и PS2 находятся в подсети 192.168.2._ а точка доступа
+        к интернету (маршрутизатор) имеет адрес 192.168.2.1.
+      </p><div class="informaltable"><table class="informaltable" border="0"><colgroup><col><col></colgroup><tbody><tr><td rowspan="4">
+        
+          
+        <p lang="ru">настройки PS2</p>
+        </td><td>
+        
+          
+        <p lang="ru">IP адрес PS2:</p>
+        </td><td>192.168.2.22</td></tr><tr><td>
+        
+        
+        <p lang="ru">Маска подсети PS2:</p>
+        </td><td>255.255.255.0</td></tr><tr><td>
+        
+        
+        <p lang="ru">Адрес точки доступа сети:</p>
+        </td><td>192.168.2.1</td></tr><tr><td>
+          
+          
+          <p lang="ru">mc0:/SYS-CONF/IPCONFIG.DAT</p>
+
+        </td><td>
+        <div class="mediaobject"><img src="../images/installation-ipconfig.dat2.png" alt="Sample ipconfig.dat file screenshot."></div>
+        </td></tr><tr><td rowspan="3">
+        
+          
+        <p lang="ru">Настройки компьютера</p>
+        </td><td>
+        
+          
+        <p lang="ru">IP адрес компьютера:</p>
+        </td><td>192.168.2.23</td></tr><tr><td>
+        
+        
+        <p lang="ru">Маска подсети компьютера:</p>
+        </td><td>255.255.255.0</td></tr><tr><td>
+        
+        
+        <p lang="ru">Точка доступа сети компьютера:</p>
+      </td><td>192.168.2.1</td></tr></tbody></table></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Предупреждение</h3><p lang="ru">
+        Если ваш компьютер подключен к Интернету посредством той же
+        локальной сети, в которой будет находиться PS2, то будьте
+        <span class="bold"><strong>предельно осторожны</strong></span>, когда вы будете
+        вносить изменения в IP конфигурацию вашего компьютера. Вы должны
+        убедиться в том, что компьютер находится в той же подсети, что и ваш
+        маршрутизатор (точка доступа). Это значит, что первые три числа в
+        адресе вашего компьютера должны совпадать с адресом маршрутизатора.
+        Также, убедитесь в том, что адрес точки доступа по умолчанию для
+        компьютера остался тем же, что и был (там должен быть адрес вашей
+        точки доступа или маршрутизатора). Если вы этого не сделаете, то
+        соединение с Интернетом может перестать работать. Если вы не уверены
+        в правильности своих действий, то, перед тем, как что либо предпринять,
+        запишите установки сети до того, как вы будете их менять (например,
+        напечатав <strong class="userinput"><code>ipconfig /all</code></strong> в окне ДОС).
+      </p></div></div></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="installation-configration-generalconfig"></a>2.6.2. 
+      
+      
+      <span lang="ru" class="phrase">
+       Общие настройки
+      </span>
+
+    </h3></div></div></div><p lang="ru">
+      Общие настройки SMS находятся в файле <tt class="filename">mc0:/SMS/SMS.cfg</tt>.
+      Этот файл создается автоматически, когда вы сохраняете настройки из
+      программы и не предназначен для редактирования вручную.
+      <span class="bold"><strong>Вы не должны сами создавать этот файл</strong></span>.
+      SMS сама создаст этот файл, когда вы будете сохранять настройки из
+      меню SMS (см меню настроек в разделе
+      <a class="link" href="usage-controls.html#usage-controls-navigation" title="3.1.2. Режим выбора файла">Работа с программой</a>).
+    </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+        Если у вас возникли трудности при конфигурировании программы, лучше
+        всего будет просто удалить файл <tt class="filename">mc0:/SMS/SMS.cfg</tt>
+        и дать возможность SMS создать новый файл при следующем запуске
+        программы.
+      </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="installation-bootabledvdr.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="installation.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">2.5. 
+    
+    
+    <span lang="ru" class="phrase">Загрузка с SMS DVD-диска (только для модчипа)</span>
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> Глава 3. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Как пользоваться программой </span>
+    </td></tr></table></div></body></html>

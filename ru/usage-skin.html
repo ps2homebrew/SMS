@@ -1,0 +1,167 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>3.9. "Меняем внешний вид SMS (скин)"</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="index.html" title="SMS - Playstation 2 Simple Media System"><link rel="up" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="prev" href="usage-subtitles.html" title="3.8. Субтитры"><link rel="next" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="chapter" href="introduction.html" title="Глава 1. Введение"><link rel="chapter" href="installation.html" title="Глава 2. Установка и конфигурирование программы"><link rel="chapter" href="usage.html" title="Глава 3. Как пользоваться программой"><link rel="appendix" href="faq.html" title="Приложение A. ЧаВо - Часто Задаваемые Вопросы"><link rel="appendix" href="apb.html" title="Приложение B. Всякая всячина"><link rel="appendix" href="legal.html" title="Приложение C. GNU Free Documentation License"><link rel="subsection" href="usage-skin.html#usage-skin-create" title="3.9.1. Создание скина"><link rel="subsection" href="usage-skin.html#usage-skin-apply" title="3.9.2. Замена стандартного скина на пользовательский"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.9. 
+    
+    
+    <span lang="ru" class="phrase">"Меняем внешний вид SMS (скин)"</span>
+  </th></tr><tr><td width="20%" align="left"><a accesskey="p" href="usage-subtitles.html">Пред.</a> </td><th width="60%" align="center">Глава 3. 
+      
+      
+      
+      
+      <span lang="ru" class="phrase">Как пользоваться программой </span>
+    </th><td width="20%" align="right"> <a accesskey="n" href="faq.html">След.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="usage-skin"></a>3.9. 
+    
+    
+    <span lang="ru" class="phrase">"Меняем внешний вид SMS (скин)"</span>
+  </h2></div></div></div><p lang="ru">
+    SMS позволяет менять внешний вид плейера с помощью так называемых "скинов".
+    Таким образом вы можете сменить "обои" файлового проводника на свои
+    собственные. Попросту говоря, вы можете поменять фоновую картинку.
+  </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+      На сегодняшний момент, вы можете сменить только фоновую картинку
+      проводника. Вы не можете сменить расположение меню управления на
+      экране.
+    </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-skin-create"></a>3.9.1. 
+      
+      
+      <span lang="ru" class="phrase">Создание скина</span>
+    </h3></div></div></div><p lang="ru">
+    Скин представляет собой закодированный в DivX5xx/XviD I-Frame, который
+    находится в файле <tt class="filename">mc0:/SMS/SMS.skn</tt>.  Для создания
+    таких файлов была написана программа для Windows, которая называется
+    (<span class="application">pic2sms.exe</span>).  Для начала, вы должны
+    приготовить файл с картинкой, которую вы сконвертируете в нужный
+    формат. В этом примере, я воспользовался фотографию, сделанную во время
+    отпуска (в формате jpeg).
+  </p><p lang="ru">
+    Вы должны создать файл в формате bitmap (например, .BMP), который будет
+    иметь разрешение не более, чем 800x600.
+    Если вы хотите понять, как именно располагаются элементы управления на
+    экране относительно фоновой картинки, вы можете скачать файл-пример
+    отсюда:
+    <a class="ulink" href="http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982" target="_top">http://www.ps2-scene.org/forums/attachment.php?attachmentid=8751&amp;d=1131850982</a>.
+    [Предупреждение: в этом примере, возможно, не отражены изменения для
+    версии V1.6, по сравнению с версией 1.5]
+    Файл этот записан в формате <span class="application">Photoshop</span>
+    (<tt class="filename">.psd</tt>), но вам не нужно устанавливать
+    <span class="application">Photoshop</span>, чтобы его открыть. Вместо этого,
+    вы можете воспользоваться бесплатным графическим редактором GIMP,
+    который можно скачать отсюда: <a class="ulink" href="http://www.gimp.org/" target="_top">http://www.gimp.org/</a>.
+    После того, как вы завершили редактирование вашей картинки, запишите
+    ее в в файл одноуровневого формата bitmap (<tt class="filename">.bmp</tt>)
+    в какую-либо пустую папку на вашем компьютере.
+  </p><p lang="ru">
+    Теперь скачайте программу генерирования скинов для SMS (она работает в
+    Windows) <span class="application">pic2sms.exe</span> с сайта
+    <a class="ulink" href="http://home.casema.nl/eugene_plotnikov/" target="_top">http://home.casema.nl/eugene_plotnikov/</a>, и распакуйте файл
+    <tt class="filename">pic2sms.exe</tt> из <tt class="filename">pic2sms.rar</tt>,
+    используя <a class="ulink" href="http://www.rarlab.com/download.htm" target="_top">WinRAR</a>.
+    Скопируйте его в ту же самую папку, в которую вы записали вашу картинку.
+    Запустите этот файл. Если он запустится с первого раза без проблем,
+    значит, все в порядке. Если же вы увидите сообщение типа:
+    cannot find xvidcore.dll, закройте эту программу, затем скачайте
+    <tt class="filename">xvidcore.dll</tt> с сайта
+    <a class="ulink" href="http://www.dll-files.com/dllindex/dll-files.shtml?xvidcore" target="_top">http://www.dll-files.com/dllindex/dll-files.shtml?xvidcore</a>
+    (или любого другого - Google вам в помощь!). Скопируйте файл
+    <tt class="filename">xvidcore.dll</tt> в ту же папку, что и
+    <span class="application">pic2sms.exe</span>.  Теперь, когда вы снова запустите
+    программу, ошибок быть не должно.
+  </p><div class="figure"><a name="idm1707"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-pic2sms01.png" alt="Pic2sms.exe application"></div></div><p class="title"><b>Рисунок 3.40. 
+      
+      
+      <span lang="ru" class="phrase">Программа Pic2sms.exe</span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Теперь кликните на кнопку open и откройте файл с картинкой, который вы
+    создали ранее.
+  </p><div class="figure"><a name="idm1716"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-pic2sms02.png" alt="Pic2sms.exe application"></div></div><p class="title"><b>Рисунок 3.41. 
+      
+      
+      <span lang="ru" class="phrase">Открываем файл с картинкой</span>
+    </b></p></div><br class="figure-break"><div class="figure"><a name="idm1724"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-pic2sms03.png" alt="Pic2sms.exe application"></div></div><p class="title"><b>Рисунок 3.42. 
+      
+      
+      <span lang="ru" class="phrase">Файл с графикой загружен</span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Вы должны увидеть вашу картинку в окне программы. Нажмите кнопку save,
+    чтобы создать файл типа <tt class="filename">.skn</tt> в той же самой папке.
+    Вот и все, вы только что создали новый скин для SMS!
+  </p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="usage-skin-apply"></a>3.9.2. 
+    
+    
+    <span lang="ru" class="phrase">Замена стандартного скина на пользовательский</span>
+  </h3></div></div></div><p lang="ru">
+    Для того, чтобы сменить станддартный скин на какой-либо другой (тот, что
+    вы сделали сами или откуда-то скачали), вам потребуется проделать
+    следующее :
+  </p><p lang="ru">
+    Вам нужен файл с именем <tt class="filename">SMS.skn</tt>. Если файл, который
+    вы создали имеет другое имя, например <tt class="filename">mypicture.skn</tt>,
+    переименуйте его в <tt class="filename">SMS.skn</tt>.
+  </p><p lang="ru">
+    Теперь вам надо переписать этот файл на карту памяти PS2 по адресу
+    <tt class="filename">mc0:SMS/SMS.skn</tt> (то бишь, на ту карту, которая
+    вставлена в первый слот на PS2). Допустим, что для этой операции вы
+    воспользуетесь FTP.
+    <span class="bold"><strong>На вашей PS2</strong></span>, запустите менеджер
+    программ, например uLaunchELF, и выберите программу FTP сервера (например,
+    PS2NET).
+  </p><p lang="ru">
+    После того, как FTP сервер заработал, запустите программу FTP клиента
+     <span class="bold"><strong>на вашем компьютере</strong></span>  (например,
+      FileZilla) и подключитесь к PS2.
+  </p><p lang="ru">
+    Перетащите файл <tt class="filename">SMS.skn</tt> в папку
+    <tt class="filename">mc0:/SMS/SMS.skn</tt>.  Когда файл будет скопирован,
+    отключите FTP клиент и перезапустите PS2.
+  </p><div class="figure"><a name="idm1750"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-ftpexplorer-skintransfer.png" alt="FTP explorer screenshot."></div></div><p class="title"><b>Рисунок 3.43. 
+       
+       
+       <span lang="ru" class="phrase">Копирование файла скина на PS2.</span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Запустите SMS <span class="bold"><strong>на PS2</strong></span>, как обычно. Затем,
+    нажмите на кнопку <span class="bold"><strong>START</strong></span>, чтобы зайти в
+    меню настроек и выберите раздел
+    <span class="bold"><strong>browser settings</strong></span> (настройки проводника).
+  </p><div class="figure"><a name="idm1762"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-browsersettings01.png" alt="SMS browser settings menu screenshot"></div></div><p class="title"><b>Рисунок 3.44. 
+      
+      
+      <span lang="ru" class="phrase">Меню настроек проводника</span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Включите опцию <span class="bold"><strong>Use background image</strong></span>
+    (подключить фоновую картинку), чтобы включить скин. Фоновая картинка
+    должна незамедлительно поменяться.
+  </p><div class="figure"><a name="idm1772"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-browsersettings02.png" alt="SMS browser settings menu screenshot"></div></div><p class="title"><b>Рисунок 3.45. 
+      
+      
+      <span lang="ru" class="phrase">Меню настроек проводника: поддержка скина включена</span>
+    </b></p></div><br class="figure-break"><p lang="ru">
+    Если вы захотите сменить вид скина еще раз, просто удалите существующий
+    файл <tt class="filename">SMS.skn</tt> и запишите на его место новый.
+  </p><div class="figure"><a name="idm1782"></a><div class="figure-contents"><div class="mediaobject"><img src="../images/usage-sms-skinned.png" alt="SMS with skin active (screenshot)"></div></div><p class="title"><b>Рисунок 3.46. 
+       
+      
+       <span lang="ru" class="phrase">Пример скина</span>
+    </b></p></div><br class="figure-break"><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p lang="ru">
+      В версиях SMS 1.5 и ниже, использовался другой формат скина. Для этих
+      версий скин был в файле <tt class="filename">mc0:/SMS/skin.sms</tt> а не
+      в <tt class="filename">mc0:/SMS/SMS.skn</tt>.  Кроме того, для этих версий
+      нужна другая версия программы-генератора скинов pic2sms.exe.
+      Старая версия этой программы больше недоступна для скачивания. Если вы
+      все еще пользуетесь старой версией SMS, мы настоятельно рекомендуем вам
+      установить последние версии SMS и pic2sms.exe, которые можно скачать
+      с <a class="ulink" href="http://sms.ps2-scene.org" target="_top">официального сайта SMS</a>.
+    </p></div></div></div><script type="text/javascript" language="javascript"><!--
+var sc_project=1113098;
+var sc_invisible=1;
+var sc_partition=10;
+var sc_security="357050be";
+--></script><script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img src="http://c11.statcounter.com/counter.php?sc_project=1113098&amp;java=0&amp;security=357050be&amp;invisible=1" alt="counter create hit" border="0"></a></noscript><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="usage-subtitles.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="faq.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">3.8. 
+    
+    
+    <span lang="ru" class="phrase">
+      Субтитры
+    </span>
+   </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> Приложение A. 
+      
+      
+      <span lang="ru" class="phrase">ЧаВо - Часто Задаваемые Вопросы</span>
+    </td></tr></table></div></body></html>
