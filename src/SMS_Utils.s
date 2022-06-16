@@ -298,13 +298,13 @@ PowF:
     lui     $v0, %hi( s_Const )
     mfc1    $t0, $f12
     addiu   $v0, $v0, %lo( s_Const )
-    cvt.w.s $f03, $f13
+    cvt.w.s $f3, $f13
     lw      $t1,  0($v0)
     lw      $t2,  4($v0)
     lw      $v1,  8($v0)
     lw      $t7, 12($v0)
     lw      $t3, 16($v0)
-    mfc1    $at, $f03
+    mfc1    $at, $f3
     and     $t4, $t0, $t1
     sll     $at, $at, 31
     and     $t5, $t0, $t2
@@ -318,57 +318,57 @@ PowF:
     lw      $t7, 20($v0)
     sub     $t4, $t4, $v1
     sub     $t5, $t5, $t7
-    mtc1    $t4, $f02
-    sub.s   $f03, $f02, $f11
-    add.s   $f02, $f02, $f11
-    div.s   $f07, $f11, $f02
-    mtc1    $zero, $f08
-    lwc1    $f05, 24($v0)
-    lwc1    $f06, 28($v0)
-    lwc1    $f09, 32($v0)
+    mtc1    $t4, $f2
+    sub.s   $f3, $f2, $f11
+    add.s   $f2, $f2, $f11
+    div.s   $f7, $f11, $f2
+    mtc1    $zero, $f8
+    lwc1    $f5, 24($v0)
+    lwc1    $f6, 28($v0)
+    lwc1    $f9, 32($v0)
     lwc1    $f10, 36($v0)
     lw      $t7,  40($v0)
-    mtc1    $t5, $f04
-    mul.s   $f03, $f03, $f07
-    cvt.s.w $f04, $f04
-    mul.s   $f02, $f03, $f03
-    mul.s   $f03, $f03, $f06
-    mul.s   $f05, $f05, $f02
-    mul.s   $f02, $f02, $f03
-    add.s   $f05, $f05, $f09
-    mul.s   $f05, $f05, $f02
-    add.s   $f05, $f05, $f10
-    mul.s   $f02, $f02, $f05
+    mtc1    $t5, $f4
+    mul.s   $f3, $f3, $f7
+    cvt.s.w $f4, $f4
+    mul.s   $f2, $f3, $f3
+    mul.s   $f3, $f3, $f6
+    mul.s   $f5, $f5, $f2
+    mul.s   $f2, $f2, $f3
+    add.s   $f5, $f5, $f9
+    mul.s   $f5, $f5, $f2
+    add.s   $f5, $f5, $f10
+    mul.s   $f2, $f2, $f5
     and     $t7, $t7, $t6
-    add.s   $f03, $f03, $f02
+    add.s   $f3, $f3, $f2
     nor     $t6, $t6, $t6
-    add.s   $f03, $f03, $f04
-    mfc1    $t1, $f03
+    add.s   $f3, $f3, $f4
+    mfc1    $t1, $f3
     and     $t6, $t6, $t1
-    mtc1    $t6, $f04
-    mul.s   $f04, $f04, $f13
-    mfc1    $t6, $f04
+    mtc1    $t6, $f4
+    mul.s   $f4, $f4, $f13
+    mfc1    $t6, $f4
     or      $t6, $t6, $t7
-    mtc1    $t6, $f04
-    cvt.w.s $f01, $f04
-    lwc1    $f05, 44($v0)
-    mfc1    $t7, $f01
-    cvt.s.w $f01, $f01
-    lwc1    $f02, 48($v0)
-    sub.s   $f04, $f04, $f01
-    lwc1    $f06, 52($v0)
-    mul.s   $f03, $f04, $f04
-    lwc1    $f07, 56($v0)
-    add.s   $f05, $f05, $f03
-    mul.s   $f02, $f02, $f03
-    mul.s   $f05, $f05, $f03
-    add.s   $f02, $f02, $f06
-    lwc1    $f06, 60($v0)
-    add.s   $f05, $f05, $f07
-    mul.s   $f02, $f02, $f04
-    sub.s   $f05, $f05, $f02
-    mul.s   $f02, $f02, $f06
-    div.s   $f07, $f11, $f05
+    mtc1    $t6, $f4
+    cvt.w.s $f1, $f4
+    lwc1    $f5, 44($v0)
+    mfc1    $t7, $f1
+    cvt.s.w $f1, $f1
+    lwc1    $f2, 48($v0)
+    sub.s   $f4, $f4, $f1
+    lwc1    $f6, 52($v0)
+    mul.s   $f3, $f4, $f4
+    lwc1    $f7, 56($v0)
+    add.s   $f5, $f5, $f3
+    mul.s   $f2, $f2, $f3
+    mul.s   $f5, $f5, $f3
+    add.s   $f2, $f2, $f6
+    lwc1    $f6, 60($v0)
+    add.s   $f5, $f5, $f7
+    mul.s   $f2, $f2, $f4
+    sub.s   $f5, $f5, $f2
+    mul.s   $f2, $f2, $f6
+    div.s   $f7, $f11, $f5
     and     $at, $t0, $at
     lw      $t0, 64($v0)
     lw      $t1, 68($v0)
@@ -377,16 +377,16 @@ PowF:
     sra     $t4, $t6, 31
     sra     $t5, $t0, 31
     and     $t4, $t4, $t5
-    mul.s   $f02, $f02, $f07
+    mul.s   $f2, $f2, $f7
     xor     $t2, $t2, $t4
     pcgtw   $t3, $t6, $t1
     pceqw   $t4, $t6, $t0
-    add.s   $f02, $f02, $f11
+    add.s   $f2, $f2, $f11
     pceqw   $t5, $t6, $t1
     or      $t2, $t2, $t4
     or      $t3, $t3, $t5
     lw      $t1, 72($v0)
-    mfc1    $t8, $f02
+    mfc1    $t8, $f2
     add     $t7, $t7, $t8
     and     $t1, $t1, $t3
     and     $t2, $t2, $t7
@@ -395,7 +395,7 @@ PowF:
     or      $t3, $t3, $t1
     xor     $t3, $t3, $at
     jr      $ra
-    mtc1    $t3, $f00
+    mtc1    $t3, $f0
 
 memcpy_swap16:
     srl     $at, $a2, 5
@@ -442,20 +442,20 @@ pcm_syn1:
     beq   $at, $zero, 1f
     andi  $a2, $a2, 15
 2:
-    lqc2  $vf01,  0($a1)
-    lqc2  $vf02, 16($a1)
-    lqc2  $vf03, 32($a1)
-    lqc2  $vf04, 48($a1)
+    lqc2  $vf1,  0($a1)
+    lqc2  $vf2, 16($a1)
+    lqc2  $vf3, 32($a1)
+    lqc2  $vf4, 48($a1)
     addiu $a1, $a1, 64
     addiu $at, $at, -1
-    vftoi0.xyzw   $vf01, $vf01
-    vftoi0.xyzw   $vf02, $vf02
-    vftoi0.xyzw   $vf03, $vf03
-    vftoi0.xyzw   $vf04, $vf04
-    qmfc2 $t0, $vf01
-    qmfc2 $t1, $vf02
-    qmfc2 $t2, $vf03
-    qmfc2 $t3, $vf04
+    vftoi0.xyzw   $vf1, $vf1
+    vftoi0.xyzw   $vf2, $vf2
+    vftoi0.xyzw   $vf3, $vf3
+    vftoi0.xyzw   $vf4, $vf4
+    qmfc2 $t0, $vf1
+    qmfc2 $t1, $vf2
+    qmfc2 $t2, $vf3
+    qmfc2 $t3, $vf4
     pmaxw $t0, $v0, $t0
     pmaxw $t1, $v0, $t1
     pmaxw $t2, $v0, $t2
@@ -474,12 +474,12 @@ pcm_syn1:
     beq   $a2, $zero, 3f
     nop
 4:
-    lwc1  $f01, 0($a1)
-    cvt.w.s   $f01, $f01
+    lwc1  $f1, 0($a1)
+    cvt.w.s   $f1, $f1
     addiu $a1, $a1, 4
     addiu $a0, $a0, 2
     addiu $a2, $a2, -1
-    mfc1  $t0, $f01
+    mfc1  $t0, $f1
     pmaxw $t0, $v0, $t0
     pminw $t0, $v1, $t0
     bgtz  $a2, 4b
@@ -498,21 +498,21 @@ pcm_syn2:
     beq   $at, $zero, 1f
     andi  $a2, $a2, 7
 2:
-    lqc2  $vf01,  0($a3)
-    lqc2  $vf02, 16($a3)
-    lqc2  $vf03,  0($a1)
-    lqc2  $vf04, 16($a1)
+    lqc2  $vf1,  0($a3)
+    lqc2  $vf2, 16($a3)
+    lqc2  $vf3,  0($a1)
+    lqc2  $vf4, 16($a1)
     addiu $a3, $a3, 32
     addiu $a1, $a1, 32
-    vftoi0.xyzw   $vf01, $vf01
-    vftoi0.xyzw   $vf02, $vf02
-    vftoi0.xyzw   $vf03, $vf03
-    vftoi0.xyzw   $vf04, $vf04
+    vftoi0.xyzw   $vf1, $vf1
+    vftoi0.xyzw   $vf2, $vf2
+    vftoi0.xyzw   $vf3, $vf3
+    vftoi0.xyzw   $vf4, $vf4
     addiu $at, $at, -1
-    qmfc2 $t0, $vf01
-    qmfc2 $t1, $vf02
-    qmfc2 $t2, $vf03
-    qmfc2 $t3, $vf04
+    qmfc2 $t0, $vf1
+    qmfc2 $t1, $vf2
+    qmfc2 $t2, $vf3
+    qmfc2 $t3, $vf4
     pmaxw $t0, $v0, $t0
     pmaxw $t1, $v0, $t1
     pmaxw $t2, $v0, $t2
@@ -531,16 +531,16 @@ pcm_syn2:
     beq   $a2, $zero, 3f
     nop
 4:
-    lwc1  $f01, 0($a3)
-    lwc1  $f02, 0($a1)
-    cvt.w.s   $f01, $f01
-    cvt.w.s   $f02, $f02
+    lwc1  $f1, 0($a3)
+    lwc1  $f2, 0($a1)
+    cvt.w.s   $f1, $f1
+    cvt.w.s   $f2, $f2
     addiu $a3, $a3, 4
     addiu $a1, $a1, 4
     addiu $a0, $a0, 4
     addiu $a2, $a2, -1
-    mfc1  $t0, $f01
-    mfc1  $t1, $f02
+    mfc1  $t0, $f1
+    mfc1  $t1, $f2
     pinteh    $t0, $t1, $t0
     pmaxw $t0, $v0, $t0
     pminw $t0, $v1, $t0
@@ -556,8 +556,8 @@ pcm_synN:
     lw      $t5,  4($a1)                # t5 = ch1
     lw      $a3,  8($a1)                # a3 = ch2
     lw      $t0, 12($a1)                # t0 = ch3
-    lqc2    $vf01,  0($t1)              # vf01 = DM_MUL
-    lqc2    $vf02, 16($t1)              # vf02 = RSQRT2 * DM_MUL
+    lqc2    $vf1,  0($t1)              # vf1 = DM_MUL
+    lqc2    $vf2, 16($t1)              # vf2 = RSQRT2 * DM_MUL
     lw      $t1, 16($a1)                # t1 = ch4
     lw      $a1,  0($a1)                # a1 = ch0
     addu    $t4, $t5, $a2
@@ -566,26 +566,36 @@ pcm_synN:
     psrlw   $v1, $v1, 17
     psraw   $v0, $v0, 16
 1:
-    lqc2    $vf03, 0($t5)               # vf03 = ch1
-    lqc2    $vf04, 0($a1)               # vf04 = ch0
-    lqc2    $vf05, 0($t0)               # vf05 = ch3
-    lqc2    $vf06, 0($a3)               # vf06 = ch2
-    lqc2    $vf07, 0($t1)               # vf07 = ch4
-    vmula.xyzw  ACC, $vf03, $vf01
-    vmadda.xyzw ACC, $vf04, $vf02
-    vmadd.xyzw  $vf03, $vf05, $vf02
-    vmula.xyzw  ACC, $vf06, $vf01
-    vmadda.xyzw ACC, $vf04, $vf02
-    vmadd.xyzw  $vf04, $vf07, $vf02
-    vftoi0.xyzw $vf03, $vf03
+    lqc2    $vf3, 0($t5)               # vf3 = ch1
+    lqc2    $vf4, 0($a1)               # vf4 = ch0
+    lqc2    $vf5, 0($t0)               # vf5 = ch3
+    lqc2    $vf6, 0($a3)               # vf6 = ch2
+    lqc2    $vf7, 0($t1)               # vf7 = ch4
+.ifdef .gasversion.
+    vmula.xyzw  $ACC, $vf3, $vf1
+    vmadda.xyzw $ACC, $vf4, $vf2
+.else
+    vmula.xyzw  ACC, $vf3, $vf1
+    vmadda.xyzw ACC, $vf4, $vf2
+.endif
+    vmadd.xyzw  $vf3, $vf5, $vf2
+.ifdef .gasversion.
+    vmula.xyzw  $ACC, $vf6, $vf1
+    vmadda.xyzw $ACC, $vf4, $vf2
+.else
+    vmula.xyzw  ACC, $vf6, $vf1
+    vmadda.xyzw ACC, $vf4, $vf2
+.endif
+    vmadd.xyzw  $vf4, $vf7, $vf2
+    vftoi0.xyzw $vf3, $vf3
     addiu   $t5, $t5, 16
     addiu   $a1, $a1, 16
-    vftoi0.xyzw $vf04, $vf04
+    vftoi0.xyzw $vf4, $vf4
     addiu   $t0, $t0, 16
     addiu   $a3, $a3, 16
     addiu   $t1, $t1, 16
-    qmfc2   $t2, $vf03
-    qmfc2   $t3, $vf04
+    qmfc2   $t2, $vf3
+    qmfc2   $t3, $vf4
     pmaxw   $t2, $v0, $t2
     pmaxw   $t3, $v0, $t3
     pminw   $t2, $v1, $t2

@@ -274,6 +274,16 @@ typedef struct SMS_LZMA2Data {
 
 struct DMAChannel;
 
+#if __GNUC__ > 3
+#define ASM_REG_ACC "$ACC"
+#define ASM_REG_Q "$Q"
+#define ASM_REG_I "$I"
+#else
+#define ASM_REG_ACC "ACC"
+#define ASM_REG_Q "Q"
+#define ASM_REG_I "I"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */

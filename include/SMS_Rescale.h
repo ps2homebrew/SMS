@@ -11,6 +11,10 @@
 #ifndef __SMS_Rescale_H
 #define __SMS_Rescale_H
 
+#ifndef __SMS_H
+#include "SMS.h"
+#endif  /* __SMS_H */
+
 typedef struct _res_param {
 
  int   m_iDelta[ 2 ];

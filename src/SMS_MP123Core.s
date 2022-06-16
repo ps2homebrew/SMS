@@ -208,19 +208,19 @@ MP123_IMDCT36:
     ld      $t6, 56($a0)
     pcpyld  $t2, $t4, $t2
     pcpyld  $t5, $t6, $t5
-    qmtc2   $t1, $vf01
+    qmtc2   $t1, $vf1
     ld      $t1, 64($a0)
-    qmtc2   $t3, $vf02
+    qmtc2   $t3, $vf2
     ld      $t3, 72($a0)
-    qmtc2   $t2, $vf03
-    qmtc2   $t5, $vf04
+    qmtc2   $t2, $vf3
+    qmtc2   $t5, $vf4
     pcpyld  $t1, $t3, $t1
     lqc2    $vf29,  0($at)
     lqc2    $vf30, 16($at)
     lqc2    $vf26, 32($at)
     lqc2    $vf27, 48($at)
     lqc2    $vf28, 64($at)
-    qmtc2   $t1, $vf05
+    qmtc2   $t1, $vf5
     .word   0x4A004B38
     ldl     $t1,   7($a3)
     ldr     $t1,   0($a3)
@@ -292,11 +292,11 @@ MP123_IMDCT36:
     qmtc2   $t8, $vf16
     qmtc2   $t7, $vf17
     qmtc2   $v0, $vf18
-    qmtc2   $t1, $vf01
-    qmtc2   $t3, $vf02
-    qmtc2   $t2, $vf03
-    qmtc2   $t5, $vf04
-    qmtc2   $t4, $vf05
+    qmtc2   $t1, $vf1
+    qmtc2   $t3, $vf2
+    qmtc2   $t2, $vf3
+    qmtc2   $t5, $vf4
+    qmtc2   $t4, $vf5
     qmtc2   $t9, $vf19
     qmtc2   $v1, $vf26
     qmtc2   $a3, $vf27
@@ -308,11 +308,11 @@ MP123_IMDCT36:
     vmul.xyzw   $vf12, $vf12, $vf17
     vmul.xyzw   $vf13, $vf13, $vf18
     vmul.xyzw   $vf14, $vf14, $vf19
-    vmul.xyzw   $vf21, $vf21, $vf01
-    vmul.xyzw   $vf22, $vf22, $vf02
-    vmul.xyzw   $vf23, $vf23, $vf03
-    vmul.xyzw   $vf24, $vf24, $vf04
-    vmul.xyzw   $vf25, $vf25, $vf05
+    vmul.xyzw   $vf21, $vf21, $vf1
+    vmul.xyzw   $vf22, $vf22, $vf2
+    vmul.xyzw   $vf23, $vf23, $vf3
+    vmul.xyzw   $vf24, $vf24, $vf4
+    vmul.xyzw   $vf25, $vf25, $vf5
     vadd.xyzw   $vf21, $vf21, $vf26
     vadd.xyzw   $vf22, $vf22, $vf27
     vadd.xyzw   $vf23, $vf23, $vf28
@@ -401,9 +401,9 @@ MP123_IMDCT12:
     pcpyld  $t1, $t2, $t1
     pcpyld  $t3, $t4, $t3
     pcpyld  $t5, $t6, $t5
-    qmtc2   $t1, $vf06
-    qmtc2   $t3, $vf07
-    qmtc2   $t5, $vf08
+    qmtc2   $t1, $vf6
+    qmtc2   $t3, $vf7
+    qmtc2   $t5, $vf8
     ldl     $t1, 43($a0)
     ldr     $t1, 36($a0)
     lw      $t2, 44($a0)
@@ -416,14 +416,14 @@ MP123_IMDCT12:
     pcpyld  $t1, $t2, $t1
     pcpyld  $t3, $t4, $t3
     pcpyld  $t5, $t6, $t5
-    qmtc2   $t1, $vf09
+    qmtc2   $t1, $vf9
     qmtc2   $t3, $vf10
     qmtc2   $t5, $vf11
-    lqc2    $vf01,  0($at)
-    lqc2    $vf02, 16($at)
-    lqc2    $vf03, 32($at)
-    lqc2    $vf04, 48($at)
-    lqc2    $vf05, 64($at)
+    lqc2    $vf1,  0($at)
+    lqc2    $vf2, 16($at)
+    lqc2    $vf3, 32($at)
+    lqc2    $vf4, 48($at)
+    lqc2    $vf5, 64($at)
     ldl     $t1,  7($a3)
     ldr     $t1,  0($a3)
     lw      $t2,  8($a3)
@@ -568,10 +568,10 @@ MP123_Synth:
     addu    $a1, $t9, $t6
 2:
     mtsah   $zero, 6
-    lqc2    $vf01,  0($a2)
-    lqc2    $vf02, 16($a2)
-    lqc2    $vf03, 32($a2)
-    lqc2    $vf04, 48($a2)
+    lqc2    $vf1,  0($a2)
+    lqc2    $vf2, 16($a2)
+    lqc2    $vf3, 32($a2)
+    lqc2    $vf4, 48($a2)
     lq      $t3,   64($a2)
     lq      $t2,   80($a2)
     lq      $t1,   96($a2)
@@ -584,58 +584,58 @@ MP123_Synth:
     qfsrv   $t2, $t2
     qfsrv   $t1, $t1
     qfsrv   $t0, $t0
-    qmtc2   $t3, $vf08
-    qmtc2   $t2, $vf07
-    qmtc2   $t1, $vf06
-    qmtc2   $t0, $vf05
+    qmtc2   $t3, $vf8
+    qmtc2   $t2, $vf7
+    qmtc2   $t1, $vf6
+    qmtc2   $t0, $vf5
     la      $at, s_Cos64
-    vadd.xyzw   $vf12, $vf04, $vf08
-    vadd.xyzw   $vf11, $vf03, $vf07
-    vadd.xyzw   $vf10, $vf02, $vf06
-    vadd.xyzw   $vf09, $vf01, $vf05
+    vadd.xyzw   $vf12, $vf4, $vf8
+    vadd.xyzw   $vf11, $vf3, $vf7
+    vadd.xyzw   $vf10, $vf2, $vf6
+    vadd.xyzw   $vf9, $vf1, $vf5
     pref    0, 64($at)
-    vsub.xyzw   $vf01, $vf01, $vf05
-    vsub.xyzw   $vf02, $vf02, $vf06
-    vsub.xyzw   $vf03, $vf03, $vf07
-    vsub.xyzw   $vf04, $vf04, $vf08
+    vsub.xyzw   $vf1, $vf1, $vf5
+    vsub.xyzw   $vf2, $vf2, $vf6
+    vsub.xyzw   $vf3, $vf3, $vf7
+    vsub.xyzw   $vf4, $vf4, $vf8
     lqc2    $vf13,  0($at)
     lqc2    $vf14, 16($at)
     lqc2    $vf15, 32($at)
     lqc2    $vf16, 48($at)
-    vmul.xyzw   $vf01, $vf01, $vf13
-    vmul.xyzw   $vf02, $vf02, $vf14
-    vmul.xyzw   $vf03, $vf03, $vf15
-    vmul.xyzw   $vf04, $vf04, $vf16
+    vmul.xyzw   $vf1, $vf1, $vf13
+    vmul.xyzw   $vf2, $vf2, $vf14
+    vmul.xyzw   $vf3, $vf3, $vf15
+    vmul.xyzw   $vf4, $vf4, $vf16
     qmfc2   $t0, $vf12
     qmfc2   $t1, $vf11
     pexew   $t0, $t0
     pexew   $t1, $t1
     qfsrv   $t0, $t0
     qfsrv   $t1, $t1
-    qmtc2   $t0, $vf05
-    qmtc2   $t1, $vf06
-    vadd.xyzw   $vf13, $vf09, $vf05
-    vadd.xyzw   $vf14, $vf10, $vf06
-    vsub.xyzw   $vf15, $vf09, $vf05
-    vsub.xyzw   $vf16, $vf10, $vf06
-    lqc2    $vf05, 64($at)
-    lqc2    $vf06, 80($at)
-    qmfc2   $t0, $vf04
-    qmfc2   $t1, $vf03
+    qmtc2   $t0, $vf5
+    qmtc2   $t1, $vf6
+    vadd.xyzw   $vf13, $vf9, $vf5
+    vadd.xyzw   $vf14, $vf10, $vf6
+    vsub.xyzw   $vf15, $vf9, $vf5
+    vsub.xyzw   $vf16, $vf10, $vf6
+    lqc2    $vf5, 64($at)
+    lqc2    $vf6, 80($at)
+    qmfc2   $t0, $vf4
+    qmfc2   $t1, $vf3
     pexew   $t0, $t0
     pexew   $t1, $t1
-    vmul.xyzw   $vf15, $vf15, $vf05
-    vmul.xyzw   $vf16, $vf16, $vf06
+    vmul.xyzw   $vf15, $vf15, $vf5
+    vmul.xyzw   $vf16, $vf16, $vf6
     qfsrv   $t0, $t0
     qfsrv   $t1, $t1
-    qmtc2   $t0, $vf04
-    qmtc2   $t1, $vf03
-    vsub.xyzw   $vf19, $vf01, $vf04
-    vsub.xyzw   $vf20, $vf02, $vf03
-    vadd.xyzw   $vf17, $vf01, $vf04
-    vadd.xyzw   $vf18, $vf02, $vf03
-    vmul.xyzw   $vf19, $vf19, $vf05
-    vmul.xyzw   $vf20, $vf20, $vf06
+    qmtc2   $t0, $vf4
+    qmtc2   $t1, $vf3
+    vsub.xyzw   $vf19, $vf1, $vf4
+    vsub.xyzw   $vf20, $vf2, $vf3
+    vadd.xyzw   $vf17, $vf1, $vf4
+    vadd.xyzw   $vf18, $vf2, $vf3
+    vmul.xyzw   $vf19, $vf19, $vf5
+    vmul.xyzw   $vf20, $vf20, $vf6
     qmfc2   $t0, $vf14
     qmfc2   $t1, $vf16
     qmfc2   $t2, $vf18
@@ -654,19 +654,19 @@ MP123_Synth:
     qmtc2   $t3, $vf20
     vsub.xyzw   $vf10, $vf13, $vf14
     vsub.xyzw   $vf12, $vf15, $vf16
-    vsub.xyzw   $vf03, $vf17, $vf18
-    vsub.xyzw   $vf01, $vf19, $vf20
-    lqc2    $vf05, 96($at)
-    vadd.xyzw   $vf09, $vf13, $vf14
+    vsub.xyzw   $vf3, $vf17, $vf18
+    vsub.xyzw   $vf1, $vf19, $vf20
+    lqc2    $vf5, 96($at)
+    vadd.xyzw   $vf9, $vf13, $vf14
     vadd.xyzw   $vf11, $vf15, $vf16
-    vadd.xyzw   $vf04, $vf17, $vf18
-    vadd.xyzw   $vf02, $vf19, $vf20
-    vmul.xyzw   $vf10, $vf10, $vf05
-    vmul.xyzw   $vf12, $vf12, $vf05
-    vmul.xyzw   $vf03, $vf03, $vf05
-    vmul.xyzw   $vf01, $vf01, $vf05
+    vadd.xyzw   $vf4, $vf17, $vf18
+    vadd.xyzw   $vf2, $vf19, $vf20
+    vmul.xyzw   $vf10, $vf10, $vf5
+    vmul.xyzw   $vf12, $vf12, $vf5
+    vmul.xyzw   $vf3, $vf3, $vf5
+    vmul.xyzw   $vf1, $vf1, $vf5
     mtsah   $zero, 2
-    qmfc2   $t0, $vf09
+    qmfc2   $t0, $vf9
     qmfc2   $t1, $vf10
     ld      $v0, 112($at)
     pcpyld  $t2, $t0, $t1
@@ -674,12 +674,12 @@ MP123_Synth:
     pexew   $t0, $t0
     pcpyld  $v0, $v0, $v0
     qfsrv   $t0, $t0
-    qmtc2   $t2, $vf09
+    qmtc2   $t2, $vf9
     qmtc2   $t0, $vf10
-    qmtc2   $v0, $vf05
-    vsub.xyzw   $vf14, $vf09, $vf10
-    vadd.xyzw   $vf13, $vf09, $vf10
-    vmul.xyzw   $vf14, $vf14, $vf05
+    qmtc2   $v0, $vf5
+    vsub.xyzw   $vf14, $vf9, $vf10
+    vadd.xyzw   $vf13, $vf9, $vf10
+    vmul.xyzw   $vf14, $vf14, $vf5
     qmfc2   $t0, $vf11
     qmfc2   $t1, $vf12
     pcpyld  $t2, $t0, $t1
@@ -690,29 +690,29 @@ MP123_Synth:
     qmtc2   $t0, $vf12
     vsub.xyzw   $vf15, $vf11, $vf12
     vadd.xyzw   $vf16, $vf11, $vf12
-    vmul.xyzw   $vf15, $vf15, $vf05
-    qmfc2   $t0, $vf04
-    qmfc2   $t1, $vf03
+    vmul.xyzw   $vf15, $vf15, $vf5
+    qmfc2   $t0, $vf4
+    qmfc2   $t1, $vf3
     pcpyld  $t2, $t0, $t1
     pcpyud  $t0, $t1, $t0
     pexew   $t0, $t0
     qfsrv   $t0, $t0
-    qmtc2   $t2, $vf04
-    qmtc2   $t0, $vf03
-    vsub.xyzw   $vf18, $vf04, $vf03
-    vadd.xyzw   $vf17, $vf04, $vf03
-    vmul.xyzw   $vf18, $vf18, $vf05
-    qmfc2   $t0, $vf02
-    qmfc2   $t1, $vf01
+    qmtc2   $t2, $vf4
+    qmtc2   $t0, $vf3
+    vsub.xyzw   $vf18, $vf4, $vf3
+    vadd.xyzw   $vf17, $vf4, $vf3
+    vmul.xyzw   $vf18, $vf18, $vf5
+    qmfc2   $t0, $vf2
+    qmfc2   $t1, $vf1
     pcpyld  $t2, $t0, $t1
     pcpyud  $t0, $t1, $t0
     pexew   $t0, $t0
     qfsrv   $t0, $t0
-    qmtc2   $t2, $vf02
-    qmtc2   $t0, $vf01
-    vsub.xyzw   $vf19, $vf02, $vf01
-    vadd.xyzw   $vf20, $vf02, $vf01
-    vmul.xyzw   $vf19, $vf19, $vf05
+    qmtc2   $t2, $vf2
+    qmtc2   $t0, $vf1
+    vsub.xyzw   $vf19, $vf2, $vf1
+    vadd.xyzw   $vf20, $vf2, $vf1
+    vmul.xyzw   $vf19, $vf19, $vf5
     qmfc2   $t0, $vf13
     qmfc2   $t1, $vf14
     lw      $at, 120($at)
@@ -724,10 +724,10 @@ MP123_Synth:
     pcpyld  $at, $at, $at
     qmtc2   $t0, $vf13
     qmtc2   $t1, $vf14
-    qmtc2   $at, $vf05
+    qmtc2   $at, $vf5
     vsub.xyzw   $vf10, $vf14, $vf13
-    vadd.xyzw   $vf09, $vf14, $vf13
-    vmul.xyzw   $vf10, $vf10, $vf05
+    vadd.xyzw   $vf9, $vf14, $vf13
+    vmul.xyzw   $vf10, $vf10, $vf5
     qmfc2   $t0, $vf16
     qmfc2   $t1, $vf15
     pextlw  $t2, $t0, $t1
@@ -738,7 +738,7 @@ MP123_Synth:
     qmtc2   $t1, $vf15
     vsub.xyzw   $vf12, $vf15, $vf16
     vadd.xyzw   $vf11, $vf15, $vf16
-    vmul.xyzw   $vf12, $vf12, $vf05
+    vmul.xyzw   $vf12, $vf12, $vf5
     qmfc2   $t0, $vf17
     qmfc2   $t1, $vf18
     pextlw  $t2, $t0, $t1
@@ -747,9 +747,9 @@ MP123_Synth:
     pcpyud  $t0, $t2, $t0
     qmtc2   $t0, $vf17
     qmtc2   $t1, $vf18
-    vsub.xyzw   $vf03, $vf18, $vf17
-    vadd.xyzw   $vf04, $vf18, $vf17
-    vmul.xyzw   $vf03, $vf03, $vf05
+    vsub.xyzw   $vf3, $vf18, $vf17
+    vadd.xyzw   $vf4, $vf18, $vf17
+    vmul.xyzw   $vf3, $vf3, $vf5
     qmfc2   $t0, $vf20
     qmfc2   $t1, $vf19
     pextlw  $t2, $t0, $t1
@@ -767,13 +767,13 @@ MP123_Synth:
     ori     $t7, $t7, 0xFE00
     mtc1    $at, $f19
     mtc1    $t7, $f18
-    mtc1    $zero, $f00
+    mtc1    $zero, $f0
     addiu   $t7, $zero, 16
     sll     $a3, $a3, 1
-    qmfc2.i $t0, $vf05
-    qmfc2   $t1, $vf09
-    qmfc2   $t2, $vf07
-    qmfc2   $t3, $vf08
+    qmfc2.i $t0, $vf5
+    qmfc2   $t1, $vf9
+    qmfc2   $t2, $vf7
+    qmfc2   $t3, $vf8
     qmfc2   $at, $vf13
     sw      $t0,    0($a0)
     sw      $t1,  256($a0)
@@ -788,18 +788,18 @@ MP123_Synth:
     sw      $t1, 256($a1)
     sw      $t2, 512($a1)
     sw      $t3, 768($a1)
-    vaddw.x     $vf05, $vf02, $vf03
-    vaddz.x     $vf06, $vf04, $vf02
-    vaddz.y     $vf07, $vf02, $vf04
-    vaddw.y     $vf08, $vf04, $vf02
-    vaddw.w     $vf13, $vf03, $vf01
-    vaddy.y     $vf14, $vf01, $vf03
-    vaddz.z     $vf15, $vf01, $vf03
-    vaddx.x     $vf16, $vf03, $vf01
-    qmfc2   $t0, $vf05
-    qmfc2   $t1, $vf06
-    qmfc2   $t2, $vf07
-    qmfc2   $t3, $vf08
+    vaddw.x     $vf5, $vf2, $vf3
+    vaddz.x     $vf6, $vf4, $vf2
+    vaddz.y     $vf7, $vf2, $vf4
+    vaddw.y     $vf8, $vf4, $vf2
+    vaddw.w     $vf13, $vf3, $vf1
+    vaddy.y     $vf14, $vf1, $vf3
+    vaddz.z     $vf15, $vf1, $vf3
+    vaddx.x     $vf16, $vf3, $vf1
+    qmfc2   $t0, $vf5
+    qmfc2   $t1, $vf6
+    qmfc2   $t2, $vf7
+    qmfc2   $t3, $vf8
     dsrl32  $t2, $t2, 0
     dsrl32  $t3, $t3, 0
     sw      $t0,  64($a0)
@@ -818,16 +818,16 @@ MP123_Synth:
     sw      $t1, 320($a1)
     sw      $t2, 576($a1)
     sw      $t3, 832($a1)
-    vaddz.x     $vf06, $vf00, $vf11
-    vaddy.x     $vf07, $vf00, $vf11
-    vaddw.x     $vf08, $vf00, $vf11
-    vaddw.x     $vf13, $vf00, $vf12
-    vaddy.x     $vf14, $vf00, $vf12
-    vaddz.x     $vf15, $vf00, $vf12
+    vaddz.x     $vf6, $vf0, $vf11
+    vaddy.x     $vf7, $vf0, $vf11
+    vaddw.x     $vf8, $vf0, $vf11
+    vaddw.x     $vf13, $vf0, $vf12
+    vaddy.x     $vf14, $vf0, $vf12
+    vaddz.x     $vf15, $vf0, $vf12
     qmfc2   $t0, $vf11
-    qmfc2   $t1, $vf06
-    qmfc2   $t2, $vf07
-    qmfc2   $t3, $vf08
+    qmfc2   $t1, $vf6
+    qmfc2   $t2, $vf7
+    qmfc2   $t3, $vf8
     sw      $t0, 128($a0)
     sw      $t1, 384($a0)
     sw      $t2, 640($a0)
@@ -840,17 +840,17 @@ MP123_Synth:
     sw      $t1, 384($a1)
     sw      $t2, 640($a1)
     sw      $t3, 896($a1)
-    vaddx.x     $vf05, $vf04, $vf02
-    vaddz.z     $vf06, $vf04, $vf02
-    vaddy.y     $vf07, $vf04, $vf02
-    vaddw.w     $vf08, $vf04, $vf02
-    vaddw.y     $vf13, $vf03, $vf01
-    vaddz.y     $vf14, $vf01, $vf03
-    vaddz.x     $vf15, $vf03, $vf01
-    qmfc2   $t0, $vf05
-    qmfc2   $t1, $vf06
-    qmfc2   $t2, $vf07
-    qmfc2   $t3, $vf08
+    vaddx.x     $vf5, $vf4, $vf2
+    vaddz.z     $vf6, $vf4, $vf2
+    vaddy.y     $vf7, $vf4, $vf2
+    vaddw.w     $vf8, $vf4, $vf2
+    vaddw.y     $vf13, $vf3, $vf1
+    vaddz.y     $vf14, $vf1, $vf3
+    vaddz.x     $vf15, $vf3, $vf1
+    qmfc2   $t0, $vf5
+    qmfc2   $t1, $vf6
+    qmfc2   $t2, $vf7
+    qmfc2   $t3, $vf8
     pcpyud  $t1, $t1, $t1
     dsrl32  $t2, $t2, 0
     pcpyud  $t3, $t3, $t3
@@ -862,7 +862,7 @@ MP123_Synth:
     qmfc2   $t0, $vf13
     qmfc2   $t1, $vf14
     qmfc2   $t2, $vf15
-    qmfc2   $t3, $vf01
+    qmfc2   $t3, $vf1
     dsrl32  $t0, $t0, 0
     dsrl32  $t1, $t1, 0
     sw      $t0, 192($a1)
@@ -870,163 +870,163 @@ MP123_Synth:
     sw      $t2, 704($a1)
     sw      $t3, 960($a1)
 1:
-    lwc1    $f01,  0($v1)
-    lwc1    $f02,  0($t9)
-    lwc1    $f03,  4($v1)
-    lwc1    $f04,  4($t9)
-    mul.s   $f01, $f01, $f02
-    lwc1    $f05,  8($v1)
-    lwc1    $f06,  8($t9)
-    lwc1    $f07, 12($v1)
-    adda.s  $f01, $f00
-    lwc1    $f08, 12($t9)
-    msuba.s $f03, $f04
-    lwc1    $f01, 16($v1)
-    madda.s $f05, $f06
-    lwc1    $f02, 16($t9)
-    msuba.s $f07, $f08
-    lwc1    $f03, 20($v1)
-    lwc1    $f04, 20($t9)
-    lwc1    $f05, 24($v1)
-    lwc1    $f06, 24($t9)
-    madda.s $f01, $f02
-    lwc1    $f07, 28($v1)
-    msuba.s $f03, $f04
-    lwc1    $f08, 28($t9)
-    madda.s $f05, $f06
-    lwc1    $f01, 32($v1)
-    lwc1    $f02, 32($t9)
-    msuba.s $f07, $f08
-    lwc1    $f03, 36($v1)
-    lwc1    $f04, 36($t9)
-    madda.s $f01, $f02
-    lwc1    $f05, 40($v1)
-    lwc1    $f06, 40($t9)
-    msuba.s $f03, $f04
-    lwc1    $f07, 44($v1)
-    lwc1    $f08, 44($t9)
-    madda.s $f05, $f06
-    lwc1    $f01, 48($v1)
-    lwc1    $f02, 48($t9)
-    msuba.s $f07, $f08
-    lwc1    $f03, 52($v1)
-    lwc1    $f04, 52($t9)
-    madda.s $f01, $f02
-    lwc1    $f05, 56($v1)
-    lwc1    $f06, 56($t9)
-    msuba.s $f03, $f04
-    lwc1    $f07, 60($v1)
-    lwc1    $f08, 60($t9)
-    madda.s $f05, $f06
-    msuba.s $f07, $f08
-    madd.s  $f01, $f00, $f00
+    lwc1    $f1,  0($v1)
+    lwc1    $f2,  0($t9)
+    lwc1    $f3,  4($v1)
+    lwc1    $f4,  4($t9)
+    mul.s   $f1, $f1, $f2
+    lwc1    $f5,  8($v1)
+    lwc1    $f6,  8($t9)
+    lwc1    $f7, 12($v1)
+    adda.s  $f1, $f0
+    lwc1    $f8, 12($t9)
+    msuba.s $f3, $f4
+    lwc1    $f1, 16($v1)
+    madda.s $f5, $f6
+    lwc1    $f2, 16($t9)
+    msuba.s $f7, $f8
+    lwc1    $f3, 20($v1)
+    lwc1    $f4, 20($t9)
+    lwc1    $f5, 24($v1)
+    lwc1    $f6, 24($t9)
+    madda.s $f1, $f2
+    lwc1    $f7, 28($v1)
+    msuba.s $f3, $f4
+    lwc1    $f8, 28($t9)
+    madda.s $f5, $f6
+    lwc1    $f1, 32($v1)
+    lwc1    $f2, 32($t9)
+    msuba.s $f7, $f8
+    lwc1    $f3, 36($v1)
+    lwc1    $f4, 36($t9)
+    madda.s $f1, $f2
+    lwc1    $f5, 40($v1)
+    lwc1    $f6, 40($t9)
+    msuba.s $f3, $f4
+    lwc1    $f7, 44($v1)
+    lwc1    $f8, 44($t9)
+    madda.s $f5, $f6
+    lwc1    $f1, 48($v1)
+    lwc1    $f2, 48($t9)
+    msuba.s $f7, $f8
+    lwc1    $f3, 52($v1)
+    lwc1    $f4, 52($t9)
+    madda.s $f1, $f2
+    lwc1    $f5, 56($v1)
+    lwc1    $f6, 56($t9)
+    msuba.s $f3, $f4
+    lwc1    $f7, 60($v1)
+    lwc1    $f8, 60($t9)
+    madda.s $f5, $f6
+    msuba.s $f7, $f8
+    madd.s  $f1, $f0, $f0
     addiu   $v1, $v1, 128
-    min.s   $f01, $f01, $f18
+    min.s   $f1, $f1, $f18
     addiu   $t9, $t9, 64
-    max.s   $f01, $f01, $f19
+    max.s   $f1, $f1, $f19
     pref    0, 0($v1)
     pref    0, 0($t9)
     addiu   $t7, $t7, -1
-    cvt.w.s $f01, $f01
-    mfc1    $t4, $f01
+    cvt.w.s $f1, $f1
+    mfc1    $t4, $f1
     sh      $t4, 0($t8)
     bgtz    $t7, 1b
     addu    $t8, $t8, $a3
-    lwc1    $f01,  0($v1)
-    lwc1    $f02,  0($t9)
-    lwc1    $f03,  8($v1)
-    lwc1    $f04,  8($t9)
-    mul.s   $f01, $f01, $f02
-    lwc1    $f05, 16($v1)
-    lwc1    $f06, 16($t9)
-    lwc1    $f07, 24($v1)
-    adda.s  $f01, $f00
-    lwc1    $f08, 24($t9)
-    madda.s $f03, $f04
-    lwc1    $f01, 32($v1)
-    madda.s $f05, $f06
-    lwc1    $f02, 32($t9)
-    madda.s $f07, $f08
-    lwc1    $f03, 40($v1)
-    lwc1    $f04, 40($t9)
-    lwc1    $f05, 48($v1)
-    lwc1    $f06, 48($t9)
-    madda.s $f01, $f02
-    lwc1    $f07, 56($v1)
-    madda.s $f03, $f04
-    lwc1    $f08, 56($t9)
-    madda.s $f05, $f06
-    madda.s $f07, $f08
+    lwc1    $f1,  0($v1)
+    lwc1    $f2,  0($t9)
+    lwc1    $f3,  8($v1)
+    lwc1    $f4,  8($t9)
+    mul.s   $f1, $f1, $f2
+    lwc1    $f5, 16($v1)
+    lwc1    $f6, 16($t9)
+    lwc1    $f7, 24($v1)
+    adda.s  $f1, $f0
+    lwc1    $f8, 24($t9)
+    madda.s $f3, $f4
+    lwc1    $f1, 32($v1)
+    madda.s $f5, $f6
+    lwc1    $f2, 32($t9)
+    madda.s $f7, $f8
+    lwc1    $f3, 40($v1)
+    lwc1    $f4, 40($t9)
+    lwc1    $f5, 48($v1)
+    lwc1    $f6, 48($t9)
+    madda.s $f1, $f2
+    lwc1    $f7, 56($v1)
+    madda.s $f3, $f4
+    lwc1    $f8, 56($t9)
+    madda.s $f5, $f6
+    madda.s $f7, $f8
     sll     $t6, $t6, 1
-    madd.s  $f01, $f00, $f00
-    min.s   $f01, $f01, $f18
+    madd.s  $f1, $f0, $f0
+    min.s   $f1, $f1, $f18
     addiu   $t9, $t9, -64
     addiu   $t7, $zero, 15
-    max.s   $f01, $f01, $f19
+    max.s   $f1, $f1, $f19
     addiu   $v1, $v1, -128
-    cvt.w.s $f01, $f01
+    cvt.w.s $f1, $f1
     addu    $v1, $v1, $t6
-    mfc1    $t4, $f01
+    mfc1    $t4, $f1
     sh      $t4, 0($t8)
     addu    $t8, $t8, $a3
 1:
-    lwc1    $f01,  -4($v1)
-    lwc1    $f02,   0($t9)
-    lwc1    $f03,  -8($v1)
-    lwc1    $f04,   4($t9)
-    mul.s   $f01, $f01, $f02
-    lwc1    $f05, -12($v1)
-    lwc1    $f06,   8($t9)
-    lwc1    $f07, -16($v1)
-    suba.s  $f00, $f01
-    lwc1    $f08,  12($t9)
-    msuba.s $f03, $f04
-    lwc1    $f01, -20($v1)
-    msuba.s $f05, $f06
-    lwc1    $f02,  16($t9)
-    msuba.s $f07, $f08
-    lwc1    $f03, -24($v1)
-    lwc1    $f04,  20($t9)
-    lwc1    $f05, -28($v1)
-    lwc1    $f06,  24($t9)
-    msuba.s $f01, $f02
-    lwc1    $f07, -32($v1)
-    msuba.s $f03, $f04
-    lwc1    $f08,  28($t9)
-    msuba.s $f05, $f06
-    lwc1    $f01, -36($v1)
-    lwc1    $f02,  32($t9)
-    msuba.s $f07, $f08
-    lwc1    $f03, -40($v1)
-    lwc1    $f04,  36($t9)
-    msuba.s $f01, $f02
-    lwc1    $f05, -44($v1)
-    lwc1    $f06,  40($t9)
-    msuba.s $f03, $f04
-    lwc1    $f07, -48($v1)
-    lwc1    $f08,  44($t9)
-    msuba.s $f05, $f06
-    lwc1    $f01, -52($v1)
-    lwc1    $f02,  48($t9)
-    msuba.s $f07, $f08
-    lwc1    $f03, -56($v1)
-    lwc1    $f04,  52($t9)
-    msuba.s $f01, $f02
-    lwc1    $f05, -60($v1)
-    lwc1    $f06,  56($t9)
-    msuba.s $f03, $f04
-    lwc1    $f07, -64($v1)
-    lwc1    $f08,  60($t9)
-    msuba.s $f05, $f06
-    msuba.s $f07, $f08
-    madd.s  $f01, $f00, $f00
+    lwc1    $f1,  -4($v1)
+    lwc1    $f2,   0($t9)
+    lwc1    $f3,  -8($v1)
+    lwc1    $f4,   4($t9)
+    mul.s   $f1, $f1, $f2
+    lwc1    $f5, -12($v1)
+    lwc1    $f6,   8($t9)
+    lwc1    $f7, -16($v1)
+    suba.s  $f0, $f1
+    lwc1    $f8,  12($t9)
+    msuba.s $f3, $f4
+    lwc1    $f1, -20($v1)
+    msuba.s $f5, $f6
+    lwc1    $f2,  16($t9)
+    msuba.s $f7, $f8
+    lwc1    $f3, -24($v1)
+    lwc1    $f4,  20($t9)
+    lwc1    $f5, -28($v1)
+    lwc1    $f6,  24($t9)
+    msuba.s $f1, $f2
+    lwc1    $f7, -32($v1)
+    msuba.s $f3, $f4
+    lwc1    $f8,  28($t9)
+    msuba.s $f5, $f6
+    lwc1    $f1, -36($v1)
+    lwc1    $f2,  32($t9)
+    msuba.s $f7, $f8
+    lwc1    $f3, -40($v1)
+    lwc1    $f4,  36($t9)
+    msuba.s $f1, $f2
+    lwc1    $f5, -44($v1)
+    lwc1    $f6,  40($t9)
+    msuba.s $f3, $f4
+    lwc1    $f7, -48($v1)
+    lwc1    $f8,  44($t9)
+    msuba.s $f5, $f6
+    lwc1    $f1, -52($v1)
+    lwc1    $f2,  48($t9)
+    msuba.s $f7, $f8
+    lwc1    $f3, -56($v1)
+    lwc1    $f4,  52($t9)
+    msuba.s $f1, $f2
+    lwc1    $f5, -60($v1)
+    lwc1    $f6,  56($t9)
+    msuba.s $f3, $f4
+    lwc1    $f7, -64($v1)
+    lwc1    $f8,  60($t9)
+    msuba.s $f5, $f6
+    msuba.s $f7, $f8
+    madd.s  $f1, $f0, $f0
     addiu   $v1, $v1, -128
-    min.s   $f01, $f01, $f18
+    min.s   $f1, $f1, $f18
     addiu   $t9, $t9, -64
-    max.s   $f01, $f01, $f19
+    max.s   $f1, $f1, $f19
     addiu   $t7, $t7, -1
-    cvt.w.s $f01, $f01
-    mfc1    $t4, $f01
+    cvt.w.s $f1, $f1
+    mfc1    $t4, $f1
     sh      $t4, 0($t8)
     bgtz    $t7, 1b
     addu    $t8, $t8, $a3
