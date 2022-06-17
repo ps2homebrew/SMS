@@ -38,7 +38,7 @@ EE_OBJS  = main.o SMS_OS.o SMS_GS_0.o SMS_GS_1.o SMS_GS_2.o SMS_Timer.o         
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJ_DIR)%)
 
 all: $(EE_OBJ_DIR) $(EE_BIN_DIR) $(EE_BIN)
-	@ee-strip --remove-section=.comment $(EE_BIN)
+	@$(EE_STRIP) --remove-section=.comment $(EE_BIN)
 
 $(EE_OBJ_DIR):
 	@$(MKDIR) -p $(EE_OBJ_DIR)
