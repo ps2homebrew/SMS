@@ -9,6 +9,13 @@
 # Review ps2sdk README & LICENSE files for further details.
 #
 */
+
+.ifdef .gasversion.
+.nan legacy
+.module singlefloat
+.module oddspreg
+.endif
+
 .text
 
 .globl g_AboutData
