@@ -35,14 +35,14 @@ IPUContext        g_IPUCtx;
 u64               s_DMAVIFDraw[ 16 ] __attribute__(   (  aligned( 64 )  )   );
 u64               s_DMAGIFDraw[ 22 ] __attribute__(   (  aligned( 64 )  )   );
 
-static SMS_FrameBuffer* s_pFrame __attribute__(  ( unused )  );
+       SMS_FrameBuffer* s_pFrame __attribute__(  ( unused )  );
 static SMS_DXSBFrame*   s_pDXSBDFrm;
 static SMS_DXSBFrame*   s_pDXSBAFrm;
 static SMS_DXSBFrame*   s_pDXSBRFrm;
 static int              s_SyncS;
        u64              s_VIFQueue[ 16 ];
-static unsigned char    s_QIdx;
-static unsigned char    s_fStopSync;
+       unsigned char    s_QIdx;
+       unsigned char    s_fStopSync;
 static unsigned char    s_fRefresh;
 
 static SMS_DXSBDrawPack s_DXSBDPack __attribute__(   (  section( ".data" )  )   ) = {

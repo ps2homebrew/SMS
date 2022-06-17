@@ -36,8 +36,8 @@ typedef struct FileMapping {
 
 } FileMapping;
 
-static u128         s_RegSave[ 3 ] __attribute__(   (  section( ".bss" ), unused  )   );
-static unsigned int s_VTLBRefillHandlerOrg;
+u128         s_RegSave[ 3 ] __attribute__(   (  section( ".bss" ), unused  )   );
+unsigned int s_VTLBRefillHandlerOrg;
 static FileMapping* s_pMapChain;
 
 void _tlb_refill_handler_r ( void );

@@ -992,7 +992,7 @@ void DSP_MDCTDestroy ( SMS_MDCTContext* s ) {
 
 }  /* end DSP_MDCTDestroy */
 
-static const unsigned int s_DCT4Const[ 272 ] __attribute__(   (  aligned( 16 ), section( ".rodata" )  )   ) = {
+const unsigned int s_DCT4Const[ 272 ] __attribute__(   (  aligned( 16 ), section( ".rodata" )  )   ) = {
  0x3F7FFB11, 0x3F7F84AB, 0x3F7E70B0, 0x3F7CBFC9,
  0x3F7A7302, 0x3F778BC5, 0x3F740BDD, 0x3F6FF573,
  0x3F6B4B0C, 0x3F660F88, 0x3F604621, 0x3F59F26A,

@@ -70,7 +70,7 @@ void IPU_InitLoadImage ( IPULoadImage* apLoadImg, int aWidth, int aHeight ) {
 
 }  /* end IPU_InitLoadImage */
 
-static void _darken_image ( unsigned char* apBuf, unsigned int aQWC ) {
+void _darken_image ( unsigned char* apBuf, unsigned int aQWC ) {
 
  __asm__ __volatile__ (
   ".set noreorder\n\t"

@@ -17,7 +17,7 @@
 
 #include <limits.h>
 
-static const uint8_t s_h263_chroma_roundtab[ 16 ] = {
+const uint8_t s_h263_chroma_roundtab[ 16 ] = {
  0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2
 };
 
