@@ -315,7 +315,7 @@ static int8_t s_LATab[ 256 ] = {
    0,   0,   0,   0
 };
 
-static int s_SAB[ 20 ] __attribute__(   (  aligned( 16 ), section( ".sdata" ), unused  )   ) = {
+int s_SAB[ 20 ] __attribute__(   (  aligned( 16 ), section( ".sdata" ), unused  )   ) = {
  0x38504E62, 0x38504E62, 0x38504E62, 0x38504E62,
  0x3CCC2D41, 0x3CCC2D41, 0x3CCC2D41, 0x3CCC2D41
 };

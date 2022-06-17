@@ -16,7 +16,7 @@
 #include <linux/types.h>
 #else
 #include <stddef.h>
-#include <tamtypes.h>
+#include "SMS.h"
 #endif
 
 #ifdef __cplusplus
