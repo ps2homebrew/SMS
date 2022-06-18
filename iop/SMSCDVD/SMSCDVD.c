@@ -520,15 +520,15 @@ static int CDVD_findfile ( const char* fname, struct TocEntry* tocEntry ) {
 
  if (  CachedDirInfo.m_Valid  && ComparePath ( pathname ) == MATCH  ) {
 
-  ( char* )tocEntryPointer = CachedDirInfo.cache;
+  tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache);
 
   for (  ; ( char* )tocEntryPointer < (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  );
-           ( char* )tocEntryPointer += tocEntryPointer -> m_Length
+           tocEntryPointer = ( struct dirTocEntry* )(( char* )(tocEntryPointer) + tocEntryPointer -> m_Length)
   ) {
 
    if ( !tocEntryPointer -> m_Length )
 
-    ( char* )tocEntryPointer = CachedDirInfo.cache + (     (    (   (  ( char* )tocEntryPointer - CachedDirInfo.cache  ) / 2048   ) + 1    ) * 2048     );
+    tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache + (     (    (   (  ( char* )tocEntryPointer - CachedDirInfo.cache  ) / 2048   ) + 1    ) * 2048     ));
 
    if (   ( char* )tocEntryPointer >= (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  )   ) break;
 
@@ -558,17 +558,17 @@ static int CDVD_findfile ( const char* fname, struct TocEntry* tocEntry ) {
 
  while ( CachedDirInfo.m_CacheSize > 0 ) {
 
-  ( char* )tocEntryPointer = CachedDirInfo.cache;
+  tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache);
 
-  if ( !CachedDirInfo.m_CacheOffset ) ( char* )tocEntryPointer += tocEntryPointer -> m_Length;
+  if ( !CachedDirInfo.m_CacheOffset ) tocEntryPointer = ( struct dirTocEntry* )(( char* )(tocEntryPointer) + tocEntryPointer -> m_Length);
 
   for (  ; ( char* )tocEntryPointer < (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  );
-           ( char* )tocEntryPointer += tocEntryPointer -> m_Length
+           tocEntryPointer = ( struct dirTocEntry* )(( char* )(tocEntryPointer) + tocEntryPointer -> m_Length)
   ) {
 
    if ( !tocEntryPointer -> m_Length )
 
-    ( char* )tocEntryPointer = CachedDirInfo.cache + (     (    (   (  ( char* )tocEntryPointer - CachedDirInfo.cache  ) / 2048   ) + 1    ) * 2048     );
+    tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache + (     (    (   (  ( char* )tocEntryPointer - CachedDirInfo.cache  ) / 2048   ) + 1    ) * 2048     ));
 
    if (   ( char* )tocEntryPointer >= (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  )   ) break;
 
@@ -705,18 +705,18 @@ static int FindPath ( char* pathname ) {
 
   found_dir = FALSE;
 
-  ( char* )tocEntryPointer  = CachedDirInfo.cache;
-  ( char* )tocEntryPointer += tocEntryPointer -> m_Length;
+  tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache);
+  tocEntryPointer = ( struct dirTocEntry* )(( char* )(tocEntryPointer) + tocEntryPointer -> m_Length);
 
   dir_entry = 0;
 
   for (  ; ( char* )tocEntryPointer < (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  );
-           ( char* )tocEntryPointer += tocEntryPointer -> m_Length
+           tocEntryPointer = ( struct dirTocEntry* )(( char* )(tocEntryPointer) + tocEntryPointer -> m_Length)
   ) {
 
    if ( !tocEntryPointer -> m_Length )
 
-    ( char* )tocEntryPointer = CachedDirInfo.cache + (     (    (   (  ( char* )tocEntryPointer - CachedDirInfo.cache  ) / 2048   ) + 1    ) * 2048     );
+    tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache + (     (    (   (  ( char* )tocEntryPointer - CachedDirInfo.cache  ) / 2048   ) + 1    ) * 2048     ));
 
    if (   ( char* )tocEntryPointer >= (  CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  )   ) {
 
@@ -735,7 +735,7 @@ static int FindPath ( char* pathname ) {
             )
      ) return CachedDirInfo.m_Valid = FALSE;
 
-     ( char* )tocEntryPointer = CachedDirInfo.cache;
+     tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache);
 
     } else return CachedDirInfo.m_Valid = FALSE;
 
@@ -875,10 +875,10 @@ static int ISO_DOpen (  iop_io_file_t* apFile, const char* apName ) {
  if (  !CDVD_Cache_Dir ( apName,                   CACHE_START )  ) return -ENOENT;
  if (  !CDVD_Cache_Dir ( CachedDirInfo.m_Pathname, CACHE_START )  ) return -ENOENT;
 
- ( char* )s_tocEntryPointer  = CachedDirInfo.cache;
- ( char* )s_tocEntryPointer += s_tocEntryPointer -> m_Length;
+ s_tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache);
+ s_tocEntryPointer = ( struct dirTocEntry* )((( char* )s_tocEntryPointer) + s_tocEntryPointer -> m_Length);
 
- if ( CachedDirInfo.m_PathDepth == 0 ) ( char* )s_tocEntryPointer += s_tocEntryPointer -> m_Length;
+ if ( CachedDirInfo.m_PathDepth == 0 ) s_tocEntryPointer = ( struct dirTocEntry* )((( char* )s_tocEntryPointer) + s_tocEntryPointer -> m_Length);
 
  s_DirEntry = 0;
 
@@ -904,7 +904,7 @@ static int ISO_DRead ( iop_io_file_t* apFile, void* apRetVal ) {
 
    if ( s_tocEntryPointer -> m_Length == 0 )
 
-    ( char* )s_tocEntryPointer = CachedDirInfo.cache + (((((char*)s_tocEntryPointer - CachedDirInfo.cache)/2048)+1)*2048);
+    s_tocEntryPointer = ( struct dirTocEntry* )(( char* )(CachedDirInfo.cache) + (((((char*)s_tocEntryPointer - CachedDirInfo.cache)/2048)+1)*2048));
 
    if (  ( char* )s_tocEntryPointer >= CachedDirInfo.cache + ( CachedDirInfo.m_CacheSize * 2048 )  ) break;
 
@@ -922,7 +922,7 @@ static int ISO_DRead ( iop_io_file_t* apFile, void* apRetVal ) {
 
    ++s_DirEntry;
 
-   ( char* )s_tocEntryPointer += s_tocEntryPointer -> m_Length;
+   s_tocEntryPointer = ( struct dirTocEntry* )((( char* )s_tocEntryPointer) + s_tocEntryPointer -> m_Length);
 
    return 1;
 
@@ -934,7 +934,7 @@ static int ISO_DRead ( iop_io_file_t* apFile, void* apRetVal ) {
 
   } else break;
 
-  ( char* )s_tocEntryPointer = CachedDirInfo.cache;
+  s_tocEntryPointer = ( struct dirTocEntry* )(CachedDirInfo.cache);
 
  }  /* end while */
 
