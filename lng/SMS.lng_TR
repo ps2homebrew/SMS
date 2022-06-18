@@ -1,22 +1,22 @@
-Mevcut medya:
+Mevcut medya:  
 yok
-SMS başlatılıyor...
+SMS baÅŸlatÄ±lÄ±yor...
 Ayarlar kaydediliyor...
-Yükleniyor %s...
-Ağ arayüzü başlatılıyor...
-USBD.IRX aranıyor...
-Medya bekleniyor (menü için "start" a basın)...
+YÃ¼kleniyor %s...
+AÄŸ baÅŸlatÄ±lÄ±yor...
+USBD.IRX aranÄ±yor...
+Medya bekleniyor ("start" ile menÃ¼ye geÃ§in)...
 Disk okunuyor...
-Geçersiz disk (devam etmek için X e basın)...
+GeÃ§ersiz disk ("Ã§arpÄ±" ile devam edin)...
 Medya okunuyor...
-Görüntü ayarları...
-Aygıt ayarları...
-Tarayıcı ayarları...
-Oynatıcı ayarları...
-Yardım...
-Ayarları kaydet
+GÃ¶rÃ¼ntÃ¼ ayarlarÄ±...
+Cihaz ayarlarÄ±...
+TarayÄ±cÄ± ayarlarÄ±...
+OynatÄ±cÄ± ayarlarÄ±...
+YardÄ±m...
+AyarlarÄ± kaydet
 Konsolu kapat
-SMS den çık
+SMS Ã§Ä±kÄ±ÅŸ
 TV sistemi
 PAL
 NTSC
@@ -26,246 +26,244 @@ WinLatin1
 WinLatin2
 WinCyrillic
 WinGreek
-Görüntü ayarları
-SMS Menüsü
-Görüntüyü sola kaydır
-Görüntüyü sağa kaydır
-Görüntüyü yukarı kaydır
-Görüntüyü aşağı kaydır
-Ağı otomatik başlat
-USB yi otomatik başlat
-HDD yi otomatik başlat
-Aygıt ayarları
-Ağ desteğini başlat
-HDD desteğini başlat
-USB desteğini başlat
-IPCONFIG.DAT düzenle...
-IPCONFIG.DAT düzenle
-IP Adresi (kısım 1)
-IP Adresi (kısım 2)
-IP Adresi (kısım 3)
-IP Adresi (kısım 4)
-Ağ Maskesi (kısım 1)
-Ağ Maskesi (kısım 2)
-Ağ Maskesi (kısım 3)
-Ağ Maskesi (kısım 4)
-Ağ geçidi Adresi (kısım 1)
-Ağ geçidi Adresi (kısım 2)
-Ağ geçidi Adresi (kısım 3)
-Ağ geçidi Adresi (kısım 4)
-IPCONFIG.DAT Kaydet/Güncelle
-Tarayıcı ayarları
-Arka plan resmi kullan
-Dosyaları sırala
-Medya dosyalarını filtrele
-HDL kısımlarını göster
-Sistem kısımlarını gizle
-Aktif sınır rengi
-İnaktif sınır rengi
+GÃ¶rÃ¼ntÃ¼ ayarlarÄ±
+SMS MenÃ¼
+GÃ¶rÃ¼ntÃ¼yÃ¼ sola kaydÄ±r
+GÃ¶rÃ¼ntÃ¼yÃ¼ saÄŸa kaydÄ±r
+GÃ¶rÃ¼ntÃ¼yÃ¼ yukarÄ± kaydÄ±r
+GÃ¶rÃ¼ntÃ¼yÃ¼ aÅŸaÄŸÄ± kaydÄ±r
+AÄŸÄ± otomatik baÅŸlat
+USB otomatik baÅŸlat
+HDD otomatik baÅŸlat
+Cihaz ayarlarÄ±
+AÄŸ desteÄŸini baÅŸlat
+HDD desteÄŸini baÅŸlat
+USB desteÄŸini baÅŸlat
+IPCONFIG.DAT dÃ¼zenle...
+IPCONFIG.DAT dÃ¼zenle
+IP Adresi (kÄ±sÄ±m 1)
+IP Adresi (kÄ±sÄ±m 2)
+IP Adresi (kÄ±sÄ±m 3)
+IP Adresi (kÄ±sÄ±m 4)
+AÄŸ Maskesi (kÄ±sÄ±m 1)
+AÄŸ Maskesi (kÄ±sÄ±m 2)
+AÄŸ Maskesi (kÄ±sÄ±m 3)
+AÄŸ Maskesi (kÄ±sÄ±m 4)
+AÄŸ geÃ§idi Adresi (kÄ±sÄ±m 1)
+AÄŸ geÃ§idi Adresi (kÄ±sÄ±m 2)
+AÄŸ geÃ§idi Adresi (kÄ±sÄ±m 3)
+AÄŸ geÃ§idi Adresi (kÄ±sÄ±m 4)
+IPCONFIG.DAT Kaydet/GÃ¼ncelle
+TarayÄ±cÄ± ayarlarÄ±
+Arkaplan resmi kullan
+DosyalarÄ± sÄ±rala
+Medya dosyalarÄ±nÄ± filtrele
+HDL bÃ¶lÃ¼mlerini gÃ¶ster
+Sistem bÃ¶lÃ¼mlerini gizle
+Etkin kenarlÄ±k rengi
+Pasif kenarlÄ±k rengi
 Font rengi
-Seçim çubuğu rengi
-Oynatıcı ayarları
-Varsayılan ses
-Altyazı hizalama
-Altyazı yeri
-Otomatik altyazı yükleme
-Saydamsız altyazılar
-Altyazı rengi
-Altyazı kalın rengi
-Altyazı italik rengi
-Altyazı altı çizili rengi
+Durum satÄ±rÄ± rengi
+OynatÄ±cÄ± ayarlarÄ±
+VarsayÄ±lan ses
+AltyazÄ± hizalama
+AltyazÄ± yeri
+Otomatik altyazÄ± yÃ¼kleme
+Åeffaf altyazÄ±lar
+AltyazÄ± rengi
+AltyazÄ± kalÄ±n rengi
+AltyazÄ± italik rengi
+AltyazÄ± alt Ã§izgili rengi
 Otomatik kapanma
-Çubuk uzunluğu
-Çubuk pozisyonu
-Çubuk zamanını göster
-Çubuk rengi
-Ses çubuğu rengi
-Ses animasyon gösterimi
-üst
+Ã‡ubuk uzunluÄŸu
+Ã‡ubuk konumu
+Ã‡ubuk zamanÄ±nÄ± gÃ¶ster
+Ã‡ubuk rengi
+Ses Ã§ubuÄŸu rengi
+Ses animasyon gÃ¶sterimi
+Ã¼st
 alt
-kapalı
+kapalÄ±
 orta
 sol
 %d dk
 %d birim
-Altyazı font genişliği
-Altyazı font yüksekliği
-Hızlı yardım
+AltyazÄ± font geniÅŸliÄŸi
+AltyazÄ± font yÃ¼ksekliÄŸi
+HÄ±zlÄ± yardÄ±m
  
-Başlarken:
+BaÅŸlarken:
 select+R1 - NTSC modu
 select+R2 - PAL modu
-Tarayıcı:
-üçgen - ana klasör
-sol/sağ - aygıt menüsü
-yukarı/aşağı - klasörü dolaş
-çarpı - aksiyon
+TarayÄ±cÄ±:
+Ã¼Ã§gen - ana klasÃ¶r
+sol/saÄŸ - aygÄ±t menÃ¼sÃ¼
+yukarÄ±/aÅŸaÄŸÄ± - klasÃ¶rÃ¼ dolaÅŸ
+Ã§arpÄ± - aksiyon
 select+yuvarlak - makineyi kapat
-select+R1 - görüntüyü sağa hizala
-select+L1 - görüntüyü sola hizala
-select+R2 - görüntüyü aşağı hizala
-select+L2 - görüntüyü yukarı hizala
-select+kare - ayarları kaydet
-select+üçgen - ana tarayıcı
-L1+L2+R1+R2 - hakkında menüsü
-Oynatıcı:
-yukarı/aşağı - sesi ayarla
-sol/sağ - İLERİ/GERİ modu
-çarpı - İLERİ/GERİ modunu kapat
-üçgen - dur
-select - durakla/zaman çizgisi
-start - devam/menü
-çarpı - OSD zaman
+select+R1 - gÃ¶rÃ¼ntÃ¼yÃ¼ saÄŸa hizala
+select+L1 - gÃ¶rÃ¼ntÃ¼yÃ¼ sola hizala
+select+R2 - gÃ¶rÃ¼ntÃ¼yÃ¼ aÅŸaÄŸÄ± hizala
+select+L2 - gÃ¶rÃ¼ntÃ¼yÃ¼ yukarÄ± hizala
+select+kare - ayarlarÄ± kaydet
+select+Ã¼Ã§gen - ana tarayÄ±cÄ±
+L1+L2+R1+R2 - hakkÄ±nda menÃ¼sÃ¼
+OynatÄ±cÄ±:
+yukarÄ±/aÅŸaÄŸÄ± - sesi ayarla
+sol/saÄŸ - Ä°LERÄ°/GERÄ° modu
+Ã§arpÄ± - Ä°LERÄ°/GERÄ° modunu kapat
+Ã¼Ã§gen - dur
+select - durakla/zaman Ã§izgisi
+start - devam/menÃ¼
+Ã§arpÄ± - OSD zaman
 kare - pan-scan modu
 L1 - pan sol
-R1 - pan sağ
+R1 - pan saÄŸ
 yuvarlak - V/A (S/V) sync modu
-L2 - sync değerini azalt
-R2 - sync değerini artır
-SMS menüsü:
-çarpı/yuvarlak - aksiyon/ileri
-üçgen - yukarı/çıkış
-Hata (devam etmek için X e basın)...
+L2 - sync deÄŸerini azalt
+R2 - sync deÄŸerini artÄ±r
+SMS menÃ¼:
+Ã§arpÄ±/yuvarlak - aksiyon/ileri
+Ã¼Ã§gen - yukarÄ±/Ã§Ä±kÄ±ÅŸ
+Hata ("Ã§arpÄ±" ile devam edin)...
 IPCONFIG.DAT kaydediliyor...
-Seçim çubuğu rengi
-Gelişmiş ayarlar...
-Görüntü boyutu
-Ayarları uygula
-Gelişmiş ayarlar
-Örnek
-İngilizce
-Türkçe
+SeÃ§im Ã§ubuÄŸu rengi
+GeliÅŸmiÅŸ ayarlar...
+GÃ¶rÃ¼ntÃ¼ boyutu
+AyarlarÄ± uygula
+GeliÅŸmiÅŸ ayarlar
+Ã–rnek
+Ä°ngilizce
+TÃ¼rkÃ§e
 Dil
-Parçalar yükleniyor...
-Altyazılar yükleniyor...
-Altyazı: %s hata (%d), devam etmek için X e basın...
+ParÃ§alar yÃ¼kleniyor...
+AltyazÄ±lar yÃ¼kleniyor...
+AltyazÄ±: %s hata (%d), "Ã§arpÄ±" ile devam edin...
 format
 sekans
-Yüklenen dosya %s ...
-Dosya tipi saptanıyor...
+YÃ¼klenen dosya %s ...
+Dosya tipi saptanÄ±yor...
 Durakla
 Durduruluyor
-varsayılan
+varsayÄ±lan
 V/A:
 S/V:
 Oynat 
-İleri 
+Ä°leri 
  Geri 
 Posizyon
-Desteklenmeyen dosya tipi (devam etmek için "X" e basın)...
+Desteklenmeyen dosya tipi ("Ã§arpÄ±" ile devam edin)...
 Kalan
-Oynatıcı menüsü
-Görüntü
+OynatÄ±cÄ± menÃ¼sÃ¼
+GÃ¶rÃ¼ntÃ¼
 letterbox
 pan-scan 1
 pan-scan 2
 pan-scan 3
 tam ekran
-Altyazıları göster
-Altyazıları seç
-ana tarayıcı
+AltyazÄ±larÄ± gÃ¶ster
+AltyazÄ±larÄ± seÃ§
+ana tarayÄ±cÄ±
 mc0:/BOOT/BOOT.ELF
 mc0:/B?DATA-SYSTEM/BOOT.ELF
-Çıkışta
-Ses Efekti
+Ã‡Ä±kÄ±ÅŸ eylemi
+Ses efekti
 S/PDIF - Dolby Digital/DTS
-MP3 ayarları...
-Rasgele playlist
+MP3 ayarlarÄ±...
+Oynatma listesini karÄ±ÅŸtÄ±r
 Tekrar modu
-Ses spektrum gösterimi
-HDD'ye kopyala
-Kopyalanıyor
+Ses spektrum gÃ¶sterimi
+HDD Ã¼stÃ¼ne kopyala
+KopyalanÄ±yor
 KB/s
-Eylemi seçiniz
-Görüntü çözünürlüğü
-32 bit
-16 bit
+Eylemi seÃ§
+GÃ¶rÃ¼ntÃ¼ Ã§Ã¶zÃ¼nÃ¼rlÃ¼ÄŸÃ¼
 32 bit
 16 bit
 DTV 480P
-Kontrol port 2
-gamepad
+KontrolcÃ¼ port 2
+oyun kolu
 uzaktan kumanda
-AC3 menzil seviyesi level
-sağ
+AC3 aralÄ±k seviyesi
+saÄŸ
 VESA (60Hz)
 VESA (75Hz)
-geniş ekran
-geniş pan-scan 1
-geniş pan-scan 2
-Ağ protokolü
+geniÅŸ ekran
+geniÅŸ pan-scan 1
+geniÅŸ pan-scan 2
+AÄŸ protokolÃ¼
 ps2dev/host
 SMB/CIFS
-Bağlantı hatası (devam etmek için "X" e basın)...
-Protokol hatası (%d) (devam etmek için "X" e basın)...
-Giriş hatası (%d) (devam etmek için "X" e basın)...
-Altyazılar?
-CD/DVD yi menet?
-Görüntü genişliği
+BaÄŸlantÄ± hatasÄ± ("Ã§arpÄ±" ile devam edin)...
+Protokol hatasÄ± (%d) ("Ã§arpÄ±" ile devam edin)...
+GiriÅŸ hatasÄ± (%d) ("Ã§arpÄ±" ile devam edin)...
+AltyazÄ±lar
+CD/DVD devre dÄ±ÅŸÄ± bÄ±rak
+GÃ¶rÃ¼ntÃ¼ geniÅŸliÄŸi
 Okunuyor %s...
-Hata: hafıza yetersiz
-Boş yer kontrol ediliyor...
-Hata: HDD yeterli boş yer yok
-Klasör dizini oluşturuluyor...
+Hata: hafÄ±za yetersiz
+BoÅŸ yer kontrol ediliyor...
+Hata: HDD yeterli boÅŸ yer yok
+KlasÃ¶r dizini oluÅŸturuluyor...
 Sil
 Siliniyor...
-CD/DVD hızı
+CD/DVD hÄ±zÄ±
 orta
-yüksek
-düşük
-Yön butonları
+yÃ¼ksek
+dÃ¼ÅŸÃ¼k
+YÃ¶n dÃ¼ÄŸmeleri
 DTV 1080I
 DTV 720P
-Çalışma modu
-oto-haberleşme
+Ã‡alÄ±ÅŸma modu
+oto-haberleÅŸme
 otomatik
-manuel
+el ile
 Duplex modu
 tam
-yarım
+yarÄ±m
 Standart
 10Base-T
 100Base-TX
-Ağ ayarları...
-Ağ ayarları
-Senkronizasyon parametresi 1 (video)
-Senkronizasyon parametresi 2 (GUI)
-SMB sunucusu...
-Askıdaki bağlantı koparlıyor...
-SMS dilini güncelle
-SMS paletini güncelle
-SMS yi güncelle
-SMB sunucu listesini güncelle
-Arka plan görüntüsü ekle
-İşleniyor...
-SMS yedeği oluşturuluyor...
-Hepsini oynat
+AÄŸ ayarlarÄ±...
+AÄŸ ayarlarÄ±
+EÅŸitleyici 1 (video)
+EÅŸitleyici 2 (GUI)
+SMB sunucu...
+Bekleyen baÄŸlantÄ± kesiliyor...
+SMS dilini gÃ¼ncelle
+SMS paletini gÃ¼ncelle
+SMS gÃ¼ncelle
+SMB sunucu listesini gÃ¼ncelle
+Arkaplan gÃ¶rÃ¼ntÃ¼sÃ¼ ekle
+Ä°ÅŸleniyor...
+SMS yedeÄŸi oluÅŸturuluyor...
+TÃ¼mÃ¼nÃ¼ oynat
 Ses
 Video
-Otomatik tanıma parametresi
-Oynatmaya şuradan başlat
-merkez-sağ
+Otomatik algÄ±lama parametresi
+Oynatmaya ÅŸuradan baÅŸla
+merkez-saÄŸ
 Hata denetleyicisi kullan
-Altyazı MBCS
-Font yükleniyor...
-ODML indeksi yükleniyor %d...
-?File size: 
-?GB
-?KB
+AltyazÄ± MBCS
+Font yÃ¼kleniyor...
+ODML indeksi yÃ¼kleniyor %d...
+Dosya boyutu: 
+GB
+KB
 %d.%02d
 %d.%03d
-?Kb/s
-?Hz
-?ch
-?Available memory: %.1fMB/%.2fMB
-?Resume playback from %s ? ('cross'='yes', 'triangle'='no')
-?Image offset
-?Video resolution is too big (press 'cross' to continue)...
-?Synch. parameter 3 (audio)
-?Images
-?Unsupported or corrupted image
-?Reset button action
-?power off
-?exit
-?Video auto 2:2 pulldown
-?DTV 576p
+Kb/s
+Hz
+ch
+KullanÄ±labilir bellek: %.1fMB/%.2fMB
+%s oynatmaya devam et? ("Ã§arpÄ±"='evet', "Ã¼Ã§gen"='hayÄ±r')
+GÃ¶rÃ¼ntÃ¼ merkezi
+Video Ã§Ã¶zÃ¼nÃ¼rlÃ¼ÄŸÃ¼ Ã§ok bÃ¼yÃ¼k ("Ã§arpÄ±" ile devam edin)...
+EÅŸitleyici 3 (ses)
+GÃ¶rÃ¼ntÃ¼ler
+Desteklenmeyen veya bozuk resim
+SÄ±fÄ±rlama dÃ¼ÄŸmesi eylemi
+konsolu kapat
+Ã§Ä±kÄ±ÅŸ
+Otomatik video 2:2 aÃ§Ä±lÄ±r
+DTV 576p
