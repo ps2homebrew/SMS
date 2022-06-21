@@ -192,7 +192,7 @@ typedef union GIFTag {
 #define GS_PABE       0x49
 #define GS_PRIM       0x00
 #define GS_PRMODECONT 0x1A
-#define GS_RGBAQ      0x01L
+#define GS_RGBAQ      0x01LL
 #define GS_SCISSOR_1  0x40
 #define GS_SCISSOR_2  0x41
 #define GS_TEST_1     0x47
@@ -209,10 +209,10 @@ typedef union GIFTag {
 #define GS_UV         0x03
 #define GS_XYOFFSET_1 0x18
 #define GS_XYOFFSET_2 0x19
-#define GS_XYZ2       0x05L
+#define GS_XYZ2       0x05LL
 #define GS_ZBUF_1     0x4E
 #define GS_ZBUF_2     0x4F
-#define GS_NOP        0x0FL
+#define GS_NOP        0x0FLL
 
 #define GS_SET_ALPHA_1 GS_SET_ALPHA
 #define GS_SET_ALPHA_2 GS_SET_ALPHA

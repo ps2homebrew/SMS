@@ -377,56 +377,56 @@ static int _gui_thread ( void* apParam ) {
 
    } else if ( s_DevFlags & DEVF_USB_CONNECT_0 ) {
 
-    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 0L << 56 )  );
+    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 0LL << 56 )  );
     s_DevFlags &= ~DEVF_USB_CONNECT_0;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_CONNECT_1 ) {
 
-    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 1L << 56 )  );
+    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 1LL << 56 )  );
     s_DevFlags &= ~DEVF_USB_CONNECT_1;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_CONNECT_2 ) {
 
-    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 2L << 56 )  );
+    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 2LL << 56 )  );
     s_DevFlags &= ~DEVF_USB_CONNECT_2;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_CONNECT_3 ) {
 
-    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 3L << 56 )  );
+    s_Event    |= (  GUI_MSG_MOUNT_BIT | GUI_MSG_USB | ( 3LL << 56 )  );
     s_DevFlags &= ~DEVF_USB_CONNECT_3;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_DISCONNECT_0 ) {
 
-    s_Event    |= GUI_MSG_USB | ( 0L << 56 );
+    s_Event    |= GUI_MSG_USB | ( 0LL << 56 );
     s_DevFlags &= ~DEVF_USB_DISCONNECT_0;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_DISCONNECT_1 ) {
 
-    s_Event    |= GUI_MSG_USB | ( 1L << 56 );
+    s_Event    |= GUI_MSG_USB | ( 1LL << 56 );
     s_DevFlags &= ~DEVF_USB_DISCONNECT_1;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_DISCONNECT_2 ) {
 
-    s_Event    |= GUI_MSG_USB | ( 2L << 56 );
+    s_Event    |= GUI_MSG_USB | ( 2LL << 56 );
     s_DevFlags &= ~DEVF_USB_DISCONNECT_2;
 
     goto raiseEvent;
 
    } else if ( s_DevFlags & DEVF_USB_DISCONNECT_3 ) {
 
-    s_Event    |= GUI_MSG_USB | ( 3L << 56 );
+    s_Event    |= GUI_MSG_USB | ( 3LL << 56 );
     s_DevFlags &= ~DEVF_USB_DISCONNECT_3;
 
     goto raiseEvent;
