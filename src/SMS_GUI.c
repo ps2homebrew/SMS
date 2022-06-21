@@ -596,6 +596,7 @@ queryPad:
 
  }  /* end while */
 
+ return 0;
 }  /* end _gui_thread */
 
 void GUI_SetColors ( void ) {
