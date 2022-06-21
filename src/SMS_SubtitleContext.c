@@ -40,7 +40,7 @@ static SubtitleContext s_SubCtx __attribute__(   (  section( ".bss" )  )   );
 static char*          ( *_strtok_func        ) ( char*, const char*                                   );
 static unsigned int   ( *_strlen_func        ) ( const char*                                          );
 static u64*           ( *_render_string_func ) ( const char*, int, int, int, u64*          , int, int );
-static int            ( *_string_width_func  ) ( unsigned char*, int, int                             );
+static int            ( *_string_width_func  ) ( char*, int, int                                      );
 
 static u64*           _sb_render_string (
                        const char* apStr, int aLen,
@@ -98,10 +98,10 @@ static u64*           _sb_render_string (
 
 }  /* end _sb_render_string */
 
-static int _sb_string_width ( unsigned char* apStr, int aLen, int aDW ) {
+static int _sb_string_width ( char* apStr, int aLen, int aDW ) {
 
  int                  retVal = 0;
- const unsigned char* lpEnd  = apStr + aLen;
+ const          char* lpEnd  = apStr + aLen;
  float                lAR    = ( 32 + aDW ) / 32.0F;
  GSMTKFontHeader*     lpXHdr = g_Fonts[ g_GSCtx.m_CodePage ];
 
@@ -181,10 +181,10 @@ static u64*           _mb_render_string (
 
 }  /* end _mb_render_string */
 
-static int _mb_string_width ( unsigned char* apStr, int aLen, int aDW ) {
+static int _mb_string_width ( char* apStr, int aLen, int aDW ) {
 
  int                  retVal = 0;
- const unsigned char* lpEnd  = apStr + aLen;
+ const char*          lpEnd  = apStr + aLen;
  float                lAR    = ( 32 + aDW ) / 32.0F;
 
  while ( apStr <= lpEnd ) {
@@ -506,7 +506,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio
 
 static int _blank_line ( char* apStr ) {
 
- while ( *apStr ) if (  !isspace ( *apStr++ )  ) return 0;
+ while ( *apStr ) if (  !isspace ( *(( unsigned char* )apStr++) )  ) return 0;
 
  return 1;
 

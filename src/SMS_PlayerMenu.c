@@ -183,7 +183,7 @@ static char     s_RLVLBuffer[ 2 ] __attribute__(   (  section( ".bss"  )  )   );
 static SMString s_StrRLVL         __attribute__(   (  section( ".data" )  )   ) = {
  1, s_RLVLBuffer
 };
-static char     s_OffsBuffer[ 5 ] __attribute__(   (  section( ".bss"  )  )   );
+static char     s_OffsBuffer[ 7 ] __attribute__(   (  section( ".bss"  )  )   );
 static SMString s_StrOffs         __attribute__(   (  section( ".data" )  )   ) = {
  1, s_OffsBuffer
 };

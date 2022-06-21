@@ -71,7 +71,7 @@ typedef struct {
 typedef struct PS2HDDMountInfo {
 
  unsigned int  m_Mode;
- unsigned char m_Path[ 124 ];
+          char m_Path[ 124 ];
 
 } PS2HDDMountInfo;
 

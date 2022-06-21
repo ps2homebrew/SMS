@@ -44,7 +44,7 @@ static uint64_t _do_probe ( FileContext* apFileCtx, SMS_AudioInfo* apInfo, int* 
 
     if ( lType == 0 ) {
 
-     char lBuf[ 34 ];
+     unsigned char lBuf[ 34 ];
 
      if ( lSize != 34 ) break;
 

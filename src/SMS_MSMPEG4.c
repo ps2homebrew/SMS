@@ -1682,7 +1682,7 @@ static SMS_INLINE int _msmpeg4_pred_dc (
 
  }  /* end else */
 
- *appDCVal = &lpDCVal[ 0 ];
+ *appDCVal = (uint16_t *)&lpDCVal[ 0 ];
 
  return lPred;
 

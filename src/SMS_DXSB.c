@@ -16,13 +16,13 @@
 #include <kernel.h>
 
 typedef struct _DXSB_Color {
- unsigned char m_R __attribute__(  ( packed )  );
- unsigned char m_G __attribute__(  ( packed )  );
- unsigned char m_B __attribute__(  ( packed )  );
-} _DXSB_Color __attribute__(  ( packed )  );
+ unsigned char m_R;
+ unsigned char m_G;
+ unsigned char m_B;
+} _DXSB_Color;
 
 typedef struct _DXSB_Header {
- unsigned char  m_PTS[ 27 ] __attribute__(  ( packed )  );
+ unsigned char  m_PTS[ 27 ];
  unsigned short m_Width     __attribute__(  ( packed )  );
  unsigned short m_Height    __attribute__(  ( packed )  );
  unsigned short m_Left      __attribute__(  ( packed )  );
@@ -30,8 +30,8 @@ typedef struct _DXSB_Header {
  unsigned short m_Right     __attribute__(  ( packed )  );
  unsigned short m_Bottom    __attribute__(  ( packed )  );
  unsigned short m_Offset    __attribute__(  ( packed )  );
- _DXSB_Color    m_Clr[ 4 ]  __attribute__(  ( packed )  );
-} _DXSB_Header __attribute__(  ( packed )  );
+ _DXSB_Color    m_Clr[ 4 ];
+} _DXSB_Header;
 
 extern void mips_memset ( void*, int, unsigned int         );
 extern void dxsb_pack   ( void*, const void*, unsigned int );
@@ -233,7 +233,7 @@ static SMS_DXSBFrame* _decode ( void* apData, int aSize ) {
 
   InvalidDCache ( retVal -> m_pPixmap, retVal -> m_pPixmap + lSize );
 
-  lpDst = lpPixmap = ( char* )(  ( unsigned int )retVal -> m_pPixmap | 0x30000000  );
+  lpDst = lpPixmap = ( unsigned char* )(  ( unsigned int )retVal -> m_pPixmap | 0x30000000  );
 
   lX      = 0;
   lY      = 0;

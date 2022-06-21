@@ -28,6 +28,10 @@
 #include <sys/ioctl.h>
 #include <fileio.h>
 
+#ifdef DISABLE_EXTRA_TIMERS_FUNCTIONS
+DISABLE_EXTRA_TIMERS_FUNCTIONS();
+#endif
+
 int main ( int argc, char** argv ) {
 
  if ( argc > 0 && argv[ 0 ][ 0 ] == 'm' && argv[ 0 ][ 1 ] == 'c' ) {

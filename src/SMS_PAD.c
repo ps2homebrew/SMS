@@ -163,7 +163,7 @@ int PAD_OpenPort ( int aPort, int aSlot, void* apData ) {
 
   s_PadState[ aPort ][ aSlot ].m_Open  = 1;
   s_PadState[ aPort ][ aSlot ].m_pData = UNCACHED_SEG( apData );
-  s_PadState[ aPort ][ aSlot ].m_pBuf  = *( char** )( &s_Buffer[ 20 ] );
+  s_PadState[ aPort ][ aSlot ].m_pBuf  = *( unsigned char** )( &s_Buffer[ 20 ] );
 
   return *( u32* )( &s_Buffer[ 12 ] );
 

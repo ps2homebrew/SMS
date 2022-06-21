@@ -473,7 +473,7 @@ void PlayerControl_Destroy ( void ) {
 
 void PlayerControl_MkTime ( int64_t aTime ) {
 
- char      lBuf[ 8 ];
+ char      lBuf[ 16 ];
  uint64_t* lpPacket = _U( s_pPTS );
 
  PlayerControl_FormatTime ( lBuf, aTime );
@@ -926,7 +926,7 @@ static void _handle_adjust_osd ( int aDelta, int* apVal, int aLimit ) {
 
  int       lVal = *apVal;
  int       lS, lMS;
- char      lBuf[ 8 ];
+ char      lBuf[ 14 ];
  uint64_t* lpPaint = _U( s_pDelta );
  char      lSign;
 
@@ -1378,7 +1378,7 @@ redo:
 
 void PlayerControl_UpdateDuration ( unsigned int anIdx, int64_t aDuration ) {
 
- char      lBuff[ 8 ];
+ char      lBuff[ 18 ];
  uint64_t* lpPaint;
 
  if ( !anIdx || aDuration ) {

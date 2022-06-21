@@ -772,7 +772,7 @@ retry:
   g_IPUCtx.m_TBW       = lTBW;
   g_IPUCtx.m_ModeIdx   = 0;
   g_IPUCtx.m_fWS       = afWS;
-  PowerOf2 ( aWidth, aHeight, &g_IPUCtx.m_TW, &g_IPUCtx.m_TH );
+  PowerOf2 ( aWidth, aHeight, ( int * )&g_IPUCtx.m_TW, ( int * )&g_IPUCtx.m_TH );
 
   lpGIFPack = ( u64*               )(  ( unsigned int )&s_DXSBDPack.m_BitBlt.m_Value | 0x20000000  );
   lpGIFPack[ 0 ] = GS_SET_BITBLTBUF( 0, 0, 0, lVRAM, 0, GSPixelFormat_PSMT4HH ),

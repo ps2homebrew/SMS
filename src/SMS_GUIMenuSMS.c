@@ -1715,37 +1715,37 @@ static void _rotate_palette_2 ( GUIMenu* apMenu, int* apVal, int aDir ) {
 
 void _subclr_handler ( GUIMenu* apMenu, int aDir ) {
 
- _rotate_palette_2 ( apMenu, &g_Config.m_PlayerSCNIdx, aDir );
+ _rotate_palette_2 ( apMenu, ( int * )( &g_Config.m_PlayerSCNIdx ), aDir );
 
 }  /* end _subclr_handler */
 
 void _subbclr_handler ( GUIMenu* apMenu, int aDir ) {
 
- _rotate_palette_2 ( apMenu, &g_Config.m_PlayerSCBIdx, aDir );
+ _rotate_palette_2 ( apMenu, ( int * )( &g_Config.m_PlayerSCBIdx ), aDir );
 
 }  /* end _subbclr_handler */
 
 void _subiclr_handler ( GUIMenu* apMenu, int aDir ) {
 
- _rotate_palette_2 ( apMenu, &g_Config.m_PlayerSCIIdx, aDir );
+ _rotate_palette_2 ( apMenu, ( int * )( &g_Config.m_PlayerSCIIdx ), aDir );
 
 }  /* end _subiclr_handler */
 
 void _subu_handler ( GUIMenu* apMenu, int aDir ) {
 
- _rotate_palette_2 ( apMenu, &g_Config.m_PlayerSCUIdx, aDir );
+ _rotate_palette_2 ( apMenu, ( int * )( &g_Config.m_PlayerSCUIdx ), aDir );
 
 }  /* end _subu_handler */
 
 static void _sbclr_handler ( GUIMenu* apMenu, int aDir ) {
 
- _rotate_palette_2 ( apMenu, &g_Config.m_PlayerSBCIdx, aDir );
+ _rotate_palette_2 ( apMenu, ( int * )( &g_Config.m_PlayerSBCIdx ), aDir );
 
 }  /* end _sbclr_handler */
 
 static void _vbclr_handler ( GUIMenu* apMenu, int aDir ) {
 
- _rotate_palette_2 ( apMenu, &g_Config.m_PlayerVBCIdx, aDir );
+ _rotate_palette_2 ( apMenu, ( int * )( &g_Config.m_PlayerVBCIdx ), aDir );
 
 }  /* end _vbclr_handler */
 
@@ -1938,9 +1938,9 @@ static void _smbcs_handler ( GUIMenu* apMenu, int aDir ) {
 
 static char s_DispHBuff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
 static char s_DispWBuff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
-static char s_SynP1Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
-static char s_SynP2Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
-static char s_SynP3Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP1Buff[ 7 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP2Buff[ 7 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP3Buff[ 7 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
 
 static SMString  s_StrAdvH __attribute__(   (  section( ".data" )  )   ) = { 0, s_DispHBuff };
 static SMString  s_StrAdvW __attribute__(   (  section( ".data" )  )   ) = { 0, s_DispWBuff };

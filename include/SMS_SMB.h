@@ -28,28 +28,28 @@
 
 typedef struct SMBLoginInfo {
 
- char m_ServerIP  [ 16 ] __attribute__(  ( packed )  );
- char m_ServerName[ 16 ] __attribute__(  ( packed )  );
- char m_ClientName[ 16 ] __attribute__(  ( packed )  );
- char m_UserName  [ 32 ] __attribute__(  ( packed )  );
- char m_Password  [ 64 ] __attribute__(  ( packed )  );
- char m_fAsync           __attribute__(  ( packed )  );
+ char m_ServerIP  [ 16 ];
+ char m_ServerName[ 16 ];
+ char m_ClientName[ 16 ];
+ char m_UserName  [ 32 ];
+ char m_Password  [ 64 ];
+ char m_fAsync;
 
 } SMBLoginInfo;
 
 typedef struct SMBMountInfo {
 
  int  m_Unit        __attribute__(  ( packed )  );
- char m_Path[ 512 ] __attribute__(  ( packed )  );
+ char m_Path[ 512 ];
 
 } SMBMountInfo;
 
 typedef struct SMBShareInfo {
 
- unsigned char  m_Name[ 13 ];
+          char  m_Name[ 13 ];
  unsigned char  m_Pad;
  unsigned short m_Type;
- unsigned char* m_pRemark;
+          char* m_pRemark;
 
 } SMBShareInfo;
 

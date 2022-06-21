@@ -32,7 +32,7 @@ typedef struct _AVIdxEntry {
  uint32_t m_CumLen __attribute__(  ( packed )  );
  uint32_t m_fKey   __attribute__(  ( packed )  );
 
-} _AVIdxEntry __attribute__(  ( packed )  );
+} _AVIdxEntry;
 
 typedef struct _AVIStream {
 
@@ -183,7 +183,7 @@ static int _Load_idx1 ( SMS_Container* apCtx, int aSize ) {
   lpStm = MYSTRM( apCtx -> m_pStm[ lIdx ] );
 
   lpIndices = SMS_Realloc (
-   lpStm -> m_pIdx, &lpStm -> m_IdxAllocSize,
+   lpStm -> m_pIdx, ( unsigned int * )( &lpStm -> m_IdxAllocSize ),
    ( lpStm -> m_nIdx + 1 ) * sizeof ( _AVIdxEntry )
   );
 
@@ -297,7 +297,7 @@ static int _LoadODMLIdx ( SMS_Container* apCont, int* apNum ) {
    int     lKey = lLen >= 0;
    lLen &= 0x7FFFFFFF;
    lpIndices = SMS_Realloc (
-    lpAVIStm -> m_pIdx, &lpAVIStm -> m_IdxAllocSize,
+    lpAVIStm -> m_pIdx, ( unsigned int * )( &lpAVIStm -> m_IdxAllocSize ),
     ( lpAVIStm -> m_nIdx + 1 ) * sizeof ( _AVIdxEntry )
    );
    lpAVIStm -> m_pIdx = lpIndices;
@@ -394,7 +394,8 @@ static int _ReadHeader ( SMS_Container* apCtx ) {
  int                retVal;
  uint32_t           lTag, lSubTag, lSize, lnFrames, lLen, lStmIdx, lFlags = 0;
  int32_t            lFramePeriod = 0, lBitRate;
- int32_t            i, lCount, lScale, lRate, lODMLIdx = 1;
+ int32_t            i, lCount, lScale, lRate;
+ int                lODMLIdx = 1;
  SMS_Stream*        lpStm;
  FileContext*       lpFileCtx  = apCtx -> m_pFileCtx;
  enum SMS_CodecType lCodecType = SMS_CodecTypeUnknown;

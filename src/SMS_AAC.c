@@ -8149,7 +8149,7 @@ static void create_channel_config ( _NeAACDecHandle hDecoder, _NeAACDecFrameInfo
 
 }  /* end create_channel_config */
 
-static int _aac_decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
+static int32_t _aac_decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
  uint16_t           i;
  _NeAACDecHandle    hDecoder        = ( _NeAACDecHandle )apCtx -> m_pCodec -> m_pCtx;
@@ -8252,12 +8252,12 @@ end:
 
 }  /* end _aac_decode */
 
-static int _aac_init ( SMS_CodecContext* apCtx ) {
+static int32_t _aac_init ( SMS_CodecContext* apCtx ) {
 
  _NeAACDecHandle lpAAC = ( _NeAACDecHandle )apCtx -> m_pCodec -> m_pCtx;
  uint32_t        lSR;
  uint8_t         lnChan;
- int             retVal;
+ int32_t         retVal;
 
  if ( apCtx -> m_pUserData && apCtx -> m_UserDataLen > 0 )
   retVal = _NeAACDecInit2 ( lpAAC, apCtx -> m_pUserData, apCtx -> m_UserDataLen, &lSR, &lnChan );

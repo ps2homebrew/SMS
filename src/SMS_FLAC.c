@@ -378,7 +378,7 @@ static int _decode_frame ( FLAContext* apCtx ) {
 
 }  /* end _decode_frame */
 
-static int _flac_init ( SMS_CodecContext* apCtx ) {
+static int32_t _flac_init ( SMS_CodecContext* apCtx ) {
 
  FLAContext* lpCtx = &s_Ctx;
 
@@ -478,7 +478,7 @@ static void ( *SynthSamples[ 4 ] ) ( FLAContext*, short*, int32_t**, int, int ) 
  _pcm_synth_ind, _pcm_synth_left, _pcm_synth_right, _pcm_synth_mid
 };
 
-static int _flac_decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
+static int32_t _flac_decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
  SMS_AVPacket* lpPkt  = ( SMS_AVPacket* )apInput -> m_pOut;
  uint8_t*      lpData = lpPkt -> m_pData;
@@ -515,10 +515,10 @@ static int _flac_decode ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS
 
     if (  _decode_frame ( lpCtx )  ) {
 
-     int    lShift     = 24 - lpCtx -> m_Data.m_BPS;
-     int*   lpInp[ 2 ] = { lpCtx -> m_pDec[ 0 ], lpCtx -> m_pDec[ 1 ] };
-     int    lnParts, lRem, lBlockLen;
-     short* lpSamples;
+     int      lShift     = 24 - lpCtx -> m_Data.m_BPS;
+     int32_t* lpInp[ 2 ] = { lpCtx -> m_pDec[ 0 ], lpCtx -> m_pDec[ 1 ] };
+     int      lnParts, lRem, lBlockLen;
+     short*   lpSamples;
 
      lBlockLen = 4096 >> lpCtx -> m_Data.m_Info.m_nChannels;
      lnParts   = lpCtx -> m_BlockSize / lBlockLen;

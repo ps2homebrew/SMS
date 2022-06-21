@@ -48,7 +48,7 @@ typedef struct SMS_MCTable {
 
 typedef struct SMS_MCIcon {
 
- unsigned char  m_Header[ 4 ];
+          char  m_Header[ 4 ];
  unsigned short m_Unk0;
  unsigned short m_Offset;
  unsigned       m_Unk1;
@@ -58,9 +58,9 @@ typedef struct SMS_MCIcon {
  float          m_LightCol[ 3 ][ 4 ];
  float          m_LightAmb[ 4 ];
  unsigned short m_Title[  34 ];
- unsigned char  m_View [  64 ];
- unsigned char  m_Copy [  64 ];
- unsigned char  m_Del  [  64 ];
+          char  m_View [  64 ];
+          char  m_Copy [  64 ];
+          char  m_Del  [  64 ];
  unsigned char  m_Unk2 [ 512 ];
 
 } SMS_MCIcon;

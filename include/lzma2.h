@@ -8,7 +8,7 @@ typedef struct
     unsigned char magic[6];
     unsigned char flags[2];
     unsigned int crc32;
-} xz_header_t __attribute__((packed));
+} xz_header_t;
 
 typedef struct
 {
@@ -16,7 +16,7 @@ typedef struct
     unsigned int backward_size; // real_backward_size = (stored + 1)*4
     unsigned char flags[2];     //identical to header
     unsigned char magic[2];
-} xz_footer_t __attribute__((packed));
+} xz_footer_t;
 
 typedef struct
 {

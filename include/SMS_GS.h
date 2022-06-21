@@ -174,7 +174,7 @@ typedef union GIFTag {
   u64           m_Lo __attribute__(  ( packed )  );
   u64           m_Hi __attribute__(  ( packed )  );
 
- } m_HiLo __attribute__(  ( packed )  );
+ } m_HiLo;
 
 } GIFTag __attribute__(   (  aligned( 16 )  )   );
 
@@ -192,7 +192,7 @@ typedef union GIFTag {
 #define GS_PABE       0x49
 #define GS_PRIM       0x00
 #define GS_PRMODECONT 0x1A
-#define GS_RGBAQ      0x01L
+#define GS_RGBAQ      0x01LL
 #define GS_SCISSOR_1  0x40
 #define GS_SCISSOR_2  0x41
 #define GS_TEST_1     0x47
@@ -209,10 +209,10 @@ typedef union GIFTag {
 #define GS_UV         0x03
 #define GS_XYOFFSET_1 0x18
 #define GS_XYOFFSET_2 0x19
-#define GS_XYZ2       0x05L
+#define GS_XYZ2       0x05LL
 #define GS_ZBUF_1     0x4E
 #define GS_ZBUF_2     0x4F
-#define GS_NOP        0x0FL
+#define GS_NOP        0x0FLL
 
 #define GS_SET_ALPHA_1 GS_SET_ALPHA
 #define GS_SET_ALPHA_2 GS_SET_ALPHA
@@ -475,7 +475,7 @@ typedef union GSRegEXTDATA {
 
  u64           m_Value __attribute__(  ( packed )  );
 
-} GSRegEXTDATA __attribute__(  ( packed )  );
+} GSRegEXTDATA;
 
 typedef union GSRegFRAME {
 
@@ -914,7 +914,7 @@ typedef union GSRegTEX1 {
 
  u64           m_Value __attribute__(  ( packed )  );
 
-} GSRegTEX1 __attribute__(  ( packed )  );
+} GSRegTEX1;
 
 #define GS_CSR_SIGNAL 0x0000000000000001L
 #define GS_CSR_FINISH 0x0000000000000002L
@@ -1224,12 +1224,12 @@ typedef struct GSContext {
 
 typedef struct GSMTKFontHeader {
 
- char           m_ID [ 3 ]    __attribute__(  ( packed )  );
- char           m_ClrType     __attribute__(  ( packed )  );
- char           m_Unk[ 3 ]    __attribute__(  ( packed )  );
+ char           m_ID [ 3 ];
+ char           m_ClrType;
+ char           m_Unk[ 3 ];
  unsigned short m_nGlyphs     __attribute__(  ( packed )  );
- unsigned char  m_GlyphWidth  __attribute__(  ( packed )  );
- unsigned char  m_GlyphHeight __attribute__(  ( packed )  );
+ unsigned char  m_GlyphWidth;
+ unsigned char  m_GlyphHeight;
 
 } GSMTKFontHeader;
 
@@ -1291,10 +1291,10 @@ void           GSContext_RenderTexSprite ( GSTexSpritePacket*, int, int, int, in
 void           GSContext_RenderVGRect    ( u64*          , int, int, int, int, u64          , u64           );
 
 void  GSFont_Init      ( void                                                    );
-int   GSFont_Width     ( unsigned char*, int                                     );
-int   GSFont_WidthEx   ( unsigned char*, int, int                                );
-void  GSFont_Render    ( unsigned char*, int, int, int, u64*                     );
-void  GSFont_RenderEx  ( unsigned char*, int, int, int, u64*          , int, int );
+int   GSFont_Width     ( char*, int                                              );
+int   GSFont_WidthEx   ( char*, int, int                                         );
+void  GSFont_Render    ( char*, int, int, int, u64*                              );
+void  GSFont_RenderEx  ( char*, int, int, int, u64*, int, int                    );
 void  GSFont_Set       ( unsigned int, void*                                     );
 void* GSFont_Get       ( unsigned int, unsigned int*                             );
 int   GSFont_UnpackChr ( GSMTKFontHeader*, unsigned int, void*                   );

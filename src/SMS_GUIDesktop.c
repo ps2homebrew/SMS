@@ -170,7 +170,7 @@ static int DrawSkin ( void ) {
     g_GSCtx.m_VRAMTexPtr = 0x4000 - (
      (   ( g_GSCtx.m_TBW << 6 ) * (  ( lHeight + 31 ) & ~31  ) * 4   ) >> 8
     );
-    PowerOf2 ( lWidth, lHeight, &g_GSCtx.m_TW, &g_GSCtx.m_TH );
+    PowerOf2 ( lWidth, lHeight, ( int * )&g_GSCtx.m_TW, ( int * )&g_GSCtx.m_TH );
 
     IPU_InitLoadImage ( &lLoadImg, lWidth, lHeight );
     IPU_LoadImage ( &lLoadImg, lpData, lSize, 0, 0, 0, 0, 0 );
@@ -437,7 +437,7 @@ GUIObject* GUI_CreateStatusLine ( void ) {
 
 }  /* end GUI_CreateStatusLine */
 
-void GUI_Status ( unsigned char* apMsg ) {
+void GUI_Status ( char* apMsg ) {
 
  int lLen   = strlen ( apMsg );
  int lWidth = g_GSCtx.m_Width - 96;
@@ -475,7 +475,7 @@ void GUI_Status ( unsigned char* apMsg ) {
 
 }  /* end GUI_Status */
 
-static int _wait_user ( unsigned char* apMsg, int anIcon, int anBtn, unsigned int* apBtn ) {
+static int _wait_user ( char* apMsg, int anIcon, int anBtn, unsigned int* apBtn ) {
 
  int            lLen   = strlen ( apMsg );
  int            lWidth = g_GSCtx.m_Width - 128;
@@ -512,7 +512,7 @@ static int _wait_user ( unsigned char* apMsg, int anIcon, int anBtn, unsigned in
 
 }  /* end _wait_user */
 
-void GUI_Error ( unsigned char* apMsg ) {
+void GUI_Error ( char* apMsg ) {
 
  unsigned int lBtn[ 2 ] = { SMS_PAD_CROSS, RC_ENTER };
 
@@ -520,7 +520,7 @@ void GUI_Error ( unsigned char* apMsg ) {
 
 }  /* end GUI_Error */
 
-int GUI_Question ( unsigned char* apMsg ) {
+int GUI_Question ( char* apMsg ) {
 
  unsigned int lBtn[ 4 ] = {
   SMS_PAD_CROSS, SMS_PAD_TRIANGLE, RC_ENTER, RC_RETURN
@@ -532,7 +532,7 @@ int GUI_Question ( unsigned char* apMsg ) {
 
 }  /* end GUI_Question */
 
-void GUI_Progress ( unsigned char* apStr, int aPos, int afForceUpdate ) {
+void GUI_Progress ( char* apStr, int aPos, int afForceUpdate ) {
 
  static u64*           s_lpListTxt;
  static u64*           s_lpListRRT;

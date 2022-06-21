@@ -17,16 +17,16 @@
 
 struct CDDAContext;
 
-extern unsigned char g_pUSB  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_pCDROM[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_pCDDA [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_pHOST [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_pDVD  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_pSMB  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_pSMBS [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
-extern unsigned char g_HDDWD [] __attribute__(   (  aligned( 1 ), section( ".bss"  )  )   );
+extern char g_pUSB  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_pCDROM[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_pCDDA [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_pHOST [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_pDVD  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_pSMB  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_pSMBS [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   );
+extern char g_HDDWD [] __attribute__(   (  aligned( 1 ), section( ".bss"  )  )   );
 
-extern unsigned char* g_pDevName[ 7 ];
+extern char* g_pDevName[ 7 ];
 
 extern SMS_List*           g_pFileList;
 extern int                 g_CMedia;
@@ -39,7 +39,7 @@ extern struct CDDAContext* g_pCDDACtx;
 extern "C" {
 #endif  /* __cplusplus */
 
-void SMS_FileDirInit ( unsigned char* );
+void SMS_FileDirInit ( char* );
 
 #ifdef __cplusplus
 }

@@ -15,7 +15,7 @@
 typedef struct SMString {
 
  unsigned int   m_Len;
- unsigned char* m_pStr;
+          char* m_pStr;
 
 } SMString __attribute__(   (  aligned( 4 )  )   );
 
@@ -349,8 +349,8 @@ extern char     g_pQuote    [] __attribute__(   (  aligned( 1 ), section( ".data
 extern char     g_pPeriod   [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char     g_pJPEG     [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 
-extern unsigned char g_pExec0[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
-extern unsigned char g_pExec1[] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pExec0    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
+extern char     g_pExec1    [] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 
 extern unsigned char* g_XLT[ 4 ] __attribute__(   (  section( ".data" )  )   );
 
