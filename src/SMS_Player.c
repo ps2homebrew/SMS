@@ -1043,7 +1043,7 @@ static int _sms_play ( void* apPlayer ) {
  if ( lfNoVideo ) {
 
   s_Player.m_pIPUCtx -> Suspend ();
-  s_Player.m_OSDPackets[ 5 ] = SMS_PlayerBallSim_Init ( &s_Player.m_OSDQWC[ 5 ] );
+  s_Player.m_OSDPackets[ 5 ] = SMS_PlayerBallSim_Init ( ( uint32_t* )( &s_Player.m_OSDQWC[ 5 ] ) );
   s_Player.m_pIPUCtx -> Resume  ();
 
   SMS_SpectrumInit ();

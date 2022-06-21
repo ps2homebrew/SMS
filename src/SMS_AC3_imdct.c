@@ -307,7 +307,7 @@ static void SMS_INLINE _ifft2 ( sample_t* apBuf ) {
 
 }  /* end _ifft2 */
 
-static void SMS_INLINE _ifft4 ( int* apBuf ) {
+static void SMS_INLINE _ifft4 ( sample_t* apBuf ) {
 
  __asm__ __volatile__(
   ".set noat\n\t"

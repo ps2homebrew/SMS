@@ -1194,7 +1194,7 @@ static void init_coef_vlc (
 
  int             n            = vlc_table -> n;
  const uint8_t*  table_bits   = vlc_table -> huffbits;
- const uint32_t* table_codes  = vlc_table -> huffcodes;
+ const uint32_t* table_codes  = ( const uint32_t * )( vlc_table -> huffcodes );
  const uint16_t* levels_table = vlc_table -> levels;
  uint16_t*       run_table, *level_table, *int_table;
  int             i, l, j, k, level;
@@ -1507,7 +1507,7 @@ static void wma_decode_end ( SMS_CodecContext* apCtx ) {
 
 }  /* end wma_decode_end */
 
-static int wma_decode_init ( SMS_CodecContext* apCtx ) {
+static int32_t wma_decode_init ( SMS_CodecContext* apCtx ) {
 
  WMADecodeContext* lpCtx = &s_Ctx;
  int               i, flags1, flags2;
@@ -2034,7 +2034,7 @@ static int wma_decode_frame ( SMS_RingBuffer* apOutput ) {
 
 }  /* end wma_decode_frame */
 
-static int wma_decode_superframe ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
+static int32_t wma_decode_superframe ( SMS_CodecContext* apCtx, SMS_RingBuffer* apOutput, SMS_RingBuffer* apInput ) {
 
  WMADecodeContext* lpCtx    = &s_Ctx;
  SMS_BitContext*   lpBitCtx = &lpCtx -> gb;

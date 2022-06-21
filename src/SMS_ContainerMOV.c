@@ -663,7 +663,7 @@ static int _mov_read_dflt ( MOVContext* apCtx, FileContext* apFileCtx, MOVAtom* 
 static void _add_idx_entry ( MOVStream* apMyStm, int afKF, uint32_t aDTS, uint32_t anOffset, uint32_t aSize ) {
  MOVIndex* lpIdx, *lpIndices;
  lpIndices = ( MOVIndex* )SMS_Realloc (
-  apMyStm -> m_pIdx, &apMyStm -> m_IdxAllocSize,
+  apMyStm -> m_pIdx, ( unsigned int * )( &apMyStm -> m_IdxAllocSize ),
   ( apMyStm -> m_nIdx + 1 ) * sizeof ( MOVIndex )
  );
  apMyStm -> m_pIdx = lpIndices;
