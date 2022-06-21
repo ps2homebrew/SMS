@@ -1938,9 +1938,9 @@ static void _smbcs_handler ( GUIMenu* apMenu, int aDir ) {
 
 static char s_DispHBuff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
 static char s_DispWBuff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
-static char s_SynP1Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
-static char s_SynP2Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
-static char s_SynP3Buff[ 5 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP1Buff[ 7 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP2Buff[ 7 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
+static char s_SynP3Buff[ 7 ] __attribute__(   (  section( ".data" ), aligned( 1 )  )   );
 
 static SMString  s_StrAdvH __attribute__(   (  section( ".data" )  )   ) = { 0, s_DispHBuff };
 static SMString  s_StrAdvW __attribute__(   (  section( ".data" )  )   ) = { 0, s_DispWBuff };
