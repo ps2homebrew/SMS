@@ -32,7 +32,7 @@ typedef struct _AVIdxEntry {
  uint32_t m_CumLen __attribute__(  ( packed )  );
  uint32_t m_fKey   __attribute__(  ( packed )  );
 
-} _AVIdxEntry __attribute__(  ( packed )  );
+} _AVIdxEntry;
 
 typedef struct _AVIStream {
 

@@ -174,7 +174,7 @@ typedef union GIFTag {
   u64           m_Lo __attribute__(  ( packed )  );
   u64           m_Hi __attribute__(  ( packed )  );
 
- } m_HiLo __attribute__(  ( packed )  );
+ } m_HiLo;
 
 } GIFTag __attribute__(   (  aligned( 16 )  )   );
 
@@ -475,7 +475,7 @@ typedef union GSRegEXTDATA {
 
  u64           m_Value __attribute__(  ( packed )  );
 
-} GSRegEXTDATA __attribute__(  ( packed )  );
+} GSRegEXTDATA;
 
 typedef union GSRegFRAME {
 
@@ -914,7 +914,7 @@ typedef union GSRegTEX1 {
 
  u64           m_Value __attribute__(  ( packed )  );
 
-} GSRegTEX1 __attribute__(  ( packed )  );
+} GSRegTEX1;
 
 #define GS_CSR_SIGNAL 0x0000000000000001L
 #define GS_CSR_FINISH 0x0000000000000002L
@@ -1224,12 +1224,12 @@ typedef struct GSContext {
 
 typedef struct GSMTKFontHeader {
 
- char           m_ID [ 3 ]    __attribute__(  ( packed )  );
- char           m_ClrType     __attribute__(  ( packed )  );
- char           m_Unk[ 3 ]    __attribute__(  ( packed )  );
+ char           m_ID [ 3 ];
+ char           m_ClrType;
+ char           m_Unk[ 3 ];
  unsigned short m_nGlyphs     __attribute__(  ( packed )  );
- unsigned char  m_GlyphWidth  __attribute__(  ( packed )  );
- unsigned char  m_GlyphHeight __attribute__(  ( packed )  );
+ unsigned char  m_GlyphWidth;
+ unsigned char  m_GlyphHeight;
 
 } GSMTKFontHeader;
 

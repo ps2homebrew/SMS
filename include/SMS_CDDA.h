@@ -26,37 +26,37 @@ extern "C" {
 
 typedef struct CDDA_Duration {
 
- unsigned char m_Minute __attribute__(  ( packed )  );
- unsigned char m_Second __attribute__(  ( packed )  );
- unsigned char m_Frame  __attribute__(  ( packed )  );
+ unsigned char m_Minute;
+ unsigned char m_Second;
+ unsigned char m_Frame ;
 
 } CDDA_Duration;
 
 typedef struct CDDA_TrackData {
 
  unsigned short m_Unknown1 __attribute__(  ( packed )  );
- unsigned char  m_TrackNr  __attribute__(  ( packed )  );
+ unsigned char  m_TrackNr;
  unsigned int   m_Unknown2 __attribute__(  ( packed )  );
- CDDA_Duration  m_Duration __attribute__(  ( packed )  );
+ CDDA_Duration  m_Duration;
 
 } CDDA_TrackData;
 
 typedef struct CDDA_TOC {
 
  unsigned short m_Unknown1       __attribute__(  ( packed )  );
- unsigned char  m_Info1          __attribute__(  ( packed )  );
+ unsigned char  m_Info1;
  unsigned int   m_Unknown2       __attribute__(  ( packed )  );
- unsigned char  m_StartTrack     __attribute__(  ( packed )  );
+ unsigned char  m_StartTrack;
  unsigned int   m_Unknown3       __attribute__(  ( packed )  );
- unsigned char  m_Info2          __attribute__(  ( packed )  );
+ unsigned char  m_Info2;
  unsigned int   m_Unknown4       __attribute__(  ( packed )  );
- unsigned char  m_EndTrack       __attribute__(  ( packed )  );
+ unsigned char  m_EndTrack;
  unsigned int   m_Unknown5       __attribute__(  ( packed )  );
- unsigned char  m_Info3          __attribute__(  ( packed )  );
+ unsigned char  m_Info3;
  unsigned int   m_Unknown6       __attribute__(  ( packed )  );
- CDDA_Duration  m_DiskDuration   __attribute__(  ( packed )  );
- CDDA_TrackData m_Tracks[   99 ] __attribute__(  ( packed )  );
- unsigned char  m_Pad   [ 1044 ] __attribute__(  ( packed )  );
+ CDDA_Duration  m_DiskDuration;
+ CDDA_TrackData m_Tracks[   99 ];
+ unsigned char  m_Pad   [ 1044 ];
 
 } CDDA_TOC;
 

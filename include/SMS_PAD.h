@@ -52,26 +52,26 @@ extern "C" {
 
 typedef struct SMS_PadButtonStatus {
 
- unsigned char  m_OK           __attribute__(  ( packed )  );
- unsigned char  m_Mode         __attribute__(  ( packed )  );
+ unsigned char  m_OK;
+ unsigned char  m_Mode;
  unsigned short m_Btns         __attribute__(  ( packed )  );
- unsigned char  m_RJoyH        __attribute__(  ( packed )  );
- unsigned char  m_RJoyV        __attribute__(  ( packed )  );
- unsigned char  m_LJoyH        __attribute__(  ( packed )  );
- unsigned char  m_LJoyV        __attribute__(  ( packed )  );
- unsigned char  m_RightP       __attribute__(  ( packed )  );
- unsigned char  m_LeftP        __attribute__(  ( packed )  );
- unsigned char  m_UpP          __attribute__(  ( packed )  );
- unsigned char  m_DownP        __attribute__(  ( packed )  );
- unsigned char  m_TriangleP    __attribute__(  ( packed )  );
- unsigned char  m_CircleP      __attribute__(  ( packed )  );
- unsigned char  m_CrossP       __attribute__(  ( packed )  );
- unsigned char  m_SquareP      __attribute__(  ( packed )  );
- unsigned char  m_L1P          __attribute__(  ( packed )  );
- unsigned char  m_R1P          __attribute__(  ( packed )  );
- unsigned char  m_L2P          __attribute__(  ( packed )  );
- unsigned char  m_R2P          __attribute__(  ( packed )  );
- unsigned char  m_Unkn16[ 12 ] __attribute__(  ( packed )  );
+ unsigned char  m_RJoyH;
+ unsigned char  m_RJoyV;
+ unsigned char  m_LJoyH;
+ unsigned char  m_LJoyV;
+ unsigned char  m_RightP;
+ unsigned char  m_LeftP;
+ unsigned char  m_UpP;
+ unsigned char  m_DownP;
+ unsigned char  m_TriangleP;
+ unsigned char  m_CircleP;
+ unsigned char  m_CrossP;
+ unsigned char  m_SquareP;
+ unsigned char  m_L1P;
+ unsigned char  m_R1P;
+ unsigned char  m_L2P;
+ unsigned char  m_R2P;
+ unsigned char  m_Unkn16[ 12 ];
 
 } SMS_PadButtonStatus;
 
