@@ -114,7 +114,7 @@ static const char NOT_AVAILABLE_CHAR = '?';
 SMS_INLINE char UnicodeToCP( const SMS_InvCodeTable *codeTable, const unsigned short uniCodeChar)
 {
 	int index = 64, step = 64;
-	unsigned short *searchTable = codeTable->m_uniCharacter;
+	const unsigned short *searchTable = codeTable->m_uniCharacter;
 
 	if(uniCodeChar < 128)
 		return (char)uniCodeChar;
