@@ -506,7 +506,7 @@ static int _load_sub ( FileContext* apFileCtx, float aFPS, int aBase, int aRatio
 
 static int _blank_line ( char* apStr ) {
 
- while ( *apStr ) if (  !isspace ( *apStr++ )  ) return 0;
+ while ( *apStr ) if (  !isspace ( *(( unsigned char* )apStr++) )  ) return 0;
 
  return 1;
 

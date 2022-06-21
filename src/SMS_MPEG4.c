@@ -1020,7 +1020,7 @@ static void _decode_user_data ( SMS_BitContext* apBitCtx ) {
 
   lpBuf += 4;
 
-  while (  isdigit ( *lpBuf )  ) lBuf[ i++ ] = *lpBuf++;
+  while (  isdigit ( *(( unsigned char* )lpBuf) )  ) lBuf[ i++ ] = *lpBuf++;
 
   lBuf[ i ] = '\x00'; lVer = atoi ( lBuf );
 
@@ -1030,7 +1030,7 @@ static void _decode_user_data ( SMS_BitContext* apBitCtx ) {
 scanBuild:
    i = 0;
 
-   while (  isdigit ( *lpBuf )  ) lBuf[ i++ ] = *lpBuf++;
+   while (  isdigit ( *(( unsigned char* )lpBuf) )  ) lBuf[ i++ ] = *lpBuf++;
 
    if ( i ) {
 
@@ -1058,7 +1058,7 @@ scanBuild:
 
   lpBuf += 4;
 
-  while (  isdigit ( *lpBuf )  ) lBuf[ i++ ] = *lpBuf++;
+  while (  isdigit ( *(( unsigned char* )lpBuf) )  ) lBuf[ i++ ] = *lpBuf++;
 
   lBuf[ i ] = '\x00'; lBuild = atoi ( lBuf );
 
