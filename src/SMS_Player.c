@@ -1013,9 +1013,9 @@ static int _sms_play ( void* apPlayer ) {
 
     lPTS = SMS_Rescale ( lPTS, s_Player.m_PDW22Ratio, s_Player.m_PDW22Base );
     PlayerControl_FormatTime ( lBuf, lPTS );
-    sprintf ( s_VideoBuffer, STR_RESUME.m_pStr, lBuf );
+    sprintf ( ( char * )s_VideoBuffer, STR_RESUME.m_pStr, lBuf );
 
-    if (  GUI_Question ( s_VideoBuffer )  ) {
+    if (  GUI_Question ( ( char * )s_VideoBuffer )  ) {
 
      SMS_Stream* lpStm = s_Player.m_pCont -> m_pStm[ s_Player.m_VideoIdx ];
 

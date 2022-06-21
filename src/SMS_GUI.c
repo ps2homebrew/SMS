@@ -83,7 +83,7 @@ static unsigned int   s_DevFlags;
        int            g_SMBServerError;
 static u64            s_BitBltPack[ sizeof ( GSLoadImage ) * 9 ] __attribute__(   (  aligned( 64 ), section( ".data" )  )   );
 
-static unsigned char s_pMsgStr [] __attribute__(   (  section( ".data" )  )   ) = "_POSTED_MESSAGE";
+static          char s_pMsgStr [] __attribute__(   (  section( ".data" )  )   ) = "_POSTED_MESSAGE";
 
 static unsigned char s_PadBuf0[  256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
        unsigned char g_PadBuf1[  256 ] __attribute__(   (  aligned( 64 ), section( ".data"  )  )   );
@@ -229,7 +229,7 @@ static void TimerHandler ( void* apArg ) {
 
 static void _smb_handler_connect ( void* apHdr ) {
 
- int* lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> opt;
+ int* lpParam = ( int * )( &(  ( SifCmdHeader_t* )apHdr  ) -> opt );
 
  g_SMBUnit        = lpParam[ 1 ];
  g_SMBError       = lpParam[ 2 ];
@@ -242,7 +242,7 @@ static void _smb_handler_connect ( void* apHdr ) {
 
 static void _usb_handler_connect ( void* apHdr ) {
 
- int*         lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> opt;
+ int*         lpParam = ( int * )( &(  ( SifCmdHeader_t* )apHdr  ) -> opt );
  int          lUnit   = lpParam[ 1 ];
  unsigned int lCMask, lDMask;
 
@@ -263,7 +263,7 @@ static void _usb_handler_connect ( void* apHdr ) {
 
 static void _usb_handler_disconnect ( void* apHdr ) {
 
- int*         lpParam = &(  ( SifCmdHeader_t* )apHdr  ) -> opt;
+ int*         lpParam = ( int * )( &(  ( SifCmdHeader_t* )apHdr  ) -> opt );
  int          lUnit   = lpParam[ 1 ];
  unsigned int lCMask, lDMask;
 
@@ -861,7 +861,7 @@ int GUI_QuitPosted ( void ) {
 
 }  /* end GUI_QuitPosted */
 
-void GUI_DeleteObject ( const unsigned char* apName ) {
+void GUI_DeleteObject ( const char* apName ) {
 
  SMS_ListNode* lpNode = SMS_ListFind ( s_pObjectList, apName );
 

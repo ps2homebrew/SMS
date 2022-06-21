@@ -33,11 +33,11 @@
 #define RC_CMD_CLOSE 0x00000004
 #define RC_CMD_OPEN  0x00000005
 
-static unsigned char s_pROM1RMMAN [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom1:RMMAN";
-       unsigned char g_pSMSRMMAN  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SMS/RMMAN.IRX";
-static unsigned char s_pSIO2MAN   [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "sio2man";
+static char s_pROM1RMMAN             [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom1:RMMAN";
+       char g_pSMSRMMAN              [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "mc0:/SMS/RMMAN.IRX";
+static char s_pSIO2MAN               [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "sio2man";
 #if SMS_USE_ROM_RMMAN2
-static unsigned char s_pROM1RMMAN2[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom1:RMMAN2";
+static char s_pROM1RMMAN2            [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom1:RMMAN2";
 #endif  /* SMS_USE_ROM_RMMAN2 */
 static SifRpcClientData_t s_ClientRC    __attribute__(   (  aligned( 64 ), section ( ".bss" )  )   );
 static SifRpcClientData_t s_ClientRCX   __attribute__(   (  aligned( 64 ), section ( ".bss" )  )   );

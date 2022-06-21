@@ -46,10 +46,10 @@ typedef struct SMBMountInfo {
 
 typedef struct SMBShareInfo {
 
- unsigned char  m_Name[ 13 ];
+          char  m_Name[ 13 ];
  unsigned char  m_Pad;
  unsigned short m_Type;
- unsigned char* m_pRemark;
+          char* m_pRemark;
 
 } SMBShareInfo;
 

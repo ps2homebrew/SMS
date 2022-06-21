@@ -34,8 +34,8 @@
 #include <fileio.h>
 #include <fcntl.h>
 
-static unsigned char s_pPPHDL[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "PP.HDL.";
-static unsigned char s_pHDLdr[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "HDLoade";
+static char s_pPPHDL[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "PP.HDL.";
+static char s_pHDLdr[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "HDLoade";
 
 extern char g_SMSLng[ 12 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );
 extern char g_SMSPal[ 13 ] __attribute__(   (  aligned( 1 ), section( ".data" )  )   );

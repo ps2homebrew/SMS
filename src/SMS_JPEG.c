@@ -1369,7 +1369,7 @@ static void _recalc_layout ( SMS_JPEGViewer* apViewer, SMS_JPEGContext* apCtx ) 
  unsigned int   lBorder;
 
 /* format image upload packet */
- PowerOf2 ( lWidth, lHeight, &lTW, &lTH );
+ PowerOf2 ( lWidth, lHeight, ( int * )( &lTW ), ( int * )( &lTH ) );
 
  lnParts = apCtx -> m_nBitmapQWC / 0x7FFF;
  lnRem   = apCtx -> m_nBitmapQWC % 0x7FFF;

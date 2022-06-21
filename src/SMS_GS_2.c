@@ -273,7 +273,7 @@ void GSFont_Init ( void ) {
 
 }  /* end GSFont_Init */
 
-int GSFont_Width ( unsigned char* apStr, int aLen ) {
+int GSFont_Width ( char* apStr, int aLen ) {
 
  int lW   = 0;
  int lChr = apStr[ 0 ] - ' ';
@@ -289,7 +289,7 @@ int GSFont_Width ( unsigned char* apStr, int aLen ) {
 
 }  /* end GSFont_Width */
 
-int GSFont_WidthEx ( unsigned char* apStr, int aLen, int aDW ) {
+int GSFont_WidthEx ( char* apStr, int aLen, int aDW ) {
 
  int   lChr;
  int   retVal = 0;;
@@ -306,7 +306,7 @@ int GSFont_WidthEx ( unsigned char* apStr, int aLen, int aDW ) {
 
 }  /* end GSFont_WidthEx */
 
-void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, u64*           apDMA ) {
+void GSFont_Render ( char* apStr, int aLen, int aX, int anY, u64*           apDMA ) {
 
  int lDelta;
  int lY1;
@@ -386,7 +386,7 @@ void GSFont_Render ( unsigned char* apStr, int aLen, int aX, int anY, u64*      
 
 }  /* end GSFont_Render */
 
-void GSFont_RenderEx ( unsigned char* apStr, int aLen, int aX, int anY, u64*           apDMA, int aDW, int aDH ) {
+void GSFont_RenderEx ( char* apStr, int aLen, int aX, int anY, u64*           apDMA, int aDW, int aDH ) {
 
  int   lDW    = aDW << 4;
  float lAR    = ( 32 + aDW ) / 32.0F;
@@ -530,9 +530,9 @@ void* GSFont_Load ( const char* apFileName ) {
      lpFile[ 3 ] ^= 'G';
      lpFile[ 4 ] ^= 'X';
 
-     if ( lzma2_get_uncompressed_size(lpFile, lFileSize) != lDataSize )  goto error;
+     if ( lzma2_get_uncompressed_size((unsigned char *)lpFile, lFileSize) != lDataSize )  goto error;
      
-     lzma2_uncompress(lpFile, lFileSize, ( unsigned char* )g_MBFont, lDataSize);
+     lzma2_uncompress((unsigned char *)lpFile, lFileSize, ( unsigned char* )g_MBFont, lDataSize);
 		 
     } else {
 error:

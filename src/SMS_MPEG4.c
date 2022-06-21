@@ -246,7 +246,7 @@ static const uint16_t s_inter_rvlc[ 170 ][ 2 ] SMS_DATA_SECTION = {
  { 0x2002, 14 }, { 0x2003, 14 }, { 0x3EFC, 15 }, { 0x3EFD, 15 },
  { 0x3F7C, 15 }, { 0x3F7D, 15 }, { 0x0000,  4 }
 };
-static const uint8_t s_inter_rvlc_run[ 169 ] SMS_DATA_SECTION = {
+static const int8_t s_inter_rvlc_run[ 169 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  1,  1,  1,  1,  1, 
@@ -270,7 +270,7 @@ static const uint8_t s_inter_rvlc_run[ 169 ] SMS_DATA_SECTION = {
  35, 36, 37, 38, 39, 40, 41, 42, 
  43, 44
 };
-static const uint8_t s_inter_rvlc_level[ 169 ] SMS_DATA_SECTION = {
+static const int8_t s_inter_rvlc_level[ 169 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8, 
   9, 10, 11, 12, 13, 14, 15, 16, 
  17, 18, 19,  1,  2,  3,  4,  5, 
@@ -342,7 +342,7 @@ static const uint16_t s_intra_rvlc[ 170 ][ 2 ] SMS_DATA_SECTION = {
  { 0x2002, 14 }, { 0x2003, 14 }, { 0x3EFC, 15 }, { 0x3EFD, 15 },
  { 0x3F7C, 15 }, { 0x3F7D, 15 }, { 0x0000,  4 }
 };
-static const uint8_t s_intra_rvlc_run[ 169 ] SMS_DATA_SECTION = {
+static const int8_t s_intra_rvlc_run[ 169 ] SMS_DATA_SECTION = {
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
   0,  0,  0,  0,  0,  0,  0,  0, 
@@ -366,7 +366,7 @@ static const uint8_t s_intra_rvlc_run[ 169 ] SMS_DATA_SECTION = {
  35, 36, 37, 38, 39, 40, 41, 42, 
  43, 44 
 };
-static const uint8_t s_intra_rvlc_level[ 169 ] SMS_DATA_SECTION = {
+static const int8_t s_intra_rvlc_level[ 169 ] SMS_DATA_SECTION = {
   1,  2,  3,  4,  5,  6,  7,  8, 
   9, 10, 11, 12, 13, 14, 15, 16, 
  17, 18, 19, 20, 21, 22, 23, 24, 
@@ -1609,7 +1609,7 @@ static SMS_INLINE int _mpeg4_pred_dc ( int aN, int aLevel, int *apDirPtr ) {
  else lScale = g_MPEGCtx.m_C_DCScale;
 
  lWrap   = g_MPEGCtx.m_BlockWrap[ aN ];
- lpDCVal = g_MPEGCtx.m_pDCVal[ 0 ] + g_MPEGCtx.m_BlockIdx[ aN ];
+ lpDCVal = ( uint16_t* )( g_MPEGCtx.m_pDCVal[ 0 ] + g_MPEGCtx.m_BlockIdx[ aN ] );
 
  lA = lpDCVal[ -1         ];
  lB = lpDCVal[ -1 - lWrap ];

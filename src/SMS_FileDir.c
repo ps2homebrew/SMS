@@ -31,40 +31,40 @@
 #include <sys/stat.h>
 #include <malloc.h>
 
-unsigned char g_pUSB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "mass";
-unsigned char g_pCDROM [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
-unsigned char g_pHDD0  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "hdd0";
-unsigned char g_pCDDA  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdda";
-unsigned char g_pHOST  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host";
-unsigned char g_pDVD   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
-unsigned char g_pCDDAFS[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cddafs:/";
-unsigned char g_pSMB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb0";
-unsigned char g_pSMBS  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb:";
+char g_pUSB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "mass";
+char g_pCDROM [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
+char g_pHDD0  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "hdd0";
+char g_pCDDA  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdda";
+char g_pHOST  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "host";
+char g_pDVD   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cdfs";
+char g_pCDDAFS[] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "cddafs:/";
+char g_pSMB   [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb0";
+char g_pSMBS  [] __attribute__(   (  aligned( 4 ), section( ".data" )  )   ) = "smb:";
 
-static unsigned char s_pAVI [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".avi";
-static unsigned char s_pDIVX[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".divx";
-static unsigned char s_pXVID[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".xvid";
-static unsigned char s_pMPG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpg";
-static unsigned char s_pMPEG[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpeg";
-static unsigned char s_pMP3 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp3";
-static unsigned char s_pM3U [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m3u";
-static unsigned char s_pMPA [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpa";
-static unsigned char s_pMP2 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp2";
-static unsigned char s_pOGG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".ogg";
-static unsigned char s_pWMA [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".wma";
-static unsigned char s_pM4A [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m4a";
-static unsigned char s_pAAC [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".aac";
-static unsigned char s_pMP4 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp4";
-static unsigned char s_pFLAC[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".flac";
-static unsigned char s_pAC3 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".ac3";
-static unsigned char s_pJPG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".jpg";
-static unsigned char s_pJPEG[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".jpeg";
-static unsigned char s_pELL [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:elflist.txt";
-static unsigned char s_pHST [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:";
+static char s_pAVI [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".avi";
+static char s_pDIVX[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".divx";
+static char s_pXVID[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".xvid";
+static char s_pMPG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpg";
+static char s_pMPEG[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpeg";
+static char s_pMP3 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp3";
+static char s_pM3U [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m3u";
+static char s_pMPA [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mpa";
+static char s_pMP2 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp2";
+static char s_pOGG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".ogg";
+static char s_pWMA [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".wma";
+static char s_pM4A [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".m4a";
+static char s_pAAC [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".aac";
+static char s_pMP4 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".mp4";
+static char s_pFLAC[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".flac";
+static char s_pAC3 [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".ac3";
+static char s_pJPG [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".jpg";
+static char s_pJPEG[] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = ".jpeg";
+static char s_pELL [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:elflist.txt";
+static char s_pHST [] __attribute__(   (  aligned( 4 ), section( ".data" ), aligned( 1 )  )   ) = "host:";
 
-unsigned char g_HDDWD[ 1024 ] __attribute__(   (  aligned( 1 ), section( ".bss"  )  )   );
+char g_HDDWD[ 1024 ] __attribute__(   (  aligned( 1 ), section( ".bss"  )  )   );
 
-unsigned char* g_pDevName[ 7 ] = {
+char* g_pDevName[ 7 ] = {
  g_pUSB, g_pCDROM, g_pHDD0, g_pCDDA, g_pHOST, g_pDVD, g_pSMB
 };
 
@@ -215,7 +215,7 @@ int SMS_FileID ( const char* apName ) {
 
 }  /* end SMS_FileID */
 
-void SMS_FileDirInit ( unsigned char* apPath ) {
+void SMS_FileDirInit ( char* apPath ) {
 
  int           lFD;
  int           lfSort = g_Config.m_BrowserFlags & SMS_BF_SORT;

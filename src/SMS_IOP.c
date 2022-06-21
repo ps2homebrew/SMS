@@ -46,11 +46,11 @@ extern void* _gp;
 
 unsigned int g_IOPFlags;
 
-static unsigned char s_pSIO2MAN[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:SIO2MAN";
-static unsigned char s_pPADMAN [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:PADMAN";
-static unsigned char s_pMCMAN  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:MCMAN";
-static unsigned char s_pMCSERV [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:MCSERV";
-static unsigned char s_pUSBD   [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "USBD.IRX";
+static char s_pSIO2MAN[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:SIO2MAN";
+static char s_pPADMAN [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:PADMAN";
+static char s_pMCMAN  [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:MCMAN";
+static char s_pMCSERV [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "rom0:MCSERV";
+static char s_pUSBD   [] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = "USBD.IRX";
 
 static char s_HDDArgs[] __attribute__(   (  section( ".data" ), aligned( 1 )  )   ) = {
  '-', 'o', '\x00', '2',      '\x00',
@@ -135,13 +135,13 @@ extern slib_exp_lib_list_t _slib_cur_exp_lib_list __attribute__(   (  section( "
 
 int SifExecDecompModuleBuffer(void *ptr, u32 size, u32 arg_len, const char *args, int *mod_res)
 {
-	char *irx_data;
+	unsigned char *irx_data;
 	int irx_size, ret = -1;
 	
-	if((irx_size = lzma2_get_uncompressed_size(ptr, size)) > 0)
+	if((irx_size = lzma2_get_uncompressed_size((unsigned char *)ptr, size)) > 0)
 	{
-		irx_data = (char *)memalign(64, irx_size);
-		ret = lzma2_uncompress(ptr, size, irx_data, irx_size);
+		irx_data = (unsigned char *)memalign(64, irx_size);
+		ret = lzma2_uncompress((unsigned char *)ptr, size, irx_data, irx_size);
 		
 		if(ret > 0)
 			ret = SifExecModuleBuffer( irx_data, irx_size, arg_len, args, mod_res );

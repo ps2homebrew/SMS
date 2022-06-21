@@ -233,7 +233,7 @@ static SMS_DXSBFrame* _decode ( void* apData, int aSize ) {
 
   InvalidDCache ( retVal -> m_pPixmap, retVal -> m_pPixmap + lSize );
 
-  lpDst = lpPixmap = ( char* )(  ( unsigned int )retVal -> m_pPixmap | 0x30000000  );
+  lpDst = lpPixmap = ( unsigned char* )(  ( unsigned int )retVal -> m_pPixmap | 0x30000000  );
 
   lX      = 0;
   lY      = 0;

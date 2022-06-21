@@ -29,12 +29,12 @@ static void UnHash ( void ) {
 
  int            i;
  unsigned char  lChr  = 'E';
- unsigned char* lpSrc = g_AboutData;
+          char* lpSrc = g_AboutData;
 
  for ( i = 0; i < NSTR; ++i ) {
 
   int            j;
-  unsigned char* lpPtr = lpSrc;
+           char* lpPtr = lpSrc;
   int            lLen  = *lpPtr + 1;
 
   lpPtr[ 1 ] ^= lChr;

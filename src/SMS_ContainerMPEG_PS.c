@@ -296,7 +296,7 @@ static int _fill_video_parameters ( SMS_Container* apCont, SMS_Stream* apStm, in
    SMS_BitContext lBitCtx;
 
    lpFileCtx -> Read ( lpFileCtx, lpBuffer, aLen );
-   SMS_InitGetBits ( &lBitCtx, lpBuffer, aLen );
+   SMS_InitGetBits ( &lBitCtx, ( unsigned char* )lpBuffer, aLen );
 
    apStm -> m_pCodec -> m_Width  = SMS_GetBits ( &lBitCtx, 12 );
    apStm -> m_pCodec -> m_Height = SMS_GetBits ( &lBitCtx, 12 );
@@ -312,7 +312,7 @@ static int _fill_video_parameters ( SMS_Container* apCont, SMS_Stream* apStm, in
 
   while ( 1 ) {
 
-   uint64_t lPTS, lDTS;
+   int64_t  lPTS, lDTS;
    int      lStartCode;
 
    if (  i++ == 1024 || FILE_EOF( lpFileCtx )  ) goto end;
@@ -376,7 +376,7 @@ static int _fill_audio_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, i
 
     int lFlags;
 
-    if (  AC3_SyncInfo ( lpPtr, &lFlags, &apStm -> m_pCodec -> m_SampleRate, &apStm -> m_pCodec -> m_BitRate )  ) {
+    if (  AC3_SyncInfo ( ( unsigned char* )lpPtr, &lFlags, ( int * )( &apStm -> m_pCodec -> m_SampleRate ), ( int * )( &apStm -> m_pCodec -> m_BitRate ) )  ) {
 
      apStm -> m_SampleRate           = apStm -> m_pCodec -> m_SampleRate;
      apStm -> m_pCodec -> m_Channels = g_AC3Channels[ lFlags & 7 ];
@@ -394,7 +394,7 @@ static int _fill_audio_parameters ( FileContext* apFileCtx, SMS_Stream* apStm, i
 
     int lFlags, lFrameLen;
 
-    if (  DTS_SyncInfo ( lpPtr, &lFlags, &apStm -> m_pCodec -> m_SampleRate, &apStm -> m_pCodec -> m_BitRate, &lFrameLen )  ) {
+    if (  DTS_SyncInfo ( ( unsigned char* )lpPtr, &lFlags, ( int * )( &apStm -> m_pCodec -> m_SampleRate ), ( int * )( &apStm -> m_pCodec -> m_BitRate ), &lFrameLen )  ) {
 
      apStm -> m_SampleRate           = apStm -> m_pCodec -> m_SampleRate;
      apStm -> m_pCodec -> m_Channels = DTS_Channels ( lFlags );
@@ -544,7 +544,7 @@ end:
 
 static void _get_stm_pts ( SMS_Container* apCont, int anIdx, int afOverride, uint64_t* apPTS ) {
 
- uint64_t     lPTS, lDTS;
+ int64_t      lPTS, lDTS;
  SMS_Stream** lIt, **lppStm = apCont -> m_pStm;
  int          lStartCode;
  FileContext* lpFileCtx = apCont -> m_pFileCtx;
@@ -573,7 +573,7 @@ next:
 
 static int _Seek ( SMS_Container* apCont, int anIdx, int aDir, uint32_t aPos ) {
 
- uint64_t          lPTS, lDTS;
+ int64_t           lPTS, lDTS;
  _MPEGPSContainer* lpMyCont  = MYCONT( apCont );
  FileContext*      lpFileCtx = apCont -> m_pFileCtx;
  SMS_Stream**      lIt, **lppStm = apCont -> m_pStm;
@@ -630,7 +630,7 @@ end:
 
 int SMS_GetContainerMPEG_PS ( SMS_Container* apCont ) {
 
- uint64_t          lPTS, lDTS;
+ int64_t           lPTS, lDTS;
  int               i, lfVideo, lfAudio, lfVideoParam, retVal = 0;
  FileContext*      lpFileCtx;
  _MPEGPSContainer* lpMyCont;

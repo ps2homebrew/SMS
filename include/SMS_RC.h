@@ -68,7 +68,7 @@
 #define RC_PROGRAM     0xF1D9
 #define RC_SQUARE      0xF5DF
 
-extern unsigned char g_pSMSRMMAN[] __attribute__(   (  section( ".data" )  )   );
+extern char g_pSMSRMMAN[] __attribute__(   (  section( ".data" )  )   );
 
 #ifdef __cplusplus
 extern "C" {

@@ -1291,10 +1291,10 @@ void           GSContext_RenderTexSprite ( GSTexSpritePacket*, int, int, int, in
 void           GSContext_RenderVGRect    ( u64*          , int, int, int, int, u64          , u64           );
 
 void  GSFont_Init      ( void                                                    );
-int   GSFont_Width     ( unsigned char*, int                                     );
-int   GSFont_WidthEx   ( unsigned char*, int, int                                );
-void  GSFont_Render    ( unsigned char*, int, int, int, u64*                     );
-void  GSFont_RenderEx  ( unsigned char*, int, int, int, u64*          , int, int );
+int   GSFont_Width     ( char*, int                                              );
+int   GSFont_WidthEx   ( char*, int, int                                         );
+void  GSFont_Render    ( char*, int, int, int, u64*                              );
+void  GSFont_RenderEx  ( char*, int, int, int, u64*, int, int                    );
 void  GSFont_Set       ( unsigned int, void*                                     );
 void* GSFont_Get       ( unsigned int, unsigned int*                             );
 int   GSFont_UnpackChr ( GSMTKFontHeader*, unsigned int, void*                   );

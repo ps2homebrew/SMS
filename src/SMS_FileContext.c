@@ -1327,7 +1327,7 @@ static int STIO_Fill ( FileContext* apCtx ) {
 static int STIO_FillStm ( FileContext* apCtx ) {
 
  int              retVal = 0;
- unsigned int     lnRead = 0;
+ int              lnRead = 0;
  STIOFilePrivate* lpPriv = ( STIOFilePrivate* )apCtx -> m_pData;
 
  if (  apCtx -> m_Pos < apCtx -> m_Size ) {
@@ -1384,7 +1384,7 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
  STIOFilePrivate* lpPriv = ( STIOFilePrivate* )apCtx -> m_pData;
  void*            lpData;
  int              retVal = 0;
- unsigned int     lnRead = 0;
+ int              lnRead = 0;
 
  if ( anBlocks == 0 ) {
 #ifdef _WIN32

@@ -419,7 +419,7 @@ static int _mov_read_stsz ( MOVContext* apCtx, FileContext* apFileCtx, MOVAtom* 
   if (  lnEntries >= UINT_MAX / sizeof ( int )  ) return -1;
   lpMyStm -> m_nSamples = lnEntries;
   if ( lSampleSize ) return 0;
-  lpMyStm -> m_pSampleSize = ( unsigned int* )malloc (  lnEntries * sizeof ( int )  );
+  lpMyStm -> m_pSampleSize = ( int* )malloc (  lnEntries * sizeof ( int )  );
   for ( i = 0; i < lnEntries; ++i ) lpMyStm -> m_pSampleSize[ i ] = _read_int_be ( apFileCtx );
  } else File_Skip (  apFileCtx, ( uint32_t )apAtom -> m_Size  );
  return 0;
