@@ -31,6 +31,7 @@
 #include <kernel.h>
 #include <malloc.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
 #include <fcntl.h>
 

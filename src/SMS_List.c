@@ -311,7 +311,7 @@ SMS_ListNode* SMS_ListFind ( SMS_List* apList, const char* apStr ) {
 
 SMS_ListNode* SMS_ListFindI ( SMS_List* apList, const char* apStr ) {
 
- return _find ( apList, apStr, stricmp );
+ return _find ( apList, apStr, strcasecmp );
 
 }  /* end SMS_ListFindI */
 

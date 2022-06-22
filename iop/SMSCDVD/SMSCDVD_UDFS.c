@@ -555,7 +555,7 @@ static int UDF_DOpen ( iop_io_file_t* apFile, const char* apPath ) {
 
 static int UDF_DRead ( iop_io_file_t* apFile, void* apRetVal ) {
 
- fio_dirent_t* lpBuf = ( fio_dirent_t* )apRetVal;
+ io_dirent_t* lpBuf = ( io_dirent_t* )apRetVal;
  UDFAddress    lFileICB;
 
  if ( s_ScanPos == 0xFFFFFFFF ) return -EPROTO;

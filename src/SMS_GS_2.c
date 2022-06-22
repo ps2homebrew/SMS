@@ -18,7 +18,8 @@
 #include <kernel.h>
 #include <string.h>
 #include <limits.h>
-#include <fileio.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <malloc.h>
 
 #include <lzma2.h>

@@ -29,6 +29,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/fcntl.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
 
 extern void GUIMenuSMS_Redraw           ( GUIMenu*                                                        );
 extern int  CtxMenu_HandleEvent         ( GUIObject*, u64                                                 );

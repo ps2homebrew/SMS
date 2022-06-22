@@ -33,7 +33,11 @@
 #include <kernel.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <libhdd.h>
 #include <sys/ioctl.h>
 #include <sifrpc.h>

@@ -18,6 +18,7 @@
 
 #include <malloc.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
 
 typedef struct SMBInfo {

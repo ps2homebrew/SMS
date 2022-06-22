@@ -14,7 +14,10 @@
 #include "SMS_RC.h"
 #include "SMS_SIF.h"
 
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
 #include <malloc.h>
 #include <loadfile.h>

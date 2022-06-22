@@ -46,6 +46,7 @@
 
 #include <kernel.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <libhdd.h>
 #include <string.h>

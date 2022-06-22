@@ -36,10 +36,11 @@
 #include <kernel.h>
 #include <loadfile.h>
 #include <libhdd.h>
-#include <fileio.h>
 #include <malloc.h>
 #include <sifrpc.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
 
 #define GUIF_DEV_CHECK 0x00000001
 

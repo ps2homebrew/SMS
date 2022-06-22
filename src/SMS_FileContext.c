@@ -225,7 +225,9 @@ BOOL _find_signature ( CDDAContext* apCtx ) {
 }  /* end _find_signature */
 #else  /* PS2 */
 # include <kernel.h>
+# define NEWLIB_PORT_AWARE
 # include <fileio.h>
+# include <stdio.h>
 # include <fcntl.h>
 # include "SMS_CDDA.h"
 

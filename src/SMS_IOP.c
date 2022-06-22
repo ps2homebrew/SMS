@@ -32,11 +32,16 @@
 #include <sifrpc.h>
 #include <iopheap.h>
 #include <iopcontrol.h>
+#include <stdlib.h>
+#include <malloc.h>
 #include <loadfile.h>
 #include <sbv_patches.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
 
 #include <lzma2.h>
 

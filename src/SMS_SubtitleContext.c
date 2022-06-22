@@ -27,6 +27,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <limits.h>
 #include <mbstring.h>
 

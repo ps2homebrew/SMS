@@ -26,7 +26,10 @@
 
 #include <kernel.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
 #include <fileio.h>
+#include <iox_stat.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <malloc.h>
@@ -84,25 +87,25 @@ int SMS_SubContID ( const char* apName ) {
 
   const char* lpExt = apName + lLen - 4;
 
-  if (  !stricmp ( lpExt, s_pMP3 ) ||
-        !stricmp ( lpExt, s_pMPA ) ||
-        !stricmp ( lpExt, s_pMP2 )
+  if (  !strcasecmp ( lpExt, s_pMP3 ) ||
+        !strcasecmp ( lpExt, s_pMPA ) ||
+        !strcasecmp ( lpExt, s_pMP2 )
   ) retVal = SMS_SUBCONTAINER_MP3;
-  else if (  !stricmp ( lpExt, s_pOGG )  )
+  else if (  !strcasecmp ( lpExt, s_pOGG )  )
    retVal = SMS_SUBCONTAINER_OGG;
-  else if (  !stricmp ( lpExt, s_pWMA )  )
+  else if (  !strcasecmp ( lpExt, s_pWMA )  )
    retVal = SMS_SUBCONTAINER_ASF;
-  else if (  !stricmp ( lpExt, s_pM4A ) ||
-             !stricmp ( lpExt, s_pMP4 )
+  else if (  !strcasecmp ( lpExt, s_pM4A ) ||
+             !strcasecmp ( lpExt, s_pMP4 )
        ) retVal = SMS_SUBCONTAINER_M4A;
-  else if (  !stricmp ( lpExt, s_pAAC )  )
+  else if (  !strcasecmp ( lpExt, s_pAAC )  )
    retVal = SMS_SUBCONTAINER_AAC;
-  else if (  !stricmp ( lpExt, s_pAC3 )  )
+  else if (  !strcasecmp ( lpExt, s_pAC3 )  )
    retVal = SMS_SUBCONTAINER_AC3;
 
   if ( retVal == -1 && lLen > 5 ) {
 
-   if (  !stricmp ( lpExt, s_pFLAC )  ) retVal = SMS_SUBCONTAINER_FLAC;
+   if (  !strcasecmp ( lpExt, s_pFLAC )  ) retVal = SMS_SUBCONTAINER_FLAC;
 
   }  /* end if */
 
@@ -121,41 +124,41 @@ int SMS_ContID ( const char* apName ) {
 
   const char* lpExt = apName + lLen - 4;
 
-  if (  !stricmp ( lpExt, s_pAVI )  )
+  if (  !strcasecmp ( lpExt, s_pAVI )  )
    retVal = SMS_CONTAINER_AVI;
-  else if (  !stricmp ( lpExt, s_pMPG  )  )
+  else if (  !strcasecmp ( lpExt, s_pMPG  )  )
    retVal = SMS_CONTAINER_MPEG_PS;
-  else if (  !stricmp ( lpExt, s_pMP3 ) ||
-             !stricmp ( lpExt, s_pMPA ) ||
-             !stricmp ( lpExt, s_pMP2 )
+  else if (  !strcasecmp ( lpExt, s_pMP3 ) ||
+             !strcasecmp ( lpExt, s_pMPA ) ||
+             !strcasecmp ( lpExt, s_pMP2 )
        ) retVal = SMS_CONTAINER_MP3;
-  else if (  !stricmp ( lpExt, s_pOGG )  )
+  else if (  !strcasecmp ( lpExt, s_pOGG )  )
    retVal = SMS_CONTAINER_OGG;
-  else if (  !stricmp ( lpExt, s_pWMA )  )
+  else if (  !strcasecmp ( lpExt, s_pWMA )  )
    retVal = SMS_CONTAINER_ASF;
-  else if (  !stricmp ( lpExt, s_pM4A ) ||
-             !stricmp ( lpExt, s_pMP4 )
+  else if (  !strcasecmp ( lpExt, s_pM4A ) ||
+             !strcasecmp ( lpExt, s_pMP4 )
        ) retVal = SMS_CONTAINER_M4A;
-  else if (  !stricmp ( lpExt, s_pAAC )  )
+  else if (  !strcasecmp ( lpExt, s_pAAC )  )
    retVal = SMS_CONTAINER_AAC;
-  else if (  !stricmp ( lpExt, s_pAC3 )  )
+  else if (  !strcasecmp ( lpExt, s_pAC3 )  )
    retVal = SMS_CONTAINER_AC3;
-  else if (  !stricmp ( lpExt, s_pM3U )  )
+  else if (  !strcasecmp ( lpExt, s_pM3U )  )
    retVal = SMS_CONTAINER_M3U;
-  else if (  !stricmp ( lpExt, s_pJPG )  )
+  else if (  !strcasecmp ( lpExt, s_pJPG )  )
    retVal = SMS_CONTAINER_JPG;
 
   if ( retVal == -1 && lLen > 5 ) {
 
-   if (  !stricmp ( --lpExt, s_pDIVX ) ||
-         !stricmp (   lpExt, s_pXVID )
+   if (  !strcasecmp ( --lpExt, s_pDIVX ) ||
+         !strcasecmp (   lpExt, s_pXVID )
    )
     retVal = SMS_CONTAINER_AVI;
-   else if (  !stricmp ( lpExt, s_pMPEG )  )
+   else if (  !strcasecmp ( lpExt, s_pMPEG )  )
     retVal = SMS_CONTAINER_MPEG_PS;
-   else if (  !stricmp ( lpExt, s_pFLAC )  )
+   else if (  !strcasecmp ( lpExt, s_pFLAC )  )
     retVal = SMS_CONTAINER_FLAC;
-   else if (  !stricmp ( lpExt, s_pJPEG )  )
+   else if (  !strcasecmp ( lpExt, s_pJPEG )  )
     retVal = SMS_CONTAINER_JPG;
 
   }  /* end if */
@@ -175,36 +178,36 @@ int SMS_FileID ( const char* apName ) {
 
   const char* lpExt = apName + lLen - 4;
 
-  if (       !stricmp ( lpExt, s_pAVI  ) ||
-             !stricmp ( lpExt, s_pMPG  )
+  if (       !strcasecmp ( lpExt, s_pAVI  ) ||
+             !strcasecmp ( lpExt, s_pMPG  )
   )
    retVal = GUICON_AVI;
-  else if (  !stricmp ( lpExt, s_pMP3 ) ||
-             !stricmp ( lpExt, s_pMPA ) ||
-             !stricmp ( lpExt, s_pMP2 ) ||
-             !stricmp ( lpExt, s_pOGG ) ||
-             !stricmp ( lpExt, s_pWMA ) ||
-             !stricmp ( lpExt, s_pM4A ) ||
-             !stricmp ( lpExt, s_pAAC ) ||
-             !stricmp ( lpExt, s_pMP4 ) ||
-             !stricmp ( lpExt, s_pAC3 )
+  else if (  !strcasecmp ( lpExt, s_pMP3 ) ||
+             !strcasecmp ( lpExt, s_pMPA ) ||
+             !strcasecmp ( lpExt, s_pMP2 ) ||
+             !strcasecmp ( lpExt, s_pOGG ) ||
+             !strcasecmp ( lpExt, s_pWMA ) ||
+             !strcasecmp ( lpExt, s_pM4A ) ||
+             !strcasecmp ( lpExt, s_pAAC ) ||
+             !strcasecmp ( lpExt, s_pMP4 ) ||
+             !strcasecmp ( lpExt, s_pAC3 )
        )
    retVal = GUICON_MP3;
-  else if (  !stricmp ( lpExt, s_pM3U )  )
+  else if (  !strcasecmp ( lpExt, s_pM3U )  )
    retVal = GUICON_M3U;
-  else if (  !stricmp ( lpExt, s_pJPG )  )
+  else if (  !strcasecmp ( lpExt, s_pJPG )  )
    retVal = GUICON_PICTURE;
 
   if ( retVal == GUICON_FILE && lLen > 5 ) {
 
-   if (  !stricmp ( --lpExt, s_pDIVX ) ||
-         !stricmp (   lpExt, s_pXVID ) ||
-         !stricmp (   lpExt, s_pMPEG )
+   if (  !strcasecmp ( --lpExt, s_pDIVX ) ||
+         !strcasecmp (   lpExt, s_pXVID ) ||
+         !strcasecmp (   lpExt, s_pMPEG )
    )
     retVal = GUICON_AVI;
-   else if (  !stricmp ( lpExt, s_pFLAC )  )
+   else if (  !strcasecmp ( lpExt, s_pFLAC )  )
     retVal = GUICON_MP3;
-   else if (  !stricmp ( lpExt, s_pJPEG )  )
+   else if (  !strcasecmp ( lpExt, s_pJPEG )  )
     retVal = GUICON_PICTURE;
 
   }  /* end if */
@@ -222,7 +225,7 @@ void SMS_FileDirInit ( char* apPath ) {
  SMS_List*     lpDirList;
  SMS_List*     lpFileList;
  SMS_List*     lpList;
- fio_dirent_t  lEntry;
+ io_dirent_t  lEntry;
  char          lPath[ 1024 ] __attribute__(   (  aligned( 4 )  )   );
  char*         lpPtr;
  SMS_ListNode* lpNode;
