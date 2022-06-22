@@ -67,6 +67,7 @@ typedef struct FileContext {
  unsigned int   m_Pos;
  unsigned int   m_CurPos;
  unsigned int   m_BufSize;
+ unsigned int   m_CurBufSize;
  unsigned char* m_pBuff[ 2 ];
  unsigned char* m_pPos;
  unsigned char* m_pEnd;

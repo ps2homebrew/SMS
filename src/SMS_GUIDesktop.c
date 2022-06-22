@@ -443,6 +443,7 @@ void GUI_Status ( char* apMsg ) {
  int lWidth = g_GSCtx.m_Width - 96;
  int lDX    = -2;
  int lQWC;
+ unsigned int lWidthOld;
 
  while (  GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth && lDX >= -12  ) --lDX;
  while (  GSFont_WidthEx ( apMsg, lLen, lDX ) > lWidth                ) --lLen;
@@ -455,7 +456,8 @@ void GUI_Status ( char* apMsg ) {
 
  if ( s_nDMASL < lWidth ) {
 
-  s_pDMASL = ( u64*           )realloc64(  s_pDMASL, lWidth * sizeof ( u64           )  );
+  lWidthOld = s_nDMASL * sizeof ( u64           );
+  s_pDMASL = ( u64*           )SMS_ReallocWithAlign(  s_pDMASL, &lWidthOld, lWidth * sizeof ( u64           )  );
   s_nDMASL = lWidth;
 
  }  /* end if */

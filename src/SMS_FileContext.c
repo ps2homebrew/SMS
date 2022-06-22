@@ -590,8 +590,8 @@ static int CDDA_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> m_BufSize = anSectors * 2352;
 
-  apCtx -> m_pBuff[ 0 ] = realloc64(  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
-  apCtx -> m_pBuff[ 1 ] = realloc64(  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 0 ] = SMS_ReallocWithAlign(  apCtx -> m_pBuff[ 0 ], &( apCtx -> m_CurBufSize ), ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 1 ] = SMS_ReallocWithAlign(  apCtx -> m_pBuff[ 1 ], &( apCtx -> m_CurBufSize ), ( apCtx -> m_BufSize + 63 ) & ~63  );
 
   if ( apCtx -> m_pBuff[ 0 ] == NULL || apCtx -> m_pBuff[ 1 ] == NULL ) return 0;
 
@@ -703,6 +703,7 @@ static FileContext* CDDA_InitFileContextInternal ( CDDAContext* apCtx, int aStar
    retVal -> m_CurBuf     = 0;
    retVal -> m_Size       = aSize;
    retVal -> m_BufSize    = 2352;
+   retVal -> m_CurBufSize = ( 2352 + 63 ) & ~63;
    retVal -> m_Pos        = 0;
    retVal -> m_CurPos     = 0;
    retVal -> m_pEnd       = retVal -> m_pBuff[ 0 ] + 2352;
@@ -1409,8 +1410,8 @@ static int STIO_Stream ( FileContext* apCtx, unsigned int aStartPos, unsigned in
 
   apCtx -> m_BufSize = anBlocks * 4096;
 
-  lpData                = realloc64(  apCtx -> m_pBuff[ 0 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
-  apCtx -> m_pBuff[ 1 ] = realloc64(  apCtx -> m_pBuff[ 1 ], ( apCtx -> m_BufSize + 63 ) & ~63  );
+  lpData                = SMS_ReallocWithAlign(  apCtx -> m_pBuff[ 0 ], &( apCtx -> m_CurBufSize ), ( apCtx -> m_BufSize + 63 ) & ~63  );
+  apCtx -> m_pBuff[ 1 ] = SMS_ReallocWithAlign(  apCtx -> m_pBuff[ 1 ], &( apCtx -> m_CurBufSize ), ( apCtx -> m_BufSize + 63 ) & ~63  );
 
   if ( lpData == NULL || apCtx -> m_pBuff[ 1 ] == NULL ) return 0;
 
@@ -1489,6 +1490,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
      retVal -> m_CurBuf     = 0;
      retVal -> m_Size       = GetFileSize ( lhFile, NULL );
      retVal -> m_BufSize    = 4096;
+     retVal -> m_CurBufSize = ( 4096 + 63 ) & ~63;
      retVal -> m_Pos        = 0;
      retVal -> m_CurPos     = 0;
      retVal -> m_pPos       = retVal -> m_pBuff[ 0 ];
@@ -1555,6 +1557,7 @@ FileContext* STIO_InitFileContext ( const char* aFileName, void* apUnused ) {
     retVal -> m_CurBuf     = 0;
     retVal -> m_Size       = fioLseek ( lFD, 0, SEEK_END );
     retVal -> m_BufSize    = 4096;
+    retVal -> m_CurBufSize = ( 4096 + 63 ) & ~63;
     retVal -> m_Pos        = 0;
     retVal -> m_CurPos     = 0;
     retVal -> m_pPos       = retVal -> m_pBuff[ 0 ];

@@ -299,6 +299,7 @@ extern "C" {
 #endif  /* __cplusplus */
 void     SMS_Initialize       ( void*                                       );
 void*    SMS_Realloc          ( void*, unsigned int*, unsigned int          );
+void*    SMS_ReallocWithAlign ( void*, unsigned int*, unsigned int          );
 uint32_t SMS_Align            ( unsigned int, unsigned int                  );
 void     SMS_SetSifCmdHandler ( void ( * ) ( void* ), int                   );
 int64_t  SMS_Rescale          ( int64_t, int64_t, int64_t                   );
