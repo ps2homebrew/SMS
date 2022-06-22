@@ -532,7 +532,7 @@ int SMS_JPEGLoad ( SMS_JPEGContext* apCtx, void* apData, unsigned int aDataSize 
     apCtx -> m_nBitmapQWC   = (  ( lnAlloc + 15 ) & ~15  ) >> 4;
     apCtx -> m_nBitmapBytes = lnAlloc;
 
-    if ( apCtx -> m_nAlloc < lnAlloc ) apCtx -> m_pBitmap = ( unsigned char* )realloc64(   apCtx -> m_pBitmap, (  ( apCtx -> m_nAlloc = lnAlloc ) + 64  ) & ~63   );
+    apCtx -> m_pBitmap = ( unsigned char* )SMS_ReallocWithAlign(   apCtx -> m_pBitmap, &( apCtx -> m_nAlloc ), (  ( lnAlloc ) + 64  ) & ~63   );
 
     lpRC -> ProcessBuffer (  lpRC, UNCACHED_SEG( apCtx -> m_pBitmap )  );
 

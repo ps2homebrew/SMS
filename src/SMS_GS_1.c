@@ -150,15 +150,18 @@ u64*           GSContext_NewPacket ( int aCtx, int aDWC, GSPaintMethod aMethod )
  int            lPutIdx = g_GSCtx.m_PutIndex[ aCtx ];
  unsigned int   lQWC    = ( aDWC + 1 ) >> 1;
  u64*           lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
+ unsigned int   lOldAllocSize;
 
  DMA_Wait ( DMAC_VIF1 );
+
+ lOldAllocSize = (  g_GSCtx.m_nAlloc[ aCtx ] * sizeof ( u64           ) + 63  ) & ~63;
 
  if ( aDWC > g_GSCtx.m_nAlloc[ aCtx ] - lPutIdx - 8 )
 
   g_GSCtx.m_nAlloc[ aCtx ] = aDWC + g_GSCtx.m_nAlloc[ aCtx ] + 512;
 
- g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )realloc64(
-  lpList, (  g_GSCtx.m_nAlloc[ aCtx ] * sizeof ( u64           ) + 63  ) & ~63
+ g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )SMS_ReallocWithAlign(
+  lpList, &lOldAllocSize, (  g_GSCtx.m_nAlloc[ aCtx ] * sizeof ( u64           ) + 63  ) & ~63
  );
 
  if ( aMethod & 0x02 ) {
@@ -254,12 +257,15 @@ void GSContext_CallList ( int aCtx, u64*           apList ) {
  unsigned int   lQWC    = ( apList[ -1 ] >> 32 ) & 0xFFFF;
  unsigned int   lPutIdx = g_GSCtx.m_PutIndex[ aCtx ];
  u64*           lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
+ unsigned int   lOldAllocSize;
 
- if ( 2 > g_GSCtx.m_nAlloc[ aCtx ] - g_GSCtx.m_PutIndex[ aCtx ] )
-
-  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )realloc (
-   lpList, ( g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512 ) * sizeof ( u64           )
+ if ( 2 > g_GSCtx.m_nAlloc[ aCtx ] - g_GSCtx.m_PutIndex[ aCtx ] ) {
+  lOldAllocSize = ( g_GSCtx.m_nAlloc[ aCtx ] ) * sizeof ( u64           );
+  g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512;
+  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )SMS_ReallocWithAlign (
+   lpList, &lOldAllocSize, ( g_GSCtx.m_nAlloc[ aCtx ] ) * sizeof ( u64           )
   );
+ }
 
  g_GSCtx.m_pLastTag[ aCtx ] = &lpList[ lPutIdx ];
  lpList[ lPutIdx++ ] = DMA_TAG(  lQWC + 1, 1, DMATAG_ID_REF, 0, ( unsigned int )( apList - 2 ), 0  );
@@ -274,12 +280,15 @@ void GSContext_CallList2 ( int aCtx, u64*           apList ) {
 
  unsigned int   lPutIdx = g_GSCtx.m_PutIndex    [ aCtx ];
  u64*           lpList  = g_GSCtx.m_pDisplayList[ aCtx ];
+ unsigned int   lOldAllocSize;
 
- if ( 2 > g_GSCtx.m_nAlloc[ aCtx ] - g_GSCtx.m_PutIndex[ aCtx ] )
-
-  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )realloc (
-   lpList, ( g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512 ) * sizeof ( u64           )
+ if ( 2 > g_GSCtx.m_nAlloc[ aCtx ] - g_GSCtx.m_PutIndex[ aCtx ] ) {
+  lOldAllocSize = ( g_GSCtx.m_nAlloc[ aCtx ] ) * sizeof ( u64           );
+  g_GSCtx.m_nAlloc[ aCtx ] = 2 + g_GSCtx.m_nAlloc[ aCtx ] + 512;
+  g_GSCtx.m_pDisplayList[ aCtx ] = lpList = ( u64*           )SMS_ReallocWithAlign (
+   lpList, &lOldAllocSize, ( g_GSCtx.m_nAlloc[ aCtx ] ) * sizeof ( u64           )
   );
+ }
 
  g_GSCtx.m_pLastTag[ aCtx ] = &lpList[ lPutIdx ];
  lpList[ lPutIdx++ ] = DMA_TAG(  0, 0, DMATAG_ID_CALL, 0, ( unsigned int )apList, 0  );

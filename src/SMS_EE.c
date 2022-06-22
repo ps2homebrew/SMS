@@ -52,6 +52,42 @@ void* SMS_Realloc ( void* apData, unsigned int* apSize, unsigned int aMinSize ) 
 
 }  /* SMS_Realloc */
 
+void* SMS_ReallocWithAlign ( void* apData, unsigned int* apSize, unsigned int aMinSize ) {
+
+ unsigned int lnOldSize;
+ void *lpNewData;
+
+ lnOldSize = *apSize;
+
+ if ( apData != NULL && aMinSize < lnOldSize ) return apData;
+ if ( aMinSize == 0 ) return apData;
+
+ if ( apData == NULL ) {
+  apData = memalign( 64, aMinSize );
+ } else {
+  apData = realloc( apData, aMinSize );
+  if ( (((unsigned int)apData) & 63) != 0 ) {
+   // We got misaligned, so need to allocate to aligned portion
+   apData = realloc( apData, lnOldSize );
+   lpNewData = memalign( 64, aMinSize );
+   if ( lpNewData != NULL ) {
+   	memcpy( lpNewData, apData, lnOldSize );
+   }
+   free( apData );
+   apData = lpNewData;
+  }
+ }
+
+ if ( apData == NULL ) {
+  aMinSize = 0;
+ }
+
+ *apSize = aMinSize;
+
+ return apData;
+
+}  /* SMS_ReallocWithAlign */
+
 extern s64  MUL64 ( s64 , s64  );
 
 s64  SMS_Rescale ( s64  anA, s64  aB, s64  aC ){
